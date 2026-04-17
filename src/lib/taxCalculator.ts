@@ -1,7 +1,7 @@
 export type TaxSystem = 'real' | 'norma'
 
 export const GROSS_MINIMUM_SALARY = 4050
-export const UBER_BOLT_ANNUAL_INCOME_NORM = 49100
+export const UBER_BOLT_ANNUAL_INCOME_NORM = 49005
 
 export interface TaxConfig {
   yearlyIncome: number
