@@ -1,4 +1,5 @@
-import { Button, HStack, Input, SimpleGrid, Stack, Text } from '@chakra-ui/react'
+import { Button, HStack, Icon, Input, SimpleGrid, Stack, Text } from '@chakra-ui/react'
+import { FiAlertTriangle, FiCheckCircle, FiDollarSign, FiTrendingUp } from 'react-icons/fi'
 import { useMemo, useState, type ChangeEvent } from 'react'
 import {
   calculateNormaSystem,
@@ -9,7 +10,7 @@ import {
   type TaxConfig,
   type TaxSystem,
 } from '../lib/taxCalculator'
-import { palette } from '../lib/palette'
+import { getPalette, type ThemeMode } from '../lib/palette'
 
 const DEFAULT_VALUES: TaxConfig = {
   yearlyIncome: 96000,
@@ -53,7 +54,12 @@ function normalizeNumberInput(value: string) {
   return digitsOnly.replace(/^0+(?=\d)/, '')
 }
 
-export default function TaxCalculator() {
+interface TaxCalculatorProps {
+  themeMode?: ThemeMode
+}
+
+export default function TaxCalculator({ themeMode = 'dark' }: TaxCalculatorProps) {
+  const palette = getPalette(themeMode)
   const [taxSystem, setTaxSystem] = useState<TaxSystem>('real')
   const [formInputs, setFormInputs] = useState<Record<keyof TaxConfig, string>>(DEFAULT_INPUT_VALUES)
 
@@ -89,7 +95,7 @@ export default function TaxCalculator() {
       borderColor={palette.border}
       borderRadius="20px"
       p={{ base: '4', md: '6' }}
-      bgGradient="linear(180deg, rgba(13, 18, 21, 0.84) 0%, rgba(13, 18, 21, 0.65) 100%)"
+      bg={palette.surface}
     >
       <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
         <Stack gap="2">
@@ -103,7 +109,7 @@ export default function TaxCalculator() {
             value={formInputs.yearlyIncome}
             onChange={handleNumberChange('yearlyIncome')}
             borderColor={palette.border}
-            bg="rgba(8, 12, 14, 0.6)"
+            bg={palette.inputBg}
             color={palette.text}
             _hover={{ borderColor: palette.mid }}
             _focusVisible={{ borderColor: palette.lime, boxShadow: '0 0 0 1px #DCF763' }}
@@ -122,7 +128,7 @@ export default function TaxCalculator() {
             onChange={handleNumberChange('yearlyDeductibleExpenses')}
             placeholder="Ex: 12000"
             borderColor={palette.border}
-            bg="rgba(8, 12, 14, 0.6)"
+            bg={palette.inputBg}
             color={palette.text}
             _hover={{ borderColor: palette.mid }}
             _focusVisible={{ borderColor: palette.lime, boxShadow: '0 0 0 1px #DCF763' }}
@@ -137,11 +143,14 @@ export default function TaxCalculator() {
           borderRadius="full"
           variant="outline"
           borderColor={taxSystem === 'real' ? 'rgba(220, 247, 99, 0.7)' : palette.border}
-          bg={taxSystem === 'real' ? 'rgba(220, 247, 99, 0.16)' : 'rgba(19, 25, 29, 0.8)'}
+          bg={taxSystem === 'real' ? 'rgba(220, 247, 99, 0.16)' : palette.toggleIdleBg}
           color={palette.text}
           _hover={{ bg: 'rgba(220, 247, 99, 0.18)' }}
         >
-          Sistem Real
+          <HStack gap="1.5">
+            <Icon as={FiTrendingUp} boxSize="4" />
+            <Text as="span">Sistem Real</Text>
+          </HStack>
         </Button>
         <Button
           type="button"
@@ -149,11 +158,14 @@ export default function TaxCalculator() {
           borderRadius="full"
           variant="outline"
           borderColor={taxSystem === 'norma' ? 'rgba(220, 247, 99, 0.7)' : palette.border}
-          bg={taxSystem === 'norma' ? 'rgba(220, 247, 99, 0.16)' : 'rgba(19, 25, 29, 0.8)'}
+          bg={taxSystem === 'norma' ? 'rgba(220, 247, 99, 0.16)' : palette.toggleIdleBg}
           color={palette.text}
           _hover={{ bg: 'rgba(220, 247, 99, 0.18)' }}
         >
-          Normă de venit
+          <HStack gap="1.5">
+            <Icon as={FiDollarSign} boxSize="4" />
+            <Text as="span">Normă de venit</Text>
+          </HStack>
         </Button>
       </HStack>
 
@@ -166,17 +178,19 @@ export default function TaxCalculator() {
 
       <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
         <Stack borderWidth="1px" borderColor={palette.border} borderRadius="14px" p="4" bg={palette.surfaceAlt} gap="2" {...subtleCardMotion}>
-          <Text color={palette.textSoft} fontSize="xs">
-            Venit anual real (input)
-          </Text>
+          <HStack gap="1.5" color={palette.textSoft} fontSize="xs">
+            <Icon as={FiDollarSign} boxSize="3.5" />
+            <Text>Venit anual real (input)</Text>
+          </HStack>
           <Text fontWeight="700" fontSize="xl">
             {formatRon(form.yearlyIncome)} RON
           </Text>
         </Stack>
         <Stack borderWidth="1px" borderColor={palette.border} borderRadius="14px" p="4" bg={palette.surfaceAlt} gap="2" {...subtleCardMotion}>
-          <Text color={palette.textSoft} fontSize="xs">
-            {taxSystem === 'norma' ? 'Normă de venit (bază taxare)' : 'Bază taxare (venit - cheltuieli)'}
-          </Text>
+          <HStack gap="1.5" color={palette.textSoft} fontSize="xs">
+            <Icon as={FiTrendingUp} boxSize="3.5" />
+            <Text>{taxSystem === 'norma' ? 'Normă de venit (bază taxare)' : 'Bază taxare (venit - cheltuieli)'}</Text>
+          </HStack>
           <Text fontWeight="700" fontSize="xl">
             {formatRon(selected.taxBase)} RON
           </Text>
@@ -212,11 +226,14 @@ export default function TaxCalculator() {
         <Text>
           Normă de venit: <strong>{formatRon(normaResult.moneyKept)} RON</strong>
         </Text>
-        <Text color={lostMoney > 0 ? '#FF9B9B' : '#B6F98C'} fontWeight="700">
-          {lostMoney > 0
-            ? `Pierzi ${formatRon(lostMoney)} RON dacă alegi sistemul greșit.`
-            : `Alegi deja varianta optimă (${bestSystem === 'real' ? 'Sistem Real' : 'Normă de venit'}).`}
-        </Text>
+        <HStack gap="1.5" align="center" color={lostMoney > 0 ? palette.warning : palette.success} fontWeight="700">
+          <Icon as={lostMoney > 0 ? FiAlertTriangle : FiCheckCircle} boxSize="4" />
+          <Text as="span">
+            {lostMoney > 0
+              ? `Pierzi ${formatRon(lostMoney)} RON dacă alegi sistemul greșit.`
+              : `Alegi deja varianta optimă (${bestSystem === 'real' ? 'Sistem Real' : 'Normă de venit'}).`}
+          </Text>
+        </HStack>
       </Stack>
     </Stack>
   )

@@ -5,16 +5,20 @@ import {
   Flex,
   Heading,
   HStack,
+  Icon,
   Image,
   Link,
   SimpleGrid,
   Stack,
   Text,
 } from '@chakra-ui/react'
-import type { MouseEvent } from 'react'
+import { FiArrowRight, FiCheckCircle, FiMoon, FiSun } from 'react-icons/fi'
+import { useEffect, useMemo, useState, type MouseEvent } from 'react'
 import logo from './assets/logo.svg'
 import TaxCalculator from './components/TaxCalculator'
-import { palette } from './lib/palette'
+import { getPalette, type ThemeMode } from './lib/palette'
+
+const THEME_MODE_STORAGE_KEY = 'ridelance-theme-mode'
 
 const beneficii = [
   {
@@ -95,15 +99,6 @@ const intrebariFrecvente = [
   },
 ]
 
-const panelStyle = {
-  borderRadius: '28px',
-  borderWidth: '1px',
-  borderColor: palette.border,
-  bg: palette.surface,
-  p: { base: '6', md: '9' },
-  boxShadow: '0 18px 38px rgba(0, 0, 0, 0.32)',
-} as const
-
 const subtleCardMotion = {
   transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
   willChange: 'transform',
@@ -114,7 +109,36 @@ const subtleCardMotion = {
   },
 } as const
 
+function getInitialThemeMode(): ThemeMode {
+  if (typeof window === 'undefined') {
+    return 'dark'
+  }
+
+  const storedMode = window.localStorage.getItem(THEME_MODE_STORAGE_KEY)
+  return storedMode === 'light' ? 'light' : 'dark'
+}
+
 function App() {
+  const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode)
+  const palette = useMemo(() => getPalette(themeMode), [themeMode])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    window.localStorage.setItem(THEME_MODE_STORAGE_KEY, themeMode)
+  }, [themeMode])
+
+  const panelStyle = {
+    borderRadius: '28px',
+    borderWidth: '1px',
+    borderColor: palette.border,
+    bg: palette.surface,
+    p: { base: '6', md: '9' },
+    boxShadow: '0 18px 38px rgba(0, 0, 0, 0.22)',
+  } as const
+
   const handleAnchorNavigation = (event: MouseEvent<HTMLElement>) => {
     const href = event.currentTarget.getAttribute('href')
     if (!href || !href.startsWith('#')) {
@@ -137,7 +161,6 @@ function App() {
       bg={palette.bg}
       color={palette.text}
       fontFamily="'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif"
-      backgroundImage="radial-gradient(circle at 14% 8%, rgba(220, 247, 99, 0.2) 0%, rgba(220, 247, 99, 0) 26%), radial-gradient(circle at 88% 20%, rgba(132, 140, 142, 0.22) 0%, rgba(132, 140, 142, 0) 34%), linear-gradient(160deg, #020304 0%, #07090b 58%, #12171b 100%)"
     >
       <Container maxW="7xl" px={{ base: '4', md: '6' }} py={{ base: '4', md: '6' }}>
         <Flex
@@ -151,7 +174,7 @@ function App() {
           borderRadius="20px"
           px={{ base: '4', md: '5' }}
           py="3"
-          bg="rgba(13, 18, 21, 0.9)"
+          bg={palette.headerBg}
           borderWidth="1px"
           borderColor="rgba(220, 247, 99, 0.25)"
           backdropFilter="blur(8px)"
@@ -172,18 +195,39 @@ function App() {
             </Link>
           </HStack>
 
-          <Link href="#contact" onClick={handleAnchorNavigation} _hover={{ textDecoration: 'none' }}>
+          <HStack gap="2">
             <Button
+              type="button"
+              onClick={() => setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'))}
               borderRadius="full"
-              bg={palette.lime}
-              color={palette.base}
-              fontWeight="700"
-              _hover={{ bg: '#E4FA85' }}
+              variant="outline"
+              borderColor={palette.border}
+              color={palette.text}
+              bg={palette.surfaceAlt}
+              _hover={{ bg: palette.chipBg }}
               size={{ base: 'sm', md: 'md' }}
             >
-              Solicită demo
+              <HStack gap="1.5">
+                <Icon as={themeMode === 'dark' ? FiSun : FiMoon} boxSize="4" />
+                <Text as="span">{themeMode === 'dark' ? 'Light' : 'Dark'}</Text>
+              </HStack>
             </Button>
-          </Link>
+            <Link href="#contact" onClick={handleAnchorNavigation} _hover={{ textDecoration: 'none' }}>
+              <Button
+                borderRadius="full"
+                bg={palette.lime}
+                color={palette.base}
+                fontWeight="700"
+                _hover={{ bg: '#E4FA85' }}
+                size={{ base: 'sm', md: 'md' }}
+              >
+                <HStack gap="1.5">
+                  <Text as="span">Demo</Text>
+                  <Icon as={FiArrowRight} boxSize="4" />
+                </HStack>
+              </Button>
+            </Link>
+          </HStack>
         </Flex>
 
         <Stack as="main" mt="6" gap="6">
@@ -194,7 +238,7 @@ function App() {
             borderRadius="32px"
             px={{ base: '6', md: '10' }}
             py={{ base: '8', md: '14' }}
-            bgGradient="linear(132deg, #0f1417 0%, #182026 52%, #232f37 100%)"
+            bg={palette.heroBg}
             borderWidth="1px"
             borderColor={palette.border}
             gap="5"
@@ -206,7 +250,7 @@ function App() {
               borderRadius="full"
               borderWidth="1px"
               borderColor="rgba(220, 247, 99, 0.3)"
-              bg="rgba(8, 12, 14, 0.36)"
+              bg={palette.badgeBg}
               fontSize="sm"
             >
               Înrolare & management PFA pentru șoferi Uber/Bolt
@@ -219,7 +263,7 @@ function App() {
               </Heading>
             </HStack>
 
-            <Text maxW="58ch" color="rgba(245, 249, 250, 0.93)" fontSize={{ base: 'md', md: 'lg' }} lineHeight="1.65">
+            <Text maxW="58ch" color={palette.textSoft} fontSize={{ base: 'md', md: 'lg' }} lineHeight="1.65">
               Ridelance este platforma care simplifică înrolarea și administrarea PFA pentru ridesharing în
               România, cu un proces clar, rapid și ușor de urmărit.
             </Text>
@@ -233,7 +277,10 @@ function App() {
                   fontWeight="700"
                   _hover={{ bg: '#E4FA85' }}
                 >
-                  Începe înrolarea
+                  <HStack gap="1.5">
+                    <Text as="span">Începe înrolarea</Text>
+                    <Icon as={FiArrowRight} boxSize="4" />
+                  </HStack>
                 </Button>
               </Link>
               <Link href="#faq" onClick={handleAnchorNavigation} _hover={{ textDecoration: 'none' }}>
@@ -242,7 +289,7 @@ function App() {
                   variant="outline"
                   borderColor="rgba(220, 247, 99, 0.45)"
                   color={palette.text}
-                  _hover={{ bg: 'rgba(6, 10, 12, 0.5)' }}
+                  _hover={{ bg: palette.ghostHoverBg }}
                 >
                   Vezi întrebările frecvente
                 </Button>
@@ -264,10 +311,13 @@ function App() {
                   borderRadius="full"
                   borderWidth="1px"
                   borderColor="rgba(220, 247, 99, 0.24)"
-                  bg="rgba(6, 10, 12, 0.35)"
+                  bg={palette.chipBg}
                   fontSize="sm"
                 >
-                  {item}
+                  <HStack gap="1.5">
+                    <Icon as={FiCheckCircle} boxSize="4" color={palette.lime} />
+                    <Text as="span">{item}</Text>
+                  </HStack>
                 </Box>
               ))}
             </HStack>
@@ -305,7 +355,7 @@ function App() {
             id="de-ce-noi"
             aria-labelledby="de-ce-noi-title"
             {...panelStyle}
-            bgGradient="linear(164deg, #101519 0%, #0b0f12 100%)"
+            bg={palette.contrastBg}
           >
             <Text textTransform="uppercase" fontWeight="700" letterSpacing="0.12em" fontSize="xs" color={palette.lime}>
               De ce noi
@@ -408,7 +458,7 @@ function App() {
             borderRadius="28px"
             borderWidth="1px"
             borderColor="rgba(220, 247, 99, 0.38)"
-            bgGradient="linear(140deg, rgba(220,247,99,0.14), rgba(13,17,19,0.95))"
+            bg={palette.surfaceAlt}
             p={{ base: '6', md: '9' }}
           >
             <Heading id="cta-title" size="xl" maxW="24ch">
@@ -427,7 +477,10 @@ function App() {
                 fontWeight="700"
                 _hover={{ bg: '#E4FA85' }}
               >
-                Programează consultanța
+                <HStack gap="1.5">
+                  <Text as="span">Programează consultanța</Text>
+                  <Icon as={FiArrowRight} boxSize="4" />
+                </HStack>
               </Button>
             </Link>
           </Box>
@@ -440,7 +493,7 @@ function App() {
               Calculează instant ce sistem fiscal este mai avantajos
             </Heading>
             <Box mt="6">
-              <TaxCalculator />
+              <TaxCalculator themeMode={themeMode} />
             </Box>
           </Box>
         </Stack>
