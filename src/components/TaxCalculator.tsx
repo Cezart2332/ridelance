@@ -157,7 +157,7 @@ export default function TaxCalculator() {
         </p>
         <p className={lostMoney > 0 ? 'tax-warning' : 'tax-success'}>
           {lostMoney > 0
-            ? `You lose ${formatRon(lostMoney)} RON if you choose the wrong system.`
+            ? `Pierzi ${formatRon(lostMoney)} RON dacă alegi sistemul greșit.`
             : `Alegi deja varianta optimă (${bestSystem === 'real' ? 'Sistem Real' : 'Normă de venit'}).`}
         </p>
       </div>
