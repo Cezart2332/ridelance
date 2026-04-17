@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useState, type MouseEvent } from 'react'
 import logo from './assets/logo.svg'
+import TaxCalculator from './components/TaxCalculator'
 import { scrollToTarget } from './lib/lenis'
 import { fadeUp, pageEntrance, staggerContainer, staggerItem } from './lib/variants'
 import './App.css'
@@ -10,8 +11,12 @@ function App() {
 
   const beneficii = [
     {
-      titlu: 'Onboarding ghidat cap-coadă',
+      titlu: 'Înrolare ghidată cap-coadă',
       text: 'Primești suport pas cu pas pentru documentele PFA și activarea rapidă în sistem.',
+    },
+    {
+      titlu: 'Contabil dedicat pentru fiecare PFA',
+      text: 'Fiecare PFA va avea un contabil care te ajută cu partea fiscală și administrativă.',
     },
     {
       titlu: 'Management simplificat',
@@ -33,7 +38,7 @@ function App() {
       text: 'Ai checklist-ul necesar și știi exact ce trebuie completat, în ordinea corectă.',
     },
     {
-      titlu: 'Onboarding rapid',
+      titlu: 'Înrolare rapidă',
       text: 'Elimini pașii confuzi și reduci timpul pierdut între acte, întrebări și confirmări.',
     },
     {
@@ -46,7 +51,7 @@ function App() {
     {
       pas: '01',
       titlu: 'Completezi formularul inițial',
-      text: 'Ne trimiți rapid datele de bază și îți validăm eligibilitatea pentru onboarding.',
+      text: 'Ne trimiți rapid datele de bază și îți validăm eligibilitatea pentru înrolare.',
     },
     {
       pas: '02',
@@ -72,7 +77,7 @@ function App() {
         'Nu. Platforma este construită pentru claritate: ai pași concreți, statusuri și suport, astfel încât să știi exact ce ai de făcut.',
     },
     {
-      intrebare: 'Cât durează onboarding-ul?',
+      intrebare: 'Cât durează înrolarea?',
       raspuns:
         'Durata depinde de completitudinea documentelor, dar fluxul este optimizat pentru activare rapidă și fără blocaje.',
     },
@@ -139,8 +144,8 @@ function App() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ duration: 0.45, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
               />
-              <p className="splash-title">ridelance</p>
-              <span className="splash-subtitle">Onboarding PFA pentru șoferi Uber și Bolt</span>
+              <p className="splash-title">Ridelance</p>
+              <span className="splash-subtitle">Înrolare PFA pentru șoferi Uber și Bolt</span>
               <div className="splash-loader" aria-hidden="true">
                 <motion.span
                   className="splash-loader-bar"
@@ -158,7 +163,7 @@ function App() {
         <header className="topbar">
           <a className="brand" href="#acasa" aria-label="Ridelance acasă" onClick={handleAnchorNavigation}>
             
-            <span>ridelance</span>
+            <span>Ridelance</span>
           </a>
           <nav aria-label="Navigație principală">
             <ul className="nav-links">
@@ -193,7 +198,7 @@ function App() {
             initial="hidden"
             animate="visible"
           >
-            <p className="hero-badge">Onboarding & management PFA pentru șoferi Uber/Bolt</p>
+            <p className="hero-badge">Înrolare & management PFA pentru șoferi Uber/Bolt</p>
             <div className="hero-title-row">
               <motion.img
                 src={logo}
@@ -211,7 +216,7 @@ function App() {
             </p>
             <div className="hero-actions">
               <a className="btn btn-primary" href="#contact" onClick={handleAnchorNavigation}>
-                Începe onboarding-ul
+                Începe înrolarea
               </a>
               <a className="btn btn-ghost" href="#faq" onClick={handleAnchorNavigation}>
                 Vezi întrebările frecvente
@@ -220,6 +225,7 @@ function App() {
             <ul className="hero-highlights" aria-label="Avantaje cheie">
               <li>Flux simplu pentru documente</li>
               <li>Statut clar pentru fiecare pas</li>
+              <li>Fiecare PFA va avea un contabil</li>
               <li>Gândit special pentru piața din România</li>
             </ul>
           </motion.section>
@@ -356,17 +362,33 @@ function App() {
           >
             <h2 id="cta-title">Vrei să începi fără bătăi de cap?</h2>
             <p>
-              Programează o discuție scurtă cu echipa Ridelance și vezi cum îți poți organiza onboarding-ul
+              Programează o discuție scurtă cu echipa Ridelance și vezi cum îți poți organiza înrolarea
               PFA într-un flux simplu și previzibil.
             </p>
             <a className="btn btn-primary" href="#acasa" onClick={handleAnchorNavigation}>
               Programează consultanța
             </a>
           </motion.section>
+
+          <motion.section
+            className="panel"
+            id="calculator"
+            aria-labelledby="calculator-title"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={sectionViewport}
+          >
+            <div className="panel-head">
+              <p className="eyebrow">Calculator taxe</p>
+              <h2 id="calculator-title">Calculează instant ce sistem fiscal este mai avantajos</h2>
+            </div>
+            <TaxCalculator />
+          </motion.section>
         </main>
 
         <motion.footer variants={fadeUp} initial="hidden" whileInView="visible" viewport={sectionViewport}>
-          <p>ridelance • soluție dedicată șoferilor de ridesharing din România</p>
+          <p>Ridelance • soluție dedicată șoferilor de ridesharing din România</p>
         </motion.footer>
       </motion.div>
     </>

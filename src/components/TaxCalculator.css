@@ -1,0 +1,162 @@
+.tax-calculator {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border-radius: 20px;
+  border: 1px solid var(--clr-border);
+  background: linear-gradient(180deg, rgba(13, 18, 21, 0.84) 0%, rgba(13, 18, 21, 0.65) 100%);
+  color: var(--clr-text);
+  font-family: inherit;
+}
+
+.tax-system-toggle {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tax-system-toggle button {
+  border: 1px solid var(--clr-border);
+  background: rgba(19, 25, 29, 0.8);
+  color: var(--clr-text);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 260ms ease, background-color 260ms ease;
+}
+
+.tax-system-toggle button.is-active {
+  border-color: rgba(220, 247, 99, 0.6);
+  background: rgba(220, 247, 99, 0.16);
+}
+
+.tax-input-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.tax-field {
+  display: grid;
+  gap: 8px;
+}
+
+.tax-field > span {
+  font-size: 1rem;
+  color: var(--clr-text-soft);
+  font-weight: 500;
+}
+
+.tax-field input {
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--clr-border);
+  background: rgba(8, 12, 14, 0.6);
+  color: var(--clr-text);
+  padding: 0 16px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.tax-field input::placeholder {
+  color: rgba(181, 192, 198, 0.72);
+}
+
+.tax-field input:focus-visible {
+  outline: 2px solid rgba(220, 247, 99, 0.38);
+  outline-offset: 1px;
+  border-color: rgba(220, 247, 99, 0.52);
+}
+
+.tax-field input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: rgba(8, 12, 14, 0.35);
+}
+
+.tax-field-inline {
+  padding-top: 4px;
+}
+
+.tax-note {
+  margin: 0;
+  color: var(--clr-text-soft);
+  font-size: 0.9rem;
+}
+
+.tax-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tax-summary-grid article {
+  border: 1px solid var(--clr-border);
+  border-radius: 14px;
+  background: rgba(19, 25, 29, 0.75);
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.tax-summary-grid p {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--clr-text-soft);
+}
+
+.tax-summary-grid strong {
+  font-size: 1.1rem;
+  color: var(--clr-text);
+}
+
+.tax-breakdown {
+  display: grid;
+  gap: 4px;
+  color: var(--clr-text-soft);
+}
+
+.tax-breakdown p,
+.tax-compare p {
+  margin: 0;
+}
+
+.tax-compare {
+  display: grid;
+  gap: 6px;
+  border-radius: 14px;
+  border: 1px solid var(--clr-border);
+  background: rgba(19, 25, 29, 0.75);
+  padding: 14px;
+  color: var(--clr-text);
+}
+
+.tax-warning {
+  color: #ff9b9b;
+  font-weight: 700;
+}
+
+.tax-success {
+  color: #b6f98c;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .tax-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tax-calculator {
+    padding: 16px;
+  }
+
+  .tax-field > span {
+    font-size: 0.95rem;
+  }
+
+  .tax-field input {
+    font-size: 0.98rem;
+  }
+}
