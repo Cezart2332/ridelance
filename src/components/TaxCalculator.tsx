@@ -1,3 +1,4 @@
+import { Button, HStack, Input, SimpleGrid, Stack, Text } from '@chakra-ui/react'
 import { useMemo, useState, type ChangeEvent } from 'react'
 import {
   calculateNormaSystem,
@@ -8,7 +9,7 @@ import {
   type TaxConfig,
   type TaxSystem,
 } from '../lib/taxCalculator'
-import './TaxCalculator.css'
+import { palette } from '../lib/palette'
 
 const DEFAULT_VALUES: TaxConfig = {
   yearlyIncome: 96000,
@@ -19,6 +20,16 @@ const DEFAULT_INPUT_VALUES: Record<keyof TaxConfig, string> = {
   yearlyIncome: String(DEFAULT_VALUES.yearlyIncome),
   yearlyDeductibleExpenses: String(DEFAULT_VALUES.yearlyDeductibleExpenses),
 }
+
+const subtleCardMotion = {
+  transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
+  willChange: 'transform',
+  _hover: {
+    transform: 'translateY(-1px)',
+    borderColor: 'rgba(220, 247, 99, 0.34)',
+    boxShadow: '0 8px 18px rgba(0, 0, 0, 0.18)',
+  },
+} as const
 
 function toPositiveNumber(value: string) {
   if (value.trim() === '') {
@@ -71,96 +82,142 @@ export default function TaxCalculator() {
     }
 
   return (
-    <div className="tax-calculator" aria-label="Calculator taxe PFA">
-      <div className="tax-input-grid">
-        <label className="tax-field">
-          <span>Venit anual estimat (RON)</span>
-          <input
+    <Stack
+      aria-label="Calculator taxe PFA"
+      gap="4"
+      borderWidth="1px"
+      borderColor={palette.border}
+      borderRadius="20px"
+      p={{ base: '4', md: '6' }}
+      bgGradient="linear(180deg, rgba(13, 18, 21, 0.84) 0%, rgba(13, 18, 21, 0.65) 100%)"
+    >
+      <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
+        <Stack gap="2">
+          <Text fontSize="sm" color={palette.textSoft}>
+            Venit anual estimat (RON)
+          </Text>
+          <Input
             type="text"
             inputMode="numeric"
             pattern="[0-9]*"
             value={formInputs.yearlyIncome}
             onChange={handleNumberChange('yearlyIncome')}
+            borderColor={palette.border}
+            bg="rgba(8, 12, 14, 0.6)"
+            color={palette.text}
+            _hover={{ borderColor: palette.mid }}
+            _focusVisible={{ borderColor: palette.lime, boxShadow: '0 0 0 1px #DCF763' }}
           />
-        </label>
+        </Stack>
 
-        <label className="tax-field">
-          <span>Cheltuieli deductibile anuale</span>
-          <input
+        <Stack gap="2">
+          <Text fontSize="sm" color={palette.textSoft}>
+            Cheltuieli deductibile anuale
+          </Text>
+          <Input
             type="text"
             inputMode="numeric"
             pattern="[0-9]*"
             value={formInputs.yearlyDeductibleExpenses}
             onChange={handleNumberChange('yearlyDeductibleExpenses')}
             placeholder="Ex: 12000"
+            borderColor={palette.border}
+            bg="rgba(8, 12, 14, 0.6)"
+            color={palette.text}
+            _hover={{ borderColor: palette.mid }}
+            _focusVisible={{ borderColor: palette.lime, boxShadow: '0 0 0 1px #DCF763' }}
           />
-        </label>
-      </div>
+        </Stack>
+      </SimpleGrid>
 
-      <div className="tax-system-toggle" role="group" aria-label="Tip impozitare">
-        <button
+      <HStack gap="2" role="group" aria-label="Tip impozitare" flexWrap="wrap">
+        <Button
           type="button"
-          className={taxSystem === 'real' ? 'is-active' : ''}
           onClick={() => setTaxSystem('real')}
+          borderRadius="full"
+          variant="outline"
+          borderColor={taxSystem === 'real' ? 'rgba(220, 247, 99, 0.7)' : palette.border}
+          bg={taxSystem === 'real' ? 'rgba(220, 247, 99, 0.16)' : 'rgba(19, 25, 29, 0.8)'}
+          color={palette.text}
+          _hover={{ bg: 'rgba(220, 247, 99, 0.18)' }}
         >
           Sistem Real
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={taxSystem === 'norma' ? 'is-active' : ''}
           onClick={() => setTaxSystem('norma')}
+          borderRadius="full"
+          variant="outline"
+          borderColor={taxSystem === 'norma' ? 'rgba(220, 247, 99, 0.7)' : palette.border}
+          bg={taxSystem === 'norma' ? 'rgba(220, 247, 99, 0.16)' : 'rgba(19, 25, 29, 0.8)'}
+          color={palette.text}
+          _hover={{ bg: 'rgba(220, 247, 99, 0.18)' }}
         >
           Normă de venit
-        </button>
-      </div>
+        </Button>
+      </HStack>
 
-      <p className="tax-note">
-        Salariul minim brut folosit în calcule: <strong>{formatRon(GROSS_MINIMUM_SALARY)} RON</strong>.
-      </p>
-      <p className="tax-note">
-        Normă anuală Uber / Bolt: <strong>{formatRon(UBER_BOLT_ANNUAL_INCOME_NORM)} RON</strong>.
-      </p>
+      <Text color={palette.textSoft} fontSize="sm">
+        Salariul minim brut folosit în calcule: <Text as="strong">{formatRon(GROSS_MINIMUM_SALARY)} RON</Text>.
+      </Text>
+      <Text color={palette.textSoft} fontSize="sm">
+        Normă anuală Uber / Bolt: <Text as="strong">{formatRon(UBER_BOLT_ANNUAL_INCOME_NORM)} RON</Text>.
+      </Text>
 
-      <div className="tax-summary-grid">
-        <article>
-          <p>Venit anual real (input)</p>
-          <strong>{formatRon(form.yearlyIncome)} RON</strong>
-        </article>
-        <article>
-          <p>
+      <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
+        <Stack borderWidth="1px" borderColor={palette.border} borderRadius="14px" p="4" bg={palette.surfaceAlt} gap="2" {...subtleCardMotion}>
+          <Text color={palette.textSoft} fontSize="xs">
+            Venit anual real (input)
+          </Text>
+          <Text fontWeight="700" fontSize="xl">
+            {formatRon(form.yearlyIncome)} RON
+          </Text>
+        </Stack>
+        <Stack borderWidth="1px" borderColor={palette.border} borderRadius="14px" p="4" bg={palette.surfaceAlt} gap="2" {...subtleCardMotion}>
+          <Text color={palette.textSoft} fontSize="xs">
             {taxSystem === 'norma' ? 'Normă de venit (bază taxare)' : 'Bază taxare (venit - cheltuieli)'}
-          </p>
-          <strong>{formatRon(selected.taxBase)} RON</strong>
-        </article>
-        <article>
-          <p>Total taxe</p>
-          <strong>{formatRon(selected.breakdown.totalTaxes)} RON</strong>
-        </article>
-        <article>
-          <p>Bani finali</p>
-          <strong>{formatRon(selected.moneyKept)} RON</strong>
-        </article>
-      </div>
+          </Text>
+          <Text fontWeight="700" fontSize="xl">
+            {formatRon(selected.taxBase)} RON
+          </Text>
+        </Stack>
+        <Stack borderWidth="1px" borderColor={palette.border} borderRadius="14px" p="4" bg={palette.surfaceAlt} gap="2" {...subtleCardMotion}>
+          <Text color={palette.textSoft} fontSize="xs">
+            Total taxe
+          </Text>
+          <Text fontWeight="700" fontSize="xl">
+            {formatRon(selected.breakdown.totalTaxes)} RON
+          </Text>
+        </Stack>
+        <Stack borderWidth="1px" borderColor={palette.border} borderRadius="14px" p="4" bg={palette.surfaceAlt} gap="2" {...subtleCardMotion}>
+          <Text color={palette.textSoft} fontSize="xs">
+            Bani finali
+          </Text>
+          <Text fontWeight="700" fontSize="xl">
+            {formatRon(selected.moneyKept)} RON
+          </Text>
+        </Stack>
+      </SimpleGrid>
 
-      <div className="tax-breakdown">
-        <p>Impozit pe venit: {formatRon(selected.breakdown.incomeTax)} RON</p>
-        <p>CAS: {formatRon(selected.breakdown.cas)} RON</p>
-        <p>CASS: {formatRon(selected.breakdown.cass)} RON</p>
-      </div>
+      <Stack gap="1" color={palette.textSoft}>
+        <Text>Impozit pe venit: {formatRon(selected.breakdown.incomeTax)} RON</Text>
+        <Text>CAS: {formatRon(selected.breakdown.cas)} RON</Text>
+        <Text>CASS: {formatRon(selected.breakdown.cass)} RON</Text>
+      </Stack>
 
-      <div className="tax-compare">
-        <p>
+      <Stack borderWidth="1px" borderColor={palette.border} borderRadius="14px" p="4" bg={palette.surfaceAlt} gap="2" {...subtleCardMotion}>
+        <Text>
           Sistem Real: <strong>{formatRon(realResult.moneyKept)} RON</strong>
-        </p>
-        <p>
+        </Text>
+        <Text>
           Normă de venit: <strong>{formatRon(normaResult.moneyKept)} RON</strong>
-        </p>
-        <p className={lostMoney > 0 ? 'tax-warning' : 'tax-success'}>
+        </Text>
+        <Text color={lostMoney > 0 ? '#FF9B9B' : '#B6F98C'} fontWeight="700">
           {lostMoney > 0
             ? `Pierzi ${formatRon(lostMoney)} RON dacă alegi sistemul greșit.`
             : `Alegi deja varianta optimă (${bestSystem === 'real' ? 'Sistem Real' : 'Normă de venit'}).`}
-        </p>
-      </div>
-    </div>
+        </Text>
+      </Stack>
+    </Stack>
   )
 }
