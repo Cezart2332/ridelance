@@ -45,11 +45,16 @@ import {
   LuUnderline,
 } from "react-icons/lu"
 
+type RichEditor = Omit<Editor, "chain" | "can"> & {
+  chain: () => any
+  can: () => any
+}
+
 export interface BaseControlConfig {
   label: string
   icon?: React.ElementType
-  isDisabled?: (editor: Editor) => boolean
-  getProps?: (editor: Editor) => Record<string, any>
+  isDisabled?: (editor: RichEditor) => boolean
+  getProps?: (editor: RichEditor) => Record<string, any>
 }
 
 export interface ButtonControlProps
@@ -76,8 +81,8 @@ export const ButtonControl = React.forwardRef<
 
 export interface BooleanControlConfig extends BaseControlConfig {
   icon: React.ElementType
-  command: (editor: Editor) => void
-  getVariant?: (editor: Editor) => IconButtonProps["variant"]
+  command: (editor: RichEditor) => void
+  getVariant?: (editor: RichEditor) => IconButtonProps["variant"]
 }
 
 export function createBooleanControl(config: BooleanControlConfig) {
@@ -94,10 +99,13 @@ export function createBooleanControl(config: BooleanControlConfig) {
     function BooleanControl(props, ref) {
       const { editor } = useRichTextEditorContext()
       if (!editor) return null
-      const disabled = isDisabled ? isDisabled(editor) : false
-      const dynamicProps = getProps ? getProps(editor) : {}
+      const richEditor = editor as RichEditor
+      const disabled = isDisabled ? isDisabled(richEditor) : false
+      const dynamicProps = getProps ? getProps(richEditor) : {}
       const variant =
-        getVariant && !getProps ? getVariant(editor) : dynamicProps.variant
+        getVariant && !getProps
+          ? getVariant(richEditor)
+          : dynamicProps.variant
 
       return (
         <ButtonControl
@@ -105,7 +113,7 @@ export function createBooleanControl(config: BooleanControlConfig) {
           label={label}
           icon={<Icon />}
           variant={variant}
-          onClick={() => command(editor)}
+          onClick={() => command(richEditor)}
           disabled={disabled}
           {...props}
         />
@@ -128,8 +136,8 @@ export interface SelectOption {
 export interface SelectControlConfig extends BaseControlConfig {
   options: SelectOption[]
   width?: Select.RootProps["width"]
-  getValue: (editor: Editor) => string
-  command: (editor: Editor, value: string) => void
+  getValue: (editor: RichEditor) => string
+  command: (editor: RichEditor, value: string) => void
   placeholder?: string
   renderValue?: (value: string, option?: SelectOption) => React.ReactNode
 }
@@ -155,9 +163,10 @@ export function createSelectControl(config: SelectControlConfig) {
     const controlId = React.useId()
 
     if (!editor) return null
+    const richEditor = editor as RichEditor
 
-    const currentValue = getValue(editor)
-    const disabled = isDisabled ? isDisabled(editor) : false
+    const currentValue = getValue(richEditor)
+    const disabled = isDisabled ? isDisabled(richEditor) : false
 
     const currentOption = options.find((o) => o.value === currentValue)
     const displayValue =
@@ -166,7 +175,7 @@ export function createSelectControl(config: SelectControlConfig) {
         : currentOption?.label || placeholder
 
     const collection = createListCollection({ items: options })
-    const dynamicProps = getProps ? getProps(editor) : {}
+    const dynamicProps = getProps ? getProps(richEditor) : {}
 
     return (
       <Select.Root
@@ -176,7 +185,7 @@ export function createSelectControl(config: SelectControlConfig) {
         variant="ghost"
         collection={collection}
         value={[currentValue]}
-        onValueChange={(details) => command(editor, details.value[0])}
+        onValueChange={(details) => command(richEditor, details.value[0])}
         disabled={disabled}
         ids={{ trigger: controlId }}
         positioning={{ sameWidth: false }}
@@ -225,10 +234,10 @@ export interface SwatchOption {
 }
 export interface SwatchControlConfig extends BaseControlConfig {
   swatches: SwatchOption[]
-  getValue: (editor: Editor) => string
-  command: (editor: Editor, value: string) => void
+  getValue: (editor: RichEditor) => string
+  command: (editor: RichEditor, value: string) => void
   showRemove?: boolean
-  onRemove?: (editor: Editor) => void
+  onRemove?: (editor: RichEditor) => void
 }
 
 export function createSwatchControl(config: SwatchControlConfig) {
@@ -251,9 +260,10 @@ export function createSwatchControl(config: SwatchControlConfig) {
       const triggerId = React.useId()
 
       if (!editor) return null
-      const currentValue = getValue(editor)
-      const disabled = isDisabled ? isDisabled(editor) : false
-      const dynamicProps = getProps ? getProps(editor) : {}
+      const richEditor = editor as RichEditor
+      const currentValue = getValue(richEditor)
+      const disabled = isDisabled ? isDisabled(richEditor) : false
+      const dynamicProps = getProps ? getProps(richEditor) : {}
 
       return (
         <Popover.Root
@@ -291,7 +301,7 @@ export function createSwatchControl(config: SwatchControlConfig) {
                         cursor="button"
                         value={swatch.color}
                         onClick={() => {
-                          command(editor, swatch.value)
+                          command(richEditor, swatch.value)
                           setOpen(false)
                         }}
                       />
@@ -301,7 +311,7 @@ export function createSwatchControl(config: SwatchControlConfig) {
                         <CloseButton
                           size="2xs"
                           onClick={() => {
-                            onRemove(editor)
+                            onRemove(richEditor)
                             setOpen(false)
                           }}
                         />
