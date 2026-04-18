@@ -1,15 +1,10 @@
 import {
   Box,
   Button,
-  Container,
   Flex,
-  Heading,
   HStack,
-  Icon,
   Image,
   Link,
-  SimpleGrid,
-  Stack,
   Text,
   Card,
   VStack,
@@ -18,14 +13,12 @@ import {
   Field,
   Input
 } from '@chakra-ui/react'
-import { FiArrowRight, FiCheckCircle, FiMoon, FiSun } from 'react-icons/fi'
 import logo from './assets/logo.svg'
 import { useState } from 'react'
 import car3 from './assets/car3.svg'
 import chill from './assets/chill.svg'
 import docs from './assets/docs.svg'
 import works from './assets/works.svg'
-import { FaCircleQuestion } from 'react-icons/fa6'
 import { LuSquareCheckBig } from 'react-icons/lu'
 
 
