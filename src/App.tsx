@@ -105,51 +105,81 @@ function App() {
       padding="4"
       style={{"backgroundColor": "#DCF763"}}
       justifyContent="space-between"
+      flexWrap={{ base: "wrap", md: "nowrap" }}
+      gap={{ base: "3", md: "0" }}
     >
       <Button variant="plain" padding="0" minWidth="0" _hover={{'transform': 'translateY(-2px)'}} >
-        <Image src={logo} alt="Ridelance Logo" width="200px" height="50px" fit="contain"/>
+        <Image
+          src={logo}
+          alt="Ridelance Logo"
+          width={{ base: "150px", md: "200px" }}
+          height={{ base: "38px", md: "50px" }}
+          fit="contain"
+        />
       </Button>
-      <Flex alignItems='center' gap="4">
-        <Link fontWeight="bold">
+      <Flex
+        alignItems='center'
+        gap={{ base: "2", md: "4" }}
+        flex={{ base: "none", md: "1" }}
+        justifyContent="center"
+        flexWrap={{ base: "wrap", md: "nowrap" }}
+        width={{ base: "100%", md: "auto" }}
+        order={{ base: 3, md: 0 }}
+      >
+        <Link fontWeight="bold" fontSize={{ base: "sm", md: "md" }}>
             Despre Noi
         </Link>
-        <Link fontWeight="semibold">
+        <Link fontWeight="semibold" fontSize={{ base: "sm", md: "md" }}>
           Intrebari Frecvente
         </Link>
-        <Link fontWeight="semibold">
+        <Link fontWeight="semibold" fontSize={{ base: "sm", md: "md" }}>
             Calculator Taxe
         </Link>
-        <Link fontWeight="semibold">
+        <Link fontWeight="semibold" fontSize={{ base: "sm", md: "md" }}>
             Contact
         </Link>
       </Flex>
-      <Button size="sm" borderRadius="12px" fontSize="15px" fontWeight="bold">
+      <Button size={{ base: "xs", md: "sm" }} borderRadius="12px" fontSize="15px" fontWeight="bold">
         Demo
       </Button>
     </Flex>
     <Flex
       style={{"backgroundColor":"#435058"}}
-      padding="12"
+      padding={{ base: "6", md: "12" }}
       alignItems="center"
+      direction={{ base: "column", md: "row" }}
+      gap={{ base: "6", md: "0" }}
     >
-      <Flex maxW="50%" padding="24" flex="1" textAlign="left" gap="5" flexDirection="column">
-        <Text textStyle="4xl" fontWeight="bold">
+      <Flex
+        maxW={{ base: "100%", md: "50%" }}
+        padding={{ base: "0", md: "24" }}
+        flex="1"
+        textAlign={{ base: "center", md: "left" }}
+        gap="5"
+        flexDirection="column"
+        alignItems={{ base: "center", md: "flex-start" }}
+      >
+        <Text textStyle="4xl" fontWeight="bold" fontSize={{ base: "3xl", md: "4xl" }}>
           Despre Noi
         </Text>
-        <Text textStyle="xl" fontWeight="semibold">
+        <Text textStyle="xl" fontWeight="semibold" fontSize={{ base: "md", md: "xl" }}>
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Corrupti recusandae neque nobis tempore nihil eveniet dicta quo. Ratione architecto, voluptatum molestiae maiores praesentium consequuntur distinctio facilis nihil optio a eveniet atque, officiis, voluptates laborum laudantium veritatis porro labore? Ipsam illo repellat dolorum est omnis nobis doloremque sit sapiente quod excepturi.
         </Text>
-        <HStack>
-            <Button fontSize="15px" fontWeight="bold" borderRadius="8px">Inregistreaza-te</Button>
-            <Button fontSize="15px" fontWeight="bold" borderRadius="8px" variant="outline">Afla mai multe</Button>
+        <HStack
+          flexDirection={{ base: "column", sm: "row" }}
+          width={{ base: "100%", sm: "auto" }}
+          alignItems="stretch"
+        >
+            <Button width={{ base: "100%", sm: "auto" }} fontSize="15px" fontWeight="bold" borderRadius="8px">Inregistreaza-te</Button>
+            <Button width={{ base: "100%", sm: "auto" }} fontSize="15px" fontWeight="bold" borderRadius="8px" variant="outline">Afla mai multe</Button>
         </HStack>
 
       </Flex>
-      <Box maxW="50%" alignItems="center" justifyContent="center" display="flex" flex="1">
-        <Image src={car3} width="65%" height="65%" alt="Car Image" />
+      <Box maxW={{ base: "100%", md: "50%" }} alignItems="center" justifyContent="center" display="flex" flex="1" width="100%">
+        <Image src={car3} width={{ base: "85%", md: "65%" }} height="auto" alt="Car Image" />
       </Box>
     </Flex>
-    <Flex style={{"backgroundColor":"#848C8E"}} padding="24" alignItems="stretch" justifyContent="center" gap="6" flexWrap="wrap">
+    <Flex style={{"backgroundColor":"#848C8E"}} padding={{ base: "6", md: "24" }} alignItems="stretch" justifyContent="center" gap={{ base: "4", md: "6" }} flexWrap="wrap">
       <Card.Root width={{ base: "100%", md: "30%" }} minH="340px" display="flex" flexDirection="column" bg="#0000006e" borderRadius="15px" border="none" borderColor="transparent">
         <Card.Header textAlign="center" pb="2">
           <Text fontSize="xl" fontWeight="bold">
@@ -216,52 +246,52 @@ function App() {
         <Card.Footer />
       </Card.Root>
     </Flex>
-    <Flex style={{"backgroundColor":"#BFB7B6"}} padding="24" textAlign="center" alignItems="center" justifyContent="center" flexDirection="column" gap="5">
-      <Text fontSize="4xl" fontWeight="bold">
+    <Flex style={{"backgroundColor":"#BFB7B6"}} padding={{ base: "6", md: "24" }} textAlign="center" alignItems="center" justifyContent="center" flexDirection="column" gap="5">
+      <Text fontSize={{ base: "2xl", md: "4xl" }} fontWeight="bold">
         Ce primesti daca alegi sa lucrezi cu noi
       </Text>
       <Box>
-        <HStack gap="20" alignItems="flex-start" justifyContent="center" flexWrap="wrap">
+        <HStack gap={{ base: "8", md: "20" }} alignItems="flex-start" justifyContent="center" flexWrap="wrap">
           <VStack gap="5">
-            <HStack>
+            <HStack alignItems="flex-start">
               <LuSquareCheckBig />
-              <Text fontWeight="semibold" fontSize="lg">Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias, odio?</Text>
+              <Text fontWeight="semibold" fontSize={{ base: "md", md: "lg" }} textAlign="left">Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias, odio?</Text>
             </HStack>
-                        <HStack>
+                        <HStack alignItems="flex-start">
               <LuSquareCheckBig />
-              <Text fontWeight="semibold" fontSize="lg">Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias, odio?</Text>
+              <Text fontWeight="semibold" fontSize={{ base: "md", md: "lg" }} textAlign="left">Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias, odio?</Text>
             </HStack>
-                        <HStack>
+                        <HStack alignItems="flex-start">
               <LuSquareCheckBig />
-              <Text fontWeight="semibold" fontSize="lg">Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias, odio?</Text>
+              <Text fontWeight="semibold" fontSize={{ base: "md", md: "lg" }} textAlign="left">Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias, odio?</Text>
             </HStack>
           </VStack>
           <VStack gap="5">
-            <HStack>
+            <HStack alignItems="flex-start">
               <LuSquareCheckBig />
-              <Text fontWeight="semibold" fontSize="lg">Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias, odio?</Text>
+              <Text fontWeight="semibold" fontSize={{ base: "md", md: "lg" }} textAlign="left">Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias, odio?</Text>
             </HStack>
-            <HStack>
+            <HStack alignItems="flex-start">
               <LuSquareCheckBig />
-              <Text fontWeight="semibold" fontSize="lg">Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias, odio?</Text>
+              <Text fontWeight="semibold" fontSize={{ base: "md", md: "lg" }} textAlign="left">Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias, odio?</Text>
             </HStack>
-            <HStack>
+            <HStack alignItems="flex-start">
               <LuSquareCheckBig />
-              <Text fontWeight="semibold" fontSize="lg">Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias, odio?</Text>
+              <Text fontWeight="semibold" fontSize={{ base: "md", md: "lg" }} textAlign="left">Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias, odio?</Text>
             </HStack>
           </VStack>
         </HStack>
       </Box>
     </Flex>
-    <Flex padding="24" alignContent="center" style={{"backgroundColor":"#435058"}} justifyContent="center" flexDirection="column" textAlign="center">
-      <Text fontSize="4xl" fontWeight="bold" >
+    <Flex padding={{ base: "6", md: "24" }} alignContent="center" style={{"backgroundColor":"#435058"}} justifyContent="center" flexDirection="column" textAlign="center">
+      <Text fontSize={{ base: "2xl", md: "4xl" }} fontWeight="bold" >
         Intrebari Frecvente
       </Text>
-      <Accordion.Root collapsible defaultValue={["a"]} variant="enclosed" borderRadius="20px" marginTop="10" bg="#0000006e" border="none" borderColor="transparent">
+      <Accordion.Root collapsible defaultValue={["a"]} variant="enclosed" borderRadius="20px" marginTop={{ base: "6", md: "10" }} bg="#0000006e" border="none" borderColor="transparent">
       {items.map((item, index) => (
         <Accordion.Item key={index} value={item.value}>
           <Accordion.ItemTrigger
-          padding="5"
+          padding={{ base: "4", md: "5" }}
           _open={{ bg: "#DCF763", color: "#1A1A1A" }}
           transition="background 0.2s ease"
           >
@@ -275,11 +305,11 @@ function App() {
       ))}
     </Accordion.Root>
     </Flex>
-    <Flex padding="24" alignContent="center" style={{"backgroundColor":"#435058d0"}} justifyContent="center" flexDirection="column" textAlign="center">
-      <Text fontSize="4xl" fontWeight="bold" >
+    <Flex padding={{ base: "6", md: "24" }} alignContent="center" style={{"backgroundColor":"#435058d0"}} justifyContent="center" flexDirection="column" textAlign="center">
+      <Text fontSize={{ base: "2xl", md: "4xl" }} fontWeight="bold" >
         Calculator Taxe
       </Text>
-      <Text fontSize = "2xl" fontWeight="semibold" marginTop="4">
+      <Text fontSize={{ base: "lg", md: "2xl" }} fontWeight="semibold" marginTop="4">
         Estimeaza ce taxe vei plati ca PFA in functie de venitul tau anual si cheltuielile deductibile
       </Text>
       <Box width={{ base: "100%", md: "58%" }} mx="auto" my="auto">
