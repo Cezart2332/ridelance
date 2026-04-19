@@ -9,6 +9,8 @@ import {
   Card,
   CardContent,
   Container,
+  Drawer,
+  IconButton,
   Paper,
   Stack,
   TextField,
@@ -18,7 +20,9 @@ import {
 import { alpha } from "@mui/material/styles"
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded"
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded"
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded"
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded"
+import MenuRoundedIcon from "@mui/icons-material/MenuRounded"
 import logo from "./assets/logo.svg"
 import car from "./assets/car.svg"
 import chill from "./assets/chill.svg"
@@ -148,6 +152,7 @@ function App() {
   const [netIncomeRealSystem, setNetIncomeRealSystem] = useState(0)
   const [netIncomeNormaSystem, setNetIncomeNormaSystem] = useState(0)
   const [isNavPinned, setIsNavPinned] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     const onScroll = () => {
@@ -171,6 +176,11 @@ function App() {
         block: "start",
       })
     }
+  }
+
+  const handleNavItemClick = (id: string) => {
+    scrollToSection(id)
+    setIsMobileMenuOpen(false)
   }
 
   const computeTaxes = () => {
@@ -299,7 +309,7 @@ function App() {
         position="sticky"
         elevation={0}
         sx={{
-          top: isNavPinned ? 0 : 12,
+          top: { xs: 0, md: isNavPinned ? 0 : 12 },
           backgroundColor: isNavPinned ? alpha("#EAF4FF", 0.92) : "transparent",
           color: palette.ink,
           zIndex: (theme) => theme.zIndex.appBar,
@@ -310,31 +320,34 @@ function App() {
         <Box
           sx={{
             width: "100%",
-            py: { xs: isNavPinned ? 0 : 1.2, md: isNavPinned ? 0 : 1.6 },
+            py: { xs: 0.45, md: isNavPinned ? 0 : 1.6 },
             transition: "padding 280ms ease",
           }}
         >
           <Box
             sx={{
-              width: isNavPinned ? "100%" : { xs: "calc(100% - 16px)", md: "min(1536px, calc(100% - 32px))" },
+              width: {
+                xs: "100%",
+                md: isNavPinned ? "100%" : "min(1536px, calc(100% - 32px))",
+              },
               mx: "auto",
               transition: "width 320ms ease",
             }}
           >
-            <Toolbar disableGutters sx={{ minHeight: "unset" }}>
+            <Toolbar disableGutters sx={{ minHeight: "unset", px: { xs: 1, md: 0 } }}>
               <Paper
                 className="reveal"
                 elevation={0}
                 sx={{
                   ...glassPanelSx,
                   width: "100%",
-                  px: { xs: 1.2, sm: 1.7, md: 2.1 },
-                  py: { xs: 1.1, md: 1.15 },
-                  borderRadius: isNavPinned ? 0 : { xs: 4, md: 999 },
+                  px: { xs: 1.1, sm: 1.6, md: 2.1 },
+                  py: { xs: 0.85, md: 1.15 },
+                  borderRadius: { xs: 2.5, md: isNavPinned ? 0 : 999 },
                   display: "flex",
                   alignItems: "center",
-                  gap: { xs: 0.8, md: 1.8 },
-                  flexWrap: { xs: "wrap", md: "nowrap" },
+                  gap: { xs: 0.65, md: 1.8 },
+                  flexWrap: "nowrap",
                   animationDelay: "30ms",
                   border: `1px solid ${alpha(palette.primary, isNavPinned ? 0.16 : 0.2)}`,
                   background: isNavPinned
@@ -345,85 +358,194 @@ function App() {
                     "border-radius 320ms ease, box-shadow 320ms ease, background 320ms ease, backdrop-filter 320ms ease",
                 }}
               >
-              <Box
-                component="button"
-                onClick={() => scrollToSection("despre-noi")}
-                sx={{
-                  border: "none",
-                  backgroundColor: "transparent",
-                  p: 0,
-                  m: 0,
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                }}
-              >
                 <Box
-                  component="img"
-                  src={logo}
-                  alt="Ridelance Logo"
-                  sx={{ height: { xs: 46, md: 58 }, width: "auto", display: "block" }}
-                />
-              </Box>
+                  component="button"
+                  onClick={() => scrollToSection("despre-noi")}
+                  sx={{
+                    border: "none",
+                    backgroundColor: "transparent",
+                    p: 0,
+                    m: 0,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={logo}
+                    alt="Ridelance Logo"
+                    sx={{ height: { xs: 36, md: 58 }, width: "auto", display: "block" }}
+                  />
+                </Box>
 
-              <Stack
-                direction="row"
-                spacing={{ xs: 0.3, md: 0.65 }}
-                sx={{
-                  flex: { xs: "0 0 100%", md: 1 },
-                  justifyContent: "center",
-                  flexWrap: "wrap",
-                  rowGap: 0.5,
-                }}
-              >
-                {navItems.map((item) => (
+                <Stack
+                  direction="row"
+                  spacing={{ md: 0.65 }}
+                  sx={{
+                    display: { xs: "none", md: "flex" },
+                    flex: 1,
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                    rowGap: 0.5,
+                  }}
+                >
+                  {navItems.map((item) => (
+                    <Button
+                      key={item.id}
+                      onClick={() => scrollToSection(item.id)}
+                      sx={{
+                        color: alpha(palette.ink, 0.9),
+                        minWidth: "auto",
+                        px: { md: 1.35 },
+                        py: 0.75,
+                        borderRadius: 2.5,
+                        fontSize: { md: "0.87rem" },
+                        fontWeight: 620,
+                        backgroundColor: "transparent",
+                        "&:hover": {
+                          color: palette.primaryStrong,
+                          backgroundColor: alpha(palette.primary, 0.12),
+                        },
+                      }}
+                    >
+                      {item.label}
+                    </Button>
+                  ))}
+                </Stack>
+
+                <Button
+                  variant="contained"
+                  endIcon={<ArrowForwardRoundedIcon />}
+                  onClick={() => scrollToSection("contact")}
+                  sx={{
+                    display: { xs: "none", md: "inline-flex" },
+                    px: { md: 2.8 },
+                    py: { md: 1.1 },
+                    color: palette.ink,
+                    backgroundColor: palette.primary,
+                    borderRadius: 999,
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                    "&:hover": {
+                      backgroundColor: palette.primary,
+                    },
+                  }}
+                >
+                  Demo
+                </Button>
+
+                <Stack
+                  direction="row"
+                  spacing={0.6}
+                  sx={{
+                    ml: "auto",
+                    display: { xs: "flex", md: "none" },
+                    alignItems: "center",
+                  }}
+                >
                   <Button
-                    key={item.id}
-                    onClick={() => scrollToSection(item.id)}
+                    variant="contained"
+                    size="small"
+                    onClick={() => scrollToSection("contact")}
                     sx={{
-                      color: alpha(palette.ink, 0.9),
-                      minWidth: "auto",
-                      px: { xs: 1, md: 1.35 },
-                      py: 0.75,
-                      borderRadius: 2.5,
-                      fontSize: { xs: "0.78rem", md: "0.87rem" },
-                      fontWeight: 620,
-                      backgroundColor: "transparent",
-                      "&:hover": {
-                        color: palette.primaryStrong,
-                        backgroundColor: alpha(palette.primary, 0.12),
-                      },
+                      px: 1.45,
+                      py: 0.62,
+                      minWidth: "unset",
+                      color: palette.ink,
+                      backgroundColor: palette.primary,
+                      borderRadius: 999,
+                      fontWeight: 700,
+                      fontSize: "0.74rem",
                     }}
                   >
-                    {item.label}
+                    Demo
                   </Button>
-                ))}
-              </Stack>
-
-              <Button
-                variant="contained"
-                endIcon={<ArrowForwardRoundedIcon />}
-                onClick={() => scrollToSection("contact")}
-                sx={{
-                  px: { xs: 2, md: 2.8 },
-                  py: { xs: 1, md: 1.1 },
-                  color: palette.ink,
-                  backgroundColor: palette.primary,
-                  borderRadius: 999,
-                  fontWeight: 700,
-                  whiteSpace: "nowrap",
-                  "&:hover": {
-                    backgroundColor: palette.primary,
-                  },
-                }}
-              >
-                Demo
-              </Button>
+                  <IconButton
+                    size="small"
+                    aria-label="Deschide meniul"
+                    onClick={() => setIsMobileMenuOpen(true)}
+                    sx={{
+                      border: `1px solid ${alpha(palette.primary, 0.3)}`,
+                      color: palette.primaryStrong,
+                      backgroundColor: alpha("#FFFFFF", 0.8),
+                    }}
+                  >
+                    <MenuRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
               </Paper>
             </Toolbar>
           </Box>
         </Box>
       </AppBar>
+
+      <Drawer
+        anchor="right"
+        open={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        slotProps={{
+          paper: {
+            sx: {
+              width: { xs: "86vw", sm: 360 },
+              p: 2,
+              background: `linear-gradient(180deg, ${alpha("#FFFFFF", 0.98)} 0%, ${alpha("#EAF4FF", 0.96)} 100%)`,
+            },
+          },
+        }}
+      >
+        <Stack spacing={1.4} sx={{ height: "100%" }}>
+          <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between" }}>
+            <Box component="img" src={logo} alt="Ridelance Logo" sx={{ height: 40, width: "auto", display: "block" }} />
+            <IconButton aria-label="Inchide meniul" onClick={() => setIsMobileMenuOpen(false)}>
+              <CloseRoundedIcon />
+            </IconButton>
+          </Stack>
+
+          <Stack spacing={0.55} sx={{ mt: 0.6 }}>
+            {navItems.map((item) => (
+              <Button
+                key={`mobile-${item.id}`}
+                onClick={() => handleNavItemClick(item.id)}
+                sx={{
+                  justifyContent: "flex-start",
+                  px: 1.2,
+                  py: 0.95,
+                  borderRadius: 2,
+                  color: alpha(palette.ink, 0.9),
+                  fontWeight: 620,
+                  textTransform: "none",
+                  "&:hover": {
+                    backgroundColor: alpha(palette.primary, 0.1),
+                    color: palette.primaryStrong,
+                  },
+                }}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </Stack>
+
+          <Button
+            variant="contained"
+            endIcon={<ArrowForwardRoundedIcon />}
+            onClick={() => handleNavItemClick("contact")}
+            sx={{
+              mt: "auto",
+              color: palette.ink,
+              backgroundColor: palette.primary,
+              borderRadius: 999,
+              py: 1,
+              fontWeight: 700,
+              "&:hover": {
+                backgroundColor: palette.primary,
+              },
+            }}
+          >
+            Demo
+          </Button>
+        </Stack>
+      </Drawer>
 
       <Box
         id="despre-noi"
@@ -446,16 +568,6 @@ function App() {
               position: "relative",
               overflow: "hidden",
               animationDelay: "90ms",
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                top: -110,
-                right: -90,
-                width: 260,
-                height: 260,
-                borderRadius: "50%",
-                background: `radial-gradient(circle at 40% 40%, ${alpha("#81B8FF", 0.28)} 0%, transparent 70%)`,
-              },
               "&::after": {
                 content: '""',
                 display: "none",
@@ -1093,34 +1205,31 @@ function App() {
                   rel="noopener noreferrer"
                   aria-label={partner.name}
                   sx={{
-                    px: { xs: 2.4, md: 3 },
-                    py: { xs: 1.6, md: 1.8 },
-                    borderRadius: 3,
-                    border: `1px solid ${alpha(palette.primary, 0.22)}`,
-                    backgroundColor: alpha("#FFFFFF", 0.78),
+                    lineHeight: 0,
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    minHeight: { xs: 74, md: 86 },
-                    minWidth: { xs: 180, md: 210 },
-                    "&:hover": {
-                      transform: "translateY(-3px)",
+                    borderRadius: 2,
+                    "& img": {
+                      transition: "transform 180ms ease, filter 180ms ease",
                     },
                     "&:hover img": {
-                      transform: "translateY(-2px)",
+                      transform: "translateY(-2px) scale(1.02)",
+                      filter: `drop-shadow(0 8px 14px ${alpha("#0F46BE", 0.22)})`,
                     },
                     "@media (prefers-reduced-motion: reduce)": {
-                      "&:hover": {
-                        transform: "none",
+                      "& img": {
+                        transition: "none",
                       },
                       "&:hover img": {
                         transform: "none",
+                        filter: "none",
                       },
                     },
                     "&:focus-visible": {
                       outline: `2px solid ${alpha(palette.primary, 0.44)}`,
                       outlineOffset: 4,
-                      borderRadius: 3,
+                      borderRadius: 2,
                     },
                   }}
                 >
@@ -1132,7 +1241,6 @@ function App() {
                       width: { xs: 132, md: 170 },
                       height: "auto",
                       display: "block",
-                      transition: "transform 180ms ease",
                     }}
                   />
                 </Box>
