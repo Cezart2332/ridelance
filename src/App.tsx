@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Accordion,
   AccordionDetails,
@@ -147,6 +147,20 @@ function App() {
   const [normCASS, setNormCASS] = useState(0)
   const [netIncomeRealSystem, setNetIncomeRealSystem] = useState(0)
   const [netIncomeNormaSystem, setNetIncomeNormaSystem] = useState(0)
+  const [isNavPinned, setIsNavPinned] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => {
+      setIsNavPinned(window.scrollY > 10)
+    }
+
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+    }
+  }, [])
 
   const scrollToSection = (id: string) => {
     const section = document.getElementById(id)
@@ -273,38 +287,64 @@ function App() {
             transition: "none !important",
           },
         },
+        "& .section-shell": {
+          borderRadius: "0 !important",
+          border: "none !important",
+          backdropFilter: "none !important",
+          background: "transparent !important",
+        },
       }}
     >
       <AppBar
         position="sticky"
         elevation={0}
         sx={{
-          top: 12,
-          backgroundColor: "transparent",
+          top: isNavPinned ? 0 : 12,
+          backgroundColor: isNavPinned ? alpha("#EAF4FF", 0.92) : "transparent",
           color: palette.ink,
-          boxShadow: "none",
           zIndex: (theme) => theme.zIndex.appBar,
+          backdropFilter: isNavPinned ? "blur(6px)" : "none",
+          transition: "top 280ms ease, background-color 280ms ease, backdrop-filter 280ms ease",
         }}
       >
-        <Container maxWidth="xl" sx={{ py: { xs: 1.2, md: 1.6 } }}>
-          <Toolbar disableGutters sx={{ minHeight: "unset" }}>
-            <Paper
-              className="reveal"
-              elevation={0}
-              sx={{
-                ...glassPanelSx,
-                width: "100%",
-                px: { xs: 1.2, sm: 1.7, md: 2.1 },
-                py: { xs: 1.1, md: 1.15 },
-                borderRadius: { xs: 4, md: 999 },
-                display: "flex",
-                alignItems: "center",
-                gap: { xs: 0.8, md: 1.8 },
-                flexWrap: { xs: "wrap", md: "nowrap" },
-                animationDelay: "30ms",
-                boxShadow: `0 14px 28px ${alpha("#154AC5", 0.12)}`,
-              }}
-            >
+        <Box
+          sx={{
+            width: "100%",
+            py: { xs: isNavPinned ? 0 : 1.2, md: isNavPinned ? 0 : 1.6 },
+            transition: "padding 280ms ease",
+          }}
+        >
+          <Box
+            sx={{
+              width: isNavPinned ? "100%" : { xs: "calc(100% - 16px)", md: "min(1536px, calc(100% - 32px))" },
+              mx: "auto",
+              transition: "width 320ms ease",
+            }}
+          >
+            <Toolbar disableGutters sx={{ minHeight: "unset" }}>
+              <Paper
+                className="reveal"
+                elevation={0}
+                sx={{
+                  ...glassPanelSx,
+                  width: "100%",
+                  px: { xs: 1.2, sm: 1.7, md: 2.1 },
+                  py: { xs: 1.1, md: 1.15 },
+                  borderRadius: isNavPinned ? 0 : { xs: 4, md: 999 },
+                  display: "flex",
+                  alignItems: "center",
+                  gap: { xs: 0.8, md: 1.8 },
+                  flexWrap: { xs: "wrap", md: "nowrap" },
+                  animationDelay: "30ms",
+                  border: `1px solid ${alpha(palette.primary, isNavPinned ? 0.16 : 0.2)}`,
+                  background: isNavPinned
+                    ? `linear-gradient(180deg, ${alpha("#F4FAFF", 0.98)} 0%, ${alpha("#ECF6FF", 0.98)} 100%)`
+                    : glassPanelSx.background,
+                  backdropFilter: isNavPinned ? "none" : "blur(10px)",
+                  transition:
+                    "border-radius 320ms ease, box-shadow 320ms ease, background 320ms ease, backdrop-filter 320ms ease",
+                }}
+              >
               <Box
                 component="button"
                 onClick={() => scrollToSection("despre-noi")}
@@ -379,9 +419,10 @@ function App() {
               >
                 Demo
               </Button>
-            </Paper>
-          </Toolbar>
-        </Container>
+              </Paper>
+            </Toolbar>
+          </Box>
+        </Box>
       </AppBar>
 
       <Box
@@ -396,7 +437,7 @@ function App() {
       >
         <Container maxWidth="xl">
           <Paper
-            className="reveal"
+            className="reveal section-shell"
             elevation={0}
             sx={{
               ...glassPanelSx,
@@ -405,7 +446,6 @@ function App() {
               position: "relative",
               overflow: "hidden",
               animationDelay: "90ms",
-              boxShadow: `0 20px 44px ${alpha("#0D44BA", 0.14)}`,
               "&::before": {
                 content: '""',
                 position: "absolute",
@@ -518,7 +558,6 @@ function App() {
                     borderRadius: { xs: 4, md: 5 },
                     border: `1px solid ${alpha(palette.primary, 0.24)}`,
                     background: `linear-gradient(155deg, ${alpha("#FFFFFF", 0.96)} 0%, ${alpha("#EAF3FF", 0.96)} 100%)`,
-                    boxShadow: `0 18px 36px ${alpha("#0E44BB", 0.14)}`,
                   }}
                 >
                   <Box
@@ -559,7 +598,6 @@ function App() {
                   position: "relative",
                   overflow: "hidden",
                   animationDelay: `${150 + index * 85}ms`,
-                  boxShadow: `0 14px 30px ${alpha("#0F46BE", 0.12)}`,
                   "&::before": {
                     content: '""',
                     display: "none",
@@ -596,42 +634,39 @@ function App() {
         </Container>
       </Box>
 
-      <Box sx={{ position: "relative", zIndex: 1, pb: { xs: 5.5, md: 8.5 } }}>
-        <Container maxWidth="xl">
-          <Paper
-            className="reveal"
-            elevation={0}
-            sx={{
-              p: { xs: 3, md: 4.8 },
-              borderRadius: { xs: 4, md: 6 },
-              border: `1px solid ${alpha("#9EC6FF", 0.3)}`,
-              background: "linear-gradient(145deg, #0F4ACA 0%, #1B6EF0 54%, #3A86FF 100%)",
-              position: "relative",
-              overflow: "hidden",
-              animationDelay: "260ms",
-              boxShadow: `0 28px 62px ${alpha("#0B3BA3", 0.3)}`,
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                width: 380,
-                height: 380,
-                borderRadius: "50%",
-                top: -210,
-                right: -120,
-                background: alpha("#9DD0FF", 0.25),
-              },
-              "&::after": {
-                content: '""',
-                position: "absolute",
-                left: -70,
-                bottom: -170,
-                width: 420,
-                height: 260,
-                borderRadius: "50%",
-                background: alpha("#A8D4FF", 0.25),
-              },
-            }}
-          >
+      <Box
+        sx={{
+          position: "relative",
+          zIndex: 1,
+          py: { xs: 5.5, md: 8.5 },
+          background: "linear-gradient(145deg, #0F4ACA 0%, #1B6EF0 54%, #3A86FF 100%)",
+          borderTop: `1px solid ${alpha("#8DBBFF", 0.35)}`,
+          borderBottom: `1px solid ${alpha("#8DBBFF", 0.35)}`,
+          overflow: "hidden",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            width: 380,
+            height: 380,
+            borderRadius: "50%",
+            top: -210,
+            right: -120,
+            background: alpha("#9DD0FF", 0.25),
+          },
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            left: -70,
+            bottom: -170,
+            width: 420,
+            height: 260,
+            borderRadius: "50%",
+            background: alpha("#A8D4FF", 0.25),
+          },
+        }}
+      >
+        <Container maxWidth="xl" className="reveal" sx={{ position: "relative", zIndex: 1, animationDelay: "260ms" }}>
+          <Box sx={{ p: { xs: 1, md: 2.2 } }}>
             <Typography
               variant="h3"
               gutterBottom
@@ -640,8 +675,6 @@ function App() {
                 fontWeight: 700,
                 textAlign: "center",
                 letterSpacing: "-0.02em",
-                position: "relative",
-                zIndex: 1,
               }}
             >
               Ce primesti daca alegi sa lucrezi cu noi
@@ -652,8 +685,6 @@ function App() {
                 display: "grid",
                 gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
                 gap: { xs: 2, md: 3.2 },
-                position: "relative",
-                zIndex: 1,
               }}
             >
               {[0, 1].map((column) => (
@@ -679,7 +710,7 @@ function App() {
                 </Stack>
               ))}
             </Box>
-          </Paper>
+          </Box>
         </Container>
       </Box>
 
@@ -689,19 +720,19 @@ function App() {
           position: "relative",
           zIndex: 1,
           scrollMarginTop: sectionScrollMargin,
+          borderTop: `1px solid ${alpha(palette.primary, 0.16)}`,
           py: { xs: 5.5, md: 8.5 },
         }}
       >
         <Container maxWidth="lg">
           <Paper
-            className="reveal"
+            className="reveal section-shell"
             elevation={0}
             sx={{
               ...glassPanelSx,
               p: { xs: 3, md: 4.5 },
               borderRadius: { xs: 4, md: 5 },
               animationDelay: "340ms",
-              boxShadow: `0 22px 52px ${alpha("#1147BD", 0.14)}`,
             }}
           >
             <Typography variant="h3" sx={sectionTitleSx}>
@@ -758,19 +789,19 @@ function App() {
           position: "relative",
           zIndex: 1,
           scrollMarginTop: sectionScrollMargin,
+          borderTop: `1px solid ${alpha(palette.primary, 0.16)}`,
           py: { xs: 5.5, md: 8.8 },
         }}
       >
         <Container maxWidth="lg">
           <Paper
-            className="reveal"
+            className="reveal section-shell"
             elevation={0}
             sx={{
               ...glassPanelSx,
               p: { xs: 2.8, md: 4.2 },
               borderRadius: { xs: 4, md: 5 },
               animationDelay: "410ms",
-              boxShadow: `0 24px 54px ${alpha("#1248BE", 0.15)}`,
             }}
           >
             <Typography variant="h3" sx={sectionTitleSx}>
@@ -952,19 +983,19 @@ function App() {
           position: "relative",
           zIndex: 1,
           scrollMarginTop: sectionScrollMargin,
+          borderTop: `1px solid ${alpha(palette.primary, 0.16)}`,
           py: { xs: 5.5, md: 8.8 },
         }}
       >
         <Container maxWidth="xl">
           <Paper
-            className="reveal"
+            className="reveal section-shell"
             elevation={0}
             sx={{
               ...glassPanelSx,
               p: { xs: 3, md: 4.5 },
               borderRadius: { xs: 4, md: 5 },
               animationDelay: "480ms",
-              boxShadow: `0 22px 50px ${alpha("#1247BF", 0.14)}`,
             }}
           >
             <Typography variant="h3" gutterBottom sx={sectionTitleSx}>
@@ -997,14 +1028,7 @@ function App() {
                     ...glassPanelSx,
                     height: "100%",
                     borderRadius: 4,
-                    background:
-                      index === 1
-                        ? `linear-gradient(155deg, ${alpha("#E4F1FF", 0.96)} 0%, ${alpha("#CFE5FF", 0.92)} 100%)`
-                        : `linear-gradient(155deg, ${alpha("#FFFFFF", 0.95)} 0%, ${alpha("#F1F7FF", 0.92)} 100%)`,
-                    boxShadow:
-                      index === 1
-                        ? `0 24px 54px ${alpha("#0D44B9", 0.18)}`
-                        : `0 16px 36px ${alpha("#0D44B9", 0.12)}`,
+                    background: `linear-gradient(155deg, ${alpha("#FFFFFF", 0.95)} 0%, ${alpha("#F1F7FF", 0.92)} 100%)`,
                     transform: index === 1 ? { xs: "none", md: "translateY(-8px)" } : "none",
                     "&:hover": {
                       borderColor: alpha(palette.primary, 0.34),
@@ -1031,19 +1055,19 @@ function App() {
           position: "relative",
           zIndex: 1,
           scrollMarginTop: sectionScrollMargin,
+          borderTop: `1px solid ${alpha(palette.primary, 0.16)}`,
           py: { xs: 5.5, md: 8.5 },
         }}
       >
         <Container maxWidth="lg">
           <Paper
-            className="reveal"
+            className="reveal section-shell"
             elevation={0}
             sx={{
               ...glassPanelSx,
               p: { xs: 3, md: 4.5 },
               borderRadius: { xs: 4, md: 5 },
               animationDelay: "560ms",
-              boxShadow: `0 20px 48px ${alpha("#1047BD", 0.13)}`,
             }}
           >
             <Typography variant="h3" gutterBottom sx={sectionTitleSx}>
@@ -1079,7 +1103,6 @@ function App() {
                     justifyContent: "center",
                     minHeight: { xs: 74, md: 86 },
                     minWidth: { xs: 180, md: 210 },
-                    boxShadow: `0 12px 26px ${alpha("#1148C1", 0.1)}`,
                     "&:hover": {
                       transform: "translateY(-3px)",
                     },
@@ -1125,19 +1148,19 @@ function App() {
           position: "relative",
           zIndex: 1,
           scrollMarginTop: sectionScrollMargin,
+          borderTop: `1px solid ${alpha(palette.primary, 0.16)}`,
           py: { xs: 5.8, md: 8.5 },
         }}
       >
         <Container maxWidth="md" sx={{ textAlign: "center" }}>
           <Paper
-            className="reveal"
+            className="reveal section-shell"
             elevation={0}
             sx={{
               ...glassPanelSx,
               p: { xs: 3, md: 4.5 },
               borderRadius: { xs: 4, md: 5 },
               animationDelay: "620ms",
-              boxShadow: `0 24px 54px ${alpha("#1046BE", 0.15)}`,
             }}
           >
             <Typography variant="h3" gutterBottom sx={sectionTitleSx}>
