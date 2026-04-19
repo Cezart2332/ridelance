@@ -23,6 +23,7 @@ import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlin
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded"
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded"
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded"
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom"
 import logo from "./assets/logo.svg"
 import car from "./assets/car.svg"
 import chill from "./assets/chill.svg"
@@ -35,17 +36,19 @@ const palette = {
   ink: "#152447",
   primary: "#1A64ED",
   primaryStrong: "#0E47BC",
-  sky: "#EAF4FF",
   paper: "#FFFFFF",
-  lime: "#D8FF2E",
 }
 
-const borderSoft = `1px solid ${alpha(palette.primary, 0.2)}`
+const borderSoft = "1px solid transparent"
+const motionEase = "cubic-bezier(0.22, 1, 0.36, 1)"
+const hoverMotionDuration = "200ms"
+const layoutMotionDuration = "200ms"
 
 const glassPanelSx = {
   border: borderSoft,
   backdropFilter: "blur(10px)",
-  background: `linear-gradient(145deg, ${alpha(palette.paper, 0.9)} 0%, ${alpha("#EEF6FF", 0.9)} 100%)`,
+  backgroundColor: alpha(palette.paper, 0.92),
+  transition: `transform ${hoverMotionDuration} ${motionEase}, border-color ${hoverMotionDuration} ${motionEase}, background-color ${hoverMotionDuration} ${motionEase}`,
 }
 
 const sectionTitleSx = {
@@ -59,16 +62,33 @@ const inputSx = {
   "& .MuiOutlinedInput-root": {
     backgroundColor: alpha("#FFFFFF", 0.92),
     color: palette.ink,
-    borderRadius: 2.5,
+    borderRadius: 3,
     fontWeight: 600,
+    transition: `background-color ${hoverMotionDuration} ${motionEase}, border-color ${hoverMotionDuration} ${motionEase}`,
+    "& .MuiOutlinedInput-notchedOutline": {
+      transition: `border-color ${hoverMotionDuration} ${motionEase}`,
+    },
+    "&:hover": {
+      backgroundColor: alpha("#FFFFFF", 0.98),
+    },
+    "&:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: alpha(palette.ink, 0.28),
+    },
   },
   "& .MuiOutlinedInput-notchedOutline": {
-    borderColor: alpha(palette.primary, 0.24),
+    borderColor: alpha(palette.ink, 0.16),
   },
   "& .MuiInputBase-input::placeholder": {
     color: alpha(palette.ink, 0.5),
     opacity: 1,
   },
+}
+
+const pageFrameSx = {
+  minHeight: { xs: "calc(100vh - 84px)", md: "calc(100vh - 112px)" },
+  display: "flex",
+  alignItems: "center",
+  py: { xs: 4.5, md: 7.5 },
 }
 
 const loremText =
@@ -77,12 +97,12 @@ const loremLongText =
   "Lorem ipsum dolor sit amet consectetur adipisicing elit. Distinctio ipsa ducimus, ipsam pariatur hic possimus aliquam eaque similique nostrum! Vero veniam earum sint sapiente ut. Quae aspernatur assumenda aliquam pariatur suscipit in porro ipsam."
 
 const navItems = [
-  { label: "Despre Noi", id: "despre-noi" },
-  { label: "Intrebari Frecvente", id: "intrebari-frecvente" },
-  { label: "Calculator Taxe", id: "calculator-taxe" },
-  { label: "Abonamente/Preturi", id: "abonamente-preturi" },
-  { label: "Parteneri", id: "parteneri" },
-  { label: "Contact", id: "contact" },
+  { label: "Despre Noi", path: "/" },
+  { label: "Intrebari Frecvente", path: "/intrebari-frecvente" },
+  { label: "Calculator Taxe", path: "/calculator-taxe" },
+  { label: "Abonamente/Preturi", path: "/abonamente-preturi" },
+  { label: "Parteneri", path: "/parteneri" },
+  { label: "Contact", path: "/contact" },
 ]
 
 const faqItems = [
@@ -129,11 +149,354 @@ const partnerLogos = [
   { name: "Renteaza", image: renteaza, href: "https://renteaza.ro" },
 ]
 
-function App() {
+function HomePage() {
+  return (
+    <Box sx={{ ...pageFrameSx, pb: 0 }}>
+      <Container maxWidth="xl">
+        <Box
+          className="reveal"
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "1.06fr 0.94fr" },
+            alignItems: "center",
+            gap: { xs: 4.5, md: 6.5 },
+            p: { xs: 2.2, md: 3.2 },
+            borderRadius: { xs: 4.5, md: 5.5 },
+            backgroundColor: alpha("#7DB5FF", 0.08),
+            animationDelay: "70ms",
+          }}
+        >
+          <Box sx={{ textAlign: { xs: "center", md: "left" } }}>
+            <Typography
+              variant="h2"
+              gutterBottom
+              sx={{
+                color: palette.ink,
+                fontWeight: 720,
+                lineHeight: 1.06,
+                letterSpacing: "-0.03em",
+                fontSize: { xs: "2.1rem", md: "3.25rem" },
+              }}
+            >
+              Despre Noi
+            </Typography>
+            <Typography
+              sx={{
+                color: alpha(palette.ink, 0.82),
+                lineHeight: 1.8,
+                fontSize: { xs: "0.99rem", md: "1.06rem" },
+                maxWidth: { xs: "100%", md: 620 },
+                mx: { xs: "auto", md: 0 },
+              }}
+            >
+              {loremLongText}
+            </Typography>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1.5}
+              sx={{
+                mt: 3.2,
+                justifyContent: { xs: "center", md: "flex-start" },
+              }}
+            >
+              <Button
+                variant="contained"
+                sx={{
+                  px: 2.6,
+                  py: 1.05,
+                  color: "#FFFFFF",
+                  backgroundColor: palette.primary,
+                  borderRadius: 999,
+                  "&:hover": {
+                    backgroundColor: palette.primary,
+                  },
+                }}
+              >
+                Inregistreaza-te
+              </Button>
+              <Button
+                variant="outlined"
+                sx={{
+                  px: 2.4,
+                  py: 1.05,
+                  color: palette.primary,
+                  borderColor: alpha(palette.ink, 0.24),
+                  backgroundColor: alpha("#FFFFFF", 0.65),
+                  borderRadius: 999,
+                  "&:hover": {
+                    borderColor: alpha(palette.ink, 0.36),
+                    backgroundColor: alpha(palette.primary, 0.1),
+                  },
+                }}
+              >
+                Afla mai multe
+              </Button>
+            </Stack>
+          </Box>
+
+          <Box
+            sx={{
+              position: "relative",
+              display: "grid",
+              placeItems: "center",
+              minHeight: { xs: 280, md: 390 },
+            }}
+          >
+            <Paper
+              elevation={0}
+              sx={{
+                width: "100%",
+                maxWidth: 520,
+                px: { xs: 2, md: 2.6 },
+                py: { xs: 2.4, md: 2.8 },
+                borderRadius: { xs: 4.5, md: 5.5 },
+                backgroundColor: alpha("#FFFFFF", 0.96),
+              }}
+            >
+              <Box
+                component="img"
+                src={car}
+                alt="Car Image"
+                sx={{
+                  width: { xs: "96%", md: "88%" },
+                  maxWidth: 470,
+                  display: "block",
+                  mx: "auto",
+                }}
+              />
+            </Paper>
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            mt: { xs: 4.2, md: 5 },
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
+            gap: { xs: 2.2, md: 2.8 },
+          }}
+        >
+          {featureCards.map((card, index) => (
+            <Card
+              key={card.title}
+              className="reveal"
+              sx={{
+                ...glassPanelSx,
+                height: "100%",
+                borderRadius: 4.5,
+                position: "relative",
+                overflow: "hidden",
+                animationDelay: `${120 + index * 85}ms`,
+                "&::before": {
+                  content: '""',
+                  display: "none",
+                },
+                "&:hover": {
+                  borderColor: alpha(palette.ink, 0.24),
+                  transform: "translateY(-4px)",
+                },
+              }}
+            >
+              <CardContent sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2.2, position: "relative" }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    textAlign: "center",
+                    color: palette.ink,
+                    fontWeight: 680,
+                    minHeight: { xs: "unset", md: 58 },
+                  }}
+                >
+                  {card.title}
+                </Typography>
+                <Typography sx={{ color: alpha(palette.ink, 0.8), lineHeight: 1.74 }}>{card.text}</Typography>
+                <Box
+                  component="img"
+                  src={card.image}
+                  alt={card.alt}
+                  sx={{ width: { xs: 126, md: 154 }, height: "auto", mx: "auto", mt: 0.6 }}
+                />
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+
+        <Box
+          className="reveal"
+          sx={{
+            mt: { xs: 4, md: 5.6 },
+            py: { xs: 3.8, md: 4.8 },
+            px: 0,
+            width: "100vw",
+            position: "relative",
+            overflow: "hidden",
+            left: "50%",
+            right: "50%",
+            ml: "-50vw",
+            mr: "-50vw",
+            borderRadius: 0,
+            backgroundColor: "#1B6EF0",
+            animationDelay: "350ms",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              width: 380,
+              height: 380,
+              borderRadius: "50%",
+              top: -210,
+              right: -120,
+              backgroundColor: "rgba(157, 208, 255, 0.25)",
+              pointerEvents: "none",
+            },
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              left: -70,
+              bottom: -170,
+              width: 420,
+              height: 260,
+              borderRadius: "50%",
+              backgroundColor: "rgba(168, 212, 255, 0.25)",
+              pointerEvents: "none",
+            },
+          }}
+        >
+          <Container maxWidth="xl" sx={{ px: { xs: 2, md: 3 }, position: "relative", zIndex: 1 }}>
+            <Typography
+              variant="h3"
+              gutterBottom
+              sx={{
+                color: "#FFFFFF",
+                fontWeight: 700,
+                textAlign: "center",
+                letterSpacing: "-0.02em",
+                fontSize: { xs: "1.5rem", sm: "2rem", md: "2.45rem" },
+                lineHeight: 1.2,
+                maxWidth: 860,
+                mx: "auto",
+              }}
+            >
+              Ce primesti daca alegi sa lucrezi cu noi
+            </Typography>
+            <Box
+              sx={{
+                mt: 3,
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                gap: { xs: 2, md: 3.2 },
+              }}
+            >
+              {[0, 1].map((column) => (
+                <Stack spacing={1.8} key={column}>
+                  {[0, 1, 2].map((row) => (
+                    <Paper
+                      key={`${column}-${row}`}
+                      elevation={0}
+                      sx={{
+                        p: 1.35,
+                        borderRadius: 3.2,
+                        backgroundColor: alpha("#FFFFFF", 0.12),
+                        backdropFilter: "blur(6px)",
+                      }}
+                    >
+                      <Stack direction="row" spacing={1.1} sx={{ alignItems: "flex-start" }}>
+                        <CheckCircleOutlineRoundedIcon sx={{ mt: 0.15, color: "#34C759" }} />
+                        <Typography sx={{ lineHeight: 1.62, color: alpha("#FFFFFF", 0.94) }}>{loremText}</Typography>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              ))}
+            </Box>
+          </Container>
+        </Box>
+      </Container>
+    </Box>
+  )
+}
+
+function FaqPage() {
+  return (
+    <Box sx={pageFrameSx}>
+      <Container maxWidth="lg">
+        <Stack spacing={3.2}>
+          <Typography variant="h2" sx={sectionTitleSx}>
+            Intrebari Frecvente
+          </Typography>
+          <Box>
+            {faqItems.map((item, index) => (
+              <Accordion
+                key={item.title}
+                disableGutters
+                elevation={0}
+                sx={{
+                  backgroundColor: alpha("#FFFFFF", 0.78),
+                  border: `1px solid ${alpha(palette.ink, 0.12)}`,
+                  borderRadius: 3.5,
+                  overflow: "hidden",
+                  mb: index === faqItems.length - 1 ? 0 : 1.25,
+                  transition: `background-color ${hoverMotionDuration} ${motionEase}, border-color ${hoverMotionDuration} ${motionEase}`,
+                  "&:hover": {
+                    borderColor: alpha(palette.ink, 0.22),
+                  },
+                  "&.Mui-expanded": {
+                    borderColor: alpha(palette.ink, 0.24),
+                  },
+                  "&:before": {
+                    display: "none",
+                  },
+                  "& .MuiAccordionSummary-root": {
+                    minHeight: 58,
+                    px: { xs: 1.9, md: 2.4 },
+                    transition: `background-color ${hoverMotionDuration} ${motionEase}, color ${hoverMotionDuration} ${motionEase}`,
+                    "&:hover": {
+                      backgroundColor: alpha(palette.primary, 0.08),
+                    },
+                  },
+                  "& .MuiAccordionSummary-content": {
+                    my: 1.2,
+                    transition: `margin ${hoverMotionDuration} ${motionEase}`,
+                  },
+                  "& .MuiAccordionSummary-expandIconWrapper": {
+                    transition: `transform ${hoverMotionDuration} ${motionEase}`,
+                  },
+                  "& .MuiAccordionDetails-root": {
+                    opacity: 0,
+                    transform: "translateY(-6px)",
+                    transition: `opacity ${hoverMotionDuration} ${motionEase}, transform ${hoverMotionDuration} ${motionEase}`,
+                  },
+                  "&.Mui-expanded .MuiAccordionDetails-root": {
+                    opacity: 1,
+                    transform: "translateY(0)",
+                  },
+                }}
+              >
+                <AccordionSummary
+                  expandIcon={<ExpandMoreRoundedIcon sx={{ color: palette.primary }} />}
+                  sx={{
+                    color: palette.ink,
+                    "&.Mui-expanded": {
+                      backgroundColor: alpha(palette.primary, 0.11),
+                    },
+                  }}
+                >
+                  <Typography sx={{ fontWeight: 650 }}>{item.title}</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography sx={{ lineHeight: 1.75, color: alpha(palette.ink, 0.8) }}>{item.text}</Typography>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Box>
+        </Stack>
+      </Container>
+    </Box>
+  )
+}
+
+function CalculatorPage() {
   const GROSS_SALARY = 4050
   const UBER_BOLT_ANNUAL_INCOME_NORM = 49005
-
-  const sectionScrollMargin = { xs: "138px", md: "120px" } as const
 
   const roundToInt = (value: number) => Math.round(value)
   const toNumber = (value: string) => {
@@ -151,37 +514,6 @@ function App() {
   const [normCASS, setNormCASS] = useState(0)
   const [netIncomeRealSystem, setNetIncomeRealSystem] = useState(0)
   const [netIncomeNormaSystem, setNetIncomeNormaSystem] = useState(0)
-  const [isNavPinned, setIsNavPinned] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => {
-      setIsNavPinned(window.scrollY > 10)
-    }
-
-    onScroll()
-    window.addEventListener("scroll", onScroll, { passive: true })
-
-    return () => {
-      window.removeEventListener("scroll", onScroll)
-    }
-  }, [])
-
-  const scrollToSection = (id: string) => {
-    const section = document.getElementById(id)
-    if (section) {
-      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      section.scrollIntoView({
-        behavior: prefersReducedMotion ? "auto" : "smooth",
-        block: "start",
-      })
-    }
-  }
-
-  const handleNavItemClick = (id: string) => {
-    scrollToSection(id)
-    setIsMobileMenuOpen(false)
-  }
 
   const computeTaxes = () => {
     const netIncome = anualIncome - deductibleExpenses
@@ -253,24 +585,486 @@ function App() {
   }
 
   return (
+    <Box sx={pageFrameSx}>
+      <Container maxWidth="lg">
+        <Stack spacing={3.2}>
+          <Typography variant="h2" sx={sectionTitleSx}>
+            Calculator Taxe
+          </Typography>
+
+          <Typography sx={{ mt: 1.4, color: alpha(palette.ink, 0.82), lineHeight: 1.7, textAlign: "center" }}>
+            Estimeaza ce taxe vei plati ca PFA in functie de venitul tau anual si cheltuielile deductibile
+          </Typography>
+
+          <Stack spacing={2.2}>
+            <TextField
+              type="number"
+              fullWidth
+              size="small"
+              label="Venit anual estimat (RON)"
+              placeholder="Introdu venitul anual estimat"
+              onChange={(event) => setAnualIncome(toNumber(event.target.value))}
+              slotProps={{ inputLabel: { sx: { color: alpha(palette.ink, 0.8), fontWeight: 620 } } }}
+              sx={inputSx}
+            />
+
+            <TextField
+              type="number"
+              fullWidth
+              size="small"
+              label="Cheltuieli deductibile (RON)"
+              placeholder="Introdu cheltuielile deductibile"
+              onChange={(event) => setDeductibleExpenses(toNumber(event.target.value))}
+              slotProps={{ inputLabel: { sx: { color: alpha(palette.ink, 0.8), fontWeight: 620 } } }}
+              sx={inputSx}
+            />
+
+            <Button
+              variant="contained"
+              onClick={computeTaxes}
+              sx={{
+                width: { xs: "100%", sm: "auto" },
+                alignSelf: { xs: "stretch", sm: "center" },
+                px: 3,
+                py: 1,
+                color: "#FFFFFF",
+                backgroundColor: palette.primary,
+                borderRadius: 999,
+                "&:hover": {
+                  backgroundColor: palette.primary,
+                },
+              }}
+            >
+              Calculeaza
+            </Button>
+
+            <Box sx={{ borderTop: `1px solid ${alpha(palette.primary, 0.22)}`, pt: 2.8 }}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                  gap: 2,
+                }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2.25,
+                    borderRadius: 3.5,
+                    border: `1px solid ${alpha(palette.ink, 0.12)}`,
+                    backgroundColor: alpha("#FFFFFF", 0.82),
+                  }}
+                >
+                  <Stack spacing={1.25}>
+                    <Typography sx={{ color: alpha(palette.ink, 0.66), fontSize: "0.8rem", letterSpacing: "0.06em" }}>
+                      SISTEM REAL
+                    </Typography>
+                    <Stack direction="row" sx={{ justifyContent: "space-between" }}>
+                      <Typography variant="body2">Venit brut</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 630 }}>
+                        {roundToInt(anualIncome)} RON
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" sx={{ justifyContent: "space-between" }}>
+                      <Typography variant="body2">Venit impozabil</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 630 }}>
+                        {roundToInt(anualIncome - deductibleExpenses)} RON
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" sx={{ justifyContent: "space-between" }}>
+                      <Typography variant="body2">Impozit pe venit (10%)</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 630 }}>
+                        -{realIncomeTax} RON
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" sx={{ justifyContent: "space-between" }}>
+                      <Typography variant="body2">Contributie CAS (25%)</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 630 }}>
+                        -{realCAS} RON
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" sx={{ justifyContent: "space-between" }}>
+                      <Typography variant="body2">Contributie CASS (10%)</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 630 }}>
+                        -{realCASS} RON
+                      </Typography>
+                    </Stack>
+                    <Stack
+                      direction="row"
+                      sx={{
+                        justifyContent: "space-between",
+                        mt: 1,
+                        pt: 1.5,
+                        borderTop: `1px dashed ${alpha(palette.ink, 0.24)}`,
+                      }}
+                    >
+                      <Typography sx={{ color: palette.ink, fontWeight: 660 }}>Venit net PFA real</Typography>
+                      <Typography sx={{ color: palette.ink, fontWeight: 710 }}>{netIncomeRealSystem} RON</Typography>
+                    </Stack>
+                  </Stack>
+                </Paper>
+
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2.25,
+                    borderRadius: 3.5,
+                    border: `1px solid ${alpha(palette.ink, 0.12)}`,
+                    backgroundColor: alpha("#FFFFFF", 0.82),
+                  }}
+                >
+                  <Stack spacing={1.25}>
+                    <Typography sx={{ color: alpha(palette.ink, 0.66), fontSize: "0.8rem", letterSpacing: "0.06em" }}>
+                      NORMA PE VENIT
+                    </Typography>
+                    <Stack direction="row" sx={{ justifyContent: "space-between" }}>
+                      <Typography variant="body2">Norma anuala</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 630 }}>
+                        {UBER_BOLT_ANNUAL_INCOME_NORM} RON
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" sx={{ justifyContent: "space-between" }}>
+                      <Typography variant="body2">Impozit pe venit (10%)</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 630 }}>
+                        -{normIncomeTax} RON
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" sx={{ justifyContent: "space-between" }}>
+                      <Typography variant="body2">Contributie CAS (25%)</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 630 }}>
+                        -{normCAS} RON
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" sx={{ justifyContent: "space-between" }}>
+                      <Typography variant="body2">Contributie CASS (10%)</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 630 }}>
+                        -{normCASS} RON
+                      </Typography>
+                    </Stack>
+                    <Stack
+                      direction="row"
+                      sx={{
+                        justifyContent: "space-between",
+                        mt: 1,
+                        pt: 1.5,
+                        borderTop: `1px dashed ${alpha(palette.primary, 0.5)}`,
+                      }}
+                    >
+                      <Typography sx={{ color: palette.ink, fontWeight: 660 }}>Venit net PFA norma</Typography>
+                      <Typography sx={{ color: palette.ink, fontWeight: 710 }}>{netIncomeNormaSystem} RON</Typography>
+                    </Stack>
+                  </Stack>
+                </Paper>
+              </Box>
+            </Box>
+          </Stack>
+        </Stack>
+      </Container>
+    </Box>
+  )
+}
+
+function PricingPage() {
+  return (
+    <Box sx={pageFrameSx}>
+      <Container maxWidth="xl">
+        <Stack spacing={3.2}>
+          <Typography
+            variant="h2"
+            sx={{
+              ...sectionTitleSx,
+              fontSize: { xs: "1.85rem", sm: "2.2rem", md: "3rem" },
+              lineHeight: 1.2,
+            }}
+          >
+            Abonamente/Preturi
+          </Typography>
+
+          <Typography
+            sx={{
+              width: "100%",
+              mx: "auto",
+              lineHeight: 1.72,
+              color: alpha(palette.ink, 0.8),
+              textAlign: "center !important",
+            }}
+          >
+            {loremLongText}
+          </Typography>
+
+          <Box
+            sx={{
+              mt: 3.8,
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
+              gap: 2.3,
+            }}
+          >
+            {pricingCards.map((item, index) => (
+              <Card
+                key={`${item.title}-${index}`}
+                sx={{
+                  ...glassPanelSx,
+                  height: "100%",
+                  borderRadius: 4.5,
+                  backgroundColor: alpha("#FFFFFF", 0.95),
+                  transform: index === 1 ? { xs: "none", md: "translateY(-8px)" } : "none",
+                  "&:hover": {
+                    borderColor: alpha(palette.ink, 0.24),
+                    transform: { xs: "translateY(-4px)", md: index === 1 ? "translateY(-12px)" : "translateY(-8px)" },
+                  },
+                }}
+              >
+                <CardContent sx={{ p: 3, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <Typography variant="h6" gutterBottom sx={{ color: palette.ink, fontWeight: 680 }}>
+                    {item.title}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      lineHeight: 1.72,
+                      color: alpha(palette.ink, 0.82),
+                      textAlign: "center !important",
+                      width: "100%",
+                      mx: "auto",
+                    }}
+                  >
+                    {item.text}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        </Stack>
+      </Container>
+    </Box>
+  )
+}
+
+function PartnersPage() {
+  return (
+    <Box sx={pageFrameSx}>
+      <Container maxWidth="lg">
+        <Stack spacing={3.2}>
+          <Typography variant="h2" sx={sectionTitleSx}>
+            Parteneri
+          </Typography>
+
+          <Stack spacing={2}>
+            {partnerLogos.map((partner) => (
+              <Box
+                key={partner.name}
+                sx={{
+                  py: { xs: 1.2, md: 1.6 },
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "170px 1fr" },
+                    alignItems: "center",
+
+                    gap: { xs: 1.8, sm: 2.2 },
+                  }}
+                >
+                  <Box
+                    component="a"
+                    href={partner.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={partner.name}
+                    sx={{
+                      lineHeight: 0,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: { xs: "flex-start", sm: "center" },
+                      "& img": {
+                        transition: `transform ${hoverMotionDuration} ${motionEase}`,
+                      },
+                      "&:hover img": {
+                        transform: "translateY(-2px) scale(1.02)",
+                      },
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={partner.image}
+                      alt={partner.name}
+                      sx={{
+                        width: { xs: 132, md: 170 },
+                        height: "auto",
+                        display: "block",
+                      }}
+                    />
+                  </Box>
+
+                  <Box>
+                    <Typography variant="h6" sx={{ color: palette.ink, fontWeight: 680 }}>
+                      {partner.name}
+                    </Typography>
+                    <Typography sx={{ mt: 0.8, lineHeight: 1.72, color: alpha(palette.ink, 0.82) }}>
+                      {loremText}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            ))}
+          </Stack>
+        </Stack>
+      </Container>
+    </Box>
+  )
+}
+
+function ContactPage() {
+  return (
+    <Box sx={pageFrameSx}>
+      <Container maxWidth="md">
+        <Stack spacing={3.2}>
+          <Typography variant="h2" sx={sectionTitleSx}>
+            Contact
+          </Typography>
+
+          <Typography sx={{ lineHeight: 1.75, color: alpha(palette.ink, 0.82), textAlign: "center" }}>
+            {loremLongText}
+          </Typography>
+
+          <Paper
+            elevation={0}
+            sx={{
+              ...glassPanelSx,
+              p: { xs: 2.5, md: 3.2 },
+              borderRadius: 3.5,
+              "&:hover": {
+                borderColor: alpha(palette.ink, 0.24),
+                transform: "translateY(-2px)",
+              },
+            }}
+          >
+            <Stack component="form" spacing={1.5}>
+              <TextField fullWidth size="small" label="Nume" placeholder="Nume" sx={inputSx} />
+              <TextField type="email" fullWidth size="small" label="Email" placeholder="Email" sx={inputSx} />
+              <TextField
+                fullWidth
+                multiline
+                minRows={4}
+                label="Intrebare"
+                placeholder="Intrebare"
+                sx={inputSx}
+              />
+              <Button
+                variant="contained"
+                sx={{
+                  mt: 0.6,
+                  px: 3,
+                  py: 1.05,
+                  color: palette.ink,
+                  backgroundColor: palette.primary,
+                  borderRadius: 999,
+                  fontWeight: 700,
+                  alignSelf: { xs: "stretch", sm: "flex-start" },
+                  "&:hover": {
+                    backgroundColor: palette.primary,
+                  },
+                }}
+              >
+                Lorem ipsum
+              </Button>
+            </Stack>
+          </Paper>
+        </Stack>
+      </Container>
+    </Box>
+  )
+}
+
+function TermsPage() {
+  return (
+    <Box sx={pageFrameSx}>
+      <Container maxWidth="lg">
+        <Stack spacing={3.2}>
+          <Typography variant="h2" sx={sectionTitleSx}>
+            Termeni si conditii
+          </Typography>
+
+          <Typography sx={{ lineHeight: 1.78, color: alpha(palette.ink, 0.82), textAlign: "center" }}>
+            {loremLongText}
+          </Typography>
+        </Stack>
+      </Container>
+    </Box>
+  )
+}
+
+function PrivacyPolicyPage() {
+  return (
+    <Box sx={pageFrameSx}>
+      <Container maxWidth="lg">
+        <Stack spacing={3.2}>
+          <Typography variant="h2" sx={sectionTitleSx}>
+            Privacy Policy
+          </Typography>
+
+          <Typography sx={{ lineHeight: 1.78, color: alpha(palette.ink, 0.82), textAlign: "center" }}>
+            {loremLongText}
+          </Typography>
+        </Stack>
+      </Container>
+    </Box>
+  )
+}
+
+function AppLayout() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [isNavPinned, setIsNavPinned] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => {
+      setIsNavPinned(window.scrollY > 10)
+    }
+
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+    }
+  }, [])
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [location.pathname])
+
+  const goTo = (path: string) => {
+    setIsMobileMenuOpen(false)
+    navigate(path)
+  }
+
+  return (
     <Box
       sx={{
         minHeight: "100vh",
         position: "relative",
         overflowX: "clip",
+        scrollBehavior: "smooth",
         color: palette.ink,
-        background: "linear-gradient(180deg, #DDF0FF 0%, #ECF6FF 42%, #F8FBFF 100%)",
+        backgroundColor: "#ECF6FF",
         fontFamily: '"Space Grotesk", "SF Compact Display", "SF Pro Display", "Segoe UI", sans-serif',
+        "& .MuiButton-root, & .MuiIconButton-root, & .MuiPaper-root, & .MuiCard-root, & .MuiAccordion-root, & .MuiAccordionSummary-root, & .MuiAccordionDetails-root, & .MuiAccordionSummary-expandIconWrapper, & .MuiOutlinedInput-root, & .MuiOutlinedInput-notchedOutline, & a, & img": {
+          transitionDuration: `${hoverMotionDuration} !important`,
+          transitionTimingFunction: `${motionEase} !important`,
+        },
+        "& .MuiCollapse-root": {
+          transitionDuration: `${layoutMotionDuration} !important`,
+          transitionTimingFunction: `${motionEase} !important`,
+        },
         "&::before": {
           content: '""',
           position: "absolute",
           inset: 0,
           pointerEvents: "none",
-          backgroundImage: `radial-gradient(circle at 10% 18%, ${alpha("#7DB5FF", 0.16)} 0%, transparent 34%), radial-gradient(circle at 92% 6%, ${alpha("#97C8FF", 0.14)} 0%, transparent 30%)`,
-        },
-        "&::after": {
-          content: '""',
-          display: "none",
+          backgroundImage: "none",
         },
         "& .reveal": {
           opacity: 0,
@@ -287,22 +1081,6 @@ function App() {
             transform: "translateY(0)",
           },
         },
-        "@media (prefers-reduced-motion: reduce)": {
-          "& .reveal": {
-            opacity: 1,
-            transform: "none",
-            animation: "none",
-          },
-          "& *": {
-            transition: "none !important",
-          },
-        },
-        "& .section-shell": {
-          borderRadius: "0 !important",
-          border: "none !important",
-          backdropFilter: "none !important",
-          background: "transparent !important",
-        },
       }}
     >
       <AppBar
@@ -314,14 +1092,14 @@ function App() {
           color: palette.ink,
           zIndex: (theme) => theme.zIndex.appBar,
           backdropFilter: isNavPinned ? "blur(6px)" : "none",
-          transition: "top 280ms ease, background-color 280ms ease, backdrop-filter 280ms ease",
+          transition: `top ${layoutMotionDuration} ${motionEase}, background-color ${layoutMotionDuration} ${motionEase}, backdrop-filter ${layoutMotionDuration} ${motionEase}`,
         }}
       >
         <Box
           sx={{
             width: "100%",
             py: { xs: 0.45, md: isNavPinned ? 0 : 1.6 },
-            transition: "padding 280ms ease",
+            transition: `padding ${layoutMotionDuration} ${motionEase}`,
           }}
         >
           <Box
@@ -331,7 +1109,7 @@ function App() {
                 md: isNavPinned ? "100%" : "min(1536px, calc(100% - 32px))",
               },
               mx: "auto",
-              transition: "width 320ms ease",
+              transition: `width ${layoutMotionDuration} ${motionEase}`,
             }}
           >
             <Toolbar disableGutters sx={{ minHeight: "unset", px: { xs: 1, md: 0 } }}>
@@ -343,24 +1121,24 @@ function App() {
                   width: "100%",
                   px: { xs: 1.1, sm: 1.6, md: 2.1 },
                   py: { xs: 0.85, md: 1.15 },
-                  borderRadius: { xs: 2.5, md: isNavPinned ? 0 : 999 },
+                  borderRadius: { xs: 3, md: isNavPinned ? 0 : 999 },
                   display: "flex",
                   alignItems: "center",
                   gap: { xs: 0.65, md: 1.8 },
                   flexWrap: "nowrap",
                   animationDelay: "30ms",
-                  border: `1px solid ${alpha(palette.primary, isNavPinned ? 0.16 : 0.2)}`,
+                  border: "1px solid transparent",
                   background: isNavPinned
-                    ? `linear-gradient(180deg, ${alpha("#F4FAFF", 0.98)} 0%, ${alpha("#ECF6FF", 0.98)} 100%)`
-                    : glassPanelSx.background,
+                    ? alpha("#F4FAFF", 0.98)
+                    : glassPanelSx.backgroundColor,
                   backdropFilter: isNavPinned ? "none" : "blur(10px)",
                   transition:
-                    "border-radius 320ms ease, box-shadow 320ms ease, background 320ms ease, backdrop-filter 320ms ease",
+                    `border-radius ${layoutMotionDuration} ${motionEase}, background ${layoutMotionDuration} ${motionEase}, backdrop-filter ${layoutMotionDuration} ${motionEase}`,
                 }}
               >
                 <Box
                   component="button"
-                  onClick={() => scrollToSection("despre-noi")}
+                  onClick={() => goTo("/")}
                   sx={{
                     border: "none",
                     backgroundColor: "transparent",
@@ -390,34 +1168,38 @@ function App() {
                     rowGap: 0.5,
                   }}
                 >
-                  {navItems.map((item) => (
-                    <Button
-                      key={item.id}
-                      onClick={() => scrollToSection(item.id)}
-                      sx={{
-                        color: alpha(palette.ink, 0.9),
-                        minWidth: "auto",
-                        px: { md: 1.35 },
-                        py: 0.75,
-                        borderRadius: 2.5,
-                        fontSize: { md: "0.87rem" },
-                        fontWeight: 620,
-                        backgroundColor: "transparent",
-                        "&:hover": {
-                          color: palette.primaryStrong,
-                          backgroundColor: alpha(palette.primary, 0.12),
-                        },
-                      }}
-                    >
-                      {item.label}
-                    </Button>
-                  ))}
+                  {navItems.map((item) => {
+                    const isActive = location.pathname === item.path
+
+                    return (
+                      <Button
+                        key={item.path}
+                        onClick={() => goTo(item.path)}
+                        sx={{
+                          color: isActive ? palette.primaryStrong : alpha(palette.ink, 0.9),
+                          minWidth: "auto",
+                          px: { md: 1.35 },
+                          py: 0.75,
+                          borderRadius: 3,
+                          fontSize: { md: "0.87rem" },
+                          fontWeight: 620,
+                          backgroundColor: isActive ? alpha(palette.primary, 0.16) : "transparent",
+                          "&:hover": {
+                            color: palette.primaryStrong,
+                            backgroundColor: alpha(palette.primary, 0.12),
+                          },
+                        }}
+                      >
+                        {item.label}
+                      </Button>
+                    )
+                  })}
                 </Stack>
 
                 <Button
                   variant="contained"
                   endIcon={<ArrowForwardRoundedIcon />}
-                  onClick={() => scrollToSection("contact")}
+                  onClick={() => goTo("/contact")}
                   sx={{
                     display: { xs: "none", md: "inline-flex" },
                     px: { md: 2.8 },
@@ -447,7 +1229,7 @@ function App() {
                   <Button
                     variant="contained"
                     size="small"
-                    onClick={() => scrollToSection("contact")}
+                    onClick={() => goTo("/contact")}
                     sx={{
                       px: 1.45,
                       py: 0.62,
@@ -466,7 +1248,7 @@ function App() {
                     aria-label="Deschide meniul"
                     onClick={() => setIsMobileMenuOpen(true)}
                     sx={{
-                      border: `1px solid ${alpha(palette.primary, 0.3)}`,
+                      border: `1px solid ${alpha(palette.ink, 0.2)}`,
                       color: palette.primaryStrong,
                       backgroundColor: alpha("#FFFFFF", 0.8),
                     }}
@@ -489,7 +1271,7 @@ function App() {
             sx: {
               width: { xs: "86vw", sm: 360 },
               p: 2,
-              background: `linear-gradient(180deg, ${alpha("#FFFFFF", 0.98)} 0%, ${alpha("#EAF4FF", 0.96)} 100%)`,
+              backgroundColor: alpha("#FFFFFF", 0.98),
             },
           },
         }}
@@ -505,14 +1287,16 @@ function App() {
           <Stack spacing={0.55} sx={{ mt: 0.6 }}>
             {navItems.map((item) => (
               <Button
-                key={`mobile-${item.id}`}
-                onClick={() => handleNavItemClick(item.id)}
+                key={`mobile-${item.path}`}
+                onClick={() => goTo(item.path)}
                 sx={{
                   justifyContent: "flex-start",
                   px: 1.2,
                   py: 0.95,
-                  borderRadius: 2,
-                  color: alpha(palette.ink, 0.9),
+                  borderRadius: 2.5,
+                  color: location.pathname === item.path ? palette.primaryStrong : alpha(palette.ink, 0.9),
+                  backgroundColor:
+                    location.pathname === item.path ? alpha(palette.primary, 0.14) : "transparent",
                   fontWeight: 620,
                   textTransform: "none",
                   "&:hover": {
@@ -529,7 +1313,7 @@ function App() {
           <Button
             variant="contained"
             endIcon={<ArrowForwardRoundedIcon />}
-            onClick={() => handleNavItemClick("contact")}
+            onClick={() => goTo("/contact")}
             sx={{
               mt: "auto",
               color: palette.ink,
@@ -547,754 +1331,231 @@ function App() {
         </Stack>
       </Drawer>
 
-      <Box
-        id="despre-noi"
-        sx={{
-          position: "relative",
-          zIndex: 1,
-          scrollMarginTop: sectionScrollMargin,
-          pt: { xs: 5, md: 7 },
-          pb: { xs: 5.5, md: 8 },
-        }}
-      >
-        <Container maxWidth="xl">
-          <Paper
-            className="reveal section-shell"
-            elevation={0}
-            sx={{
-              ...glassPanelSx,
-              p: { xs: 2.8, sm: 3.4, md: 5.2 },
-              borderRadius: { xs: 4, md: 7 },
-              position: "relative",
-              overflow: "hidden",
-              animationDelay: "90ms",
-              "&::after": {
-                content: '""',
-                display: "none",
-              },
-            }}
-          >
-            <Box
-              sx={{
-                position: "relative",
-                zIndex: 1,
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", md: "1.06fr 0.94fr" },
-                alignItems: "center",
-                gap: { xs: 4.5, md: 6.5 },
-              }}
-            >
-              <Box sx={{ textAlign: { xs: "center", md: "left" } }}>
-                <Typography
-                  variant="h2"
-                  gutterBottom
-                  sx={{
-                    color: palette.ink,
-                    fontWeight: 720,
-                    lineHeight: 1.06,
-                    letterSpacing: "-0.03em",
-                    fontSize: { xs: "2.1rem", md: "3.25rem" },
-                  }}
-                >
-                  Despre Noi
-                </Typography>
-                <Typography
-                  sx={{
-                    color: alpha(palette.ink, 0.82),
-                    lineHeight: 1.8,
-                    fontSize: { xs: "0.99rem", md: "1.06rem" },
-                    maxWidth: { xs: "100%", md: 620 },
-                    mx: { xs: "auto", md: 0 },
-                  }}
-                >
-                  {loremLongText}
-                </Typography>
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={1.5}
-                  sx={{
-                    mt: 3.2,
-                    justifyContent: { xs: "center", md: "flex-start" },
-                  }}
-                >
-                  <Button
-                    variant="contained"
-                    sx={{
-                      px: 2.6,
-                      py: 1.05,
-                      color: "#FFFFFF",
-                      backgroundColor: palette.primary,
-                      borderRadius: 999,
-                      "&:hover": {
-                        backgroundColor: palette.primary,
-                      },
-                    }}
-                  >
-                    Inregistreaza-te
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      px: 2.4,
-                      py: 1.05,
-                      color: palette.primary,
-                      borderColor: alpha(palette.primary, 0.45),
-                      backgroundColor: alpha("#FFFFFF", 0.65),
-                      borderRadius: 999,
-                      "&:hover": {
-                        borderColor: palette.primary,
-                        backgroundColor: alpha(palette.primary, 0.1),
-                      },
-                    }}
-                  >
-                    Afla mai multe
-                  </Button>
-                </Stack>
-              </Box>
-
-              <Box
-                sx={{
-                  position: "relative",
-                  display: "grid",
-                  placeItems: "center",
-                  minHeight: { xs: 280, md: 390 },
-                }}
-              >
-                <Paper
-                  elevation={0}
-                  sx={{
-                    width: "100%",
-                    maxWidth: 520,
-                    px: { xs: 2, md: 2.6 },
-                    py: { xs: 2.4, md: 2.8 },
-                    borderRadius: { xs: 4, md: 5 },
-                    border: `1px solid ${alpha(palette.primary, 0.24)}`,
-                    background: `linear-gradient(155deg, ${alpha("#FFFFFF", 0.96)} 0%, ${alpha("#EAF3FF", 0.96)} 100%)`,
-                  }}
-                >
-                  <Box
-                    component="img"
-                    src={car}
-                    alt="Car Image"
-                    sx={{
-                      width: { xs: "96%", md: "88%" },
-                      maxWidth: 470,
-                      display: "block",
-                      mx: "auto",
-                    }}
-                  />
-                </Paper>
-              </Box>
-            </Box>
-          </Paper>
-        </Container>
-      </Box>
-
-      <Box sx={{ position: "relative", zIndex: 1, py: { xs: 3, md: 6 } }}>
-        <Container maxWidth="xl">
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
-              gap: { xs: 2.2, md: 2.8 },
-            }}
-          >
-            {featureCards.map((card, index) => (
-              <Card
-                key={card.title}
-                className="reveal"
-                sx={{
-                  ...glassPanelSx,
-                  height: "100%",
-                  borderRadius: 4,
-                  position: "relative",
-                  overflow: "hidden",
-                  animationDelay: `${150 + index * 85}ms`,
-                  "&::before": {
-                    content: '""',
-                    display: "none",
-                  },
-                  "&:hover": {
-                    borderColor: alpha(palette.primary, 0.34),
-                    transform: "translateY(-4px)",
-                  },
-                }}
-              >
-                <CardContent sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2.2, position: "relative" }}>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      textAlign: "center",
-                      color: palette.ink,
-                      fontWeight: 680,
-                      minHeight: { xs: "unset", md: 58 },
-                    }}
-                  >
-                    {card.title}
-                  </Typography>
-                  <Typography sx={{ color: alpha(palette.ink, 0.8), lineHeight: 1.74 }}>{card.text}</Typography>
-                  <Box
-                    component="img"
-                    src={card.image}
-                    alt={card.alt}
-                    sx={{ width: { xs: 126, md: 154 }, height: "auto", mx: "auto", mt: 0.6 }}
-                  />
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
-        </Container>
+      <Box component="main" sx={{ position: "relative", zIndex: 1 }}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/intrebari-frecvente" element={<FaqPage />} />
+          <Route path="/calculator-taxe" element={<CalculatorPage />} />
+          <Route path="/abonamente-preturi" element={<PricingPage />} />
+          <Route path="/parteneri" element={<PartnersPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/termeni-si-conditii" element={<TermsPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </Box>
 
       <Box
+        component="footer"
         sx={{
+          mt: 0,
+          py: { xs: 6.1, md: 7.8 },
           position: "relative",
-          zIndex: 1,
-          py: { xs: 5.5, md: 8.5 },
-          background: "linear-gradient(145deg, #0F4ACA 0%, #1B6EF0 54%, #3A86FF 100%)",
-          borderTop: `1px solid ${alpha("#8DBBFF", 0.35)}`,
-          borderBottom: `1px solid ${alpha("#8DBBFF", 0.35)}`,
           overflow: "hidden",
+          backgroundColor: "#0F4AAE",
+          color: "#FFFFFF",
           "&::before": {
             content: '""',
             position: "absolute",
-            width: 380,
-            height: 380,
-            borderRadius: "50%",
-            top: -210,
-            right: -120,
-            background: alpha("#9DD0FF", 0.25),
+            width: 520,
+            height: 280,
+            borderRadius: "56% 44% 62% 38% / 45% 58% 42% 55%",
+            top: -170,
+            right: -180,
+            transform: "rotate(-11deg)",
+            backgroundColor: "rgba(135, 195, 255, 0.2)",
+            pointerEvents: "none",
           },
           "&::after": {
             content: '""',
             position: "absolute",
-            left: -70,
-            bottom: -170,
-            width: 420,
-            height: 260,
-            borderRadius: "50%",
-            background: alpha("#A8D4FF", 0.25),
+            left: -190,
+            bottom: -245,
+            width: 460,
+            height: 460,
+            borderRadius: "60% 40% 48% 52% / 52% 38% 62% 48%",
+            transform: "rotate(16deg)",
+            backgroundColor: "rgba(97, 167, 247, 0.2)",
+            pointerEvents: "none",
+          },
+          "& .footer-shell": {
+            position: "relative",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              width: 190,
+              height: 190,
+              borderRadius: "44% 56% 60% 40% / 48% 45% 55% 52%",
+              top: -94,
+              left: "42%",
+              transform: "translateX(-50%) rotate(19deg)",
+              backgroundColor: "rgba(154, 209, 255, 0.14)",
+              pointerEvents: "none",
+            },
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              width: 300,
+              height: 130,
+              borderRadius: "42% 58% 54% 46% / 58% 40% 60% 42%",
+              top: 18,
+              right: "8%",
+              transform: "rotate(-8deg)",
+              backgroundColor: "rgba(173, 220, 255, 0.12)",
+              pointerEvents: "none",
+            },
+          },
+          "& .footer-shell .footer-grid": {
+            position: "relative",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              width: 136,
+              height: 136,
+              borderRadius: "58% 42% 47% 53% / 50% 61% 39% 50%",
+              top: -48,
+              left: "33%",
+              transform: "translateX(-50%) rotate(24deg)",
+              backgroundColor: "rgba(188, 228, 255, 0.12)",
+              pointerEvents: "none",
+            },
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              width: 118,
+              height: 118,
+              borderRadius: "39% 61% 56% 44% / 41% 57% 43% 59%",
+              bottom: -58,
+              right: "31%",
+              transform: "rotate(-18deg)",
+              backgroundColor: "rgba(169, 218, 255, 0.1)",
+              pointerEvents: "none",
+            },
           },
         }}
       >
-        <Container maxWidth="xl" className="reveal" sx={{ position: "relative", zIndex: 1, animationDelay: "260ms" }}>
-          <Box sx={{ p: { xs: 1, md: 2.2 } }}>
-            <Typography
-              variant="h3"
-              gutterBottom
-              sx={{
-                color: "#FFFFFF",
-                fontWeight: 700,
-                textAlign: "center",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Ce primesti daca alegi sa lucrezi cu noi
-            </Typography>
+        <Container maxWidth="xl" sx={{ position: "relative", zIndex: 1 }}>
+          <Box className="footer-shell">
             <Box
+              className="footer-grid"
               sx={{
-                mt: 3.2,
                 display: "grid",
                 gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                gap: { xs: 2, md: 3.2 },
+                gap: { xs: 2.8, md: 4.4 },
+                pb: { xs: 2.6, md: 3.1 },
+                borderBottom: `1px solid ${alpha("#FFFFFF", 0.24)}`,
+                position: "relative",
+                zIndex: 1,
               }}
             >
-              {[0, 1].map((column) => (
-                <Stack spacing={1.8} key={column}>
-                  {[0, 1, 2].map((row) => (
-                    <Paper
-                      key={`${column}-${row}`}
-                      elevation={0}
-                      sx={{
-                        p: 1.35,
-                        borderRadius: 2.8,
-                        border: `1px solid ${alpha("#FFFFFF", 0.24)}`,
-                        backgroundColor: alpha("#FFFFFF", 0.12),
-                        backdropFilter: "blur(6px)",
-                      }}
-                    >
-                      <Stack direction="row" spacing={1.1} sx={{ alignItems: "flex-start" }}>
-                        <CheckCircleOutlineRoundedIcon sx={{ mt: 0.15, color: "#34C759" }} />
-                        <Typography sx={{ lineHeight: 1.62, color: alpha("#FFFFFF", 0.94) }}>{loremText}</Typography>
-                      </Stack>
-                    </Paper>
-                  ))}
-                </Stack>
-              ))}
+              <Stack spacing={0.85} sx={{ alignItems: "flex-start", position: "relative", zIndex: 1 }}>
+                <Box
+                  component="a"
+                  href="mailto:contact@ridelance.ro"
+                  sx={{
+                    color: alpha("#FFFFFF", 0.95),
+                    textDecoration: "none",
+                    fontWeight: 770,
+                    letterSpacing: "0.01em",
+                    lineHeight: 1.32,
+                    fontSize: { xs: "1.16rem", md: "1.32rem" },
+                    "&:hover": {
+                      color: "#FFFFFF",
+                    },
+                  }}
+                >
+                  contact@ridelance.ro
+                </Box>
+
+                <Box
+                  component="a"
+                  href="tel:+40070000000"
+                  sx={{
+                    color: alpha("#FFFFFF", 0.95),
+                    textDecoration: "none",
+                    fontWeight: 770,
+                    letterSpacing: "0.01em",
+                    lineHeight: 1.32,
+                    fontSize: { xs: "1.16rem", md: "1.32rem" },
+                    "&:hover": {
+                      color: "#FFFFFF",
+                    },
+                  }}
+                >
+                  +40 700 000 000
+                </Box>
+              </Stack>
+
+              <Stack spacing={0.85} sx={{ alignItems: { xs: "flex-start", md: "flex-end" }, position: "relative", zIndex: 1 }}>
+
+                <Button
+                  onClick={() => goTo("/termeni-si-conditii")}
+                  sx={{
+                    p: 0,
+                    minWidth: "unset",
+                    color: alpha("#FFFFFF", 0.95),
+                    textTransform: "none",
+                    fontWeight: 770,
+                    letterSpacing: "0.01em",
+                    lineHeight: 1.32,
+                    fontSize: { xs: "1.12rem", md: "1.28rem" },
+                    justifyContent: "flex-start",
+                    "&:hover": {
+                      color: "#FFFFFF",
+                      backgroundColor: "transparent",
+                    },
+                  }}
+                >
+                  Termeni si conditii
+                </Button>
+
+                <Button
+                  onClick={() => goTo("/privacy-policy")}
+                  sx={{
+                    p: 0,
+                    minWidth: "unset",
+                    color: alpha("#FFFFFF", 0.95),
+                    textTransform: "none",
+                    fontWeight: 770,
+                    letterSpacing: "0.01em",
+                    lineHeight: 1.32,
+                    fontSize: { xs: "1.12rem", md: "1.28rem" },
+                    justifyContent: "flex-start",
+                    "&:hover": {
+                      color: "#FFFFFF",
+                      backgroundColor: "transparent",
+                    },
+                  }}
+                >
+                  Privacy Policy
+                </Button>
+              </Stack>
             </Box>
+
+            <Typography
+              sx={{
+                pt: { xs: 2.4, md: 2.9 },
+                textAlign: "center",
+                color: alpha("#FFFFFF", 0.92),
+                fontWeight: 680,
+                letterSpacing: "0.01em",
+                fontSize: { xs: "1.02rem", md: "1.1rem" },
+              }}
+            >
+              © Copyright 2026 by ridelance.ro
+            </Typography>
           </Box>
         </Container>
       </Box>
-
-      <Box
-        id="intrebari-frecvente"
-        sx={{
-          position: "relative",
-          zIndex: 1,
-          scrollMarginTop: sectionScrollMargin,
-          borderTop: `1px solid ${alpha(palette.primary, 0.16)}`,
-          py: { xs: 5.5, md: 8.5 },
-        }}
-      >
-        <Container maxWidth="lg">
-          <Paper
-            className="reveal section-shell"
-            elevation={0}
-            sx={{
-              ...glassPanelSx,
-              p: { xs: 3, md: 4.5 },
-              borderRadius: { xs: 4, md: 5 },
-              animationDelay: "340ms",
-            }}
-          >
-            <Typography variant="h3" sx={sectionTitleSx}>
-              Intrebari Frecvente
-            </Typography>
-            <Box sx={{ mt: 3.5 }}>
-              {faqItems.map((item, index) => (
-                <Accordion
-                  key={item.title}
-                  disableGutters
-                  elevation={0}
-                  sx={{
-                    backgroundColor: alpha("#FFFFFF", 0.78),
-                    border: `1px solid ${alpha(palette.primary, 0.2)}`,
-                    borderRadius: 3,
-                    overflow: "hidden",
-                    mb: index === faqItems.length - 1 ? 0 : 1.25,
-                    "&:before": {
-                      display: "none",
-                    },
-                    "& .MuiAccordionSummary-root": {
-                      minHeight: 58,
-                      px: { xs: 1.9, md: 2.4 },
-                    },
-                    "& .MuiAccordionSummary-content": {
-                      my: 1.2,
-                    },
-                  }}
-                >
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreRoundedIcon sx={{ color: palette.primary }} />}
-                    sx={{
-                      color: palette.ink,
-                      "&.Mui-expanded": {
-                        backgroundColor: alpha(palette.primary, 0.11),
-                      },
-                    }}
-                  >
-                    <Typography sx={{ fontWeight: 650 }}>{item.title}</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Typography sx={{ lineHeight: 1.75, color: alpha(palette.ink, 0.8) }}>{item.text}</Typography>
-                  </AccordionDetails>
-                </Accordion>
-              ))}
-            </Box>
-          </Paper>
-        </Container>
-      </Box>
-
-      <Box
-        id="calculator-taxe"
-        sx={{
-          position: "relative",
-          zIndex: 1,
-          scrollMarginTop: sectionScrollMargin,
-          borderTop: `1px solid ${alpha(palette.primary, 0.16)}`,
-          py: { xs: 5.5, md: 8.8 },
-        }}
-      >
-        <Container maxWidth="lg">
-          <Paper
-            className="reveal section-shell"
-            elevation={0}
-            sx={{
-              ...glassPanelSx,
-              p: { xs: 2.8, md: 4.2 },
-              borderRadius: { xs: 4, md: 5 },
-              animationDelay: "410ms",
-            }}
-          >
-            <Typography variant="h3" sx={sectionTitleSx}>
-              Calculator Taxe
-            </Typography>
-            <Typography sx={{ mt: 1.4, color: alpha(palette.ink, 0.82), lineHeight: 1.7, textAlign: "center" }}>
-              Estimeaza ce taxe vei plati ca PFA in functie de venitul tau anual si cheltuielile deductibile
-            </Typography>
-
-            <Stack spacing={2.2} sx={{ mt: 3.5 }}>
-              <TextField
-                type="number"
-                fullWidth
-                size="small"
-                label="Venit anual estimat (RON)"
-                placeholder="Introdu venitul anual estimat"
-                onChange={(event) => setAnualIncome(toNumber(event.target.value))}
-                slotProps={{ inputLabel: { sx: { color: alpha(palette.ink, 0.8), fontWeight: 620 } } }}
-                sx={inputSx}
-              />
-
-              <TextField
-                type="number"
-                fullWidth
-                size="small"
-                label="Cheltuieli deductibile (RON)"
-                placeholder="Introdu cheltuielile deductibile"
-                onChange={(event) => setDeductibleExpenses(toNumber(event.target.value))}
-                slotProps={{ inputLabel: { sx: { color: alpha(palette.ink, 0.8), fontWeight: 620 } } }}
-                sx={inputSx}
-              />
-
-              <Button
-                variant="contained"
-                onClick={computeTaxes}
-                sx={{
-                  width: { xs: "100%", sm: "auto" },
-                  alignSelf: { xs: "stretch", sm: "center" },
-                  px: 3,
-                  py: 1,
-                  color: "#FFFFFF",
-                  backgroundColor: palette.primary,
-                  borderRadius: 999,
-                  "&:hover": {
-                    backgroundColor: palette.primary,
-                  },
-                }}
-              >
-                Calculeaza
-              </Button>
-
-              <Box sx={{ borderTop: `1px solid ${alpha(palette.primary, 0.22)}`, pt: 2.8 }}>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                    gap: 2,
-                  }}
-                >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2.25,
-                      borderRadius: 3,
-                      border: `1px solid ${alpha(palette.primary, 0.2)}`,
-                      backgroundColor: alpha("#FFFFFF", 0.82),
-                    }}
-                  >
-                    <Stack spacing={1.25}>
-                      <Typography sx={{ color: alpha(palette.ink, 0.66), fontSize: "0.8rem", letterSpacing: "0.06em" }}>
-                        SISTEM REAL
-                      </Typography>
-                      <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-                        <Typography variant="body2">Venit brut</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 630 }}>
-                          {roundToInt(anualIncome)} RON
-                        </Typography>
-                      </Stack>
-                      <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-                        <Typography variant="body2">Venit impozabil</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 630 }}>
-                          {roundToInt(anualIncome - deductibleExpenses)} RON
-                        </Typography>
-                      </Stack>
-                      <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-                        <Typography variant="body2">Impozit pe venit (10%)</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 630 }}>
-                          -{realIncomeTax} RON
-                        </Typography>
-                      </Stack>
-                      <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-                        <Typography variant="body2">Contributie CAS (25%)</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 630 }}>
-                          -{realCAS} RON
-                        </Typography>
-                      </Stack>
-                      <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-                        <Typography variant="body2">Contributie CASS (10%)</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 630 }}>
-                          -{realCASS} RON
-                        </Typography>
-                      </Stack>
-                      <Stack
-                        direction="row"
-                        sx={{
-                          justifyContent: "space-between",
-                          mt: 1,
-                          pt: 1.5,
-                          borderTop: `1px dashed ${alpha(palette.primary, 0.34)}`,
-                        }}
-                      >
-                        <Typography sx={{ color: palette.ink, fontWeight: 660 }}>Venit net PFA real</Typography>
-                        <Typography sx={{ color: palette.ink, fontWeight: 710 }}>{netIncomeRealSystem} RON</Typography>
-                      </Stack>
-                    </Stack>
-                  </Paper>
-
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2.25,
-                      borderRadius: 3,
-                      border: `1px solid ${alpha(palette.primary, 0.2)}`,
-                      backgroundColor: alpha("#FFFFFF", 0.82),
-                    }}
-                  >
-                    <Stack spacing={1.25}>
-                      <Typography sx={{ color: alpha(palette.ink, 0.66), fontSize: "0.8rem", letterSpacing: "0.06em" }}>
-                        NORMA PE VENIT
-                      </Typography>
-                      <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-                        <Typography variant="body2">Norma anuala</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 630 }}>
-                          {UBER_BOLT_ANNUAL_INCOME_NORM} RON
-                        </Typography>
-                      </Stack>
-                      <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-                        <Typography variant="body2">Impozit pe venit (10%)</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 630 }}>
-                          -{normIncomeTax} RON
-                        </Typography>
-                      </Stack>
-                      <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-                        <Typography variant="body2">Contributie CAS (25%)</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 630 }}>
-                          -{normCAS} RON
-                        </Typography>
-                      </Stack>
-                      <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-                        <Typography variant="body2">Contributie CASS (10%)</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 630 }}>
-                          -{normCASS} RON
-                        </Typography>
-                      </Stack>
-                      <Stack
-                        direction="row"
-                        sx={{
-                          justifyContent: "space-between",
-                          mt: 1,
-                          pt: 1.5,
-                          borderTop: `1px dashed ${alpha(palette.primary, 0.34)}`,
-                        }}
-                      >
-                        <Typography sx={{ color: palette.ink, fontWeight: 660 }}>Venit net PFA norma</Typography>
-                        <Typography sx={{ color: palette.ink, fontWeight: 710 }}>{netIncomeNormaSystem} RON</Typography>
-                      </Stack>
-                    </Stack>
-                  </Paper>
-                </Box>
-              </Box>
-            </Stack>
-          </Paper>
-        </Container>
-      </Box>
-
-      <Box
-        id="abonamente-preturi"
-        sx={{
-          position: "relative",
-          zIndex: 1,
-          scrollMarginTop: sectionScrollMargin,
-          borderTop: `1px solid ${alpha(palette.primary, 0.16)}`,
-          py: { xs: 5.5, md: 8.8 },
-        }}
-      >
-        <Container maxWidth="xl">
-          <Paper
-            className="reveal section-shell"
-            elevation={0}
-            sx={{
-              ...glassPanelSx,
-              p: { xs: 3, md: 4.5 },
-              borderRadius: { xs: 4, md: 5 },
-              animationDelay: "480ms",
-            }}
-          >
-            <Typography variant="h3" gutterBottom sx={sectionTitleSx}>
-              Abonamente/Preturi
-            </Typography>
-            <Typography
-              sx={{
-                maxWidth: 800,
-                mx: "auto",
-                lineHeight: 1.72,
-                color: alpha(palette.ink, 0.8),
-                textAlign: "center",
-              }}
-            >
-              {loremLongText}
-            </Typography>
-
-            <Box
-              sx={{
-                mt: 3.8,
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
-                gap: 2.3,
-              }}
-            >
-              {pricingCards.map((item, index) => (
-                <Card
-                  key={`${item.title}-${index}`}
-                  sx={{
-                    ...glassPanelSx,
-                    height: "100%",
-                    borderRadius: 4,
-                    background: `linear-gradient(155deg, ${alpha("#FFFFFF", 0.95)} 0%, ${alpha("#F1F7FF", 0.92)} 100%)`,
-                    transform: index === 1 ? { xs: "none", md: "translateY(-8px)" } : "none",
-                    "&:hover": {
-                      borderColor: alpha(palette.primary, 0.34),
-                      transform: { xs: "translateY(-4px)", md: index === 1 ? "translateY(-12px)" : "translateY(-8px)" },
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" gutterBottom sx={{ color: palette.ink, fontWeight: 680 }}>
-                      {item.title}
-                    </Typography>
-                    <Typography sx={{ lineHeight: 1.72, color: alpha(palette.ink, 0.82) }}>{item.text}</Typography>
-                  </CardContent>
-                </Card>
-              ))}
-            </Box>
-          </Paper>
-        </Container>
-      </Box>
-
-      <Box
-        id="parteneri"
-        sx={{
-          position: "relative",
-          zIndex: 1,
-          scrollMarginTop: sectionScrollMargin,
-          borderTop: `1px solid ${alpha(palette.primary, 0.16)}`,
-          py: { xs: 5.5, md: 8.5 },
-        }}
-      >
-        <Container maxWidth="lg">
-          <Paper
-            className="reveal section-shell"
-            elevation={0}
-            sx={{
-              ...glassPanelSx,
-              p: { xs: 3, md: 4.5 },
-              borderRadius: { xs: 4, md: 5 },
-              animationDelay: "560ms",
-            }}
-          >
-            <Typography variant="h3" gutterBottom sx={sectionTitleSx}>
-              Parteneri
-            </Typography>
-
-            <Box
-              sx={{
-                mt: 4,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: { xs: 2.4, md: 3.2 },
-              }}
-            >
-              {partnerLogos.map((partner) => (
-                <Box
-                  key={partner.name}
-                  component="a"
-                  href={partner.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={partner.name}
-                  sx={{
-                    lineHeight: 0,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 2,
-                    "& img": {
-                      transition: "transform 180ms ease, filter 180ms ease",
-                    },
-                    "&:hover img": {
-                      transform: "translateY(-2px) scale(1.02)",
-                      filter: `drop-shadow(0 8px 14px ${alpha("#0F46BE", 0.22)})`,
-                    },
-                    "@media (prefers-reduced-motion: reduce)": {
-                      "& img": {
-                        transition: "none",
-                      },
-                      "&:hover img": {
-                        transform: "none",
-                        filter: "none",
-                      },
-                    },
-                    "&:focus-visible": {
-                      outline: `2px solid ${alpha(palette.primary, 0.44)}`,
-                      outlineOffset: 4,
-                      borderRadius: 2,
-                    },
-                  }}
-                >
-                  <Box
-                    component="img"
-                    src={partner.image}
-                    alt={partner.name}
-                    sx={{
-                      width: { xs: 132, md: 170 },
-                      height: "auto",
-                      display: "block",
-                    }}
-                  />
-                </Box>
-              ))}
-            </Box>
-          </Paper>
-        </Container>
-      </Box>
-
-      <Box
-        id="contact"
-        sx={{
-          position: "relative",
-          zIndex: 1,
-          scrollMarginTop: sectionScrollMargin,
-          borderTop: `1px solid ${alpha(palette.primary, 0.16)}`,
-          py: { xs: 5.8, md: 8.5 },
-        }}
-      >
-        <Container maxWidth="md" sx={{ textAlign: "center" }}>
-          <Paper
-            className="reveal section-shell"
-            elevation={0}
-            sx={{
-              ...glassPanelSx,
-              p: { xs: 3, md: 4.5 },
-              borderRadius: { xs: 4, md: 5 },
-              animationDelay: "620ms",
-            }}
-          >
-            <Typography variant="h3" gutterBottom sx={sectionTitleSx}>
-              Contact
-            </Typography>
-            <Typography sx={{ lineHeight: 1.75, color: alpha(palette.ink, 0.82), mb: 3 }}>{loremLongText}</Typography>
-            <Button
-              variant="contained"
-              sx={{
-                px: 3,
-                py: 1.05,
-                color: palette.ink,
-                backgroundColor: palette.primary,
-                borderRadius: 999,
-                fontWeight: 700,
-                "&:hover": {
-                  backgroundColor: palette.primary,
-                },
-              }}
-            >
-              Lorem ipsum
-            </Button>
-          </Paper>
-        </Container>
-      </Box>
     </Box>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppLayout />
+    </BrowserRouter>
   )
 }
 

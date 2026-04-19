@@ -37,8 +37,25 @@ const theme = createTheme({
       paper: '#FFFFFF',
     },
   },
+  transitions: {
+    duration: {
+      shortest: 200,
+      shorter: 200,
+      short: 200,
+      standard: 200,
+      complex: 200,
+      enteringScreen: 200,
+      leavingScreen: 200,
+    },
+    easing: {
+      easeInOut: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      easeOut: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      easeIn: 'cubic-bezier(0.32, 0, 0.67, 0)',
+      sharp: 'cubic-bezier(0.22, 1, 0.36, 1)',
+    },
+  },
   shape: {
-    borderRadius: 4,
+    borderRadius: 6,
   },
   typography: {
     fontFamily: sfFontStack,
@@ -79,11 +96,6 @@ const theme = createTheme({
           color: '#007AFF',
           backgroundColor: '#EAF4FF',
         },
-        '@media (prefers-reduced-motion: reduce)': {
-          html: {
-            scrollBehavior: 'auto',
-          },
-        },
       },
     },
     MuiButton: {
@@ -92,16 +104,10 @@ const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: 10,
-          transition: 'background-color 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease',
+          borderRadius: 12,
+          transition: 'background-color 200ms cubic-bezier(0.22, 1, 0.36, 1), color 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
           '&:hover': {
             transform: 'translateY(-1px)',
-          },
-          '@media (prefers-reduced-motion: reduce)': {
-            transition: 'none',
-            '&:hover': {
-              transform: 'none',
-            },
           },
         },
       },
@@ -109,18 +115,12 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 14,
           border: `1px solid ${alpha('#007AFF', 0.2)}`,
           backgroundImage: 'none',
-          transition: 'border-color 180ms ease, transform 180ms ease',
+          transition: 'border-color 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
           '&:hover': {
             transform: 'translateY(-2px)',
-          },
-          '@media (prefers-reduced-motion: reduce)': {
-            transition: 'none',
-            '&:hover': {
-              transform: 'none',
-            },
           },
         },
       },
@@ -129,6 +129,14 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
+          transition: 'background-color 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          transition: 'background-color 200ms cubic-bezier(0.22, 1, 0.36, 1), color 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
         },
       },
     },
@@ -136,9 +144,9 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           border: `1px solid ${alpha('#007AFF', 0.22)}`,
-          borderRadius: 10,
+          borderRadius: 12,
           overflow: 'hidden',
-          boxShadow: 'none',
+          transition: 'background-color 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms cubic-bezier(0.22, 1, 0.36, 1)',
           '&:before': {
             display: 'none',
           },
@@ -146,6 +154,31 @@ const theme = createTheme({
             marginBottom: 12,
           },
         },
+      },
+    },
+    MuiAccordionSummary: {
+      styleOverrides: {
+        root: {
+          transition: 'background-color 200ms cubic-bezier(0.22, 1, 0.36, 1), color 200ms cubic-bezier(0.22, 1, 0.36, 1)',
+        },
+        expandIconWrapper: {
+          transition: 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
+        },
+        content: {
+          transition: 'margin 200ms cubic-bezier(0.22, 1, 0.36, 1)',
+        },
+      },
+    },
+    MuiAccordionDetails: {
+      styleOverrides: {
+        root: {
+          transition: 'opacity 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
+        },
+      },
+    },
+    MuiCollapse: {
+      defaultProps: {
+        timeout: 200,
       },
     },
   },
