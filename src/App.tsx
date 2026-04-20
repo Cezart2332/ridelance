@@ -100,7 +100,7 @@ const navItems = [
   { label: "Despre Noi", path: "/" },
   { label: "Intrebari Frecvente", path: "/intrebari-frecvente" },
   { label: "Calculator Taxe", path: "/calculator-taxe" },
-  { label: "Abonamente/Preturi", path: "/abonamente-preturi" },
+  { label: "Abonamente/Prețuri", path: "/abonamente-preturi" },
   { label: "Parteneri", path: "/parteneri" },
   { label: "Contact", path: "/contact" },
 ]
@@ -139,9 +139,31 @@ const featureCards = [
 ]
 
 const pricingCards = [
-  { title: "Lorem ipsum", text: loremLongText },
-  { title: "Lorem ipsum", text: loremLongText },
-  { title: "Lorem ipsum", text: loremLongText },
+  {
+    title: "RIDElance Start - 399 lei / lună",
+    summary: "Tot ce ai nevoie ca să începi și să lucrezi legal pe cont propriu.",
+    cta: "Începe cu Start",
+    list: [
+      "Deschidere PFA cu cost rambursabil + bonus 100 lei",
+      "Asistență și consultanță constantă pe tot parcursul colaborării",
+      "Acces complet în dashboardul RIDElance",
+      "Contabilitate completă pentru PFA",
+      "Reduceri și beneficii prin partenerii RIDElance (case de marcat, cont bancar business și alte servicii utile)",
+    ],
+  },
+  {
+    title: "RIDElance Pro - 599 lei/lună",
+    summary:
+      "Mai multă flexibilitate, mai mult suport și avantaje exclusive pentru șoferii care vor un nivel superior.",
+    cta: "Alege RIDElance Pro",
+    intro: "Include tot ce ai în RIDElance Start, plus:",
+    list: [
+      "Găzduire sediu social gratuit în București / Ilfov",
+      "Reducere la chiria mașinilor RIDElance",
+      "Oferte, campanii și promoții exclusive PRO",
+      "Suport prioritar",
+    ],
+  },
 ]
 
 const partnerLogos = [
@@ -777,7 +799,7 @@ function PricingPage() {
               lineHeight: 1.2,
             }}
           >
-            Abonamente/Preturi
+            Abonamente/Prețuri
           </Typography>
 
           <Typography
@@ -785,19 +807,35 @@ function PricingPage() {
               width: "100%",
               mx: "auto",
               lineHeight: 1.72,
-              color: alpha(palette.ink, 0.8),
+              color: alpha(palette.ink, 0.86),
               textAlign: "center !important",
             }}
           >
-            {loremLongText}
+            Planuri simple. Beneficii reale. Sprijin complet.
+          </Typography>
+
+          <Typography
+            sx={{
+              width: "100%",
+              mx: "auto",
+              lineHeight: 1.76,
+              color: alpha(palette.ink, 0.76),
+              textAlign: "center !important",
+              fontSize: { xs: "0.96rem", md: "1.03rem" },
+            }}
+          >
+            Alege varianta care ți se potrivește și concentrează-te pe drum, nu pe birocrație.
           </Typography>
 
           <Box
             sx={{
               mt: 3.8,
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
-              gap: 2.3,
+              display: "flex",
+              justifyContent: "center",
+              justifyItems: "center",
+              width: "100%",
+              mx: "auto",
+              gap: { xs: 2.2, md: 2.8 },
             }}
           >
             {pricingCards.map((item, index) => (
@@ -805,31 +843,130 @@ function PricingPage() {
                 key={`${item.title}-${index}`}
                 sx={{
                   ...glassPanelSx,
-                  height: "100%",
-                  borderRadius: 4.5,
-                  backgroundColor: alpha("#FFFFFF", 0.95),
-                  transform: index === 1 ? { xs: "none", md: "translateY(-8px)" } : "none",
+                  position: "relative",
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2.2,
+                  p: { xs: 2.4, md: 3 },
+                  width: "100%",
+                  maxWidth: { xs: "100%", sm: 760, lg: "100%" },
+                  mx: "auto",
+                  minHeight: { xs: "auto", md: 560 },
+                  borderRadius: 4,
+                  border: `1px solid ${alpha(palette.primary, 0.16)}`,
+                  backgroundColor: "#FFFFFF",
+                  background:
+                    `radial-gradient(circle at 88% 40%, ${alpha("#FFFFFF", 0.99)} 0%, ${alpha("#FFFFFF", 0)} 58%), radial-gradient(circle at 8% 72%, ${alpha("#1A64ED", 0.22)} 0%, ${alpha("#1A64ED", 0)} 64%), radial-gradient(circle at 98% 100%, ${alpha("#7DB5FF", 0.42)} 0%, ${alpha("#7DB5FF", 0)} 62%), linear-gradient(180deg, ${alpha("#FFFFFF", 1)} 0%, ${alpha("#F2F9FF", 1)} 100%)`,
+                  boxShadow: `0px -16px 24px 0px ${alpha("#FFFFFF", 0.52)} inset, 0 14px 26px ${alpha("#1A64ED", 0.1)}`,
                   "&:hover": {
-                    borderColor: alpha(palette.ink, 0.24),
-                    transform: { xs: "translateY(-4px)", md: index === 1 ? "translateY(-12px)" : "translateY(-8px)" },
+                    transform: "translateY(-3px)",
+                    borderColor: alpha(palette.primary, 0.24),
+                    boxShadow: `0 18px 30px ${alpha("#1A64ED", 0.1)}, inset 0 1px 0 ${alpha("#FFFFFF", 0.92)}`,
                   },
                 }}
               >
-                <CardContent sx={{ p: 3, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <Typography variant="h6" gutterBottom sx={{ color: palette.ink, fontWeight: 680 }}>
-                    {item.title}
-                  </Typography>
-                  <Typography
+                <CardContent
+                  sx={{
+                    p: 0,
+                    position: "relative",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                    height: "100%",
+                    gap: 2.2,
+                  }}
+                >
+                  <Box sx={{ width: "100%", maxWidth: 540, mx: "auto" }}>
+                    <Typography sx={{ fontSize: { xs: "1.04rem", md: "1.18rem" }, color: palette.ink, fontWeight: 760, lineHeight: 1.45 }}>
+                      {item.title}
+                    </Typography>
+                    <Typography sx={{ mt: 0.65, fontSize: { xs: "0.86rem", md: "0.95rem" }, color: alpha(palette.ink, 0.76), lineHeight: 1.62 }}>
+                      {item.summary}
+                    </Typography>
+                  </Box>
+
+                  <Box
                     sx={{
-                      lineHeight: 1.72,
-                      color: alpha(palette.ink, 0.82),
-                      textAlign: "center !important",
                       width: "100%",
-                      mx: "auto",
+                      height: "0.12rem",
+                      backgroundColor: alpha(palette.primary, 0.18),
+                      border: "none",
+                    }}
+                  />
+
+                  <Box
+                    component="ul"
+                    sx={{
+                      p: 0,
+                      m: 0,
+                      alignSelf: "stretch",
+                      width: "100%",
+                      maxWidth: "100%",
+                      listStyle: "none",
+                      display: "flex",
+                      flexDirection: "column",
+                      textAlign: "left",
+                      gap: 1,
                     }}
                   >
-                    {item.text}
-                  </Typography>
+                    {item.intro && (
+                      <Typography
+                        sx={{
+                          fontSize: { xs: "0.86rem", md: "0.92rem" },
+                          color: alpha(palette.ink, 0.72),
+                          lineHeight: 1.58,
+                          pr: 1.2,
+                          textAlign: "left",
+                        }}
+                      >
+                        {item.intro}
+                      </Typography>
+                    )}
+
+                    {item.list.map((point) => (
+                      <Box
+                        component="li"
+                        key={point}
+                        sx={{ display: "flex", alignItems: "flex-start", justifyContent: "flex-start", textAlign: "left", gap: 1 }}
+                      >
+                        <CheckCircleOutlineRoundedIcon
+                          sx={{
+                            fontSize: 18,
+                            minWidth: 18,
+                            mt: 0.22,
+                            color: alpha(palette.primary, 0.82),
+                          }}
+                        />
+                        <Typography sx={{ fontSize: { xs: "0.86rem", md: "0.94rem" }, color: alpha(palette.ink, 0.88), lineHeight: 1.6 }}>{point}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+
+                  <Button
+                    variant="contained"
+                    sx={{
+                      mt: "auto",
+                      px: 1.5,
+                      py: 0.95,
+                      width: "100%",
+                      border: 0,
+                      borderRadius: "9999px",
+                      textTransform: "none",
+                      fontWeight: 700,
+                      fontSize: { xs: "0.86rem", md: "0.92rem" },
+                      alignSelf: "stretch",
+                      color: palette.ink,
+                      backgroundColor: alpha(palette.primary, 0.9),
+                      boxShadow: `inset 0 -2px 18px -5px ${alpha("#FFFFFF", 0.7)}`,
+                      "&:hover": {
+                        backgroundColor: palette.primaryStrong,
+                      },
+                    }}
+                  >
+                    {item.cta}
+                  </Button>
                 </CardContent>
               </Card>
             ))}
