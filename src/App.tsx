@@ -38,7 +38,7 @@ import motto from './assets/motto.svg'
 import car from './assets/car.svg'
 import docs from './assets/docs.svg'
 import renteaza from './assets/renteaza.svg'
-import silso from './assets/silso.png'
+import silso from './assets/silso.jpg'
 import works from './assets/works.svg'
 
 import character1 from './assets/Stickers/character 1.png'
@@ -192,26 +192,6 @@ const faqItems = [
   { title: 'De ce documente am nevoie?', text: loremLongText },
 ]
 
-const featureCards = [
-  {
-    title: 'Cum functioneaza',
-    text: loremText,
-    image: scene1,
-    alt: 'Cum functioneaza',
-  },
-  {
-    title: 'Doar trimite documentele necesare',
-    text: loremText,
-    image: docs,
-    alt: 'Documente',
-  },
-  {
-    title: 'Fara stres, fara batai de cap',
-    text: loremText,
-    image: scene4,
-    alt: 'Fara stres',
-  },
-]
 
 const pricingCards = [
   {
