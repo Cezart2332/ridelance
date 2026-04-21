@@ -39,20 +39,15 @@ import car from './assets/car.svg'
 import docs from './assets/docs.svg'
 import renteaza from './assets/renteaza.svg'
 import silso from './assets/silso.jpg'
-import works from './assets/works.svg'
 
-import character1 from './assets/Stickers/character 1.png'
 import character2 from './assets/Stickers/character 2.png'
 import scene1 from './assets/Stickers/scene 1.png'
 import scene4 from './assets/Stickers/scene 4.png'
-import shape1 from './assets/Stickers/shapes 1.png'
-import shape2 from './assets/Stickers/shapes 2.png'
+
 
 import checkSvg from './assets/SVG/2- Regular/check-circle.svg'
 import starSvg from './assets/SVG/2- Regular/star.svg'
-import creditCardSvg from './assets/SVG/2- Regular/credit-card.svg'
 import arrowRight from './assets/SVG/2- Regular/arrow-right.svg'
-import commentsSvg from './assets/SVG/2- Regular/comments.svg'
 import desktop from './assets/SVG/2- Regular/desktop.svg'
 import dashboard from './assets/dashboard.svg'
 
