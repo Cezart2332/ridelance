@@ -50,6 +50,7 @@ import starSvg from './assets/SVG/2- Regular/star.svg'
 import arrowRight from './assets/SVG/2- Regular/arrow-right.svg'
 import desktop from './assets/SVG/2- Regular/desktop.svg'
 import dashboard from './assets/dashboard.svg'
+import DashboardDemoPage from './components/dashboard-demo/DashboardDemoPage'
 
 /* ────────────────────────────────────────────────
    Design Tokens (consistent with main.tsx)
@@ -167,11 +168,11 @@ const loremLongText =
    ──────────────────────────────────────────────── */
 
 const navItems = [
-  { label: 'Despre Noi', path: '/' },
-  { label: 'Intrebari Frecvente', path: '/intrebari-frecvente' },
-  { label: 'Calculator Taxe', path: '/calculator-taxe' },
-  { label: 'Abonamente/Preturi', path: '/abonamente-preturi' },
+  { label: 'Servicii', path: '/servicii' },
+  { label: 'Abonamente', path: '/abonamente-preturi' },
+  { label: 'Fiscal', path: '/calculator-taxe' },
   { label: 'Parteneri', path: '/parteneri' },
+  { label: 'Despre Ridelance', path: '/despre-ridelance' },
   { label: 'Contact', path: '/contact' },
 ]
 
@@ -1009,6 +1010,60 @@ function HomePage() {
         </Container>
       </Box>
 
+      {/* ═══════ 8. DE CE RIDELANCE ═══════ */}
+      <Container maxWidth="lg" sx={{ mt: { xs: 8, md: 12 } }}>
+        <SectionHeader
+          title="De ce RIDElance"
+          subtitle="De ce aleg soferii RIDElance"
+        />
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+            gap: 2.5,
+          }}
+        >
+          {homeSec8.map((reason, i) => (
+            <Paper
+              key={i}
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: TOKENS.radius.md,
+                backgroundColor: alpha(TOKENS.primary, 0.03),
+                border: `1px solid ${alpha(TOKENS.primary, 0.08)}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
+                '&:hover': {
+                  backgroundColor: alpha(TOKENS.primary, 0.05),
+                  borderColor: alpha(TOKENS.primary, 0.15),
+                  transform: 'translateX(4px)',
+                },
+              }}
+            >
+              <Box
+                component="img"
+                src={arrowRight}
+                sx={{
+                  width: 22,
+                  height: 22,
+                  flexShrink: 0,
+                  filter:
+                    'invert(28%) sepia(87%) saturate(2222%) hue-rotate(210deg) brightness(98%) contrast(92%)',
+                }}
+              />
+              <Typography
+                sx={{ fontWeight: 650, color: TOKENS.ink, fontSize: '0.95rem' }}
+              >
+                {reason}
+              </Typography>
+            </Paper>
+          ))}
+        </Box>
+      </Container>
+      
       {/* ═══════ 7. DASHBOARD ═══════ */}
       <Box
         sx={{
@@ -1171,60 +1226,6 @@ function HomePage() {
           </Box>
         </Container>
       </Box>
-
-      {/* ═══════ 8. DE CE RIDELANCE ═══════ */}
-      <Container maxWidth="lg" sx={{ mt: { xs: 8, md: 12 } }}>
-        <SectionHeader
-          title="De ce RIDElance"
-          subtitle="De ce aleg soferii RIDElance"
-        />
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-            gap: 2.5,
-          }}
-        >
-          {homeSec8.map((reason, i) => (
-            <Paper
-              key={i}
-              elevation={0}
-              sx={{
-                p: 3,
-                borderRadius: TOKENS.radius.md,
-                backgroundColor: alpha(TOKENS.primary, 0.03),
-                border: `1px solid ${alpha(TOKENS.primary, 0.08)}`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-                '&:hover': {
-                  backgroundColor: alpha(TOKENS.primary, 0.05),
-                  borderColor: alpha(TOKENS.primary, 0.15),
-                  transform: 'translateX(4px)',
-                },
-              }}
-            >
-              <Box
-                component="img"
-                src={arrowRight}
-                sx={{
-                  width: 22,
-                  height: 22,
-                  flexShrink: 0,
-                  filter:
-                    'invert(28%) sepia(87%) saturate(2222%) hue-rotate(210deg) brightness(98%) contrast(92%)',
-                }}
-              />
-              <Typography
-                sx={{ fontWeight: 650, color: TOKENS.ink, fontSize: '0.95rem' }}
-              >
-                {reason}
-              </Typography>
-            </Paper>
-          ))}
-        </Box>
-      </Container>
 
       {/* ═══════ 9. FAQ ═══════ */}
       <Container maxWidth="md" sx={{ mt: { xs: 8, md: 12 } }}>
@@ -1537,8 +1538,8 @@ function CalculatorPage() {
   return (
     <Box sx={pageFrameSx}>
       <Container maxWidth="md">
-        <Stack spacing={4}>
-          <SectionHeader
+        <Stack spacing={4} sx={{justifyContent:"center", textAlign:"center"}}>
+          <SectionHeader 
             title="Calculator Taxe"
             subtitle="Estimeaza ce taxe vei plati ca PFA in functie de venitul tau anual si cheltuielile deductibile"
           />
@@ -2196,6 +2197,164 @@ function PrivacyPolicyPage() {
     </Box>
   )
 }
+function ServicesPage() {
+  return (
+    <Box sx={pageFrameSx}>
+      <Container maxWidth="lg">
+        <Stack spacing={6} sx={{alignItems:"center", justifyContent:"center"}}>
+          <SectionHeader
+            title="Serviciile noastre"
+            subtitle="Tot ce ai nevoie pentru activitatea ta, într-un singur loc."
+          />
+
+          {/* Servicii individuale (din homeSec6) */}
+          <Box>
+            <Typography variant="h4" sx={{ mb: 4, fontWeight: 700, color: TOKENS.ink }}>
+              Servicii individuale
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+                gap: 4,
+              }}
+            >
+              {homeSec6.map((svc, i) => (
+                <Paper
+                  key={i}
+                  elevation={0}
+                  sx={{
+                    p: 4,
+                    borderRadius: TOKENS.radius.lg,
+                    border: `1px solid ${TOKENS.border}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                    boxShadow: TOKENS.shadow.sm,
+                    transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
+                    '&:hover': {
+                      boxShadow: TOKENS.shadow.md,
+                      borderColor: TOKENS.borderHover,
+                      transform: 'translateY(-3px)',
+                    },
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    sx={{
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 1,
+                    }}
+                  >
+                    <Typography variant="h5" sx={{ fontWeight: 800, color: TOKENS.ink }}>
+                      {svc.title}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: TOKENS.primaryStrong,
+                        fontWeight: 800,
+                        fontSize: '1.15rem',
+                      }}
+                    >
+                      {svc.price}
+                    </Typography>
+                  </Stack>
+                  <Typography
+                    sx={{
+                      color: TOKENS.textMuted,
+                      lineHeight: 1.65,
+                      flexGrow: 1,
+                      fontSize: '0.95rem',
+                    }}
+                  >
+                    {svc.desc}
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    sx={{
+                      alignSelf: 'flex-start',
+                      borderRadius: TOKENS.radius.full,
+                      px: 3.5,
+                      py: 1,
+                      fontWeight: 700,
+                      borderColor: TOKENS.borderHover,
+                      color: TOKENS.ink,
+                      '&:hover': {
+                        borderColor: alpha(TOKENS.ink, 0.3),
+                        backgroundColor: alpha(TOKENS.ink, 0.02),
+                      },
+                    }}
+                  >
+                    {svc.cta}
+                  </Button>
+                </Paper>
+              ))}
+            </Box>
+          </Box>
+        </Stack>
+      </Container>
+    </Box>
+  )
+}
+
+function AboutPage() {
+  return (
+    <Box sx={pageFrameSx}>
+      <Container maxWidth="md">
+        <Stack spacing={5} sx={{alignItems:"center", justifyContent:"center"}}>
+          <Box
+            component="img"
+            src={logo}
+            alt="Ridelance Logo"
+            sx={{ height: 80, width: 'auto', mb: 2 }}
+          />
+          <SectionHeader title="Despre Ridelance" align="center" />
+
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 4, md: 6 },
+              borderRadius: TOKENS.radius.xl,
+              border: `1px solid ${TOKENS.border}`,
+              boxShadow: TOKENS.shadow.md,
+              backgroundColor: TOKENS.paper,
+              width: '100%',
+            }}
+          >
+            <Stack spacing={4}>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: TOKENS.ink }}>
+                  Test
+                </Typography>
+                <Typography sx={{ color: TOKENS.textMuted, lineHeight: 1.8 }}>
+                  {loremLongText}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: TOKENS.ink }}>
+                  Test
+                </Typography>
+                <Typography sx={{ color: TOKENS.textMuted, lineHeight: 1.8 }}>
+                  {loremText}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: TOKENS.ink }}>
+                  Test
+                </Typography>
+                <Typography sx={{ color: TOKENS.textMuted, lineHeight: 1.8 }}>
+                  {loremLongText}
+                </Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Stack>
+      </Container>
+    </Box>
+  )
+}
 
 /* ────────────────────────────────────────────────
    AppLayout / Shell
@@ -2325,7 +2484,7 @@ function AppLayout() {
             <Button
               variant="contained"
               endIcon={<ArrowForwardRoundedIcon />}
-              onClick={() => goTo('/contact')}
+              onClick={() => goTo('/dashboard')}
               sx={{
                 display: { xs: 'none', md: 'inline-flex' },
                 px: 3,
@@ -2357,7 +2516,7 @@ function AppLayout() {
               <Button
                 variant="contained"
                 size="small"
-                onClick={() => goTo('/contact')}
+                onClick={() => goTo('/dashboard')}
                 sx={{
                   px: 2,
                   py: 0.6,
@@ -2369,7 +2528,7 @@ function AppLayout() {
                   fontSize: '0.75rem',
                 }}
               >
-                Demo
+                Dashboard
               </Button>
               <IconButton
                 size="small"
@@ -2457,7 +2616,7 @@ function AppLayout() {
           <Button
             variant="contained"
             endIcon={<ArrowForwardRoundedIcon />}
-            onClick={() => goTo('/contact')}
+            onClick={() => goTo('/dashboard')}
             sx={{
               mt: 'auto',
               color: '#fff',
@@ -2468,7 +2627,7 @@ function AppLayout() {
               boxShadow: TOKENS.shadow.glow,
             }}
           >
-            Demo
+            Dashboard
           </Button>
         </Stack>
       </Drawer>
@@ -2478,10 +2637,17 @@ function AppLayout() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/intrebari-frecvente" element={<FaqPage />} />
+          <Route path="/servicii" element={<ServicesPage />} />
+          <Route path="/despre-ridelance" element={<AboutPage />} />
           <Route path="/calculator-taxe" element={<CalculatorPage />} />
           <Route path="/abonamente-preturi" element={<PricingPage />} />
           <Route path="/parteneri" element={<PartnersPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/dashboard" element={<DashboardDemoPage />} />
+          <Route
+            path="/dashboard-demo"
+            element={<Navigate to="/dashboard" replace />}
+          />
           <Route path="/termeni-si-conditii" element={<TermsPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
