@@ -163,8 +163,6 @@ const pageFrameSx = {
   py: { xs: 5, md: 8 },
 }
 
-const loremText =
-  'Lorem ipsum dolor sit amet consectetur adipisicing elit. Distinctio ipsa ducimus, ipsam pariatur hic possimus aliquam eaque similique nostrum.'
 const loremLongText =
   'Lorem ipsum dolor sit amet consectetur adipisicing elit. Distinctio ipsa ducimus, ipsam pariatur hic possimus aliquam eaque similique nostrum! Vero veniam earum sint sapiente ut. Quae aspernatur assumenda aliquam pariatur suscipit in porro ipsam.'
 
