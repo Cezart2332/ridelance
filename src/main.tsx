@@ -7,31 +7,31 @@ import App from './App'
    Design Tokens (from original App.tsx)
    ──────────────────────────────────────────────── */
 const TOKENS = {
-  ink: '#152447',
-  primary: '#1A64ED',
-  primaryStrong: '#0E47BC',
+  ink: '#1a1a2e',
+  primary: '#5CCBF5',
+  primaryStrong: '#45B8E2',
   paper: '#FFFFFF',
-  surface: '#F7FAFF',
-  surfaceAlt: '#EDF3FF',
-  border: 'rgba(21, 36, 71, 0.08)',
-  borderHover: 'rgba(21, 36, 71, 0.15)',
-  textMain: '#152447',
-  textMuted: 'rgba(21, 36, 71, 0.65)',
-  textSubtle: 'rgba(21, 36, 71, 0.45)',
+  surface: '#FAFAFA',
+  surfaceAlt: '#F5F5F7',
+  border: 'rgba(0, 0, 0, 0.06)',
+  borderHover: 'rgba(0, 0, 0, 0.12)',
+  textMain: '#1a1a2e',
+  textMuted: 'rgba(26, 26, 46, 0.6)',
+  textSubtle: 'rgba(26, 26, 46, 0.4)',
   radius: {
-    xs: 6,
-    sm: 8,
-    md: 10,
-    lg: 12,
-    xl: 16,
-    full: 999,
+    xs: 2,
+    sm: 3,
+    md: 4,
+    lg: 6,
+    xl: 8,
+    full: 4,
   },
   shadow: {
-    sm: '0 1px 3px rgba(21,36,71,0.04), 0 1px 2px rgba(21,36,71,0.03)',
-    md: '0 4px 20px rgba(21,36,71,0.06), 0 1px 3px rgba(21,36,71,0.04)',
-    lg: '0 12px 40px rgba(21,36,71,0.08), 0 4px 12px rgba(21,36,71,0.03)',
-    xl: '0 24px 60px rgba(21,36,71,0.10), 0 8px 20px rgba(21,36,71,0.04)',
-    glow: '0 8px 32px rgba(26,100,237,0.18)',
+    sm: '0 1px 2px rgba(0,0,0,0.04)',
+    md: '0 2px 8px rgba(0,0,0,0.06)',
+    lg: '0 4px 16px rgba(0,0,0,0.08)',
+    xl: '0 8px 30px rgba(0,0,0,0.10)',
+    glow: '0 2px 8px rgba(92,203,245,0.12)',
   },
   easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
   duration: '200ms',
@@ -104,7 +104,7 @@ const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: TOKENS.radius.md, // 10px default
+    borderRadius: TOKENS.radius.md, // 4px default
   },
   transitions: {
     duration: {
@@ -153,7 +153,7 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: TOKENS.radius.lg, // 12px
+          borderRadius: TOKENS.radius.lg, // 6px
           border: `1px solid ${TOKENS.border}`,
           boxShadow: TOKENS.shadow.md,
           transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
@@ -167,7 +167,7 @@ const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: TOKENS.radius.lg, // 12px
+          borderRadius: TOKENS.radius.lg, // 6px
           backgroundImage: 'none',
           transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
         },

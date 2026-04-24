@@ -34,7 +34,7 @@ const sectionConfig = [
 
 type SectionId = 'home' | 'profile' | 'documents' | 'support' | 'expenses' | 'doc_recurring' | string
 
-export default function DashboardDemoPage() {
+export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState<SectionId>('home')
   
   const [chatMessage, setChatMessage] = useState('')

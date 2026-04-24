@@ -19,7 +19,7 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, activeSection,
     <Stack sx={{ height: '100%', p: 2, backgroundColor: '#fff' }} spacing={2}>
       <Box sx={{ mt: 2 }}>
         <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 900, fontSize: '1rem' }}>
-          Ridelance Dashboard(Demo)
+          Ridelance Dashboard
         </Typography>
       </Box>
       
