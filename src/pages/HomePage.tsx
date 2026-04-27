@@ -17,7 +17,7 @@ import {
 import motto from '../assets/motto.svg'
 import car from '../assets/car.svg'
 import checkSvg from '../assets/SVG/2- Regular/check-circle.svg'
-import dashboard from '../assets/dashboard.svg'
+import dashboard from '../assets/dashboard.png'
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
@@ -930,9 +930,6 @@ export function HomePage() {
                 src={dashboard}
                 sx={{
                   width: '100%',
-                  maxWidth: 400,
-                  opacity: 0.7,
-                  filter: 'brightness(0) invert(1)',
                 }}
               />
             </Box>
