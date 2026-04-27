@@ -1,5 +1,4 @@
-import { useState } from 'react'
-
+﻿import { useState } from 'react'
 import { defaultExpenses, dashboardInitialChat } from './dashboardData'
 import type { ChatMessage } from './types'
 import { DocumentsTab } from './sections/DocumentsTab'
@@ -8,7 +7,7 @@ import { HomeDashboardView } from './sections/HomeDashboardView'
 import { ProfileTab } from './sections/ProfileTab'
 import { SupportChatTab } from './sections/SupportChatTab'
 
-import AppLayout from './layout/AppLayout'
+import { DashboardLayout } from '../layout/DashboardLayout'
 
 import iconHome from '../../assets/SVG/2- Regular/home.svg'
 import iconProfile from '../../assets/SVG/2- Regular/user.svg'
@@ -23,7 +22,7 @@ const sectionConfig = [
   { id: 'support', label: 'Suport', icon: iconSupport },
   {
     id: 'accordion_group',
-    label: 'Cheltuieli & Documentatie recurenta',
+    label: 'Cheltuieli & Documentatie',
     icon: iconWallet,
     subItems: [
       { id: 'expenses', label: 'Cheltuieli' },
@@ -94,7 +93,6 @@ export default function DashboardDemoPage() {
       )
     }
 
-    // Pass an indicator to ExpensesRecurringTab to know which sub-view to show
     return (
       <ExpensesRecurringTab
         expenses={expenses}
@@ -107,13 +105,14 @@ export default function DashboardDemoPage() {
   }
 
   return (
-    <AppLayout
-      activeSection={activeSection}
-      setActiveSection={setActiveSection}
-      sectionConfig={sectionConfig}
+    <DashboardLayout
+      activeId={activeSection}
+      onNavClick={setActiveSection}
+      navItems={sectionConfig}
+      userName="Șofer Demo"
+      userRole="Utilizator PFA"
     >
       {renderSection()}
-    </AppLayout>
+    </DashboardLayout>
   )
 }
-

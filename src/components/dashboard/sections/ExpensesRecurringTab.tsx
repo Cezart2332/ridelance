@@ -41,7 +41,7 @@ export function ExpensesRecurringTab({
             boxShadow: DASHBOARD_TOKENS.shadow.sm,
           }}
         >
-          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>Cheltuieli deductibile</Typography>
+          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>Cheltuieli</Typography>
           <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.7, fontSize: '0.9rem' }}>
             Adauga cheltuieli pentru facturare pe PFA (leasing, service, piese auto, internet, chirie masina, asigurari etc.).
           </Typography>

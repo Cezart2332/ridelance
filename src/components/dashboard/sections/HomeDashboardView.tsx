@@ -28,7 +28,7 @@ const metricIcons: Record<string, string> = {
 
 export function HomeDashboardView() {
   return (
-    <Stack spacing={3}>
+    <Stack spacing={2.5}>
       <div
         style={{
           display: 'grid',
@@ -43,16 +43,15 @@ export function HomeDashboardView() {
             sx={{
               p: 2.5,
               borderRadius: DASHBOARD_TOKENS.radius.lg,
-              border: `1px solid ${alpha(DASHBOARD_TOKENS.border, 0.6)}`,
+              border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
               boxShadow: DASHBOARD_TOKENS.shadow.sm,
-              backgroundColor: DASHBOARD_TOKENS.paper,
+              background: `linear-gradient(160deg, ${alpha(DASHBOARD_TOKENS.primary, 0.05)} 0%, ${DASHBOARD_TOKENS.paper} 34%)`,
               display: 'flex',
               flexDirection: 'column',
               transition: `all 0.2s ease`,
               '&:hover': {
-                transform: 'translateY(-2px)',
                 boxShadow: DASHBOARD_TOKENS.shadow.md,
-                borderColor: DASHBOARD_TOKENS.borderHover,
+                borderColor: alpha(DASHBOARD_TOKENS.primary, 0.34),
               }
             }}
           >
@@ -93,8 +92,9 @@ export function HomeDashboardView() {
             gridColumn: { xs: 'span 12', xl: 'span 7' },
             p: 2.5,
             borderRadius: DASHBOARD_TOKENS.radius.lg,
-            border: `1px solid ${DASHBOARD_TOKENS.border}`,
+            border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
             boxShadow: DASHBOARD_TOKENS.shadow.sm,
+            background: `linear-gradient(170deg, ${alpha(DASHBOARD_TOKENS.primary, 0.05)} 0%, ${DASHBOARD_TOKENS.paper} 35%)`,
           }}
         >
           <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>

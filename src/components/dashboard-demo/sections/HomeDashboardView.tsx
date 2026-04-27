@@ -2,9 +2,8 @@ import { Box, Paper, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 
 import { dashboardMetrics } from '../dashboardData'
-import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { TOKENS } from '../../../constants/tokens'
 import { BarChart } from '@mui/x-charts/BarChart'
-import { ChartsBrushOverlay } from '@mui/x-charts/ChartsBrushOverlay'
 
 import iconCash from '../../../assets/SVG/2- Regular/coupon.svg'
 import iconCard from '../../../assets/SVG/2- Regular/credit-card.svg'
@@ -28,12 +27,12 @@ const metricIcons: Record<string, string> = {
 
 export function HomeDashboardView() {
   return (
-    <Stack spacing={3}>
+    <Stack spacing={4}>
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: 16,
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: 24,
         }}
       >
         {dashboardMetrics.map((metric) => (
@@ -41,90 +40,77 @@ export function HomeDashboardView() {
             key={metric.label}
             elevation={0}
             sx={{
-              p: 2.5,
-              borderRadius: DASHBOARD_TOKENS.radius.lg,
-              border: `1px solid ${alpha(DASHBOARD_TOKENS.border, 0.6)}`,
-              boxShadow: DASHBOARD_TOKENS.shadow.sm,
-              backgroundColor: DASHBOARD_TOKENS.paper,
+              p: 3,
+              borderRadius: TOKENS.radius.xl,
+              border: `1px solid ${TOKENS.border}`,
+              backgroundColor: TOKENS.paper,
               display: 'flex',
               flexDirection: 'column',
-              transition: `all 0.2s ease`,
+              transition: `all 0.3s ${TOKENS.easing}`,
               '&:hover': {
-                transform: 'translateY(-2px)',
-                boxShadow: DASHBOARD_TOKENS.shadow.md,
-                borderColor: DASHBOARD_TOKENS.borderHover,
+                transform: 'translateY(-4px)',
+                boxShadow: TOKENS.shadow.md,
+                borderColor: TOKENS.primary,
               }
             }}
           >
-            <Stack direction="row" sx={{ alignItems: 'center', mb: 2 }} spacing={1.5}>
+            <Stack direction="row" sx={{ alignItems: 'center', mb: 2.5 }} spacing={2}>
               <Box 
                 sx={{ 
                   p: 1.2, 
-                  borderRadius: DASHBOARD_TOKENS.radius.md, 
-                  backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.06),
+                  borderRadius: TOKENS.radius.lg, 
+                  backgroundColor: alpha(TOKENS.primary, 0.08),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}
               >
-                <img src={metricIcons[metric.label]} alt={metric.label} style={{ width: 22, height: 22, filter: 'invert(31%) sepia(85%) saturate(2853%) hue-rotate(211deg) brightness(98%) contrast(93%)' }} />
+                <img src={metricIcons[metric.label]} alt={metric.label} style={{ width: 24, height: 24, filter: 'invert(31%) sepia(85%) saturate(2853%) hue-rotate(211deg) brightness(98%) contrast(93%)' }} />
               </Box>
-              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', fontWeight: 650 }}>
+              <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', fontWeight: 700 }}>
                 {metric.label}
               </Typography>
             </Stack>
-            <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '1.4rem' }}>
+            <Typography sx={{ color: TOKENS.ink, fontWeight: 900, fontSize: '1.75rem', letterSpacing: -0.5 }}>
               {metric.value}
             </Typography>
           </Paper>
         ))}
       </div>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
-          gap: 16,
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          borderRadius: TOKENS.radius.xl,
+          border: `1px solid ${TOKENS.border}`,
+          bgcolor: TOKENS.paper,
         }}
       >
-        <Paper
-          elevation={0}
-          sx={{
-            gridColumn: { xs: 'span 12', xl: 'span 7' },
-            p: 2.5,
-            borderRadius: DASHBOARD_TOKENS.radius.lg,
-            border: `1px solid ${DASHBOARD_TOKENS.border}`,
-            boxShadow: DASHBOARD_TOKENS.shadow.sm,
-          }}
-        >
-          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
-            <div>
-              <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>Venit</Typography>
-              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', mt: 0.4 }}>
-                Venitul pe fiecare luna
-              </Typography>
-            </div>
-          </Stack>
+        <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Box>
+            <Typography variant="h6" sx={{ color: TOKENS.ink, fontWeight: 800 }}>Analiză Venituri</Typography>
+            <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.85rem', mt: 0.5 }}>
+              Evoluția veniturilor brute pe parcursul anului curent
+            </Typography>
+          </Box>
+        </Stack>
 
+        <Box sx={{ height: 350, width: '100%' }}>
           <BarChart
-            height={300}
             series={[
               {
-                data: [4, 8, 6, 12, 9, 15, 11, 14, 13, 18, 16, 20],
-                label: 'Venit',
+                data: [4500, 5200, 4800, 6100, 5900, 7500, 6800, 7200, 6900, 8400, 7800, 9200],
+                label: 'Venit (RON)',
+                color: TOKENS.primary,
               },
             ]}
-            brushConfig={{ enabled: true }}
-            xAxis={[{ data: xAxisData }]}
-          >
-            <ChartsBrushOverlay />
-          </BarChart>
-
-         
-        </Paper>
-
-       
-      </div>
+            xAxis={[{ data: xAxisData, scaleType: 'band' }]}
+            borderRadius={8}
+            margin={{ top: 20, right: 20, bottom: 40, left: 60 }}
+          />
+        </Box>
+      </Paper>
     </Stack>
   )
 }

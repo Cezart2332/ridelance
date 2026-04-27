@@ -16,15 +16,32 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, activeSection,
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
 
   const sidebarContent = (
-    <Stack sx={{ height: '100%', p: 2, backgroundColor: '#fff' }} spacing={2}>
-      <Box sx={{ mt: 2 }}>
+    <Stack
+      sx={{
+        height: '100%',
+        p: 2,
+        backgroundColor: alpha(DASHBOARD_TOKENS.paper, 0.96),
+        backdropFilter: 'blur(10px)',
+      }}
+      spacing={2}
+    >
+      <Box
+        sx={{
+          mt: 1,
+          px: 1,
+          py: 1.6,
+          borderBottom: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.06)}`,
+          background: `linear-gradient(180deg, ${alpha(DASHBOARD_TOKENS.primary, 0.09)} 0%, transparent 70%)`,
+          borderRadius: DASHBOARD_TOKENS.radius.md,
+        }}
+      >
         <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 900, fontSize: '1rem' }}>
           Ridelance Dashboard
         </Typography>
       </Box>
       
-      <Box sx={{ mt: 4 }}>
-        <Typography sx={{ px: 1.3, mb: 1, fontSize: '0.75rem', fontWeight: 600, color: DASHBOARD_TOKENS.textSubtle, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+      <Box sx={{ mt: 2 }}>
+        <Typography sx={{ px: 1.3, mb: 1.2, fontSize: '0.72rem', fontWeight: 700, color: DASHBOARD_TOKENS.textSubtle, textTransform: 'uppercase', letterSpacing: 0.9 }}>
           Meniu Principal
         </Typography>
         <Stack spacing={0.8}>
@@ -56,6 +73,7 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, activeSection,
                       px: 1.5,
                       py: 1,
                       borderRadius: DASHBOARD_TOKENS.radius.md,
+                      border: `1px solid ${isChildActive ? alpha(DASHBOARD_TOKENS.primary, 0.25) : 'transparent'}`,
                       '& .MuiAccordionSummary-content': { m: 0 },
                       '&.Mui-expanded': { minHeight: 'auto' },
                       '&:hover': {
@@ -103,6 +121,7 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, activeSection,
                               fontWeight: isSubActive ? 700 : 500,
                               fontSize: '0.85rem',
                               color: isSubActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.7),
+                              border: `1px solid ${isSubActive ? alpha(DASHBOARD_TOKENS.primary, 0.2) : 'transparent'}`,
                               backgroundColor: isSubActive ? alpha(DASHBOARD_TOKENS.primary, 0.08) : 'transparent',
                               '&:hover': {
                                 backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.05),
@@ -135,6 +154,7 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, activeSection,
                   fontWeight: isActive ? 700 : 500,
                   fontSize: '0.9rem',
                   color: isActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.8),
+                  border: `1px solid ${isActive ? alpha(DASHBOARD_TOKENS.primary, 0.25) : 'transparent'}`,
                   backgroundColor: isActive ? alpha(DASHBOARD_TOKENS.primary, 0.12) : 'transparent',
                   '&:hover': {
                     backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
@@ -168,7 +188,17 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, activeSection,
 
   if (isMdUp) {
     return (
-      <Box sx={{ width: 280, borderRight: `1px solid ${DASHBOARD_TOKENS.border}`, backgroundColor: '#fff', position: 'sticky', top: 72, alignSelf: 'flex-start', height: 'calc(100vh - 72px)' }}>
+      <Box
+        sx={{
+          width: 284,
+          borderRight: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+          backgroundColor: alpha(DASHBOARD_TOKENS.paper, 0.96),
+          position: 'sticky',
+          top: 0,
+          alignSelf: 'flex-start',
+          height: '100vh',
+        }}
+      >
         {sidebarContent}
       </Box>
     );
@@ -179,7 +209,7 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, activeSection,
       anchor="left"
       open={sidebarOpen}
       onClose={() => setSidebarOpen(false)}
-      slotProps={{ paper: { sx: { width: 280 } } }}
+      slotProps={{ paper: { sx: { width: 284, backgroundColor: alpha(DASHBOARD_TOKENS.paper, 0.96) } } }}
     >
       {sidebarContent}
     </Drawer>

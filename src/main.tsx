@@ -3,39 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 
-/* ────────────────────────────────────────────────
-   Design Tokens (from original App.tsx)
-   ──────────────────────────────────────────────── */
-const TOKENS = {
-  ink: '#1a1a2e',
-  primary: '#5CCBF5',
-  primaryStrong: '#45B8E2',
-  paper: '#FFFFFF',
-  surface: '#FAFAFA',
-  surfaceAlt: '#F5F5F7',
-  border: 'rgba(0, 0, 0, 0.06)',
-  borderHover: 'rgba(0, 0, 0, 0.12)',
-  textMain: '#1a1a2e',
-  textMuted: 'rgba(26, 26, 46, 0.6)',
-  textSubtle: 'rgba(26, 26, 46, 0.4)',
-  radius: {
-    xs: 2,
-    sm: 3,
-    md: 4,
-    lg: 6,
-    xl: 8,
-    full: 4,
-  },
-  shadow: {
-    sm: '0 1px 2px rgba(0,0,0,0.04)',
-    md: '0 2px 8px rgba(0,0,0,0.06)',
-    lg: '0 4px 16px rgba(0,0,0,0.08)',
-    xl: '0 8px 30px rgba(0,0,0,0.10)',
-    glow: '0 2px 8px rgba(92,203,245,0.12)',
-  },
-  easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-  duration: '200ms',
-}
+import { TOKENS } from './constants/tokens'
 
 const fontStack = [
   '"SF Compact Display"',

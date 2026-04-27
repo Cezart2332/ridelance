@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import AppSidebar from './AppSidebar';
 import AppHeader from './AppHeader';
@@ -16,7 +17,14 @@ export default function AppLayout({ children, activeSection, setActiveSection, s
   const sectionTitle = sectionConfig.find((item) => item.id === activeSection)?.label || '';
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: DASHBOARD_TOKENS.surface }}>
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        backgroundColor: DASHBOARD_TOKENS.surface,
+        backgroundImage: `radial-gradient(circle at 100% 0, ${alpha(DASHBOARD_TOKENS.primary, 0.08)} 0%, transparent 40%)`,
+      }}
+    >
       <AppSidebar 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen} 
@@ -30,7 +38,7 @@ export default function AppLayout({ children, activeSection, setActiveSection, s
           setSidebarOpen={setSidebarOpen} 
           title={sectionTitle}
         />
-        <Box component="main" sx={{ p: { xs: 1.5, md: 2.4 }, flexGrow: 1 }}>
+        <Box component="main" sx={{ p: { xs: 2, md: 3 }, flexGrow: 1 }}>
           {children}
         </Box>
       </Box>

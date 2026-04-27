@@ -1,0 +1,631 @@
+Accesorii medicale:Nu exista cheltuieli deductibile
+Asigurari:
+Asigurări / abonamente medicale
+PROCENT DEDUCTIBIL
+400 €/an
+Pensii private
+PROCENT DEDUCTIBIL
+400 €/an
+Asigurări călătorie (în legătură cu activitatea PFA / PFI)
+PROCENT DEDUCTIBIL
+100%
+Asigurări malpraxis
+PROCENT DEDUCTIBIL
+100%
+Auto/Moto:
+Combustibil auto / moto (benzină / motorină / GPL)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Taxa ITP
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Chirie auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Motocicletă
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Scuter
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Trotinetă
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Autoturism
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Leasing financiar (plată avans)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Leasing financiar (plată dobandă)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Leasing financiar (plată comisioane)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Leasing financiar asigurări (CASCO & RCA)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+Leasing operațional (plată avans)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Leasing operațional (plată dobandă)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Leasing operațional (plată comisioane)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Leasing operațional asigurări (CASCO & RCA)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+Anvelope (cauciucuri) auto / moto / biciclete
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Lanțuri auto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Piese auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Revizie auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Trecere pod
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Manoperă reparații auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Accesorii pentru interior auto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Accesorii pentru exterior auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Colantare auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Aspirator auto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Produse de curățare auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Portbagaj exterior auto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Vopsea auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Kit de siguranță auto (trusa medicală, triunghiuri, stingător, vestă etc.)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Oglinzi auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Sisteme pentru testări și diagnoze auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Truse pentru reparații auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Cască de protecție
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Cameră video auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Navigator GPS
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Baterie auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Consumabile auto / moto (ulei, lichid de parbriz etc.)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Suport telefon
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Curățare auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+50%
+
+Biciclete:
+
+Bicicletă
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Chirie bicicletă
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Revizie bicicletă
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Alte accesorii bicicletă
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Oglinzi bicicletă
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Truse pentru reparații bicicletă
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Baterie bicicletă electrică
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Consumabile bicicletă (ulei, becuri etc)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Suport bicicletă pentru depozitare în casă
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Cutii depozitare accesorii pentru biciclete
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Calculatoare pentru biciclete
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Iluminat pentru biciclete
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Încuietori cablu pentru biciclete
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Anvelope și camere de biciclete
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Huse pentru șa de bicicletă
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Coșuri și remorci pentru biciclete
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Truse de vulcanizare pentru biciclete
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Manoperă reparații bicicletă
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Curățare biciclete
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+
+Carti, papetarie si jucarii:
+
+Cărți dezvoltare profesională (inclusiv audio)
+PROCENT DEDUCTIBIL
+100%
+Dosar de plastic
+PROCENT DEDUCTIBIL
+100%
+Portofolii, serviete și clipboard-uri
+PROCENT DEDUCTIBIL
+100%
+Plută și panouri textile
+PROCENT DEDUCTIBIL
+100%
+Sisteme de afișare, prezentare și planificatoare
+PROCENT DEDUCTIBIL
+100%
+Flipcharts
+PROCENT DEDUCTIBIL
+100%
+Accesorii de prezentare
+PROCENT DEDUCTIBIL
+100%
+Pixuri
+PROCENT DEDUCTIBIL
+100%
+Corector și radieră
+PROCENT DEDUCTIBIL
+100%
+Seturi de birou
+PROCENT DEDUCTIBIL
+100%
+Pixuri
+PROCENT DEDUCTIBIL
+100%
+Căptușeli
+PROCENT DEDUCTIBIL
+100%
+Markere
+PROCENT DEDUCTIBIL
+100%
+Creioane și ascuțitori
+PROCENT DEDUCTIBIL
+100%
+Instrumente de scriere premium
+PROCENT DEDUCTIBIL
+100%
+Rezerve și cerneală
+PROCENT DEDUCTIBIL
+100%
+Role hârtie
+PROCENT DEDUCTIBIL
+100%
+Benzi adezive
+PROCENT DEDUCTIBIL
+100%
+Hârtie pentru copiator
+PROCENT DEDUCTIBIL
+100%
+Hârtie de lucru
+PROCENT DEDUCTIBIL
+100%
+Plicuri
+PROCENT DEDUCTIBIL
+100%
+Blocuri de hârtie și note post-it
+PROCENT DEDUCTIBIL
+100%
+Hârtie fotografică
+PROCENT DEDUCTIBIL
+100%
+Etichete autoadezive
+PROCENT DEDUCTIBIL
+100%
+Calculatoare de birou
+PROCENT DEDUCTIBIL
+100%
+Articole de birou
+PROCENT DEDUCTIBIL
+100%
+Perforatoare
+PROCENT DEDUCTIBIL
+100%
+Foarfece și tăietori
+PROCENT DEDUCTIBIL
+100%
+Ștampile
+PROCENT DEDUCTIBIL
+100%
+Ghilotine și trimmere
+PROCENT DEDUCTIBIL
+100%
+Filme de laminare
+PROCENT DEDUCTIBIL
+100%
+Laminatoare
+PROCENT DEDUCTIBIL
+100%
+Tocătoare
+PROCENT DEDUCTIBIL
+100%
+Caiete
+PROCENT DEDUCTIBIL
+100%
+Seturi de papetărie
+PROCENT DEDUCTIBIL
+100%
+Alte accesorii școlare
+PROCENT DEDUCTIBIL
+100%
+Penare
+PROCENT DEDUCTIBIL
+100%
+
+Casa Deco: Nu exista cheltuieli deductibile
+
+Consumabile:  Nu exista cheltuieli deductibile
+
+Contributii catre stat/alte institutii:
+Contribuții CAS (pensie)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Contribuții CASS (sănătate)
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+TVA intracomunitar
+PROCENT DEDUCTIBIL
+100%
+Impozit reținut la sursă (comision, drepturi de autor etc.)
+PROCENT DEDUCTIBIL
+100%
+Contribuții reținute la sursă
+PROCENT DEDUCTIBIL
+100%
+Impozit auto / moto
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Contribuții asociații profesionale
+PROCENT DEDUCTIBIL
+100%
+Contribuții organizații profesionale
+PROCENT DEDUCTIBIL
+100%
+
+Electrocasnice: Nu exista cheltuieli deductibile
+
+Electronice:
+Căști
+PROCENT DEDUCTIBIL
+100%
+Tablete
+PROCENT DEDUCTIBIL
+100%
+eBook Reader și accesorii
+PROCENT DEDUCTIBIL
+100%
+
+
+IT:
+Laptop / PC
+PROCENT DEDUCTIBIL
+100%
+Telefoane mobile
+PROCENT DEDUCTIBIL
+100%
+Monitoare LCD și LED și accesorii
+PROCENT DEDUCTIBIL
+100%
+Tastaturi
+PROCENT DEDUCTIBIL
+100%
+Mouse
+PROCENT DEDUCTIBIL
+100%
+Mouse pad
+PROCENT DEDUCTIBIL
+100%
+Accesorii IT
+PROCENT DEDUCTIBIL
+100%
+Huse pentru telefoane mobile
+PROCENT DEDUCTIBIL
+100%
+Cabluri de date pentru telefonul mobil / tabletă
+PROCENT DEDUCTIBIL
+100%
+Încărcătoare pentru telefoane mobile / tablete
+PROCENT DEDUCTIBIL
+100%
+Stick-uri USB
+PROCENT DEDUCTIBIL
+100%
+Diverse periferice
+PROCENT DEDUCTIBIL
+100%
+Cameră web
+PROCENT DEDUCTIBIL
+100%
+DVD Writer
+PROCENT DEDUCTIBIL
+100%
+Hard disk-uri și accesorii
+PROCENT DEDUCTIBIL
+100%
+Memorie RAM
+PROCENT DEDUCTIBIL
+100%
+Plăci de bază
+PROCENT DEDUCTIBIL
+100%
+Surse de alimentare și baterii externe
+PROCENT DEDUCTIBIL
+100%
+Procesoare
+PROCENT DEDUCTIBIL
+100%
+Unitate cu stare solidă (SSD)
+PROCENT DEDUCTIBIL
+100%
+Plăci de sunet
+PROCENT DEDUCTIBIL
+100%
+Plăci video
+PROCENT DEDUCTIBIL
+100%
+Controlere ventilatoare
+PROCENT DEDUCTIBIL
+100%
+Ventilatoare PC
+PROCENT DEDUCTIBIL
+100%
+Genți pentru laptop
+PROCENT DEDUCTIBIL
+100%
+Stații de andocare
+PROCENT DEDUCTIBIL
+100%
+Baterii de laptop
+PROCENT DEDUCTIBIL
+100%
+Încărcătoare pentru laptop
+PROCENT DEDUCTIBIL
+100%
+Sisteme de securitate pentru laptop
+PROCENT DEDUCTIBIL
+100%
+Suporturi / Coolere pentru notebook
+PROCENT DEDUCTIBIL
+100%
+Alte accesorii pentru laptop
+PROCENT DEDUCTIBIL
+100%
+Cartușe de imprimare cu jet de cerneală
+PROCENT DEDUCTIBIL
+100%
+Tonere pentru imprimante laser
+PROCENT DEDUCTIBIL
+100%
+Accesorii pentru imprimantă
+PROCENT DEDUCTIBIL
+100%
+Benzi de etichete pentru imprimantă
+PROCENT DEDUCTIBIL
+100%
+Cabluri și accesorii
+PROCENT DEDUCTIBIL
+100%
+Convertoare media
+PROCENT DEDUCTIBIL
+100%
+Scanere
+PROCENT DEDUCTIBIL
+100%
+Imprimante și multifuncționale inclusiv 3D și accesorii
+PROCENT DEDUCTIBIL
+100%
+Adaptoare pentru telefoane mobile
+PROCENT DEDUCTIBIL
+100%
+Alte accesorii pentru telefoane mobile / tablete
+PROCENT DEDUCTIBIL
+100%
+Suport auto pentru telefon / tabletă
+PROCENT DEDUCTIBIL
+100%
+Smartwatch și accesorii
+PROCENT DEDUCTIBIL
+100%
+
+Maternitate: Nu exista cheltuieli deductibile 
+
+Moda:
+Ochelari de vedere
+PROCENT DEDUCTIBIL
+100%
+Lentile de contact
+PROCENT DEDUCTIBIL
+100%
+Accesorii pentru ochelari și lentile de contact
+PROCENT DEDUCTIBIL
+100%
+Uniforme
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+
+Produse de infrumusetare: Nu exista cheltuieli deductibile 
+
+Servicii/alte cheltuieli:
+Cheltuieli de protocol
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+Limitat
+Cheltuieli pregătire profesională
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Servicii contabilitate
+PROCENT DEDUCTIBIL
+100%
+Servicii juridice
+PROCENT DEDUCTIBIL
+100%
+Abonamente fitness
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100 €/an
+Abonamente telefonie mobilă
+PROCENT DEDUCTIBIL
+100%
+Abonamente platforme IT
+PROCENT DEDUCTIBIL
+100%
+Comisioane bancare
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Dobânda și comision credit
+DETALIIdropdown
+PROCENT DEDUCTIBIL
+100%
+Cazare în scopul desfășurării activității PFA
+PROCENT DEDUCTIBIL
+100%
+Formulare tipizate
+PROCENT DEDUCTIBIL
+100%
+Registre contabile
+PROCENT DEDUCTIBIL
+100%
+
+Sport: Nu exista cheltuieli deductibile 

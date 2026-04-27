@@ -1,4 +1,5 @@
 import { Badge, IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
@@ -18,10 +19,11 @@ export default function AppHeader({ sidebarOpen, setSidebarOpen, title }: AppHea
       elevation={0}
       sx={{
         borderRadius: 0,
-        borderBottom: `1px solid ${DASHBOARD_TOKENS.border}`,
-        px: { xs: 1.5, md: 3 },
-        py: 1.5,
-        backgroundColor: '#fff',
+        borderBottom: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+        px: { xs: 1.8, md: 3 },
+        py: 1.3,
+        backgroundColor: alpha(DASHBOARD_TOKENS.paper, 0.9),
+        backdropFilter: 'blur(10px)',
         position: 'sticky',
         top: 0,
         zIndex: 10,
@@ -40,12 +42,16 @@ export default function AppHeader({ sidebarOpen, setSidebarOpen, title }: AppHea
               e.stopPropagation();
               setSidebarOpen(!sidebarOpen);
             }}
-            sx={{ border: `1px solid ${DASHBOARD_TOKENS.border}`, backgroundColor: DASHBOARD_TOKENS.surfaceAlt }}
+            sx={{
+              border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+              backgroundColor: alpha(DASHBOARD_TOKENS.paper, 0.9),
+              '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.1) },
+            }}
           >
             <MenuRoundedIcon fontSize="small" color="primary" />
           </IconButton>
         )}
-        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '1.25rem', letterSpacing: -0.5 }}>
+        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '1.15rem', letterSpacing: -0.4 }}>
           {title}
         </Typography>
       </Stack>
@@ -54,7 +60,12 @@ export default function AppHeader({ sidebarOpen, setSidebarOpen, title }: AppHea
         <IconButton
           size="small"
           aria-label="Notificari"
-          sx={{ border: `1px solid ${DASHBOARD_TOKENS.border}`, backgroundColor: DASHBOARD_TOKENS.surface, transition: '0.3s', '&:hover': { backgroundColor: DASHBOARD_TOKENS.surfaceAlt } }}
+          sx={{
+            border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+            backgroundColor: alpha(DASHBOARD_TOKENS.paper, 0.92),
+            transition: '0.2s',
+            '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.1), color: DASHBOARD_TOKENS.primaryStrong },
+          }}
         >
           <Badge badgeContent={3} color="error" overlap="circular">
             <NotificationsRoundedIcon fontSize="small" sx={{ color: DASHBOARD_TOKENS.textMuted }} />
