@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { ScrollToTop } from './components/layout/ScrollToTop'
 import { AppLayout } from './components/layout/AppLayout'
+import InstallPWA from './components/pwa/InstallPWA'
 
 // External Components
 import AuthPage from './components/auth/AuthPage'
@@ -15,6 +16,7 @@ function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <InstallPWA />
       <Routes>
         {/* Auth pages — no navbar/footer */}
         <Route path="/auth" element={<AuthPage />} />

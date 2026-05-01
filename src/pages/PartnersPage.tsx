@@ -35,7 +35,6 @@ export function PartnersPage() {
                   '&:hover': {
                     boxShadow: TOKENS.shadow.lg,
                     borderColor: TOKENS.borderHover,
-                    transform: 'translateY(-3px)',
                   },
                 }}
               >

@@ -35,13 +35,30 @@ export const faqItems = [
 
 export const pricingCards = [
   {
+    title: 'RIDElance Solo',
+    price: '49 lei / săpt.',
+    priceNote: 'Abonament săptămânal, cu reînnoire automată în fiecare luni.',
+    summary: 'Pentru șoferii care au deja contabil sau vor să își gestioneze singuri partea contabilă, dar vor infrastructura RIDElance.',
+    cta: 'Alege Solo',
+    footnote: 'Fără contabilitate lunară inclusă.',
+    list: [
+      'Deschidere PFA la tarif preferențial — 300 lei',
+      'Export lunar pentru contabilul propriu',
+      'Asistență și consultanță constantă',
+      'Acces complet în dashboardul RIDElance',
+      'Organizare completă pentru activitatea de șofer PFA',
+      'Reduceri și beneficii prin partenerii RIDElance',
+    ],
+  },
+  {
     title: 'RIDElance Start',
-    price: '399 lei / luna',
+    price: '99 lei / săptămână',
+    priceNote: 'Abonament săptămânal, cu reînnoire automată în fiecare luni.',
     summary: 'Pentru șoferii care vor să înceapă rapid și să aibă totul pus la punct.',
-    cta: 'Incepe cu Start',
+    cta: 'Începe cu Start',
     list: [
       'Deschidere PFA cu cost rambursabil + bonus 100 lei',
-      'Asistență și consultanță constantă ',
+      'Asistență și consultanță constantă',
       'Acces complet în dashboardul RIDElance',
       'Contabilitate completă pentru PFA',
       'Reduceri și beneficii prin partenerii RIDElance',
@@ -49,16 +66,16 @@ export const pricingCards = [
   },
   {
     title: 'RIDElance Pro',
-    price: '599 lei / luna',
-    summary:
-      'Pentru cei care vor mai mult confort, suport prioritar și avantaje suplimentare.',
+    price: '149 lei / săptămână',
+    priceNote: 'Abonament săptămânal, cu reînnoire automată în fiecare luni.',
+    summary: 'Pentru cei care vor mai mult confort, suport prioritar și avantaje suplimentare.',
     cta: 'Vezi Pro',
-    intro: 'Include tot ce ai in Start, plus:',
+    intro: 'Include tot ce ai în Start, plus:',
     list: [
-      'Găzduire sediu social gratuit în București / Ilfov ',
+      'Găzduire sediu social gratuit în București / Ilfov',
       'Suport prioritar',
       'Oferte, campanii și promoții exclusive PRO',
-      'Reducere la chiria mașinilor RIDElance ',
+      'Reducere la chiria mașinilor RIDElance',
     ],
   },
 ]
@@ -203,6 +220,14 @@ export const homeSec6 = [
     price: '449 lei / an',
     desc: 'O soluție practică pentru cei care au nevoie de sediu social pentru PFA în București / Ilfov.',
     cta: 'Vezi serviciul',
+  },
+  {
+    title: 'Start Ride',
+    price: '799 lei',
+    priceNote: '* nu include taxe ARR',
+    desc: 'Începi pe PFA, fără să pierzi timp cu pași neclari. RIDElance te ghidează prin deschiderea PFA-ului și activarea pentru ridesharing, până ești pregătit să lucrezi independent.',
+    tagline: 'Proces clar. Pornire corectă. Suport până la activare.',
+    cta: 'Alege serviciul',
   },
 ]
 

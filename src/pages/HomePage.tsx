@@ -367,9 +367,9 @@ export function HomePage() {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
             gap: 4,
-            maxWidth: 1100,
+            maxWidth: 1200,
             mx: 'auto',
           }}
         >
@@ -384,15 +384,15 @@ export function HomePage() {
                 borderRadius: TOKENS.radius.xs,
                 backgroundColor: TOKENS.paper,
                 border:
-                  index === 1
+                  index === 2
                     ? `2px solid ${TOKENS.primary}`
                     : `1px solid ${TOKENS.border}`,
                 boxShadow:
-                  index === 1 ? TOKENS.shadow.glow : 'none',
+                  index === 2 ? TOKENS.shadow.glow : 'none',
                 transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
                 '&:hover': {
                   boxShadow:
-                    index === 1
+                    index === 2
                       ? '0 8px 32px rgba(26,100,237,0.18)'
                       : TOKENS.shadow.md,
                 },
@@ -428,6 +428,18 @@ export function HomePage() {
                   >
                     {item.price}
                   </Typography>
+                  {item.priceNote && (
+                    <Typography
+                      sx={{
+                        color: TOKENS.textMuted,
+                        fontSize: '0.78rem',
+                        mt: 0.5,
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      {item.priceNote}
+                    </Typography>
+                  )}
                 </Box>
 
                 <Typography
@@ -481,9 +493,21 @@ export function HomePage() {
                   ))}
                 </Stack>
 
+                {item.footnote && (
+                  <Typography
+                    sx={{
+                      fontSize: '0.8rem',
+                      color: TOKENS.textMuted,
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    {item.footnote}
+                  </Typography>
+                )}
+
                 <Button
                   onClick={() => navigate('/auth')}
-                  variant={index === 1 ? 'contained' : 'outlined'}
+                  variant={index === 2 ? 'contained' : 'outlined'}
                   fullWidth
                   size="large"
                   sx={{
@@ -492,9 +516,9 @@ export function HomePage() {
                     fontWeight: 700,
                     fontSize: '1rem',
                     borderRadius: TOKENS.radius.full,
-                    boxShadow: index === 1 ? TOKENS.shadow.glow : 'none',
+                    boxShadow: index === 2 ? TOKENS.shadow.glow : 'none',
                     '&:hover':
-                      index === 1
+                      index === 2
                         ? {
                           boxShadow: '0 12px 40px rgba(26,100,237,0.25)',
                           transform: 'translateY(-1px)',
@@ -528,10 +552,12 @@ export function HomePage() {
           />
           <Box
             sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+              display: 'flex',
+              flexDirection: 'row',
+              flexWrap: 'wrap',
               gap: 4,
-              maxWidth: 900,
+              justifyContent: 'center',
+              maxWidth: 1300,
               mx: 'auto',
             }}
           >
@@ -546,6 +572,8 @@ export function HomePage() {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 2,
+                  flex: '1 1 280px',
+                  maxWidth: 420,
                   transition: `border-color ${TOKENS.duration} ${TOKENS.easing}`,
                   '&:hover': {
                     borderColor: TOKENS.borderHover,
@@ -555,7 +583,7 @@ export function HomePage() {
                 <Stack
                   direction="row"
                   sx={{
-                    alignItems: 'center',
+                    alignItems: 'flex-start',
                     justifyContent: 'space-between',
                     flexWrap: 'wrap',
                     gap: 1,
@@ -564,15 +592,30 @@ export function HomePage() {
                   <Typography variant="h5" sx={{ fontWeight: 800, color: TOKENS.ink }}>
                     {svc.title}
                   </Typography>
-                  <Typography
-                    sx={{
-                      color: TOKENS.primaryStrong,
-                      fontWeight: 800,
-                      fontSize: '1.15rem',
-                    }}
-                  >
-                    {svc.price}
-                  </Typography>
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography
+                      sx={{
+                        color: TOKENS.primaryStrong,
+                        fontWeight: 800,
+                        fontSize: '1.15rem',
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {svc.price}
+                    </Typography>
+                    {svc.priceNote && (
+                      <Typography
+                        sx={{
+                          color: TOKENS.textMuted,
+                          fontSize: '0.7rem',
+                          mt: 0.3,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {svc.priceNote}
+                      </Typography>
+                    )}
+                  </Box>
                 </Stack>
                 <Typography
                   sx={{
@@ -584,6 +627,18 @@ export function HomePage() {
                 >
                   {svc.desc}
                 </Typography>
+                {svc.tagline && (
+                  <Typography
+                    sx={{
+                      color: TOKENS.ink,
+                      fontWeight: 700,
+                      fontSize: '0.88rem',
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    {svc.tagline}
+                  </Typography>
+                )}
                 <Button
                   onClick={() => navigate('/auth')}
                   variant="outlined"
@@ -973,12 +1028,6 @@ export function HomePage() {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  opacity: 0.7,
-                  transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-                  '&:hover': {
-                    opacity: 1,
-                    transform: 'scale(1.1)',
-                  },
                 }}
               >
                 <Box
@@ -990,11 +1039,6 @@ export function HomePage() {
                     maxWidth: 240,
                     width: 'auto',
                     objectFit: 'contain',
-                    filter: 'grayscale(100%) brightness(0.5)',
-                    transition: 'all 0.4s ease',
-                    '&:hover': {
-                      filter: 'none',
-                    },
                   }}
                 />
               </Box>

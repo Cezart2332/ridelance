@@ -46,27 +46,27 @@ export function PricingPage() {
                 key={`${item.title}-${index}`}
                 elevation={0}
                 sx={{
-                  width: { xs: '100%', sm: '80%', md: '35%' },
-                  maxWidth: { md: 500 },
+                  width: { xs: '100%', sm: '80%', md: '30%' },
+                  maxWidth: { md: 420 },
                   display: 'flex',
                   flexDirection: 'column',
                   p: { xs: 3, md: 4.5 },
                   borderRadius: TOKENS.radius.sm,
                   backgroundColor: TOKENS.paper,
-                  border:
-                    index === 1
-                      ? `2px solid ${TOKENS.primary}`
-                      : `1px solid ${TOKENS.border}`,
-                  boxShadow:
-                    index === 1 ? TOKENS.shadow.glow : TOKENS.shadow.md,
-                  transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-                  '&:hover': {
-                    transform: 'translateY(-6px)',
+                    border:
+                      index === 2
+                        ? `2px solid ${TOKENS.primary}`
+                        : `1px solid ${TOKENS.border}`,
                     boxShadow:
-                      index === 1
-                        ? '0 20px 56px rgba(26,100,237,0.2)'
-                        : TOKENS.shadow.lg,
-                  },
+                      index === 2 ? TOKENS.shadow.glow : TOKENS.shadow.md,
+                  transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
+                    '&:hover': {
+                      transform: 'translateY(-6px)',
+                      boxShadow:
+                        index === 2
+                          ? '0 20px 56px rgba(26,100,237,0.2)'
+                          : TOKENS.shadow.lg,
+                    },
                 }}
               >
                 <CardContent
@@ -101,6 +101,18 @@ export function PricingPage() {
                     >
                       {item.price}
                     </Typography>
+                    {item.priceNote && (
+                      <Typography
+                        sx={{
+                          color: TOKENS.textMuted,
+                          fontSize: '0.78rem',
+                          mt: 0.5,
+                          fontStyle: 'italic',
+                        }}
+                      >
+                        {item.priceNote}
+                      </Typography>
+                    )}
                     <Typography
                       sx={{
                         color: TOKENS.textMuted,
@@ -167,6 +179,19 @@ export function PricingPage() {
                       </Box>
                     ))}
                   </Box>
+
+                  {item.footnote && (
+                    <Typography
+                      sx={{
+                        fontSize: '0.8rem',
+                        color: TOKENS.textMuted,
+                        fontStyle: 'italic',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {item.footnote}
+                    </Typography>
+                  )}
 
                   <Button
                     variant="contained"

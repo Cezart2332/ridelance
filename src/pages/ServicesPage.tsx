@@ -22,9 +22,11 @@ export function ServicesPage() {
             </Typography>
             <Box
               sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+                display: 'flex',
+                flexDirection: 'row',
+                flexWrap: 'wrap',
                 gap: 4,
+                justifyContent: 'center',
               }}
             >
               {homeSec6.map((svc, i) => (
@@ -38,6 +40,8 @@ export function ServicesPage() {
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 2,
+                    flex: '1 1 280px',
+                    maxWidth: 420,
                     boxShadow: TOKENS.shadow.sm,
                     transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
                     '&:hover': {
@@ -50,7 +54,7 @@ export function ServicesPage() {
                   <Stack
                     direction="row"
                     sx={{
-                      alignItems: 'center',
+                      alignItems: 'flex-start',
                       justifyContent: 'space-between',
                       flexWrap: 'wrap',
                       gap: 1,
@@ -59,15 +63,30 @@ export function ServicesPage() {
                     <Typography variant="h5" sx={{ fontWeight: 800, color: TOKENS.ink }}>
                       {svc.title}
                     </Typography>
-                    <Typography
-                      sx={{
-                        color: TOKENS.primaryStrong,
-                        fontWeight: 800,
-                        fontSize: '1.15rem',
-                      }}
-                    >
-                      {svc.price}
-                    </Typography>
+                    <Box sx={{ textAlign: 'right' }}>
+                      <Typography
+                        sx={{
+                          color: TOKENS.primaryStrong,
+                          fontWeight: 800,
+                          fontSize: '1.15rem',
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {svc.price}
+                      </Typography>
+                      {svc.priceNote && (
+                        <Typography
+                          sx={{
+                            color: TOKENS.textMuted,
+                            fontSize: '0.7rem',
+                            mt: 0.3,
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {svc.priceNote}
+                        </Typography>
+                      )}
+                    </Box>
                   </Stack>
                   <Typography
                     sx={{
@@ -79,6 +98,18 @@ export function ServicesPage() {
                   >
                     {svc.desc}
                   </Typography>
+                  {svc.tagline && (
+                    <Typography
+                      sx={{
+                        color: TOKENS.ink,
+                        fontWeight: 700,
+                        fontSize: '0.88rem',
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      {svc.tagline}
+                    </Typography>
+                  )}
                   <Button
                     variant="outlined"
                     sx={{
