@@ -31,8 +31,13 @@ const InstallPWA: React.FC = () => {
 
     if (isStandalone) return;
 
-    // Detect iOS
+    // Detect mobile device
     const userAgent = window.navigator.userAgent.toLowerCase();
+    const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    
+    if (!isMobileDevice) return; // Do not show prompt on PC
+
+    // Detect iOS
     const ios = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(ios);
 

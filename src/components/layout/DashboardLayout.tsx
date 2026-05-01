@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Drawer,
@@ -20,6 +20,8 @@ import {
   AccordionSummary,
   AccordionDetails,
   Badge,
+  BottomNavigation,
+  BottomNavigationAction,
 } from '@mui/material'
 import { alpha, useTheme } from '@mui/material/styles'
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded'
@@ -68,6 +70,15 @@ export function DashboardLayout({
   const theme = useTheme()
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'))
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [isStandalone, setIsStandalone] = useState(false)
+  
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || 
+                        (window.navigator as any).standalone || 
+                        document.referrer.includes('android-app://');
+    setIsStandalone(standalone)
+  }, [])
+
   const activeParentItem = navItems.find((n) => n.subItems?.some((s) => s.id === activeId))
   const activeItem = navItems.find((n) => n.id === activeId) ?? activeParentItem
   const activeSubItem = activeParentItem?.subItems?.find((s) => s.id === activeId)
@@ -361,7 +372,7 @@ export function DashboardLayout({
       </Box>
 
       {/* Main Area */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, pb: (isStandalone && !isMdUp) ? '70px' : 0 }}>
         <AppBar
           position="sticky"
           elevation={0}
@@ -380,7 +391,7 @@ export function DashboardLayout({
                 onClick={handleDrawerToggle}
                 sx={{
                   mr: 1,
-                  display: { md: 'none' },
+                  display: isStandalone ? 'none' : { md: 'none' },
                   border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
                   bgcolor: alpha(TOKENS.paper, 0.9),
                 }}
@@ -426,6 +437,60 @@ export function DashboardLayout({
           {children}
         </Box>
       </Box>
+
+      {/* PWA Bottom Navigation */}
+      {isStandalone && !isMdUp && (
+        <Paper 
+          sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, pb: 'env(safe-area-inset-bottom)' }} 
+          elevation={8}
+        >
+          <BottomNavigation
+            showLabels
+            value={activeParentItem ? activeParentItem.id : activeId}
+            onChange={(_, newValue) => {
+              const item = navItems.find(n => n.id === newValue)
+              if (item?.subItems?.length) {
+                onNavClick(item.subItems[0].id)
+              } else {
+                onNavClick(newValue)
+              }
+            }}
+            sx={{
+              height: 65,
+              bgcolor: alpha(TOKENS.paper, 0.96),
+              backdropFilter: 'blur(10px)',
+              borderTop: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+              '& .MuiBottomNavigationAction-root': {
+                color: TOKENS.textMuted,
+                minWidth: 'auto',
+                px: 1,
+                '&.Mui-selected': {
+                  color: TOKENS.primaryStrong,
+                }
+              }
+            }}
+          >
+            {navItems.map((item) => {
+              const isSelected = (activeParentItem ? activeParentItem.id : activeId) === item.id;
+              return (
+                <BottomNavigationAction 
+                  key={item.id} 
+                  label={item.label} 
+                  value={item.id} 
+                  icon={renderIcon(item.icon, isSelected)} 
+                  sx={{
+                    '& .MuiBottomNavigationAction-label': {
+                      fontSize: '0.65rem',
+                      fontWeight: isSelected ? 700 : 500,
+                      mt: 0.5
+                    }
+                  }}
+                />
+              )
+            })}
+          </BottomNavigation>
+        </Paper>
+      )}
     </Box>
   )
 }
