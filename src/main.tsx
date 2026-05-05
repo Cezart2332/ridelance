@@ -1,11 +1,36 @@
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import { TOKENS } from './constants/tokens'
 
-registerSW({ immediate: true })
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { 
+      scope: '/',
+      updateViaCache: 'none'
+    })
+      .then((registration) => {
+        console.log('SW registered:', registration);
+        
+        // Check for updates periodically or on navigation
+        registration.update();
+      })
+      .catch((error) => {
+        console.error('SW registration failed:', error);
+      });
+  });
+
+  // Force reload when a new service worker takes control
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
+}
 
 const fontStack = [
   '"SF Compact Display"',
