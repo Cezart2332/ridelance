@@ -25,3 +25,4 @@ backend
 *.sw?
 .github/skills
 .env
+.agent/

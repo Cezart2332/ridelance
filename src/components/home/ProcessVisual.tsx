@@ -1,4 +1,4 @@
-import { Box, Container, Typography, Stack, alpha, useTheme, useMediaQuery } from '@mui/material'
+import { Box, Container, Typography, Stack, alpha } from '@mui/material'
 import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded'
 import CalculateRoundedIcon from '@mui/icons-material/CalculateRounded'
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded'
@@ -16,6 +16,8 @@ interface ProcessItem {
   icon: React.ReactNode
   x: number
   y: number
+  mx: number
+  my: number
 }
 
 const ITEMS: ProcessItem[] = [
@@ -24,66 +26,84 @@ const ITEMS: ProcessItem[] = [
     icon: <BusinessRoundedIcon sx={{ fontSize: 28 }} />,
     x: 18,
     y: 55,
+    mx: 20,
+    my: 15,
   },
   {
     label: 'Autorizații ARR',
     icon: <AssignmentRoundedIcon sx={{ fontSize: 28 }} />,
     x: 28,
     y: 35,
+    mx: 75,
+    my: 20,
   },
   {
     label: 'TVA intracomunitar',
     icon: <PublicRoundedIcon sx={{ fontSize: 28 }} />,
     x: 40,
     y: 20,
+    mx: 25,
+    my: 35,
   },
   {
     label: 'Deschidere conturi Fleet Uber si Bolt',
     icon: <DirectionsCarRoundedIcon sx={{ fontSize: 28 }} />,
     x: 52,
     y: 15,
+    mx: 80,
+    my: 40,
   },
   {
     label: 'Gestionare conturi Fleet',
     icon: <SettingsRoundedIcon sx={{ fontSize: 28 }} />,
     x: 65,
     y: 20,
+    mx: 20,
+    my: 55,
   },
   {
     label: 'Deschidere si management cont SPV',
     icon: <LockOpenRoundedIcon sx={{ fontSize: 28 }} />,
     x: 77,
     y: 35,
+    mx: 75,
+    my: 60,
   },
   {
     label: 'Trimiterea facturilor asociate fiecarei curse, direct in SPV',
     icon: <ReceiptLongRoundedIcon sx={{ fontSize: 28 }} />,
     x: 87,
     y: 55,
+    mx: 25,
+    my: 75,
   },
   {
     label: 'Contabilitate completă pentru PFA',
     icon: <CalculateRoundedIcon sx={{ fontSize: 28 }} />,
     x: 35,
     y: 65,
+    mx: 80,
+    my: 80,
   },
   {
     label: 'Dashboard pentru încărcarea cheltuielilor și documentelor',
     icon: <DashboardRoundedIcon sx={{ fontSize: 28 }} />,
     x: 52,
     y: 60,
+    mx: 30,
+    my: 90,
   },
   {
     label: 'Acces la mașini de închiriat',
     icon: <NoCrashRoundedIcon sx={{ fontSize: 28 }} />,
     x: 70,
     y: 65,
+    mx: 75,
+    my: 95,
   },
 ]
 
 export function ProcessVisual() {
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 }, textAlign: 'center', overflow: 'hidden' }}>
@@ -118,7 +138,7 @@ export function ProcessVisual() {
       <Box
         sx={{
           position: 'relative',
-          height: { xs: 'auto', md: 550 },
+          height: { xs: 850, md: 550 },
           width: '100%',
           display: 'flex',
           justifyContent: 'center',
@@ -127,21 +147,20 @@ export function ProcessVisual() {
           pb: { xs: 4, md: 0 },
         }}
       >
-        {/* Concentric Arcs (Desktop only) */}
-        {!isMobile && (
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: -150,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 1000,
-              height: 1000,
-              pointerEvents: 'none',
-              zIndex: 0,
-            }}
-          >
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+        {/* Concentric Arcs */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: { xs: -150, md: -150 },
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: { xs: 800, md: 1000 },
+            height: { xs: 800, md: 1000 },
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        >
+          {[1, 2, 3, 4, 5, 6].map((i) => (
               <Box
                 key={i}
                 sx={{
@@ -149,120 +168,75 @@ export function ProcessVisual() {
                   top: '50%',
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
-                  width: i * 200,
-                  height: i * 200,
+                  width: { xs: i * 150, md: i * 200 },
+                  height: { xs: i * 150, md: i * 200 },
                   border: `1px solid ${alpha(TOKENS.primary, 0.08)}`,
                   borderRadius: '50%',
                 }}
               />
             ))}
           </Box>
-        )}
 
         {/* Items */}
-        {isMobile ? (
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: 3,
-              width: '100%',
-              px: 2,
-            }}
-          >
-            {ITEMS.map((item, idx) => (
-              <Box
-                key={idx}
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  p: 2,
-                  borderRadius: '24px',
-                  backgroundColor: alpha(TOKENS.paper, 0.6),
-                  border: `1px solid ${TOKENS.border}`,
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: '16px',
-                    backgroundColor: TOKENS.primary,
-                    color: '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: `0 4px 12px ${alpha(TOKENS.primary, 0.2)}`,
-                  }}
-                >
-                  {item.icon}
-                </Box>
-                <Typography sx={{ fontWeight: 750, fontSize: '0.85rem', color: TOKENS.ink }}>
-                  {item.label}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        ) : (
-          <Box sx={{ position: 'relative', width: '100%', height: '100%', zIndex: 1 }}>
-            {ITEMS.map((item, idx) => (
-              <Box
-                key={idx}
-                sx={{
-                  position: 'absolute',
-                  left: `${item.x}%`,
-                  top: `${item.y}%`,
-                  transform: 'translate(-50%, -50%)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 2,
-                  transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                  '&:hover': {
-                    transform: 'translate(-50%, -58%)',
-                    '& > .icon-box': {
-                      boxShadow: `0 12px 32px ${alpha(TOKENS.primary, 0.4)}`,
-                      backgroundColor: TOKENS.primaryStrong,
-                    },
+        <Box sx={{ position: 'relative', width: '100%', height: '100%', zIndex: 1 }}>
+          {ITEMS.map((item, idx) => (
+            <Box
+              key={idx}
+              sx={{
+                position: 'absolute',
+                left: { xs: `${item.mx}%`, md: `${item.x}%` },
+                top: { xs: `${item.my}%`, md: `${item.y}%` },
+                transform: { xs: 'translate(-50%, -50%) scale(0.85)', md: 'translate(-50%, -50%)' },
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: { xs: 1, md: 2 },
+                transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                '&:hover': {
+                  transform: { xs: 'translate(-50%, -55%) scale(0.85)', md: 'translate(-50%, -58%) scale(1.05)' },
+                  '& > .icon-box': {
+                    boxShadow: `0 12px 32px ${alpha(TOKENS.primary, 0.4)}`,
+                    backgroundColor: TOKENS.primaryStrong,
                   },
+                },
+              }}
+            >
+              <Box
+                className="icon-box"
+                sx={{
+                  width: { xs: 48, md: 72 },
+                  height: { xs: 48, md: 72 },
+                  borderRadius: { xs: '12px', md: '20px' },
+                  backgroundColor: TOKENS.primary,
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: `0 8px 24px ${alpha(TOKENS.primary, 0.25)}`,
+                  transition: 'inherit',
+                  '& svg': {
+                    fontSize: { xs: 20, md: 28 }
+                  }
                 }}
               >
-                <Box
-                  className="icon-box"
-                  sx={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: '20px',
-                    backgroundColor: TOKENS.primary,
-                    color: '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: `0 8px 24px ${alpha(TOKENS.primary, 0.25)}`,
-                    transition: 'inherit',
-                  }}
-                >
-                  {item.icon}
-                </Box>
-                <Typography
-                  sx={{
-                    fontWeight: 800,
-                    fontSize: '0.88rem',
-                    color: TOKENS.ink,
-                    maxWidth: 160,
-                    textAlign: 'center',
-                    lineHeight: 1.2,
-                    textShadow: '0 0 20px #fff',
-                  }}
-                >
-                  {item.label}
-                </Typography>
+                {item.icon}
               </Box>
-            ))}
-          </Box>
-        )}
+              <Typography
+                sx={{
+                  fontWeight: 800,
+                  fontSize: { xs: '0.62rem', md: '0.88rem' },
+                  color: TOKENS.ink,
+                  maxWidth: { xs: 90, md: 160 },
+                  textAlign: 'center',
+                  lineHeight: 1.1,
+                  textShadow: '0 0 20px #fff',
+                }}
+              >
+                {item.label}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
       </Box>
     </Container>
   )
