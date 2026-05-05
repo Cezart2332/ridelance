@@ -15,7 +15,7 @@ export function PricingPage() {
       <Container maxWidth="xl">
         <Stack sx={{ justifyContent: 'center', alignItems: 'center' }} spacing={4} >
           <SectionHeader
-            title="Abonamente/Preturi"
+            title="Abonamente"
             subtitle="Planuri simple. Beneficii reale. Sprijin complet."
           />
           <Typography
@@ -53,20 +53,20 @@ export function PricingPage() {
                   p: { xs: 3, md: 4.5 },
                   borderRadius: TOKENS.radius.sm,
                   backgroundColor: TOKENS.paper,
-                    border:
-                      index === 2
-                        ? `2px solid ${TOKENS.primary}`
-                        : `1px solid ${TOKENS.border}`,
-                    boxShadow:
-                      index === 2 ? TOKENS.shadow.glow : TOKENS.shadow.md,
+                  border:
+                    index === 2
+                      ? `2px solid ${TOKENS.primary}`
+                      : `1px solid ${TOKENS.border}`,
+                  boxShadow:
+                    index === 2 ? TOKENS.shadow.glow : TOKENS.shadow.md,
                   transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-                    '&:hover': {
-                      transform: 'translateY(-6px)',
-                      boxShadow:
-                        index === 2
-                          ? '0 20px 56px rgba(26,100,237,0.2)'
-                          : TOKENS.shadow.lg,
-                    },
+                  '&:hover': {
+                    transform: 'translateY(-6px)',
+                    boxShadow:
+                      index === 2
+                        ? '0 20px 56px rgba(26,100,237,0.2)'
+                        : TOKENS.shadow.lg,
+                  },
                 }}
               >
                 <CardContent

@@ -36,7 +36,7 @@ export const faqItems = [
 export const pricingCards = [
   {
     title: 'RIDElance Solo',
-    price: '49 lei / săpt.',
+    price: '49 lei / săptămână',
     priceNote: 'Abonament săptămânal, cu reînnoire automată în fiecare luni.',
     summary: 'Pentru șoferii care au deja contabil sau vor să își gestioneze singuri partea contabilă, dar vor infrastructura RIDElance.',
     cta: 'Alege Solo',

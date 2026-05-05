@@ -32,9 +32,7 @@ export function CalculatorPage() {
     let netIncomeAfterTaxes = 0
 
     // CAS (25%)
-    if (profit < GROSS_SALARY * 12) {
-      CAS = 0
-    } else if (profit >= GROSS_SALARY * 12 && profit < GROSS_SALARY * 24) {
+    if (profit >= GROSS_SALARY * 12 && profit < GROSS_SALARY * 24) {
       CAS = 0.25 * (GROSS_SALARY * 12)
     } else if (profit >= GROSS_SALARY * 24) {
       CAS = 0.25 * (GROSS_SALARY * 24)
@@ -42,18 +40,20 @@ export function CalculatorPage() {
 
     // CASS (10%)
     if (profit < GROSS_SALARY * 6) {
-      CASS = 0
+      CASS = 0.1 * (GROSS_SALARY * 6) // Minimum contribution
     } else if (profit >= GROSS_SALARY * 6 && profit < GROSS_SALARY * 72) {
       CASS = 0.1 * profit
     } else if (profit >= GROSS_SALARY * 72) {
-      CASS = 0.1 * (GROSS_SALARY * 72)
+      CASS = 0.1 * (GROSS_SALARY * 72) // Maximum cap (72 salaries in 2024+)
     }
 
     // Impozit pe venit (10% on profit after deducting CAS and CASS)
-    incomeTax = 0.1 * Math.max(0, profit - CAS - CASS)
+    // Both CAS and CASS are fully deductible from the taxable base
+    const taxableIncome = Math.max(0, profit - CAS - CASS)
+    incomeTax = 0.1 * taxableIncome
 
     // Venit net PFA (What's left from your bank account = Income - Expenses - Taxes)
-    netIncomeAfterTaxes = profit > 0 ? (anualIncome - deductibleExpenses - CAS - CASS - incomeTax) : anualIncome - deductibleExpenses
+    netIncomeAfterTaxes = anualIncome - deductibleExpenses - CAS - CASS - incomeTax
 
     setRealCAS(roundToInt(CAS))
     setRealCASS(roundToInt(CASS))
@@ -165,50 +165,30 @@ export function CalculatorPage() {
                 <Typography variant="h6" sx={{ mb: 3.5, fontWeight: 800, color: TOKENS.ink }}>
                   Rezumat Fiscal
                 </Typography>
-                <Stack spacing={2.2}>
+                <Stack component="div" spacing={2.2}>
                   <TaxRow
-                    label="Venit brut estimat"
-                    value={`${roundToInt(anualIncome).toLocaleString()} RON`}
+                    label="Venit impozabil"
+                    value={`${Math.max(0, roundToInt(anualIncome - deductibleExpenses - realCAS - realCASS)).toLocaleString()} lei`}
                   />
-                  {deductibleExpenses > 0 && (
-                    <TaxRow
-                      label="Cheltuieli deductibile"
-                      value={`-${roundToInt(deductibleExpenses).toLocaleString()} RON`}
-                    />
-                  )}
                   <TaxRow
-                    label="Venit impozabil (Profit)"
-                    value={`${Math.max(0, roundToInt(anualIncome - deductibleExpenses)).toLocaleString()} RON`}
+                    label="Contributii CAS"
+                    value={`${realCAS.toLocaleString()} lei`}
+                  />
+                  <TaxRow
+                    label="Contributii CASS"
+                    value={`${realCASS.toLocaleString()} lei`}
+                  />
+                  <TaxRow
+                    label="Impozit venit"
+                    value={`${realIncomeTax.toLocaleString()} lei`}
                   />
                   <Box sx={{ my: 1, borderTop: `1px solid ${TOKENS.border}`, opacity: 0.5 }} />
                   <TaxRow
-                    label="Impozit pe venit (10%)"
-                    value={`-${realIncomeTax.toLocaleString()} RON`}
+                    label="Venit net"
+                    value={`${netIncomeRealSystem.toLocaleString()} lei`}
+                    bold
+                    highlight
                   />
-                  <TaxRow
-                    label="Contribuție CAS (25%)"
-                    value={`-${realCAS.toLocaleString()} RON`}
-                  />
-                  {realCASS > 0 && (
-                    <TaxRow
-                      label="Contribuție CASS (10%)"
-                      value={`-${realCASS.toLocaleString()} RON`}
-                    />
-                  )}
-                  <Box
-                    sx={{
-                      mt: 1.5,
-                      pt: 2.5,
-                      borderTop: `2px dashed ${TOKENS.border}`,
-                    }}
-                  >
-                    <TaxRow
-                      label="Venit Net Real PFA"
-                      value={`${netIncomeRealSystem.toLocaleString()} RON`}
-                      bold
-                      highlight
-                    />
-                  </Box>
                 </Stack>
               </Box>
             </Box>

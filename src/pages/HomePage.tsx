@@ -3,9 +3,7 @@ import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
 import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
-import { GradientCheckIcon } from '../components/common/GradientCheckIcon'
 import {
-  homeSec2,
   homeSec3,
   homeSec6,
   homeSec9,
@@ -21,6 +19,7 @@ import dashboard from '../assets/dashboard.png'
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
+import { ProcessVisual } from '../components/home/ProcessVisual'
 
 export function HomePage() {
   const navigate = useNavigate()
@@ -216,56 +215,7 @@ export function HomePage() {
       </Container>
 
       {/* ═══════ 2. TOT PROCESUL ═══════ */}
-      <Container maxWidth="lg" sx={{ mt: { xs: 7, md: 10 } }}>
-        <SectionHeader
-          title="Tot procesul, intr-un singur loc"
-          subtitle="Acoperim pasii esentiali, de la inceput pana la activitate"
-        />
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
-            gap: { xs: 2, md: 3 },
-          }}
-        >
-          {homeSec2.map((item, i) => (
-            <Paper
-              key={i}
-              elevation={0}
-              sx={{
-                px: { xs: 3, md: 4 },
-                py: { xs: 2, md: 2.5 },
-                borderRadius: '50px',
-                border: `1px solid ${TOKENS.border}`,
-                backgroundColor: TOKENS.paper,
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                textAlign: 'left',
-                gap: 2,
-                transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-                '&:hover': {
-                  borderColor: TOKENS.borderHover,
-                  boxShadow: TOKENS.shadow.md,
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <GradientCheckIcon />
-              <Typography
-                sx={{
-                  fontWeight: 650,
-                  color: TOKENS.ink,
-                  fontSize: '0.95rem',
-                  lineHeight: 1.4,
-                }}
-              >
-                {item}
-              </Typography>
-            </Paper>
-          ))}
-        </Box>
-      </Container>
+      <ProcessVisual />
 
       {/* ═══════ 3. CUM FUNCTIONEAZA ═══════ */}
       <Box

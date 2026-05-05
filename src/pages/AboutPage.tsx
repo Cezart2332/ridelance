@@ -54,7 +54,7 @@ export function AboutPage() {
               return (
                 <Box key={i} sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'flex-start', mb: { xs: 6, md: 8 }, position: 'relative' }}>
                   {/* Timeline Dot */}
-                  <Box sx={{ position: 'absolute', left: { xs: 24, md: '50%' }, top: { xs: 2, md: 24 }, width: 16, height: 16, borderRadius: '50%', bgcolor: TOKENS.primary, transform: { xs: 'translateX(-7px)', md: 'translateX(-50%)' }, border: `3px solid ${TOKENS.surface}`, zIndex: 1 }} />
+                  <Box sx={{ position: 'absolute', left: { xs: 24, md: '50%' }, top: { xs: 8, md: '50%' }, width: 16, height: 16, borderRadius: '50%', bgcolor: TOKENS.primary, transform: { xs: 'translateX(-7px)', md: 'translate(-50%, -50%)' }, border: `3px solid ${TOKENS.surface}`, zIndex: 1 }} />
 
                   {/* MOBILE LAYOUT */}
                   <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', width: '100%', pl: '60px' }}>
@@ -69,33 +69,29 @@ export function AboutPage() {
                   </Box>
 
                   {/* DESKTOP LAYOUT */}
-                  <Box sx={{ display: { xs: 'none', md: 'flex' }, width: '100%' }}>
+                  <Box sx={{ display: { xs: 'none', md: 'flex' }, width: '100%', alignItems: 'center' }}>
                     {/* Left Side */}
-                    <Box sx={{ width: '50%', pr: 6, display: 'flex', justifyContent: 'flex-end', pt: 2, position: 'relative' }}>
+                    <Box sx={{ width: '50%', pr: 6, display: 'flex', justifyContent: 'flex-end', position: 'relative' }}>
                       {isEven ? (
                         <Paper elevation={0} sx={{ p: 4, width: '100%', borderRadius: TOKENS.radius.lg, border: `1px solid ${TOKENS.border}`, bgcolor: TOKENS.paper, boxShadow: TOKENS.shadow.sm, transition: `all ${TOKENS.duration} ${TOKENS.easing}`, '&:hover': { borderColor: TOKENS.borderHover, boxShadow: TOKENS.shadow.md } }}>
                           <Typography sx={{ color: TOKENS.textMuted, lineHeight: 1.7, fontSize: '0.98rem' }}>{sec.text}</Typography>
                         </Paper>
                       ) : (
-                        <Box sx={{ display: 'flex', alignItems: 'center', height: 'fit-content' }}>
-                          <Box sx={{ px: 3, py: 1.2, borderRadius: TOKENS.radius.full, bgcolor: TOKENS.primary, color: '#fff', fontWeight: 650, fontSize: '0.95rem', boxShadow: TOKENS.shadow.sm }}>
-                            {sec.title}
-                          </Box>
+                        <Box sx={{ px: 3, py: 1.2, borderRadius: TOKENS.radius.full, bgcolor: TOKENS.primary, color: '#fff', fontWeight: 650, fontSize: '0.95rem', boxShadow: TOKENS.shadow.sm }}>
+                          {sec.title}
                         </Box>
                       )}
                     </Box>
 
                     {/* Right Side */}
-                    <Box sx={{ width: '50%', pl: 6, display: 'flex', flexDirection: 'column', pt: 2 }}>
+                    <Box sx={{ width: '50%', pl: 6, display: 'flex', justifyContent: 'flex-start' }}>
                       {!isEven ? (
                         <Paper elevation={0} sx={{ p: 4, width: '100%', borderRadius: TOKENS.radius.lg, border: `1px solid ${TOKENS.border}`, bgcolor: TOKENS.paper, boxShadow: TOKENS.shadow.sm, transition: `all ${TOKENS.duration} ${TOKENS.easing}`, '&:hover': { borderColor: TOKENS.borderHover, boxShadow: TOKENS.shadow.md } }}>
                           <Typography sx={{ color: TOKENS.textMuted, lineHeight: 1.7, fontSize: '0.98rem' }}>{sec.text}</Typography>
                         </Paper>
                       ) : (
-                        <Box sx={{ display: 'flex', alignItems: 'center', height: 'fit-content' }}>
-                          <Box sx={{ px: 3, py: 1.2, borderRadius: TOKENS.radius.full, bgcolor: TOKENS.primary, color: '#fff', fontWeight: 650, fontSize: '0.95rem', boxShadow: TOKENS.shadow.sm }}>
-                            {sec.title}
-                          </Box>
+                        <Box sx={{ px: 3, py: 1.2, borderRadius: TOKENS.radius.full, bgcolor: TOKENS.primary, color: '#fff', fontWeight: 650, fontSize: '0.95rem', boxShadow: TOKENS.shadow.sm }}>
+                          {sec.title}
                         </Box>
                       )}
                     </Box>
