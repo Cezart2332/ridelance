@@ -10,9 +10,10 @@ interface AppLayoutProps {
   activeSection: string;
   setActiveSection: React.Dispatch<React.SetStateAction<any>>;
   sectionConfig: readonly { id: string; label: string }[];
+  onLogout?: () => void;
 }
 
-export default function AppLayout({ children, activeSection, setActiveSection, sectionConfig }: AppLayoutProps) {
+export default function AppLayout({ children, activeSection, setActiveSection, sectionConfig, onLogout }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sectionTitle = sectionConfig.find((item) => item.id === activeSection)?.label || '';
 
@@ -30,7 +31,8 @@ export default function AppLayout({ children, activeSection, setActiveSection, s
         setSidebarOpen={setSidebarOpen} 
         activeSection={activeSection} 
         setActiveSection={setActiveSection} 
-        sectionConfig={sectionConfig} 
+        sectionConfig={sectionConfig}
+        onLogout={onLogout}
       />
       <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <AppHeader 

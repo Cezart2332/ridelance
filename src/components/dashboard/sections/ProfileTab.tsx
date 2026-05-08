@@ -1,11 +1,63 @@
-import { Avatar, Chip, Paper, Stack, Typography } from '@mui/material'
+import { useEffect, useState } from 'react'
+import { Avatar, Chip, CircularProgress, Paper, Stack, Typography, Button, Box } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 
 import character2 from '../../../assets/Stickers/character 2.png'
-import { dashboardProfileFields, dashboardRideAccounts } from '../dashboardData'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { userService, type UserProfile, type DashboardSummary } from '../../../services/user.service'
+import { documentService } from '../../../services/document.service'
+import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
+import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
+import { formatRegistrationType } from '../../../utils/formatters'
 
 export function ProfileTab() {
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  const [summary, setSummary] = useState<DashboardSummary | null>(null)
+  const [downloading, setDownloading] = useState(false)
+
+  useEffect(() => {
+    Promise.all([
+      userService.getProfile(),
+      userService.getDashboardSummary()
+    ]).then(([profileData, summaryData]) => {
+      setProfile(profileData)
+      setSummary(summaryData)
+    }).catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleDownloadCertificat = async () => {
+    if (!summary?.pfaCertificatId) return
+    setDownloading(true)
+    try {
+      await documentService.downloadAndSave(summary.pfaCertificatId, 'Certificat_Inregistrare.pdf')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  const profileFields = profile
+    ? [
+        { label: 'Prenume', value: profile.firstName },
+        { label: 'Nume', value: profile.lastName },
+        { label: 'Email', value: profile.email },
+        { label: 'Telefon', value: profile.phoneNumber || '—' },
+        { label: 'Rol', value: profile.role },
+        { label: 'Parola', value: '**********' },
+        { label: 'Plan activ', value: 'RIDElance Pro' },
+      ]
+    : []
+
+  if (loading) {
+    return (
+      <Stack sx={{ alignItems: 'center', justifyContent: 'center', height: 200 }}>
+        <CircularProgress size={32} sx={{ color: DASHBOARD_TOKENS.primary }} />
+      </Stack>
+    )
+  }
+
   return (
     <div
       style={{
@@ -26,15 +78,17 @@ export function ProfileTab() {
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
           <Avatar src={character2} alt="Poza profil" sx={{ width: 64, height: 64 }} />
           <div>
-            <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>Cont RIDElance</Typography>
+            <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>
+              {profile ? `${profile.firstName} ${profile.lastName}` : 'Cont RIDElance'}
+            </Typography>
             <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.5 }}>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex, nostrum?
+              {profile?.email}
             </Typography>
           </div>
         </Stack>
 
         <Stack spacing={1.5} sx={{ mt: 3 }}>
-          {dashboardProfileFields.map((field) => (
+          {profileFields.map((field) => (
             <Paper
               key={field.label}
               elevation={0}
@@ -65,7 +119,10 @@ export function ProfileTab() {
       >
         <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>Conturi Uber & Bolt</Typography>
         <Stack spacing={1.4} sx={{ mt: 2 }}>
-          {dashboardRideAccounts.map((account) => (
+          {[
+            { provider: 'Uber', accountEmail: '—', status: 'Neconfigurat' },
+            { provider: 'Bolt', accountEmail: '—', status: 'Neconfigurat' },
+          ].map((account) => (
             <Paper
               key={account.provider}
               elevation={0}
@@ -76,10 +133,7 @@ export function ProfileTab() {
                 backgroundColor: DASHBOARD_TOKENS.surface,
               }}
             >
-              <Stack
-                direction="row"
-                sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1 }}
-              >
+              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
                 <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700 }}>
                   {account.provider}
                 </Typography>
@@ -89,8 +143,8 @@ export function ProfileTab() {
                   sx={{
                     fontWeight: 700,
                     borderRadius: DASHBOARD_TOKENS.radius.full,
-                    color: '#2e7d32',
-                    backgroundColor: alpha('#2e7d32', 0.1),
+                    color: '#ed6c02',
+                    backgroundColor: alpha('#ed6c02', 0.1),
                   }}
                 />
               </Stack>
@@ -101,6 +155,56 @@ export function ProfileTab() {
           ))}
         </Stack>
       </Paper>
+
+      {summary?.pfaStatus?.toLowerCase() === 'approved' && (
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2.5, md: 3 },
+            borderRadius: DASHBOARD_TOKENS.radius.lg,
+            border: `1px solid ${DASHBOARD_TOKENS.border}`,
+            boxShadow: DASHBOARD_TOKENS.shadow.sm,
+            background: `linear-gradient(135deg, ${alpha(DASHBOARD_TOKENS.primary, 0.05)} 0%, ${DASHBOARD_TOKENS.surface} 100%)`,
+          }}
+        >
+          <Stack direction="row" sx={{ alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <Box sx={{ p: 1, borderRadius: DASHBOARD_TOKENS.radius.sm, bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.1), color: DASHBOARD_TOKENS.primary }}>
+              <HowToRegRoundedIcon />
+            </Box>
+            <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>Informații PFA</Typography>
+          </Stack>
+
+          <Stack spacing={2}>
+            <Box>
+              <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.8rem' }}>CUI (Cod Unic de Înregistrare)</Typography>
+              <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700, fontSize: '1.1rem' }}>{summary.pfaCui}</Typography>
+            </Box>
+            
+            <Box>
+              <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.8rem' }}>Tip Înregistrare</Typography>
+              <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700 }}>{formatRegistrationType(summary.pfaRegistrationType)}</Typography>
+            </Box>
+
+            <Button
+              variant="contained"
+              fullWidth
+              startIcon={downloading ? <CircularProgress size={18} color="inherit" /> : <FileDownloadRoundedIcon />}
+              onClick={handleDownloadCertificat}
+              disabled={downloading || !summary.pfaCertificatId}
+              sx={{
+                mt: 1,
+                py: 1.2,
+                fontWeight: 700,
+                boxShadow: 'none',
+                bgcolor: DASHBOARD_TOKENS.primary,
+                '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong, boxShadow: 'none' }
+              }}
+            >
+              Descarcă Certificat de Înregistrare
+            </Button>
+          </Stack>
+        </Paper>
+      )}
     </div>
   )
 }

@@ -49,6 +49,7 @@ interface DashboardLayoutProps {
   navItems: NavItem[]
   activeId: string
   onNavClick: (id: string) => void
+  onLogout?: () => void
   userName?: string
   userRole?: string
   userAvatar?: string
@@ -62,6 +63,7 @@ export function DashboardLayout({
   navItems,
   activeId,
   onNavClick,
+  onLogout,
   userName = 'Utilizator',
   userRole = 'Admin',
   userAvatar,
@@ -323,6 +325,8 @@ export function DashboardLayout({
           </Box>
           <IconButton
             size="small"
+            onClick={onLogout}
+            title="Deconectare"
             sx={{
               color: alpha(TOKENS.ink, 0.35),
               border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,

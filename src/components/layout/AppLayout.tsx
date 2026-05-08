@@ -20,6 +20,7 @@ import { PartnersPage } from '../../pages/PartnersPage'
 import { ContactPage } from '../../pages/ContactPage'
 import { TermsPage } from '../../pages/TermsPage'
 import { PrivacyPolicyPage } from '../../pages/PrivacyPolicyPage'
+import { CarsPage } from '../../pages/CarsPage'
 
 export function AppLayout() {
   const location = useLocation()
@@ -297,6 +298,7 @@ export function AppLayout() {
       <Box component="main" sx={{ flex: 1, position: 'relative' }}>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/masini" element={<CarsPage />} />
           <Route path="/intrebari-frecvente" element={<FaqPage />} />
           <Route path="/servicii" element={<ServicesPage />} />
           <Route path="/despre-ridelance" element={<AboutPage />} />

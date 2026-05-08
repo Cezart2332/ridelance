@@ -3,10 +3,14 @@ import { ScrollToTop } from './components/layout/ScrollToTop'
 import { AppLayout } from './components/layout/AppLayout'
 import InstallPWA from './components/pwa/InstallPWA'
 
-// External Components
+// Auth
 import AuthPage from './components/auth/AuthPage'
 import RegisterPfaPage from './components/auth/RegisterPfaPage'
 import RegistrationSuccessPage from './components/auth/RegistrationSuccessPage'
+import ProtectedRoute from './components/auth/ProtectedRoute'
+import RoleRedirect from './components/auth/RoleRedirect'
+
+// Dashboards
 import DashboardPage from './components/dashboard/DashboardPage'
 import DashboardDemoPage from './components/dashboard-demo/DashboardDemoPage'
 import { AdminDashboard } from './pages/AdminDashboard'
@@ -18,22 +22,30 @@ function App() {
       <ScrollToTop />
       <InstallPWA />
       <Routes>
-        {/* Auth pages — no navbar/footer */}
+        {/* ── Public auth pages ── */}
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/inregistrare/pfa" element={<RegisterPfaPage />} />
         <Route path="/inregistrare/succes" element={<RegistrationSuccessPage />} />
-        
-        {/* Real dashboard — uses its own layout */}
-        <Route path="/app/*" element={<DashboardPage />} />
-        
-        {/* Demo dashboard */}
+
+        {/* ── Protected routes ── */}
+        <Route element={<ProtectedRoute />}>
+          {/* /app → role-based redirect */}
+          <Route path="/app" element={<RoleRedirect />} />
+
+          {/* Client dashboard */}
+          <Route path="/app/dashboard/*" element={<DashboardPage />} />
+
+          {/* Contabil dashboard */}
+          <Route path="/contabil/*" element={<ContabilDashboard />} />
+
+          {/* Admin dashboard */}
+          <Route path="/admin/*" element={<AdminDashboard />} />
+        </Route>
+
+        {/* Demo (unprotected, for showcasing) */}
         <Route path="/demo/*" element={<DashboardDemoPage />} />
 
-        {/* Admin & Contabil dashboards — classic layout */}
-        <Route path="/contabil/*" element={<ContabilDashboard />} />
-        <Route path="/admin/*" element={<AdminDashboard />} />
-        
-        {/* Landing pages — wrapped in AppLayout with navbar & footer */}
+        {/* Landing pages */}
         <Route path="/*" element={<AppLayout />} />
       </Routes>
     </BrowserRouter>

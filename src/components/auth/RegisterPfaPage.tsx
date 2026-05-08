@@ -13,11 +13,15 @@ import {
   Tabs,
   TextField,
   Typography,
+  Alert
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
+import { pfaService } from '../../services/pfa.service'
+import { documentService } from '../../services/document.service'
+import { getErrorMessage } from '../../utils/errorHandler'
 
 import logo from '../../assets/logo.svg'
 import iconUpload from '../../assets/SVG/2- Regular/upload.svg'
@@ -60,7 +64,7 @@ const inputSx = {
   },
 }
 
-function UploadField({ label, fileName, onFileChange }: { label: string; fileName: string; onFileChange: (name: string) => void }) {
+function UploadField({ label, file, onFileChange }: { label: string; file: File | null; onFileChange: (file: File | null) => void }) {
   return (
     <Box>
       <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
@@ -75,8 +79,8 @@ function UploadField({ label, fileName, onFileChange }: { label: string; fileNam
           px: 2.5,
           py: 1.8,
           borderRadius: TOKENS.radius.md,
-          border: `1.5px dashed ${fileName ? TOKENS.primary : TOKENS.borderHover}`,
-          backgroundColor: fileName ? alpha(TOKENS.primary, 0.03) : '#fff',
+          border: `1.5px dashed ${file ? TOKENS.primary : TOKENS.borderHover}`,
+          backgroundColor: file ? alpha(TOKENS.primary, 0.03) : '#fff',
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           '&:hover': {
@@ -85,7 +89,7 @@ function UploadField({ label, fileName, onFileChange }: { label: string; fileNam
           },
         }}
       >
-        {fileName ? (
+        {file ? (
           <CheckCircleOutlineRoundedIcon sx={{ color: TOKENS.primary, fontSize: 22 }} />
         ) : (
           <img
@@ -99,15 +103,15 @@ function UploadField({ label, fileName, onFileChange }: { label: string; fileNam
             }}
           />
         )}
-        <Typography sx={{ color: fileName ? TOKENS.ink : TOKENS.textMuted, fontWeight: fileName ? 600 : 500, fontSize: '0.92rem' }}>
-          {fileName || `Incarca ${label.toLowerCase()}`}
+        <Typography sx={{ color: file ? TOKENS.ink : TOKENS.textMuted, fontWeight: file ? 600 : 500, fontSize: '0.92rem' }}>
+          {file ? file.name : `Incarca ${label.toLowerCase()}`}
         </Typography>
         <input
           type="file"
           hidden
           onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) onFileChange(file.name)
+            const f = e.target.files?.[0]
+            if (f) onFileChange(f)
           }}
         />
       </Box>
@@ -136,9 +140,13 @@ export default function RegisterPfaPage() {
       .catch((err) => console.error('Failed to load counties:', err))
   }, [])
 
+  // "Am PFA" form state
+  const [amPfaName, setAmPfaName] = useState('')
+  const [amPfaPhone, setAmPfaPhone] = useState('')
+
   // "Nu am PFA" form state
-  const [buletin, setBuletin] = useState('')
-  const [atestat, setAtestat] = useState('')
+  const [buletinFile, setBuletinFile] = useState<File | null>(null)
+  const [atestatFile, setAtestatFile] = useState<File | null>(null)
   const [durataContract, setDurataContract] = useState('3')
   const [strada, setStrada] = useState('')
   const [numar, setNumar] = useState('')
@@ -147,6 +155,7 @@ export default function RegisterPfaPage() {
   const [suntProprietar, setSuntProprietar] = useState(false)
 
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const availableCities = useMemo(() => {
     if (!judet || countiesData.length === 0) return []
@@ -155,11 +164,43 @@ export default function RegisterPfaPage() {
   }, [judet, countiesData])
 
   const handleSubmitNuAmPfa = async () => {
+    setError(null)
+    if (!buletinFile || !strada || !numar || !oras || !judet) {
+      setError('Te rugam sa completezi adresa si sa incarci macar buletinul.')
+      return
+    }
+
     try {
       setIsLoading(true)
-      const secret = import.meta.env.VITE_SECRET_STRIPE
-      const productId = import.meta.env.VITE_PRODUCT_ID
 
+      // 1. Create PFA record
+      const pfaId = await pfaService.create({
+        registrationType: 'NuAmPfa',
+        contractDuration: parseInt(durataContract, 10),
+        street: strada,
+        number: numar,
+        city: oras,
+        county: judet,
+        isOwner: suntProprietar
+      });
+
+      // 2. Upload Documents
+      if (buletinFile) {
+        await documentService.upload(buletinFile, 'Buletin', pfaId);
+      }
+      if (atestatFile) {
+        await documentService.upload(atestatFile, 'AtestatSofer', pfaId);
+      }
+
+      // 3. Optional: Trigger Stripe Session
+      const secret = import.meta.env.VITE_SECRET_STRIPE
+      if (!secret) {
+        // Skip stripe in dev
+        navigate('/inregistrare/succes')
+        return
+      }
+
+      const productId = import.meta.env.VITE_PRODUCT_ID
       const body = new URLSearchParams()
       body.append('success_url', `${window.location.origin}/inregistrare/succes`)
       body.append('cancel_url', `${window.location.origin}/inregistrare/pfa`)
@@ -183,18 +224,37 @@ export default function RegisterPfaPage() {
         window.location.href = data.url
       } else {
         console.error('Stripe error:', data)
-        setIsLoading(false)
         navigate('/inregistrare/succes') // fallback
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
+      setError(getErrorMessage(err, 'A aparut o eroare la inregistrare. Te rugam sa incerci din nou.'))
+    } finally {
       setIsLoading(false)
-      navigate('/inregistrare/succes')
     }
   }
 
-  const handleSubmitAmPfa = () => {
-    navigate('/inregistrare/succes')
+  const handleSubmitAmPfa = async () => {
+    setError(null)
+    if (!amPfaName || !amPfaPhone) {
+      setError('Te rugam sa completezi toate campurile.')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      await pfaService.create({
+        registrationType: 'AmPfa',
+        fullName: amPfaName,
+        phone: amPfaPhone,
+        isOwner: false // default
+      });
+      navigate('/inregistrare/succes')
+    } catch (err: any) {
+      setError(getErrorMessage(err, 'A aparut o eroare. Te rugam sa incerci din nou.'))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -241,9 +301,15 @@ export default function RegisterPfaPage() {
               Selecteaza situatia ta actuala pentru a continua
             </Typography>
 
+            {error && (
+              <Alert severity="error" sx={{ mb: 3, borderRadius: TOKENS.radius.md }}>
+                {error}
+              </Alert>
+            )}
+
             <Tabs
               value={tab}
-              onChange={(_, v) => setTab(v)}
+              onChange={(_, v) => { setTab(v); setError(null); }}
               variant="fullWidth"
               sx={{
                 mb: 4,
@@ -291,20 +357,17 @@ export default function RegisterPfaPage() {
                 <Stack spacing={2.5}>
                   <Box>
                     <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>Nume complet</Typography>
-                    <TextField fullWidth placeholder="Numele tau" sx={inputSx} />
-                  </Box>
-                  <Box>
-                    <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>Email</Typography>
-                    <TextField fullWidth placeholder="email@exemplu.ro" type="email" sx={inputSx} />
+                    <TextField fullWidth placeholder="Numele tau" value={amPfaName} onChange={(e) => setAmPfaName(e.target.value)} sx={inputSx} />
                   </Box>
                   <Box>
                     <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>Telefon</Typography>
-                    <TextField fullWidth placeholder="07XX XXX XXX" type="tel" sx={inputSx} />
+                    <TextField fullWidth placeholder="07XX XXX XXX" type="tel" value={amPfaPhone} onChange={(e) => setAmPfaPhone(e.target.value)} sx={inputSx} />
                   </Box>
                   <Button
                     variant="contained"
                     size="large"
                     fullWidth
+                    disabled={isLoading}
                     endIcon={<ArrowForwardRoundedIcon />}
                     onClick={handleSubmitAmPfa}
                     sx={{
@@ -322,7 +385,7 @@ export default function RegisterPfaPage() {
                       },
                     }}
                   >
-                    Trimite mesaj
+                    {isLoading ? 'Se incarca...' : 'Trimite datele'}
                   </Button>
                 </Stack>
               </Stack>
@@ -331,14 +394,14 @@ export default function RegisterPfaPage() {
               <Stack spacing={2.5}>
                 <UploadField
                   label="Buletin"
-                  fileName={buletin}
-                  onFileChange={setBuletin}
+                  file={buletinFile}
+                  onFileChange={setBuletinFile}
                 />
 
                 <UploadField
                   label="Atestat Sofer"
-                  fileName={atestat}
-                  onFileChange={setAtestat}
+                  file={atestatFile}
+                  onFileChange={setAtestatFile}
                 />
 
                 <Box>
@@ -418,8 +481,8 @@ export default function RegisterPfaPage() {
                         <MenuItem value="" disabled>
                           {judet ? 'Oras/Localitate' : 'Selecteaza Judet intai'}
                         </MenuItem>
-                        {availableCities.map((city) => (
-                          <MenuItem key={city} value={city}>
+                        {availableCities.map((city, index) => (
+                          <MenuItem key={`${city}-${index}`} value={city}>
                             {city}
                           </MenuItem>
                         ))}

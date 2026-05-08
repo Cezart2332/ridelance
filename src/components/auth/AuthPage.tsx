@@ -9,10 +9,13 @@ import {
   Tabs,
   TextField,
   Typography,
+  Alert,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
+import { authService } from '../../services/auth.service'
+import { getErrorMessage } from '../../utils/errorHandler'
 
 import logo from '../../assets/logo.svg'
 
@@ -61,16 +64,52 @@ export default function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleLogin = () => {
-    // Skip validation for now, just redirect to the real dashboard
-    navigate('/app')
+  const handleLogin = async () => {
+    setError(null)
+    if (!email || !password) {
+      setError('Te rugam sa completezi toate campurile.')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      await authService.login(email, password)
+      navigate('/app')
+    } catch (err: any) {
+      setError(getErrorMessage(err, 'Eroare la autentificare. Verifica emailul si parola.'))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleRegister = () => {
-    // Redirect to register PFA flow
-    navigate('/inregistrare/pfa')
+  const handleRegister = async () => {
+    setError(null)
+    if (!email || !password || !firstName || !lastName) {
+      setError('Te rugam sa completezi toate campurile.')
+      return
+    }
+    if (password !== confirmPassword) {
+      setError('Parolele nu coincid.')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      await authService.register(email, firstName, lastName, password, 'Client')
+      // Auto-login after successful registration
+      await authService.login(email, password)
+      navigate('/inregistrare/pfa')
+    } catch (err: any) {
+      setError(getErrorMessage(err, 'Eroare la inregistrare. Emailul ar putea fi deja folosit.'))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -108,7 +147,10 @@ export default function AuthPage() {
           >
             <Tabs
               value={tab}
-              onChange={(_, v) => setTab(v)}
+              onChange={(_, v) => {
+                setTab(v)
+                setError(null)
+              }}
               variant="fullWidth"
               sx={{
                 mb: 4,
@@ -129,6 +171,12 @@ export default function AuthPage() {
               <Tab label="Autentificare" />
               <Tab label="Inregistrare" />
             </Tabs>
+
+            {error && (
+              <Alert severity="error" sx={{ mb: 3, borderRadius: TOKENS.radius.md }}>
+                {error}
+              </Alert>
+            )}
 
             {tab === 0 ? (
               /* ── LOGIN ── */
@@ -167,6 +215,7 @@ export default function AuthPage() {
                   fullWidth
                   endIcon={<ArrowForwardRoundedIcon />}
                   onClick={handleLogin}
+                  disabled={isLoading}
                   sx={{
                     mt: 1,
                     py: 1.4,
@@ -182,7 +231,7 @@ export default function AuthPage() {
                     },
                   }}
                 >
-                  Autentificare
+                  {isLoading ? 'Se incarca...' : 'Autentificare'}
                 </Button>
 
                 <Typography
@@ -206,6 +255,33 @@ export default function AuthPage() {
             ) : (
               /* ── REGISTER ── */
               <Stack spacing={2.5}>
+                <Stack direction="row" spacing={2}>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
+                      Nume
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      placeholder="Popescu"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      sx={inputSx}
+                    />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
+                      Prenume
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      placeholder="Ion"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      sx={inputSx}
+                    />
+                  </Box>
+                </Stack>
+
                 <Box>
                   <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
                     Email
@@ -254,6 +330,7 @@ export default function AuthPage() {
                   fullWidth
                   endIcon={<ArrowForwardRoundedIcon />}
                   onClick={handleRegister}
+                  disabled={isLoading}
                   sx={{
                     mt: 1,
                     py: 1.4,
@@ -269,7 +346,7 @@ export default function AuthPage() {
                     },
                   }}
                 >
-                  Inregistrare
+                  {isLoading ? 'Se incarca...' : 'Inregistrare'}
                 </Button>
 
                 <Typography

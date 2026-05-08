@@ -4,11 +4,13 @@ import { alpha } from '@mui/material/styles'
 import { monthlyRequiredDocuments } from '../dashboardData'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme'
 
+import type { DocumentSummary } from '../../../services/document.service'
+
 type ExpensesRecurringTabProps = {
-  expenses: string[]
+  expenses: DocumentSummary[]
   expenseInput: string
   onExpenseChange: (value: string) => void
-  onAddExpense: () => void
+  onAddExpense: (file: File) => void
   viewMode?: 'expenses' | 'doc_recurring'
 }
 
@@ -75,7 +77,8 @@ export function ExpensesRecurringTab({
                 hidden
                 onChange={(e) => {
                   if (e.target.files && e.target.files.length > 0) {
-                    onAddExpense()
+                    onAddExpense(e.target.files[0])
+                    e.target.value = ''
                   }
                 }}
               />
@@ -83,9 +86,9 @@ export function ExpensesRecurringTab({
           </Stack>
 
           <Stack spacing={1} sx={{ mt: 2 }}>
-            {expenses.map((expense, idx) => (
+            {expenses.map((expense) => (
               <Paper
-                key={`${expense}-${idx}`}
+                key={expense.id}
                 elevation={0}
                 sx={{
                   p: 1.3,
@@ -95,15 +98,15 @@ export function ExpensesRecurringTab({
                 }}
               >
                 <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 650 }}>{expense}</Typography>
+                  <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 650 }}>{expense.originalFileName}</Typography>
                   <Chip
-                    label="In Verificare"
+                    label={expense.status === 'Pending' ? 'In Verificare' : expense.status === 'Approved' ? 'Aprobat' : 'Respins'}
                     size="small"
                     sx={{
                       fontWeight: 700,
                       fontSize: '0.7rem',
-                      color: '#ED6C02',
-                      backgroundColor: alpha('#ED6C02', 0.1),
+                      color: expense.status === 'Pending' ? '#ED6C02' : expense.status === 'Approved' ? '#2e7d32' : '#d32f2f',
+                      backgroundColor: alpha(expense.status === 'Pending' ? '#ED6C02' : expense.status === 'Approved' ? '#2e7d32' : '#d32f2f', 0.1),
                       borderRadius: DASHBOARD_TOKENS.radius.sm,
                       height: 24,
                     }}

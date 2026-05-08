@@ -1,100 +1,28 @@
-import type {
-  DashboardMetric,
-  DocumentItem,
-  FaqItem,
-  ProfileField,
-  RideAccount,
-  ChatMessage,
-} from './types'
+import type { FaqItem } from './types'
 
-export const dashboardLoremText =
-  'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-
-export const dashboardLoremLongText =
-  'Actualizăm statusul documentelor pe măsură ce sunt încărcate, verificate și aprobate. Pentru completări sau clarificări, folosește tab-ul Suport.'
-
-export const dashboardMetrics: DashboardMetric[] = [
-  { label: 'Venit cash', value: '6.420 RON' },
-  { label: 'Venit card', value: '8.960 RON' },
-  { label: 'Taxe estimate', value: '3.180 RON'},
-  { label: 'Venit Bolt', value: '7.010 RON'},
-  { label: 'Venit Uber', value: '8.370 RON'},
-  { label: 'Venit total', value: '15.380 RON' },
-]
-
-export const dashboardProfileFields: ProfileField[] = [
-  { label: 'Email', value: 'sofer.demo@ridelance.ro' },
-  { label: 'Parola', value: '**********' },
-  { label: 'Plan activ', value: 'RIDElance Pro' },
-]
-
-export const dashboardRideAccounts: RideAccount[] = [
-  {
-    provider: 'Uber',
-    accountEmail: 'demo.uber@ridelance.ro',
-    status: 'Activ',
-  },
-  {
-    provider: 'Bolt',
-    accountEmail: 'demo.bolt@ridelance.ro',
-    status: 'Activ',
-  },
-]
-
-export const personalPfaDocuments: DocumentItem[] = [
-  { title: 'Carte de identitate', status: 'In verificare', tooltip: dashboardLoremText },
-  { title: 'Permis de conducere', status: 'Valid', tooltip: dashboardLoremText },
-  {
-    title: 'Atestat transport alternativ (Uber/Bolt)',
-    status: 'Lipsa',
-    tooltip: dashboardLoremText,
-  },
-  {
-    title: 'Adeverinta medicala + psihologica',
-    status: 'Valid',
-    tooltip: dashboardLoremText,
-  },
-  { title: 'Certificat de cazier judiciar', status: 'Valid', tooltip: dashboardLoremText },
-]
-
-export const vehicleDocuments: DocumentItem[] = [
-  { title: 'ITP', status: 'Valid', tooltip: dashboardLoremText },
-  { title: 'RCA', status: 'Valid', tooltip: dashboardLoremText },
-  { title: 'Ecuson Uber', status: 'In verificare', tooltip: dashboardLoremText },
-  { title: 'Ecuson Bolt', status: 'Lipsa', tooltip: dashboardLoremText },
-  {
-    title: 'Asigurare calatori si bagaje',
-    status: 'Lipsa',
-    tooltip: dashboardLoremText,
-    purchaseLink: '#',
-    complianceNote: 'Optional pentru Uber, obligatoriu pentru Bolt.',
-  },
-]
-
+// ── FAQ — static content, not fetched from API ──────────────────────────────
 export const dashboardFaqItems: FaqItem[] = [
   {
-    title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-    text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam viverra est vitae elementum interdum. Duis tempor, ante posuere feugiat blandit.',
+    title: 'Cum incarc un document nou?',
+    text: 'Mergi la sectiunea "Documente" din meniu si apasa "Incarca" langa categoria documentului dorit. Documentele vor fi verificate de echipa noastra.',
   },
   {
-    title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-    text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam viverra est vitae elementum interdum. Duis tempor, ante posuere feugiat blandit.',
+    title: 'Cat dureaza verificarea documentelor?',
+    text: 'Verificarea documentelor dureaza de obicei 1-2 zile lucratoare. Vei primi o notificare cand statusul se actualizeaza.',
   },
   {
-    title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-    text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam viverra est vitae elementum interdum. Duis tempor, ante posuere feugiat blandit.',
+    title: 'Cum pot vorbi cu contabilul meu?',
+    text: 'Acceseaza sectiunea "Suport" din meniu pentru a deschide chat-ul direct cu contabilul tau asignat.',
   },
 ]
 
-
-export const defaultExpenses: string[] = []
-
+// ── Monthly required document labels (informational, not API data) ───────────
 export const monthlyRequiredDocuments = [
-  'Extrase bancare',
+  'Extrase bancare (toate conturile)',
   'Raport venituri Uber',
   'Raport venituri Bolt',
+  'Facturi cheltuieli deductibile',
 ]
 
-export const dashboardInitialChat: ChatMessage[] = [
-  { sender: 'Suport', text: 'Salut! Cu ce te putem ajuta astăzi?', time: '09:00' }
-]
+// ── Default expenses list (local UI state, persisted to backend in future) ───
+export const defaultExpenses: string[] = []

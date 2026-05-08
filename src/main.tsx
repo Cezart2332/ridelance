@@ -1,8 +1,11 @@
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Provider } from 'react-redux'
 import App from './App'
 import { TOKENS } from './constants/tokens'
+import { store } from './store/store'
+import { AuthInitializer } from './components/auth/AuthInitializer'
 
 // Service Worker Registration
 if ('serviceWorker' in navigator) {
@@ -214,9 +217,13 @@ const theme = createTheme({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <App />
-    </ThemeProvider>
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AuthInitializer>
+          <App />
+        </AuthInitializer>
+      </ThemeProvider>
+    </Provider>
   </StrictMode>,
 )

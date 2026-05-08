@@ -1,6 +1,8 @@
-import { Box, Button, Drawer, Stack, Typography, useMediaQuery, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import { Box, Button, Drawer, Stack, Typography, useMediaQuery, Accordion, AccordionSummary, AccordionDetails, Divider } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import LogoutRoundedIcon from '@mui/icons-material/Logout';
+import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 
 interface AppSidebarProps {
@@ -9,9 +11,10 @@ interface AppSidebarProps {
   activeSection: string;
   setActiveSection: (id: string) => void;
   sectionConfig: readonly { id: string; label: string; icon?: string; subItems?: readonly { id: string; label: string }[] }[];
+  onLogout?: () => void;
 }
 
-export default function AppSidebar({ sidebarOpen, setSidebarOpen, activeSection, setActiveSection, sectionConfig }: AppSidebarProps) {
+export default function AppSidebar({ sidebarOpen, setSidebarOpen, activeSection, setActiveSection, sectionConfig, onLogout }: AppSidebarProps) {
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
 
@@ -163,18 +166,31 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, activeSection,
               >
                 <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
                   {item.icon && (
-                    <img 
-                      src={item.icon} 
-                      alt="" 
-                      style={{ 
-                        width: 18, 
-                        height: 18, 
-                        filter: isActive 
-                          ? 'invert(31%) sepia(85%) saturate(2853%) hue-rotate(211deg) brightness(98%) contrast(93%)' 
-                          : 'invert(15%) sepia(10%) saturate(704%) hue-rotate(201deg) brightness(94%) contrast(89%)', 
-                        opacity: isActive ? 1 : 0.6 
-                      }} 
-                    />
+                    item.icon.startsWith('MUI:') ? (
+                      (() => {
+                        const iconName = item.icon.split(':')[1];
+                        if (iconName === 'DirectionsCarFilledRounded') {
+                          return <DirectionsCarFilledRoundedIcon sx={{ 
+                            fontSize: 18, 
+                            color: isActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.5)
+                          }} />;
+                        }
+                        return null;
+                      })()
+                    ) : (
+                      <img 
+                        src={item.icon} 
+                        alt="" 
+                        style={{ 
+                          width: 18, 
+                          height: 18, 
+                          filter: isActive 
+                            ? 'invert(31%) sepia(85%) saturate(2853%) hue-rotate(211deg) brightness(98%) contrast(93%)' 
+                            : 'invert(15%) sepia(10%) saturate(704%) hue-rotate(201deg) brightness(94%) contrast(89%)', 
+                          opacity: isActive ? 1 : 0.6 
+                        }} 
+                      />
+                    )
                   )}
                   <span>{item.label}</span>
                 </Stack>
@@ -183,6 +199,28 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, activeSection,
           })}
         </Stack>
       </Box>
+
+      <Divider sx={{ opacity: 0.5, mx: 1 }} />
+
+      <Button
+        onClick={onLogout}
+        startIcon={<LogoutRoundedIcon sx={{ fontSize: 18 }} />}
+        sx={{
+          justifyContent: 'flex-start',
+          mx: 1,
+          mb: 1,
+          px: 1.5,
+          py: 1,
+          borderRadius: DASHBOARD_TOKENS.radius.md,
+          textTransform: 'none',
+          fontWeight: 600,
+          fontSize: '0.9rem',
+          color: '#f43f5e',
+          '&:hover': { backgroundColor: alpha('#f43f5e', 0.06) },
+        }}
+      >
+        Deconectare
+      </Button>
     </Stack>
   );
 

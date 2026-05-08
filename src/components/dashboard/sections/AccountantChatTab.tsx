@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  Accordion, AccordionDetails, AccordionSummary, Button,
+  Button,
   CircularProgress, Divider, Paper, Stack, TextField, Typography,
 } from '@mui/material'
-import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 
-import { dashboardFaqItems } from '../dashboardData'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme'
 import { chatService, type ChatMessageDto } from '../../../services/chat.service'
 import { getChatConnection, startChatConnection, stopChatConnection } from '../../../lib/signalr'
@@ -13,8 +11,9 @@ import { useAppSelector } from '../../../store/hooks'
 import { groupMessagesByDate } from '../../../utils/chat'
 import { Box } from '@mui/material'
 
-export function SupportChatTab() {
+export function AccountantChatTab() {
   const [roomId, setRoomId] = useState<string | null>(null)
+  const [supportName, setSupportName] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessageDto[]>([])
   const [chatMessage, setChatMessage] = useState('')
   const [loading, setLoading] = useState(true)
@@ -27,10 +26,11 @@ export function SupportChatTab() {
   useEffect(() => {
     let currentRoomId: string;
 
-    chatService.getSupportRoom()
-      .then(async ({ roomId: id }) => {
+    chatService.getAccountantRoom()
+      .then(async ({ roomId: id, supportUserName }) => {
         currentRoomId = id;
         setRoomId(id)
+        setSupportName(supportUserName)
 
         // Load message history
         const history = await chatService.getMessages(id)
@@ -38,7 +38,6 @@ export function SupportChatTab() {
 
         // Connect to SignalR
         const conn = getChatConnection()
-        conn.off('ReceiveMessage') // Clear previous listeners
         conn.on('ReceiveMessage', (msg: ChatMessageDto) => {
           setMessages((prev) => [...prev, msg])
         })
@@ -86,53 +85,7 @@ export function SupportChatTab() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
-          border: `1px solid ${DASHBOARD_TOKENS.border}`,
-          boxShadow: DASHBOARD_TOKENS.shadow.sm,
-        }}
-      >
-        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2 }}>FAQ</Typography>
-        {dashboardFaqItems.map((item) => (
-          <Accordion
-            key={item.title}
-            disableGutters
-            elevation={0}
-            sx={{
-              borderBottom: `1px solid ${DASHBOARD_TOKENS.border}`,
-              '&:before': { display: 'none' },
-              backgroundColor: 'transparent',
-            }}
-          >
-            <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-              <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700 }}>{item.title}</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, lineHeight: 1.7 }}>{item.text}</Typography>
-            </AccordionDetails>
-          </Accordion>
-        ))}
 
-        <Divider sx={{ my: 2 }} />
-
-        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>Contact support</Typography>
-        <Typography
-          component="a"
-          href="mailto:contact@ridelance.ro"
-          sx={{
-            mt: 0.6,
-            display: 'inline-block',
-            color: DASHBOARD_TOKENS.primaryStrong,
-            fontWeight: 800,
-            textDecoration: 'none',
-          }}
-        >
-          contact@ridelance.ro
-        </Typography>
-      </Paper>
 
       <Paper
         elevation={0}
@@ -144,7 +97,7 @@ export function SupportChatTab() {
         }}
       >
         <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>
-          Chat suport
+          Chat contabil {supportName ? `— ${supportName}` : ''}
         </Typography>
 
         {loading ? (
@@ -153,7 +106,7 @@ export function SupportChatTab() {
           </Stack>
         ) : noAgent ? (
           <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 2, fontSize: '0.9rem' }}>
-            Chat-ul va fi disponibil dupa asignarea unui administrator pentru suport.
+            Chat-ul va fi disponibil dupa asignarea unui contabil.
           </Typography>
         ) : (
           <>
@@ -169,7 +122,7 @@ export function SupportChatTab() {
                   </Box>
                   <Stack spacing={1.2}>
                     {group.messages.map((message, index) => {
-                      const isMe = message.senderId.toLowerCase() === myUserId.toLowerCase()
+                      const isMe = message.senderId === myUserId
                       return (
                         <Paper
                           key={`${message.sentAtUtc}-${index}`}

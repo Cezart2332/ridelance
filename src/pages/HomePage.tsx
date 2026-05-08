@@ -20,6 +20,7 @@ import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 import { ProcessVisual } from '../components/home/ProcessVisual'
+import { CarCarousel } from '../components/home/CarCarousel'
 
 export function HomePage() {
   const navigate = useNavigate()
@@ -216,6 +217,9 @@ export function HomePage() {
 
       {/* ═══════ 2. TOT PROCESUL ═══════ */}
       <ProcessVisual />
+
+      {/* ═══════ 2.5 CAROUSEL MASINI ═══════ */}
+      <CarCarousel />
 
       {/* ═══════ 3. CUM FUNCTIONEAZA ═══════ */}
       <Box
