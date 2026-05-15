@@ -4,7 +4,6 @@ import {
   Button,
   Container,
   Paper,
-  Stack,
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -64,7 +63,7 @@ export default function SubscriptionSelectPage() {
       }}
     >
       <Container maxWidth="lg">
-        <Stack spacing={5} alignItems="center">
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'center' }}>
           {/* Logo */}
           <Box
             component="img"
@@ -248,18 +247,18 @@ export default function SubscriptionSelectPage() {
                   )}
 
                   {/* Feature List */}
-                  <Stack spacing={1.2} sx={{ flexGrow: 1 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2, flexGrow: 1 }}>
                     {plan.list.map((point) => (
-                      <Stack direction="row" spacing={1.2} key={point} sx={{ alignItems: 'flex-start' }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.2, alignItems: 'flex-start' }} key={point}>
                         <CheckCircleOutlineRoundedIcon
                           sx={{ color: TOKENS.primary, fontSize: 17, flexShrink: 0, mt: 0.15 }}
                         />
                         <Typography sx={{ fontSize: '0.88rem', color: alpha(TOKENS.ink, 0.82), lineHeight: 1.55 }}>
                           {point}
                         </Typography>
-                      </Stack>
+                      </Box>
                     ))}
-                  </Stack>
+                  </Box>
 
                   {plan.footnote && (
                     <Typography sx={{ fontSize: '0.78rem', color: TOKENS.textMuted, fontStyle: 'italic' }}>
@@ -299,7 +298,7 @@ export default function SubscriptionSelectPage() {
           </Box>
 
           {/* Continue CTA */}
-          <Stack spacing={2} alignItems="center" sx={{ width: '100%', maxWidth: 400 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', width: '100%', maxWidth: 400 }}>
             <Button
               variant="contained"
               size="large"
@@ -339,8 +338,8 @@ export default function SubscriptionSelectPage() {
             >
               ← Înapoi la autentificare
             </Button>
-          </Stack>
-        </Stack>
+          </Box>
+        </Box>
       </Container>
     </Box>
   )

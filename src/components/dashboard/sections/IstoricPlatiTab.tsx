@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Box, Chip, Paper, Stack, Typography, CircularProgress } from '@mui/material'
+import { Box, Chip, Paper, Typography, CircularProgress } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded'
@@ -97,7 +97,7 @@ export function IstoricPlatiTab() {
 
   return (
     <Box sx={{ maxWidth: 860, mx: 'auto', p: { xs: 2, md: 3 } }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: T.ink }}>
             Istoric Plăți
@@ -123,7 +123,7 @@ export function IstoricPlatiTab() {
             {new Date().getFullYear()}
           </Typography>
         </Box>
-      </Stack>
+      </Box>
 
       {payments.length === 0 ? (
         /* Empty state */
@@ -146,7 +146,7 @@ export function IstoricPlatiTab() {
           </Typography>
         </Paper>
       ) : (
-        <Stack spacing={2}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {payments.map((payment) => {
             const statusConf = STATUS_CONFIG[payment.status]
             return (
@@ -168,7 +168,7 @@ export function IstoricPlatiTab() {
                   '&:hover': { boxShadow: T.shadow.md },
                 }}
               >
-                <Stack direction="row" spacing={2} alignItems="center">
+                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center' }}>
                   <Box
                     sx={{
                       width: 44,
@@ -192,12 +192,10 @@ export function IstoricPlatiTab() {
                       {payment.status === 'scheduled' && ' la 15:00'}
                     </Typography>
                   </Box>
-                </Stack>
+                </Box>
 
-                <Stack
-                  direction={{ xs: 'row', sm: 'column' }}
-                  alignItems={{ xs: 'center', sm: 'flex-end' }}
-                  spacing={0.8}
+                <Box
+                  sx={{ display: 'flex', flexDirection: { xs: 'row', sm: 'column' }, alignItems: { xs: 'center', sm: 'flex-end' }, gap: 0.8 }}
                 >
                   <Typography sx={{ fontWeight: 800, color: T.ink, fontSize: '1.05rem' }}>
                     {payment.amount}
@@ -213,11 +211,11 @@ export function IstoricPlatiTab() {
                       borderRadius: T.radius.full,
                     }}
                   />
-                </Stack>
+                </Box>
               </Paper>
             )
           })}
-        </Stack>
+        </Box>
       )}
 
       {/* Note about real-time data */}

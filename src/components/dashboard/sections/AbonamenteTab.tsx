@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Box, Button, Chip, Paper, Stack, Typography, CircularProgress } from '@mui/material'
+import { Box, Button, Chip, Paper, Typography, CircularProgress } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded'
@@ -103,14 +103,14 @@ export function AbonamenteTab() {
           mb: 3,
         }}
       >
-        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'flex-start' }} gap={2}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { sm: 'flex-start' }, gap: 2 }}>
           <Box>
-            <Stack direction="row" spacing={1.5} alignItems="center" mb={1}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, alignItems: 'center', mb: 1 }}>
               <Typography sx={{ fontWeight: 800, fontSize: '1.25rem', color: T.ink }}>
                 {currentPlan.title}
               </Typography>
               <StatusChip pending={pending} />
-            </Stack>
+            </Box>
             <Typography sx={{ fontWeight: 800, fontSize: '1.5rem', color: T.primaryStrong }}>
               {currentPlan.price}
             </Typography>
@@ -119,7 +119,7 @@ export function AbonamenteTab() {
             </Typography>
           </Box>
 
-          <Stack spacing={1} sx={{ minWidth: 160 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 160 }}>
             <Button
               variant="outlined"
               startIcon={<SwapHorizRoundedIcon />}
@@ -145,8 +145,8 @@ export function AbonamenteTab() {
             >
               Portal facturare
             </Button>
-          </Stack>
-        </Stack>
+          </Box>
+        </Box>
 
         {/* Billing info */}
         <Box
@@ -195,17 +195,17 @@ export function AbonamenteTab() {
         )}
 
         {/* Feature list */}
-        <Stack spacing={1} mt={3}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 3 }}>
           {currentPlan.intro && (
             <Typography sx={{ fontWeight: 700, color: T.ink, fontSize: '0.88rem' }}>{currentPlan.intro}</Typography>
           )}
           {currentPlan.list.map((feat) => (
-            <Stack direction="row" spacing={1} key={feat} alignItems="flex-start">
+            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'flex-start' }} key={feat}>
               <CheckCircleOutlineRoundedIcon sx={{ color: T.primary, fontSize: 17, mt: 0.15, flexShrink: 0 }} />
               <Typography sx={{ fontSize: '0.88rem', color: alpha(T.ink, 0.82) }}>{feat}</Typography>
-            </Stack>
+            </Box>
           ))}
-        </Stack>
+        </Box>
       </Paper>
 
       {/* Upgrade/Downgrade section */}

@@ -1,4 +1,4 @@
-import { Box, Button, Chip, Paper, Stack, Typography } from '@mui/material'
+import { Box, Button, Chip, Paper, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import { ONE_TIME_SERVICES, stripeService, type ServiceKey } from '../../../services/stripe.service'
@@ -79,7 +79,7 @@ export function ServiciiTab() {
               }}
             >
               {/* Icon + Badge */}
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+              <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <Box
                   sx={{
                     width: 48,
@@ -107,7 +107,7 @@ export function ServiciiTab() {
                     }}
                   />
                 )}
-              </Stack>
+              </Box>
 
               {/* Title + Price */}
               <Box>
