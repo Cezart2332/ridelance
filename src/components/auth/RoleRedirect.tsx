@@ -38,7 +38,17 @@ export default function RoleRedirect() {
       return <Navigate to="/inregistrare/abonament" replace />
     }
 
-    // Subscription exists, check if access is granted
+    // Has subscription, check PFA status
+    if (!sub.pfaStatus) {
+      // No PFA registration yet
+      return <Navigate to="/inregistrare/pfa" replace />
+    }
+
+    if (sub.pfaStatus === 'Pending' || sub.pfaStatus === 'Rejected') {
+      return <Navigate to="/app/pending-approval" replace />
+    }
+
+    // PFA is approved (or AmPfa), now check Monday access gate
     if (sub.dashboardAccessGranted) {
       return <Navigate to="/app/dashboard" replace />
     } else {

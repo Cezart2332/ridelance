@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import { ScrollToTop } from './components/layout/ScrollToTop'
 import { AppLayout } from './components/layout/AppLayout'
 import InstallPWA from './components/pwa/InstallPWA'
@@ -11,6 +11,9 @@ import SubscriptionSelectPage from './components/auth/SubscriptionSelectPage'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import RoleRedirect from './components/auth/RoleRedirect'
 import PendingAccessPage from './components/auth/PendingAccessPage'
+import PendingApprovalPage from './components/auth/PendingApprovalPage'
+import { authService } from './services/auth.service'
+import { useNavigate } from 'react-router-dom'
 
 // Dashboards
 import DashboardPage from './components/dashboard/DashboardPage'
@@ -19,8 +22,14 @@ import { AdminDashboard } from './pages/AdminDashboard'
 import { ContabilDashboard } from './pages/ContabilDashboard'
 
 function App() {
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/auth');
+  };
+
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
       <InstallPWA />
       <Routes>
@@ -35,6 +44,7 @@ function App() {
           {/* /app → role-based redirect */}
           <Route path="/app" element={<RoleRedirect />} />
           <Route path="/app/pending-access" element={<PendingAccessPage />} />
+          <Route path="/app/pending-approval" element={<PendingApprovalPage status="Pending" onLogout={handleLogout} />} />
 
           {/* Client dashboard */}
           <Route path="/app/dashboard/*" element={<DashboardPage />} />
@@ -52,7 +62,7 @@ function App() {
         {/* Landing pages */}
         <Route path="/*" element={<AppLayout />} />
       </Routes>
-    </BrowserRouter>
+    </>
   )
 }
 

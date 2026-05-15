@@ -17,6 +17,8 @@ export interface SubscriptionResponse {
   nextBillingDateUtc: string | null
   createdAtUtc: string
   dashboardAccessGranted: boolean
+  pfaStatus: string | null
+  pfaRegistrationType: string | null
 }
 
 export interface PlanInfo {

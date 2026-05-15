@@ -1,10 +1,11 @@
-import { Box, Button, Container, Paper, Stack, Typography } from '@mui/material'
+import { useState, useEffect } from 'react'
+import { Box, Button, Container, Paper, Stack, Typography, CircularProgress } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
 import HourglassEmptyRoundedIcon from '@mui/icons-material/HourglassEmptyRounded'
 import BlockRoundedIcon from '@mui/icons-material/BlockRounded'
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded'
-
+import { stripeService } from '../../services/stripe.service'
 import logo from '../../assets/logo.svg'
 
 const TOKENS = {
@@ -23,13 +24,35 @@ const TOKENS = {
   },
 }
 
-interface PendingApprovalPageProps {
-  status: 'Pending' | 'Rejected'
-  onLogout: () => void
-}
-
-export default function PendingApprovalPage({ status, onLogout }: PendingApprovalPageProps) {
+export default function PendingApprovalPage({ onLogout, status: initialStatus }: { onLogout: () => void; status?: any }) {
   const navigate = useNavigate()
+  const [status, setStatus] = useState<'Pending' | 'Rejected' | 'Approved' | null>(initialStatus || null)
+  const [isLoading, setIsLoading] = useState(!initialStatus)
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      const sub = await stripeService.getSubscriptionStatus()
+      if (sub?.pfaStatus === 'Approved' || sub?.pfaRegistrationType === 'AmPfa') {
+        navigate('/app') // This will trigger RoleRedirect and show the correct page
+        return
+      }
+      setStatus(sub?.pfaStatus as any || 'Pending')
+      setIsLoading(false)
+    }
+
+    checkStatus()
+    const interval = setInterval(checkStatus, 10000) // Poll every 10s
+    return () => clearInterval(interval)
+  }, [navigate])
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
   const isPending = status === 'Pending'
 
   return (

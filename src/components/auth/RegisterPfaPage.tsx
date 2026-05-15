@@ -131,6 +131,14 @@ export default function RegisterPfaPage() {
   const [countiesData, setCountiesData] = useState<County[]>([])
 
   useEffect(() => {
+    const checkStatus = async () => {
+      const sub = await stripeService.getSubscriptionStatus()
+      if (sub?.pfaStatus || sub?.pfaRegistrationType === 'AmPfa') {
+        navigate('/app')
+      }
+    }
+    checkStatus()
+
     fetch('https://raw.githubusercontent.com/virgil-av/judet-oras-localitati-romania/master/judete.json')
       .then((res) => res.json())
       .then((data) => {
@@ -139,7 +147,7 @@ export default function RegisterPfaPage() {
         }
       })
       .catch((err) => console.error('Failed to load counties:', err))
-  }, [])
+  }, [navigate])
 
   // "Am PFA" form state
   const [amPfaName, setAmPfaName] = useState('')
