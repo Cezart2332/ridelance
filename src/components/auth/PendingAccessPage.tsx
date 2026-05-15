@@ -113,7 +113,8 @@ export default function PendingAccessPage() {
             component="img"
             src={logo}
             alt="Ridelance"
-            sx={{ height: 46, width: 'auto' }}
+            sx={{ height: 46, width: 'auto', cursor: 'pointer' }}
+            onClick={() => navigate('/app')}
           />
 
           <Paper

@@ -52,7 +52,7 @@ export default function RegistrationSuccessPage() {
             src={logo}
             alt="Ridelance"
             sx={{ height: 50, width: 'auto', cursor: 'pointer' }}
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
           />
 
           <Paper
@@ -93,7 +93,7 @@ export default function RegistrationSuccessPage() {
                 mb: 2,
               }}
             >
-              Procedura finalizata cu succes!
+              Procedura finalizată cu succes! Vei fi redirecționat către dashboard.
             </Typography>
 
             <Typography
@@ -115,7 +115,7 @@ export default function RegistrationSuccessPage() {
 
           <Button
             variant="contained"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
             sx={{
               px: 4,
               py: 1.2,
@@ -129,7 +129,7 @@ export default function RegistrationSuccessPage() {
               },
             }}
           >
-            Inapoi la pagina principala
+            Continua spre aplicatie
           </Button>
         </Stack>
       </Container>

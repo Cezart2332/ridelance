@@ -70,7 +70,7 @@ export default function SubscriptionSelectPage() {
             src={logo}
             alt="Ridelance"
             sx={{ height: 46, width: 'auto', cursor: 'pointer' }}
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
           />
 
           {/* Header */}

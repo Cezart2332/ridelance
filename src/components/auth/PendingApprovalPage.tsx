@@ -76,7 +76,7 @@ export default function PendingApprovalPage({ onLogout, status: initialStatus }:
             src={logo}
             alt="Ridelance"
             sx={{ height: 50, width: 'auto', cursor: 'pointer' }}
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
           />
 
           <Paper
