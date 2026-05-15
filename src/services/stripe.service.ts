@@ -136,13 +136,17 @@ export const stripeService = {
    * Generates a checkout session and redirects the user to Stripe.
    */
   async redirectToInfiintarePfa(successUrl?: string, cancelUrl?: string): Promise<void> {
+    const origin = window.location.origin
+    const effectiveSuccessUrl = successUrl || `${origin}/inregistrare/succes?session_id={{CHECKOUT_SESSION_ID}}`
+    const effectiveCancelUrl = cancelUrl || `${origin}/inregistrare/pfa`
+
     try {
       const response = await api.post<{url: string}>('/payments/checkout-session', {
         priceId: import.meta.env.VITE_PRICE_INFIINTARE_PFA,
         mode: 'payment',
         plan: 'infiintare_pfa',
-        successUrl,
-        cancelUrl
+        successUrl: effectiveSuccessUrl,
+        cancelUrl: effectiveCancelUrl
       })
       window.location.href = response.data.url
     } catch (error) {
@@ -154,16 +158,18 @@ export const stripeService = {
     const plan = SUBSCRIPTION_PLANS.find(p => p.key === key)
     if (!plan?.priceId) return
     
+    const origin = window.location.origin
+    const effectiveSuccessUrl = successUrl || `${origin}/inregistrare/pfa?subscribed=1&session_id={{CHECKOUT_SESSION_ID}}&plan=${key}`
+    const effectiveCancelUrl = cancelUrl || `${origin}/inregistrare/abonament`
+
     try {
-      // Backend automatically sets the BillingCycleAnchor if needed when billingAnchorUnix is null or not provided
-      
       const response = await api.post<{url: string}>('/payments/checkout-session', {
         priceId: plan.priceId,
         mode: 'subscription',
         plan: key,
         billingAnchorUnix: null,
-        successUrl,
-        cancelUrl
+        successUrl: effectiveSuccessUrl,
+        cancelUrl: effectiveCancelUrl
       })
       window.location.href = response.data.url
     } catch (error) {

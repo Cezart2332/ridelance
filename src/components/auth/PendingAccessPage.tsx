@@ -174,7 +174,7 @@ export default function PendingAccessPage() {
                 mb: 5,
               }}
             >
-              Abonamentul tău a fost înregistrat cu succes. Accesul la dashboard se acordă automat în fiecare{' '}
+              Abonamentul tău a fost înregistrat cu succes. Accesul la dashboard se acordă automat {' '}
               <Box component="span" sx={{ color: TOKENS.ink, fontWeight: 700 }}>
                 luni la ora 15:00
               </Box>
