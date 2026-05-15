@@ -158,8 +158,10 @@ export function CarsAdminView() {
       if (window.confirm('Ștergi definitiv această imagine de pe server?')) {
         try {
           await carsService.deleteImage(editingCar.id, id);
-        } catch (error) {
-          alert('Eroare la ștergerea imaginii de pe server.');
+        } catch (error: any) {
+          console.error('Error deleting image:', error);
+          const errorMessage = error.response?.data?.detail || error.response?.data?.title || 'Eroare la ștergerea imaginii de pe server.';
+          alert(errorMessage);
           return;
         }
       } else {
@@ -222,9 +224,10 @@ export function CarsAdminView() {
 
       await fetchData();
       setIsCarModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving car:', error);
-      alert('Eroare la salvarea mașinii.');
+      const errorMessage = error.response?.data?.detail || error.response?.data?.title || 'Eroare la salvarea mașinii.';
+      alert(errorMessage);
     } finally {
       setUploading(false);
     }

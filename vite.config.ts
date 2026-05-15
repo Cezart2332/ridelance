@@ -49,12 +49,5 @@ export default defineConfig({
     })
   ],
   server: {
-    proxy: {
-      '/stripe-api': {
-        target: 'https://api.stripe.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/stripe-api/, ''),
-      }
-    }
   }
 })

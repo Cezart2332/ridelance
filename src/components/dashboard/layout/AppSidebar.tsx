@@ -3,6 +3,9 @@ import { alpha, useTheme } from '@mui/material/styles';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import LogoutRoundedIcon from '@mui/icons-material/Logout';
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';
+import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
+import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
+import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 
 interface AppSidebarProps {
@@ -171,6 +174,24 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, activeSection,
                         const iconName = item.icon.split(':')[1];
                         if (iconName === 'DirectionsCarFilledRounded') {
                           return <DirectionsCarFilledRoundedIcon sx={{ 
+                            fontSize: 18, 
+                            color: isActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.5)
+                          }} />;
+                        }
+                        if (iconName === 'WorkspacePremiumRounded') {
+                          return <WorkspacePremiumRoundedIcon sx={{ 
+                            fontSize: 18, 
+                            color: isActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.5)
+                          }} />;
+                        }
+                        if (iconName === 'ShoppingCartRounded') {
+                          return <ShoppingCartRoundedIcon sx={{ 
+                            fontSize: 18, 
+                            color: isActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.5)
+                          }} />;
+                        }
+                        if (iconName === 'ReceiptLongRounded') {
+                          return <ReceiptLongRoundedIcon sx={{ 
                             fontSize: 18, 
                             color: isActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.5)
                           }} />;

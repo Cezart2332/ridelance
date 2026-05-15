@@ -7,6 +7,9 @@ import { HomeDashboardView } from './sections/HomeDashboardView'
 import { ProfileTab } from './sections/ProfileTab'
 import { SupportChatTab } from './sections/SupportChatTab'
 import { CarsView } from './sections/CarsView'
+import { AbonamenteTab } from './sections/AbonamenteTab'
+import { ServiciiTab } from './sections/ServiciiTab'
+import { IstoricPlatiTab } from './sections/IstoricPlatiTab'
 
 import AppLayout from './layout/AppLayout'
 
@@ -26,6 +29,9 @@ import iconWallet from '../../assets/SVG/2- Regular/credit-card.svg'
 const sectionConfig = [
   { id: 'home', label: 'Acasa', icon: iconHome },
   { id: 'cars', label: 'Mașini', icon: 'MUI:DirectionsCarFilledRounded' },
+  { id: 'abonamente', label: 'Abonamente', icon: 'MUI:WorkspacePremiumRounded' },
+  { id: 'servicii', label: 'Servicii', icon: 'MUI:ShoppingCartRounded' },
+  { id: 'istoric_plati', label: 'Istoric Plăți', icon: 'MUI:ReceiptLongRounded' },
   { id: 'profile', label: 'Profil', icon: iconProfile },
   { id: 'documents', label: 'Documente', icon: iconDocs },
   { id: 'support', label: 'Suport / Contabilitate', icon: iconSupport },
@@ -40,7 +46,7 @@ const sectionConfig = [
   },
 ]
 
-type SectionId = 'home' | 'cars' | 'profile' | 'documents' | 'support' | 'expenses' | 'doc_recurring' | string
+type SectionId = 'home' | 'cars' | 'profile' | 'documents' | 'support' | 'expenses' | 'doc_recurring' | 'abonamente' | 'servicii' | 'istoric_plati' | string
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -111,6 +117,9 @@ export default function DashboardPage() {
     if (activeSection === 'profile') return <ProfileTab />
     if (activeSection === 'documents') return <DocumentsTab />
     if (activeSection === 'support') return <SupportChatTab />
+    if (activeSection === 'abonamente') return <AbonamenteTab />
+    if (activeSection === 'servicii') return <ServiciiTab />
+    if (activeSection === 'istoric_plati') return <IstoricPlatiTab />
 
     return (
       <ExpensesRecurringTab

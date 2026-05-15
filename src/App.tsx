@@ -7,6 +7,7 @@ import InstallPWA from './components/pwa/InstallPWA'
 import AuthPage from './components/auth/AuthPage'
 import RegisterPfaPage from './components/auth/RegisterPfaPage'
 import RegistrationSuccessPage from './components/auth/RegistrationSuccessPage'
+import SubscriptionSelectPage from './components/auth/SubscriptionSelectPage'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import RoleRedirect from './components/auth/RoleRedirect'
 
@@ -25,6 +26,7 @@ function App() {
         {/* ── Public auth pages ── */}
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/inregistrare/pfa" element={<RegisterPfaPage />} />
+        <Route path="/inregistrare/abonament" element={<SubscriptionSelectPage />} />
         <Route path="/inregistrare/succes" element={<RegistrationSuccessPage />} />
 
         {/* ── Protected routes ── */}

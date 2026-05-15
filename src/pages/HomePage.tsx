@@ -670,10 +670,10 @@ export function HomePage() {
             <Paper
               elevation={0}
               sx={{
-                borderRadius: TOKENS.radius.lg,
-                backgroundColor: alpha(TOKENS.surfaceAlt, 0.6),
-                border: `1px solid ${TOKENS.border}`,
-                mb: 5,
+                fontSize: { xs: '1.1rem', md: '1.25rem' },
+                color: TOKENS.primaryStrong,
+                fontWeight: 700,
+                mb: 4,
               }}
             >
               <Typography

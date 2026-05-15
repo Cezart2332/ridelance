@@ -22,6 +22,7 @@ import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlin
 import { pfaService } from '../../services/pfa.service'
 import { documentService } from '../../services/document.service'
 import { getErrorMessage } from '../../utils/errorHandler'
+import { stripeService } from '../../services/stripe.service'
 
 import logo from '../../assets/logo.svg'
 import iconUpload from '../../assets/SVG/2- Regular/upload.svg'
@@ -192,40 +193,10 @@ export default function RegisterPfaPage() {
         await documentService.upload(atestatFile, 'AtestatSofer', pfaId);
       }
 
-      // 3. Optional: Trigger Stripe Session
-      const secret = import.meta.env.VITE_SECRET_STRIPE
-      if (!secret) {
-        // Skip stripe in dev
-        navigate('/inregistrare/succes')
-        return
-      }
-
-      const productId = import.meta.env.VITE_PRODUCT_ID
-      const body = new URLSearchParams()
-      body.append('success_url', `${window.location.origin}/inregistrare/succes`)
-      body.append('cancel_url', `${window.location.origin}/inregistrare/pfa`)
-      body.append('line_items[0][price_data][currency]', 'ron')
-      body.append('line_items[0][price_data][product]', productId)
-      body.append('line_items[0][price_data][unit_amount]', '39900') // 399 RON
-      body.append('line_items[0][quantity]', '1')
-      body.append('mode', 'payment')
-
-      const res = await fetch('/stripe-api/v1/checkout/sessions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${secret}`,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: body.toString()
-      })
-
-      const data = await res.json()
-      if (data.url) {
-        window.location.href = data.url
-      } else {
-        console.error('Stripe error:', data)
-        navigate('/inregistrare/succes') // fallback
-      }
+      // 3. Redirect to Stripe for Înființare PFA payment (450 lei)
+      // After payment, user returns to /inregistrare/abonament
+      sessionStorage.setItem('pfa_registered', 'NuAmPfa')
+      stripeService.redirectToInfiintarePfa()
     } catch (err: any) {
       console.error(err)
       setError(getErrorMessage(err, 'A aparut o eroare la inregistrare. Te rugam sa incerci din nou.'))
@@ -249,7 +220,9 @@ export default function RegisterPfaPage() {
         phone: amPfaPhone,
         isOwner: false // default
       });
-      navigate('/inregistrare/succes')
+      // AmPfa users already have PFA — skip the 450 lei payment, go to subscription
+      sessionStorage.setItem('pfa_registered', 'AmPfa')
+      navigate('/inregistrare/abonament')
     } catch (err: any) {
       setError(getErrorMessage(err, 'A aparut o eroare. Te rugam sa incerci din nou.'))
     } finally {
