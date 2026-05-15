@@ -104,7 +104,7 @@ export default function AuthPage() {
       await authService.register(email, firstName, lastName, password, 'Client')
       // Auto-login after successful registration
       await authService.login(email, password)
-      navigate('/inregistrare/pfa')
+      navigate('/inregistrare/abonament')
     } catch (err: any) {
       setError(getErrorMessage(err, 'Eroare la inregistrare. Emailul ar putea fi deja folosit.'))
     } finally {

@@ -194,7 +194,7 @@ export default function RegisterPfaPage() {
       }
 
       // 3. Redirect to Stripe for Înființare PFA payment (450 lei)
-      // After payment, user returns to /inregistrare/abonament
+      // After payment, user returns to /inregistrare/succes (configured in backend)
       sessionStorage.setItem('pfa_registered', 'NuAmPfa')
       stripeService.redirectToInfiintarePfa()
     } catch (err: any) {
@@ -220,9 +220,9 @@ export default function RegisterPfaPage() {
         phone: amPfaPhone,
         isOwner: false // default
       });
-      // AmPfa users already have PFA — skip the 450 lei payment, go to subscription
+      // AmPfa users already have PFA — they paid subscription already, go to app
       sessionStorage.setItem('pfa_registered', 'AmPfa')
-      navigate('/inregistrare/abonament')
+      navigate('/app')
     } catch (err: any) {
       setError(getErrorMessage(err, 'A aparut o eroare. Te rugam sa incerci din nou.'))
     } finally {

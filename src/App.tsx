@@ -10,6 +10,7 @@ import RegistrationSuccessPage from './components/auth/RegistrationSuccessPage'
 import SubscriptionSelectPage from './components/auth/SubscriptionSelectPage'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import RoleRedirect from './components/auth/RoleRedirect'
+import PendingAccessPage from './components/auth/PendingAccessPage'
 
 // Dashboards
 import DashboardPage from './components/dashboard/DashboardPage'
@@ -33,6 +34,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           {/* /app → role-based redirect */}
           <Route path="/app" element={<RoleRedirect />} />
+          <Route path="/app/pending-access" element={<PendingAccessPage />} />
 
           {/* Client dashboard */}
           <Route path="/app/dashboard/*" element={<DashboardPage />} />

@@ -16,6 +16,7 @@ export interface SubscriptionResponse {
   firstBillingDateUtc: string
   nextBillingDateUtc: string | null
   createdAtUtc: string
+  dashboardAccessGranted: boolean
 }
 
 export interface PlanInfo {
@@ -132,12 +133,14 @@ export const stripeService = {
   /**
    * Generates a checkout session and redirects the user to Stripe.
    */
-  async redirectToInfiintarePfa(): Promise<void> {
+  async redirectToInfiintarePfa(successUrl?: string, cancelUrl?: string): Promise<void> {
     try {
       const response = await api.post<{url: string}>('/payments/checkout-session', {
         priceId: import.meta.env.VITE_PRICE_INFIINTARE_PFA,
         mode: 'payment',
-        plan: 'infiintare_pfa'
+        plan: 'infiintare_pfa',
+        successUrl,
+        cancelUrl
       })
       window.location.href = response.data.url
     } catch (error) {
@@ -145,7 +148,7 @@ export const stripeService = {
     }
   },
 
-  async redirectToPlan(key: PlanKey): Promise<void> {
+  async redirectToPlan(key: PlanKey, successUrl?: string, cancelUrl?: string): Promise<void> {
     const plan = SUBSCRIPTION_PLANS.find(p => p.key === key)
     if (!plan?.priceId) return
     
@@ -156,7 +159,9 @@ export const stripeService = {
         priceId: plan.priceId,
         mode: 'subscription',
         plan: key,
-        billingAnchorUnix: null
+        billingAnchorUnix: null,
+        successUrl,
+        cancelUrl
       })
       window.location.href = response.data.url
     } catch (error) {
