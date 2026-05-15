@@ -204,7 +204,7 @@ export default function PendingAccessPage() {
             </Box>
 
             <Typography sx={{ fontSize: '0.88rem', color: TOKENS.textMuted, mb: 4 }}>
-              Te vom notifica prin email imediat ce contul tău devine accesibil.
+              Te vom notifica prin email cand vei avea acces la platforma.
             </Typography>
 
             <Button
