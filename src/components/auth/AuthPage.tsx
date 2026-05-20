@@ -350,7 +350,7 @@ export default function AuthPage() {
                     }}
                   >
                     <ToggleButton value="Client">Șofer PFA</ToggleButton>
-                    <ToggleButton value="CarPoster">Postator mașini</ToggleButton>
+                    <ToggleButton value="CarPoster">Cont inchiriere mașini</ToggleButton>
                   </ToggleButtonGroup>
                   <Typography sx={{ mt: 1, fontSize: '0.8rem', color: TOKENS.textMuted, lineHeight: 1.5 }}>
                     {registerRole === 'CarPoster'
