@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';
 import { TOKENS } from '../../constants/tokens';
 import { carsService, type Car, getCarImageUrl } from '../../services/cars.service';
+import { formatCarOfferType } from '../../utils/carLabels';
+import { hasActiveDiscount } from '../../utils/carPricing';
+import CarPriceDisplay, { CarDiscountChip } from '../dashboard/sections/cars/CarPriceDisplay';
 
 export function CarCarousel() {
   const navigate = useNavigate();
@@ -122,8 +125,11 @@ export function CarCarousel() {
                     fontSize: '0.75rem',
                     fontWeight: 700
                   }}>
-                    {car.offerType === 'Stay' ? 'La rămânere' : 'Închiriere săptămânală'}
+                    {formatCarOfferType(car.offerType)}
                   </Box>
+                  {hasActiveDiscount(car) && (
+                    <CarDiscountChip sx={{ top: 16, left: 'auto', right: 16 }} />
+                  )}
                 </Box>
 
                 <Box sx={{ p: 3 }}>
@@ -134,14 +140,17 @@ export function CarCarousel() {
                     {car.year} • {car.engine} • {car.transmission}
                   </Typography>
 
-                  <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-end', mb: 3 }} component="div">
+                  <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }} component="div">
                     <Box>
-                      <Typography variant="caption" sx={{ color: TOKENS.textMuted, fontWeight: 700, display: 'block' }}>
+                      <Typography variant="caption" sx={{ color: TOKENS.textMuted, fontWeight: 700, display: 'block', mb: 0.5 }}>
                         PREȚ / SĂPTĂMÂNĂ
                       </Typography>
-                      <Typography variant="h5" sx={{ fontWeight: 900, color: TOKENS.primaryStrong }}>
-                        {car.pricePerWeek} <Box component="span" sx={{ fontSize: '0.9rem', fontWeight: 700 }}>RON</Box>
-                      </Typography>
+                      <CarPriceDisplay
+                        car={car}
+                        primaryColor={TOKENS.primaryStrong}
+                        mutedColor={TOKENS.textMuted}
+                        size="compact"
+                      />
                     </Box>
                     <Box sx={{ textAlign: 'right' }}>
                        <Typography variant="caption" sx={{ color: TOKENS.textMuted, display: 'block' }}>
@@ -172,12 +181,27 @@ export function CarCarousel() {
         </Box>
 
         <Box sx={{ mt: 6, textAlign: 'center' }}>
-          <Button 
-            variant="text" 
+          <Button
+            variant="contained"
+            size="large"
             onClick={() => navigate('/masini')}
-            sx={{ fontWeight: 800, color: TOKENS.ink, fontSize: '1rem', '&:hover': { color: TOKENS.primaryStrong } }}
+            sx={{
+              px: 4,
+              py: 1.4,
+              fontSize: '1.05rem',
+              fontWeight: 700,
+              borderRadius: '14px',
+              textTransform: 'none',
+              color: TOKENS.ink,
+              backgroundColor: TOKENS.primary,
+              boxShadow: TOKENS.shadow.glow,
+              '&:hover': {
+                backgroundColor: TOKENS.primaryStrong,
+                boxShadow: '0 4px 16px rgba(92, 203, 245, 0.35)',
+              },
+            }}
           >
-            Vezi toată flota disponibilă →
+            Vezi toată flota disponibilă
           </Button>
         </Box>
       </Container>

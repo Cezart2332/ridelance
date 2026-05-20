@@ -8,8 +8,6 @@ import {
   Typography,
   Avatar,
   IconButton,
-  Select,
-  MenuItem,
   CircularProgress,
   Alert,
   Snackbar,
@@ -37,6 +35,7 @@ import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
 
 import { documentService, type DocumentSummary } from '../services/document.service'
 import { ProfessionalChatBox } from '../components/dashboard/sections/ProfessionalChatBox'
+import { PfaMonthlyIncomeForm } from '../components/contabil/PfaMonthlyIncomeForm'
 
 interface ClientSummary {
   id: string
@@ -83,7 +82,6 @@ export function ContabilDashboard() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('clients')
   const [selectedPfaId, setSelectedPfaId] = useState<string | null>(null)
-  const [selectedMonth, setSelectedMonth] = useState('Aprilie')
   const [search, setSearch] = useState('')
 
   const handleLogout = async () => {
@@ -314,38 +312,7 @@ export function ContabilDashboard() {
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 24 }}>
           <Box>
             <Stack spacing={4} component="div">
-              {/* Incomes section — no backend endpoint yet */}
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  borderRadius: TOKENS.radius.xl,
-                  border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
-                  boxShadow: TOKENS.shadow.sm,
-                  background: `linear-gradient(165deg, ${alpha(TOKENS.primary, 0.05)} 0%, ${TOKENS.paper} 35%)`,
-                }}
-              >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>Venituri Client</Typography>
-                  <Select
-                    size="small"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    sx={{ width: 140, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
-                  >
-                    {['Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie', 'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'].map((m) => (
-                      <MenuItem key={m} value={m}>{m}</MenuItem>
-                    ))}
-                  </Select>
-                </Box>
-
-                <Box sx={{ py: 6, textAlign: 'center' }}>
-                  <InboxRoundedIcon sx={{ fontSize: 40, color: TOKENS.textSubtle, mb: 1 }} />
-                  <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
-                    Nu există date de venituri disponibile pentru {selectedMonth}.
-                  </Typography>
-                </Box>
-              </Paper>
+              {selectedPfaId && <PfaMonthlyIncomeForm pfaRegistrationId={selectedPfaId} />}
 
               {/* Documente PFA */}
               <Paper

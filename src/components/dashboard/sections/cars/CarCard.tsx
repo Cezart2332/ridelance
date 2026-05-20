@@ -17,6 +17,15 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import LocalGasStationOutlinedIcon from '@mui/icons-material/LocalGasStationOutlined';
 import { DASHBOARD_TOKENS } from '../../dashboardTheme';
 import { type Car, getCarImageUrl } from '../../../../services/cars.service';
+import { hasActiveDiscount } from '../../../../utils/carPricing';
+import {
+  formatCarOfferType,
+  formatCarStatus,
+  getCarStatusColor,
+  isCarComingSoon,
+  isCarRentDisabled,
+} from '../../../../utils/carLabels';
+import CarPriceDisplay, { CarDiscountChip } from './CarPriceDisplay';
 
 interface CarCardProps {
   car: Car;
@@ -36,16 +45,6 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
   const prevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     setActiveImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Disponibilă acum': return '#10b981';
-      case 'În curând': return '#f59e0b';
-      case 'Indisponibilă': return '#ef4444';
-      case 'În service': return '#6366f1';
-      default: return DASHBOARD_TOKENS.textSubtle;
-    }
   };
 
   return (
@@ -131,9 +130,11 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
           </>
         )}
 
+        {hasActiveDiscount(car) && <CarDiscountChip />}
+
         {/* Status Badge Over Image */}
         <Chip 
-          label={car.status} 
+          label={formatCarStatus(car.status)} 
           size="small"
           sx={{ 
             position: 'absolute', 
@@ -142,8 +143,8 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
             fontWeight: 700, 
             fontSize: '0.65rem',
             bgcolor: 'white',
-            color: getStatusColor(car.status),
-            border: `1px solid ${alpha(getStatusColor(car.status), 0.2)}`
+            color: getCarStatusColor(car.status),
+            border: `1px solid ${alpha(getCarStatusColor(car.status), 0.2)}`
           }} 
         />
       </Box>
@@ -154,7 +155,7 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
           {/* Brand & Model */}
           <Box>
             <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: DASHBOARD_TOKENS.textSubtle, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              {car.offerType}
+              {formatCarOfferType(car.offerType)}
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink, lineHeight: 1.2 }}>
               {car.brand} {car.model}, {car.year}
@@ -162,14 +163,11 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
           </Box>
 
           {/* Price */}
-          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
-            <Typography variant="h5" sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.primary }}>
-              {car.pricePerWeek.toLocaleString('ro-RO')} lei
-            </Typography>
-            <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.85rem' }}>
-              / săptămână
-            </Typography>
-          </Box>
+          <CarPriceDisplay
+            car={car}
+            primaryColor={DASHBOARD_TOKENS.primary}
+            mutedColor={DASHBOARD_TOKENS.textSubtle}
+          />
 
           {/* Quick Details Grid */}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
@@ -243,7 +241,7 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
           fullWidth
           variant="contained"
           onClick={() => onRentClick(car)}
-          disabled={car.status === 'Indisponibilă' || car.status === 'În service'}
+          disabled={isCarRentDisabled(car.status)}
           sx={{
             mt: 3,
             py: 1.4,
@@ -259,7 +257,7 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
             }
           }}
         >
-          {car.status === 'În curând' ? 'Vreau detalii' : 'Închiriază acum'}
+          {isCarComingSoon(car.status) ? 'Vreau detalii' : 'Închiriază acum'}
         </Button>
       </Box>
     </Box>

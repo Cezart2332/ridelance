@@ -21,6 +21,7 @@ import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFil
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import { carsService, type Car } from '../../../services/cars.service';
 import CarCard from './cars/CarCard';
+import { matchesOfferTypeFilter, matchesStatusFilter } from '../../../utils/carLabels';
 import RentFormModal from './cars/RentFormModal';
 
 export function CarsView() {
@@ -70,12 +71,11 @@ export function CarsView() {
     }
 
     if (city !== 'Toate') result = result.filter(c => c.location.includes(city));
-    if (offerType !== 'Toate') result = result.filter(c => c.offerType === offerType);
+    if (offerType !== 'Toate') result = result.filter(c => matchesOfferTypeFilter(c.offerType, offerType));
     if (engine !== 'Toate') result = result.filter(c => c.engine === engine);
     if (transmission !== 'Toate') result = result.filter(c => c.transmission === transmission);
     if (status !== 'Toate') {
-      if (status === 'Disponibilă') result = result.filter(c => c.status === 'Disponibilă acum');
-      else result = result.filter(c => c.status === 'În curând');
+      result = result.filter(c => matchesStatusFilter(c.status, status));
     }
     if (platform !== 'Toate') {
       result = result.filter(c => 

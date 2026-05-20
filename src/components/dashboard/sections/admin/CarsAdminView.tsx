@@ -21,6 +21,14 @@ import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
 import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { carsService, getCarImageUrl, type Car, type CarLead } from '../../../../services/cars.service';
+import {
+  formatCarStatus,
+  getCarStatusColor,
+  OFFER_TYPE_FROM_API,
+  OFFER_TYPE_TO_API,
+  STATUS_FROM_API,
+  STATUS_TO_API,
+} from '../../../../utils/carLabels';
 import { DASHBOARD_TOKENS } from '../../dashboardTheme';
 
 interface LocalImage {
@@ -108,7 +116,11 @@ export function CarsAdminView() {
 
   const handleOpenCarModal = (car?: Car) => {
     if (car) {
-      setEditingCar(car);
+      setEditingCar({
+        ...car,
+        offerType: OFFER_TYPE_FROM_API[car.offerType] ?? car.offerType,
+        status: STATUS_FROM_API[car.status] ?? car.status,
+      });
       setLocalImages(car.images.map((img) => ({
         id: img.id,
         previewUrl: getCarImageUrl(img.imageUrl),
@@ -118,7 +130,8 @@ export function CarsAdminView() {
       setEditingCar({
         brand: '', model: '', year: new Date().getFullYear(),
         pricePerWeek: 0, oldPrice: undefined,
-        discountActive: false, offerType: 'Închiriere săptămânală',
+        discountActive: false, garantie: undefined,
+        offerType: 'Închiriere săptămânală',
         status: 'Disponibilă acum', engine: 'GPL', transmission: 'Manuală',
         location: 'București', uberCategories: [], boltCategories: [],
         badges: [], description: '', active: true
@@ -176,21 +189,19 @@ export function CarsAdminView() {
 
   const handleSaveCar = async () => {
     if (!editingCar) return;
+
+    if (
+      editingCar.discountActive &&
+      (editingCar.oldPrice == null || editingCar.oldPrice <= (editingCar.pricePerWeek ?? 0))
+    ) {
+      alert('Pentru reducere activă, prețul vechi trebuie să fie mai mare decât prețul actual.');
+      return;
+    }
+
     setUploading(true);
 
     try {
       let carId = editingCar.id;
-      const statusMap: Record<string, string> = {
-        'Disponibilă acum': 'Available',
-        'În curând': 'ComingSoon',
-        'Indisponibilă': 'Unavailable',
-        'În service': 'InService'
-      };
-      const offerTypeMap: Record<string, string> = {
-        'Închiriere săptămânală': 'Weekly',
-        'La rămânere': 'Stay'
-      };
-
       const payload = {
         brand: editingCar.brand!,
         model: editingCar.model!,
@@ -201,8 +212,9 @@ export function CarsAdminView() {
         pricePerWeek: editingCar.pricePerWeek!,
         oldPrice: editingCar.oldPrice,
         discountActive: editingCar.discountActive ?? false,
-        offerType: offerTypeMap[editingCar.offerType!] || editingCar.offerType!,
-        status: statusMap[editingCar.status!] || editingCar.status!,
+        garantie: editingCar.garantie,
+        offerType: OFFER_TYPE_TO_API[editingCar.offerType!] || editingCar.offerType!,
+        status: STATUS_TO_API[editingCar.status!] || editingCar.status!,
         uberCategories: editingCar.uberCategories ?? [],
         boltCategories: editingCar.boltCategories ?? [],
         badges: editingCar.badges ?? [],
@@ -233,10 +245,6 @@ export function CarsAdminView() {
     }
   };
 
-  const statusColors: Record<string, string> = {
-    'Disponibilă acum': '#10b981', 'În curând': '#f59e0b',
-    'Indisponibilă': '#ef4444', 'În service': '#6366f1'
-  };
   const leadStatusColors: Record<string, string> = {
     'Nou': '#6366f1', 'Contactat': '#f59e0b', 'În discuție': '#3b82f6',
     'Acceptat': '#10b981', 'Respins': '#ef4444'
@@ -322,8 +330,8 @@ export function CarsAdminView() {
                           </Stack>
                         </TableCell>
                         <TableCell>
-                          <Chip label={car.status} size="small"
-                            sx={{ fontWeight: 800, fontSize: '0.65rem', bgcolor: alpha(statusColors[car.status] ?? '#999', 0.1), color: statusColors[car.status] ?? '#999', border: `1px solid ${alpha(statusColors[car.status] ?? '#999', 0.2)}` }} />
+                          <Chip label={formatCarStatus(car.status)} size="small"
+                            sx={{ fontWeight: 800, fontSize: '0.65rem', bgcolor: alpha(getCarStatusColor(car.status), 0.1), color: getCarStatusColor(car.status), border: `1px solid ${alpha(getCarStatusColor(car.status), 0.2)}` }} />
                         </TableCell>
                         <TableCell><Switch checked={car.active} onChange={() => handleToggleCarActive(car.id)} color="primary" /></TableCell>
                         <TableCell align="right">
@@ -503,6 +511,22 @@ export function CarsAdminView() {
                         label={<Typography sx={{ fontWeight: 700 }}>Public</Typography>} 
                       />
                     </Stack>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }} component="div">
+                    <TextField
+                      fullWidth
+                      label="Garanție (RON)"
+                      type="number"
+                      slotProps={{ input: { startAdornment: <InputAdornment position="start">RON</InputAdornment> } }}
+                      value={editingCar?.garantie ?? ''}
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value);
+                        setEditingCar({
+                          ...editingCar,
+                          garantie: Number.isNaN(v) ? undefined : v,
+                        });
+                      }}
+                    />
                   </Grid>
                 </Grid>
               </Paper>

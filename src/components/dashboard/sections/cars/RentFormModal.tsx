@@ -17,6 +17,7 @@ import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import { alpha } from '@mui/material/styles';
 import { DASHBOARD_TOKENS } from '../../dashboardTheme';
 import { carsService, type Car } from '../../../../services/cars.service';
+import CarPriceDisplay from './CarPriceDisplay';
 
 interface RentFormModalProps {
   open: boolean;
@@ -131,6 +132,16 @@ export default function RentFormModal({ open, onClose, car }: RentFormModalProps
                     <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.ink }} component="p">
                       {car ? `${car.brand} ${car.model} (${car.year})` : 'Alege un vehicul din listă'}
                     </Typography>
+                    {car && (
+                      <Box sx={{ mt: 1.5 }}>
+                        <CarPriceDisplay
+                          car={car}
+                          primaryColor={DASHBOARD_TOKENS.primary}
+                          mutedColor={DASHBOARD_TOKENS.textSubtle}
+                          size="compact"
+                        />
+                      </Box>
+                    )}
                   </Box>
 
                   <TextField

@@ -30,6 +30,14 @@ export interface DashboardSummary {
   rejectedDocuments: number;
   unreadNotifications: number;
   recentDocuments: RecentDocumentDto[];
+  venitCash?: number | null;
+  venitCard?: number | null;
+  venitBolt?: number | null;
+  venitUber?: number | null;
+  taxeEstimate?: number | null;
+  venitTotal?: number | null;
+  incomeYear?: number | null;
+  incomeMonth?: number | null;
 }
 
 export const userService = {

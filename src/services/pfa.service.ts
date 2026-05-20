@@ -1,5 +1,29 @@
 import { api } from '../lib/axios';
 
+export interface PfaMonthlyIncome {
+  id: string | null;
+  pfaRegistrationId: string;
+  year: number;
+  month: number;
+  venitCash: number;
+  venitCard: number;
+  venitBolt: number;
+  venitUber: number;
+  taxeEstimate: number;
+  venitTotal: number;
+  updatedAtUtc: string | null;
+}
+
+export interface UpsertPfaMonthlyIncomeRequest {
+  year: number;
+  month: number;
+  venitCash: number;
+  venitCard: number;
+  venitBolt: number;
+  venitUber: number;
+  taxeEstimate: number;
+}
+
 export interface CreatePfaRequest {
   registrationType: string;
   fullName?: string;
@@ -32,5 +56,20 @@ export const pfaService = {
       documentId
     });
     return response.data;
-  }
+  },
+
+  getMonthlyIncome: async (pfaId: string, year: number, month: number): Promise<PfaMonthlyIncome> => {
+    const response = await api.get<PfaMonthlyIncome>(`/pfa-registrations/${pfaId}/monthly-income`, {
+      params: { year, month },
+    });
+    return response.data;
+  },
+
+  upsertMonthlyIncome: async (
+    pfaId: string,
+    data: UpsertPfaMonthlyIncomeRequest
+  ): Promise<PfaMonthlyIncome> => {
+    const response = await api.put<PfaMonthlyIncome>(`/pfa-registrations/${pfaId}/monthly-income`, data);
+    return response.data;
+  },
 };

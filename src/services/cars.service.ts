@@ -31,6 +31,7 @@ export interface Car {
   pricePerWeek: number;
   oldPrice?: number;
   discountActive: boolean;
+  garantie?: number;
   offerType: string;
   status: string;
   uberCategories: string[];
@@ -66,6 +67,7 @@ export interface CreateCarRequest {
   pricePerWeek: number;
   oldPrice?: number;
   discountActive: boolean;
+  garantie?: number;
   offerType: string;
   status: string;
   uberCategories: string[];

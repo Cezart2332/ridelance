@@ -211,18 +211,21 @@ export const economyComparison = [
 
 export const homeSec6 = [
   {
+    serviceKey: 'infiintare_pfa' as const,
     title: 'Înființare PFA',
     price: '450 lei',
     desc: 'Deschizi rapid un PFA printr-un proces simplu și organizat, fără abonament lunar.',
-    cta: 'Vezi serviciul',
+    cta: 'Cumpără serviciul',
   },
   {
+    serviceKey: 'sediu_social' as const,
     title: 'Găzduire Sediu Social',
     price: '449 lei / an',
     desc: 'O soluție practică pentru cei care au nevoie de sediu social pentru PFA în București / Ilfov.',
-    cta: 'Vezi serviciul',
+    cta: 'Cumpără serviciul',
   },
   {
+    serviceKey: 'start_ride' as const,
     title: 'Start Ride',
     price: '799 lei',
     priceNote: '* nu include taxe ARR',

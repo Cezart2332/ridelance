@@ -21,6 +21,7 @@ import { ContactPage } from '../../pages/ContactPage'
 import { TermsPage } from '../../pages/TermsPage'
 import { PrivacyPolicyPage } from '../../pages/PrivacyPolicyPage'
 import { CarsPage } from '../../pages/CarsPage'
+import { ServicePaymentSuccessDialog } from '../services/ServicePaymentSuccessDialog'
 
 export function AppLayout() {
   const location = useLocation()
@@ -293,6 +294,8 @@ export function AppLayout() {
           </Button>
         </Stack>
       </Drawer>
+
+      <ServicePaymentSuccessDialog />
 
       {/* ── Main Content ── */}
       <Box component="main" sx={{ flex: 1, position: 'relative' }}>

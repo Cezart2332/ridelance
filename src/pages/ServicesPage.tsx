@@ -1,21 +1,32 @@
+import { useState } from 'react'
 import { Box, Button, Container, Paper, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
 import { homeSec6 } from '../data/constants'
 import { pageFrameSx } from '../constants/layout'
+import {
+  ServicePurchaseModal,
+  type ServicePurchaseTarget,
+} from '../components/services/ServicePurchaseModal'
+import type { ServiceKey } from '../services/stripe.service'
 
 export function ServicesPage() {
+  const [purchaseTarget, setPurchaseTarget] = useState<ServicePurchaseTarget | null>(null)
+
+  const openPurchase = (serviceKey: ServiceKey, title: string, price: string) => {
+    setPurchaseTarget({ key: serviceKey, title, price })
+  }
+
   return (
     <Box sx={pageFrameSx}>
       <Container maxWidth="lg">
-        <Stack spacing={6} sx={{ alignItems: "center", justifyContent: "center" }}>
+        <Stack spacing={6} sx={{ alignItems: 'center', justifyContent: 'center' }}>
           <SectionHeader
             title="Serviciile noastre"
             subtitle="Tot ce ai nevoie pentru activitatea ta, într-un singur loc."
           />
 
-          {/* Servicii individuale (din homeSec6) */}
           <Box>
             <Typography variant="h4" sx={{ mb: 4, fontWeight: 700, color: TOKENS.ink }}>
               Servicii individuale
@@ -29,9 +40,9 @@ export function ServicesPage() {
                 justifyContent: 'center',
               }}
             >
-              {homeSec6.map((svc, i) => (
+              {homeSec6.map((svc) => (
                 <Paper
-                  key={i}
+                  key={svc.serviceKey}
                   elevation={0}
                   sx={{
                     p: 4,
@@ -74,7 +85,7 @@ export function ServicesPage() {
                       >
                         {svc.price}
                       </Typography>
-                      {svc.priceNote && (
+                      {'priceNote' in svc && svc.priceNote && (
                         <Typography
                           sx={{
                             color: TOKENS.textMuted,
@@ -98,7 +109,7 @@ export function ServicesPage() {
                   >
                     {svc.desc}
                   </Typography>
-                  {svc.tagline && (
+                  {'tagline' in svc && svc.tagline && (
                     <Typography
                       sx={{
                         color: TOKENS.ink,
@@ -112,6 +123,7 @@ export function ServicesPage() {
                   )}
                   <Button
                     variant="outlined"
+                    onClick={() => openPurchase(svc.serviceKey, svc.title, svc.price)}
                     sx={{
                       alignSelf: 'flex-start',
                       borderRadius: TOKENS.radius.full,
@@ -134,6 +146,12 @@ export function ServicesPage() {
           </Box>
         </Stack>
       </Container>
+
+      <ServicePurchaseModal
+        open={purchaseTarget !== null}
+        service={purchaseTarget}
+        onClose={() => setPurchaseTarget(null)}
+      />
     </Box>
   )
 }

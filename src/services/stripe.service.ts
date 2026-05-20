@@ -177,6 +177,27 @@ export const stripeService = {
     }
   },
 
+  async redirectToPublicService(
+    key: ServiceKey,
+    customer: { customerName: string; customerEmail: string; customerPhone: string },
+    successUrl?: string,
+    cancelUrl?: string,
+  ): Promise<void> {
+    const origin = window.location.origin
+    const effectiveSuccessUrl = successUrl ?? `${origin}/?service_paid=1`
+    const effectiveCancelUrl = cancelUrl ?? `${origin}/servicii`
+
+    const response = await api.post<{ url: string }>('/payments/public/service-checkout', {
+      serviceKey: key,
+      customerName: customer.customerName,
+      customerEmail: customer.customerEmail,
+      customerPhone: customer.customerPhone,
+      successUrl: effectiveSuccessUrl,
+      cancelUrl: effectiveCancelUrl,
+    })
+    window.location.href = response.data.url
+  },
+
   async redirectToService(key: ServiceKey): Promise<void> {
     const service = ONE_TIME_SERVICES.find(s => s.key === key)
     if (!service?.priceId) return
