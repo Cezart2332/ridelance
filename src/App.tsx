@@ -20,6 +20,7 @@ import DashboardPage from './components/dashboard/DashboardPage'
 import DashboardDemoPage from './components/dashboard-demo/DashboardDemoPage'
 import { AdminDashboard } from './pages/AdminDashboard'
 import { ContabilDashboard } from './pages/ContabilDashboard'
+import { CarPosterDashboard } from './pages/CarPosterDashboard'
 
 function App() {
   const navigate = useNavigate();
@@ -54,6 +55,9 @@ function App() {
 
           {/* Admin dashboard */}
           <Route path="/admin/*" element={<AdminDashboard />} />
+
+          {/* Car poster dashboard */}
+          <Route path="/poster/*" element={<CarPosterDashboard />} />
         </Route>
 
         {/* Demo (unprotected, for showcasing) */}

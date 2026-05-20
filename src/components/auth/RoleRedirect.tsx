@@ -8,7 +8,8 @@ import { Box, CircularProgress } from '@mui/material'
  * Reads the user's role from Redux and redirects to the correct dashboard.
  * - Client   → /app/dashboard (if access granted)
  * - Contabil → /contabil
- * - Admin    → /admin
+ * - Admin      → /admin
+ * - CarPoster  → /poster
  */
 export default function RoleRedirect() {
   const role = useAppSelector((s) => s.auth.role)
@@ -22,6 +23,7 @@ export default function RoleRedirect() {
 
   if (role === 'Contabil') return <Navigate to="/contabil" replace />
   if (role === 'Admin') return <Navigate to="/admin" replace />
+  if (role === 'CarPoster') return <Navigate to="/poster" replace />
 
   if (role === 'Client') {
     // While loading subscription info

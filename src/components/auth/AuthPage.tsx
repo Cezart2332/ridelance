@@ -10,6 +10,8 @@ import {
   TextField,
   Typography,
   Alert,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
@@ -66,6 +68,7 @@ export default function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [registerRole, setRegisterRole] = useState<'Client' | 'CarPoster'>('Client')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
@@ -101,10 +104,9 @@ export default function AuthPage() {
 
     setIsLoading(true)
     try {
-      await authService.register(email, firstName, lastName, password, 'Client')
-      // Auto-login after successful registration
+      await authService.register(email, firstName, lastName, password, registerRole)
       await authService.login(email, password)
-      navigate('/inregistrare/abonament')
+      navigate(registerRole === 'CarPoster' ? '/poster' : '/app')
     } catch (err: any) {
       setError(getErrorMessage(err, 'Eroare la inregistrare. Emailul ar putea fi deja folosit.'))
     } finally {
@@ -322,6 +324,39 @@ export default function AuthPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     sx={inputSx}
                   />
+                </Box>
+
+                <Box>
+                  <Typography sx={{ mb: 1, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
+                    Tip cont
+                  </Typography>
+                  <ToggleButtonGroup
+                    exclusive
+                    fullWidth
+                    value={registerRole}
+                    onChange={(_, v) => v && setRegisterRole(v)}
+                    sx={{
+                      '& .MuiToggleButton-root': {
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        py: 1.2,
+                        borderColor: TOKENS.border,
+                        '&.Mui-selected': {
+                          bgcolor: alpha(TOKENS.primary, 0.12),
+                          color: TOKENS.primaryStrong,
+                          borderColor: alpha(TOKENS.primary, 0.4),
+                        },
+                      },
+                    }}
+                  >
+                    <ToggleButton value="Client">Șofer PFA</ToggleButton>
+                    <ToggleButton value="CarPoster">Postator mașini</ToggleButton>
+                  </ToggleButtonGroup>
+                  <Typography sx={{ mt: 1, fontSize: '0.8rem', color: TOKENS.textMuted, lineHeight: 1.5 }}>
+                    {registerRole === 'CarPoster'
+                      ? 'Publici anunțuri de închiriere. Fiecare anunț este verificat de echipa RIDElance înainte de a apărea pe site.'
+                      : 'Acces complet la platformă: PFA, contabilitate, documente și flotă RIDElance.'}
+                  </Typography>
                 </Box>
 
                 <Button

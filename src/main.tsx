@@ -8,32 +8,22 @@ import { TOKENS } from './constants/tokens'
 import { store } from './store/store'
 import { AuthInitializer } from './components/auth/AuthInitializer'
 
-// Service Worker Registration
+// Service Worker (push notifications only). Avoid reload loops on mobile:
+// skipWaiting + controllerchange + reload resets in-memory flags every load.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { 
-      scope: '/',
-      updateViaCache: 'none'
-    })
-      .then((registration) => {
-        console.log('SW registered:', registration);
-        
-        // Check for updates periodically or on navigation
-        registration.update();
-      })
-      .catch((error) => {
-        console.error('SW registration failed:', error);
-      });
-  });
+    navigator.serviceWorker
+      .register('/sw.js', { scope: '/', updateViaCache: 'none' })
+      .catch((error) => console.error('SW registration failed:', error))
+  })
 
-  // Force reload when a new service worker takes control
-  let refreshing = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!refreshing) {
-      refreshing = true;
-      window.location.reload();
-    }
-  });
+  // Check for updates when user returns to the tab (not on every load)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return
+    navigator.serviceWorker.ready
+      .then((reg) => reg.update())
+      .catch(() => {})
+  })
 }
 
 const fontStack = [

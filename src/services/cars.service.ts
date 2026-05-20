@@ -39,6 +39,9 @@ export interface Car {
   badges: string[];
   description: string;
   active: boolean;
+  listingSource: string;
+  approvalStatus: string;
+  postedByAdmin: boolean;
   images: CarImage[];
   createdAtUtc: string;
   stats: CarStats;
@@ -75,6 +78,7 @@ export interface CreateCarRequest {
   badges: string[];
   description: string;
   active: boolean;
+  listingSource: string;
 }
 
 const carsService = {
@@ -93,6 +97,15 @@ const carsService = {
   async getAllAdmin(): Promise<Car[]> {
     const res = await api.get<Car[]>('/cars/admin');
     return res.data;
+  },
+
+  async getMyCars(): Promise<Car[]> {
+    const res = await api.get<Car[]>('/cars/mine');
+    return res.data;
+  },
+
+  async approveListing(carId: string, approve: boolean): Promise<void> {
+    await api.patch(`/cars/${carId}/approval`, { approve });
   },
 
   async create(data: CreateCarRequest): Promise<string> {

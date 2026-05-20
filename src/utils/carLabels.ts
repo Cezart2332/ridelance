@@ -81,6 +81,45 @@ export function matchesOfferTypeFilter(carOfferType: string, filter: string): bo
   return formatCarOfferType(carOfferType) === filter;
 }
 
+export const LISTING_SOURCE_TO_API: Record<string, string> = {
+  'Închiriat de RIDElance': 'Ridelance',
+  'Închiriat (altă sursă)': 'External',
+};
+
+export const LISTING_SOURCE_FROM_API: Record<string, string> = {
+  Ridelance: 'Închiriat de RIDElance',
+  External: 'Închiriat (altă sursă)',
+};
+
+export function formatCarListingLabel(listingSource: string): string {
+  if (!listingSource) return 'Închiriat';
+  return LISTING_SOURCE_FROM_API[listingSource] ?? 'Închiriat';
+}
+
+export function formatApprovalStatus(status: string): string {
+  switch (status) {
+    case 'Approved':
+      return 'Aprobat';
+    case 'Pending':
+      return 'În așteptare';
+    case 'Rejected':
+      return 'Respins';
+    default:
+      return status;
+  }
+}
+
+export function getApprovalStatusColor(status: string): string {
+  switch (status) {
+    case 'Approved':
+      return '#10b981';
+    case 'Rejected':
+      return '#ef4444';
+    default:
+      return '#f59e0b';
+  }
+}
+
 export function matchesStatusFilter(carStatus: string, filter: string): boolean {
   if (filter === 'Toate') return true;
   if (filter === 'Disponibilă') {

@@ -28,11 +28,13 @@ import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded'
 import AttachFileRoundedIcon from '@mui/icons-material/AttachFileRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
+import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded'
 import { validateRomanianCIF } from '../utils/validation'
 import { formatRegistrationType, formatDocumentCategory } from '../utils/formatters'
 
 import { AdminChatView } from '../components/dashboard/sections/AdminChatView'
 import { CarsAdminView } from '../components/dashboard/sections/admin/CarsAdminView'
+import { ServicesAdminView } from '../components/dashboard/sections/admin/ServicesAdminView'
 
 interface PfaSummary {
   id: string
@@ -292,6 +294,7 @@ export function AdminDashboard() {
     { id: 'pfa', label: 'Cereri PFA', icon: <PeopleAltRoundedIcon /> },
     { id: 'pfa_inrolate', label: 'PFA-uri înrolate', icon: <HowToRegRoundedIcon /> },
     { id: 'masini', label: 'Mașini Ridesharing', icon: <DirectionsCarFilledRoundedIcon /> },
+    { id: 'servicii', label: 'Servicii', icon: <ShoppingCartRoundedIcon /> },
     { id: 'chat', label: 'Chat Clienți', icon: <ChatRoundedIcon /> },
     { id: 'contabili', label: 'Înrolare Contabili', icon: <SupervisedUserCircleRoundedIcon /> },
     { id: 'notificari', label: 'Notificări', icon: <NotificationsActiveRoundedIcon /> },
@@ -695,6 +698,7 @@ export function AdminDashboard() {
       case 'pfa':
       case 'pfa_inrolate': return renderPfaList()
       case 'masini': return <CarsAdminView />
+      case 'servicii': return <ServicesAdminView />
       case 'chat': return <AdminChatView pfas={pfas} />
       case 'contabili': return renderContabili()
       case 'notificari': return renderNotificari()

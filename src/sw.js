@@ -9,12 +9,10 @@
 const manifest = self.__WB_MANIFEST; 
 
 self.addEventListener('install', () => {
-  // Force the waiting service worker to become the active service worker.
-  self.skipWaiting();
+  // Do not skipWaiting here — immediate takeover + page reload caused infinite refresh on mobile.
 });
 
 self.addEventListener('activate', (event) => {
-  // Ensure the service worker takes control of all clients immediately.
   event.waitUntil(
     Promise.all([
       clients.claim(),

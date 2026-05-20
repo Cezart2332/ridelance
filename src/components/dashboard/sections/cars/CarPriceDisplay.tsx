@@ -55,7 +55,7 @@ export default function CarPriceDisplay({
             opacity: 0.9,
           }}
         >
-          Economisești {savings.toLocaleString('ro-RO')} lei/săpt.
+          Economisești {savings.toLocaleString('ro-RO')} lei/săptămână
         </Typography>
       )}
 

@@ -20,6 +20,7 @@ import { type Car, getCarImageUrl } from '../../../../services/cars.service';
 import { hasActiveDiscount } from '../../../../utils/carPricing';
 import {
   formatCarOfferType,
+  formatCarListingLabel,
   formatCarStatus,
   getCarStatusColor,
   isCarComingSoon,
@@ -157,6 +158,19 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
             <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: DASHBOARD_TOKENS.textSubtle, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {formatCarOfferType(car.offerType)}
             </Typography>
+            <Chip
+              label={formatCarListingLabel(car.listingSource)}
+              size="small"
+              sx={{
+                mt: 0.75,
+                height: 22,
+                fontWeight: 700,
+                fontSize: '0.65rem',
+                bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.1),
+                color: DASHBOARD_TOKENS.primaryStrong,
+                border: `1px solid ${alpha(DASHBOARD_TOKENS.primary, 0.2)}`,
+              }}
+            />
             <Typography variant="h6" sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink, lineHeight: 1.2 }}>
               {car.brand} {car.model}, {car.year}
             </Typography>

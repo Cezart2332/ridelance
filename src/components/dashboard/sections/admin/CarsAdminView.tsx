@@ -28,6 +28,10 @@ import {
   OFFER_TYPE_TO_API,
   STATUS_FROM_API,
   STATUS_TO_API,
+  LISTING_SOURCE_FROM_API,
+  LISTING_SOURCE_TO_API,
+  formatApprovalStatus,
+  getApprovalStatusColor,
 } from '../../../../utils/carLabels';
 import { DASHBOARD_TOKENS } from '../../dashboardTheme';
 
@@ -42,7 +46,12 @@ const UBER_CATEGORIES = ['UberX', 'Uber Comfort', 'Uber Green', 'Uber Black', 'U
 const BOLT_CATEGORIES = ['Bolt', 'Bolt Comfort', 'Bolt Green', 'Bolt Premium', 'Bolt Economy'];
 const BADGES = ['Consum Mic', 'Hybrid', 'GPL', 'Top Rated', 'Nou', 'Reducere'];
 
-export function CarsAdminView() {
+interface CarsAdminViewProps {
+  variant?: 'admin' | 'poster';
+}
+
+export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
+  const isPoster = variant === 'poster';
   const [activeTab, setActiveTab] = useState(0);
   const [cars, setCars] = useState<Car[]>([]);
   const [leads, setLeads] = useState<CarLead[]>([]);
@@ -58,10 +67,10 @@ export function CarsAdminView() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [carsData, leadsData] = await Promise.all([
-        carsService.getAllAdmin(),
-        carsService.getLeads()
-      ]);
+      const carsData = isPoster
+        ? await carsService.getMyCars()
+        : await carsService.getAllAdmin();
+      const leadsData = isPoster ? [] : await carsService.getLeads();
       setCars(carsData);
       setLeads(leadsData);
     } catch (error) {
@@ -73,7 +82,7 @@ export function CarsAdminView() {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, isPoster]);
 
   const handleTabChange = (_: React.SyntheticEvent, v: number) => setActiveTab(v);
 
@@ -120,6 +129,7 @@ export function CarsAdminView() {
         ...car,
         offerType: OFFER_TYPE_FROM_API[car.offerType] ?? car.offerType,
         status: STATUS_FROM_API[car.status] ?? car.status,
+        listingSource: LISTING_SOURCE_FROM_API[car.listingSource] ?? car.listingSource,
       });
       setLocalImages(car.images.map((img) => ({
         id: img.id,
@@ -134,7 +144,9 @@ export function CarsAdminView() {
         offerType: 'Închiriere săptămânală',
         status: 'Disponibilă acum', engine: 'GPL', transmission: 'Manuală',
         location: 'București', uberCategories: [], boltCategories: [],
-        badges: [], description: '', active: true
+        badges: [], description: '',
+        listingSource: 'Închiriat de RIDElance',
+        active: !isPoster,
       });
       setLocalImages([]);
     }
@@ -219,7 +231,10 @@ export function CarsAdminView() {
         boltCategories: editingCar.boltCategories ?? [],
         badges: editingCar.badges ?? [],
         description: editingCar.description ?? '',
-        active: editingCar.active ?? true,
+        active: editingCar.active ?? !isPoster,
+        listingSource: LISTING_SOURCE_TO_API[editingCar.listingSource as string]
+          ?? editingCar.listingSource
+          ?? 'Ridelance',
       };
 
       if (carId) {
@@ -250,16 +265,29 @@ export function CarsAdminView() {
     'Acceptat': '#10b981', 'Respins': '#ef4444'
   };
 
-  const filteredCars = cars.filter(c =>
-    c.brand.toLowerCase().includes(search.toLowerCase()) ||
-    c.model.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleApproveCar = async (id: string, approve: boolean) => {
+    try {
+      await carsService.approveListing(id, approve);
+      await fetchData();
+    } catch {
+      alert(approve ? 'Eroare la aprobare.' : 'Eroare la respingere.');
+    }
+  };
+
+  const filteredCars = cars.filter(c => {
+    const matchesSearch =
+      c.brand.toLowerCase().includes(search.toLowerCase()) ||
+      c.model.toLowerCase().includes(search.toLowerCase());
+    if (!matchesSearch) return false;
+    if (!isPoster && activeTab === 3) return c.approvalStatus === 'Pending';
+    return true;
+  });
 
   return (
     <Box>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.ink }}>
-          Gestiune Fleet
+          {isPoster ? 'Anunțurile mele' : 'Gestiune Fleet'}
         </Typography>
         {activeTab === 0 && (
           <Button variant="contained" startIcon={<AddRoundedIcon />}
@@ -275,13 +303,18 @@ export function CarsAdminView() {
       <Paper elevation={0} sx={{ mb: 4, borderRadius: DASHBOARD_TOKENS.radius.lg, border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`, overflow: 'hidden' }}>
         <Tabs value={activeTab} onChange={handleTabChange}
           sx={{ px: 2, borderBottom: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.05)}`, '& .MuiTab-root': { fontWeight: 700, py: 2 } }}>
-          <Tab icon={<DirectionsCarFilledRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Parc Auto" />
-          <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Solicitări" />
-          <Tab icon={<BarChartRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Analytics" />
+          <Tab icon={<DirectionsCarFilledRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label={isPoster ? 'Mașini' : 'Parc Auto'} />
+          {!isPoster && (
+            <>
+              <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Solicitări" />
+              <Tab icon={<BarChartRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Analytics" />
+              <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Validare" />
+            </>
+          )}
         </Tabs>
 
         <Box sx={{ p: 3 }}>
-          {activeTab === 0 && (
+          {(activeTab === 0 || activeTab === 3) && (
             <Stack spacing={3}>
               <TextField placeholder="Caută după brand sau model..." size="small" value={search}
                 onChange={(e) => setSearch(e.target.value)} sx={{ maxWidth: 400 }}
@@ -291,9 +324,11 @@ export function CarsAdminView() {
                   <TableHead>
                     <TableRow>
                       <TableCell sx={{ fontWeight: 800 }}>Mașină</TableCell>
-                      <TableCell sx={{ fontWeight: 800 }}>Preț Săpt.</TableCell>
+                      <TableCell sx={{ fontWeight: 800 }}>Preț săptămână</TableCell>
                       <TableCell sx={{ fontWeight: 800 }}>Media</TableCell>
                       <TableCell sx={{ fontWeight: 800 }}>Status</TableCell>
+                      {!isPoster && <TableCell sx={{ fontWeight: 800 }}>Sursă</TableCell>}
+                      <TableCell sx={{ fontWeight: 800 }}>Validare</TableCell>
                       <TableCell sx={{ fontWeight: 800 }}>Vizibilă</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 800 }}>Acțiuni</TableCell>
                     </TableRow>
@@ -333,9 +368,35 @@ export function CarsAdminView() {
                           <Chip label={formatCarStatus(car.status)} size="small"
                             sx={{ fontWeight: 800, fontSize: '0.65rem', bgcolor: alpha(getCarStatusColor(car.status), 0.1), color: getCarStatusColor(car.status), border: `1px solid ${alpha(getCarStatusColor(car.status), 0.2)}` }} />
                         </TableCell>
-                        <TableCell><Switch checked={car.active} onChange={() => handleToggleCarActive(car.id)} color="primary" /></TableCell>
+                        {!isPoster && (
+                          <TableCell>
+                            <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                              {LISTING_SOURCE_FROM_API[car.listingSource] ?? car.listingSource}
+                            </Typography>
+                          </TableCell>
+                        )}
+                        <TableCell>
+                          <Chip label={formatApprovalStatus(car.approvalStatus)} size="small"
+                            sx={{ fontWeight: 800, fontSize: '0.65rem', bgcolor: alpha(getApprovalStatusColor(car.approvalStatus), 0.1), color: getApprovalStatusColor(car.approvalStatus) }} />
+                        </TableCell>
+                        <TableCell>
+                          <Switch
+                            checked={car.active}
+                            onChange={() => handleToggleCarActive(car.id)}
+                            color="primary"
+                            disabled={isPoster && car.approvalStatus !== 'Approved'}
+                          />
+                        </TableCell>
                         <TableCell align="right">
                           <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                            {!isPoster && car.approvalStatus === 'Pending' && (
+                              <>
+                                <Button size="small" variant="contained" onClick={() => handleApproveCar(car.id, true)}
+                                  sx={{ fontWeight: 700, bgcolor: '#10b981', fontSize: '0.7rem', minWidth: 0, px: 1.5 }}>Aprobă</Button>
+                                <Button size="small" variant="outlined" color="error" onClick={() => handleApproveCar(car.id, false)}
+                                  sx={{ fontWeight: 700, fontSize: '0.7rem', minWidth: 0, px: 1.5 }}>Respinge</Button>
+                              </>
+                            )}
                             <IconButton size="small" onClick={() => handleOpenCarModal(car)}><EditRoundedIcon fontSize="small" /></IconButton>
                             <IconButton size="small" color="error" onClick={() => handleDeleteCar(car.id)}><DeleteRoundedIcon fontSize="small" /></IconButton>
                           </Stack>
@@ -470,7 +531,25 @@ export function CarsAdminView() {
                     {['Disponibilă acum', 'În curând', 'Indisponibilă', 'În service'].map(o => <MenuItem key={o} value={o}>{o}</MenuItem>)}
                   </TextField>
                 </Grid>
+                <Grid size={{ xs: 12, sm: 6, md: 6 }} component="div">
+                  <TextField
+                    select
+                    fullWidth
+                    label="Sursă închiriere"
+                    value={editingCar?.listingSource ?? 'Închiriat de RIDElance'}
+                    onChange={(e) => setEditingCar({ ...editingCar, listingSource: e.target.value })}
+                  >
+                    {Object.keys(LISTING_SOURCE_TO_API).map((o) => (
+                      <MenuItem key={o} value={o}>{o}</MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
               </Grid>
+              {isPoster && (
+                <Typography variant="caption" sx={{ display: 'block', mt: 1.5, color: DASHBOARD_TOKENS.textSubtle }}>
+                  Anunțul va fi publicat după validarea echipei RIDElance.
+                </Typography>
+              )}
             </Box>
 
             {/* 2. Pricing & Visibility */}
@@ -483,7 +562,7 @@ export function CarsAdminView() {
                   <Grid size={{ xs: 12, md: 4 }} component="div">
                     <TextField 
                       fullWidth 
-                      label="Preț Săpt. Actual (RON)" 
+                      label="Preț săptămână actual (RON)" 
                       type="number" 
                       slotProps={{ input: { startAdornment: <InputAdornment position="start">RON</InputAdornment> } }}
                       value={editingCar?.pricePerWeek ?? ''} 
@@ -506,10 +585,12 @@ export function CarsAdminView() {
                         control={<Switch checked={editingCar?.discountActive ?? false} onChange={(e) => setEditingCar({ ...editingCar, discountActive: e.target.checked })} />} 
                         label={<Typography sx={{ fontWeight: 700 }}>Reducere</Typography>} 
                       />
-                      <FormControlLabel 
-                        control={<Switch checked={editingCar?.active ?? true} onChange={(e) => setEditingCar({ ...editingCar, active: e.target.checked })} />} 
-                        label={<Typography sx={{ fontWeight: 700 }}>Public</Typography>} 
-                      />
+                      {!isPoster && (
+                        <FormControlLabel 
+                          control={<Switch checked={editingCar?.active ?? true} onChange={(e) => setEditingCar({ ...editingCar, active: e.target.checked })} />} 
+                          label={<Typography sx={{ fontWeight: 700 }}>Public</Typography>} 
+                        />
+                      )}
                     </Stack>
                   </Grid>
                   <Grid size={{ xs: 12, md: 4 }} component="div">
