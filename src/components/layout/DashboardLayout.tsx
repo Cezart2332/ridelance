@@ -81,12 +81,21 @@ export function DashboardLayout({
     setIsStandalone(standalone)
   }, [])
 
+  // Close mobile drawer when viewport is desktop — avoids invisible Modal backdrop blocking clicks
+  useEffect(() => {
+    if (isMdUp) setMobileOpen(false)
+  }, [isMdUp])
+
   const activeParentItem = navItems.find((n) => n.subItems?.some((s) => s.id === activeId))
   const activeItem = navItems.find((n) => n.id === activeId) ?? activeParentItem
   const activeSubItem = activeParentItem?.subItems?.find((s) => s.id === activeId)
 
+  const handleDrawerClose = () => {
+    setMobileOpen(false)
+  }
+
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen)
+    setMobileOpen((prev) => !prev)
   }
 
   const renderIcon = (icon: React.ReactNode | string, isActive: boolean) => {
@@ -349,19 +358,23 @@ export function DashboardLayout({
         backgroundImage: `radial-gradient(circle at 95% 0%, ${alpha(TOKENS.primary, 0.08)} 0%, transparent 42%)`,
       }}
     >
-      {/* Mobile Drawer */}
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }}
-        sx={{
-          display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: SIDEBAR_WIDTH, border: 'none', boxShadow: TOKENS.shadow.lg },
-        }}
-      >
-        {sidebarContent}
-      </Drawer>
+      {/* Mobile Drawer — only mount on small screens so Modal backdrop cannot block desktop UI */}
+      {!isMdUp && (
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerClose}
+          ModalProps={{
+            keepMounted: false,
+            disableScrollLock: false,
+          }}
+          sx={{
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: SIDEBAR_WIDTH, border: 'none', boxShadow: TOKENS.shadow.lg },
+          }}
+        >
+          {sidebarContent}
+        </Drawer>
+      )}
 
       {/* Desktop Sidebar */}
       <Box
@@ -389,19 +402,22 @@ export function DashboardLayout({
         >
           <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, md: 4 } }}>
             <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-              <IconButton
-                color="inherit"
-                edge="start"
-                onClick={handleDrawerToggle}
-                sx={{
-                  mr: 1,
-                  display: isStandalone ? 'none' : { md: 'none' },
-                  border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
-                  bgcolor: alpha(TOKENS.paper, 0.9),
-                }}
-              >
-                <MenuRoundedIcon />
-              </IconButton>
+              {!isMdUp && !isStandalone && (
+                <IconButton
+                  color="inherit"
+                  edge="start"
+                  aria-label="Deschide meniul"
+                  aria-expanded={mobileOpen}
+                  onClick={handleDrawerToggle}
+                  sx={{
+                    mr: 1,
+                    border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+                    bgcolor: alpha(TOKENS.paper, 0.9),
+                  }}
+                >
+                  <MenuRoundedIcon />
+                </IconButton>
+              )}
               <Typography variant="h6" sx={{ fontWeight: 800, color: TOKENS.ink, fontSize: '1.08rem' }}>
                 {activeItem?.label}
                 {activeParentItem && (

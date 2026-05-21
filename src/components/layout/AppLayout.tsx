@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { lazy, Suspense, useState, useEffect } from 'react'
 import { AppBar, Box, Button, Container, Drawer, IconButton, Stack, Toolbar, Typography, useMediaQuery } from '@mui/material'
 import { alpha, useTheme } from '@mui/material/styles'
 import { useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom'
@@ -9,19 +9,22 @@ import { TOKENS } from '../../constants/tokens'
 import { navItems } from '../../data/constants'
 import logo from '../../assets/logo.svg'
 
-// Pages
-import { HomePage } from '../../pages/HomePage'
-import { FaqPage } from '../../pages/FaqPage'
-import { ServicesPage } from '../../pages/ServicesPage'
-import { AboutPage } from '../../pages/AboutPage'
-import { CalculatorPage } from '../../pages/CalculatorPage'
-import { PricingPage } from '../../pages/PricingPage'
-import { PartnersPage } from '../../pages/PartnersPage'
-import { ContactPage } from '../../pages/ContactPage'
-import { TermsPage } from '../../pages/TermsPage'
-import { PrivacyPolicyPage } from '../../pages/PrivacyPolicyPage'
-import { CarsPage } from '../../pages/CarsPage'
+import { RouteFallback } from '../common/RouteFallback'
 import { ServicePaymentSuccessDialog } from '../services/ServicePaymentSuccessDialog'
+
+const HomePage = lazy(() => import('../../pages/HomePage').then((m) => ({ default: m.HomePage })))
+const FaqPage = lazy(() => import('../../pages/FaqPage').then((m) => ({ default: m.FaqPage })))
+const ServicesPage = lazy(() => import('../../pages/ServicesPage').then((m) => ({ default: m.ServicesPage })))
+const AboutPage = lazy(() => import('../../pages/AboutPage').then((m) => ({ default: m.AboutPage })))
+const CalculatorPage = lazy(() => import('../../pages/CalculatorPage').then((m) => ({ default: m.CalculatorPage })))
+const PricingPage = lazy(() => import('../../pages/PricingPage').then((m) => ({ default: m.PricingPage })))
+const PartnersPage = lazy(() => import('../../pages/PartnersPage').then((m) => ({ default: m.PartnersPage })))
+const ContactPage = lazy(() => import('../../pages/ContactPage').then((m) => ({ default: m.ContactPage })))
+const TermsPage = lazy(() => import('../../pages/TermsPage').then((m) => ({ default: m.TermsPage })))
+const PrivacyPolicyPage = lazy(() =>
+  import('../../pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })),
+)
+const CarsPage = lazy(() => import('../../pages/CarsPage').then((m) => ({ default: m.CarsPage })))
 
 export function AppLayout() {
   const location = useLocation()
@@ -299,26 +302,25 @@ export function AppLayout() {
 
       {/* ── Main Content ── */}
       <Box component="main" sx={{ flex: 1, position: 'relative' }}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/masini" element={<CarsPage />} />
-          <Route path="/intrebari-frecvente" element={<FaqPage />} />
-          <Route path="/servicii" element={<ServicesPage />} />
-          <Route path="/despre-ridelance" element={<AboutPage />} />
-          <Route path="/fiscal" element={<CalculatorPage />} />
-          <Route path="/calculator-taxe" element={<Navigate to="/fiscal" replace />} />
-          <Route path="/abonamente-preturi" element={<PricingPage />} />
-          <Route path="/parteneri" element={<PartnersPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/dashboard" element={<Navigate to="/demo" replace />} />
-          <Route
-            path="/dashboard-demo"
-            element={<Navigate to="/demo" replace />}
-          />
-          <Route path="/termeni-si-conditii" element={<TermsPage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/masini" element={<CarsPage />} />
+            <Route path="/intrebari-frecvente" element={<FaqPage />} />
+            <Route path="/servicii" element={<ServicesPage />} />
+            <Route path="/despre-ridelance" element={<AboutPage />} />
+            <Route path="/fiscal" element={<CalculatorPage />} />
+            <Route path="/calculator-taxe" element={<Navigate to="/fiscal" replace />} />
+            <Route path="/abonamente-preturi" element={<PricingPage />} />
+            <Route path="/parteneri" element={<PartnersPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/dashboard" element={<Navigate to="/demo" replace />} />
+            <Route path="/dashboard-demo" element={<Navigate to="/demo" replace />} />
+            <Route path="/termeni-si-conditii" element={<TermsPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </Box>
 
       {/* ── Footer ── */}

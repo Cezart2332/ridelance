@@ -1,9 +1,10 @@
+import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { ScrollToTop } from './components/layout/ScrollToTop'
-import { AppLayout } from './components/layout/AppLayout'
 import InstallPWA from './components/pwa/InstallPWA'
+import { RouteFallback } from './components/common/RouteFallback'
 
-// Auth
+// Auth (kept eager — small, needed immediately on /auth)
 import AuthPage from './components/auth/AuthPage'
 import RegisterPfaPage from './components/auth/RegisterPfaPage'
 import RegistrationSuccessPage from './components/auth/RegistrationSuccessPage'
@@ -15,12 +16,21 @@ import PendingApprovalPage from './components/auth/PendingApprovalPage'
 import { authService } from './services/auth.service'
 import { useNavigate } from 'react-router-dom'
 
-// Dashboards
-import DashboardPage from './components/dashboard/DashboardPage'
-import DashboardDemoPage from './components/dashboard-demo/DashboardDemoPage'
-import { AdminDashboard } from './pages/AdminDashboard'
-import { ContabilDashboard } from './pages/ContabilDashboard'
-import { CarPosterDashboard } from './pages/CarPosterDashboard'
+// Dashboards & marketing shell — lazy-loaded to split the production bundle
+const DashboardPage = lazy(() => import('./components/dashboard/DashboardPage'))
+const DashboardDemoPage = lazy(() => import('./components/dashboard-demo/DashboardDemoPage'))
+const AdminDashboard = lazy(() =>
+  import('./pages/AdminDashboard').then((m) => ({ default: m.AdminDashboard })),
+)
+const ContabilDashboard = lazy(() =>
+  import('./pages/ContabilDashboard').then((m) => ({ default: m.ContabilDashboard })),
+)
+const CarPosterDashboard = lazy(() =>
+  import('./pages/CarPosterDashboard').then((m) => ({ default: m.CarPosterDashboard })),
+)
+const AppLayout = lazy(() =>
+  import('./components/layout/AppLayout').then((m) => ({ default: m.AppLayout })),
+)
 
 function App() {
   const navigate = useNavigate();
@@ -33,39 +43,29 @@ function App() {
     <>
       <ScrollToTop />
       <InstallPWA />
-      <Routes>
-        {/* ── Public auth pages ── */}
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/inregistrare/pfa" element={<RegisterPfaPage />} />
-        <Route path="/inregistrare/abonament" element={<SubscriptionSelectPage />} />
-        <Route path="/inregistrare/succes" element={<RegistrationSuccessPage />} />
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          {/* ── Public auth pages ── */}
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/inregistrare/pfa" element={<RegisterPfaPage />} />
+          <Route path="/inregistrare/abonament" element={<SubscriptionSelectPage />} />
+          <Route path="/inregistrare/succes" element={<RegistrationSuccessPage />} />
 
-        {/* ── Protected routes ── */}
-        <Route element={<ProtectedRoute />}>
-          {/* /app → role-based redirect */}
-          <Route path="/app" element={<RoleRedirect />} />
-          <Route path="/app/pending-access" element={<PendingAccessPage />} />
-          <Route path="/app/pending-approval" element={<PendingApprovalPage status="Pending" onLogout={handleLogout} />} />
+          {/* ── Protected routes ── */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/app" element={<RoleRedirect />} />
+            <Route path="/app/pending-access" element={<PendingAccessPage />} />
+            <Route path="/app/pending-approval" element={<PendingApprovalPage status="Pending" onLogout={handleLogout} />} />
+            <Route path="/app/dashboard/*" element={<DashboardPage />} />
+            <Route path="/contabil/*" element={<ContabilDashboard />} />
+            <Route path="/admin/*" element={<AdminDashboard />} />
+            <Route path="/poster/*" element={<CarPosterDashboard />} />
+          </Route>
 
-          {/* Client dashboard */}
-          <Route path="/app/dashboard/*" element={<DashboardPage />} />
-
-          {/* Contabil dashboard */}
-          <Route path="/contabil/*" element={<ContabilDashboard />} />
-
-          {/* Admin dashboard */}
-          <Route path="/admin/*" element={<AdminDashboard />} />
-
-          {/* Cont inchiriere masini dashboard */}
-          <Route path="/poster/*" element={<CarPosterDashboard />} />
-        </Route>
-
-        {/* Demo (unprotected, for showcasing) */}
-        <Route path="/demo/*" element={<DashboardDemoPage />} />
-
-        {/* Landing pages */}
-        <Route path="/*" element={<AppLayout />} />
-      </Routes>
+          <Route path="/demo/*" element={<DashboardDemoPage />} />
+          <Route path="/*" element={<AppLayout />} />
+        </Routes>
+      </Suspense>
     </>
   )
 }
