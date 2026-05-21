@@ -301,16 +301,15 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
       {loading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
 
       <Paper elevation={0} sx={{ mb: 4, borderRadius: DASHBOARD_TOKENS.radius.lg, border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`, overflow: 'hidden' }}>
-        <Tabs value={activeTab} onChange={handleTabChange}
-          sx={{ px: 2, borderBottom: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.05)}`, '& .MuiTab-root': { fontWeight: 700, py: 2 } }}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          sx={{ px: 2, borderBottom: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.05)}`, '& .MuiTab-root': { fontWeight: 700, py: 2 } }}
+        >
           <Tab icon={<DirectionsCarFilledRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label={isPoster ? 'Mașini' : 'Parc Auto'} />
-          {!isPoster && (
-            <>
-              <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Solicitări" />
-              <Tab icon={<BarChartRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Analytics" />
-              <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Validare" />
-            </>
-          )}
+          {!isPoster && <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Solicitări" />}
+          {!isPoster && <Tab icon={<BarChartRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Analytics" />}
+          {!isPoster && <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Validare" />}
         </Tabs>
 
         <Box sx={{ p: 3 }}>
