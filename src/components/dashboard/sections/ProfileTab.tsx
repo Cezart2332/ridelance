@@ -9,6 +9,7 @@ import { documentService } from '../../../services/document.service'
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
 import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
 import { formatRegistrationType } from '../../../utils/formatters'
+import { formatRole } from '../../../utils/roleLabels'
 
 export function ProfileTab() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -44,7 +45,7 @@ export function ProfileTab() {
         { label: 'Nume', value: profile.lastName },
         { label: 'Email', value: profile.email },
         { label: 'Telefon', value: profile.phoneNumber || '—' },
-        { label: 'Rol', value: profile.role },
+        { label: 'Rol', value: formatRole(profile.role) },
         { label: 'Parola', value: '**********' },
         { label: 'Plan activ', value: 'RIDElance Pro' },
       ]

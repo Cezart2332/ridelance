@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import { authService } from '../../services/auth.service'
 import { getErrorMessage } from '../../utils/errorHandler'
+import { ROLE_LABELS } from '../../utils/roleLabels'
 
 import logo from '../../assets/logo.svg'
 
@@ -350,7 +351,7 @@ export default function AuthPage() {
                     }}
                   >
                     <ToggleButton value="Client">Șofer PFA</ToggleButton>
-                    <ToggleButton value="CarPoster">Cont inchiriere mașini</ToggleButton>
+                    <ToggleButton value="CarPoster">{ROLE_LABELS.CarPoster}</ToggleButton>
                   </ToggleButtonGroup>
                   <Typography sx={{ mt: 1, fontSize: '0.8rem', color: TOKENS.textMuted, lineHeight: 1.5 }}>
                     {registerRole === 'CarPoster'

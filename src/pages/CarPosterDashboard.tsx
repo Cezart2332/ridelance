@@ -5,6 +5,7 @@ import { authService } from '../services/auth.service'
 import { userService, type UserProfile } from '../services/user.service'
 import { useEffect, useState } from 'react'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
+import { ROLE_LABELS } from '../utils/roleLabels'
 
 export function CarPosterDashboard() {
   const navigate = useNavigate()
@@ -28,7 +29,7 @@ export function CarPosterDashboard() {
       onNavClick={() => {}}
       onLogout={handleLogout}
       userName={userName}
-      userRole="Postator mașini"
+      userRole={ROLE_LABELS.CarPoster}
     >
       <CarsAdminView variant="poster" />
     </DashboardLayout>

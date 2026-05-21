@@ -9,7 +9,7 @@ import { Box, CircularProgress } from '@mui/material'
  * - Client   → /app/dashboard (if access granted)
  * - Contabil → /contabil
  * - Admin      → /admin
- * - CarPoster  → /poster
+ * - CarPoster (Cont inchiriere masini) → /poster
  */
 export default function RoleRedirect() {
   const role = useAppSelector((s) => s.auth.role)

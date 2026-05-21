@@ -56,7 +56,7 @@ function App() {
           {/* Admin dashboard */}
           <Route path="/admin/*" element={<AdminDashboard />} />
 
-          {/* Car poster dashboard */}
+          {/* Cont inchiriere masini dashboard */}
           <Route path="/poster/*" element={<CarPosterDashboard />} />
         </Route>
 
