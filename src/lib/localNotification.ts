@@ -18,7 +18,6 @@ export async function showLocalPushNotification(
       badge: '/pwa-192x192.png',
       data: url,
       tag: 'recurring-documentation',
-      renotify: true,
     })
   } catch (error) {
     console.error('Failed to show local notification:', error)

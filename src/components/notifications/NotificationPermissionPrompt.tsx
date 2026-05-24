@@ -89,11 +89,13 @@ export function NotificationPermissionPrompt() {
       onClose={handleDismiss}
       maxWidth="xs"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: `${TOKENS.radius.xl}px`,
-          border: `1px solid ${TOKENS.border}`,
-          boxShadow: TOKENS.shadow.lg,
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: `${TOKENS.radius.xl}px`,
+            border: `1px solid ${TOKENS.border}`,
+            boxShadow: TOKENS.shadow.lg,
+          },
         },
       }}
     >

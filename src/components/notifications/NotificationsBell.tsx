@@ -119,7 +119,7 @@ export function NotificationsBell({ onOpenRecurringDocumentation }: Notification
               maxWidth: 'calc(100vw - 24px)',
               borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
               border: `1px solid ${DASHBOARD_TOKENS.border}`,
-              boxShadow: DASHBOARD_TOKENS.shadow.lg,
+              boxShadow: DASHBOARD_TOKENS.shadow.md,
               mt: 1,
             },
           },
@@ -160,14 +160,20 @@ export function NotificationsBell({ onOpenRecurringDocumentation }: Notification
                 <ListItemText
                   primary={n.text}
                   secondary={relativeTime(n.createdAtUtc)}
-                  primaryTypographyProps={{
-                    fontWeight: n.isRead ? 600 : 800,
-                    fontSize: '0.85rem',
-                    color: DASHBOARD_TOKENS.ink,
-                  }}
-                  secondaryTypographyProps={{
-                    fontSize: '0.75rem',
-                    color: DASHBOARD_TOKENS.textSubtle,
+                  slotProps={{
+                    primary: {
+                      sx: {
+                        fontWeight: n.isRead ? 600 : 800,
+                        fontSize: '0.85rem',
+                        color: DASHBOARD_TOKENS.ink,
+                      },
+                    },
+                    secondary: {
+                      sx: {
+                        fontSize: '0.75rem',
+                        color: DASHBOARD_TOKENS.textSubtle,
+                      },
+                    },
                   }}
                 />
               </ListItemButton>
