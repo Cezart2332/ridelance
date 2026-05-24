@@ -260,6 +260,15 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
     }
   };
 
+  const analyticsTotals = cars.reduce(
+    (acc, car) => ({
+      views: acc.views + (car.stats?.views ?? 0),
+      clicks: acc.clicks + (car.stats?.clicks ?? 0),
+      forms: acc.forms + (car.stats?.forms ?? 0),
+    }),
+    { views: 0, clicks: 0, forms: 0 },
+  );
+
   const leadStatusColors: Record<string, string> = {
     'Nou': '#6366f1', 'Contactat': '#f59e0b', 'În discuție': '#3b82f6',
     'Acceptat': '#10b981', 'Respins': '#ef4444'
@@ -452,6 +461,33 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
           )}
 
           {activeTab === 2 && (
+            <Stack spacing={3}>
+              <Grid container spacing={2} component="div">
+                {[
+                  { label: 'Vizualizări totale', value: analyticsTotals.views },
+                  { label: 'Click-uri închiriere', value: analyticsTotals.clicks },
+                  { label: 'Cereri trimise', value: analyticsTotals.forms },
+                ].map((item) => (
+                  <Grid size={{ xs: 12, sm: 4 }} key={item.label} component="div">
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2.5,
+                        borderRadius: DASHBOARD_TOKENS.radius.lg,
+                        border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+                        bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.04),
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 700 }}>
+                        {item.label}
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.ink, mt: 0.5 }}>
+                        {item.value.toLocaleString('ro-RO')}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                ))}
+              </Grid>
             <Grid container spacing={3} component="div">
               {cars.map((car) => (
                 <Grid size={{ xs: 12, md: 6, lg: 4 }} key={car.id} component="div">
@@ -466,9 +502,9 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
                       </Stack>
                       <Grid container spacing={2} component="div">
                         {[
-                          { icon: <VisibilityRoundedIcon />, value: car.stats?.views ?? 0, label: 'Views' },
-                          { icon: <TouchAppRoundedIcon />, value: car.stats?.clicks ?? 0, label: 'Clicks' },
-                          { icon: <DescriptionRoundedIcon />, value: car.stats?.forms ?? 0, label: 'Leads' },
+                          { icon: <VisibilityRoundedIcon />, value: car.stats?.views ?? 0, label: 'Vizualizări' },
+                          { icon: <TouchAppRoundedIcon />, value: car.stats?.clicks ?? 0, label: 'Click-uri' },
+                          { icon: <DescriptionRoundedIcon />, value: car.stats?.forms ?? 0, label: 'Cereri' },
                         ].map(stat => (
                           <Grid size={4} key={stat.label} component="div">
                             <Stack sx={{ alignItems: 'center' }}>
@@ -484,6 +520,7 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
                 </Grid>
               ))}
             </Grid>
+            </Stack>
           )}
         </Box>
       </Paper>

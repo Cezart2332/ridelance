@@ -1,16 +1,24 @@
-import { Badge, IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
-import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
+import { NotificationsBell } from '../../notifications/NotificationsBell';
 
 interface AppHeaderProps {
   sidebarOpen: boolean;
   setSidebarOpen: (arg: boolean) => void;
   title: string;
+  showNotifications?: boolean;
+  onOpenRecurringDocumentation?: () => void;
 }
 
-export default function AppHeader({ sidebarOpen, setSidebarOpen, title }: AppHeaderProps) {
+export default function AppHeader({
+  sidebarOpen,
+  setSidebarOpen,
+  title,
+  showNotifications,
+  onOpenRecurringDocumentation,
+}: AppHeaderProps) {
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
 
@@ -57,20 +65,9 @@ export default function AppHeader({ sidebarOpen, setSidebarOpen, title }: AppHea
       </Stack>
 
       <Stack direction="row" spacing={1.5}>
-        <IconButton
-          size="small"
-          aria-label="Notificari"
-          sx={{
-            border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
-            backgroundColor: alpha(DASHBOARD_TOKENS.paper, 0.92),
-            transition: '0.2s',
-            '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.1), color: DASHBOARD_TOKENS.primaryStrong },
-          }}
-        >
-          <Badge badgeContent={3} color="error" overlap="circular">
-            <NotificationsRoundedIcon fontSize="small" sx={{ color: DASHBOARD_TOKENS.textMuted }} />
-          </Badge>
-        </IconButton>
+        {showNotifications && (
+          <NotificationsBell onOpenRecurringDocumentation={onOpenRecurringDocumentation} />
+        )}
       </Stack>
     </Paper>
   );

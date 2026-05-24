@@ -1,7 +1,7 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
 import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded'
-import { useEffect, useState } from 'react'
-import { Button, Chip, CircularProgress, Paper, Stack, Typography, Snackbar, Alert } from '@mui/material'
+import { useEffect, useMemo, useState } from 'react'
+import { Button, Chip, CircularProgress, IconButton, Paper, Stack, Typography, Snackbar, Alert } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
@@ -18,6 +18,16 @@ interface DocumentSummary {
   fileSize: number;
   uploadedAtUtc: string;
 }
+
+const DOCUMENT_CATEGORIES = [
+  'Buletin',
+  'AtestatSofer',
+  'CazierJudiciar',
+  'AdeverintaMedicala',
+  'ITP',
+  'RCA',
+  'Other',
+] as const
 
 function statusChipSx(status: string) {
   const s = status.toLowerCase()
@@ -57,15 +67,31 @@ export function DocumentsTab() {
     fetchDocuments()
   }, [])
 
+  const docsByCategory = useMemo(() => {
+    const map = new Map<string, DocumentSummary>()
+    for (const doc of documents) {
+      const existing = map.get(doc.category)
+      if (!existing || new Date(doc.uploadedAtUtc) > new Date(existing.uploadedAtUtc)) {
+        map.set(doc.category, doc)
+      }
+    }
+    return map
+  }, [documents])
+
+  const otherDocuments = useMemo(
+    () => documents.filter((doc) => !DOCUMENT_CATEGORIES.includes(doc.category as typeof DOCUMENT_CATEGORIES[number])),
+    [documents],
+  )
+
   const handleUpload = async (file: File, category: string) => {
     setUploading(category)
     try {
       await documentService.upload(file, category)
-      setSnackbar({ open: true, message: `Documentul "${category}" a fost încărcat cu succes!`, severity: 'success' })
-      fetchDocuments() // Refresh after upload
+      setSnackbar({ open: true, message: `Documentul "${formatDocumentCategory(category)}" a fost încărcat cu succes!`, severity: 'success' })
+      fetchDocuments()
     } catch (err: any) {
       console.error('Upload failed:', err)
-      setSnackbar({ open: true, message: getErrorMessage(err, `Încărcarea documentului "${category}" a eșuat.`), severity: 'error' })
+      setSnackbar({ open: true, message: getErrorMessage(err, `Încărcarea documentului "${formatDocumentCategory(category)}" a eșuat.`), severity: 'error' })
     } finally {
       setUploading(null)
     }
@@ -108,14 +134,109 @@ export function DocumentsTab() {
         <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2 }}>
           Documentele mele
         </Typography>
+        <Stack spacing={1.4}>
+          {DOCUMENT_CATEGORIES.map((category) => {
+            const doc = docsByCategory.get(category)
+            const isUploading = uploading === category
 
-        {documents.length === 0 ? (
-          <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>
-            Nu ai niciun document incarcat inca.
+            return (
+              <Paper
+                key={category}
+                elevation={0}
+                sx={{
+                  p: 1.5,
+                  borderRadius: DASHBOARD_TOKENS.radius.md,
+                  border: `1px solid ${DASHBOARD_TOKENS.border}`,
+                  backgroundColor: DASHBOARD_TOKENS.surface,
+                }}
+              >
+                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1.2 }}>
+                  <div style={{ overflow: 'hidden', minWidth: 0 }}>
+                    <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700 }}>
+                      {formatDocumentCategory(category)}
+                    </Typography>
+                    {doc ? (
+                      <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.8rem', mt: 0.3 }}>
+                        (incarcat) · {doc.originalFileName}
+                      </Typography>
+                    ) : (
+                      <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.8rem', mt: 0.3 }}>
+                        Neincarcat
+                      </Typography>
+                    )}
+                  </div>
+                  <Stack direction="row" spacing={0.8} sx={{ alignItems: 'center', flexShrink: 0 }}>
+                    {doc && (
+                      <>
+                        <Chip
+                          label={statusLabel(doc.status)}
+                          size="small"
+                          sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full, ...statusChipSx(doc.status) }}
+                        />
+                        <Button
+                          size="small"
+                          startIcon={<DownloadRoundedIcon fontSize="small" />}
+                          onClick={() => handleDownload(doc.id, doc.originalFileName)}
+                          sx={{
+                            minWidth: 'unset',
+                            borderRadius: DASHBOARD_TOKENS.radius.full,
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            color: DASHBOARD_TOKENS.primaryStrong,
+                            backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
+                            '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
+                          }}
+                        >
+                          Descarca
+                        </Button>
+                      </>
+                    )}
+                    <IconButton
+                      component="label"
+                      disabled={isUploading}
+                      size="small"
+                      aria-label={doc ? 'Reincarca document' : 'Incarca document'}
+                      sx={{
+                        borderRadius: DASHBOARD_TOKENS.radius.full,
+                        color: DASHBOARD_TOKENS.primaryStrong,
+                        backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
+                        '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
+                      }}
+                    >
+                      {isUploading ? <CircularProgress size={18} /> : <AddRoundedIcon fontSize="small" />}
+                      <input
+                        hidden
+                        type="file"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) handleUpload(file, category)
+                          e.target.value = ''
+                        }}
+                      />
+                    </IconButton>
+                  </Stack>
+                </Stack>
+              </Paper>
+            )
+          })}
+        </Stack>
+      </Paper>
+
+      {otherDocuments.length > 0 && (
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2.5, md: 3 },
+            borderRadius: DASHBOARD_TOKENS.radius.lg,
+            border: `1px solid ${DASHBOARD_TOKENS.border}`,
+            boxShadow: DASHBOARD_TOKENS.shadow.sm,
+          }}
+        >
+          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2 }}>
+            Alte documente
           </Typography>
-        ) : (
           <Stack spacing={1.4}>
-            {documents.map((doc) => (
+            {otherDocuments.map((doc) => (
               <Paper
                 key={doc.id}
                 elevation={0}
@@ -162,65 +283,8 @@ export function DocumentsTab() {
               </Paper>
             ))}
           </Stack>
-        )}
-      </Paper>
-
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
-          border: `1px solid ${DASHBOARD_TOKENS.border}`,
-          boxShadow: DASHBOARD_TOKENS.shadow.sm,
-        }}
-      >
-        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2 }}>
-          Incarca documente noi
-        </Typography>
-        <Stack spacing={1.4}>
-          {['Buletin', 'AtestatSofer', 'CazierJudiciar', 'AdeverintaMedicala', 'ITP', 'RCA', 'Other'].map((category) => (
-            <Paper
-              key={category}
-              elevation={0}
-              sx={{
-                p: 1.5,
-                borderRadius: DASHBOARD_TOKENS.radius.md,
-                border: `1px solid ${DASHBOARD_TOKENS.border}`,
-                backgroundColor: DASHBOARD_TOKENS.surface,
-              }}
-            >
-              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1.2 }}>
-                <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700 }}>{formatDocumentCategory(category)}</Typography>
-                <Button
-                  component="label"
-                  size="small"
-                  disabled={uploading === category}
-                  startIcon={uploading === category ? <CircularProgress size={14} /> : <AddRoundedIcon fontSize="small" />}
-                  sx={{
-                    minWidth: 'unset',
-                    borderRadius: DASHBOARD_TOKENS.radius.full,
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    color: DASHBOARD_TOKENS.primaryStrong,
-                    backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
-                    '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
-                  }}
-                >
-                  Incarca
-                  <input
-                    hidden
-                    type="file"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) handleUpload(file, category)
-                    }}
-                  />
-                </Button>
-              </Stack>
-            </Paper>
-          ))}
-        </Stack>
-      </Paper>
+        </Paper>
+      )}
 
       <Snackbar
         open={snackbar.open}

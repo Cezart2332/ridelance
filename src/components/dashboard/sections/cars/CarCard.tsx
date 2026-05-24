@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -6,17 +6,18 @@ import {
   Button, 
   Chip, 
   IconButton,
-  Tooltip
+  Tooltip,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import LocalGasStationOutlinedIcon from '@mui/icons-material/LocalGasStationOutlined';
 import { DASHBOARD_TOKENS } from '../../dashboardTheme';
-import { type Car, getCarImageUrl } from '../../../../services/cars.service';
+import { carsService, type Car, getCarImageUrl } from '../../../../services/cars.service';
 import { hasActiveDiscount } from '../../../../utils/carPricing';
 import {
   formatCarOfferType,
@@ -27,6 +28,7 @@ import {
   isCarRentDisabled,
 } from '../../../../utils/carLabels';
 import CarPriceDisplay, { CarDiscountChip } from './CarPriceDisplay';
+import { useSwipeGallery } from './useSwipeGallery';
 
 interface CarCardProps {
   car: Car;
@@ -37,15 +39,21 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const images = car.images.length > 0 ? car.images : [{ id: 'placeholder', imageUrl: '' }];
+  const { swipeHandlers, goNext, goPrev } = useSwipeGallery(images.length, setActiveImageIndex);
+
+  useEffect(() => {
+    if (!car.id) return;
+    carsService.trackView(car.id).catch(() => {});
+  }, [car.id]);
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setActiveImageIndex((prev) => (prev + 1) % images.length);
+    goNext();
   };
 
   const prevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setActiveImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    goPrev();
   };
 
   return (
@@ -65,7 +73,17 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
       }
     }}>
       {/* Gallery Section */}
-      <Box sx={{ position: 'relative', height: 240, overflow: 'hidden', bgcolor: '#f8fafc' }}>
+      <Box
+        sx={{
+          position: 'relative',
+          height: 240,
+          overflow: 'hidden',
+          bgcolor: '#f8fafc',
+          touchAction: 'pan-y',
+          userSelect: 'none',
+        }}
+        {...(images.length > 1 ? swipeHandlers : {})}
+      >
         {images[activeImageIndex]?.imageUrl ? (
           <img 
             src={getCarImageUrl(images[activeImageIndex].imageUrl)} 
@@ -83,11 +101,11 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
         
         {images.length > 1 && (
           <>
-            {/* Navigation Buttons */}
+            {/* Navigation Buttons (desktop / pointer devices) */}
             <Box sx={{ 
               position: 'absolute', 
               top: 0, left: 0, right: 0, bottom: 0, 
-              display: 'flex', 
+              display: { xs: 'none', md: 'flex' }, 
               alignItems: 'center', 
               justifyContent: 'space-between',
               px: 1,
@@ -119,12 +137,29 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
               transform: 'translateX(-50%)' 
             }}>
               {images.map((_, i) => (
-                <Box key={i} sx={{ 
-                  width: 6, 
+                <Box
+                  key={i}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Imaginea ${i + 1}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImageIndex(i);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setActiveImageIndex(i);
+                    }
+                  }}
+                  sx={{ 
+                  width: i === activeImageIndex ? 8 : 6, 
                   height: 6, 
                   borderRadius: '50%', 
                   bgcolor: i === activeImageIndex ? 'white' : 'rgba(255,255,255,0.4)',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  cursor: 'pointer',
                 }} />
               ))}
             </Stack>
@@ -254,7 +289,10 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
         <Button
           fullWidth
           variant="contained"
-          onClick={() => onRentClick(car)}
+          onClick={() => {
+            carsService.trackClick(car.id).catch(() => {});
+            onRentClick(car);
+          }}
           disabled={isCarRentDisabled(car.status)}
           sx={{
             mt: 3,
@@ -277,5 +315,3 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
     </Box>
   );
 }
-
-import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';

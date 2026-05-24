@@ -11,9 +11,11 @@ interface AppLayoutProps {
   setActiveSection: React.Dispatch<React.SetStateAction<any>>;
   sectionConfig: readonly { id: string; label: string }[];
   onLogout?: () => void;
+  showNotifications?: boolean;
+  onOpenRecurringDocumentation?: () => void;
 }
 
-export default function AppLayout({ children, activeSection, setActiveSection, sectionConfig, onLogout }: AppLayoutProps) {
+export default function AppLayout({ children, activeSection, setActiveSection, sectionConfig, onLogout, showNotifications, onOpenRecurringDocumentation }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sectionTitle = sectionConfig.find((item) => item.id === activeSection)?.label || '';
 
@@ -39,6 +41,8 @@ export default function AppLayout({ children, activeSection, setActiveSection, s
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
           title={sectionTitle}
+          showNotifications={showNotifications}
+          onOpenRecurringDocumentation={onOpenRecurringDocumentation}
         />
         <Box component="main" sx={{ p: { xs: 2, md: 3 }, flexGrow: 1 }}>
           {children}

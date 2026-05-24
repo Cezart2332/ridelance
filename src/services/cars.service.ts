@@ -163,7 +163,17 @@ const carsService = {
 
   async updateLeadStatus(leadId: string, status: string, adminNote?: string): Promise<void> {
     await api.patch(`/cars/leads/${leadId}/status`, { status, adminNote });
-  }
+  },
+
+  /** Record a listing impression (public, fire-and-forget). */
+  trackView(carId: string): Promise<void> {
+    return api.post(`/cars/${carId}/analytics/view`).then(() => undefined);
+  },
+
+  /** Record rent / CTA click (public, fire-and-forget). */
+  trackClick(carId: string): Promise<void> {
+    return api.post(`/cars/${carId}/analytics/click`).then(() => undefined);
+  },
 };
 
 export { carsService };

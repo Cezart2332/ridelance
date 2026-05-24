@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { DocumentsTab } from './sections/DocumentsTab'
 import { ExpensesRecurringTab } from './sections/ExpensesRecurringTab'
@@ -17,6 +17,7 @@ import { documentService, type DocumentSummary } from '../../services/document.s
 import { authService } from '../../services/auth.service'
 import { userService } from '../../services/user.service'
 import PendingApprovalPage from '../auth/PendingApprovalPage'
+import { useRecurringDocumentationReminder } from '../../hooks/useRecurringDocumentationReminder'
 
 import { Box, CircularProgress, Snackbar, Alert } from '@mui/material'
 
@@ -50,6 +51,7 @@ type SectionId = 'home' | 'cars' | 'profile' | 'documents' | 'support' | 'expens
 
 export default function DashboardPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [activeSection, setActiveSection] = useState<SectionId>('home')
   const [expenseInput, setExpenseInput] = useState('')
   const [expenses, setExpenses] = useState<DocumentSummary[]>([])
@@ -57,6 +59,15 @@ export default function DashboardPage() {
 
   // PFA approval gate
   const [pfaStatus, setPfaStatus] = useState<string | null | 'loading'>('loading')
+
+  useRecurringDocumentationReminder(pfaStatus === 'Approved')
+
+  useEffect(() => {
+    const section = searchParams.get('section')
+    if (section) {
+      setActiveSection(section)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     userService.getDashboardSummary()
@@ -152,6 +163,8 @@ export default function DashboardPage() {
       setActiveSection={setActiveSection}
       sectionConfig={sectionConfig}
       onLogout={handleLogout}
+      showNotifications
+      onOpenRecurringDocumentation={() => setActiveSection('doc_recurring')}
     >
       {renderSection()}
       <Snackbar

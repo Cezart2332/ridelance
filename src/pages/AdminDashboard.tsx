@@ -130,6 +130,7 @@ export function AdminDashboard() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [notifsLoading, setNotifsLoading] = useState(false)
   const [notifsError, setNotifsError] = useState<string | null>(null)
+  const [testNotifLoading, setTestNotifLoading] = useState(false)
 
   // Profile
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -287,6 +288,27 @@ export function AdminDashboard() {
       navigate('/app', { replace: true })
     } catch {
       setStatusError('Eroare la autentificarea ca utilizator.')
+    }
+  }
+
+  const handleTestRecurringDocumentation = async () => {
+    setTestNotifLoading(true)
+    try {
+      const result = await notificationService.adminTestRecurringDocumentation()
+      setSnackbar({
+        open: true,
+        message: `Test trimis: ${result.inAppCreated} notificări în app, ${result.pushSent} push-uri către ${result.usersNotified} utilizatori.`,
+        severity: 'success',
+      })
+      if (activeTab === 'notificari') {
+        const updated = await notificationService.getAll()
+        setNotifications(updated)
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || 'Trimiterea notificărilor de test a eșuat.'
+      setSnackbar({ open: true, message: msg, severity: 'error' })
+    } finally {
+      setTestNotifLoading(false)
     }
   }
 
@@ -671,7 +693,43 @@ export function AdminDashboard() {
 
   // ─── Notifications ───────────────────────────────────────────────────────────
   const renderNotificari = () => (
-    <Stack spacing={1.5} sx={{ maxWidth: 600 }}>
+    <Stack spacing={2} sx={{ maxWidth: 600 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 2.5,
+          borderRadius: TOKENS.radius.lg,
+          border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+          boxShadow: TOKENS.shadow.sm,
+          bgcolor: alpha(TOKENS.primary, 0.04),
+        }}
+      >
+        <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 0.5 }}>
+          Documentație recurentă (lunar)
+        </Typography>
+        <Typography variant="body2" sx={{ color: TOKENS.textMuted, mb: 2, lineHeight: 1.6 }}>
+          Notificările programate se trimit automat în fiecare zi de 1 a lunii (ora României) către
+          clienții activi — în aplicație și push. Butonul de mai jos declanșează același flux pentru test.
+        </Typography>
+        <Button
+          variant="contained"
+          disabled={testNotifLoading}
+          onClick={handleTestRecurringDocumentation}
+          sx={{
+            fontWeight: 700,
+            bgcolor: TOKENS.primary,
+            boxShadow: 'none',
+            '&:hover': { bgcolor: TOKENS.primaryStrong, boxShadow: 'none' },
+          }}
+        >
+          {testNotifLoading ? (
+            <CircularProgress size={22} sx={{ color: '#fff' }} />
+          ) : (
+            'Test notifications'
+          )}
+        </Button>
+      </Paper>
+
       {notifsLoading && <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress size={28} sx={{ color: TOKENS.primary }} /></Box>}
       {notifsError && <Alert severity="error" sx={{ borderRadius: TOKENS.radius.md }}>{notifsError}</Alert>}
       {!notifsLoading && !notifsError && notifications.length === 0 && (

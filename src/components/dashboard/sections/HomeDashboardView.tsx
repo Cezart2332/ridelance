@@ -103,12 +103,6 @@ export function HomeDashboardView() {
                 <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>Status</Typography>
                 {pfaStatusChip(summary.pfaStatus)}
               </Stack>
-              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>Tip</Typography>
-                <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.ink, fontSize: '0.9rem' }}>
-                  {summary.pfaRegistrationType === 'HasPfa' ? 'Am PFA' : 'Nu am PFA'}
-                </Typography>
-              </Stack>
               {summary.pfaCreatedAtUtc && (
                 <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>Data cererii</Typography>

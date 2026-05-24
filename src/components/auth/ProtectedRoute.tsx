@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { CircularProgress, Box } from '@mui/material'
+import { NotificationPermissionPrompt } from '../notifications/NotificationPermissionPrompt'
 import { useAppSelector } from '../../store/hooks'
 
 /**
@@ -23,5 +24,10 @@ export default function ProtectedRoute() {
     return <Navigate to="/auth" replace />
   }
 
-  return <Outlet />
+  return (
+    <>
+      <NotificationPermissionPrompt />
+      <Outlet />
+    </>
+  )
 }

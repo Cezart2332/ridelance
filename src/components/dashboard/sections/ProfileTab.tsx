@@ -8,7 +8,6 @@ import { userService, type UserProfile, type DashboardSummary } from '../../../s
 import { documentService } from '../../../services/document.service'
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
 import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
-import { formatRegistrationType } from '../../../utils/formatters'
 import { formatRole } from '../../../utils/roleLabels'
 
 export function ProfileTab() {
@@ -181,11 +180,6 @@ export function ProfileTab() {
               <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700, fontSize: '1.1rem' }}>{summary.pfaCui}</Typography>
             </Box>
             
-            <Box>
-              <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.8rem' }}>Tip Înregistrare</Typography>
-              <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700 }}>{formatRegistrationType(summary.pfaRegistrationType)}</Typography>
-            </Box>
-
             <Button
               variant="contained"
               fullWidth
