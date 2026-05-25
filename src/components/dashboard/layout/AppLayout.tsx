@@ -9,15 +9,17 @@ interface AppLayoutProps {
   children: React.ReactNode;
   activeSection: string;
   setActiveSection: React.Dispatch<React.SetStateAction<any>>;
-  sectionConfig: readonly { id: string; label: string }[];
+  sectionConfig: readonly { id: string; label: string; icon?: string; subItems?: readonly { id: string; label: string }[] }[];
+  bottomSectionConfig?: readonly { id: string; label: string; icon?: string }[];
   onLogout?: () => void;
   showNotifications?: boolean;
   onOpenRecurringDocumentation?: () => void;
 }
 
-export default function AppLayout({ children, activeSection, setActiveSection, sectionConfig, onLogout, showNotifications, onOpenRecurringDocumentation }: AppLayoutProps) {
+export default function AppLayout({ children, activeSection, setActiveSection, sectionConfig, bottomSectionConfig = [], onLogout, showNotifications, onOpenRecurringDocumentation }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const sectionTitle = sectionConfig.find((item) => item.id === activeSection)?.label || '';
+  const allSections = [...sectionConfig, ...bottomSectionConfig];
+  const sectionTitle = allSections.find((item) => item.id === activeSection)?.label || '';
 
   return (
     <Box
@@ -34,6 +36,7 @@ export default function AppLayout({ children, activeSection, setActiveSection, s
         activeSection={activeSection} 
         setActiveSection={setActiveSection} 
         sectionConfig={sectionConfig}
+        bottomSectionConfig={bottomSectionConfig}
         onLogout={onLogout}
       />
       <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>

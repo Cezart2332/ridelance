@@ -27,12 +27,8 @@ import iconDocs from '../../assets/SVG/2- Regular/folder.svg'
 import iconSupport from '../../assets/SVG/2- Regular/headphones.svg'
 import iconWallet from '../../assets/SVG/2- Regular/credit-card.svg'
 
-const sectionConfig = [
+const mainSectionConfig = [
   { id: 'home', label: 'Acasa', icon: iconHome },
-  { id: 'cars', label: 'Mașini', icon: 'MUI:DirectionsCarFilledRounded' },
-  { id: 'abonamente', label: 'Abonamente', icon: 'MUI:WorkspacePremiumRounded' },
-  { id: 'servicii', label: 'Servicii', icon: 'MUI:ShoppingCartRounded' },
-  { id: 'istoric_plati', label: 'Istoric Plăți', icon: 'MUI:ReceiptLongRounded' },
   { id: 'profile', label: 'Profil', icon: iconProfile },
   { id: 'documents', label: 'Documente', icon: iconDocs },
   { id: 'support', label: 'Suport / Contabilitate', icon: iconSupport },
@@ -45,7 +41,16 @@ const sectionConfig = [
       { id: 'doc_recurring', label: 'Documentatie recurenta' },
     ],
   },
-]
+] as const
+
+const bottomSectionConfig = [
+  { id: 'cars', label: 'Mașini', icon: 'MUI:DirectionsCarFilledRounded' },
+  { id: 'abonamente', label: 'Abonamente', icon: 'MUI:WorkspacePremiumRounded' },
+  { id: 'servicii', label: 'Servicii', icon: 'MUI:ShoppingCartRounded' },
+  { id: 'istoric_plati', label: 'Istoric Plăți', icon: 'MUI:ReceiptLongRounded' },
+] as const
+
+const sectionConfig = [...mainSectionConfig, ...bottomSectionConfig]
 
 type SectionId = 'home' | 'cars' | 'profile' | 'documents' | 'support' | 'expenses' | 'doc_recurring' | 'abonamente' | 'servicii' | 'istoric_plati' | string
 
@@ -161,7 +166,8 @@ export default function DashboardPage() {
     <AppLayout
       activeSection={activeSection}
       setActiveSection={setActiveSection}
-      sectionConfig={sectionConfig}
+      sectionConfig={mainSectionConfig}
+      bottomSectionConfig={bottomSectionConfig}
       onLogout={handleLogout}
       showNotifications
       onOpenRecurringDocumentation={() => setActiveSection('doc_recurring')}
