@@ -1,7 +1,19 @@
 import { Box, Paper, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import { monthNumberToLabel } from '../../../utils/monthLabels';
+import { TOKENS } from '../../../constants/tokens';
+
+import iconCash from '../../../assets/SVG/2- Regular/coupon.svg';
+import iconCard from '../../../assets/SVG/2- Regular/credit-card.svg';
+import iconTaxes from '../../../assets/SVG/2- Regular/file.svg';
+import iconBolt from '../../../assets/SVG/2- Regular/users.svg';
+import iconUber from '../../../assets/SVG/2- Regular/users-three.svg';
+import iconTotal from '../../../assets/SVG/2- Regular/chart-pie.svg';
+
+const iconFilter =
+  'invert(31%) sepia(85%) saturate(2853%) hue-rotate(211deg) brightness(98%) contrast(93%)';
 
 interface PfaIncomeSummaryProps {
   venitCash: number;
@@ -14,16 +26,73 @@ interface PfaIncomeSummaryProps {
   incomeMonth?: number | null;
 }
 
-function IncomeRow({ label, value }: { label: string; value: number }) {
+type IncomeMetric = {
+  label: string;
+  value: number;
+  icon: string;
+  highlight?: boolean;
+};
+
+function formatLei(value: number) {
+  return `${value.toLocaleString('ro-RO')} lei`;
+}
+
+function IncomeMetricCard({ label, value, icon, highlight }: IncomeMetric) {
   return (
-    <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-      <Typography sx={{ fontSize: '0.85rem', color: DASHBOARD_TOKENS.textMuted, fontWeight: 600 }}>
-        {label}
+    <Paper
+      elevation={0}
+      sx={{
+        p: { xs: 2, md: 2.5 },
+        borderRadius: DASHBOARD_TOKENS.radius.xl,
+        border: `1px solid ${highlight ? alpha(DASHBOARD_TOKENS.primary, 0.35) : DASHBOARD_TOKENS.border}`,
+        backgroundColor: highlight
+          ? `linear-gradient(160deg, ${alpha(DASHBOARD_TOKENS.primary, 0.1)} 0%, ${DASHBOARD_TOKENS.paper} 55%)`
+          : DASHBOARD_TOKENS.paper,
+        display: 'flex',
+        flexDirection: 'column',
+        transition: `all 0.3s ${TOKENS.easing}`,
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: DASHBOARD_TOKENS.shadow.md,
+          borderColor: DASHBOARD_TOKENS.primary,
+        },
+      }}
+    >
+      <Stack direction="row" sx={{ alignItems: 'center', mb: 2 }} spacing={1.5}>
+        <Box
+          sx={{
+            p: 1.1,
+            borderRadius: DASHBOARD_TOKENS.radius.lg,
+            backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <img src={icon} alt="" style={{ width: 22, height: 22, filter: iconFilter }} />
+        </Box>
+        <Typography
+          sx={{
+            color: DASHBOARD_TOKENS.textMuted,
+            fontSize: '0.88rem',
+            fontWeight: 700,
+            lineHeight: 1.3,
+          }}
+        >
+          {label}
+        </Typography>
+      </Stack>
+      <Typography
+        sx={{
+          color: highlight ? DASHBOARD_TOKENS.primaryStrong : DASHBOARD_TOKENS.ink,
+          fontWeight: 900,
+          fontSize: highlight ? '1.85rem' : '1.65rem',
+          letterSpacing: -0.5,
+        }}
+      >
+        {formatLei(value)}
       </Typography>
-      <Typography sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink, fontSize: '0.95rem' }}>
-        {value.toLocaleString('ro-RO')} lei
-      </Typography>
-    </Stack>
+    </Paper>
   );
 }
 
@@ -38,60 +107,60 @@ export function PfaIncomeSummary({
   incomeMonth,
 }: PfaIncomeSummaryProps) {
   const hasAnyIncome =
-    venitCash > 0 || venitCard > 0 || venitBolt > 0 || venitUber > 0 || taxeEstimate > 0;
+    venitCash > 0 || venitCard > 0 || venitBolt > 0 || venitUber > 0 || taxeEstimate > 0 || venitTotal > 0;
 
   const periodLabel =
     incomeMonth && incomeYear
       ? `${monthNumberToLabel(incomeMonth)} ${incomeYear}`
       : 'Luna curentă';
 
+  const metrics: IncomeMetric[] = [
+    { label: 'Venit cash', value: venitCash, icon: iconCash },
+    { label: 'Venit card', value: venitCard, icon: iconCard },
+    { label: 'Venit Bolt', value: venitBolt, icon: iconBolt },
+    { label: 'Venit Uber', value: venitUber, icon: iconUber },
+    { label: 'Taxe estimate', value: taxeEstimate, icon: iconTaxes },
+    { label: 'Venit total', value: venitTotal, icon: iconTotal, highlight: true },
+  ];
+
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 2.5,
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
-        border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
-        boxShadow: DASHBOARD_TOKENS.shadow.sm,
-        background: `linear-gradient(160deg, ${alpha(DASHBOARD_TOKENS.primary, 0.06)} 0%, ${DASHBOARD_TOKENS.paper} 40%)`,
-      }}
-    >
-      <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 0.5 }}>
-        Venituri {periodLabel}
-      </Typography>
-      <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', mb: 2 }}>
-        Date introduse de contabilul tău
-      </Typography>
+    <Stack spacing={2}>
+      <Box>
+        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '1.1rem' }}>
+          Venituri {periodLabel}
+        </Typography>
+        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', mt: 0.5 }}>
+          Date introduse de contabilul tău
+        </Typography>
+      </Box>
 
       {!hasAnyIncome ? (
-        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>
-          Nu există încă date de venituri pentru această lună.
-        </Typography>
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2.5,
+            borderRadius: DASHBOARD_TOKENS.radius.xl,
+            border: `1px solid ${DASHBOARD_TOKENS.border}`,
+            boxShadow: DASHBOARD_TOKENS.shadow.sm,
+          }}
+        >
+          <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>
+            Nu există încă date de venituri pentru această lună.
+          </Typography>
+        </Paper>
       ) : (
-        <Stack spacing={1.5}>
-          <IncomeRow label="Venit cash" value={venitCash} />
-          <IncomeRow label="Venit card" value={venitCard} />
-          <IncomeRow label="Venit Bolt" value={venitBolt} />
-          <IncomeRow label="Venit Uber" value={venitUber} />
-          <IncomeRow label="Taxe estimate" value={taxeEstimate} />
-          <Box
-            sx={{
-              mt: 1,
-              pt: 1.5,
-              borderTop: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
-            }}
-          >
-            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.primaryStrong }}>
-                Venit total
-              </Typography>
-              <Typography sx={{ fontWeight: 900, fontSize: '1.35rem', color: DASHBOARD_TOKENS.primaryStrong }}>
-                {venitTotal.toLocaleString('ro-RO')} lei
-              </Typography>
-            </Stack>
-          </Box>
-        </Stack>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: { xs: 1.5, md: 2 },
+          }}
+        >
+          {metrics.map((metric) => (
+            <IncomeMetricCard key={metric.label} {...metric} />
+          ))}
+        </Box>
       )}
-    </Paper>
+    </Stack>
   );
 }

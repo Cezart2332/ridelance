@@ -1,8 +1,9 @@
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Paper, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { BarChart } from '@mui/x-charts/BarChart';
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
+import { TOKENS } from '../../../constants/tokens';
 import { MONTH_CHART_LABELS, monthNumberToLabel } from '../../../utils/monthLabels';
 import type { MonthlyRevenuePoint } from '../../../services/user.service';
 
@@ -36,11 +37,16 @@ function ChartCard({
     <Paper
       elevation={0}
       sx={{
-        p: 2.5,
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
-        border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+        p: { xs: 2, md: 3 },
+        borderRadius: DASHBOARD_TOKENS.radius.xl,
+        border: `1px solid ${DASHBOARD_TOKENS.border}`,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,
         height: '100%',
+        transition: `all 0.3s ${TOKENS.easing}`,
+        '&:hover': {
+          boxShadow: DASHBOARD_TOKENS.shadow.md,
+          borderColor: alpha(DASHBOARD_TOKENS.primary, 0.25),
+        },
       }}
     >
       <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 0.5 }}>
@@ -74,9 +80,9 @@ export function RevenueCharts({
       <Paper
         elevation={0}
         sx={{
-          p: 2.5,
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
-          border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+          p: { xs: 2, md: 3 },
+          borderRadius: DASHBOARD_TOKENS.radius.xl,
+          border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
       >
@@ -91,19 +97,28 @@ export function RevenueCharts({
   }
 
   return (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: { xs: '1fr', lg: hasYearData && hasBreakdown ? '1fr 1fr' : '1fr' },
-        gap: 2,
-      }}
-    >
+    <Stack spacing={2}>
+      <Box>
+        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '1.1rem' }}>
+          Analiză venituri
+        </Typography>
+        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', mt: 0.5 }}>
+          Evoluție lunară și împărțire pe canale
+        </Typography>
+      </Box>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', lg: hasYearData && hasBreakdown ? '1fr 1fr' : '1fr' },
+          gap: 2,
+        }}
+      >
       {hasYearData && (
         <ChartCard
           title={`Venit total pe luni — ${year}`}
           subtitle="Evoluția veniturilor brute introduse de contabil"
         >
-          <Box sx={{ height: { xs: 280, md: 320 }, width: '100%' }}>
+          <Box sx={{ height: { xs: 300, md: 350 }, width: '100%' }}>
             <BarChart
               series={[
                 {
@@ -113,7 +128,7 @@ export function RevenueCharts({
                 },
               ]}
               xAxis={[{ data: [...MONTH_CHART_LABELS], scaleType: 'band' }]}
-              borderRadius={6}
+              borderRadius={8}
               margin={chartMargin}
               sx={{
                 '& .MuiChartsAxis-tickLabel': {
@@ -136,7 +151,7 @@ export function RevenueCharts({
           title={`Structură venituri — ${breakdownMonthLabel} ${year}`}
           subtitle="Împărțire pe canale pentru luna selectată"
         >
-          <Box sx={{ height: { xs: 280, md: 320 }, width: '100%' }}>
+          <Box sx={{ height: { xs: 300, md: 350 }, width: '100%' }}>
             <BarChart
               layout="horizontal"
               series={[
@@ -147,7 +162,7 @@ export function RevenueCharts({
                 },
               ]}
               yAxis={[{ data: ['Cash', 'Card', 'Bolt', 'Uber'], scaleType: 'band' }]}
-              borderRadius={6}
+              borderRadius={8}
               margin={{ top: 16, right: 24, bottom: 24, left: 72 }}
               sx={{
                 '& .MuiChartsAxis-tickLabel': {
@@ -160,6 +175,7 @@ export function RevenueCharts({
           </Box>
         </ChartCard>
       )}
-    </Box>
+      </Box>
+    </Stack>
   );
 }
