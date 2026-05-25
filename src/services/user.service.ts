@@ -10,6 +10,11 @@ export interface UserProfile {
   createdAtUtc: string;
 }
 
+export interface MonthlyRevenuePoint {
+  month: number;
+  venitTotal: number;
+}
+
 export interface RecentDocumentDto {
   id: string;
   originalFileName: string;
@@ -38,6 +43,8 @@ export interface DashboardSummary {
   venitTotal?: number | null;
   incomeYear?: number | null;
   incomeMonth?: number | null;
+  revenueChartYear?: number;
+  monthlyRevenue?: MonthlyRevenuePoint[];
 }
 
 export const userService = {

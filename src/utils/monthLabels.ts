@@ -1,3 +1,19 @@
+/** Short labels for charts (Jan–Dec). */
+export const MONTH_CHART_LABELS = [
+  'Ian',
+  'Feb',
+  'Mar',
+  'Apr',
+  'Mai',
+  'Iun',
+  'Iul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Noi',
+  'Dec',
+] as const;
+
 export const ROMANIAN_MONTHS = [
   'Ianuarie',
   'Februarie',

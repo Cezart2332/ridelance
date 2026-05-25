@@ -704,12 +704,8 @@ export function AdminDashboard() {
           bgcolor: alpha(TOKENS.primary, 0.04),
         }}
       >
-        <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 0.5 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2 }}>
           Documentație recurentă (lunar)
-        </Typography>
-        <Typography variant="body2" sx={{ color: TOKENS.textMuted, mb: 2, lineHeight: 1.6 }}>
-          Notificările programate se trimit automat în fiecare zi de 1 a lunii (ora României) către
-          clienții activi — în aplicație și push. Butonul de mai jos declanșează același flux pentru test.
         </Typography>
         <Button
           variant="contained"
