@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   Container,
   FormControlLabel,
   MenuItem,
@@ -16,7 +17,9 @@ import {
   Alert
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useAppSelector } from '../../store/hooks'
+import { resolveClientPath } from '../../utils/clientOnboarding'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 import { pfaService } from '../../services/pfa.service'
@@ -126,18 +129,71 @@ type County = { auto: string; nume: string; localitati: Locality[] }
 export default function RegisterPfaPage() {
   const [tab, setTab] = useState(0) // 0 = Am PFA, 1 = Nu am PFA
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const { accessToken, isInitialized } = useAppSelector((s) => s.auth)
+  const awaitingPaymentConfirm = searchParams.get('subscribed') === '1'
 
   // Location data
   const [countiesData, setCountiesData] = useState<County[]>([])
+  const [routeChecking, setRouteChecking] = useState(true)
+  const [confirmingPayment, setConfirmingPayment] = useState(awaitingPaymentConfirm)
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const syncOnboardingRoute = useCallback(async () => {
+    const sub = await stripeService.getSubscriptionStatus()
+    if (!sub) {
+      if (awaitingPaymentConfirm) {
+        setConfirmingPayment(true)
+        return false
+      }
+      navigate('/inregistrare/abonament', { replace: true })
+      return true
+    }
+    setConfirmingPayment(false)
+    const target = resolveClientPath(sub)
+    if (target !== '/inregistrare/pfa') {
+      navigate(target, { replace: true })
+      return true
+    }
+    return false
+  }, [navigate, awaitingPaymentConfirm])
 
   useEffect(() => {
-    const checkStatus = async () => {
-      const sub = await stripeService.getSubscriptionStatus()
-      if (sub?.pfaStatus || sub?.pfaRegistrationType === 'AmPfa') {
-        navigate('/app')
+    if (!isInitialized) return
+    if (!accessToken) {
+      navigate('/auth', { replace: true })
+      return
+    }
+
+    let cancelled = false
+    const pollStartedAt = Date.now()
+
+    const run = async () => {
+      const redirected = await syncOnboardingRoute()
+      if (!cancelled) setRouteChecking(false)
+      if (!redirected && awaitingPaymentConfirm) {
+        pollTimerRef.current = setInterval(async () => {
+          if (Date.now() - pollStartedAt > 30_000) {
+            if (pollTimerRef.current) clearInterval(pollTimerRef.current)
+            pollTimerRef.current = null
+            setConfirmingPayment(false)
+            return
+          }
+          const sub = await stripeService.getSubscriptionStatus()
+          if (sub) {
+            if (pollTimerRef.current) clearInterval(pollTimerRef.current)
+            pollTimerRef.current = null
+            setConfirmingPayment(false)
+            const target = resolveClientPath(sub)
+            if (target !== '/inregistrare/pfa') {
+              navigate(target, { replace: true })
+            }
+          }
+        }, 2500)
       }
     }
-    checkStatus()
+
+    void run()
 
     fetch('https://raw.githubusercontent.com/virgil-av/judet-oras-localitati-romania/master/judete.json')
       .then((res) => res.json())
@@ -147,7 +203,12 @@ export default function RegisterPfaPage() {
         }
       })
       .catch((err) => console.error('Failed to load counties:', err))
-  }, [navigate])
+
+    return () => {
+      cancelled = true
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current)
+    }
+  }, [isInitialized, accessToken, navigate, syncOnboardingRoute, awaitingPaymentConfirm])
 
   // "Am PFA" form state
   const [amPfaName, setAmPfaName] = useState('')
@@ -230,12 +291,33 @@ export default function RegisterPfaPage() {
       });
       // AmPfa users already have PFA — they paid subscription already, go to app
       sessionStorage.setItem('pfa_registered', 'AmPfa')
-      navigate('/app')
+      navigate('/app/pending-approval', { replace: true })
     } catch (err: any) {
       setError(getErrorMessage(err, 'A aparut o eroare. Te rugam sa incerci din nou.'))
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (!isInitialized || routeChecking || confirmingPayment) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: TOKENS.surface,
+        }}
+      >
+        <Stack spacing={2} sx={{ alignItems: 'center' }}>
+          <CircularProgress sx={{ color: TOKENS.primary }} />
+          <Typography sx={{ color: TOKENS.textMuted, fontWeight: 600 }}>
+            {confirmingPayment ? 'Se confirmă plata...' : 'Se încarcă...'}
+          </Typography>
+        </Stack>
+      </Box>
+    )
   }
 
   return (
@@ -257,7 +339,7 @@ export default function RegisterPfaPage() {
             src={logo}
             alt="Ridelance"
             sx={{ height: 50, width: 'auto', cursor: 'pointer' }}
-            onClick={() => navigate('/app')}
+            onClick={() => navigate(accessToken ? '/app' : '/auth')}
           />
 
           <Paper

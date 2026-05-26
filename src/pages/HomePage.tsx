@@ -1,6 +1,7 @@
 import { Box, Button, Card, CardContent, Container, Paper, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
+import { useAppSelector } from '../store/hooks'
 import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
 import {
@@ -24,6 +25,12 @@ import { CarCarousel } from '../components/home/CarCarousel'
 
 export function HomePage() {
   const navigate = useNavigate()
+  const { accessToken, isInitialized } = useAppSelector((s) => s.auth)
+
+  const handleStart = () => {
+    if (!isInitialized) return
+    navigate(accessToken ? '/app' : '/auth')
+  }
 
   return (
     <Box sx={{ pb: 0, flexDirection: 'column', display: 'flex' }}>
@@ -134,7 +141,7 @@ export function HomePage() {
               <Button
                 variant="outlined"
                 size="large"
-                onClick={() => navigate('/auth')}
+                onClick={handleStart}
                 sx={{
                   px: 4,
                   py: 1.4,
@@ -460,7 +467,7 @@ export function HomePage() {
                 )}
 
                 <Button
-                  onClick={() => navigate('/auth')}
+                  onClick={handleStart}
                   variant={index === 2 ? 'contained' : 'outlined'}
                   fullWidth
                   size="large"
@@ -594,7 +601,7 @@ export function HomePage() {
                   </Typography>
                 )}
                 <Button
-                  onClick={() => navigate('/auth')}
+                  onClick={handleStart}
                   variant="outlined"
                   sx={{
                     alignSelf: 'flex-start',

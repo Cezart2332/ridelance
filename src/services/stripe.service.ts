@@ -154,7 +154,12 @@ export const stripeService = {
     }
   },
 
-  async redirectToPlan(key: PlanKey, successUrl?: string, cancelUrl?: string): Promise<void> {
+  async redirectToPlan(
+    key: PlanKey,
+    successUrl?: string,
+    cancelUrl?: string,
+    options?: { isPlanChange?: boolean },
+  ): Promise<void> {
     const plan = SUBSCRIPTION_PLANS.find(p => p.key === key)
     if (!plan?.priceId) return
     
@@ -168,6 +173,7 @@ export const stripeService = {
         mode: 'subscription',
         plan: key,
         billingAnchorUnix: null,
+        isPlanChange: options?.isPlanChange ?? false,
         successUrl: effectiveSuccessUrl,
         cancelUrl: effectiveCancelUrl
       })

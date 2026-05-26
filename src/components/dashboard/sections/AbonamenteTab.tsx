@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Box, Button, Chip, Paper, Typography, CircularProgress } from '@mui/material'
+import { Box, Button, Chip, Paper, Typography, CircularProgress, Snackbar, Alert } from '@mui/material'
+import { useSearchParams } from 'react-router-dom'
 import { alpha } from '@mui/material/styles'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded'
@@ -52,9 +53,20 @@ function StatusChip({ pending }: { pending: boolean }) {
 }
 
 export function AbonamenteTab() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [subStatus, setSubStatus] = useState<SubscriptionResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [planChangeNotice, setPlanChangeNotice] = useState(false)
+
+  useEffect(() => {
+    if (searchParams.get('plan_changed') === '1') {
+      setPlanChangeNotice(true)
+      const next = new URLSearchParams(searchParams)
+      next.delete('plan_changed')
+      setSearchParams(next, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
 
   useEffect(() => {
     async function fetchStatus() {
@@ -82,11 +94,27 @@ export function AbonamenteTab() {
   const currentPlan = SUBSCRIPTION_PLANS.find(p => p.key === currentPlanKey) || SUBSCRIPTION_PLANS[1]
 
   const handleUpgrade = (key: PlanKey) => {
-    stripeService.redirectToPlan(key)
+    const origin = window.location.origin
+    void stripeService.redirectToPlan(
+      key,
+      `${origin}/app/dashboard?section=abonamente&plan_changed=1`,
+      `${origin}/app/dashboard?section=abonamente`,
+      { isPlanChange: true },
+    )
   }
 
   return (
     <Box sx={{ maxWidth: 860, mx: 'auto', p: { xs: 2, md: 3 } }}>
+      <Snackbar
+        open={planChangeNotice}
+        autoHideDuration={6000}
+        onClose={() => setPlanChangeNotice(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="success" onClose={() => setPlanChangeNotice(false)} sx={{ width: '100%' }}>
+          Plata a fost înregistrată. Noul abonament se activează de luni la 15:00; până atunci păstrezi accesul curent.
+        </Alert>
+      </Snackbar>
       <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: T.ink, mb: 3 }}>
         Abonamentul meu
       </Typography>

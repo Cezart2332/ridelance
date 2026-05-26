@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Box, Button, Container, Paper, Stack, Typography, CircularProgress } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
+import { useAppSelector } from '../../store/hooks'
+import { resolveClientPath } from '../../utils/clientOnboarding'
 import HourglassEmptyRoundedIcon from '@mui/icons-material/HourglassEmptyRounded'
 import BlockRoundedIcon from '@mui/icons-material/BlockRounded'
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded'
@@ -26,26 +28,29 @@ const TOKENS = {
 
 export default function PendingApprovalPage({ onLogout, status: initialStatus }: { onLogout: () => void; status?: any }) {
   const navigate = useNavigate()
+  const { isInitialized } = useAppSelector((s) => s.auth)
   const [status, setStatus] = useState<'Pending' | 'Rejected' | 'Approved' | null>(initialStatus || null)
   const [isLoading, setIsLoading] = useState(!initialStatus)
 
   useEffect(() => {
+    if (!isInitialized) return
+
     const checkStatus = async () => {
       const sub = await stripeService.getSubscriptionStatus()
-      if (sub?.pfaStatus === 'Approved' || sub?.pfaRegistrationType === 'AmPfa') {
-        navigate('/app') // This will trigger RoleRedirect and show the correct page
+      if (sub?.pfaStatus === 'Approved') {
+        navigate(resolveClientPath(sub), { replace: true })
         return
       }
-      setStatus(sub?.pfaStatus as any || 'Pending')
+      setStatus((sub?.pfaStatus as 'Pending' | 'Rejected' | 'Approved') || 'Pending')
       setIsLoading(false)
     }
 
-    checkStatus()
-    const interval = setInterval(checkStatus, 10000) // Poll every 10s
+    void checkStatus()
+    const interval = setInterval(() => void checkStatus(), 10000)
     return () => clearInterval(interval)
-  }, [navigate])
+  }, [navigate, isInitialized])
 
-  if (isLoading) {
+  if (!isInitialized || isLoading) {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
         <CircularProgress />

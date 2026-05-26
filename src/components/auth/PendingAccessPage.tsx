@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   Box,
   Button,
+  CircularProgress,
   Container,
   Paper,
   Typography,
@@ -12,6 +13,10 @@ import { useNavigate } from 'react-router-dom'
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded'
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded'
 import { authService } from '../../services/auth.service'
+import { stripeService } from '../../services/stripe.service'
+import { getNextMondayBillingDate } from '../../utils/billing'
+import { canAccessDashboard } from '../../utils/clientOnboarding'
+import { useAppSelector } from '../../store/hooks'
 import logo from '../../assets/logo.svg'
 
 const TOKENS = {
@@ -31,23 +36,36 @@ const TOKENS = {
 
 export default function PendingAccessPage() {
   const navigate = useNavigate()
+  const { isInitialized } = useAppSelector((s) => s.auth)
+  const [targetDate, setTargetDate] = useState<Date>(() => getNextMondayBillingDate())
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!isInitialized) return
+
+    const syncSubscription = async () => {
+      const sub = await stripeService.getSubscriptionStatus()
+      if (sub && canAccessDashboard(sub)) {
+        navigate('/app/dashboard', { replace: true })
+        return
+      }
+      if (sub?.nextBillingDateUtc) {
+        setTargetDate(new Date(sub.nextBillingDateUtc))
+      } else {
+        setTargetDate(getNextMondayBillingDate())
+      }
+      setLoading(false)
+    }
+
+    void syncSubscription()
+    const poll = setInterval(() => void syncSubscription(), 10000)
+    return () => clearInterval(poll)
+  }, [isInitialized, navigate])
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const now = new Date()
-      // Get next Monday at 15:00
-      let nextMonday = new Date()
-      nextMonday.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7))
-      nextMonday.setHours(15, 0, 0, 0)
-
-      // If it's already past Monday 15:00 today, move to next week
-      if (now > nextMonday) {
-        nextMonday.setDate(nextMonday.getDate() + 7)
-      }
-
-      const difference = nextMonday.getTime() - now.getTime()
-
+      const difference = targetDate.getTime() - Date.now()
       if (difference > 0) {
         setTimeLeft({
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
@@ -55,13 +73,15 @@ export default function PendingAccessPage() {
           minutes: Math.floor((difference / 1000 / 60) % 60),
           seconds: Math.floor((difference / 1000) % 60),
         })
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
       }
     }
 
     calculateTimeLeft()
     const timer = setInterval(calculateTimeLeft, 1000)
     return () => clearInterval(timer)
-  }, [])
+  }, [targetDate])
 
   const handleLogout = () => {
     authService.logout()
@@ -95,6 +115,14 @@ export default function PendingAccessPage() {
     </Box>
   )
 
+  if (!isInitialized || loading) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <CircularProgress sx={{ color: TOKENS.primary }} />
+      </Box>
+    )
+  }
+
   return (
     <Box
       sx={{
@@ -108,7 +136,6 @@ export default function PendingAccessPage() {
     >
       <Container maxWidth="sm">
         <Stack sx={{ alignItems: 'center' }} spacing={4}>
-          {/* Logo */}
           <Box
             component="img"
             src={logo}
@@ -136,7 +163,7 @@ export default function PendingAccessPage() {
                 right: 0,
                 height: 6,
                 backgroundColor: TOKENS.primary,
-              }
+              },
             }}
           >
             <Box
@@ -175,14 +202,13 @@ export default function PendingAccessPage() {
                 mb: 5,
               }}
             >
-              Abonamentul tău a fost înregistrat cu succes. Accesul la dashboard se acordă automat {' '}
+              Abonamentul tău a fost înregistrat cu succes. Accesul la dashboard se acordă automat{' '}
               <Box component="span" sx={{ color: TOKENS.ink, fontWeight: 700 }}>
                 luni la ora 15:00
               </Box>
               .
             </Typography>
 
-            {/* Countdown */}
             <Box
               sx={{
                 display: 'flex',

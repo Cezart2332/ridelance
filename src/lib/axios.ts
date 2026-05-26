@@ -1,6 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { store } from '../store/store'
-import { setCredentials, clearCredentials } from '../store/authSlice'
+import { clearCredentials } from '../store/authSlice'
+import { isRegistrationPath, refreshAccessToken } from './refreshSession'
 
 // Create the configured Axios instance
 export const api = axios.create({
@@ -69,16 +70,7 @@ api.interceptors.response.use(
     isRefreshing = true
 
     try {
-      const refreshResponse = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/users/refresh-token`,
-        {},
-        { withCredentials: true }
-      )
-
-      const { accessToken, role, userId } = refreshResponse.data
-
-      // Update Redux with new access token
-      store.dispatch(setCredentials({ accessToken, role, userId }))
+      const { accessToken } = await refreshAccessToken()
 
       // Retry all queued requests with the new token
       processQueue(null, accessToken)
@@ -89,7 +81,8 @@ api.interceptors.response.use(
       processQueue(refreshError, null)
       store.dispatch(clearCredentials())
 
-      if (!window.location.pathname.startsWith('/auth')) {
+      const path = window.location.pathname
+      if (!path.startsWith('/auth') && !isRegistrationPath(path)) {
         window.location.href = '/auth'
       }
       return Promise.reject(refreshError)

@@ -1,9 +1,7 @@
 import { useEffect } from 'react'
-import axios from 'axios'
-import { setCredentials, clearCredentials } from '../../store/authSlice'
+import { clearCredentials } from '../../store/authSlice'
 import { useAppDispatch } from '../../store/hooks'
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+import { refreshAccessToken } from '../../lib/refreshSession'
 
 /**
  * Runs once at app startup.
@@ -18,25 +16,10 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch()
 
   useEffect(() => {
-    axios
-      .post(
-        `${BASE_URL}/users/refresh-token`,
-        {},
-        { withCredentials: true } // sends the HTTP-only refreshToken cookie
-      )
-      .then((res) => {
-        dispatch(
-          setCredentials({
-            accessToken: res.data.accessToken,
-            role: res.data.role,
-            userId: res.data.userId,
-          })
-        )
-      })
-      .catch(() => {
-        // No valid refresh token → user is not authenticated
-        dispatch(clearCredentials())
-      })
+    refreshAccessToken().catch(() => {
+      // No valid refresh token → user is not authenticated
+      dispatch(clearCredentials())
+    })
   }, [dispatch])
 
   return <>{children}</>
