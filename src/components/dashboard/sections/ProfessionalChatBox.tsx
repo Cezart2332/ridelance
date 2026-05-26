@@ -91,7 +91,8 @@ export function ProfessionalChatBox({ clientUserId, clientName }: ProfessionalCh
       elevation={0}
       sx={{
         p: 3,
-        height: 600,
+        height: { xs: 'min(70vh, 520px)', md: 600 },
+        minHeight: { xs: 360, md: 600 },
         display: 'flex',
         flexDirection: 'column',
         borderRadius: TOKENS.radius.xl,

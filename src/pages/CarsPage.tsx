@@ -225,14 +225,18 @@ export function CarsPage() {
       {/* Filter & Search Bar */}
       <Container maxWidth="lg" sx={{ mt: 10 }}>
         <Stack spacing={4} component="div">
-          <Box sx={{ 
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            gap: 2.5, 
-            alignItems: 'center', 
-            justifyContent: 'space-between'
-          }}>
-            <Stack direction="row" spacing={2} sx={{ flex: 1, minWidth: { xs: '100%', md: 450 } }} component="div">
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={2.5}
+            sx={{ alignItems: { xs: 'stretch', md: 'center' }, justifyContent: 'space-between' }}
+            component="div"
+          >
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={2}
+              sx={{ flex: 1, width: '100%', minWidth: 0 }}
+              component="div"
+            >
               <TextField
                 fullWidth
                 placeholder="Caută model sau brand (ex: Logan, Tesla...)"
@@ -265,6 +269,7 @@ export function CarsPage() {
                   fontWeight: 700,
                   whiteSpace: 'nowrap',
                   px: 3.5,
+                  width: { xs: '100%', sm: 'auto' },
                   borderColor: TOKENS.border,
                   color: showFilters ? '#fff' : TOKENS.ink,
                   bgcolor: showFilters ? TOKENS.ink : 'transparent',
@@ -284,7 +289,8 @@ export function CarsPage() {
               value={sort}
               onChange={(e) => setSort(e.target.value)}
               sx={{ 
-                minWidth: 220,
+                width: { xs: '100%', md: 'auto' },
+                minWidth: { md: 220 },
                 '& .MuiOutlinedInput-root': { 
                   borderRadius: TOKENS.radius.lg,
                   bgcolor: TOKENS.paper,
@@ -305,7 +311,7 @@ export function CarsPage() {
                 <MenuItem key={opt} value={opt} sx={{ fontWeight: 600 }}>{opt}</MenuItem>
               ))}
             </TextField>
-          </Box>
+          </Stack>
 
           <Collapse in={showFilters}>
             <Paper 

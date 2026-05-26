@@ -139,7 +139,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1.65fr) minmax(320px, 1fr)' },
+          gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1.65fr) minmax(0, 1fr)' },
           gap: 3,
           alignItems: 'start',
         }}

@@ -725,7 +725,7 @@ export function HomePage() {
           >
             <Box
               sx={{
-                display: 'grid',
+                display: { xs: 'none', md: 'grid' },
                 gridTemplateColumns: '1.5fr 1fr 1fr',
                 backgroundColor: alpha(TOKENS.surfaceAlt, 0.8),
                 borderBottom: `1px solid ${TOKENS.border}`,
@@ -747,8 +747,10 @@ export function HomePage() {
               <Box
                 key={i}
                 sx={{
-                  display: 'grid',
-                  gridTemplateColumns: '1.5fr 1fr 1fr',
+                  display: { xs: 'flex', md: 'grid' },
+                  flexDirection: { xs: 'column', md: 'unset' },
+                  gridTemplateColumns: { md: '1.5fr 1fr 1fr' },
+                  gap: { xs: 1.5, md: 0 },
                   p: 2.5,
                   borderBottom: i === economyComparison.length - 1 ? 'none' : `1px solid ${TOKENS.border}`,
                   transition: 'background-color 0.2s ease',
@@ -760,25 +762,60 @@ export function HomePage() {
                 <Typography sx={{ fontWeight: 700, color: TOKENS.ink, fontSize: '0.95rem' }}>
                   {row.service}
                 </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                  <Typography
-                    sx={{
-                      fontWeight: 800,
-                      color: TOKENS.primaryStrong,
-                      fontSize: '0.95rem',
-                      textAlign: 'center',
-                      px: 2,
-                      py: 0.5,
-                      borderRadius: TOKENS.radius.md,
-                      backgroundColor: alpha(TOKENS.primary, 0.08),
-                    }}
-                  >
-                    {row.withRidelance}
-                  </Typography>
-                </Box>
-                <Typography sx={{ fontWeight: 500, color: TOKENS.textMuted, fontSize: '0.95rem', textAlign: 'center' }}>
-                  {row.withoutRidelance}
-                </Typography>
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  sx={{ display: { xs: 'flex', md: 'contents' }, width: '100%' }}
+                >
+                  <Box sx={{ flex: 1 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: { md: 'none' },
+                        fontWeight: 800,
+                        color: TOKENS.primaryStrong,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        mb: 0.5,
+                      }}
+                    >
+                      Cu RIDElance
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontWeight: 800,
+                        color: TOKENS.primaryStrong,
+                        fontSize: '0.95rem',
+                        textAlign: { xs: 'left', md: 'center' },
+                        px: { xs: 0, md: 2 },
+                        py: 0.5,
+                        borderRadius: TOKENS.radius.md,
+                        backgroundColor: alpha(TOKENS.primary, 0.08),
+                        display: 'inline-block',
+                      }}
+                    >
+                      {row.withRidelance}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ flex: 1, textAlign: { xs: 'right', md: 'center' } }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: { md: 'none' },
+                        fontWeight: 800,
+                        color: TOKENS.textSubtle,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        mb: 0.5,
+                      }}
+                    >
+                      Fără RIDElance
+                    </Typography>
+                    <Typography sx={{ fontWeight: 500, color: TOKENS.textMuted, fontSize: '0.95rem' }}>
+                      {row.withoutRidelance}
+                    </Typography>
+                  </Box>
+                </Stack>
               </Box>
             ))}
           </Paper>

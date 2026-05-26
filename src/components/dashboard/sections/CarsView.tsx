@@ -107,7 +107,11 @@ export function CarsView() {
             Parcul Auto
           </Typography>
           
-          <Stack direction="row" spacing={2} sx={{ flex: { xs: 1, md: 'none' }, minWidth: { xs: '100%', md: 400 } }}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            sx={{ flex: { xs: 1, md: 'none' }, width: { xs: '100%', md: 'auto' }, minWidth: 0 }}
+          >
             <TextField
               fullWidth
               placeholder="Caută mașină..."
@@ -138,6 +142,7 @@ export function CarsView() {
                 borderRadius: DASHBOARD_TOKENS.radius.md,
                 fontWeight: 700,
                 whiteSpace: 'nowrap',
+                width: { xs: '100%', sm: 'auto' },
                 px: 3,
                 borderColor: alpha(DASHBOARD_TOKENS.ink, 0.1),
                 color: showFilters ? '#fff' : DASHBOARD_TOKENS.ink,
@@ -196,7 +201,7 @@ export function CarsView() {
       </Stack>
 
       {/* Sorting & Stats Info */}
-      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', justifyContent: 'space-between' }}>
         <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 600 }}>
           {filteredCars.length} {filteredCars.length === 1 ? 'mașină găsită' : 'mașini găsite'}
         </Typography>
@@ -207,7 +212,8 @@ export function CarsView() {
           value={sort}
           onChange={(e) => setSort(e.target.value)}
           sx={{ 
-            minWidth: 180,
+            width: { xs: '100%', sm: 'auto' },
+            minWidth: { sm: 180 },
             '& .MuiOutlinedInput-root': { 
               borderRadius: DASHBOARD_TOKENS.radius.md,
               bgcolor: DASHBOARD_TOKENS.paper 

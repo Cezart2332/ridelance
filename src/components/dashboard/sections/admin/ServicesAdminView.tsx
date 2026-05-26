@@ -107,6 +107,10 @@ export function ServicesAdminView() {
       {!loading && !error && orders.length > 0 && (
         <TableContainer
           sx={{
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            width: '100%',
+            maxWidth: '100%',
             borderRadius: TOKENS.radius.lg,
             border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
             boxShadow: TOKENS.shadow.sm,

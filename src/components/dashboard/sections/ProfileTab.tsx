@@ -59,11 +59,11 @@ export function ProfileTab() {
   }
 
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-        gap: 16,
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(auto-fit, minmax(280px, 1fr))' },
+        gap: 2,
       }}
     >
       <Paper
@@ -200,6 +200,6 @@ export function ProfileTab() {
           </Stack>
         </Paper>
       )}
-    </div>
+    </Box>
   )
 }

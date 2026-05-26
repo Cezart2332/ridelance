@@ -27,6 +27,14 @@ export const DASHBOARD_TOKENS = {
   },
 }
 
+/** Horizontal scroll for wide tables on small screens */
+export const responsiveTableContainerSx: SxProps<Theme> = {
+  overflowX: 'auto',
+  WebkitOverflowScrolling: 'touch',
+  width: '100%',
+  maxWidth: '100%',
+}
+
 export const dashboardInputSx: SxProps<Theme> = {
   '& .MuiOutlinedInput-root': {
     backgroundColor: DASHBOARD_TOKENS.surface,

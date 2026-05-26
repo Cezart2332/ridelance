@@ -1,7 +1,7 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
 import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded'
 import { useEffect, useMemo, useState } from 'react'
-import { Button, Chip, CircularProgress, IconButton, Paper, Stack, Typography, Snackbar, Alert } from '@mui/material'
+import { Box, Button, Chip, CircularProgress, IconButton, Paper, Stack, Typography, Snackbar, Alert } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
@@ -121,7 +121,7 @@ export function DocumentsTab() {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(auto-fit, minmax(280px, 1fr))' }, gap: 2 }}>
       <Paper
         elevation={0}
         sx={{
@@ -296,6 +296,6 @@ export function DocumentsTab() {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   )
 }

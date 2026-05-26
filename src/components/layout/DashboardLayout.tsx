@@ -401,7 +401,7 @@ export function DashboardLayout({
           }}
         >
           <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, md: 4 } }}>
-            <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+            <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flex: 1, minWidth: 0 }}>
               {!isMdUp && !isStandalone && (
                 <IconButton
                   color="inherit"
@@ -418,7 +418,7 @@ export function DashboardLayout({
                   <MenuRoundedIcon />
                 </IconButton>
               )}
-              <Typography variant="h6" sx={{ fontWeight: 800, color: TOKENS.ink, fontSize: '1.08rem' }}>
+              <Typography variant="h6" noWrap sx={{ fontWeight: 800, color: TOKENS.ink, fontSize: '1.08rem', minWidth: 0 }}>
                 {activeItem?.label}
                 {activeParentItem && (
                    <Box component="span" sx={{ color: TOKENS.textSubtle, fontWeight: 500, mx: 1 }}>/</Box>

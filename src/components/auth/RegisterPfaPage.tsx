@@ -437,11 +437,11 @@ export default function RegisterPfaPage() {
                     Adresa sediu
                   </Typography>
                   <Stack spacing={1.5}>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 1.5 }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '2fr 1fr' }, gap: 1.5 }}>
                       <TextField fullWidth placeholder="Strada" value={strada} onChange={(e) => setStrada(e.target.value)} sx={inputSx} />
                       <TextField fullWidth placeholder="Numar" value={numar} onChange={(e) => setNumar(e.target.value)} sx={inputSx} />
                     </Box>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
                       <Select
                         fullWidth
                         displayEmpty

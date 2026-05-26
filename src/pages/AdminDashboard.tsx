@@ -432,7 +432,7 @@ export function AdminDashboard() {
             </Box>
           )}
           {!docsLoading && !docsError && documents.length > 0 && (
-            <TableContainer>
+            <TableContainer sx={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%', maxWidth: '100%' }}>
               <Table size="small">
                 <TableHead>
                   <TableRow sx={{ bgcolor: alpha(TOKENS.surface, 0.7) }}>
@@ -614,7 +614,7 @@ export function AdminDashboard() {
     <Stack spacing={3}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <SearchRoundedIcon sx={{ color: TOKENS.textSubtle, mr: 1, fontSize: 20 }} />
-        <TextField variant="outlined" size="small" placeholder="Caută PFA..." value={search} onChange={(e) => setSearch(e.target.value)} sx={{ width: 300, ...inputSx }} />
+        <TextField variant="outlined" size="small" placeholder="Caută PFA..." value={search} onChange={(e) => setSearch(e.target.value)} sx={{ width: { xs: '100%', sm: 300 }, maxWidth: '100%', ...inputSx }} />
       </Box>
 
       {pfasLoading && <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress size={32} sx={{ color: TOKENS.primary }} /></Box>}

@@ -139,12 +139,12 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeForm
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Typography variant="h6" sx={{ fontWeight: 800 }}>Venituri client</Typography>
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', sm: 'auto' }, flexWrap: 'wrap' }}>
           <Select
             size="small"
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            sx={{ width: 100, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+            sx={{ width: { xs: '100%', sm: 100 }, flex: { sm: '0 0 auto' }, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
           >
             {yearOptions.map((y) => (
               <MenuItem key={y} value={y}>{y}</MenuItem>
@@ -154,7 +154,7 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeForm
             size="small"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            sx={{ width: 160, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+            sx={{ width: { xs: '100%', sm: 160 }, flex: { sm: '0 0 auto' }, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
           >
             {ROMANIAN_MONTHS.map((m) => (
               <MenuItem key={m} value={m}>{m}</MenuItem>

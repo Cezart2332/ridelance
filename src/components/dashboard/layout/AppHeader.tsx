@@ -42,7 +42,7 @@ export default function AppHeader({
         boxSizing: 'border-box'
       }}
     >
-      <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+      <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flex: 1, minWidth: 0 }}>
         {!isMdUp && (
           <IconButton
             size="small"
@@ -59,7 +59,7 @@ export default function AppHeader({
             <MenuRoundedIcon fontSize="small" color="primary" />
           </IconButton>
         )}
-        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '1.15rem', letterSpacing: -0.4 }}>
+        <Typography noWrap sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '1.15rem', letterSpacing: -0.4, minWidth: 0 }}>
           {title}
         </Typography>
       </Stack>

@@ -145,7 +145,7 @@ export function ContabilDashboard() {
           placeholder="Caută client..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          sx={{ width: 300, ...inputSx }}
+          sx={{ width: { xs: '100%', sm: 300 }, maxWidth: '100%', ...inputSx }}
         />
       </Box>
 

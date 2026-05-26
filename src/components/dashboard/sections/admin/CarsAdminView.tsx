@@ -33,7 +33,7 @@ import {
   formatApprovalStatus,
   getApprovalStatusColor,
 } from '../../../../utils/carLabels';
-import { DASHBOARD_TOKENS } from '../../dashboardTheme';
+import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardTheme';
 
 interface LocalImage {
   id: string;
@@ -327,7 +327,7 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
               <TextField placeholder="Caută după brand sau model..." size="small" value={search}
                 onChange={(e) => setSearch(e.target.value)} sx={{ maxWidth: 400 }}
                 slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchRoundedIcon sx={{ color: alpha(DASHBOARD_TOKENS.ink, 0.4) }} /></InputAdornment> } }} />
-              <TableContainer>
+              <TableContainer sx={responsiveTableContainerSx}>
                 <Table>
                   <TableHead>
                     <TableRow>
@@ -418,7 +418,7 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
           )}
 
           {activeTab === 1 && (
-            <TableContainer>
+            <TableContainer sx={responsiveTableContainerSx}>
               <Table>
                 <TableHead>
                   <TableRow>
