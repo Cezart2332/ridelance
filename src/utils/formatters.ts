@@ -49,6 +49,12 @@ export function formatDocumentCategory(category: string | null | undefined): str
       return 'Asigurare Călători';
     case 'ExtrasBancar':
       return 'Extras Bancar';
+    case 'RaportUber':
+      return 'Raport venituri Uber';
+    case 'RaportBolt':
+      return 'Raport venituri Bolt';
+    case 'Cheltuiala':
+      return 'Cheltuială deductibilă';
     case 'CererePfa':
       return 'Cerere Înregistrare PFA';
     case 'Other':

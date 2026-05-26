@@ -1,9 +1,4 @@
-const RECURRING_DOC_ITEMS = [
-  'Extrase bancare (toate conturile)',
-  'Raport venituri Uber',
-  'Raport venituri Bolt',
-  'Facturi cheltuieli deductibile',
-] as const
+import { RECURRING_DOCUMENTATION_ITEMS } from './recurringDocumentationItems'
 
 export const RECURRING_DOCUMENTATION_NOTIFICATION_TYPE = 'RecurringDocumentation' as const
 
@@ -19,7 +14,7 @@ export function formatMonthLabelRomania(date = new Date()): string {
 
 export function getRecurringDocumentationNotificationText(date = new Date()): string {
   const month = formatMonthLabelRomania(date)
-  const checklist = RECURRING_DOC_ITEMS.join(', ')
+  const checklist = RECURRING_DOCUMENTATION_ITEMS.map((i) => i.label).join(', ')
   return `Este începutul lunii (${month}). Te rugăm să încarci documentația recurentă: ${checklist}.`
 }
 

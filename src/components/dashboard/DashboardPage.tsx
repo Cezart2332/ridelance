@@ -13,7 +13,6 @@ import { IstoricPlatiTab } from './sections/IstoricPlatiTab'
 
 import AppLayout from './layout/AppLayout'
 
-import { documentService, type DocumentSummary } from '../../services/document.service'
 import { authService } from '../../services/auth.service'
 import { userService } from '../../services/user.service'
 import PendingApprovalPage from '../auth/PendingApprovalPage'
@@ -50,17 +49,18 @@ const bottomSectionConfig = [
   { id: 'istoric_plati', label: 'Istoric Plăți', icon: 'MUI:ReceiptLongRounded' },
 ] as const
 
-const sectionConfig = [...mainSectionConfig, ...bottomSectionConfig]
-
 type SectionId = 'home' | 'cars' | 'profile' | 'documents' | 'support' | 'expenses' | 'doc_recurring' | 'abonamente' | 'servicii' | 'istoric_plati' | string
 
 export default function DashboardPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [activeSection, setActiveSection] = useState<SectionId>('home')
-  const [expenseInput, setExpenseInput] = useState('')
-  const [expenses, setExpenses] = useState<DocumentSummary[]>([])
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'error' })
+  const [pfaRegistrationId, setPfaRegistrationId] = useState<string | null>(null)
+
+  const showSnackbar = (message: string, severity: 'success' | 'error') => {
+    setSnackbar({ open: true, message, severity })
+  }
 
   // PFA approval gate
   const [pfaStatus, setPfaStatus] = useState<string | null | 'loading'>('loading')
@@ -82,6 +82,7 @@ export default function DashboardPage() {
           navigate('/inregistrare/pfa', { replace: true })
         } else {
           setPfaStatus(summary.pfaStatus)
+          setPfaRegistrationId(summary.pfaRegistrationId ?? null)
         }
       })
       .catch(() => {
@@ -89,42 +90,11 @@ export default function DashboardPage() {
         setPfaStatus('Approved')
       })
 
-    // Load existing expenses
-    documentService.getByUser()
-      .then((docs) => {
-        const cheltuieli = docs.filter(d => d.category === 'Cheltuiala')
-        setExpenses(cheltuieli)
-      })
-      .catch((err) => {
-        console.error('Eroare incarcare cheltuieli', err)
-        setSnackbar({ open: true, message: 'Nu s-au putut încărca cheltuielile.', severity: 'error' })
-      })
   }, [navigate])
 
   const handleLogout = async () => {
     await authService.logout()
     navigate('/auth', { replace: true })
-  }
-
-  const addExpense = async (file: File) => {
-    if (!expenseInput.trim()) return
-
-    const ext = file.name.split('.').pop()
-    const customName = `${expenseInput.trim()}.${ext}`
-    const customFile = new File([file], customName, { type: file.type })
-
-    try {
-      await documentService.upload(customFile, 'Cheltuiala')
-      setExpenseInput('')
-      
-      // Refresh expenses
-      const docs = await documentService.getByUser()
-      setExpenses(docs.filter(d => d.category === 'Cheltuiala'))
-      setSnackbar({ open: true, message: 'Cheltuiala a fost adăugată cu succes!', severity: 'success' })
-    } catch (err: any) {
-      console.error('Eroare incarcare cheltuiala', err)
-      setSnackbar({ open: true, message: 'Adăugarea cheltuielii a eșuat. Încearcă din nou.', severity: 'error' })
-    }
   }
 
   const renderSection = () => {
@@ -139,11 +109,9 @@ export default function DashboardPage() {
 
     return (
       <ExpensesRecurringTab
-        expenses={expenses}
-        expenseInput={expenseInput}
-        onExpenseChange={setExpenseInput}
-        onAddExpense={addExpense}
+        pfaRegistrationId={pfaRegistrationId}
         viewMode={activeSection as 'expenses' | 'doc_recurring'}
+        onSnackbar={showSnackbar}
       />
     )
   }

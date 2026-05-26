@@ -16,13 +16,10 @@ export const dashboardFaqItems: FaqItem[] = [
   },
 ]
 
-// ── Monthly required document labels (informational, not API data) ───────────
-export const monthlyRequiredDocuments = [
-  'Extrase bancare (toate conturile)',
-  'Raport venituri Uber',
-  'Raport venituri Bolt',
-  'Facturi cheltuieli deductibile',
-]
+import { RECURRING_DOCUMENTATION_ITEMS } from '../../constants/recurringDocumentationItems'
+
+// ── Monthly required document labels (synced with recurring documentation) ───
+export const monthlyRequiredDocuments = RECURRING_DOCUMENTATION_ITEMS.map((i) => i.label)
 
 // ── Default expenses list (local UI state, persisted to backend in future) ───
 export const defaultExpenses: string[] = []

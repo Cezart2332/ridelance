@@ -24,6 +24,7 @@ export interface RecentDocumentDto {
 }
 
 export interface DashboardSummary {
+  pfaRegistrationId?: string | null;
   pfaStatus: string | null;
   pfaRegistrationType: string | null;
   pfaCui: string | null;

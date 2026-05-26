@@ -1,17 +1,13 @@
 import { useState, useEffect } from 'react'
 import {
   Box,
-  Button,
   Paper,
   Stack,
   TextField,
   Typography,
   Avatar,
-  IconButton,
   CircularProgress,
   Alert,
-  Snackbar,
-  Chip,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { DashboardLayout } from '../components/layout/DashboardLayout'
@@ -25,17 +21,10 @@ import { useNavigate } from 'react-router-dom'
 // Icons
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded'
-import InboxRoundedIcon from '@mui/icons-material/InboxRounded'
-import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded'
-import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
-import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
-import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
 
-import { documentService, type DocumentSummary } from '../services/document.service'
 import { ProfessionalChatBox } from '../components/dashboard/sections/ProfessionalChatBox'
-import { PfaMonthlyIncomeForm } from '../components/contabil/PfaMonthlyIncomeForm'
+import { ContabilClientWorkspace, type ContabilClientInfo } from '../components/contabil/ContabilClientWorkspace'
 
 interface ClientSummary {
   id: string
@@ -58,24 +47,6 @@ function relativeTime(utcString: string): string {
   const days = Math.floor(hours / 24)
   if (days === 1) return 'Ieri'
   return `Acum ${days} zile`
-}
-
-function statusColor(status: string) {
-  switch (status.toLowerCase()) {
-    case 'approved': return '#10b981'
-    case 'verified': return '#10b981'
-    case 'rejected': return '#ef4444'
-    default: return '#f59e0b'
-  }
-}
-
-function statusLabel(status: string) {
-  switch (status.toLowerCase()) {
-    case 'approved': return 'Aprobat'
-    case 'verified': return 'Verificat'
-    case 'rejected': return 'Respins'
-    default: return 'În așteptare'
-  }
 }
 
 export function ContabilDashboard() {
@@ -139,50 +110,6 @@ export function ContabilDashboard() {
       .catch(() => setNotifsError('Nu s-au putut încărca notificările.'))
       .finally(() => setNotifsLoading(false))
   }, [activeTab])
-
-  // Documents
-  const [documents, setDocuments] = useState<DocumentSummary[]>([])
-  const [docsLoading, setDocsLoading] = useState(false)
-  const [docsError, setDocsError] = useState<string | null>(null)
-  const [downloadingId, setDownloadingId] = useState<string | null>(null)
-  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null)
-  
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' })
-
-  useEffect(() => {
-    if (!selectedPfaId) return
-    const client = clients.find(c => c.id === selectedPfaId)
-    if (!client) return
-
-    setDocsLoading(true)
-    setDocsError(null)
-    documentService.getByUser(client.userId)
-      .then(setDocuments)
-      .catch(() => setDocsError('Ne pare rău, documentele nu au putut fi încărcate. Te rugăm să verifici conexiunea și să încerci din nou.'))
-      .finally(() => setDocsLoading(false))
-  }, [selectedPfaId, clients])
-
-  const handleDownload = async (doc: DocumentSummary) => {
-    setDownloadingId(doc.id)
-    try {
-      await documentService.downloadAndSave(doc.id, doc.originalFileName)
-    } finally {
-      setDownloadingId(null)
-    }
-  }
-
-  const handleUpdateDocStatus = async (id: string, status: 'Verified' | 'Rejected') => {
-    setStatusUpdatingId(id)
-    try {
-      await documentService.updateStatus(id, status)
-      setDocuments(docs => docs.map(d => d.id === id ? { ...d, status } : d))
-      setSnackbar({ open: true, message: `Documentul a fost ${status === 'Verified' ? 'aprobat' : 'respins'} cu succes.`, severity: 'success' })
-    } catch {
-      setSnackbar({ open: true, message: 'Nu am putut actualiza statusul documentului. Te rugăm să încerci din nou.', severity: 'error' })
-    } finally {
-      setStatusUpdatingId(null)
-    }
-  }
 
   const navItems = [
     { id: 'clients', label: 'Clienți PFA', icon: <GroupsRoundedIcon /> },
@@ -289,137 +216,24 @@ export function ContabilDashboard() {
 
   const renderClientDetail = () => {
     const client = clients.find((c) => c.id === selectedPfaId)
+    if (!client) return null
+
+    const clientInfo: ContabilClientInfo = {
+      id: client.id,
+      userId: client.userId,
+      userName: client.userName,
+      userEmail: client.userEmail,
+      status: client.status,
+    }
+
     return (
-      <Stack spacing={4} component="div">
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton
-            onClick={() => setSelectedPfaId(null)}
-            size="small"
-            sx={{
-              bgcolor: alpha(TOKENS.paper, 0.9),
-              border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
-              '&:hover': { bgcolor: alpha(TOKENS.primary, 0.08) },
-            }}
-          >
-            <ArrowBackRoundedIcon fontSize="small" />
-          </IconButton>
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 800 }}>{client?.userName}</Typography>
-            <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{client?.userEmail}</Typography>
-          </Box>
-        </Box>
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 24 }}>
-          <Box>
-            <Stack spacing={4} component="div">
-              {selectedPfaId && <PfaMonthlyIncomeForm pfaRegistrationId={selectedPfaId} />}
-
-              {/* Documente PFA */}
-              <Paper
-                elevation={0}
-                sx={{ p: 3, borderRadius: TOKENS.radius.xl, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}
-              >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>Documente de verificat</Typography>
-                </Box>
-                
-                {docsLoading && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                    <CircularProgress size={28} sx={{ color: TOKENS.primary }} />
-                  </Box>
-                )}
-                {docsError && <Alert severity="error">{docsError}</Alert>}
-                {!docsLoading && !docsError && documents.length === 0 && (
-                  <Box sx={{ py: 4, textAlign: 'center' }}>
-                    <InboxRoundedIcon sx={{ fontSize: 40, color: TOKENS.textSubtle, mb: 1 }} />
-                    <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
-                      Niciun document încărcat de client.
-                    </Typography>
-                  </Box>
-                )}
-                {!docsLoading && !docsError && documents.length > 0 && (
-                  <Stack spacing={2} component="div">
-                    {documents.map((doc) => (
-                      <Paper
-                        key={doc.id}
-                        elevation={0}
-                        sx={{
-                          p: 2,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 2,
-                          borderRadius: TOKENS.radius.md,
-                          bgcolor: alpha(TOKENS.surface, 0.5),
-                          border: `1px solid ${alpha(TOKENS.ink, 0.08)}`
-                        }}
-                      >
-                        <InsertDriveFileRoundedIcon sx={{ color: TOKENS.primary, fontSize: 24 }} />
-                        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 700 }} noWrap title={doc.originalFileName}>
-                            {doc.originalFileName}
-                          </Typography>
-                          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                            <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>
-                              {doc.category}
-                            </Typography>
-                            <Chip
-                              label={statusLabel(doc.status)}
-                              size="small"
-                              sx={{ fontSize: '0.65rem', height: 20, fontWeight: 700, bgcolor: alpha(statusColor(doc.status), 0.1), color: statusColor(doc.status) }}
-                            />
-                          </Stack>
-                        </Box>
-                        
-                        <Stack direction="row" spacing={1}>
-                          {doc.status.toLowerCase() === 'pending' && (
-                            <>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleUpdateDocStatus(doc.id, 'Verified')}
-                                disabled={statusUpdatingId === doc.id}
-                                sx={{ color: '#10b981', '&:hover': { bgcolor: alpha('#10b981', 0.1) } }}
-                                title="Aprobă document"
-                              >
-                                {statusUpdatingId === doc.id ? <CircularProgress size={18} color="inherit" /> : <CheckCircleRoundedIcon fontSize="small" />}
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleUpdateDocStatus(doc.id, 'Rejected')}
-                                disabled={statusUpdatingId === doc.id}
-                                sx={{ color: '#ef4444', '&:hover': { bgcolor: alpha('#ef4444', 0.1) } }}
-                                title="Respinge document"
-                              >
-                                <CancelRoundedIcon fontSize="small" />
-                              </IconButton>
-                            </>
-                          )}
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => handleDownload(doc)}
-                            disabled={downloadingId === doc.id}
-                            startIcon={downloadingId === doc.id ? <CircularProgress size={16} /> : <FileDownloadRoundedIcon />}
-                            sx={{ textTransform: 'none', borderRadius: TOKENS.radius.full }}
-                          >
-                            Descarcă
-                          </Button>
-                        </Stack>
-                      </Paper>
-                    ))}
-                  </Stack>
-                )}
-              </Paper>
-            </Stack>
-          </Box>
-
-          <Box>
-            {/* Chat Section */}
-            {client && (
-              <ProfessionalChatBox clientUserId={client.userId} clientName={client.userName} />
-            )}
-          </Box>
-        </Box>
-      </Stack>
+      <ContabilClientWorkspace
+        client={clientInfo}
+        onBack={() => setSelectedPfaId(null)}
+        chatSlot={
+          <ProfessionalChatBox clientUserId={client.userId} clientName={client.userName} />
+        }
+      />
     )
   }
 
@@ -444,6 +258,15 @@ export function ContabilDashboard() {
         <Paper
           key={n.id}
           elevation={0}
+          onClick={() => {
+            if (!n.isRead) {
+              notificationService.markAsRead(n.id).then(() => {
+                setNotifications((prev) =>
+                  prev.map((item) => (item.id === n.id ? { ...item, isRead: true } : item)),
+                )
+              })
+            }
+          }}
           sx={{
             p: 2,
             display: 'flex',
@@ -453,6 +276,7 @@ export function ContabilDashboard() {
             border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
             bgcolor: n.isRead ? alpha(TOKENS.paper, 0.86) : alpha(TOKENS.primary, 0.04),
             boxShadow: TOKENS.shadow.sm,
+            cursor: n.isRead ? 'default' : 'pointer',
             '&:hover': { borderColor: alpha(TOKENS.primary, 0.28), bgcolor: TOKENS.paper },
           }}
         >
@@ -505,17 +329,6 @@ export function ContabilDashboard() {
         : activeTab === 'notificari'
           ? renderNotifications()
           : renderClientList()}
-          
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity={snackbar.severity} sx={{ width: '100%', borderRadius: TOKENS.radius.md, fontWeight: 600 }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </DashboardLayout>
   )
 }

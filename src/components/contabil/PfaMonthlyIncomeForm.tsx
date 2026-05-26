@@ -40,6 +40,7 @@ const emptyIncome = (pfaRegistrationId: string, year: number, month: number): Pf
 
 export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeFormProps) {
   const initial = currentMonthYear();
+  const [selectedYear, setSelectedYear] = useState(initial.year);
   const [selectedMonth, setSelectedMonth] = useState(initial.label);
   const [income, setIncome] = useState<PfaMonthlyIncome>(() =>
     emptyIncome(pfaRegistrationId, initial.year, initial.month)
@@ -49,8 +50,13 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeForm
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  const year = initial.year;
+  const year = selectedYear;
   const month = monthLabelToNumber(selectedMonth);
+
+  const yearOptions = useMemo(() => {
+    const current = new Date().getFullYear();
+    return [current - 1, current, current + 1];
+  }, []);
 
   const venitTotal = useMemo(
     () =>
@@ -132,17 +138,29 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeForm
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="h6" sx={{ fontWeight: 800 }}>Venituri Client</Typography>
-        <Select
-          size="small"
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          sx={{ width: 160, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
-        >
-          {ROMANIAN_MONTHS.map((m) => (
-            <MenuItem key={m} value={m}>{m}</MenuItem>
-          ))}
-        </Select>
+        <Typography variant="h6" sx={{ fontWeight: 800 }}>Venituri client</Typography>
+        <Stack direction="row" spacing={1}>
+          <Select
+            size="small"
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            sx={{ width: 100, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+          >
+            {yearOptions.map((y) => (
+              <MenuItem key={y} value={y}>{y}</MenuItem>
+            ))}
+          </Select>
+          <Select
+            size="small"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            sx={{ width: 160, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+          >
+            {ROMANIAN_MONTHS.map((m) => (
+              <MenuItem key={m} value={m}>{m}</MenuItem>
+            ))}
+          </Select>
+        </Stack>
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
