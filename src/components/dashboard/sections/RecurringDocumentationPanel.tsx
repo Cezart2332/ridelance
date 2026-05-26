@@ -149,7 +149,7 @@ export function RecurringDocumentationPanel({
       </Typography>
       <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.7, fontSize: '0.9rem', mb: 2 }}>
         {isContabil
-          ? 'Verifică documentele încărcate de client pentru luna curentă sau încarcă în numele lui.'
+          ? 'Verifică documentele încărcate de client pentru luna curentă.'
           : 'Încarcă documentele obligatorii pentru închiderea lunii. Notificarea din prima zi a lunii te reamintește.'}
       </Typography>
 
