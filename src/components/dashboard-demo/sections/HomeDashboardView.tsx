@@ -3,7 +3,7 @@ import { alpha } from '@mui/material/styles'
 
 import { dashboardMetrics } from '../dashboardData'
 import { TOKENS } from '../../../constants/tokens'
-import { BarChart } from '@mui/x-charts/BarChart'
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 
 import iconCash from '../../../assets/SVG/2- Regular/coupon.svg'
 import iconCard from '../../../assets/SVG/2- Regular/credit-card.svg'
@@ -15,6 +15,11 @@ import iconTotal from '../../../assets/SVG/2- Regular/chart-pie.svg'
 const xAxisData = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ];
+
+const demoChartData = xAxisData.map((label, index) => ({
+  name: label,
+  value: [4500, 5200, 4800, 6100, 5900, 7500, 6800, 7200, 6900, 8400, 7800, 9200][index],
+}));
 
 const metricIcons: Record<string, string> = {
   'Venit cash': iconCash,
@@ -97,18 +102,52 @@ export function HomeDashboardView() {
         </Stack>
 
         <Box sx={{ height: 350, width: '100%' }}>
-          <BarChart
-            series={[
-              {
-                data: [4500, 5200, 4800, 6100, 5900, 7500, 6800, 7200, 6900, 8400, 7800, 9200],
-                label: 'Venit (RON)',
-                color: TOKENS.primary,
-              },
-            ]}
-            xAxis={[{ data: xAxisData, scaleType: 'band' }]}
-            borderRadius={8}
-            margin={{ top: 20, right: 20, bottom: 40, left: 60 }}
-          />
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={demoChartData}
+              margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={alpha(TOKENS.border, 0.5)} />
+              <XAxis
+                dataKey="name"
+                tickLine={false}
+                axisLine={false}
+                tick={{
+                  fill: TOKENS.textMuted,
+                  fontSize: 11,
+                  fontWeight: 600,
+                }}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={{
+                  fill: TOKENS.textMuted,
+                  fontSize: 11,
+                  fontWeight: 600,
+                }}
+                tickFormatter={(v) => `${v} RON`}
+              />
+              <Tooltip
+                cursor={{ fill: alpha(TOKENS.primary, 0.05) }}
+                contentStyle={{
+                  backgroundColor: TOKENS.paper,
+                  borderColor: TOKENS.border,
+                  borderRadius: TOKENS.radius.md,
+                  boxShadow: TOKENS.shadow.sm,
+                }}
+                labelStyle={{ fontWeight: 800, color: TOKENS.ink }}
+                itemStyle={{ color: TOKENS.primary }}
+                formatter={(value: any) => [`${value} RON`, 'Venit']}
+              />
+              <Bar
+                dataKey="value"
+                fill={TOKENS.primary}
+                radius={[4, 4, 0, 0]}
+                maxBarSize={40}
+              />
+            </BarChart>
+          </ResponsiveContainer>
         </Box>
       </Paper>
     </Stack>

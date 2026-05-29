@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import { VitePWA } from 'vite-plugin-pwa'
+import path from 'path'
 
 /** Vite 8 uses Rolldown; vite-plugin-pwa still sets rollup input — mirror it for the SW build */
 function configureServiceWorkerBuild(inlineConfig: InlineConfig) {
@@ -25,6 +26,21 @@ function configureServiceWorkerBuild(inlineConfig: InlineConfig) {
 
 // https://vite.dev/config/
 export default defineConfig({
+  resolve: {
+    alias: {
+      'es-toolkit/compat/range': path.resolve('src/compat-shims/range.ts'),
+      'es-toolkit/compat/get': path.resolve('src/compat-shims/get.ts'),
+      'es-toolkit/compat/omit': path.resolve('src/compat-shims/omit.ts'),
+      'es-toolkit/compat/maxBy': path.resolve('src/compat-shims/maxBy.ts'),
+      'es-toolkit/compat/sumBy': path.resolve('src/compat-shims/sumBy.ts'),
+      'es-toolkit/compat/sortBy': path.resolve('src/compat-shims/sortBy.ts'),
+      'es-toolkit/compat/throttle': path.resolve('src/compat-shims/throttle.ts'),
+      'es-toolkit/compat/last': path.resolve('src/compat-shims/last.ts'),
+      'es-toolkit/compat/minBy': path.resolve('src/compat-shims/minBy.ts'),
+      'es-toolkit/compat/isPlainObject': path.resolve('src/compat-shims/isPlainObject.ts'),
+      'es-toolkit/compat/uniqBy': path.resolve('src/compat-shims/uniqBy.ts'),
+    },
+  },
   plugins: [
     react(),
     babel({ presets: [reactCompilerPreset()] }),

@@ -14,7 +14,7 @@ const TOKENS = {
   surface: '#F8F9FC',
   border: 'rgba(0, 0, 0, 0.06)',
   textMuted: 'rgba(26, 26, 46, 0.55)',
-  radius: { md: 4, lg: 6, xl: 8, full: 50 },
+  radius: { md: 8, lg: 12, xl: 16, full: 9999 },
   shadow: {
     sm: '0 1px 2px rgba(0,0,0,0.04)',
     md: '0 2px 8px rgba(0,0,0,0.06)',
@@ -120,7 +120,7 @@ export default function RegistrationSuccessPage() {
               px: 4,
               py: 1.2,
               fontWeight: 700,
-              borderRadius: TOKENS.radius.full,
+              borderRadius: TOKENS.radius.md,
               color: '#fff',
               backgroundColor: TOKENS.primary,
               boxShadow: TOKENS.shadow.glow,

@@ -27,7 +27,7 @@ const TOKENS = {
   surface: '#F8F9FC',
   border: 'rgba(0,0,0,0.06)',
   textMuted: 'rgba(26,26,46,0.55)',
-  radius: { md: 4, lg: 6, xl: 8, full: 50 },
+  radius: { md: 8, lg: 12, xl: 16, full: 9999 },
   shadow: {
     md: '0 4px 12px rgba(0,0,0,0.05)',
     glow: '0 8px 32px rgba(92,203,245,0.15)',
@@ -243,7 +243,7 @@ export default function PendingAccessPage() {
                 fontWeight: 700,
                 color: TOKENS.textMuted,
                 borderColor: TOKENS.border,
-                borderRadius: TOKENS.radius.full,
+                borderRadius: TOKENS.radius.md,
                 px: 4,
                 py: 1.2,
                 '&:hover': {

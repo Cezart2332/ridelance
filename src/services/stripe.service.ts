@@ -19,6 +19,19 @@ export interface SubscriptionResponse {
   dashboardAccessGranted: boolean
   pfaStatus: string | null
   pfaRegistrationType: string | null
+  pendingPlan: PlanKey | null
+  hasPaidInfiintare: boolean
+}
+
+
+export interface PaymentHistoryItem {
+  id: string
+  paymentType: string
+  status: string
+  amountBani: number
+  description: string
+  stripePaymentId: string | null
+  createdAtUtc: string
 }
 
 export interface PlanInfo {
@@ -233,10 +246,31 @@ export const stripeService = {
   async getSubscriptionStatus(): Promise<SubscriptionResponse | null> {
     try {
       const response = await api.get<SubscriptionResponse>('/payments/subscription')
+      if (response.data) {
+        if (response.data.plan) {
+          response.data.plan = response.data.plan.toLowerCase() as PlanKey
+        }
+        if (response.data.pendingPlan) {
+          response.data.pendingPlan = response.data.pendingPlan.toLowerCase() as PlanKey
+        }
+      }
       return response.data
     } catch (error) {
       console.error('Failed to get subscription status', error)
       return null
+    }
+  },
+
+  /** Get real payment history from the database */
+  async getPaymentHistory(page = 1, pageSize = 20): Promise<PaymentHistoryItem[]> {
+    try {
+      const response = await api.get<PaymentHistoryItem[]>('/payments/history', {
+        params: { page, pageSize }
+      })
+      return response.data
+    } catch (error) {
+      console.error('Failed to get payment history', error)
+      return []
     }
   },
 

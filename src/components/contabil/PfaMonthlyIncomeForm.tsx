@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  Divider,
   MenuItem,
   Paper,
   Select,
@@ -12,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import CalculateRoundedIcon from '@mui/icons-material/CalculateRounded';
 import { TOKENS } from '../../constants/tokens';
 import { pfaService, type PfaMonthlyIncome } from '../../services/pfa.service';
 import {
@@ -95,7 +97,6 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeForm
         venitCard: income.venitCard,
         venitBolt: income.venitBolt,
         venitUber: income.venitUber,
-        taxeEstimate: income.taxeEstimate,
       });
       setIncome(data);
       setSaved(true);
@@ -106,7 +107,7 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeForm
     }
   };
 
-  const setField = (field: keyof Pick<PfaMonthlyIncome, 'venitCash' | 'venitCard' | 'venitBolt' | 'venitUber' | 'taxeEstimate'>, value: string) => {
+  const setField = (field: keyof Pick<PfaMonthlyIncome, 'venitCash' | 'venitCard' | 'venitBolt' | 'venitUber'>, value: string) => {
     const num = parseFloat(value) || 0;
     setIncome((prev) => ({ ...prev, [field]: num }));
   };
@@ -118,12 +119,11 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeForm
     },
   };
 
-  const fields: { key: keyof Pick<PfaMonthlyIncome, 'venitCash' | 'venitCard' | 'venitBolt' | 'venitUber' | 'taxeEstimate'>; label: string }[] = [
+  const incomeFields: { key: keyof Pick<PfaMonthlyIncome, 'venitCash' | 'venitCard' | 'venitBolt' | 'venitUber'>; label: string }[] = [
     { key: 'venitCash', label: 'Venit cash' },
     { key: 'venitCard', label: 'Venit card' },
     { key: 'venitBolt', label: 'Venit Bolt' },
     { key: 'venitUber', label: 'Venit Uber' },
-    { key: 'taxeEstimate', label: 'Taxe estimate' },
   ];
 
   return (
@@ -164,7 +164,7 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeForm
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {saved && <Alert severity="success" sx={{ mb: 2 }}>Veniturile au fost salvate.</Alert>}
+      {saved && <Alert severity="success" sx={{ mb: 2 }}>Veniturile au fost salvate. Taxele au fost recalculate automat.</Alert>}
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
@@ -173,7 +173,7 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeForm
       ) : (
         <Stack spacing={2}>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-            {fields.map(({ key, label }) => (
+            {incomeFields.map(({ key, label }) => (
               <TextField
                 key={key}
                 fullWidth
@@ -206,6 +206,34 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeForm
               Cash + Card + Bolt + Uber
             </Typography>
           </Paper>
+
+          {income.taxeEstimate > 0 && (
+            <>
+              <Divider />
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  borderRadius: TOKENS.radius.md,
+                  bgcolor: alpha('#f59e0b', 0.06),
+                  border: `1px solid ${alpha('#f59e0b', 0.2)}`,
+                }}
+              >
+                <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5 }}>
+                  <CalculateRoundedIcon sx={{ fontSize: 18, color: '#b45309' }} />
+                  <Typography sx={{ fontSize: '0.8rem', color: '#b45309', fontWeight: 700 }}>
+                    Taxe estimate anuale (calculat automat)
+                  </Typography>
+                </Stack>
+                <Typography sx={{ fontWeight: 900, fontSize: '1.4rem', color: '#92400e' }}>
+                  {income.taxeEstimate.toLocaleString('ro-RO')} lei
+                </Typography>
+                <Typography sx={{ fontSize: '0.72rem', color: TOKENS.textSubtle, mt: 0.5 }}>
+                  CAS + CASS + Impozit venit · bazat pe venitul anual cumulat
+                </Typography>
+              </Paper>
+            </>
+          )}
 
           <Button
             variant="contained"

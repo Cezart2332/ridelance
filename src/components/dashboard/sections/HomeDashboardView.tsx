@@ -5,6 +5,7 @@ import { alpha } from '@mui/material/styles';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import { userService, type DashboardSummary } from '../../../services/user.service';
 import { PfaIncomeSummary } from './PfaIncomeSummary';
+import { PfaTaxSummaryWidget } from './PfaTaxSummaryWidget';
 import { RevenueCharts } from './RevenueCharts';
 
 function pfaStatusChip(status: string | null) {
@@ -79,6 +80,8 @@ export function HomeDashboardView() {
         incomeYear={summary.incomeYear}
         incomeMonth={summary.incomeMonth}
       />
+
+      <PfaTaxSummaryWidget summary={summary} />
 
       <RevenueCharts
         year={summary.revenueChartYear ?? new Date().getFullYear()}

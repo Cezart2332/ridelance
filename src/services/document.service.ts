@@ -8,10 +8,11 @@ export interface DocumentSummary {
   status: string;
   fileSize: number;
   uploadedAtUtc: string;
+  expiresAtUtc?: string | null;
 }
 
 export const documentService = {
-  upload: async (file: File, category: string, pfaRegistrationId?: string, userId?: string) => {
+  upload: async (file: File, category: string, pfaRegistrationId?: string, userId?: string, expiresAt?: string) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('category', category);
@@ -20,6 +21,9 @@ export const documentService = {
     }
     if (userId) {
       formData.append('userId', userId);
+    }
+    if (expiresAt) {
+      formData.append('expiresAt', expiresAt);
     }
 
     const response = await api.post('/documents/upload', formData, {

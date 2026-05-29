@@ -13,12 +13,12 @@ export const DASHBOARD_TOKENS = {
   textMuted: 'rgba(26, 26, 46, 0.6)',
   textSubtle: 'rgba(26, 26, 46, 0.4)',
   radius: {
-    xs: 2,
-    sm: 3,
-    md: 4,
-    lg: 6,
-    xl: 8,
-    full: 4,
+    xs: 4,
+    sm: 6,
+    md: 8,
+    lg: 12,
+    xl: 16,
+    full: 9999,
   },
   shadow: {
     sm: '0 1px 2px rgba(0,0,0,0.04)',

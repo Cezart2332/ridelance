@@ -23,6 +23,16 @@ export interface RecentDocumentDto {
   uploadedAtUtc: string;
 }
 
+export interface YtdExpenseItem {
+  id: string;
+  itemName: string;
+  catalogCategory: string;
+  deductibleLabel: string;
+  amountRon: number | null;
+  month: number;
+  documentStatus: string;
+}
+
 export interface DashboardSummary {
   pfaRegistrationId?: string | null;
   pfaStatus: string | null;
@@ -46,6 +56,17 @@ export interface DashboardSummary {
   incomeMonth?: number | null;
   revenueChartYear?: number;
   monthlyRevenue?: MonthlyRevenuePoint[];
+  // YTD auto-computed tax breakdown
+  taxYear: number;
+  ytdTotalIncome: number;
+  ytdDeductibleExpenses: number;
+  ytdProfit: number;
+  ytdCas: number;
+  ytdCass: number;
+  ytdIncomeTax: number;
+  ytdTotalTax: number;
+  ytdNetIncome: number;
+  ytdExpenses: YtdExpenseItem[];
 }
 
 export const userService = {

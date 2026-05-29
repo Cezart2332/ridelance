@@ -21,6 +21,7 @@ import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
 import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { carsService, getCarImageUrl, type Car, type CarLead } from '../../../../services/cars.service';
+import carListJson from '../../../../data/car-list.json';
 import {
   formatCarStatus,
   getCarStatusColor,
@@ -46,6 +47,51 @@ const UBER_CATEGORIES = ['UberX', 'Uber Comfort', 'Uber Green', 'Uber Black', 'U
 const BOLT_CATEGORIES = ['Bolt', 'Bolt Comfort', 'Bolt Green', 'Bolt Premium', 'Bolt Economy'];
 const BADGES = ['Consum Mic', 'Hybrid', 'GPL', 'Top Rated', 'Nou', 'Reducere'];
 
+interface CarBrandData {
+  brand: string;
+  models: string[];
+}
+
+const curatedBrands: CarBrandData[] = [
+  {
+    brand: 'Tesla',
+    models: ['Model 3', 'Model Y', 'Model S', 'Model X']
+  },
+  {
+    brand: 'Dacia',
+    models: ['Logan', 'Sandero', 'Jogger', 'Spring', 'Duster', 'Lodgy', 'Dokker', 'Solenza']
+  },
+  {
+    brand: 'Toyota',
+    models: ['Prius', 'Corolla', 'Camry', 'Auris', 'Yaris', 'RAV4', 'C-HR', 'Avensis']
+  },
+  {
+    brand: 'Hyundai',
+    models: ['Ioniq', 'Ioniq 5', 'Ioniq 6', 'Elantra', 'Accent', 'Tucson', 'Kona', 'i30', 'i20']
+  },
+  {
+    brand: 'Kia',
+    models: ['Ceed', 'Niro', 'Stonic', 'Sportage', 'Rio', 'Optima', 'XCeed']
+  }
+];
+
+const allBrandsData: CarBrandData[] = (() => {
+  const list = [...(carListJson as CarBrandData[])];
+  
+  curatedBrands.forEach(curated => {
+    const existing = list.find(item => item.brand.toLowerCase() === curated.brand.toLowerCase());
+    if (existing) {
+      existing.models = Array.from(new Set([...existing.models, ...curated.models])).sort();
+    } else {
+      list.push(curated);
+    }
+  });
+  
+  return list.sort((a, b) => a.brand.localeCompare(b.brand));
+})();
+
+const brandsList = allBrandsData.map(item => item.brand);
+
 interface CarsAdminViewProps {
   variant?: 'admin' | 'poster';
 }
@@ -63,6 +109,14 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const modelsListForSelectedBrand = (() => {
+    if (!editingCar?.brand) return [];
+    const brandData = allBrandsData.find(
+      item => item.brand.toLowerCase() === editingCar.brand!.toLowerCase()
+    );
+    return brandData ? brandData.models : [];
+  })();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -543,8 +597,62 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
                 1. Informații de Bază
               </Typography>
               <Grid container spacing={2.5} component="div">
-                <Grid size={{ xs: 12, sm: 6, md: 6 }} component="div"><TextField fullWidth label="Brand" value={editingCar?.brand ?? ''} onChange={(e) => setEditingCar({ ...editingCar, brand: e.target.value })} variant="outlined" /></Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 6 }} component="div"><TextField fullWidth label="Model" value={editingCar?.model ?? ''} onChange={(e) => setEditingCar({ ...editingCar, model: e.target.value })} /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md: 6 }} component="div">
+                  <Autocomplete
+                    freeSolo
+                    options={brandsList}
+                    value={editingCar?.brand ?? ''}
+                    onChange={(_, newValue) => {
+                      setEditingCar(prev => prev ? {
+                        ...prev,
+                        brand: newValue ?? '',
+                        model: ''
+                      } : null);
+                    }}
+                    onInputChange={(_, newInputValue) => {
+                      setEditingCar(prev => prev ? {
+                        ...prev,
+                        brand: newInputValue,
+                        model: ''
+                      } : null);
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Brand"
+                        variant="outlined"
+                        fullWidth
+                      />
+                    )}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6, md: 6 }} component="div">
+                  <Autocomplete
+                    freeSolo
+                    options={modelsListForSelectedBrand}
+                    value={editingCar?.model ?? ''}
+                    onChange={(_, newValue) => {
+                      setEditingCar(prev => prev ? {
+                        ...prev,
+                        model: newValue ?? ''
+                      } : null);
+                    }}
+                    onInputChange={(_, newInputValue) => {
+                      setEditingCar(prev => prev ? {
+                        ...prev,
+                        model: newInputValue
+                      } : null);
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Model"
+                        variant="outlined"
+                        fullWidth
+                      />
+                    )}
+                  />
+                </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }} component="div"><TextField fullWidth label="An Fabricație" type="number" value={editingCar?.year ?? ''} onChange={(e) => setEditingCar({ ...editingCar, year: parseInt(e.target.value) })} /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }} component="div"><TextField fullWidth label="Oraș / Locație" value={editingCar?.location ?? ''} onChange={(e) => setEditingCar({ ...editingCar, location: e.target.value })} /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }} component="div">

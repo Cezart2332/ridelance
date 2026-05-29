@@ -8,6 +8,7 @@ import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import { TOKENS } from '../../constants/tokens'
 import { navItems } from '../../data/constants'
 import logo from '../../assets/logo.svg'
+import { useAppSelector } from '../../store/hooks'
 
 import { RouteFallback } from '../common/RouteFallback'
 import { ServicePaymentSuccessDialog } from '../services/ServicePaymentSuccessDialog'
@@ -33,6 +34,7 @@ export function AppLayout() {
   const [isNavPinned, setIsNavPinned] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'))
+  const { accessToken } = useAppSelector((s) => s.auth)
 
   useEffect(() => {
     const onScroll = () => setIsNavPinned(window.scrollY > 10)
@@ -147,27 +149,71 @@ export function AppLayout() {
             </Stack>
 
             {/* Desktop CTA */}
-            <Button
-              variant="contained"
-              endIcon={<ArrowForwardRoundedIcon />}
-              onClick={() => goTo('/demo')}
-              sx={{
-                display: { xs: 'none', md: 'inline-flex' },
-                px: 3,
-                py: 1,
-                color: '#fff',
-                backgroundColor: TOKENS.primary,
-                borderRadius: TOKENS.radius.full,
-                fontWeight: 700,
-                boxShadow: TOKENS.shadow.glow,
-                '&:hover': {
-                  backgroundColor: TOKENS.primaryStrong,
-                  transform: 'translateY(-1px)',
-                },
-              }}
-            >
-              Demo
-            </Button>
+            {!accessToken ? (
+              <Button
+                variant="contained"
+                endIcon={<ArrowForwardRoundedIcon />}
+                onClick={() => goTo('/demo')}
+                sx={{
+                  display: { xs: 'none', md: 'inline-flex' },
+                  px: 3,
+                  py: 1,
+                  color: '#fff',
+                  backgroundColor: TOKENS.primary,
+                  borderRadius: TOKENS.radius.md,
+                  fontWeight: 700,
+                  boxShadow: TOKENS.shadow.glow,
+                  '&:hover': {
+                    backgroundColor: TOKENS.primaryStrong,
+                    transform: 'translateY(-1px)',
+                  },
+                }}
+              >
+                Demo
+              </Button>
+            ) : (
+              <Stack direction="row" spacing={1.5} sx={{ display: { xs: 'none', md: 'inline-flex' } }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => goTo('/demo')}
+                  sx={{
+                    px: 3,
+                    py: 1,
+                    color: TOKENS.primaryStrong,
+                    borderColor: alpha(TOKENS.primaryStrong, 0.3),
+                    borderRadius: TOKENS.radius.md,
+                    fontWeight: 700,
+                    '&:hover': {
+                      borderColor: TOKENS.primaryStrong,
+                      backgroundColor: alpha(TOKENS.primary, 0.04),
+                      transform: 'translateY(-1px)',
+                    },
+                  }}
+                >
+                  Demo
+                </Button>
+                <Button
+                  variant="contained"
+                  endIcon={<ArrowForwardRoundedIcon />}
+                  onClick={() => goTo('/app')}
+                  sx={{
+                    px: 3,
+                    py: 1,
+                    color: '#fff',
+                    backgroundColor: TOKENS.primary,
+                    borderRadius: TOKENS.radius.md,
+                    fontWeight: 700,
+                    boxShadow: TOKENS.shadow.glow,
+                    '&:hover': {
+                      backgroundColor: TOKENS.primaryStrong,
+                      transform: 'translateY(-1px)',
+                    },
+                  }}
+                >
+                  Profilul meu
+                </Button>
+              </Stack>
+            )}
 
             {/* Mobile Controls */}
             <Stack
@@ -182,19 +228,19 @@ export function AppLayout() {
               <Button
                 variant="contained"
                 size="small"
-                onClick={() => goTo('/demo')}
+                onClick={() => goTo(accessToken ? '/app' : '/demo')}
                 sx={{
                   px: 2,
                   py: 0.6,
                   minWidth: 'unset',
                   color: '#fff',
                   backgroundColor: TOKENS.primary,
-                  borderRadius: TOKENS.radius.full,
+                  borderRadius: TOKENS.radius.md,
                   fontWeight: 700,
                   fontSize: '0.75rem',
                 }}
               >
-                Dashboard
+                {accessToken ? 'Profilul meu' : 'Dashboard'}
               </Button>
               <IconButton
                 size="small"
@@ -277,23 +323,43 @@ export function AppLayout() {
                 {item.label}
               </Button>
             ))}
+            {accessToken && (
+              <Button
+                onClick={() => goTo('/app')}
+                sx={{
+                  justifyContent: 'flex-start',
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: TOKENS.radius.md,
+                  color: TOKENS.primaryStrong,
+                  fontWeight: 750,
+                  fontSize: '0.95rem',
+                  backgroundColor: alpha(TOKENS.primary, 0.05),
+                  '&:hover': {
+                    backgroundColor: alpha(TOKENS.primary, 0.1),
+                  },
+                }}
+              >
+                Profilul meu
+              </Button>
+            )}
           </Stack>
 
           <Button
             variant="contained"
             endIcon={<ArrowForwardRoundedIcon />}
-            onClick={() => goTo('/demo')}
+            onClick={() => goTo(accessToken ? '/app' : '/demo')}
             sx={{
               mt: 'auto',
               color: '#fff',
               backgroundColor: TOKENS.primary,
-              borderRadius: TOKENS.radius.full,
+              borderRadius: TOKENS.radius.md,
               py: 1.2,
               fontWeight: 700,
               boxShadow: TOKENS.shadow.glow,
             }}
           >
-            Dashboard
+            {accessToken ? 'Profilul meu' : 'Dashboard'}
           </Button>
         </Stack>
       </Drawer>

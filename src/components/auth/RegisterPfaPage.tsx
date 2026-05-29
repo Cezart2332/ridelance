@@ -25,7 +25,7 @@ import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlin
 import { pfaService } from '../../services/pfa.service'
 import { documentService } from '../../services/document.service'
 import { getErrorMessage } from '../../utils/errorHandler'
-import { stripeService } from '../../services/stripe.service'
+import { stripeService, type SubscriptionResponse } from '../../services/stripe.service'
 
 import logo from '../../assets/logo.svg'
 import iconUpload from '../../assets/SVG/2- Regular/upload.svg'
@@ -39,7 +39,7 @@ const TOKENS = {
   border: 'rgba(0, 0, 0, 0.06)',
   borderHover: 'rgba(0, 0, 0, 0.12)',
   textMuted: 'rgba(26, 26, 46, 0.55)',
-  radius: { md: 4, lg: 6, xl: 8, full: 50 },
+  radius: { md: 8, lg: 12, xl: 16, full: 9999 },
   shadow: {
     sm: '0 1px 2px rgba(0,0,0,0.04)',
     md: '0 2px 8px rgba(0,0,0,0.06)',
@@ -138,9 +138,11 @@ export default function RegisterPfaPage() {
   const [routeChecking, setRouteChecking] = useState(true)
   const [confirmingPayment, setConfirmingPayment] = useState(awaitingPaymentConfirm)
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [subStatus, setSubStatus] = useState<SubscriptionResponse | null>(null)
 
   const syncOnboardingRoute = useCallback(async () => {
     const sub = await stripeService.getSubscriptionStatus()
+    setSubStatus(sub)
     if (!sub) {
       if (awaitingPaymentConfirm) {
         setConfirmingPayment(true)
@@ -152,6 +154,9 @@ export default function RegisterPfaPage() {
     setConfirmingPayment(false)
     const target = resolveClientPath(sub)
     if (target !== '/inregistrare/pfa') {
+      if (target === '/app/pending-approval' && sub?.pfaStatus === 'Rejected') {
+        return false
+      }
       navigate(target, { replace: true })
       return true
     }
@@ -181,11 +186,15 @@ export default function RegisterPfaPage() {
           }
           const sub = await stripeService.getSubscriptionStatus()
           if (sub) {
+            setSubStatus(sub)
             if (pollTimerRef.current) clearInterval(pollTimerRef.current)
             pollTimerRef.current = null
             setConfirmingPayment(false)
             const target = resolveClientPath(sub)
             if (target !== '/inregistrare/pfa') {
+              if (target === '/app/pending-approval' && sub.pfaStatus === 'Rejected') {
+                return
+              }
               navigate(target, { replace: true })
             }
           }
@@ -262,10 +271,13 @@ export default function RegisterPfaPage() {
         await documentService.upload(atestatFile, 'AtestatSofer', pfaId);
       }
 
-      // 3. Redirect to Stripe for Înființare PFA payment (450 lei)
-      // After payment, user returns to /inregistrare/succes (configured in backend)
+      // 3. Redirect to Stripe or direct redirect if they have already paid
       sessionStorage.setItem('pfa_registered', 'NuAmPfa')
-      stripeService.redirectToInfiintarePfa()
+      if (subStatus?.hasPaidInfiintare) {
+        navigate('/app/pending-approval', { replace: true })
+      } else {
+        stripeService.redirectToInfiintarePfa()
+      }
     } catch (err: any) {
       console.error(err)
       setError(getErrorMessage(err, 'A aparut o eroare la inregistrare. Te rugam sa incerci din nou.'))
@@ -438,7 +450,7 @@ export default function RegisterPfaPage() {
                       py: 1.4,
                       fontWeight: 700,
                       fontSize: '1rem',
-                      borderRadius: TOKENS.radius.full,
+                      borderRadius: TOKENS.radius.md,
                       color: '#fff',
                       backgroundColor: TOKENS.primary,
                       boxShadow: TOKENS.shadow.glow,
@@ -618,7 +630,7 @@ export default function RegisterPfaPage() {
                     py: 1.4,
                     fontWeight: 700,
                     fontSize: '1rem',
-                    borderRadius: TOKENS.radius.full,
+                    borderRadius: TOKENS.radius.md,
                     color: '#fff',
                     backgroundColor: TOKENS.primary,
                     boxShadow: TOKENS.shadow.glow,

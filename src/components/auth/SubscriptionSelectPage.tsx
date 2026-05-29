@@ -26,7 +26,7 @@ const TOKENS = {
   border: 'rgba(0,0,0,0.06)',
   borderHover: 'rgba(0,0,0,0.12)',
   textMuted: 'rgba(26,26,46,0.55)',
-  radius: { md: 4, lg: 6, xl: 8, full: 50 },
+  radius: { md: 8, lg: 12, xl: 16, full: 9999 },
   shadow: {
     sm: '0 1px 2px rgba(0,0,0,0.04)',
     md: '0 2px 8px rgba(0,0,0,0.06)',
@@ -279,7 +279,7 @@ export default function SubscriptionSelectPage() {
                       py: 1.2,
                       fontWeight: 700,
                       fontSize: '0.95rem',
-                      borderRadius: TOKENS.radius.full,
+                      borderRadius: TOKENS.radius.md,
                       borderColor: isSelected ? 'transparent' : TOKENS.borderHover,
                       color: isSelected ? '#fff' : TOKENS.ink,
                       backgroundColor: isSelected ? TOKENS.primary : 'transparent',
@@ -310,7 +310,7 @@ export default function SubscriptionSelectPage() {
                 py: 1.6,
                 fontWeight: 700,
                 fontSize: '1.05rem',
-                borderRadius: TOKENS.radius.full,
+                borderRadius: TOKENS.radius.md,
                 backgroundColor: TOKENS.primary,
                 boxShadow: TOKENS.shadow.glow,
                 '&:hover': {

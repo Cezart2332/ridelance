@@ -151,6 +151,7 @@ export function AbonamenteTab() {
             <Button
               variant="outlined"
               startIcon={<SwapHorizRoundedIcon />}
+              disabled={!!subStatus?.pendingPlan}
               onClick={() => setShowUpgrade((v) => !v)}
               size="small"
               sx={{
@@ -215,9 +216,25 @@ export function AbonamenteTab() {
           >
             <InfoOutlinedIcon sx={{ color: '#b45309', fontSize: 18, mt: 0.1, flexShrink: 0 }} />
             <Typography sx={{ color: '#92400e', fontSize: '0.83rem', lineHeight: 1.6 }}>
-              Abonamentul tău este activ. Prima factură automată se va genera{' '}
-              <strong>luni la 15:00</strong>. Dacă ai plătit luni înainte de 15:00, factura va fi
-              generată lunea următoare, nu în aceeași zi.
+              {subStatus?.pendingPlan ? (
+                <>
+                  Ai deja o modificare de abonament programată pentru <strong>luni la 15:00</strong>:
+                  trecerea de la <strong>{currentPlan.title}</strong> la <strong>{SUBSCRIPTION_PLANS.find(p => p.key === subStatus.pendingPlan)?.title}</strong>.
+                  Poți schimba din nou tipul abonamentului doar o singură dată pe săptămână, după ce noua perioadă devine activă.
+                </>
+              ) : subStatus?.status === 'ActivePendingBilling' ? (
+                <>
+                  Abonamentul tău este activ. Prima factură automată se va genera{' '}
+                  <strong>luni la 15:00</strong>. Dacă ai plătit luni înainte de 15:00, factura va fi
+                  generată lunea următoare, nu în aceeași zi.
+                </>
+              ) : (
+                <>
+                  Abonamentul tău este activ. Prima factură automată se va genera{' '}
+                  <strong>luni la 15:00</strong>. Dacă ai plătit luni înainte de 15:00, factura va fi
+                  generată lunea următoare, nu în aceeași zi.
+                </>
+              )}
             </Typography>
           </Box>
         )}

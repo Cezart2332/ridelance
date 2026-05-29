@@ -209,6 +209,25 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
             <Typography variant="h6" sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink, lineHeight: 1.2 }}>
               {car.brand} {car.model}, {car.year}
             </Typography>
+            {car.description && (
+              <Typography 
+                sx={{ 
+                  fontSize: '0.82rem', 
+                  color: alpha(DASHBOARD_TOKENS.ink, 0.7), 
+                  mt: 1.5, 
+                  lineHeight: 1.5,
+                  whiteSpace: 'pre-line',
+                  wordBreak: 'break-word',
+                  backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.03),
+                  p: 1.5,
+                  borderRadius: `${DASHBOARD_TOKENS.radius.sm}px`,
+                  borderLeft: `3px solid ${DASHBOARD_TOKENS.primary}`,
+                  fontStyle: 'italic',
+                }}
+              >
+                {car.description}
+              </Typography>
+            )}
           </Box>
 
           {/* Price */}

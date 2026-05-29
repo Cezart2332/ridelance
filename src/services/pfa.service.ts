@@ -21,7 +21,6 @@ export interface UpsertPfaMonthlyIncomeRequest {
   venitCard: number;
   venitBolt: number;
   venitUber: number;
-  taxeEstimate: number;
 }
 
 export interface CreatePfaRequest {

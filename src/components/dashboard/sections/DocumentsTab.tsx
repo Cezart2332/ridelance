@@ -1,7 +1,11 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
 import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded'
-import { useEffect, useMemo, useState } from 'react'
-import { Box, Button, Chip, CircularProgress, IconButton, Paper, Stack, Typography, Snackbar, Alert } from '@mui/material'
+import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded'
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded'
+import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded'
+import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Box, Button, Chip, CircularProgress, IconButton, Paper, Stack, Typography, Snackbar, Alert, Tooltip } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
@@ -17,6 +21,7 @@ interface DocumentSummary {
   status: string;
   fileSize: number;
   uploadedAtUtc: string;
+  expiresAtUtc?: string | null;
 }
 
 const DOCUMENT_CATEGORIES = [
@@ -28,6 +33,9 @@ const DOCUMENT_CATEGORIES = [
   'RCA',
   'Other',
 ] as const
+
+// Categories that require an expiry date when uploading
+const EXPIRABLE_CATEGORIES = new Set(['Buletin', 'AsigurareCalatori', 'ITP', 'RCA', 'PermisConducere'])
 
 function statusChipSx(status: string) {
   const s = status.toLowerCase()
@@ -47,11 +55,86 @@ function statusLabel(status: string): string {
   return 'Respins'
 }
 
+type ExpiryState = 'valid' | 'soon30' | 'soon7' | 'expired'
+
+function getExpiryState(expiresAtUtc: string | null | undefined): ExpiryState | null {
+  if (!expiresAtUtc) return null
+  const expiry = new Date(expiresAtUtc)
+  const now = new Date()
+  const diffMs = expiry.getTime() - now.getTime()
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays < 0) return 'expired'
+  if (diffDays <= 7) return 'soon7'
+  if (diffDays <= 30) return 'soon30'
+  return 'valid'
+}
+
+function ExpiryBadge({ expiresAtUtc }: { expiresAtUtc?: string | null }) {
+  const state = getExpiryState(expiresAtUtc)
+  if (!state) return null
+
+  const expiry = new Date(expiresAtUtc!)
+  const formatted = expiry.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' })
+
+  if (state === 'expired') {
+    return (
+      <Tooltip title={`Expirat la ${formatted}`}>
+        <Chip
+          icon={<ErrorRoundedIcon sx={{ fontSize: '14px !important' }} />}
+          label="Expirat"
+          size="small"
+          sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha('#ef4444', 0.1), color: '#dc2626', border: `1px solid ${alpha('#ef4444', 0.2)}` }}
+        />
+      </Tooltip>
+    )
+  }
+  if (state === 'soon7') {
+    return (
+      <Tooltip title={`Expiră la ${formatted}`}>
+        <Chip
+          icon={<WarningAmberRoundedIcon sx={{ fontSize: '14px !important' }} />}
+          label={`Exp. ${formatted}`}
+          size="small"
+          sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha('#ef4444', 0.08), color: '#dc2626', border: `1px solid ${alpha('#ef4444', 0.15)}` }}
+        />
+      </Tooltip>
+    )
+  }
+  if (state === 'soon30') {
+    return (
+      <Tooltip title={`Expiră la ${formatted}`}>
+        <Chip
+          icon={<WarningAmberRoundedIcon sx={{ fontSize: '14px !important' }} />}
+          label={`Exp. ${formatted}`}
+          size="small"
+          sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha('#f59e0b', 0.1), color: '#b45309', border: `1px solid ${alpha('#f59e0b', 0.2)}` }}
+        />
+      </Tooltip>
+    )
+  }
+  return (
+    <Tooltip title={`Expiră la ${formatted}`}>
+      <Chip
+        icon={<CheckCircleOutlineRoundedIcon sx={{ fontSize: '14px !important' }} />}
+        label={`Exp. ${formatted}`}
+        size="small"
+        sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha('#10b981', 0.08), color: '#059669', border: `1px solid ${alpha('#10b981', 0.2)}` }}
+      />
+    </Tooltip>
+  )
+}
+
 export function DocumentsTab() {
   const [documents, setDocuments] = useState<DocumentSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState<string | null>(null)
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'error' })
+
+  // Pending expiry date input state: category -> date string
+  const [pendingExpiry, setPendingExpiry] = useState<Record<string, string>>({})
+  // Pending file waiting for expiry confirmation: category -> File
+  const [pendingFile, setPendingFile] = useState<Record<string, File>>({})
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const fetchDocuments = () => {
     documentService.getByUser()
@@ -83,13 +166,26 @@ export function DocumentsTab() {
     [documents],
   )
 
-  const handleUpload = async (file: File, category: string) => {
+  const handleFileSelected = (file: File, category: string) => {
+    if (EXPIRABLE_CATEGORIES.has(category)) {
+      // Hold the file and ask for expiry date
+      setPendingFile((prev) => ({ ...prev, [category]: file }))
+      setPendingExpiry((prev) => ({ ...prev, [category]: '' }))
+    } else {
+      void handleUpload(file, category)
+    }
+  }
+
+  const handleUpload = async (file: File, category: string, expiresAt?: string) => {
     setUploading(category)
     try {
-      await documentService.upload(file, category)
+      await documentService.upload(file, category, undefined, undefined, expiresAt)
       setSnackbar({ open: true, message: `Documentul "${formatDocumentCategory(category)}" a fost încărcat cu succes!`, severity: 'success' })
       fetchDocuments()
-    } catch (err: any) {
+      // Clear pending state
+      setPendingFile((prev) => { const n = { ...prev }; delete n[category]; return n })
+      setPendingExpiry((prev) => { const n = { ...prev }; delete n[category]; return n })
+    } catch (err: unknown) {
       console.error('Upload failed:', err)
       setSnackbar({ open: true, message: getErrorMessage(err, `Încărcarea documentului "${formatDocumentCategory(category)}" a eșuat.`), severity: 'error' })
     } finally {
@@ -106,7 +202,7 @@ export function DocumentsTab() {
       a.download = fileName
       a.click()
       window.URL.revokeObjectURL(url)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Download failed:', err)
       setSnackbar({ open: true, message: getErrorMessage(err, 'Descărcarea documentului a eșuat. Te rugăm să încerci din nou.'), severity: 'error' })
     }
@@ -138,6 +234,8 @@ export function DocumentsTab() {
           {DOCUMENT_CATEGORIES.map((category) => {
             const doc = docsByCategory.get(category)
             const isUploading = uploading === category
+            const isExpirable = EXPIRABLE_CATEGORIES.has(category)
+            const hasPendingFile = !!pendingFile[category]
 
             return (
               <Paper
@@ -146,12 +244,13 @@ export function DocumentsTab() {
                 sx={{
                   p: 1.5,
                   borderRadius: DASHBOARD_TOKENS.radius.md,
-                  border: `1px solid ${DASHBOARD_TOKENS.border}`,
-                  backgroundColor: DASHBOARD_TOKENS.surface,
+                  border: `1px solid ${hasPendingFile ? alpha(DASHBOARD_TOKENS.primary, 0.35) : DASHBOARD_TOKENS.border}`,
+                  backgroundColor: hasPendingFile ? alpha(DASHBOARD_TOKENS.primary, 0.03) : DASHBOARD_TOKENS.surface,
+                  transition: 'all 0.2s',
                 }}
               >
                 <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1.2 }}>
-                  <div style={{ overflow: 'hidden', minWidth: 0 }}>
+                  <div style={{ overflow: 'hidden', minWidth: 0, flex: 1 }}>
                     <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700 }}>
                       {formatDocumentCategory(category)}
                     </Typography>
@@ -168,6 +267,7 @@ export function DocumentsTab() {
                   <Stack direction="row" spacing={0.8} sx={{ alignItems: 'center', flexShrink: 0 }}>
                     {doc && (
                       <>
+                        <ExpiryBadge expiresAtUtc={doc.expiresAtUtc} />
                         <Chip
                           label={statusLabel(doc.status)}
                           size="small"
@@ -207,15 +307,95 @@ export function DocumentsTab() {
                       <input
                         hidden
                         type="file"
+                        ref={(el) => { fileInputRefs.current[category] = el }}
                         onChange={(e) => {
                           const file = e.target.files?.[0]
-                          if (file) handleUpload(file, category)
+                          if (file) handleFileSelected(file, category)
                           e.target.value = ''
                         }}
                       />
                     </IconButton>
                   </Stack>
                 </Stack>
+
+                {/* Expiry date picker — shown when an expirable file has been selected */}
+                {hasPendingFile && isExpirable && (
+                  <Box
+                    sx={{
+                      mt: 1.5,
+                      pt: 1.5,
+                      borderTop: `1px dashed ${alpha(DASHBOARD_TOKENS.primary, 0.2)}`,
+                      display: 'flex',
+                      gap: 1,
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <CalendarTodayRoundedIcon sx={{ fontSize: 16, color: DASHBOARD_TOKENS.primary }} />
+                    <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: DASHBOARD_TOKENS.ink, flexShrink: 0 }}>
+                      Data expirării:
+                    </Typography>
+                    <input
+                      type="date"
+                      value={pendingExpiry[category] ?? ''}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setPendingExpiry((prev) => ({ ...prev, [category]: e.target.value }))}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: 8,
+                        border: `1px solid ${alpha(DASHBOARD_TOKENS.primary, 0.3)}`,
+                        fontSize: '0.8rem',
+                        fontFamily: 'inherit',
+                        background: 'transparent',
+                        color: 'inherit',
+                        outline: 'none',
+                      }}
+                    />
+                    <Stack direction="row" spacing={0.8}>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        disabled={isUploading}
+                        onClick={() => {
+                          const file = pendingFile[category]
+                          if (file) {
+                            void handleUpload(file, category, pendingExpiry[category] || undefined)
+                          }
+                        }}
+                        sx={{
+                          textTransform: 'none',
+                          fontWeight: 700,
+                          borderRadius: DASHBOARD_TOKENS.radius.full,
+                          fontSize: '0.78rem',
+                          py: 0.4,
+                          bgcolor: DASHBOARD_TOKENS.primary,
+                          '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong },
+                        }}
+                      >
+                        {isUploading ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : 'Încarcă'}
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="text"
+                        disabled={isUploading}
+                        onClick={() => {
+                          setPendingFile((prev) => { const n = { ...prev }; delete n[category]; return n })
+                          setPendingExpiry((prev) => { const n = { ...prev }; delete n[category]; return n })
+                        }}
+                        sx={{
+                          textTransform: 'none',
+                          fontWeight: 600,
+                          borderRadius: DASHBOARD_TOKENS.radius.full,
+                          fontSize: '0.78rem',
+                          py: 0.4,
+                          color: DASHBOARD_TOKENS.textMuted,
+                        }}
+                      >
+                        Anulează
+                      </Button>
+                    </Stack>
+                  </Box>
+                )}
               </Paper>
             )
           })}
@@ -257,6 +437,7 @@ export function DocumentsTab() {
                     </Typography>
                   </div>
                   <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexShrink: 0 }}>
+                    <ExpiryBadge expiresAtUtc={doc.expiresAtUtc} />
                     <Chip
                       label={statusLabel(doc.status)}
                       size="small"

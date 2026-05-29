@@ -3,9 +3,8 @@ import { Box, Chip, Paper, Typography, CircularProgress } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded'
-import { stripeService, type SubscriptionResponse } from '../../../services/stripe.service'
+import { stripeService, SUBSCRIPTION_PLANS } from '../../../services/stripe.service'
 import { formatRomanianDate } from '../../../utils/billing'
-import { SUBSCRIPTION_PLANS } from '../../../services/stripe.service'
 
 const T = {
   ink: '#1a1a2e',
@@ -23,66 +22,79 @@ const T = {
   },
 }
 
-interface FakePayment {
+export interface PaymentItem {
   id: string
   date: Date
   amount: string
   description: string
-  status: 'paid' | 'pending' | 'scheduled'
-}
-
-function buildFakeHistory(subStatus: SubscriptionResponse | null): FakePayment[] {
-  const plan = subStatus?.plan
-  const nextBilling = subStatus?.nextBillingDateUtc ? new Date(subStatus.nextBillingDateUtc) : null
-
-  if (!plan || !nextBilling) return []
-
-  const planInfo = SUBSCRIPTION_PLANS.find(p => p.key === plan)
-  if (!planInfo) return []
-
-  const now = new Date()
-  const payments: FakePayment[] = []
-
-  // Simulate registration payment (Înființare PFA)
-  const regDate = new Date(now)
-  regDate.setDate(regDate.getDate() - 1)
-  payments.push({
-    id: 'pay_reg_01',
-    date: regDate,
-    amount: '450 lei',
-    description: 'Înființare PFA — serviciu individual',
-    status: 'paid',
-  })
-
-  // Upcoming scheduled subscription payment
-  payments.push({
-    id: 'pay_sub_01',
-    date: nextBilling,
-    amount: planInfo.price,
-    description: `${planInfo.title} — abonament săptămânal`,
-    status: 'scheduled',
-  })
-
-  return payments.sort((a, b) => b.date.getTime() - a.date.getTime())
+  status: 'paid' | 'pending' | 'scheduled' | 'failed' | 'refunded'
 }
 
 const STATUS_CONFIG = {
   paid: { label: 'Plătit', color: '#16a34a', bg: alpha('#22c55e', 0.1) },
   pending: { label: 'În procesare', color: '#b45309', bg: alpha('#f59e0b', 0.1) },
   scheduled: { label: 'Programat', color: '#1d4ed8', bg: alpha('#3b82f6', 0.1) },
+  failed: { label: 'Eșuat', color: '#dc2626', bg: alpha('#ef4444', 0.1) },
+  refunded: { label: 'Rambursat', color: '#4b5563', bg: alpha('#9ca3af', 0.1) },
 }
 
 export function IstoricPlatiTab() {
-  const [subStatus, setSubStatus] = useState<SubscriptionResponse | null>(null)
+  const [payments, setPayments] = useState<PaymentItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchStatus() {
-      const data = await stripeService.getSubscriptionStatus()
-      setSubStatus(data)
-      setIsLoading(false)
+    async function loadData() {
+      try {
+        const [statusData, historyData] = await Promise.all([
+          stripeService.getSubscriptionStatus(),
+          stripeService.getPaymentHistory(1, 100),
+        ])
+
+        // Map real payment records from database
+        const mappedPayments: PaymentItem[] = historyData.map((item) => {
+          let status: 'paid' | 'pending' | 'failed' | 'refunded' = 'paid'
+          const s = item.status.toLowerCase()
+          if (s === 'succeeded' || s === 'paid') status = 'paid'
+          else if (s === 'pending') status = 'pending'
+          else if (s === 'failed') status = 'failed'
+          else if (s === 'refunded') status = 'refunded'
+
+          return {
+            id: item.id,
+            date: new Date(item.createdAtUtc),
+            amount: `${item.amountBani / 100} lei`,
+            description: item.description,
+            status,
+          }
+        })
+
+        // Add scheduled future payment if active subscription exists
+        if (statusData?.nextBillingDateUtc &&
+            (statusData.status === 'Active' || statusData.status === 'ActivePendingBilling')) {
+          const nextPlan = statusData.pendingPlan || statusData.plan
+          const planInfo = SUBSCRIPTION_PLANS.find(p => p.key === nextPlan)
+          const priceStr = planInfo ? planInfo.price : '99 lei / săptămână'
+          const titleStr = planInfo ? planInfo.title : 'RIDElance Start'
+
+          mappedPayments.push({
+            id: 'scheduled_next_payment',
+            date: new Date(statusData.nextBillingDateUtc),
+            amount: priceStr,
+            description: `${titleStr} — abonament săptămânal`,
+            status: 'scheduled',
+          })
+        }
+
+        // Sort descending by date
+        mappedPayments.sort((a, b) => b.date.getTime() - a.date.getTime())
+        setPayments(mappedPayments)
+      } catch (err) {
+        console.error('Failed to load payment history', err)
+      } finally {
+        setIsLoading(false)
+      }
     }
-    fetchStatus()
+    loadData()
   }, [])
 
   if (isLoading) {
@@ -92,8 +104,6 @@ export function IstoricPlatiTab() {
       </Box>
     )
   }
-
-  const payments = buildFakeHistory(subStatus)
 
   return (
     <Box sx={{ maxWidth: 860, mx: 'auto', p: { xs: 2, md: 3 } }}>
@@ -218,31 +228,7 @@ export function IstoricPlatiTab() {
         </Box>
       )}
 
-      {/* Note about real-time data */}
-      <Box
-        sx={{
-          mt: 4,
-          p: 2,
-          borderRadius: T.radius.lg,
-          backgroundColor: alpha(T.primary, 0.04),
-          border: `1px solid ${alpha(T.primary, 0.1)}`,
-        }}
-      >
-        <Typography sx={{ color: T.textMuted, fontSize: '0.82rem', lineHeight: 1.6 }}>
-          📊 Istoricul complet al plăților va fi disponibil după integrarea cu Stripe Webhooks.
-          Poți vedea toate facturile și în{' '}
-          <Box
-            component="a"
-            href="https://billing.stripe.com/p/login/test_00g"
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{ color: T.primaryStrong, fontWeight: 700, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-          >
-            portalul de facturare Stripe
-          </Box>
-          .
-        </Typography>
-      </Box>
+
     </Box>
   )
 }

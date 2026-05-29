@@ -93,7 +93,7 @@ const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: TOKENS.radius.md, // 4px default
+    borderRadius: 1, // Let numbers represent exact pixels
   },
   transitions: {
     duration: {
@@ -131,7 +131,7 @@ const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: TOKENS.radius.full,
+          borderRadius: TOKENS.radius.md, // 8px for standard buttons
           transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
           '&:hover': {
             transform: 'translateY(-1px)',
@@ -142,7 +142,7 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: TOKENS.radius.lg, // 6px
+          borderRadius: TOKENS.radius.lg, // 12px for cards
           border: `1px solid ${TOKENS.border}`,
           boxShadow: TOKENS.shadow.md,
           transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
@@ -156,7 +156,7 @@ const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: TOKENS.radius.lg, // 6px
+          borderRadius: TOKENS.radius.lg, // 12px for paper containers
           backgroundImage: 'none',
           transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
         },
@@ -173,7 +173,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           border: `1px solid ${TOKENS.border}`,
-          borderRadius: `${TOKENS.radius.md}px !important`,
+          borderRadius: `${TOKENS.radius.lg}px !important`, // 12px for accordions
           overflow: 'hidden',
           '&:before': {
             display: 'none',
@@ -197,7 +197,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: TOKENS.radius.md,
+            borderRadius: TOKENS.radius.md, // 8px for text fields
             transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
           },
         },

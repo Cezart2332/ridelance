@@ -132,6 +132,11 @@ export default function RentFormModal({ open, onClose, car }: RentFormModalProps
                     <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.ink }} component="p">
                       {car ? `${car.brand} ${car.model} (${car.year})` : 'Alege un vehicul din listă'}
                     </Typography>
+                    {car?.description && (
+                      <Typography sx={{ fontSize: '0.82rem', color: alpha(DASHBOARD_TOKENS.ink, 0.6), mt: 1, lineHeight: 1.4 }} component="p">
+                        {car.description}
+                      </Typography>
+                    )}
                     {car && (
                       <Box sx={{ mt: 1.5 }}>
                         <CarPriceDisplay
