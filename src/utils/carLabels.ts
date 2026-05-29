@@ -82,18 +82,18 @@ export function matchesOfferTypeFilter(carOfferType: string, filter: string): bo
 }
 
 export const LISTING_SOURCE_TO_API: Record<string, string> = {
-  'Închiriat de RIDElance': 'Ridelance',
-  'Închiriat (altă sursă)': 'External',
+  'Oferit de RIDElance': 'Ridelance',
+  'Oferit (altă sursă)': 'External',
 };
 
 export const LISTING_SOURCE_FROM_API: Record<string, string> = {
-  Ridelance: 'Închiriat de RIDElance',
-  External: 'Închiriat (altă sursă)',
+  Ridelance: 'Oferit de RIDElance',
+  External: 'Oferit (altă sursă)',
 };
 
 export function formatCarListingLabel(listingSource: string): string {
-  if (!listingSource) return 'Închiriat';
-  return LISTING_SOURCE_FROM_API[listingSource] ?? 'Închiriat';
+  if (!listingSource) return 'Oferit';
+  return LISTING_SOURCE_FROM_API[listingSource] ?? 'Oferit';
 }
 
 export function formatApprovalStatus(status: string): string {

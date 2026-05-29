@@ -54,6 +54,7 @@ export interface CarLead {
   userName: string;
   userEmail: string;
   userPhone: string;
+  city: string;
   interestType: string;
   status: string;
   adminNote?: string;
@@ -147,6 +148,7 @@ const carsService = {
     userName: string;
     userEmail: string;
     userPhone: string;
+    city: string;
     interestType: string;
   }): Promise<string> {
     const res = await api.post<{ leadId: string }>(`/cars/${carId}/leads`, data);

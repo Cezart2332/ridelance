@@ -46,6 +46,7 @@ export default function RentFormModal({ open, onClose, car }: RentFormModalProps
         userName: formData.name,
         userEmail: formData.email,
         userPhone: formData.phone,
+        city: formData.city,
         interestType: formData.interest
       });
       setSubmitted(true);

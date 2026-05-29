@@ -199,7 +199,7 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
         status: 'Disponibilă acum', engine: 'GPL', transmission: 'Manuală',
         location: 'București', uberCategories: [], boltCategories: [],
         badges: [], description: '',
-        listingSource: 'Închiriat de RIDElance',
+        listingSource: 'Oferit de RIDElance',
         active: !isPoster,
       });
       setLocalImages([]);
@@ -488,7 +488,10 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
                     <TableRow key={lead.id}>
                       <TableCell>
                         <Typography sx={{ fontWeight: 800 }}>{lead.userName}</Typography>
-                        <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle }}>{lead.userEmail} • {lead.userPhone}</Typography>
+                        <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle, display: 'block' }}>{lead.userEmail} • {lead.userPhone}</Typography>
+                        <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.primaryStrong, fontWeight: 700, display: 'block', mt: 0.5 }}>
+                          Oraș: {lead.city} • Opțiune: {lead.interestType}
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>{lead.carName}</Typography>
@@ -680,7 +683,7 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
                     select
                     fullWidth
                     label="Sursă închiriere"
-                    value={editingCar?.listingSource ?? 'Închiriat de RIDElance'}
+                    value={editingCar?.listingSource ?? 'Oferit de RIDElance'}
                     onChange={(e) => setEditingCar({ ...editingCar, listingSource: e.target.value })}
                   >
                     {Object.keys(LISTING_SOURCE_TO_API).map((o) => (
