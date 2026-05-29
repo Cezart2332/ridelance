@@ -1,155 +1,221 @@
-import { Box, Paper, Stack, Typography } from '@mui/material'
+import { Box, Chip, Paper, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 
-import { dashboardMetrics } from '../dashboardData'
-import { TOKENS } from '../../../constants/tokens'
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
+import { PfaIncomeSummary } from '../../dashboard/sections/PfaIncomeSummary'
+import { PfaTaxSummaryWidget } from '../../dashboard/sections/PfaTaxSummaryWidget'
+import { RevenueCharts } from '../../dashboard/sections/RevenueCharts'
+import { DASHBOARD_TOKENS } from '../../dashboard/dashboardTheme'
+import { type DashboardSummary } from '../../../services/user.service'
 
-import iconCash from '../../../assets/SVG/2- Regular/coupon.svg'
-import iconCard from '../../../assets/SVG/2- Regular/credit-card.svg'
-import iconTaxes from '../../../assets/SVG/2- Regular/file.svg'
-import iconBolt from '../../../assets/SVG/2- Regular/users.svg'
-import iconUber from '../../../assets/SVG/2- Regular/users-three.svg'
-import iconTotal from '../../../assets/SVG/2- Regular/chart-pie.svg'
+function pfaStatusChip(status: string | null) {
+  if (!status) return null
+  const map: Record<string, { label: string; color: string; bg: string }> = {
+    Pending:  { label: 'In verificare', color: '#b54708', bg: alpha('#ed6c02', 0.1) },
+    Approved: { label: 'Aprobat',       color: '#2e7d32', bg: alpha('#2e7d32', 0.08) },
+    Rejected: { label: 'Respins',       color: '#b71c1c', bg: alpha('#d32f2f', 0.08) },
+  }
+  const cfg = map[status] ?? { label: status, color: DASHBOARD_TOKENS.textMuted, bg: alpha(DASHBOARD_TOKENS.ink, 0.06) }
+  return (
+    <Chip
+      label={cfg.label}
+      size="small"
+      sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full, color: cfg.color, backgroundColor: cfg.bg }}
+    />
+  )
+}
 
-const xAxisData = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
+function docStatusChip(status: string) {
+  const map: Record<string, { label: string; color: string; bg: string }> = {
+    Verified: { label: 'Verificat',     color: '#2e7d32', bg: alpha('#2e7d32', 0.08) },
+    Pending:  { label: 'In verificare', color: '#b54708', bg: alpha('#ed6c02', 0.10) },
+    Rejected: { label: 'Respins',       color: '#b71c1c', bg: alpha('#d32f2f', 0.08) },
+  }
+  const cfg = map[status] ?? { label: status, color: DASHBOARD_TOKENS.textMuted, bg: alpha(DASHBOARD_TOKENS.ink, 0.06) }
+  return (
+    <Chip
+      label={cfg.label}
+      size="small"
+      sx={{ fontWeight: 700, fontSize: '0.72rem', borderRadius: DASHBOARD_TOKENS.radius.full, color: cfg.color, backgroundColor: cfg.bg }}
+    />
+  )
+}
 
-const demoChartData = xAxisData.map((label, index) => ({
-  name: label,
-  value: [4500, 5200, 4800, 6100, 5900, 7500, 6800, 7200, 6900, 8400, 7800, 9200][index],
-}));
-
-const metricIcons: Record<string, string> = {
-  'Venit cash': iconCash,
-  'Venit card': iconCard,
-  'Taxe estimate': iconTaxes,
-  'Venit Bolt': iconBolt,
-  'Venit Uber': iconUber,
-  'Venit total': iconTotal,
+const mockSummary: DashboardSummary = {
+  pfaRegistrationId: 'demo-registration-id',
+  pfaStatus: 'Approved',
+  pfaRegistrationType: 'AmPfa',
+  pfaCui: 'RO12345678',
+  pfaCertificatId: 'demo-cert-id',
+  pfaCreatedAtUtc: new Date(2026, 0, 15).toISOString(),
+  totalDocuments: 8,
+  approvedDocuments: 6,
+  pendingDocuments: 2,
+  rejectedDocuments: 0,
+  unreadNotifications: 0,
+  recentDocuments: [
+    {
+      id: 'demo-doc-1',
+      originalFileName: 'ci_sofer_demo.jpg',
+      category: 'Carte de Identitate',
+      status: 'Pending',
+      uploadedAtUtc: new Date().toISOString(),
+    },
+    {
+      id: 'demo-doc-2',
+      originalFileName: 'permis_fata_verso.png',
+      category: 'Permis de Conducere',
+      status: 'Verified',
+      uploadedAtUtc: new Date().toISOString(),
+    },
+    {
+      id: 'demo-doc-3',
+      originalFileName: 'cazier_judiciar_curat.pdf',
+      category: 'Cazier Judiciar',
+      status: 'Verified',
+      uploadedAtUtc: new Date().toISOString(),
+    },
+    {
+      id: 'demo-doc-4',
+      originalFileName: 'Certificat_Inregistrare_PFA.pdf',
+      category: 'Certificat de Înregistrare',
+      status: 'Verified',
+      uploadedAtUtc: new Date().toISOString(),
+    },
+  ],
+  venitCash: 1000,
+  venitCard: 1000,
+  venitBolt: 3000,
+  venitUber: 3000,
+  taxeEstimate: 1000,
+  venitTotal: 8000,
+  incomeYear: 2026,
+  incomeMonth: 5, // May
+  revenueChartYear: 2026,
+  monthlyRevenue: [
+    { month: 1, venitTotal: 4500 },
+    { month: 2, venitTotal: 5200 },
+    { month: 3, venitTotal: 4800 },
+    { month: 4, venitTotal: 6100 },
+    { month: 5, venitTotal: 8000 },
+  ],
+  // YTD auto-computed tax breakdown
+  taxYear: 2026,
+  ytdTotalIncome: 8000,
+  ytdDeductibleExpenses: 0,
+  ytdProfit: 8000,
+  ytdCas: 0,
+  ytdCass: 2430,
+  ytdIncomeTax: 557,
+  ytdTotalTax: 2987,
+  ytdNetIncome: 5013,
+  ytdExpenses: [],
 }
 
 export function HomeDashboardView() {
   return (
-    <Stack spacing={4}>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: 24,
-        }}
-      >
-        {dashboardMetrics.map((metric) => (
-          <Paper
-            key={metric.label}
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: TOKENS.radius.xl,
-              border: `1px solid ${TOKENS.border}`,
-              backgroundColor: TOKENS.paper,
-              display: 'flex',
-              flexDirection: 'column',
-              transition: `all 0.3s ${TOKENS.easing}`,
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: TOKENS.shadow.md,
-                borderColor: TOKENS.primary,
-              }
-            }}
-          >
-            <Stack direction="row" sx={{ alignItems: 'center', mb: 2.5 }} spacing={2}>
-              <Box 
-                sx={{ 
-                  p: 1.2, 
-                  borderRadius: TOKENS.radius.lg, 
-                  backgroundColor: alpha(TOKENS.primary, 0.08),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+    <Stack spacing={2.5}>
+      <PfaIncomeSummary
+        venitCash={mockSummary.venitCash ?? 0}
+        venitCard={mockSummary.venitCard ?? 0}
+        venitBolt={mockSummary.venitBolt ?? 0}
+        venitUber={mockSummary.venitUber ?? 0}
+        taxeEstimate={mockSummary.taxeEstimate ?? 0}
+        venitTotal={mockSummary.venitTotal ?? 0}
+        incomeYear={mockSummary.incomeYear}
+        incomeMonth={mockSummary.incomeMonth}
+      />
+
+      <PfaTaxSummaryWidget summary={mockSummary} />
+
+      <RevenueCharts
+        year={mockSummary.revenueChartYear ?? new Date().getFullYear()}
+        monthlyRevenue={mockSummary.monthlyRevenue ?? []}
+        venitCash={mockSummary.venitCash ?? 0}
+        venitCard={mockSummary.venitCard ?? 0}
+        venitBolt={mockSummary.venitBolt ?? 0}
+        venitUber={mockSummary.venitUber ?? 0}
+        incomeMonth={mockSummary.incomeMonth}
+      />
+
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 2 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            gridColumn: { xs: 'span 12', md: 'span 5' },
+            p: 2.5,
+            borderRadius: DASHBOARD_TOKENS.radius.lg,
+            border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+            boxShadow: DASHBOARD_TOKENS.shadow.sm,
+          }}
+        >
+          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 0.5 }}>
+            Status inregistrare PFA
+          </Typography>
+          <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', mb: 2 }}>
+            Starea cererii tale de inregistrare PFA (Demo)
+          </Typography>
+
+          <Stack spacing={1.5}>
+            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>Status</Typography>
+              {pfaStatusChip(mockSummary.pfaStatus)}
+            </Stack>
+            {mockSummary.pfaCreatedAtUtc && (
+              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>Data cererii</Typography>
+                <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.ink, fontSize: '0.9rem' }}>
+                  {new Date(mockSummary.pfaCreatedAtUtc).toLocaleDateString('ro-RO')}
+                </Typography>
+              </Stack>
+            )}
+          </Stack>
+        </Paper>
+
+        <Paper
+          elevation={0}
+          sx={{
+            gridColumn: { xs: 'span 12', md: 'span 7' },
+            p: 2.5,
+            borderRadius: DASHBOARD_TOKENS.radius.lg,
+            border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+            boxShadow: DASHBOARD_TOKENS.shadow.sm,
+          }}
+        >
+          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 0.5 }}>
+            Documente recente
+          </Typography>
+          <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', mb: 2 }}>
+            Ultimele documente incarcate (Demo)
+          </Typography>
+
+          <Stack spacing={1}>
+            {mockSummary.recentDocuments.map((doc) => (
+              <Paper
+                key={doc.id}
+                elevation={0}
+                sx={{
+                  p: 1.4,
+                  borderRadius: DASHBOARD_TOKENS.radius.md,
+                  border: `1px solid ${DASHBOARD_TOKENS.border}`,
+                  backgroundColor: DASHBOARD_TOKENS.surface,
                 }}
               >
-                <img src={metricIcons[metric.label]} alt={metric.label} style={{ width: 24, height: 24, filter: 'invert(31%) sepia(85%) saturate(2853%) hue-rotate(211deg) brightness(98%) contrast(93%)' }} />
-              </Box>
-              <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', fontWeight: 700 }}>
-                {metric.label}
-              </Typography>
-            </Stack>
-            <Typography sx={{ color: TOKENS.ink, fontWeight: 900, fontSize: '1.75rem', letterSpacing: -0.5 }}>
-              {metric.value}
-            </Typography>
-          </Paper>
-        ))}
-      </div>
-
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          borderRadius: TOKENS.radius.xl,
-          border: `1px solid ${TOKENS.border}`,
-          bgcolor: TOKENS.paper,
-        }}
-      >
-        <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-          <Box>
-            <Typography variant="h6" sx={{ color: TOKENS.ink, fontWeight: 800 }}>Analiză Venituri</Typography>
-            <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.85rem', mt: 0.5 }}>
-              Evoluția veniturilor brute pe parcursul anului curent
-            </Typography>
-          </Box>
-        </Stack>
-
-        <Box sx={{ height: 350, width: '100%' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={demoChartData}
-              margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={alpha(TOKENS.border, 0.5)} />
-              <XAxis
-                dataKey="name"
-                tickLine={false}
-                axisLine={false}
-                tick={{
-                  fill: TOKENS.textMuted,
-                  fontSize: 11,
-                  fontWeight: 600,
-                }}
-              />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                tick={{
-                  fill: TOKENS.textMuted,
-                  fontSize: 11,
-                  fontWeight: 600,
-                }}
-                tickFormatter={(v) => `${v} RON`}
-              />
-              <Tooltip
-                cursor={{ fill: alpha(TOKENS.primary, 0.05) }}
-                contentStyle={{
-                  backgroundColor: TOKENS.paper,
-                  borderColor: TOKENS.border,
-                  borderRadius: TOKENS.radius.md,
-                  boxShadow: TOKENS.shadow.sm,
-                }}
-                labelStyle={{ fontWeight: 800, color: TOKENS.ink }}
-                itemStyle={{ color: TOKENS.primary }}
-                formatter={(value: any) => [`${value} RON`, 'Venit']}
-              />
-              <Bar
-                dataKey="value"
-                fill={TOKENS.primary}
-                radius={[4, 4, 0, 0]}
-                maxBarSize={40}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </Box>
-      </Paper>
+                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ overflow: 'hidden', minWidth: 0 }}>
+                    <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700, fontSize: '0.88rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {doc.originalFileName}
+                    </Typography>
+                    <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.75rem' }}>
+                      {doc.category} · {new Date(doc.uploadedAtUtc).toLocaleDateString('ro-RO')}
+                    </Typography>
+                  </Box>
+                  {docStatusChip(doc.status)}
+                </Stack>
+              </Paper>
+            ))}
+          </Stack>
+        </Paper>
+      </Box>
     </Stack>
   )
 }

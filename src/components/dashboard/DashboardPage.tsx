@@ -101,7 +101,7 @@ export default function DashboardPage() {
     if (activeSection === 'home') return <HomeDashboardView />
     if (activeSection === 'cars') return <CarsView />
     if (activeSection === 'profile') return <ProfileTab />
-    if (activeSection === 'documents') return <DocumentsTab />
+    if (activeSection === 'documents') return <DocumentsTab onNavigate={setActiveSection} />
     if (activeSection === 'support') return <SupportChatTab />
     if (activeSection === 'abonamente') return <AbonamenteTab />
     if (activeSection === 'servicii') return <ServiciiTab />

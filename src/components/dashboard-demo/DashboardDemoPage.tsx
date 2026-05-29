@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { defaultExpenses, dashboardInitialChat } from './dashboardData'
 import type { ChatMessage } from './types'
 import { DocumentsTab } from './sections/DocumentsTab'
@@ -79,7 +79,7 @@ export default function DashboardDemoPage() {
     }
 
     if (activeSection === 'documents') {
-      return <DocumentsTab />
+      return <DocumentsTab onNavigate={setActiveSection} />
     }
 
     if (activeSection === 'support') {
