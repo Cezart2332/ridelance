@@ -13,8 +13,8 @@ export const loremLongText =
   'Lorem ipsum dolor sit amet consectetur adipisicing elit. Distinctio ipsa ducimus, ipsam pariatur hic possimus aliquam eaque similique nostrum! Vero veniam earum sint sapiente ut. Quae aspernatur assumenda aliquam pariatur suscipit in porro ipsam.'
 
 export const navItems = [
-  { label: 'Mașini', path: '/masini' },
   { label: 'Servicii', path: '/servicii' },
+  { label: 'Mașini', path: '/masini' },
   { label: 'Abonamente', path: '/abonamente-preturi' },
   { label: 'Fiscal', path: '/fiscal' },
   { label: 'Parteneri', path: '/parteneri' },
