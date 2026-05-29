@@ -224,7 +224,6 @@ export default function AppSidebar({
           px: 1,
           py: 1.6,
           borderBottom: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.06)}`,
-          background: `linear-gradient(180deg, ${alpha(DASHBOARD_TOKENS.primary, 0.09)} 0%, transparent 70%)`,
           borderRadius: DASHBOARD_TOKENS.radius.md,
         }}
       >

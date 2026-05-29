@@ -45,39 +45,13 @@ export function HomePage() {
             gap: { xs: 4, md: 6 },
             p: { xs: 3, sm: 4, md: 6 },
             borderRadius: TOKENS.radius.xl,
-            background: `linear-gradient(135deg, #ffffff 0%, #f7f9fc 100%)`,
+            backgroundColor: '#ffffff',
             boxShadow: '0 10px 40px rgba(0, 0, 0, 0.03)',
             border: `1px solid ${alpha(TOKENS.ink, 0.05)}`,
             position: 'relative',
             overflow: 'hidden',
           }}
         >
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -120,
-              right: -120,
-              width: 320,
-              height: 320,
-              borderRadius: '50%',
-              background: `radial-gradient(circle, ${alpha(TOKENS.primary, 0.18)} 0%, transparent 70%)`,
-              filter: 'blur(30px)',
-              pointerEvents: 'none',
-            }}
-          />
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: -150,
-              left: -100,
-              width: 350,
-              height: 350,
-              borderRadius: '50%',
-              background: `radial-gradient(circle, ${alpha(TOKENS.primaryStrong, 0.08)} 0%, transparent 70%)`,
-              filter: 'blur(40px)',
-              pointerEvents: 'none',
-            }}
-          />
 
           <Box
             sx={{

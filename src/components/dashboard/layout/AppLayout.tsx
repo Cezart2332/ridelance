@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Box } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import AppSidebar from './AppSidebar';
 import AppHeader from './AppHeader';
@@ -27,7 +26,6 @@ export default function AppLayout({ children, activeSection, setActiveSection, s
         display: 'flex',
         minHeight: '100vh',
         backgroundColor: DASHBOARD_TOKENS.surface,
-        backgroundImage: `radial-gradient(circle at 100% 0, ${alpha(DASHBOARD_TOKENS.primary, 0.08)} 0%, transparent 40%)`,
       }}
     >
       <AppSidebar 

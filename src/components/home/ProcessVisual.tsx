@@ -170,7 +170,7 @@ export function ProcessVisual() {
                   transform: 'translate(-50%, -50%)',
                   width: { xs: i * 150, md: i * 200 },
                   height: { xs: i * 150, md: i * 200 },
-                  border: `1px solid ${alpha(TOKENS.primary, 0.08)}`,
+                  border: `1px solid ${alpha(TOKENS.primary, 0.25)}`,
                   borderRadius: '50%',
                 }}
               />
