@@ -163,11 +163,11 @@ export function CarsPage() {
                   fontWeight: 800,
                   fontSize: '1.05rem',
                   textTransform: 'none',
-                  boxShadow: TOKENS.shadow.glow,
+                  boxShadow: 'none',
                   '&:hover': {
                     backgroundColor: TOKENS.primaryStrong,
                     transform: 'translateY(-2px)',
-                    boxShadow: TOKENS.shadow.xl,
+                    boxShadow: 'none',
                   }
                 }}
               >

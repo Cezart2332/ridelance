@@ -251,39 +251,41 @@ export function RecurringDocumentationPanel({
                   )}
 
                   <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                    <Button
-                      variant="contained"
-                      component="label"
-                      size="small"
-                      disabled={uploadingCategory === item.category}
-                      startIcon={
-                        uploadingCategory === item.category ? (
-                          <CircularProgress size={16} color="inherit" />
-                        ) : (
-                          <UploadRoundedIcon sx={{ fontSize: 18 }} />
-                        )
-                      }
-                      sx={{
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        borderRadius: DASHBOARD_TOKENS.radius.full,
-                        bgcolor: DASHBOARD_TOKENS.primary,
-                        boxShadow: 'none',
-                        '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong },
-                      }}
-                    >
-                      {doc ? 'Reîncarcă' : 'Încarcă'}
-                      <input
-                        type="file"
-                        hidden
-                        accept=".pdf,.png,.jpg,.jpeg,.webp"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (file) void handleUpload(item.category, file, item.label)
-                          e.target.value = ''
+                    {!isContabil && (
+                      <Button
+                        variant="contained"
+                        component="label"
+                        size="small"
+                        disabled={uploadingCategory === item.category}
+                        startIcon={
+                          uploadingCategory === item.category ? (
+                            <CircularProgress size={16} color="inherit" />
+                          ) : (
+                            <UploadRoundedIcon sx={{ fontSize: 18 }} />
+                          )
+                        }
+                        sx={{
+                          textTransform: 'none',
+                          fontWeight: 700,
+                          borderRadius: DASHBOARD_TOKENS.radius.full,
+                          bgcolor: DASHBOARD_TOKENS.primary,
+                          boxShadow: 'none',
+                          '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong },
                         }}
-                      />
-                    </Button>
+                      >
+                        {doc ? 'Reîncarcă' : 'Încarcă'}
+                        <input
+                          type="file"
+                          hidden
+                          accept=".pdf,.png,.jpg,.jpeg,.webp"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) void handleUpload(item.category, file, item.label)
+                            e.target.value = ''
+                          }}
+                        />
+                      </Button>
+                    )}
 
                     {doc && (
                       <>

@@ -21,7 +21,7 @@ export default function CarPriceDisplay({
   const priceFontSize = size === 'card' ? undefined : '1.25rem';
 
   return (
-    <Box>
+    <Box sx={{ minHeight: size === 'card' ? 92 : 84 }}>
       {discounted && (
         <Typography
           sx={{

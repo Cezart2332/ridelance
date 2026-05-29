@@ -45,9 +45,9 @@ export function HomePage() {
             gap: { xs: 4, md: 6 },
             p: { xs: 3, sm: 4, md: 6 },
             borderRadius: TOKENS.radius.xl,
-            background: `linear-gradient(135deg, ${TOKENS.paper} 0%, ${TOKENS.surfaceAlt} 100%)`,
-            boxShadow: TOKENS.shadow.md,
-            border: `1px solid ${TOKENS.border}`,
+            background: `linear-gradient(135deg, #ffffff 0%, #f7f9fc 100%)`,
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.03)',
+            border: `1px solid ${alpha(TOKENS.ink, 0.05)}`,
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -55,12 +55,26 @@ export function HomePage() {
           <Box
             sx={{
               position: 'absolute',
-              top: -80,
-              right: -80,
-              width: 300,
-              height: 300,
+              top: -120,
+              right: -120,
+              width: 320,
+              height: 320,
               borderRadius: '50%',
-              background: `radial-gradient(circle, ${alpha(TOKENS.primary, 0.06)} 0%, transparent 70%)`,
+              background: `radial-gradient(circle, ${alpha(TOKENS.primary, 0.18)} 0%, transparent 70%)`,
+              filter: 'blur(30px)',
+              pointerEvents: 'none',
+            }}
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: -150,
+              left: -100,
+              width: 350,
+              height: 350,
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${alpha(TOKENS.primaryStrong, 0.08)} 0%, transparent 70%)`,
+              filter: 'blur(40px)',
               pointerEvents: 'none',
             }}
           />
@@ -90,9 +104,14 @@ export function HomePage() {
             <Typography
               variant="h1"
               sx={{
-                fontSize: { xs: '1.9rem', sm: '2.4rem', md: '3rem' },
+                fontSize: { xs: '2.2rem', sm: '3rem', md: '3.6rem' },
+                fontWeight: 900,
+                letterSpacing: '-0.035em',
+                lineHeight: 1.1,
+                color: TOKENS.ink,
                 maxWidth: 1000,
                 mx: { xs: 'auto', md: 0 },
+                textWrap: 'balance',
               }}
             >
               Totul într-un singur loc.
@@ -125,14 +144,18 @@ export function HomePage() {
                 size="large"
                 onClick={() => navigate('/abonamente-preturi')}
                 sx={{
-                  px: 4,
-                  py: 1.4,
-                  fontSize: '1.05rem',
-                  fontWeight: 700,
-                  boxShadow: TOKENS.shadow.glow,
+                  px: 4.5,
+                  py: 1.6,
+                  fontSize: '1.02rem',
+                  fontWeight: 800,
+                  borderRadius: TOKENS.radius.lg,
+                  boxShadow: 'none',
                   backgroundColor: TOKENS.primary,
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                   '&:hover': {
                     backgroundColor: TOKENS.primaryStrong,
+                    boxShadow: 'none',
+                    transform: 'translateY(-2px)',
                   },
                 }}
               >
@@ -143,16 +166,18 @@ export function HomePage() {
                 size="large"
                 onClick={handleStart}
                 sx={{
-                  px: 4,
-                  py: 1.4,
-                  fontSize: '1.05rem',
-                  fontWeight: 700,
+                  px: 4.5,
+                  py: 1.6,
+                  fontSize: '1.02rem',
+                  fontWeight: 800,
+                  borderRadius: TOKENS.radius.lg,
                   color: TOKENS.ink,
-                  borderColor: TOKENS.borderHover,
-                  backgroundColor: TOKENS.paper,
+                  borderColor: alpha(TOKENS.ink, 0.12),
+                  backgroundColor: 'transparent',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                   '&:hover': {
-                    borderColor: alpha(TOKENS.ink, 0.25),
-                    backgroundColor: TOKENS.paper,
+                    borderColor: alpha(TOKENS.ink, 0.4),
+                    backgroundColor: 'rgba(0, 0, 0, 0.02)',
                     transform: 'translateY(-2px)',
                   },
                 }}
@@ -233,10 +258,10 @@ export function HomePage() {
         sx={{
           width: '100%',
           mt: { xs: 8, md: 12 },
-          py: { xs: 7, md: 10 },
+          py: { xs: 8, md: 14 },
           backgroundColor: TOKENS.surfaceAlt,
-          borderTop: `1px solid ${TOKENS.border}`,
-          borderBottom: `1px solid ${TOKENS.border}`,
+          borderTop: `1px solid ${alpha(TOKENS.ink, 0.04)}`,
+          borderBottom: `1px solid ${alpha(TOKENS.ink, 0.04)}`,
         }}
       >
         <Container maxWidth="xl">
@@ -248,7 +273,8 @@ export function HomePage() {
             sx={{
               display: 'grid',
               gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' },
-              gap: 3,
+              gap: 3.5,
+              pt: { xs: 0, md: 4 },
             }}
           >
             {homeSec3.map((card, index) => (
@@ -257,26 +283,49 @@ export function HomePage() {
                 elevation={0}
                 sx={{
                   height: '100%',
-                  borderRadius: TOKENS.radius.lg,
-                  border: `1px solid ${TOKENS.border}`,
-                  boxShadow: 'none',
-                  transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
+                  borderRadius: TOKENS.radius.xl,
+                  border: `1px solid ${alpha(TOKENS.ink, 0.05)}`,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.01)',
+                  backgroundColor: TOKENS.paper,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transform: { md: index % 2 === 0 ? 'translateY(0)' : 'translateY(16px)' },
+                  transition: `all 0.4s cubic-bezier(0.16, 1, 0.3, 1)`,
                   '&:hover': {
-                    boxShadow: TOKENS.shadow.sm,
-                    borderColor: TOKENS.borderHover,
+                    transform: {
+                      xs: 'translateY(-4px)',
+                      md: index % 2 === 0 ? 'translateY(-6px)' : 'translateY(10px)',
+                    },
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.04)',
+                    borderColor: TOKENS.primaryStrong,
                   },
                 }}
               >
                 <CardContent
                   sx={{
-                    p: { xs: 3, md: 4 },
+                    p: { xs: 4, md: 4.5 },
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     textAlign: 'center',
-                    gap: 2,
+                    gap: 2.5,
                   }}
                 >
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 10,
+                      right: 16,
+                      fontSize: '3.5rem',
+                      fontWeight: 900,
+                      color: alpha(TOKENS.primary, 0.12),
+                      userSelect: 'none',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    {`0${index + 1}`}
+                  </Box>
+
                   <Box
                     sx={{
                       width: 100,
@@ -285,6 +334,7 @@ export function HomePage() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       mb: 1,
+                      zIndex: 1,
                     }}
                   >
                     <Box
@@ -299,7 +349,7 @@ export function HomePage() {
                   </Box>
                   <Typography
                     variant="h6"
-                    sx={{ fontWeight: 750, color: TOKENS.ink, lineHeight: 1.3 }}
+                    sx={{ fontWeight: 800, color: TOKENS.ink, lineHeight: 1.3, zIndex: 1 }}
                   >
                     {card.title}
                   </Typography>
@@ -308,6 +358,7 @@ export function HomePage() {
                       color: TOKENS.textMuted,
                       fontSize: '0.92rem',
                       lineHeight: 1.65,
+                      zIndex: 1,
                     }}
                   >
                     {card.text}
@@ -342,23 +393,49 @@ export function HomePage() {
                 display: 'flex',
                 flexDirection: 'column',
                 p: { xs: 3, md: 4.5 },
-                borderRadius: TOKENS.radius.xs,
+                borderRadius: TOKENS.radius.xl,
                 backgroundColor: TOKENS.paper,
+                position: 'relative',
                 border:
                   index === 2
-                    ? `2px solid ${TOKENS.primary}`
-                    : `1px solid ${TOKENS.border}`,
+                    ? `1.5px solid ${TOKENS.primaryStrong}`
+                    : `1px solid ${alpha(TOKENS.ink, 0.06)}`,
                 boxShadow:
-                  index === 2 ? TOKENS.shadow.glow : 'none',
-                transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
+                  index === 2
+                    ? '0 16px 40px rgba(92,203,245,0.14)'
+                    : '0 4px 20px rgba(0,0,0,0.01)',
+                transition: `all 0.3s cubic-bezier(0.16, 1, 0.3, 1)`,
                 '&:hover': {
                   boxShadow:
                     index === 2
-                      ? '0 8px 32px rgba(26,100,237,0.18)'
-                      : TOKENS.shadow.md,
+                      ? '0 24px 50px rgba(92,203,245,0.22)'
+                      : '0 16px 36px rgba(0,0,0,0.04)',
+                  transform: 'translateY(-4px)',
                 },
               }}
             >
+              {index === 2 && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 16,
+                    right: 16,
+                    bgcolor: TOKENS.primaryStrong,
+                    color: '#fff',
+                    px: 1.8,
+                    py: 0.5,
+                    borderRadius: TOKENS.radius.sm,
+                    fontSize: '0.68rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    boxShadow: '0 4px 12px rgba(92,203,245,0.2)',
+                  }}
+                >
+                  Recomandat
+                </Box>
+              )}
+
               <CardContent
                 sx={{
                   p: 0,
@@ -368,7 +445,7 @@ export function HomePage() {
                   gap: 2.5,
                 }}
               >
-                <Box>
+                <Box sx={{ minHeight: { xs: 'auto', md: 105 } }}>
                   <Typography
                     variant="h5"
                     sx={{
@@ -383,7 +460,7 @@ export function HomePage() {
                     sx={{
                       color: TOKENS.primaryStrong,
                       fontWeight: 800,
-                      fontSize: '1.15rem',
+                      fontSize: '1.25rem',
                       mt: 0.5,
                     }}
                   >
@@ -473,18 +550,24 @@ export function HomePage() {
                   size="large"
                   sx={{
                     mt: 2,
-                    py: 1.3,
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                    borderRadius: TOKENS.radius.full,
-                    boxShadow: index === 2 ? TOKENS.shadow.glow : 'none',
+                    py: 1.4,
+                    fontWeight: 800,
+                    fontSize: '0.95rem',
+                    borderRadius: TOKENS.radius.lg,
+                    boxShadow: 'none',
+                    transition: 'all 0.2s ease',
+                    color: index === 2 ? '#fff' : TOKENS.ink,
+                    borderColor: index === 2 ? 'transparent' : alpha(TOKENS.ink, 0.12),
                     '&:hover':
                       index === 2
                         ? {
-                          boxShadow: '0 12px 40px rgba(26,100,237,0.25)',
-                          transform: 'translateY(-1px)',
+                          backgroundColor: TOKENS.primaryStrong,
+                          boxShadow: 'none',
                         }
-                        : { backgroundColor: alpha(TOKENS.primary, 0.04) },
+                        : {
+                          borderColor: alpha(TOKENS.ink, 0.3),
+                          backgroundColor: alpha(TOKENS.ink, 0.01),
+                        },
                   }}
                 >
                   {item.cta}
@@ -500,10 +583,10 @@ export function HomePage() {
         sx={{
           width: '100%',
           mt: { xs: 8, md: 10 },
-          py: { xs: 7, md: 10 },
+          py: { xs: 8, md: 12 },
           backgroundColor: TOKENS.surfaceAlt,
-          borderTop: `1px solid ${TOKENS.border}`,
-          borderBottom: `1px solid ${TOKENS.border}`,
+          borderTop: `1px solid ${alpha(TOKENS.ink, 0.04)}`,
+          borderBottom: `1px solid ${alpha(TOKENS.ink, 0.04)}`,
         }}
       >
         <Container maxWidth="lg">
@@ -513,12 +596,10 @@ export function HomePage() {
           />
           <Box
             sx={{
-              display: 'flex',
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              gap: 4,
-              justifyContent: 'center',
-              maxWidth: 1300,
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+              gap: 3.5,
+              maxWidth: 1200,
               mx: 'auto',
             }}
           >
@@ -527,17 +608,20 @@ export function HomePage() {
                 key={i}
                 elevation={0}
                 sx={{
-                  p: 4,
-                  borderRadius: TOKENS.radius.lg,
-                  border: `1px solid ${TOKENS.border}`,
+                  p: 4.5,
+                  borderRadius: TOKENS.radius.xl,
+                  border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
+                  backgroundColor: TOKENS.paper,
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 2,
-                  flex: '1 1 280px',
-                  maxWidth: 420,
-                  transition: `border-color ${TOKENS.duration} ${TOKENS.easing}`,
+                  gap: 2.5,
+                  justifyContent: 'space-between',
+                  minHeight: 280,
+                  transition: `all 0.3s cubic-bezier(0.16, 1, 0.3, 1)`,
                   '&:hover': {
-                    borderColor: TOKENS.borderHover,
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 16px 36px rgba(0,0,0,0.04)',
+                    borderColor: TOKENS.primaryStrong,
                   },
                 }}
               >
@@ -708,7 +792,7 @@ export function HomePage() {
                 fontWeight: 700,
                 borderRadius: TOKENS.radius.full,
                 backgroundColor: TOKENS.primary,
-                boxShadow: TOKENS.shadow.glow,
+                boxShadow: 'none',
                 '&:hover': {
                   backgroundColor: TOKENS.primaryStrong,
                   transform: 'translateY(-2px)',
@@ -724,8 +808,8 @@ export function HomePage() {
             elevation={0}
             sx={{
               borderRadius: TOKENS.radius.xl,
-              border: `2px solid ${TOKENS.primary}`, // PRO border style
-              boxShadow: TOKENS.shadow.xl,
+              border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
+              boxShadow: '0 10px 40px rgba(0,0,0,0.02)',
               overflow: 'hidden',
               backgroundColor: TOKENS.paper,
             }}
@@ -734,8 +818,8 @@ export function HomePage() {
               sx={{
                 display: { xs: 'none', md: 'grid' },
                 gridTemplateColumns: '1.5fr 1fr 1fr',
-                backgroundColor: alpha(TOKENS.surfaceAlt, 0.8),
-                borderBottom: `1px solid ${TOKENS.border}`,
+                backgroundColor: alpha(TOKENS.surfaceAlt, 0.6),
+                borderBottom: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
                 p: 2.5,
               }}
             >
@@ -759,7 +843,7 @@ export function HomePage() {
                   gridTemplateColumns: { md: '1.5fr 1fr 1fr' },
                   gap: { xs: 1.5, md: 0 },
                   p: 2.5,
-                  borderBottom: i === economyComparison.length - 1 ? 'none' : `1px solid ${TOKENS.border}`,
+                  borderBottom: i === economyComparison.length - 1 ? 'none' : `1px solid ${alpha(TOKENS.ink, 0.05)}`,
                   transition: 'background-color 0.2s ease',
                   '&:hover': {
                     backgroundColor: alpha(TOKENS.surfaceAlt, 0.3),
@@ -833,36 +917,40 @@ export function HomePage() {
       <Box
         sx={{
           width: '100%',
-          background: `linear-gradient(145deg, #111827 0%, #1a1a2e 100%)`,
+          background: 'radial-gradient(circle at 10% 20%, #1b223c 0%, #0d0e15 100%)',
           color: '#FFFFFF',
           py: { xs: 8, md: 12 },
           position: 'relative',
           overflow: 'hidden',
+          borderTop: `1px solid rgba(255, 255, 255, 0.08)`,
+          borderBottom: `1px solid rgba(255, 255, 255, 0.08)`,
         }}
       >
         <Box
           sx={{
             position: 'absolute',
-            top: -100,
-            right: -100,
-            width: 400,
-            height: 400,
+            top: -150,
+            right: -150,
+            width: 500,
+            height: 500,
             borderRadius: '50%',
             background:
-              'radial-gradient(circle, rgba(26,100,237,0.15) 0%, transparent 70%)',
+              'radial-gradient(circle, rgba(92,203,245,0.12) 0%, transparent 75%)',
+            filter: 'blur(50px)',
             pointerEvents: 'none',
           }}
         />
         <Box
           sx={{
             position: 'absolute',
-            bottom: -80,
-            left: -80,
-            width: 350,
-            height: 350,
+            bottom: -100,
+            left: -100,
+            width: 400,
+            height: 400,
             borderRadius: '50%',
             background:
-              'radial-gradient(circle, rgba(26,100,237,0.1) 0%, transparent 70%)',
+              'radial-gradient(circle, rgba(92,203,245,0.06) 0%, transparent 75%)',
+            filter: 'blur(45px)',
             pointerEvents: 'none',
           }}
         />
@@ -871,8 +959,8 @@ export function HomePage() {
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' },
-              gap: { xs: 5, md: 8 },
+              gridTemplateColumns: { xs: '1fr', md: '0.8fr 1.2fr' },
+              gap: { xs: 5, md: 6 },
               alignItems: 'center',
             }}
           >
@@ -880,10 +968,11 @@ export function HomePage() {
               <Typography
                 variant="h2"
                 sx={{
-                  fontWeight: 800,
+                  fontWeight: 900,
                   mb: 2.5,
                   fontSize: { xs: '1.8rem', md: '2.8rem' },
-                  lineHeight: 1.12,
+                  lineHeight: 1.15,
+                  letterSpacing: '-0.02em',
                   color: '#fff',
                 }}
               >
@@ -897,7 +986,7 @@ export function HomePage() {
                   fontSize: '1.05rem',
                   mb: 4,
                   maxWidth: 480,
-                  lineHeight: 1.7,
+                  lineHeight: 1.75,
                 }}
               >
                 Dashboardul RIDElance este gândit pentru activitatea reală a unui șofer care lucrează pe cont propriu.
@@ -938,8 +1027,8 @@ export function HomePage() {
                     />
                     <Typography
                       sx={{
-                        fontWeight: 450,
-                        color: alpha('#fff', 0.88),
+                        fontWeight: 500,
+                        color: alpha('#fff', 0.9),
                         fontSize: '0.95rem',
                       }}
                     >
@@ -954,17 +1043,18 @@ export function HomePage() {
                 onClick={() => navigate('/demo')}
                 sx={{
                   backgroundColor: TOKENS.primary,
-                  color: '#fff',
-                  borderRadius: TOKENS.radius.full,
-                  px: 4,
-                  py: 1.4,
-                  fontWeight: 700,
-                  fontSize: '1.05rem',
-                  boxShadow: TOKENS.shadow.glow,
+                  color: TOKENS.ink,
+                  borderRadius: TOKENS.radius.lg,
+                  px: 4.5,
+                  py: 1.6,
+                  fontWeight: 800,
+                  fontSize: '1.02rem',
+                  boxShadow: 'none',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                   '&:hover': {
                     backgroundColor: TOKENS.primaryStrong,
+                    boxShadow: 'none',
                     transform: 'translateY(-2px)',
-                    boxShadow: '0 12px 40px rgba(26,100,237,0.3)',
                   },
                 }}
               >
@@ -976,15 +1066,59 @@ export function HomePage() {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
+                width: '100%',
               }}
             >
               <Box
-                component="img"
-                src={dashboard}
                 sx={{
                   width: '100%',
+                  borderRadius: TOKENS.radius.xl,
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  boxShadow: '0 24px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(92,203,245,0.06)',
+                  overflow: 'hidden',
+                  backgroundColor: '#1b223c',
                 }}
-              />
+              >
+                {/* Browser bar header mockup */}
+                <Box
+                  sx={{
+                    height: 36,
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    px: 2,
+                    gap: 1,
+                  }}
+                >
+                  <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#ff5f56' }} />
+                  <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#ffbd2e' }} />
+                  <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#27c93f' }} />
+                  <Box
+                    sx={{
+                      mx: 'auto',
+                      height: 18,
+                      width: '45%',
+                      borderRadius: 1,
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.15)', mr: 0.8 }} />
+                    <Box sx={{ height: 4, width: 80, borderRadius: 0.5, backgroundColor: 'rgba(255, 255, 255, 0.15)' }} />
+                  </Box>
+                </Box>
+                <Box
+                  component="img"
+                  src={dashboard}
+                  sx={{
+                    width: '100%',
+                    display: 'block',
+                  }}
+                />
+              </Box>
             </Box>
           </Box>
         </Container>
@@ -1054,13 +1188,17 @@ export function HomePage() {
               key={index}
               elevation={0}
               sx={{
-                mb: 2,
-                border: `1px solid ${TOKENS.border}`,
-                borderRadius: `${TOKENS.radius.md}px !important`,
+                mb: 2.2,
+                border: `1px solid ${alpha(TOKENS.border, 0.8)}`,
+                borderRadius: `${TOKENS.radius.lg}px !important`,
                 overflow: 'hidden',
                 backgroundColor: TOKENS.paper,
-                transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-                '&:hover': { borderColor: TOKENS.borderHover },
+                boxShadow: '0 4px 15px rgba(0,0,0,0.01)',
+                transition: `all 0.3s cubic-bezier(0.16, 1, 0.3, 1)`,
+                '&:hover': {
+                  borderColor: TOKENS.primaryStrong,
+                  boxShadow: '0 10px 28px rgba(0,0,0,0.03)',
+                },
                 '&:before': { display: 'none' },
               }}
             >
@@ -1095,18 +1233,20 @@ export function HomePage() {
         sx={{
           width: '100%',
           mt: { xs: 8, md: 12 },
-          py: { xs: 7, md: 10 },
+          py: { xs: 8, md: 12 },
           textAlign: 'center',
-          backgroundColor: TOKENS.surfaceAlt,
+          background: `linear-gradient(135deg, ${TOKENS.surfaceAlt} 0%, #edf1f7 100%)`,
+          borderTop: `1px solid ${alpha(TOKENS.ink, 0.04)}`,
         }}
       >
         <Container maxWidth="md">
           <Typography
             variant="h2"
             sx={{
-              fontWeight: 800,
+              fontWeight: 900,
               fontSize: { xs: '1.7rem', md: '2.4rem' },
               mb: 3,
+              letterSpacing: '-0.02em',
               color: TOKENS.ink,
             }}
           >
@@ -1123,14 +1263,17 @@ export function HomePage() {
               onClick={() => navigate('/abonamente-preturi')}
               sx={{
                 px: 5,
-                py: 1.4,
-                borderRadius: TOKENS.radius.full,
-                fontWeight: 700,
-                fontSize: '1.05rem',
-                boxShadow: TOKENS.shadow.glow,
+                py: 1.5,
+                borderRadius: TOKENS.radius.lg,
+                fontWeight: 800,
+                fontSize: '1.02rem',
+                boxShadow: 'none',
+                backgroundColor: TOKENS.primary,
+                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                 '&:hover': {
+                  backgroundColor: TOKENS.primaryStrong,
                   transform: 'translateY(-2px)',
-                  boxShadow: '0 12px 40px rgba(26,100,237,0.25)',
+                  boxShadow: 'none',
                 },
               }}
             >
@@ -1141,15 +1284,17 @@ export function HomePage() {
               size="large"
               sx={{
                 px: 5,
-                py: 1.4,
-                borderRadius: TOKENS.radius.full,
-                fontWeight: 700,
-                fontSize: '1.05rem',
-                borderColor: TOKENS.borderHover,
+                py: 1.5,
+                borderRadius: TOKENS.radius.lg,
+                fontWeight: 800,
+                fontSize: '1.02rem',
+                borderColor: alpha(TOKENS.ink, 0.12),
                 color: TOKENS.ink,
+                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                 '&:hover': {
-                  borderColor: alpha(TOKENS.ink, 0.25),
-                  backgroundColor: alpha(TOKENS.ink, 0.02),
+                  borderColor: alpha(TOKENS.ink, 0.35),
+                  backgroundColor: alpha(TOKENS.ink, 0.015),
+                  transform: 'translateY(-2px)',
                 },
               }}
             >

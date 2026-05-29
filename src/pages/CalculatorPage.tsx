@@ -147,11 +147,11 @@ export function CalculatorPage() {
                       borderRadius: TOKENS.radius.full,
                       fontWeight: 700,
                       fontSize: '1rem',
-                      boxShadow: TOKENS.shadow.glow,
+                      boxShadow: 'none',
                       '&:hover': {
                         backgroundColor: TOKENS.primaryStrong,
                         transform: 'translateY(-2px)',
-                        boxShadow: '0 8px 24px rgba(92,203,245,0.3)',
+                        boxShadow: 'none',
                       },
                     }}
                   >

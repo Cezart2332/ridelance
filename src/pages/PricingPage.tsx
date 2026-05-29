@@ -6,9 +6,16 @@ import { SectionHeader } from '../components/common/SectionHeader'
 import { pricingCards } from '../data/constants'
 import { pageFrameSx } from '../constants/layout'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
+import { useAppSelector } from '../store/hooks'
 
 export function PricingPage() {
   const navigate = useNavigate()
+  const { accessToken, isInitialized } = useAppSelector((s) => s.auth)
+
+  const handleStart = () => {
+    if (!isInitialized) return
+    navigate(accessToken ? '/app' : '/auth')
+  }
 
   return (
     <Box sx={pageFrameSx}>
@@ -51,24 +58,49 @@ export function PricingPage() {
                   display: 'flex',
                   flexDirection: 'column',
                   p: { xs: 3, md: 4.5 },
-                  borderRadius: TOKENS.radius.sm,
+                  borderRadius: TOKENS.radius.xl,
                   backgroundColor: TOKENS.paper,
+                  position: 'relative',
                   border:
                     index === 2
-                      ? `2px solid ${TOKENS.primary}`
-                      : `1px solid ${TOKENS.border}`,
+                      ? `1.5px solid ${TOKENS.primaryStrong}`
+                      : `1px solid ${alpha(TOKENS.ink, 0.06)}`,
                   boxShadow:
-                    index === 2 ? TOKENS.shadow.glow : TOKENS.shadow.md,
-                  transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
+                    index === 2
+                      ? '0 16px 40px rgba(92,203,245,0.14)'
+                      : '0 4px 20px rgba(0,0,0,0.01)',
+                  transition: `all 0.3s cubic-bezier(0.16, 1, 0.3, 1)`,
                   '&:hover': {
-                    transform: 'translateY(-6px)',
+                    transform: 'translateY(-4px)',
                     boxShadow:
                       index === 2
-                        ? '0 20px 56px rgba(26,100,237,0.2)'
-                        : TOKENS.shadow.lg,
+                        ? '0 24px 50px rgba(92,203,245,0.22)'
+                        : '0 16px 36px rgba(0,0,0,0.04)',
                   },
                 }}
               >
+                {index === 2 && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 16,
+                      right: 16,
+                      bgcolor: TOKENS.primaryStrong,
+                      color: '#fff',
+                      px: 1.8,
+                      py: 0.5,
+                      borderRadius: TOKENS.radius.sm,
+                      fontSize: '0.68rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      boxShadow: '0 4px 12px rgba(92,203,245,0.2)',
+                    }}
+                  >
+                    Recomandat
+                  </Box>
+                )}
+
                 <CardContent
                   sx={{
                     p: 0,
@@ -80,12 +112,12 @@ export function PricingPage() {
                     gap: 2.5,
                   }}
                 >
-                  <Box>
+                  <Box sx={{ minHeight: { xs: 'auto', md: 105 } }}>
                     <Typography
                       variant="h5"
                       sx={{
                         fontWeight: 800,
-                        fontSize: '1.3rem',
+                        fontSize: '1.35rem',
                         color: TOKENS.ink,
                       }}
                     >
@@ -95,7 +127,7 @@ export function PricingPage() {
                       sx={{
                         color: TOKENS.primaryStrong,
                         fontWeight: 800,
-                        fontSize: '1.15rem',
+                        fontSize: '1.25rem',
                         mt: 0.5,
                       }}
                     >
@@ -113,17 +145,17 @@ export function PricingPage() {
                         {item.priceNote}
                       </Typography>
                     )}
-                    <Typography
-                      sx={{
-                        color: TOKENS.textMuted,
-                        fontSize: '0.95rem',
-                        mt: 1.2,
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {item.summary}
-                    </Typography>
                   </Box>
+
+                  <Typography
+                    sx={{
+                      color: TOKENS.textMuted,
+                      fontSize: '0.95rem',
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {item.summary}
+                  </Typography>
 
                   <Box
                     component="ul"
@@ -136,13 +168,15 @@ export function PricingPage() {
                       flexDirection: 'column',
                       textAlign: 'left',
                       gap: 1.2,
+                      flexGrow: 1,
                     }}
                   >
                     {item.intro && (
                       <Typography
                         sx={{
                           fontSize: '0.9rem',
-                          color: TOKENS.textMuted,
+                          fontWeight: 700,
+                          color: TOKENS.ink,
                           pr: 1.2,
                         }}
                       >
@@ -194,23 +228,30 @@ export function PricingPage() {
                   )}
 
                   <Button
-                    variant="contained"
+                    onClick={handleStart}
+                    variant={index === 2 ? 'contained' : 'outlined'}
                     fullWidth
                     size="large"
-                    onClick={() => navigate('/auth')}
                     sx={{
                       mt: 'auto',
-                      py: 1.2,
-                      fontWeight: 700,
+                      py: 1.4,
+                      fontWeight: 800,
                       fontSize: '0.95rem',
-                      borderRadius: TOKENS.radius.full,
-                      color: '#fff',
-                      backgroundColor: TOKENS.primary,
-                      boxShadow: TOKENS.shadow.glow,
-                      '&:hover': {
-                        backgroundColor: TOKENS.primaryStrong,
-                        transform: 'translateY(-2px)',
-                      },
+                      borderRadius: TOKENS.radius.lg,
+                      boxShadow: 'none',
+                      transition: 'all 0.2s ease',
+                      color: index === 2 ? '#fff' : TOKENS.ink,
+                      borderColor: index === 2 ? 'transparent' : alpha(TOKENS.ink, 0.12),
+                      '&:hover':
+                        index === 2
+                          ? {
+                            backgroundColor: TOKENS.primaryStrong,
+                            boxShadow: 'none',
+                          }
+                          : {
+                            borderColor: alpha(TOKENS.ink, 0.3),
+                            backgroundColor: alpha(TOKENS.ink, 0.01),
+                          },
                     }}
                   >
                     {item.cta}

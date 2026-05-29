@@ -46,6 +46,7 @@ export function CarCarousel() {
         <Box 
           sx={{ 
             display: 'flex', 
+            alignItems: 'stretch',
             gap: 3, 
             overflowX: 'auto', 
             pb: 4,
@@ -98,6 +99,8 @@ export function CarCarousel() {
                   overflow: 'hidden',
                   backgroundColor: TOKENS.paper,
                   scrollSnapAlign: 'start',
+                  display: 'flex',
+                  flexDirection: 'column',
                   transition: 'all 0.3s ease',
                   '&:hover': {
                     transform: 'translateY(-8px)',
@@ -132,15 +135,17 @@ export function CarCarousel() {
                   )}
                 </Box>
 
-                <Box sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 800, color: TOKENS.ink, mb: 0.5 }}>
-                    {car.brand} {car.model}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: TOKENS.textMuted, mb: 2 }}>
-                    {car.year} • {car.engine} • {car.transmission}
-                  </Typography>
+                <Box sx={{ p: 3, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: TOKENS.ink, mb: 0.5 }}>
+                      {car.brand} {car.model}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: TOKENS.textMuted, mb: 2 }}>
+                      {car.year} • {car.engine} • {car.transmission}
+                    </Typography>
+                  </Box>
 
-                  <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }} component="div">
+                  <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, minHeight: 110 }} component="div">
                     <Box>
                       <Typography variant="caption" sx={{ color: TOKENS.textMuted, fontWeight: 700, display: 'block', mb: 0.5 }}>
                         PREȚ / SĂPTĂMÂNĂ
@@ -165,10 +170,11 @@ export function CarCarousel() {
                     onClick={() => navigate('/masini')}
                     sx={{ 
                       py: 1.5, 
+                      mt: 'auto',
                       borderRadius: '14px', 
                       fontWeight: 800, 
                       bgcolor: TOKENS.primary,
-                      boxShadow: TOKENS.shadow.glow,
+                      boxShadow: 'none',
                       '&:hover': { bgcolor: TOKENS.primaryStrong }
                     }}
                   >
@@ -194,10 +200,10 @@ export function CarCarousel() {
               textTransform: 'none',
               color: TOKENS.ink,
               backgroundColor: TOKENS.primary,
-              boxShadow: TOKENS.shadow.glow,
+              boxShadow: 'none',
               '&:hover': {
                 backgroundColor: TOKENS.primaryStrong,
-                boxShadow: '0 4px 16px rgba(92, 203, 245, 0.35)',
+                boxShadow: 'none',
               },
             }}
           >

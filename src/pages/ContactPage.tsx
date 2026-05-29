@@ -89,11 +89,11 @@ export function ContactPage() {
                   backgroundColor: TOKENS.primary,
                   borderRadius: TOKENS.radius.full,
                   fontWeight: 700,
-                  boxShadow: TOKENS.shadow.glow,
+                  boxShadow: 'none',
                   alignSelf: { xs: 'stretch', sm: 'flex-start' },
                   '&:hover': {
                     backgroundColor: TOKENS.primaryStrong,
-                    boxShadow: '0 12px 40px rgba(26,100,237,0.3)',
+                    boxShadow: 'none',
                     transform: 'translateY(-2px)',
                   },
                 }}

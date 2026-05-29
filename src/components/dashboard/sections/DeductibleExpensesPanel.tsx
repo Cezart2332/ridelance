@@ -182,7 +182,7 @@ export function DeductibleExpensesPanel({
       </Typography>
       <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.7, fontSize: '0.85rem', mb: 2 }}>
         {contabilContext
-          ? 'Adaugă facturi deductibile pentru client din catalogul fiscal.'
+          ? 'Verifică facturile de cheltuieli deductibile adăugate de client.'
           : 'Alege tipul din catalog, suma în lei (opțional) și încarcă factura.'}
       </Typography>
 
@@ -205,75 +205,77 @@ export function DeductibleExpensesPanel({
         </FormControl>
       </Stack>
 
-      <Stack spacing={1.5} sx={{ mb: 2 }}>
-        <Autocomplete
-          options={deductibleExpenseOptions}
-          groupBy={(o) => o.category}
-          getOptionLabel={(o) => o.label}
-          value={selectedOption}
-          onChange={(_, v) => {
-            setSelectedOption(v)
-            if (v) setCustomName(v.name)
-          }}
-          onInputChange={(_, value) => {
-            if (!selectedOption) setCustomName(value)
-            const match = findDeductibleOption(value)
-            if (match) setSelectedOption(match)
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Tip cheltuială (catalog deductibil)"
-              placeholder="ex. Combustibil auto, Chirie auto..."
-              sx={dashboardInputSx}
-            />
-          )}
-          slotProps={{
-            paper: { sx: { borderRadius: DASHBOARD_TOKENS.radius.md, maxHeight: 320 } },
-          }}
-        />
-        <TextField
-          label="Sumă (lei) — opțional"
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
-          sx={dashboardInputSx}
-        />
-        <Button
-          variant="contained"
-          component="label"
-          disabled={uploading}
-          startIcon={
-            uploading ? (
-              <CircularProgress size={18} color="inherit" />
-            ) : (
-              <AddRoundedIcon />
-            )
-          }
-          sx={{
-            alignSelf: 'flex-start',
-            textTransform: 'none',
-            fontWeight: 700,
-            borderRadius: DASHBOARD_TOKENS.radius.full,
-            bgcolor: DASHBOARD_TOKENS.primary,
-            boxShadow: DASHBOARD_TOKENS.shadow.glow,
-            '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong },
-          }}
-        >
-          Adaugă factură
-          <input
-            type="file"
-            hidden
-            accept=".pdf,.png,.jpg,.jpeg"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) void handleAdd(file)
-              e.target.value = ''
+      {!contabilContext && (
+        <Stack spacing={1.5} sx={{ mb: 2 }}>
+          <Autocomplete
+            options={deductibleExpenseOptions}
+            groupBy={(o) => o.category}
+            getOptionLabel={(o) => o.label}
+            value={selectedOption}
+            onChange={(_, v) => {
+              setSelectedOption(v)
+              if (v) setCustomName(v.name)
+            }}
+            onInputChange={(_, value) => {
+              if (!selectedOption) setCustomName(value)
+              const match = findDeductibleOption(value)
+              if (match) setSelectedOption(match)
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Tip cheltuială (catalog deductibil)"
+                placeholder="ex. Combustibil auto, Chirie auto..."
+                sx={dashboardInputSx}
+              />
+            )}
+            slotProps={{
+              paper: { sx: { borderRadius: DASHBOARD_TOKENS.radius.md, maxHeight: 320 } },
             }}
           />
-        </Button>
-      </Stack>
+          <TextField
+            label="Sumă (lei) — opțional"
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
+            sx={dashboardInputSx}
+          />
+          <Button
+            variant="contained"
+            component="label"
+            disabled={uploading}
+            startIcon={
+              uploading ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <AddRoundedIcon />
+              )
+            }
+            sx={{
+              alignSelf: 'flex-start',
+              textTransform: 'none',
+              fontWeight: 700,
+              borderRadius: DASHBOARD_TOKENS.radius.full,
+              bgcolor: DASHBOARD_TOKENS.primary,
+              boxShadow: 'none', // Replaced glow shadow with flat style
+              '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong },
+            }}
+          >
+            Adaugă factură
+            <input
+              type="file"
+              hidden
+              accept=".pdf,.png,.jpg,.jpeg"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) void handleAdd(file)
+                e.target.value = ''
+              }}
+            />
+          </Button>
+        </Stack>
+      )}
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>

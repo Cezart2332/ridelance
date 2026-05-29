@@ -7,6 +7,8 @@ import App from './App'
 import { TOKENS } from './constants/tokens'
 import { store } from './store/store'
 import { AuthInitializer } from './components/auth/AuthInitializer'
+// @ts-ignore
+import '@fontsource-variable/geist'
 
 // Service Worker (push notifications only). Avoid reload loops on mobile:
 // skipWaiting + controllerchange + reload resets in-memory flags every load.
@@ -27,6 +29,8 @@ if ('serviceWorker' in navigator) {
 }
 
 const fontStack = [
+  '"Geist Variable"',
+  '"Geist"',
   '"SF Compact Display"',
   '"SF Pro Display"',
   '"SF Compact Text"',
@@ -134,7 +138,10 @@ const theme = createTheme({
           borderRadius: TOKENS.radius.md, // 8px for standard buttons
           transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
           '&:hover': {
-            transform: 'translateY(-1px)',
+            transform: 'translateY(-1.5px)',
+          },
+          '&:active': {
+            transform: 'scale(0.97)',
           },
         },
       },
