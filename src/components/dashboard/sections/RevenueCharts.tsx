@@ -126,8 +126,8 @@ export function RevenueCharts({
           <ChartCard
             title={`Venit total pe luni — ${year}`}
           >
-            <Box sx={{ height: { xs: 300, md: 350 }, width: '100%' }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <Box sx={{ height: { xs: 300, md: 350 }, width: '100%', minWidth: 0, position: 'relative' }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart
                   data={yearlyChartData}
                   margin={{ top: 16, right: 16, bottom: 16, left: 16 }}
@@ -181,8 +181,8 @@ export function RevenueCharts({
           <ChartCard
             title={`Structură venituri — ${breakdownMonthLabel} ${year}`}
           >
-            <Box sx={{ height: { xs: 300, md: 350 }, width: '100%' }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <Box sx={{ height: { xs: 300, md: 350 }, width: '100%', minWidth: 0, position: 'relative' }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart
                   layout="vertical"
                   data={breakdownChartData}

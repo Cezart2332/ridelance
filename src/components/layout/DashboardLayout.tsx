@@ -136,7 +136,6 @@ export function DashboardLayout({
           py: 2.5,
           mb: 1.5,
           borderBottom: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
-          background: `linear-gradient(180deg, ${alpha(TOKENS.primary, 0.09)} 0%, transparent 72%)`,
         }}
       >
         <Box component="img" src={logo} sx={{ height: 42 }} />
@@ -355,7 +354,6 @@ export function DashboardLayout({
         display: 'flex',
         minHeight: '100vh',
         bgcolor: TOKENS.surface,
-        backgroundImage: `radial-gradient(circle at 95% 0%, ${alpha(TOKENS.primary, 0.08)} 0%, transparent 42%)`,
       }}
     >
       {/* Mobile Drawer — only mount on small screens so Modal backdrop cannot block desktop UI */}

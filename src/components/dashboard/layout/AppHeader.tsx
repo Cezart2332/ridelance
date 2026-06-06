@@ -1,6 +1,6 @@
 import { IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import { NotificationsBell } from '../../notifications/NotificationsBell';
 
@@ -10,6 +10,8 @@ interface AppHeaderProps {
   title: string;
   showNotifications?: boolean;
   onOpenRecurringDocumentation?: () => void;
+  activeSection?: string;
+  setActiveSection?: (sectionId: string) => void;
 }
 
 export default function AppHeader({
@@ -18,9 +20,17 @@ export default function AppHeader({
   title,
   showNotifications,
   onOpenRecurringDocumentation,
+  activeSection,
+  setActiveSection,
 }: AppHeaderProps) {
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
+
+  // A sub-page on mobile is any active section that is NOT one of the primary tabs
+  const isSubPageOnMobile = 
+    !isMdUp && 
+    activeSection && 
+    !['home', 'profile', 'support', 'more'].includes(activeSection);
 
   return (
     <Paper
@@ -43,12 +53,12 @@ export default function AppHeader({
       }}
     >
       <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flex: 1, minWidth: 0 }}>
-        {!isMdUp && (
+        {isSubPageOnMobile && setActiveSection && (
           <IconButton
             size="small"
             onClick={(e) => {
               e.stopPropagation();
-              setSidebarOpen(!sidebarOpen);
+              setActiveSection('more');
             }}
             sx={{
               border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
@@ -56,7 +66,7 @@ export default function AppHeader({
               '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.1) },
             }}
           >
-            <MenuRoundedIcon fontSize="small" color="primary" />
+            <ArrowBackRoundedIcon fontSize="small" color="primary" />
           </IconButton>
         )}
         <Typography noWrap sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '1.15rem', letterSpacing: -0.4, minWidth: 0 }}>

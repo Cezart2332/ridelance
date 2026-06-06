@@ -37,7 +37,7 @@ function StatusChip({ pending }: { pending: boolean }) {
   return (
     <Chip
       icon={<CheckCircleOutlineRoundedIcon sx={{ fontSize: '14px !important' }} />}
-      label={pending ? 'Activ — plată programată luni 15:00' : 'Activ'}
+      label={pending ? 'Programat Luni' : 'Activ'}
       size="small"
       sx={{
         fontWeight: 700,
@@ -133,7 +133,7 @@ export function AbonamenteTab() {
       >
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { sm: 'flex-start' }, gap: 2 }}>
           <Box>
-            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, alignItems: 'center', mb: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1.5, alignItems: { xs: 'flex-start', sm: 'center' }, mb: 1.5 }}>
               <Typography sx={{ fontWeight: 800, fontSize: '1.25rem', color: T.ink }}>
                 {currentPlan.title}
               </Typography>

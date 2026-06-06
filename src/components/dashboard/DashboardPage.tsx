@@ -10,6 +10,8 @@ import { CarsView } from './sections/CarsView'
 import { AbonamenteTab } from './sections/AbonamenteTab'
 import { ServiciiTab } from './sections/ServiciiTab'
 import { IstoricPlatiTab } from './sections/IstoricPlatiTab'
+import { BoltIntegrationTab } from './sections/BoltIntegrationTab'
+import { MenuHubView } from './sections/MenuHubView'
 
 import AppLayout from './layout/AppLayout'
 
@@ -47,9 +49,10 @@ const bottomSectionConfig = [
   { id: 'abonamente', label: 'Abonamente', icon: 'MUI:WorkspacePremiumRounded' },
   { id: 'servicii', label: 'Servicii', icon: 'MUI:ShoppingCartRounded' },
   { id: 'istoric_plati', label: 'Istoric Plăți', icon: 'MUI:ReceiptLongRounded' },
+  { id: 'bolt_integration', label: 'Integrare Bolt', icon: 'MUI:ElectricCarRounded' },
 ] as const
 
-type SectionId = 'home' | 'cars' | 'profile' | 'documents' | 'support' | 'expenses' | 'doc_recurring' | 'abonamente' | 'servicii' | 'istoric_plati' | string
+type SectionId = 'home' | 'cars' | 'profile' | 'documents' | 'support' | 'expenses' | 'doc_recurring' | 'abonamente' | 'servicii' | 'istoric_plati' | 'bolt_integration' | string
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -106,6 +109,8 @@ export default function DashboardPage() {
     if (activeSection === 'abonamente') return <AbonamenteTab />
     if (activeSection === 'servicii') return <ServiciiTab />
     if (activeSection === 'istoric_plati') return <IstoricPlatiTab />
+    if (activeSection === 'bolt_integration') return <BoltIntegrationTab />
+    if (activeSection === 'more') return <MenuHubView onNavigate={setActiveSection} onLogout={handleLogout} />
 
     return (
       <ExpensesRecurringTab

@@ -331,24 +331,41 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
         }}
       >
         <Stack spacing={1}>
-          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1.2 }}>
+          <Stack 
+            direction={{ xs: 'column', sm: 'row' }} 
+            sx={{ 
+              justifyContent: 'space-between', 
+              alignItems: { xs: 'stretch', sm: 'center' }, 
+              gap: 1.5 
+            }}
+          >
             <div style={{ overflow: 'hidden', minWidth: 0, flex: 1 }}>
               <Tooltip title={config.tooltip || ''}>
-                <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700, cursor: config.tooltip ? 'help' : 'default' }}>
+                <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700, cursor: config.tooltip ? 'help' : 'default', fontSize: { xs: '0.9rem', sm: '1rem' } }}>
                   {config.title}
                 </Typography>
               </Tooltip>
               {doc ? (
-                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.8rem', mt: 0.3 }} noWrap title={doc.originalFileName}>
-                  (incarcat) · {doc.originalFileName}
+                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.78rem', mt: 0.3, wordBreak: 'break-all' }} title={doc.originalFileName}>
+                  (încărcat) · {doc.originalFileName}
                 </Typography>
               ) : (
-                <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.8rem', mt: 0.3 }}>
-                  Lipsa
+                <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.78rem', mt: 0.3 }}>
+                  Lipsă
                 </Typography>
               )}
             </div>
-            <Stack direction="row" spacing={0.8} sx={{ alignItems: 'center', flexShrink: 0 }}>
+            <Stack 
+              direction="row" 
+              spacing={0.8} 
+              sx={{ 
+                alignItems: 'center', 
+                flexWrap: 'wrap', 
+                gap: 0.8,
+                justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+                flexShrink: 0 
+              }}
+            >
               {doc ? (
                 <>
                   <ExpiryBadge expiresAtUtc={doc.expiresAtUtc} />
@@ -371,12 +388,12 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
                       '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
                     }}
                   >
-                    Descarca
+                    Descarcă
                   </Button>
                 </>
               ) : (
                 <Chip
-                  label="Lipsa"
+                  label="Lipsă"
                   size="small"
                   sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full, ...statusChipSx('missing') }}
                 />
@@ -385,7 +402,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
                 component="label"
                 disabled={isUploading}
                 size="small"
-                aria-label={doc ? 'Reincarca document' : 'Incarca document'}
+                aria-label={doc ? 'Reîncarcă document' : 'Încarcă document'}
                 sx={{
                   borderRadius: DASHBOARD_TOKENS.radius.full,
                   color: DASHBOARD_TOKENS.primaryStrong,
@@ -529,16 +546,33 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
               backgroundColor: DASHBOARD_TOKENS.surface,
             }}
           >
-            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1.2 }}>
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              sx={{ 
+                justifyContent: 'space-between', 
+                alignItems: { xs: 'stretch', sm: 'center' }, 
+                gap: 1.5 
+              }}
+            >
               <div style={{ overflow: 'hidden', minWidth: 0, flex: 1 }}>
-                <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700, fontSize: '0.9rem', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={doc.originalFileName}>
+                <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700, fontSize: '0.88rem', wordBreak: 'break-all' }} title={doc.originalFileName}>
                   {doc.originalFileName}
                 </Typography>
-                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.75rem' }}>
+                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.75rem', mt: 0.3 }}>
                   {formatDocumentCategory(doc.category)} · {(doc.fileSize / 1024).toFixed(0)} KB
                 </Typography>
               </div>
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexShrink: 0 }}>
+              <Stack 
+                direction="row" 
+                spacing={0.8} 
+                sx={{ 
+                  alignItems: 'center', 
+                  flexWrap: 'wrap', 
+                  gap: 0.8,
+                  justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+                  flexShrink: 0 
+                }}
+              >
                 <ExpiryBadge expiresAtUtc={doc.expiresAtUtc} />
                 <Chip
                   label={statusLabel(doc.status)}
@@ -559,7 +593,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
                     '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
                   }}
                 >
-                  Descarca
+                  Descarcă
                 </Button>
               </Stack>
             </Stack>

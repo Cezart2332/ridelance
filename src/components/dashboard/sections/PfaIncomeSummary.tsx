@@ -86,7 +86,10 @@ function IncomeMetricCard({ label, value, icon, highlight }: IncomeMetric) {
         sx={{
           color: highlight ? DASHBOARD_TOKENS.primaryStrong : DASHBOARD_TOKENS.ink,
           fontWeight: 900,
-          fontSize: highlight ? '1.85rem' : '1.65rem',
+          fontSize: {
+            xs: highlight ? '1.35rem' : '1.25rem',
+            sm: highlight ? '1.85rem' : '1.65rem',
+          },
           letterSpacing: -0.5,
         }}
       >

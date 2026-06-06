@@ -9,11 +9,13 @@ export function isAwaitingAdminApproval(sub: SubscriptionResponse | null): boole
 }
 
 export function isAwaitingBillingGate(sub: SubscriptionResponse | null): boolean {
-  return sub?.pfaStatus === 'Approved' && !sub.dashboardAccessGranted
+  // Bypassed: user requested to not display or gate access behind the countdown screen
+  return false
 }
 
 export function canAccessDashboard(sub: SubscriptionResponse | null): boolean {
-  return sub?.pfaStatus === 'Approved' && !!sub.dashboardAccessGranted
+  // Bypassed: direct access is allowed once the PFA is approved
+  return sub?.pfaStatus === 'Approved'
 }
 
 /** Client onboarding route for a known subscription snapshot. */

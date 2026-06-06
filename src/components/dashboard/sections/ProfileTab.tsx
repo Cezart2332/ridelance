@@ -190,12 +190,14 @@ export function ProfileTab() {
                 mt: 1,
                 py: 1.2,
                 fontWeight: 700,
+                fontSize: { xs: '0.8rem', sm: '0.88rem' },
                 boxShadow: 'none',
                 bgcolor: DASHBOARD_TOKENS.primary,
+                color: DASHBOARD_TOKENS.ink,
                 '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong, boxShadow: 'none' }
               }}
             >
-              Descarcă Certificat de Înregistrare
+              Descarcă Certificat PFA
             </Button>
           </Stack>
         </Paper>

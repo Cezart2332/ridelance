@@ -190,7 +190,7 @@ export function PfaTaxSummaryWidget({ summary }: PfaTaxSummaryWidgetProps) {
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
                 gap: 1.5,
               }}
             >
