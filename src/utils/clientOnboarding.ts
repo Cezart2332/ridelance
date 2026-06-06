@@ -8,7 +8,7 @@ export function isAwaitingAdminApproval(sub: SubscriptionResponse | null): boole
   return sub?.pfaStatus === 'Pending' || sub?.pfaStatus === 'Rejected'
 }
 
-export function isAwaitingBillingGate(sub: SubscriptionResponse | null): boolean {
+export function isAwaitingBillingGate(_sub: SubscriptionResponse | null): boolean {
   // Bypassed: user requested to not display or gate access behind the countdown screen
   return false
 }

@@ -4,9 +4,7 @@ import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFil
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
-import HeadphonesRoundedIcon from '@mui/icons-material/HeadphonesRounded';
 import FolderSpecialRoundedIcon from '@mui/icons-material/FolderSpecialRounded';
-import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
@@ -120,7 +118,7 @@ export function MenuHubView({ onNavigate, onLogout }: MenuHubViewProps) {
       {/* Grid of options */}
       <Grid container spacing={1.5} sx={{ mb: 4 }}>
         {menuItems.map((item) => (
-          <Grid item xs={12} key={item.id}>
+          <Grid size={12} key={item.id}>
             <Paper
               elevation={0}
               onClick={() => onNavigate(item.id)}

@@ -15,8 +15,8 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({
-  sidebarOpen,
-  setSidebarOpen,
+  sidebarOpen: _sidebarOpen,
+  setSidebarOpen: _setSidebarOpen,
   title,
   showNotifications,
   onOpenRecurringDocumentation,
