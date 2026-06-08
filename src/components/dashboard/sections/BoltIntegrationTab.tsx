@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type FormEvent, type ReactNode } from 'react'
 import {
   Box,
   Button,
@@ -38,6 +38,33 @@ const STATUS_CHIP_CONFIG: Record<string, { label: string; color: string; bg: str
   pickup: { label: 'Preluare', color: '#ca8a04', bg: alpha('#eab308', 0.1) },
   cancelled: { label: 'Anulată', color: '#dc2626', bg: alpha('#ef4444', 0.1) },
   no_show: { label: 'Neprezentare', color: '#4b5563', bg: alpha('#9ca3af', 0.1) }
+}
+
+function MobileDetailRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(88px, auto) minmax(0, 1fr)',
+        gap: 1.5,
+        alignItems: 'start',
+      }}
+    >
+      <Typography sx={{ fontSize: '0.82rem', color: DASHBOARD_TOKENS.textMuted }}>
+        {label}
+      </Typography>
+      <Box
+        sx={{
+          minWidth: 0,
+          textAlign: 'right',
+          overflowWrap: 'anywhere',
+          wordBreak: 'break-word',
+        }}
+      >
+        {children}
+      </Box>
+    </Box>
+  )
 }
 
 export function BoltIntegrationTab() {
@@ -110,7 +137,7 @@ export function BoltIntegrationTab() {
     }
   }
 
-  const handleConnect = async (e: React.FormEvent) => {
+  const handleConnect = async (e: FormEvent) => {
     e.preventDefault()
     if (!clientId || !clientSecret) {
       setErrorMsg('Introduceți atât Client ID cât și Client Secret.')
@@ -157,7 +184,7 @@ export function BoltIntegrationTab() {
   const showForm = !integration || configuring
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 0, py: { xs: 1, md: 0 } }}>
+    <Box sx={{ width: '100%', maxWidth: 1200, minWidth: 0, mx: 'auto', p: 0, py: { xs: 1, md: 0 }, boxSizing: 'border-box' }}>
       {/* Title & Refresh */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
@@ -168,14 +195,30 @@ export function BoltIntegrationTab() {
           mb: 3.5
         }}
       >
-        <Box>
-          <Typography sx={{ fontWeight: 800, fontSize: '1.45rem', color: DASHBOARD_TOKENS.ink }}>
-            Integrare Bolt API
-          </Typography>
-          <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem', mt: 0.3 }}>
-            Sincronizare automată a curselor și facturarea lor prin PFA
-          </Typography>
-        </Box>
+        <Stack direction="row" spacing={1.6} sx={{ alignItems: 'center', minWidth: 0 }}>
+          <Box
+            sx={{
+              width: 44,
+              height: 44,
+              flexShrink: 0,
+              borderRadius: DASHBOARD_TOKENS.radius.md,
+              bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.14),
+              color: DASHBOARD_TOKENS.primaryStrong,
+              display: 'grid',
+              placeItems: 'center',
+            }}
+          >
+            <ElectricCarRoundedIcon />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ fontWeight: 800, fontSize: '1.45rem', color: DASHBOARD_TOKENS.ink }}>
+              Integrare Bolt API
+            </Typography>
+            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem', mt: 0.3 }}>
+              Sincronizare automată a curselor și facturarea lor prin PFA
+            </Typography>
+          </Box>
+        </Stack>
         {integration?.isConnected && !showForm && (
           <Button
             variant="outlined"
@@ -215,7 +258,8 @@ export function BoltIntegrationTab() {
           display: 'grid',
           gridTemplateColumns: { xs: '1fr', lg: showForm ? '1fr' : '1fr 2fr' },
           gap: 3,
-          alignItems: 'start'
+          alignItems: 'start',
+          minWidth: 0
         }}
       >
         {/* Connection Setup panel */}
@@ -226,7 +270,8 @@ export function BoltIntegrationTab() {
             borderRadius: DASHBOARD_TOKENS.radius.lg,
             border: `1px solid ${DASHBOARD_TOKENS.border}`,
             boxShadow: DASHBOARD_TOKENS.shadow.sm,
-            bgcolor: DASHBOARD_TOKENS.paper
+            bgcolor: DASHBOARD_TOKENS.paper,
+            minWidth: 0
           }}
         >
           {showForm ? (
@@ -389,7 +434,7 @@ export function BoltIntegrationTab() {
 
         {/* Orders list and stats - Only visible when connected */}
         {!showForm && (
-          <Stack spacing={3}>
+          <Stack spacing={3} sx={{ minWidth: 0 }}>
             {/* Quick stats widgets */}
             <Box
               sx={{
@@ -412,14 +457,15 @@ export function BoltIntegrationTab() {
                     borderRadius: DASHBOARD_TOKENS.radius.lg,
                     border: `1px solid ${DASHBOARD_TOKENS.border}`,
                     bgcolor: DASHBOARD_TOKENS.paper,
-                    boxShadow: DASHBOARD_TOKENS.shadow.sm
+                    boxShadow: DASHBOARD_TOKENS.shadow.sm,
+                    minWidth: 0
                   }}
                 >
-                  <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography sx={{ fontSize: { xs: '0.7rem', sm: '0.78rem' }, color: DASHBOARD_TOKENS.textMuted, fontWeight: 700 }}>
+                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1, minWidth: 0 }}>
+                    <Typography sx={{ minWidth: 0, fontSize: { xs: '0.7rem', sm: '0.78rem' }, color: DASHBOARD_TOKENS.textMuted, fontWeight: 700 }}>
                       {stat.title}
                     </Typography>
-                    <Box sx={{ color: stat.color, display: 'flex', alignItems: 'center', '& svg': { fontSize: { xs: 18, sm: 24 } } }}>
+                    <Box sx={{ flexShrink: 0, color: stat.color, display: 'flex', alignItems: 'center', '& svg': { fontSize: { xs: 18, sm: 24 } } }}>
                       {stat.icon}
                     </Box>
                   </Stack>
@@ -438,7 +484,9 @@ export function BoltIntegrationTab() {
                 borderRadius: DASHBOARD_TOKENS.radius.lg,
                 border: `1px solid ${DASHBOARD_TOKENS.border}`,
                 boxShadow: DASHBOARD_TOKENS.shadow.sm,
-                bgcolor: DASHBOARD_TOKENS.paper
+                bgcolor: DASHBOARD_TOKENS.paper,
+                minWidth: 0,
+                overflow: 'hidden'
               }}
             >
               <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 2.5 }}>
@@ -468,8 +516,8 @@ export function BoltIntegrationTab() {
               ) : (
                 <>
                   {/* Table View for Desktop Devices */}
-                  <TableContainer sx={{ display: { xs: 'none', md: 'block' } }}>
-                    <Table sx={{ minWidth: 650 }}>
+                  <TableContainer sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto', maxWidth: '100%' }}>
+                    <Table sx={{ minWidth: 880 }}>
                       <TableHead>
                         <TableRow sx={{ '& th': { borderBottom: `1px solid ${DASHBOARD_TOKENS.border}`, fontWeight: 700, color: DASHBOARD_TOKENS.textMuted } }}>
                           <TableCell>Referință</TableCell>
@@ -540,7 +588,7 @@ export function BoltIntegrationTab() {
                   </TableContainer>
 
                   {/* Card List View for Mobile Devices */}
-                  <Stack spacing={1.5} sx={{ display: { xs: 'flex', md: 'none' } }}>
+                  <Stack spacing={1.5} sx={{ display: { xs: 'flex', md: 'none' }, minWidth: 0 }}>
                     {orders.map((order) => {
                       const statusCfg = STATUS_CHIP_CONFIG[order.orderStatus.toLowerCase()] || { label: order.orderStatus, color: '#4b5563', bg: alpha('#9ca3af', 0.1) }
                       return (
@@ -548,14 +596,23 @@ export function BoltIntegrationTab() {
                           key={order.id}
                           sx={{
                             p: 2,
+                            width: '100%',
+                            maxWidth: '100%',
+                            minWidth: 0,
+                            boxSizing: 'border-box',
                             borderRadius: DASHBOARD_TOKENS.radius.md,
                             border: `1px solid ${DASHBOARD_TOKENS.border}`,
                             bgcolor: DASHBOARD_TOKENS.surface,
+                            overflow: 'hidden',
                             '&:active': { bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.05) }
                           }}
                         >
-                          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                            <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: DASHBOARD_TOKENS.ink }}>
+                          <Stack direction="row" spacing={1.2} sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1.5, minWidth: 0 }}>
+                            <Typography
+                              title={order.orderReference}
+                              noWrap
+                              sx={{ flex: 1, minWidth: 0, fontWeight: 800, fontSize: '0.95rem', color: DASHBOARD_TOKENS.ink }}
+                            >
                               {order.orderReference}
                             </Typography>
                             <Chip
@@ -566,22 +623,22 @@ export function BoltIntegrationTab() {
                                 fontSize: '0.65rem',
                                 color: statusCfg.color,
                                 bgcolor: statusCfg.bg,
-                                borderRadius: DASHBOARD_TOKENS.radius.full
+                                borderRadius: DASHBOARD_TOKENS.radius.full,
+                                flexShrink: 0,
+                                maxWidth: 112
                               }}
                             />
                           </Stack>
 
                           <Stack spacing={1} sx={{ mb: 1.5 }}>
-                            <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-                              <Typography sx={{ fontSize: '0.82rem', color: DASHBOARD_TOKENS.textMuted }}>Data cursei:</Typography>
+                            <MobileDetailRow label="Data cursei:">
                               <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: DASHBOARD_TOKENS.ink }}>
                                 {new Date(order.orderCreatedTime).toLocaleString('ro-RO')}
                               </Typography>
-                            </Stack>
+                            </MobileDetailRow>
 
-                            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <Typography sx={{ fontSize: '0.82rem', color: DASHBOARD_TOKENS.textMuted }}>Șofer / Auto:</Typography>
-                              <Box sx={{ textAlign: 'right' }}>
+                            <MobileDetailRow label="Șofer / Auto:">
+                              <Box sx={{ minWidth: 0 }}>
                                 <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: DASHBOARD_TOKENS.ink }}>
                                   {order.driverName}
                                 </Typography>
@@ -589,21 +646,19 @@ export function BoltIntegrationTab() {
                                   {order.vehicleLicensePlate} ({order.vehicleModel})
                                 </Typography>
                               </Box>
-                            </Stack>
+                            </MobileDetailRow>
 
-                            <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-                              <Typography sx={{ fontSize: '0.82rem', color: DASHBOARD_TOKENS.textMuted }}>Distanță:</Typography>
+                            <MobileDetailRow label="Distanță:">
                               <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: DASHBOARD_TOKENS.ink }}>
                                 {(order.rideDistance / 1000).toFixed(1)} km
                               </Typography>
-                            </Stack>
+                            </MobileDetailRow>
 
-                            <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-                              <Typography sx={{ fontSize: '0.82rem', color: DASHBOARD_TOKENS.textMuted }}>Preț cursă / Plată:</Typography>
+                            <MobileDetailRow label="Preț / Plată:">
                               <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: DASHBOARD_TOKENS.ink }}>
                                 {Number(order.ridePrice).toFixed(2)} lei ({order.paymentMethod})
                               </Typography>
-                            </Stack>
+                            </MobileDetailRow>
                           </Stack>
 
                           <Box
@@ -611,12 +666,14 @@ export function BoltIntegrationTab() {
                               pt: 1.5,
                               borderTop: `1px dashed ${DASHBOARD_TOKENS.border}`,
                               display: 'flex',
+                              gap: 1.5,
                               justifyContent: 'space-between',
-                              alignItems: 'center'
+                              alignItems: 'center',
+                              minWidth: 0
                             }}
                           >
                             <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted }}>Venit Net:</Typography>
-                            <Typography sx={{ fontSize: '1.05rem', fontWeight: 900, color: '#16a34a' }}>
+                            <Typography sx={{ minWidth: 0, textAlign: 'right', overflowWrap: 'anywhere', fontSize: '1.05rem', fontWeight: 900, color: '#16a34a' }}>
                               {Number(order.netEarnings).toFixed(2)} lei
                             </Typography>
                           </Box>

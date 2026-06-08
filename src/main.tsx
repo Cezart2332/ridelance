@@ -122,8 +122,9 @@ const theme = createTheme({
         html: {
           scrollBehavior: 'smooth',
           backgroundColor: TOKENS.surface,
-          overflow: 'hidden',
-          height: '100%',
+          overflowX: 'hidden',
+          overflowY: 'auto',
+          minHeight: '100%',
           width: '100%',
           margin: 0,
           padding: 0,
@@ -135,8 +136,9 @@ const theme = createTheme({
         body: {
           color: TOKENS.ink,
           backgroundColor: TOKENS.surface,
-          overflow: 'hidden',
-          height: '100%',
+          overflowX: 'hidden',
+          overflowY: 'auto',
+          minHeight: '100%',
           width: '100%',
           margin: 0,
           padding: 0,
@@ -144,9 +146,9 @@ const theme = createTheme({
           touchAction: 'pan-y pinch-zoom',
         },
         '#root': {
-          height: '100%',
+          minHeight: '100%',
           width: '100%',
-          overflow: 'hidden',
+          overflowX: 'hidden',
         },
         'input, textarea': {
           WebkitUserSelect: 'text',
