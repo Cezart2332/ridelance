@@ -19,6 +19,7 @@ import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import { authService } from '../../services/auth.service'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { ROLE_LABELS } from '../../utils/roleLabels'
+import { TermsAcceptance } from '../common/TermsAcceptance'
 
 import logo from '../../assets/logo.svg'
 
@@ -70,6 +71,7 @@ export default function AuthPage() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [registerRole, setRegisterRole] = useState<'Client' | 'CarPoster'>('Client')
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
@@ -100,6 +102,10 @@ export default function AuthPage() {
     }
     if (password !== confirmPassword) {
       setError('Parolele nu coincid.')
+      return
+    }
+    if (!termsAccepted) {
+      setError('Te rugam sa accepti Termenii si Conditiile pentru a continua.')
       return
     }
 
@@ -360,13 +366,15 @@ export default function AuthPage() {
                   </Typography>
                 </Box>
 
+                <TermsAcceptance checked={termsAccepted} onChange={setTermsAccepted} disabled={isLoading} />
+
                 <Button
                   variant="contained"
                   size="large"
                   fullWidth
                   endIcon={<ArrowForwardRoundedIcon />}
                   onClick={handleRegister}
-                  disabled={isLoading}
+                  disabled={isLoading || !termsAccepted}
                   sx={{
                     mt: 1,
                     py: 1.4,

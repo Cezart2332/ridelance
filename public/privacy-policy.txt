@@ -1,0 +1,382 @@
+POLITICA DE CONFIDENȚIALITATE RIDELANCE
+Ultima actualizare: 04.06.2026
+Prezenta Politică de Confidențialitate, denumită în continuare „Politica”, explică modul în care RENTEAZA MOBILITY SOLUTIONS SRL, în calitate de operator al platformei RIDElance, colectează, utilizează, stochează, transmite și protejează datele cu caracter personal ale utilizatorilor.
+Această Politică se aplică utilizării website-ului www.ridelance.ro, dashboard-ului RIDElance, formularelor, modulelor, serviciilor digitale, abonamentelor, serviciilor individuale și oricăror alte interacțiuni dintre utilizator și RIDElance.
+Prin accesarea platformei, crearea unui cont, încărcarea documentelor, achiziționarea unui abonament sau utilizarea serviciilor RIDElance, confirmați că ați citit și ați înțeles prezenta Politică.
+________________________________________
+1. Operatorul de date
+Operatorul datelor personale prelucrate prin platforma RIDElance este:
+RENTEAZA MOBILITY SOLUTIONS SRL
+CUI: 51787316
+Nr. Registrul Comerțului: J2025034182001
+Sediu social: Intrarea Doina nr. 28, cod poștal 077031, România
+Email: contact@ridelance.ro
+Website: www.ridelance.ro
+Telefon/WhatsApp: nu este disponibil momentan
+În sensul legislației privind protecția datelor, operatorul este entitatea care stabilește scopurile și mijloacele prelucrării datelor personale.
+________________________________________
+2. Ce este RIDElance din perspectiva datelor personale
+RIDElance este o platformă digitală care ajută șoferii de ridesharing/transport alternativ să își organizeze activitatea, documentele, veniturile, cheltuielile, relația cu partenerii și, după caz, relația cu contabilul partener.
+Pentru furnizarea serviciilor, RIDElance poate prelucra date personale necesare pentru:
+a) crearea contului;
+b) verificarea identității;
+c) organizarea documentelor personale, PFA și auto;
+d) prestarea serviciilor achiziționate;
+e) transmiterea documentelor către parteneri;
+f) prestarea contabilității prin partener contabil;
+g) gestionarea documentației lunare;
+h) procesarea plăților;
+i) comunicarea cu utilizatorul;
+j) furnizarea suportului;
+k) importul sau afișarea datelor din platforme terțe, inclusiv Bolt Fleet, unde utilizatorul sau structura contractuală aplicabilă permite acest lucru.
+________________________________________
+3. Categorii de date personale prelucrate
+RIDElance poate colecta și prelucra următoarele categorii de date, în funcție de serviciile utilizate.
+________________________________________
+3.1. Date de identificare
+Putem prelucra:
+a) nume și prenume;
+b) CNP, dacă este necesar pentru serviciul solicitat;
+c) seria și numărul actului de identitate;
+d) data nașterii;
+e) adresa de domiciliu sau reședință;
+f) cetățenie, dacă este necesară pentru documentație;
+g) semnătură, dacă este necesară pentru documente;
+h) fotografie, dacă este necesară pentru identificare sau profil.
+________________________________________
+3.2. Date de contact
+Putem prelucra:
+a) adresă de email;
+b) număr de telefon;
+c) adresă de corespondență;
+d) conturi de comunicare folosite în relația cu RIDElance, dacă este cazul.
+________________________________________
+3.3. Date PFA și date profesionale
+Putem prelucra:
+a) certificat de înregistrare PFA;
+b) CUI;
+c) număr de înregistrare la Registrul Comerțului;
+d) cod CAEN;
+e) sediu profesional;
+f) documente ONRC;
+g) documente ANAF;
+h) documente fiscale;
+i) informații privind statutul activității;
+j) informații privind contabilul alocat sau contabilul propriu.
+________________________________________
+3.4. Documente personale și profesionale ale șoferului
+Putem prelucra:
+a) carte de identitate;
+b) permis de conducere;
+c) atestat transport alternativ;
+d) adeverință medicală;
+e) aviz/adeverință psihologică;
+f) certificat de cazier judiciar;
+g) alte documente necesare activării sau desfășurării activității de ridesharing/transport alternativ.
+________________________________________
+3.5. Date privind condamnări penale sau infracțiuni
+În măsura în care este necesar pentru serviciile solicitate, RIDElance poate prelucra date din certificatul de cazier judiciar sau informații similare necesare pentru verificări, dosare, activări sau cerințe ale partenerilor/platformelor terțe.
+Aceste date sunt prelucrate doar în măsura necesară furnizării serviciului solicitat, respectării obligațiilor legale, prevenirii fraudei sau îndeplinirii cerințelor operaționale ale activității de transport alternativ.
+________________________________________
+3.6. Date privind sănătatea
+În măsura în care utilizatorul încarcă adeverințe medicale, avize medicale sau documente similare necesare activității de transport alternativ, RIDElance poate prelucra aceste documente doar în scopul verificării, organizării, transmiterii către parteneri sau prestării serviciului solicitat.
+Aceste date sunt tratate cu un nivel ridicat de confidențialitate și sunt accesibile doar persoanelor sau partenerilor care au nevoie de ele pentru furnizarea serviciului.
+________________________________________
+3.7. Date vehicul
+Putem prelucra:
+a) număr de înmatriculare;
+b) serie șasiu/VIN, dacă este necesar;
+c) marcă, model, an fabricație;
+d) tip combustibil/motorizare;
+e) ITP;
+f) RCA;
+g) asigurare călători și bagaje;
+h) ecuson Uber;
+i) ecuson Bolt;
+j) documente privind dreptul de folosință asupra vehiculului;
+k) contracte de comodat, închiriere sau alte documente similare.
+________________________________________
+3.8. Date financiare și contabile
+Putem prelucra:
+a) extrase bancare;
+b) IBAN;
+c) rapoarte de venituri Uber;
+d) rapoarte de venituri Bolt;
+e) facturi de cheltuieli deductibile;
+f) bonuri/facturi combustibil;
+g) bonuri/facturi încărcare electrică;
+h) facturi service, piese, reparații sau mentenanță;
+i) documente necesare contabilității lunare;
+j) date privind abonamentele achitate;
+k) istoricul plăților către RIDElance.
+RIDElance nu stochează direct datele complete ale cardului bancar. Plățile sunt procesate prin Stripe sau alți procesatori afișați în platformă.
+________________________________________
+3.9. Date preluate din Bolt Fleet API
+RIDElance poate utiliza Bolt Fleet API pentru preluarea și afișarea în dashboard a anumitor date relevante pentru activitatea utilizatorului, în scopul centralizării informațiilor într-un singur ecosistem digital.
+Datele preluate prin Bolt Fleet API pot include, în funcție de disponibilitatea tehnică și de permisiunile acordate:
+a) curse efectuate;
+b) venituri generate;
+c) tipuri de plată;
+d) comisioane sau rețineri, dacă sunt disponibile;
+e) statusuri asociate curselor;
+f) informații privind activitatea șoferului;
+g) informații privind vehiculul folosit;
+h) alte date disponibile prin integrarea Bolt Fleet, strict în limita scopului pentru care integrarea este utilizată.
+Aceste date sunt folosite pentru ca utilizatorul să își poată urmări activitatea, veniturile, documentele și situația operațională într-un singur loc, în cadrul dashboard-ului RIDElance.
+RIDElance nu controlează platforma Bolt, nu stabilește datele puse la dispoziție de Bolt și nu garantează disponibilitatea permanentă, exactitatea continuă sau completitudinea datelor furnizate prin API.
+________________________________________
+3.10. Date privind utilizarea platformei
+Putem prelucra:
+a) date de autentificare;
+b) loguri de acces;
+c) adresă IP;
+d) tip dispozitiv;
+e) browser;
+f) sistem de operare;
+g) acțiuni efectuate în dashboard;
+h) documente încărcate/descărcate;
+i) statusuri ale documentelor;
+j) interacțiuni cu support agentul;
+k) interacțiuni cu contabilul partener;
+l) notificări trimise și primite.
+________________________________________
+3.11. Date de comunicare și suport
+Putem prelucra:
+a) mesaje trimise către suport;
+b) conversații cu support agentul;
+c) solicitări transmise contabilului partener;
+d) răspunsuri la notificări;
+e) reclamații;
+f) cereri privind contul;
+g) solicitări privind drepturile GDPR;
+h) istoricul comunicării cu RIDElance.
+________________________________________
+4. Scopurile prelucrării datelor
+RIDElance poate prelucra datele personale pentru următoarele scopuri:
+a) crearea și administrarea contului;
+b) verificarea identității utilizatorului;
+c) verificarea, organizarea și gestionarea documentelor;
+d) prestarea serviciilor individuale achiziționate;
+e) furnizarea abonamentelor RIDElance;
+f) asistență pentru înființare PFA;
+g) găzduire sediu profesional prin partener;
+h) contabilitate prin partener contabil, pentru abonamentele care includ acest beneficiu;
+i) comunicare între utilizator, contabil partener și support agent;
+j) încărcarea, validarea operațională și transmiterea documentației lunare;
+k) importul și afișarea datelor din Bolt Fleet API;
+l) centralizarea veniturilor, cheltuielilor și documentelor în dashboard;
+m) calcularea unor estimări financiare sau fiscale orientative;
+n) procesarea plăților prin Stripe;
+o) emiterea facturilor/documentelor fiscale;
+p) oferirea suportului tehnic și operațional;
+q) trimiterea notificărilor privind documentele, plățile și serviciile;
+r) prevenirea fraudei și utilizării abuzive;
+s) securitatea platformei;
+t) respectarea obligațiilor legale;
+u) soluționarea cererilor, reclamațiilor sau disputelor;
+v) îmbunătățirea serviciilor RIDElance.
+________________________________________
+5. Temeiurile legale ale prelucrării
+Prelucrăm datele personale în baza unuia sau mai multora dintre următoarele temeiuri legale:
+________________________________________
+5.1. Executarea contractului
+Prelucrarea este necesară pentru furnizarea serviciilor RIDElance, administrarea contului, activarea abonamentului, prestarea serviciilor individuale, gestionarea documentelor și comunicarea cu utilizatorul.
+________________________________________
+5.2. Obligații legale
+Anumite date pot fi prelucrate pentru respectarea obligațiilor legale, fiscale, contabile, administrative sau a solicitărilor venite din partea autorităților competente.
+________________________________________
+5.3. Interes legitim
+RIDElance poate prelucra date pentru:
+a) securitatea platformei;
+b) prevenirea fraudelor;
+c) gestionarea riscurilor;
+d) păstrarea evidențelor operaționale;
+e) apărarea drepturilor și intereselor RIDElance;
+f) îmbunătățirea serviciilor;
+g) soluționarea disputelor;
+h) verificarea utilizării corecte a platformei.
+________________________________________
+5.4. Consimțământ
+În anumite situații, putem solicita consimțământul utilizatorului, de exemplu pentru:
+a) comunicări de marketing;
+b) anumite cookie-uri neesențiale;
+c) anumite integrări sau prelucrări opționale;
+d) transmiterea unor date către parteneri în situații care nu sunt strict necesare executării serviciului.
+Consimțământul poate fi retras oricând, fără a afecta legalitatea prelucrării efectuate anterior retragerii.
+________________________________________
+5.5. Date speciale și date sensibile
+Pentru documente medicale, avize psihologice sau alte categorii speciale de date, prelucrarea se realizează doar în măsura necesară pentru serviciul solicitat, în baza temeiurilor permise de legislația aplicabilă, inclusiv consimțământ explicit, obligații legale sau necesitatea constatării, exercitării ori apărării unor drepturi, după caz.
+Pentru date privind cazierul judiciar, prelucrarea se realizează doar în măsura necesară și în limitele permise de lege, pentru servicii, verificări, cerințe operaționale, prevenirea fraudei sau obligații legale.
+________________________________________
+6. Bolt Fleet API și date din platforme terțe
+RIDElance poate integra date din Bolt Fleet API pentru a permite utilizatorului să vizualizeze în dashboard informații relevante despre activitatea sa de ridesharing.
+Scopul acestei integrări este de a centraliza într-un singur loc datele relevante pentru activitatea utilizatorului, precum curse, venituri, tipuri de plată, statusuri și alte informații disponibile tehnic prin integrare.
+Prelucrarea acestor date se poate realiza în baza:
+a) executării contractului dintre RIDElance și utilizator;
+b) interesului legitim de a furniza un dashboard complet și funcțional;
+c) consimțământului utilizatorului, dacă este necesar;
+d) permisiunilor acordate în cadrul platformelor terțe sau al conturilor asociate.
+Utilizatorul înțelege că datele provenite din Bolt Fleet API sunt furnizate de o platformă terță, iar disponibilitatea, conținutul, actualizarea și exactitatea acestora pot depinde de Bolt, de accesul tehnic acordat, de setările contului, de drepturile flotei sau de alte condiții externe RIDElance.
+RIDElance poate întrerupe, modifica sau limita integrarea cu Bolt Fleet API dacă aceasta devine indisponibilă, nefuncțională, nepermisă, nesigură sau incompatibilă cu funcționarea platformei.
+________________________________________
+7. Cine poate avea acces la date
+Datele personale pot fi accesate, în limitele necesare, de:
+a) personalul autorizat RIDElance;
+b) support agenți RIDElance;
+c) contabili parteneri;
+d) parteneri pentru înființare PFA;
+e) parteneri pentru găzduire sediu profesional;
+f) procesatori de plăți, inclusiv Stripe;
+g) furnizori de hosting și infrastructură IT;
+h) furnizori de email, notificări, CRM sau suport;
+i) consultanți, contabili, auditori sau avocați, dacă este necesar;
+j) autorități publice, instanțe sau instituții competente, atunci când legea impune sau permite acest lucru;
+k) platforme terțe sau furnizori de servicii integrați, în măsura necesară funcționării serviciilor.
+Accesul este acordat pe principiul necesității de a cunoaște, în funcție de rolul persoanei sau entității implicate.
+________________________________________
+8. Contabilul partener
+Pentru abonamentele care includ contabilitate, utilizatorului i se poate aloca un contabil partener.
+Contabilul partener poate avea acces, printr-un dashboard dedicat, la datele și documentele necesare prestării serviciilor contabile.
+Acesta poate:
+a) vizualiza documentele încărcate de utilizator;
+b) solicita documente suplimentare;
+c) cere clarificări;
+d) comunica cu utilizatorul;
+e) marca documente ca verificate, incomplete, neclare sau insuficiente;
+f) utiliza documentele pentru prestarea contabilității;
+g) transmite observații necesare desfășurării corecte a activității contabile.
+Contabilul partener poate acționa, în funcție de context, ca persoană împuternicită de RIDElance sau ca operator independent pentru propriile obligații profesionale și legale.
+________________________________________
+9. Support agentul RIDElance
+Pentru buna desfășurare a serviciilor, RIDElance poate asocia utilizatorului un support agent.
+Support agentul poate avea acces limitat la datele și documentele utilizatorului, strict pentru scopuri operaționale.
+Support agentul poate:
+a) vizualiza anumite documente;
+b) semnala documente lipsă, expirate, incomplete sau incorecte;
+c) solicita clarificări;
+d) încărca documente în numele utilizatorului, dacă utilizatorul le transmite în acest scop;
+e) actualiza anumite informații operaționale;
+f) transmite observații;
+g) ajuta utilizatorul în folosirea platformei;
+h) facilita comunicarea cu contabilul sau partenerii.
+Support agentul nu oferă consultanță juridică, fiscală sau contabilă individuală, cu excepția cazului în care acest lucru este prestat de un specialist autorizat printr-un serviciu distinct.
+________________________________________
+10. Transmiterea datelor către parteneri
+RIDElance poate transmite date personale și documente către parteneri doar în măsura necesară furnizării serviciilor.
+Transmiterea poate avea loc pentru:
+a) înființare PFA;
+b) găzduire sediu profesional;
+c) contabilitate;
+d) procesare plăți;
+e) suport operațional;
+f) verificări documente;
+g) servicii administrative;
+h) beneficii sau oferte partenere solicitate de utilizator;
+i) obligații legale.
+Partenerii pot avea propriile politici de confidențialitate și propriile obligații legale privind datele personale.
+________________________________________
+11. Transferuri în afara Spațiului Economic European
+În principiu, RIDElance urmărește să utilizeze furnizori care stochează și prelucrează datele în Uniunea Europeană sau Spațiul Economic European.
+Totuși, anumite servicii tehnologice, precum procesatori de plăți, furnizori de email, hosting, analytics, suport sau infrastructură, pot implica transferuri de date către țări din afara Spațiului Economic European.
+În astfel de cazuri, RIDElance va urmări utilizarea unor garanții adecvate, precum clauze contractuale standard, mecanisme de conformitate sau alte instrumente permise de legislația aplicabilă.
+________________________________________
+12. Durata de stocare a datelor
+Datele personale sunt păstrate doar atât timp cât este necesar pentru scopurile pentru care au fost colectate, pentru executarea contractului, respectarea obligațiilor legale, soluționarea disputelor sau apărarea drepturilor RIDElance.
+Orientativ, perioadele pot fi:
+a) date cont activ: pe durata existenței contului;
+b) date cont închis: până la 3 ani după închiderea contului, dacă nu există obligații sau motive legale pentru păstrare mai lungă;
+c) documente fiscale și contabile: conform termenelor legale aplicabile, de regulă până la 5–10 ani, în funcție de document și legislația aplicabilă;
+d) date privind plăți și facturi: conform obligațiilor fiscale și contabile;
+e) date privind litigii, fraude sau suspiciuni de documente false: până la soluționarea situației și expirarea termenelor legale de prescripție;
+f) date din comunicări de suport: pe durata necesară soluționării solicitării și ulterior pentru apărarea drepturilor sau îmbunătățirea serviciilor;
+g) date preluate din Bolt Fleet API: pe durata necesară afișării în dashboard, prestării serviciului și respectării obligațiilor contractuale sau legale.
+La expirarea perioadelor aplicabile, datele vor fi șterse, anonimizate sau arhivate, după caz.
+________________________________________
+13. Securitatea datelor
+RIDElance aplică măsuri tehnice și organizatorice rezonabile pentru protejarea datelor personale împotriva accesului neautorizat, pierderii, distrugerii, modificării, divulgării sau utilizării necorespunzătoare.
+Măsurile pot include:
+a) acces limitat pe roluri;
+b) autentificare în cont;
+c) loguri de acces;
+d) controlul drepturilor pentru support agenți și contabili;
+e) stocare securizată;
+f) criptare sau protecții tehnice, unde este cazul;
+g) backup-uri;
+h) politici interne de acces;
+i) instruirea persoanelor cu acces la date;
+j) monitorizarea activității suspecte.
+Nicio platformă digitală nu poate garanta securitate absolută, dar RIDElance depune eforturi rezonabile pentru protejarea datelor.
+________________________________________
+14. Drepturile utilizatorului
+Conform legislației aplicabile privind protecția datelor, utilizatorul poate avea următoarele drepturi:
+a) dreptul de acces la date;
+b) dreptul la rectificarea datelor;
+c) dreptul la ștergerea datelor;
+d) dreptul la restricționarea prelucrării;
+e) dreptul la opoziție;
+f) dreptul la portabilitatea datelor;
+g) dreptul de a retrage consimțământul, atunci când prelucrarea se bazează pe consimțământ;
+h) dreptul de a depune plângere la autoritatea de supraveghere;
+i) dreptul de a nu fi supus unei decizii bazate exclusiv pe prelucrare automată, dacă aceasta produce efecte juridice sau similare semnificative.
+Pentru exercitarea acestor drepturi, utilizatorul poate contacta RIDElance la:
+contact@ridelance.ro
+RIDElance va răspunde solicitărilor în termenul prevăzut de legislația aplicabilă, de regulă în maximum o lună de la primirea cererii complete.
+________________________________________
+15. Ștergerea contului și a datelor
+Utilizatorul poate solicita ștergerea contului și a datelor personale, prin transmiterea unei cereri la contact@ridelance.ro.
+Ștergerea poate fi refuzată sau amânată, total sau parțial, dacă datele trebuie păstrate pentru:
+a) obligații legale;
+b) obligații fiscale sau contabile;
+c) executarea contractului;
+d) apărarea drepturilor RIDElance;
+e) soluționarea disputelor;
+f) prevenirea fraudei;
+g) obligații față de autorități sau parteneri.
+După ștergerea contului, utilizatorul poate pierde accesul la documente, rapoarte, istoricul activității, exporturi, abonamente și alte funcționalități.
+________________________________________
+16. Actualizarea datelor
+Utilizatorul are obligația să furnizeze date reale, corecte, complete și actuale.
+Utilizatorul trebuie să actualizeze documentele expirate sau informațiile care s-au modificat, inclusiv date de contact, date PFA, documente auto, documente personale, documente fiscale sau informații relevante pentru serviciile utilizate.
+RIDElance nu răspunde pentru consecințele cauzate de date incorecte, incomplete, expirate sau neactualizate furnizate de utilizator.
+________________________________________
+17. Marketing și comunicări comerciale
+RIDElance poate transmite comunicări comerciale, oferte, noutăți, campanii sau informații despre parteneri doar în condițiile permise de lege.
+Utilizatorul se poate dezabona de la comunicările de marketing folosind instrucțiunile din mesaj sau contactând RIDElance la contact@ridelance.ro.
+Comunicările operaționale privind contul, abonamentul, documentele, plățile, serviciile sau securitatea platformei nu sunt comunicări de marketing și pot fi transmise indiferent de opțiunea privind marketingul.
+________________________________________
+18. Cookie-uri și tehnologii similare
+Website-ul și platforma RIDElance pot utiliza cookie-uri și tehnologii similare pentru:
+a) funcționarea site-ului;
+b) autentificare;
+c) securitate;
+d) preferințe;
+e) analiză trafic;
+f) îmbunătățirea serviciilor;
+g) marketing, doar unde este permis.
+Detalii suplimentare vor fi prevăzute în Politica de Cookies.
+________________________________________
+19. Datele minorilor
+Serviciile RIDElance nu sunt destinate minorilor.
+Utilizatorii trebuie să aibă capacitate legală deplină de exercițiu pentru crearea contului și utilizarea serviciilor.
+Dacă RIDElance descoperă că a colectat date de la un minor fără temei legal, va lua măsuri pentru ștergerea acestora.
+________________________________________
+20. Modificarea Politicii de Confidențialitate
+RIDElance poate modifica prezenta Politică pentru a reflecta schimbări legislative, tehnice, operaționale sau comerciale.
+Versiunea actualizată va fi publicată pe website sau în platformă, cu indicarea datei ultimei actualizări.
+Continuarea utilizării platformei după publicarea modificărilor reprezintă luarea la cunoștință a noii versiuni.
+________________________________________
+21. Plângeri și autoritatea de supraveghere
+Utilizatorul are dreptul să depună o plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal.
+Date de contact autoritate:
+Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal
+Website: www.dataprotection.ro
+Email: anspdcp@dataprotection.ro
+Înainte de a formula o plângere, utilizatorul este încurajat să contacteze RIDElance la contact@ridelance.ro, pentru a încerca soluționarea amiabilă a situației.
+________________________________________
+22. Contact pentru protecția datelor
+Pentru orice întrebări privind prezenta Politică, prelucrarea datelor personale sau exercitarea drepturilor GDPR, utilizatorul poate contacta RIDElance la:
+RENTEAZA MOBILITY SOLUTIONS SRL
+Email: contact@ridelance.ro
+Website: www.ridelance.ro
+Sediu social: Intrarea Doina nr. 28, cod poștal 077031, România
+

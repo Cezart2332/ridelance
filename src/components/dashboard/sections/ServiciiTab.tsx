@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Box, Button, Chip, Paper, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import { ONE_TIME_SERVICES, stripeService, type ServiceKey } from '../../../services/stripe.service'
+import { PaymentPolicyAcceptance } from '../../common/PaymentPolicyAcceptance'
 
 const T = {
   ink: '#1a1a2e',
@@ -32,7 +34,10 @@ const SERVICE_BADGES: Record<ServiceKey, { label: string; color: string; bg: str
 }
 
 export function ServiciiTab() {
+  const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
+
   const handleBuy = (key: ServiceKey) => {
+    if (!paymentPolicyAccepted) return
     stripeService.redirectToService(key)
   }
 
@@ -45,6 +50,12 @@ export function ServiciiTab() {
         Ai nevoie de un serviciu punctual, fără abonament? Poți achiziționa orice serviciu separat,
         direct prin platforma noastră.
       </Typography>
+      <Box sx={{ mb: 3 }}>
+        <PaymentPolicyAcceptance
+          checked={paymentPolicyAccepted}
+          onChange={setPaymentPolicyAccepted}
+        />
+      </Box>
 
       <Box
         sx={{
@@ -154,6 +165,7 @@ export function ServiciiTab() {
               <Button
                 variant="contained"
                 endIcon={<OpenInNewRoundedIcon />}
+                disabled={!paymentPolicyAccepted}
                 onClick={() => handleBuy(svc.key)}
                 sx={{
                   borderRadius: T.radius.full,

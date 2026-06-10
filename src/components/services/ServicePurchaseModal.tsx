@@ -15,6 +15,8 @@ import {
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import { TOKENS } from '../../constants/tokens'
 import { stripeService, type ServiceKey } from '../../services/stripe.service'
+import { TermsAcceptance } from '../common/TermsAcceptance'
+import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
 
 export interface ServicePurchaseTarget {
   key: ServiceKey
@@ -32,6 +34,8 @@ export function ServicePurchaseModal({ open, service, onClose }: ServicePurchase
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -42,6 +46,8 @@ export function ServicePurchaseModal({ open, service, onClose }: ServicePurchase
       setName('')
       setEmail('')
       setPhone('')
+      setTermsAccepted(false)
+      setPaymentPolicyAccepted(false)
       setError(null)
     }, 200)
   }
@@ -49,6 +55,14 @@ export function ServicePurchaseModal({ open, service, onClose }: ServicePurchase
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!service) return
+    if (!termsAccepted) {
+      setError('Te rugăm să accepți Termenii și Condițiile pentru a continua.')
+      return
+    }
+    if (!paymentPolicyAccepted) {
+      setError('Te rugăm să accepți Politica de Plăți și Abonamente pentru a continua.')
+      return
+    }
 
     setSubmitting(true)
     setError(null)
@@ -109,6 +123,12 @@ export function ServicePurchaseModal({ open, service, onClose }: ServicePurchase
               required
               fullWidth
             />
+            <TermsAcceptance checked={termsAccepted} onChange={setTermsAccepted} disabled={submitting} />
+            <PaymentPolicyAcceptance
+              checked={paymentPolicyAccepted}
+              onChange={setPaymentPolicyAccepted}
+              disabled={submitting}
+            />
             {error && (
               <Typography sx={{ color: 'error.main', fontSize: '0.9rem' }}>{error}</Typography>
             )}
@@ -121,7 +141,7 @@ export function ServicePurchaseModal({ open, service, onClose }: ServicePurchase
           <Button
             type="submit"
             variant="contained"
-            disabled={submitting || !service}
+            disabled={submitting || !service || !termsAccepted || !paymentPolicyAccepted}
             sx={{
               fontWeight: 700,
               borderRadius: TOKENS.radius.full,

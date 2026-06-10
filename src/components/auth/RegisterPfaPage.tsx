@@ -26,6 +26,7 @@ import { pfaService } from '../../services/pfa.service'
 import { documentService } from '../../services/document.service'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { stripeService, type SubscriptionResponse } from '../../services/stripe.service'
+import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
 
 import logo from '../../assets/logo.svg'
 import iconUpload from '../../assets/SVG/2- Regular/upload.svg'
@@ -232,6 +233,7 @@ export default function RegisterPfaPage() {
   const [oras, setOras] = useState('')
   const [judet, setJudet] = useState('')
   const [suntProprietar, setSuntProprietar] = useState(false)
+  const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -246,6 +248,10 @@ export default function RegisterPfaPage() {
     setError(null)
     if (!buletinFile || !strada || !numar || !oras || !judet) {
       setError('Te rugam sa completezi adresa si sa incarci macar buletinul.')
+      return
+    }
+    if (!subStatus?.hasPaidInfiintare && !paymentPolicyAccepted) {
+      setError('Te rugam sa accepti Politica de Plati si Abonamente pentru a continua.')
       return
     }
 
@@ -618,11 +624,19 @@ export default function RegisterPfaPage() {
                   />
                 </Box>
 
+                {!subStatus?.hasPaidInfiintare && (
+                  <PaymentPolicyAcceptance
+                    checked={paymentPolicyAccepted}
+                    onChange={setPaymentPolicyAccepted}
+                    disabled={isLoading}
+                  />
+                )}
+
                 <Button
                   variant="contained"
                   size="large"
                   fullWidth
-                  disabled={isLoading}
+                  disabled={isLoading || (!subStatus?.hasPaidInfiintare && !paymentPolicyAccepted)}
                   endIcon={<ArrowForwardRoundedIcon />}
                   onClick={handleSubmitNuAmPfa}
                   sx={{

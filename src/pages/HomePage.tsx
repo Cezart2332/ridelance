@@ -136,7 +136,7 @@ export function HomePage() {
                 Vezi abonamentele
               </Button>
               <Button
-                variant="outlined"
+                variant="contained"
                 size="large"
                 onClick={handleStart}
                 sx={{
@@ -145,13 +145,13 @@ export function HomePage() {
                   fontSize: '1.02rem',
                   fontWeight: 800,
                   borderRadius: TOKENS.radius.lg,
-                  color: TOKENS.ink,
-                  borderColor: alpha(TOKENS.ink, 0.12),
-                  backgroundColor: 'transparent',
+                  color: '#fff',
+                  backgroundColor: '#303238',
+                  boxShadow: 'none',
                   transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                   '&:hover': {
-                    borderColor: alpha(TOKENS.ink, 0.4),
-                    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                    backgroundColor: '#26282d',
+                    boxShadow: 'none',
                     transform: 'translateY(-2px)',
                   },
                 }}
@@ -1114,26 +1114,31 @@ export function HomePage() {
           >
             Partenerii RIDElance
           </Typography>
-          <Stack
-            direction="row"
-            spacing={{ xs: 6, md: 12 }}
+          <Box
             sx={{
-              justifyContent: 'center',
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'repeat(2, minmax(0, 1fr))',
+                sm: 'repeat(3, minmax(0, 1fr))',
+                md: 'repeat(4, minmax(0, 1fr))',
+              },
               alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: { xs: 4, md: 0 }
+              gap: { xs: 3, md: 4 },
             }}
           >
             {partnerLogos.map((partner) => (
               <Box
                 key={partner.name}
-                component="a"
+                component={partner.href ? 'a' : 'div'}
                 href={partner.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                target={partner.href ? '_blank' : undefined}
+                rel={partner.href ? 'noopener noreferrer' : undefined}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: { xs: 76, md: 96 },
+                  px: 2,
                 }}
               >
                 <Box
@@ -1141,15 +1146,16 @@ export function HomePage() {
                   src={partner.image}
                   alt={partner.name}
                   sx={{
-                    height: { xs: 45, md: 70 },
-                    maxWidth: 240,
+                    maxHeight: partner.name === 'ACE' ? { xs: 58, md: 78 } : { xs: 42, md: 58 },
+                    maxWidth: partner.name === 'ACE' ? { xs: 190, md: 250 } : { xs: 150, md: 190 },
                     width: 'auto',
+                    height: 'auto',
                     objectFit: 'contain',
                   }}
                 />
               </Box>
             ))}
-          </Stack>
+          </Box>
         </Container>
       </Box>
 
@@ -1256,6 +1262,7 @@ export function HomePage() {
             <Button
               variant="outlined"
               size="large"
+              onClick={() => navigate('/servicii')}
               sx={{
                 px: 5,
                 py: 1.5,

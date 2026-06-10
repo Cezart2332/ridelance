@@ -1,0 +1,200 @@
+POLITICA DE COOKIES RIDELANCE
+Ultima actualizare: 04.06.2026
+Prezenta Politică de Cookies explică modul în care platforma RIDElance, disponibilă prin website-ul www.ridelance.ro, utilizează cookie-uri și tehnologii similare.
+Platforma RIDElance este operată de:
+RENTEAZA MOBILITY SOLUTIONS SRL
+CUI: 51787316
+Nr. Registrul Comerțului: J2025034182001
+Sediu social: Intrarea Doina nr. 28, cod poștal 077031, România
+Email: contact@ridelance.ro
+Website: www.ridelance.ro
+Prin utilizarea website-ului sau a platformei RIDElance, utilizatorul poate accepta, refuza sau personaliza utilizarea cookie-urilor, în funcție de preferințele sale și de tipurile de cookie-uri folosite.
+________________________________________
+1. Ce sunt cookie-urile
+Cookie-urile sunt fișiere de mici dimensiuni plasate pe dispozitivul utilizatorului atunci când acesta accesează un website sau o aplicație web.
+Acestea permit website-ului să rețină anumite informații despre vizita utilizatorului, precum preferințe, sesiuni de autentificare, setări, comportament de navigare sau alte informații tehnice necesare funcționării platformei.
+Cookie-urile nu sunt programe software, nu pot accesa fișierele din dispozitivul utilizatorului și nu pot rula cod pe dispozitiv.
+________________________________________
+2. Tehnologii similare
+Pe lângă cookie-uri, RIDElance poate utiliza și tehnologii similare, precum:
+a) pixeli de tracking;
+b) tag-uri;
+c) local storage;
+d) session storage;
+e) identificatori de dispozitiv;
+f) SDK-uri sau scripturi de analiză;
+g) tehnologii de măsurare a performanței;
+h) tehnologii de marketing și remarketing.
+Aceste tehnologii pot funcționa similar cookie-urilor și pot colecta informații despre interacțiunea utilizatorului cu website-ul sau platforma.
+________________________________________
+3. De ce folosim cookie-uri
+RIDElance poate utiliza cookie-uri pentru următoarele scopuri:
+a) funcționarea corectă a website-ului și dashboard-ului;
+b) autentificarea utilizatorului;
+c) păstrarea sesiunii active;
+d) securitatea contului;
+e) prevenirea fraudelor;
+f) salvarea preferințelor utilizatorului;
+g) analizarea traficului;
+h) îmbunătățirea serviciilor;
+i) măsurarea performanței campaniilor;
+j) personalizarea conținutului;
+k) afișarea de reclame relevante;
+l) integrarea cu servicii externe, unde este cazul.
+________________________________________
+4. Tipuri de cookie-uri utilizate
+RIDElance poate utiliza următoarele categorii de cookie-uri:
+________________________________________
+4.1. Cookie-uri strict necesare
+Aceste cookie-uri sunt esențiale pentru funcționarea website-ului și a platformei.
+Ele permit:
+a) autentificarea în cont;
+b) păstrarea sesiunii active;
+c) funcționarea dashboard-ului;
+d) procesarea comenzilor sau abonamentelor;
+e) securitatea platformei;
+f) prevenirea accesului neautorizat;
+g) salvarea preferințelor de confidențialitate.
+Aceste cookie-uri nu pot fi dezactivate din sistemele RIDElance, deoarece fără ele platforma nu poate funcționa corect.
+Utilizatorul poate seta browserul să blocheze aceste cookie-uri, dar anumite părți ale platformei pot deveni indisponibile sau pot funcționa incorect.
+________________________________________
+4.2. Cookie-uri funcționale
+Aceste cookie-uri permit platformei să rețină anumite preferințe ale utilizatorului, precum:
+a) preferințe de limbă;
+b) preferințe de afișare;
+c) date introduse anterior în formulare;
+d) setări ale dashboard-ului;
+e) preferințe privind notificările;
+f) preferințe privind afișarea conținutului.
+Cookie-urile funcționale îmbunătățesc experiența utilizatorului, dar nu sunt strict necesare pentru funcționarea de bază a platformei.
+________________________________________
+4.3. Cookie-uri de analiză și performanță
+Aceste cookie-uri ajută RIDElance să înțeleagă modul în care utilizatorii interacționează cu website-ul și platforma.
+Ele pot colecta informații precum:
+a) paginile vizitate;
+b) durata vizitei;
+c) sursa traficului;
+d) acțiunile efectuate pe site;
+e) erori tehnice;
+f) performanța paginilor;
+g) dispozitivul și browserul utilizat;
+h) interacțiuni cu formulare sau butoane.
+Aceste informații sunt folosite pentru îmbunătățirea website-ului, optimizarea conținutului și dezvoltarea serviciilor RIDElance.
+Exemple de instrumente care pot fi folosite:
+a) Google Analytics;
+b) Google Tag Manager;
+c) alte instrumente de analiză web.
+Aceste cookie-uri sunt utilizate doar dacă utilizatorul le acceptă, acolo unde legea impune consimțământ.
+________________________________________
+4.4. Cookie-uri de marketing și publicitate
+Aceste cookie-uri pot fi utilizate pentru:
+a) afișarea de reclame relevante;
+b) măsurarea eficienței campaniilor publicitare;
+c) remarketing;
+d) crearea de audiențe;
+e) limitarea frecvenței de afișare a reclamelor;
+f) urmărirea conversiilor;
+g) optimizarea campaniilor.
+RIDElance poate utiliza, în funcție de campaniile active:
+a) Meta Pixel/Facebook Pixel;
+b) Google Ads;
+c) TikTok Pixel;
+d) LinkedIn Insight Tag;
+e) alte instrumente similare.
+Aceste cookie-uri sunt plasate doar dacă utilizatorul își exprimă consimțământul, acolo unde legea impune acest lucru.
+________________________________________
+4.5. Cookie-uri ale terților
+Anumite cookie-uri pot fi plasate de furnizori terți utilizați de RIDElance.
+Acești terți pot include:
+a) procesatori de plăți, precum Stripe;
+b) furnizori de analiză, precum Google Analytics;
+c) platforme de publicitate, precum Google Ads, Meta sau TikTok;
+d) furnizori de hosting și securitate;
+e) furnizori de chat sau suport;
+f) furnizori de video sau conținut integrat;
+g) furnizori de autentificare, unde este cazul.
+RIDElance nu controlează în totalitate cookie-urile plasate de terți. Pentru mai multe informații, utilizatorul trebuie să consulte politicile de confidențialitate și cookies ale furnizorilor respectivi.
+________________________________________
+5. Cookie-uri utilizate pentru plăți
+RIDElance utilizează Stripe pentru procesarea plăților online.
+Stripe poate utiliza cookie-uri sau tehnologii similare pentru:
+a) procesarea plăților;
+b) prevenirea fraudelor;
+c) securizarea tranzacțiilor;
+d) autentificarea plăților;
+e) respectarea obligațiilor legale.
+RIDElance nu stochează direct datele complete ale cardului bancar al utilizatorului.
+________________________________________
+6. Cookie-uri utilizate pentru autentificare și dashboard
+Pentru utilizarea contului RIDElance și a dashboard-ului, pot fi folosite cookie-uri necesare pentru:
+a) logarea utilizatorului;
+b) menținerea sesiunii active;
+c) securitatea contului;
+d) prevenirea accesului neautorizat;
+e) afișarea corectă a documentelor și modulelor;
+f) păstrarea setărilor contului;
+g) protejarea datelor utilizatorului.
+Aceste cookie-uri sunt necesare pentru funcționarea platformei și nu necesită consimțământ separat, fiind esențiale pentru prestarea serviciului solicitat.
+________________________________________
+7. Cookie-uri pentru marketing și campanii
+RIDElance poate desfășura campanii online pentru promovarea serviciilor sale, inclusiv prin Google, Meta/Facebook, Instagram, TikTok, LinkedIn sau alte platforme.
+În acest scop, pot fi folosite cookie-uri sau pixeli pentru:
+a) măsurarea conversiilor;
+b) înțelegerea sursei utilizatorului;
+c) afișarea de reclame relevante;
+d) optimizarea bugetelor de marketing;
+e) retargeting;
+f) crearea de audiențe similare.
+Aceste tehnologii vor fi activate doar după exprimarea consimțământului utilizatorului, acolo unde legea cere acest lucru.
+________________________________________
+8. Durata de viață a cookie-urilor
+Cookie-urile pot fi:
+8.1. Cookie-uri de sesiune
+Acestea sunt șterse automat atunci când utilizatorul închide browserul.
+Sunt folosite, de regulă, pentru autentificare, securitate și funcționarea temporară a platformei.
+8.2. Cookie-uri persistente
+Acestea rămân pe dispozitivul utilizatorului pentru o perioadă determinată sau până când sunt șterse manual.
+Pot fi folosite pentru preferințe, analiză, marketing sau reținerea unor setări.
+Durata exactă poate varia în funcție de furnizorul cookie-ului și de scopul acestuia.
+________________________________________
+9. Gestionarea preferințelor privind cookie-urile
+La prima accesare a website-ului, utilizatorul poate primi un banner cookies prin care poate:
+a) accepta toate cookie-urile;
+b) refuza cookie-urile neesențiale;
+c) personaliza preferințele;
+d) salva opțiunile selectate.
+Utilizatorul poate modifica ulterior preferințele prin setările disponibile pe website sau prin configurarea browserului.
+Cookie-urile strict necesare nu pot fi dezactivate prin bannerul cookies, deoarece sunt necesare funcționării platformei.
+________________________________________
+10. Dezactivarea cookie-urilor din browser
+Utilizatorul poate bloca, șterge sau dezactiva cookie-urile direct din setările browserului folosit.
+Modalitatea de gestionare diferă în funcție de browser, de exemplu:
+a) Google Chrome;
+b) Mozilla Firefox;
+c) Safari;
+d) Microsoft Edge;
+e) Opera;
+f) browsere mobile.
+Blocarea tuturor cookie-urilor poate afecta funcționarea website-ului și a dashboard-ului RIDElance.
+În special, dezactivarea cookie-urilor strict necesare poate împiedica autentificarea, menținerea sesiunii active, procesarea comenzilor sau accesul la anumite funcționalități.
+________________________________________
+11. Consimțământul utilizatorului
+Cookie-urile strict necesare sunt utilizate fără consimțământ separat, deoarece sunt indispensabile funcționării website-ului și platformei.
+Cookie-urile funcționale, de analiză, marketing sau publicitate sunt utilizate în funcție de preferințele exprimate de utilizator și doar acolo unde legea impune consimțământ.
+Utilizatorul își poate retrage consimțământul în orice moment, fără ca acest lucru să afecteze legalitatea utilizării cookie-urilor anterior retragerii.
+________________________________________
+12. Actualizarea Politicii de Cookies
+RIDElance poate modifica prezenta Politică de Cookies pentru a reflecta schimbări legislative, tehnice, comerciale sau operaționale.
+Versiunea actualizată va fi publicată pe website-ul www.ridelance.ro, cu indicarea datei ultimei actualizări.
+Continuarea utilizării website-ului sau platformei după publicarea modificărilor reprezintă luarea la cunoștință a noii versiuni.
+________________________________________
+13. Legătura cu Politica de Confidențialitate
+Prezenta Politică de Cookies trebuie citită împreună cu Politica de Confidențialitate RIDElance.
+Politica de Confidențialitate explică modul în care RIDElance colectează, utilizează, stochează, transmite și protejează datele personale ale utilizatorilor.
+________________________________________
+14. Contact
+Pentru întrebări privind prezenta Politică de Cookies, utilizatorul poate contacta RIDElance la:
+RENTEAZA MOBILITY SOLUTIONS SRL
+Email: contact@ridelance.ro
+Website: www.ridelance.ro
+Sediu social: Intrarea Doina nr. 28, cod poștal 077031, România

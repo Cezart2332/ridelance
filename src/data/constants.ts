@@ -2,6 +2,11 @@ import docs from '../assets/docs.svg'
 import renteaza from '../assets/renteaza.svg'
 import silso from '../assets/silso.png'
 import lion from '../assets/lion.png'
+import ace from '../assets/ace.svg'
+import mol from '../assets/mol.png'
+import asigurari from '../assets/asigurari.ro.png'
+import george from '../assets/george.png'
+import ihunt from '../assets/ihunt.webp'
 import character2 from '../assets/Stickers/character 2.png'
 import scene1 from '../assets/Stickers/scene 1.png'
 import scene4 from '../assets/Stickers/scene 4.png'
@@ -99,6 +104,26 @@ export const partnerLogos = [
     image: lion,
     href: 'https://bonurifiscale.ro/',
     desc: 'Lion Finance Consulting este un partener specializat în case de marcat și echipamente fiscale, oferind soluții pentru fiscalizare, configurare și suport dedicat.',
+  },
+  {
+    name: 'ACE',
+    image: ace,
+  },
+  {
+    name: 'MOL',
+    image: mol,
+  },
+  {
+    name: 'asigurari.ro',
+    image: asigurari,
+  },
+  {
+    name: 'George',
+    image: george,
+  },
+  {
+    name: 'iHunt',
+    image: ihunt,
   },
 ]
 

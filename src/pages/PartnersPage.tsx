@@ -31,18 +31,19 @@ export function PartnersPage() {
                   flexDirection: { xs: 'column', sm: 'row' },
                   alignItems: { xs: 'flex-start', sm: 'center' },
                   gap: 3,
+                  justifyContent: 'flex-start',
                   transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
                   '&:hover': {
                     boxShadow: TOKENS.shadow.lg,
                     borderColor: TOKENS.borderHover,
                   },
                 }}
-              >
+                >
                 <Box
-                  component="a"
+                  component={partner.href ? 'a' : 'div'}
                   href={partner.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target={partner.href ? '_blank' : undefined}
+                  rel={partner.href ? 'noopener noreferrer' : undefined}
                   aria-label={partner.name}
                   sx={{
                     lineHeight: 0,
@@ -59,23 +60,25 @@ export function PartnersPage() {
                     sx={{ width: 140, height: 'auto', display: 'block' }}
                   />
                 </Box>
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ color: TOKENS.ink, fontWeight: 750, mb: 0.8 }}
-                  >
-                    {partner.name}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      color: TOKENS.textMuted,
-                      lineHeight: 1.7,
-                      fontSize: '0.95rem',
-                    }}
-                  >
-                    {partner.desc}
-                  </Typography>
-                </Box>
+                {partner.desc && (
+                  <Box>
+                    <Typography
+                      variant="h6"
+                      sx={{ color: TOKENS.ink, fontWeight: 750, mb: 0.8 }}
+                    >
+                      {partner.name}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: TOKENS.textMuted,
+                        lineHeight: 1.7,
+                        fontSize: '0.95rem',
+                      }}
+                    >
+                      {partner.desc}
+                    </Typography>
+                  </Box>
+                )}
               </Paper>
             ))}
           </Box>

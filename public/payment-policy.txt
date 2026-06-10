@@ -1,0 +1,150 @@
+POLITICA DE PLĂȚI, ABONAMENTE ȘI RAMBURSĂRI RIDELANCE
+Ultima actualizare: 04.06.2026
+Prezenta Politică de Plăți, Abonamente și Rambursări, denumită în continuare „Politica de Plăți”, reglementează modul în care sunt achitate, reînnoite, suspendate, anulate și, după caz, rambursate abonamentele și serviciile oferite prin platforma RIDElance.
+Această Politică se aplică utilizării website-ului www.ridelance.ro, dashboard-ului RIDElance, abonamentelor RIDElance, serviciilor individuale și oricăror plăți efectuate către RIDElance.
+Platforma RIDElance este operată de:
+RENTEAZA MOBILITY SOLUTIONS SRL
+CUI: 51787316
+Nr. Registrul Comerțului: J2025034182001
+Sediu social: Intrarea Doina nr. 28, cod poștal 077031, România
+Email: contact@ridelance.ro
+Website: www.ridelance.ro
+Prin achiziționarea unui abonament sau serviciu RIDElance, utilizatorul confirmă că a citit, a înțeles și acceptă prezenta Politică de Plăți.
+________________________________________
+1. Servicii și abonamente disponibile
+RIDElance poate oferi abonamente recurente și servicii individuale, conform ofertei afișate în platformă.
+La data ultimei actualizări, serviciile și prețurile pot include:
+1.1. Abonamente RIDElance
+RIDElance Solo — 49 lei/săptămână
+RIDElance Start — 99 lei/săptămână
+RIDElance Pro — 149 lei/săptămână
+Abonamentele sunt servicii recurente, cu plată săptămânală, care oferă acces la funcționalitățile și beneficiile aferente planului ales.
+________________________________________
+1.2. Servicii individuale
+Înființare PFA — 450 lei / serviciu
+Găzduire sediu social/profesional — 449 lei / an
+Start Ride — 799 lei / serviciu
+Adăugare anunț mașină — 29 lei / lună / anunț
+Serviciile individuale sunt servicii punctuale sau servicii cu durată determinată, achiziționate separat de abonamente, cu excepția cazului în care oferta comercială prevede altfel.
+________________________________________
+2. Procesatorul de plăți
+Plățile online sunt procesate prin Stripe sau prin alți procesatori de plată afișați în platformă.
+RIDElance nu stochează direct datele complete ale cardului bancar al utilizatorului.
+Procesarea cardului, autorizarea plății, autentificarea plății, prevenirea fraudei și securitatea tranzacției sunt gestionate prin infrastructura procesatorului de plăți.
+Utilizatorul este responsabil să se asigure că metoda de plată folosită este validă, activă și are fonduri suficiente.
+________________________________________
+3. Plăți recurente
+Prin achiziționarea unui abonament RIDElance, utilizatorul autorizează debitarea recurentă a metodei de plată selectate, conform prețului abonamentului și ciclului de facturare aplicabil.
+Abonamentele RIDElance se pot reînnoi automat până la anularea lor de către utilizator sau până la suspendarea/încetarea serviciului de către RIDElance, conform Termenilor și Condițiilor.
+________________________________________
+4. Ciclul standard de abonament
+Abonamentele RIDElance funcționează, ca regulă generală, pe bază de plată săptămânală.
+Ciclul standard poate fi:
+luni ora 15:00 – următoarea luni ora 14:59
+Pentru utilizatorii noi, activarea completă poate începe după finalizarea onboardingului, verificarea informațiilor necesare și confirmarea plății.
+RIDElance poate stabili un alt ciclu de facturare, dacă acesta este afișat în platformă sau comunicat utilizatorului înainte de achiziție.
+________________________________________
+5. Activarea serviciilor
+Un abonament sau serviciu RIDElance poate fi activat după:
+a) completarea datelor solicitate;
+b) acceptarea Termenilor și Condițiilor;
+c) acceptarea Politicii de Confidențialitate;
+d) exprimarea consimțămintelor necesare, unde este cazul;
+e) confirmarea plății;
+f) verificarea documentelor sau informațiilor necesare, dacă serviciul impune acest lucru.
+Pentru anumite servicii, precum înființare PFA, Start Ride, contabilitate prin partener sau găzduire sediu profesional, activarea poate depinde și de documentele furnizate de utilizator sau de disponibilitatea partenerilor implicați.
+________________________________________
+6. Neplata abonamentului
+În cazul în care plata abonamentului eșuează, RIDElance poate:
+a) notifica utilizatorul;
+b) încerca din nou debitarea metodei de plată;
+c) solicita actualizarea metodei de plată;
+d) limita accesul la anumite funcționalități;
+e) suspenda temporar contul;
+f) suspenda suportul;
+g) suspenda accesul la contabilul partener, dacă abonamentul include contabilitate;
+h) opri transmiterea documentelor către parteneri;
+i) înceta furnizarea serviciilor până la achitarea sumelor restante.
+Utilizatorul rămâne responsabil pentru plata sumelor datorate pentru serviciile deja activate, utilizate sau prestate.
+________________________________________
+7. Anularea abonamentului
+Utilizatorul poate solicita anularea abonamentului prin platformă, dacă această funcție este disponibilă, sau prin transmiterea unei solicitări la adresa:
+contact@ridelance.ro
+Anularea abonamentului produce efecte pentru perioada următoare de facturare, cu excepția cazului în care RIDElance comunică altfel.
+Sumele deja achitate pentru perioada activă nu se rambursează, cu excepția situațiilor prevăzute expres în prezenta Politică sau impuse de lege.
+După anularea abonamentului, utilizatorul poate pierde accesul la:
+a) funcționalități premium;
+b) suport;
+c) comunicarea cu contabilul partener;
+d) dashboard avansat;
+e) exporturi;
+f) rapoarte;
+g) beneficii partenere;
+h) alte servicii incluse în abonament.
+________________________________________
+8. Suspendarea sau încetarea serviciilor
+RIDElance poate suspenda sau înceta furnizarea serviciilor în cazul în care:
+a) plata nu este efectuată;
+b) utilizatorul furnizează date false;
+c) utilizatorul încarcă documente false, expirate sau neconforme;
+d) utilizatorul nu transmite documentele necesare prestării serviciului;
+e) utilizatorul nu răspunde solicitărilor esențiale venite de la RIDElance, contabil sau partener;
+f) există suspiciuni rezonabile de fraudă;
+g) utilizatorul încalcă Termenii și Condițiile;
+h) serviciul nu mai poate fi prestat din motive legale, tehnice sau operaționale.
+Suspendarea sau încetarea serviciului nu anulează obligația utilizatorului de a achita sumele datorate pentru serviciile deja activate, utilizate sau prestate.
+________________________________________
+9. Politica de rambursare
+Sumele achitate pentru abonamente, servicii digitale sau servicii deja activate nu sunt rambursabile, cu excepția situației în care eroarea, neexecutarea serviciului sau debitarea incorectă este cauzată direct de RIDElance.
+Rambursarea poate fi analizată punctual în următoarele situații:
+a) utilizatorul a fost taxat din eroarea directă a RIDElance;
+b) serviciul nu a fost activat din cauza unei erori imputabile RIDElance;
+c) a fost efectuată o plată dublă dintr-o eroare tehnică;
+d) RIDElance nu poate furniza serviciul achitat din motive imputabile exclusiv RIDElance.
+Nu se acordă rambursare pentru:
+a) neutilizarea contului;
+b) răzgândirea utilizatorului după activarea serviciului;
+c) documente incomplete, neclare sau greșite furnizate de utilizator;
+d) refuzul utilizatorului de a continua onboardingul;
+e) refuzul utilizatorului de a furniza documente necesare;
+f) imposibilitatea activării pe Uber, Bolt sau alte platforme din cauze independente de RIDElance;
+g) respingerea documentelor de către autorități, parteneri sau platforme terțe;
+h) întârzieri cauzate de ONRC, ANAF, ARR, Uber, Bolt, bănci, procesatori de plăți sau alți terți;
+i) neîndeplinirea condițiilor legale de către utilizator;
+j) servicii deja prestate integral sau parțial;
+k) suspendarea contului ca urmare a încălcării Termenilor și Condițiilor.
+RIDElance poate analiza punctual o cerere de rambursare, fără ca o rambursare acordată într-un caz să creeze o obligație pentru cazuri viitoare.
+________________________________________
+10. Dreptul de retragere pentru consumatori
+În cazul în care utilizatorul are calitatea de consumator potrivit legislației aplicabile, acesta poate beneficia de dreptul legal de retragere pentru contractele încheiate la distanță, în condițiile și limitele prevăzute de lege.
+Pentru serviciile digitale, serviciile activate imediat sau serviciile începute cu acordul expres al utilizatorului înainte de expirarea termenului legal de retragere, utilizatorul poate pierde dreptul de retragere sau poate datora plata proporțională pentru serviciile deja prestate.
+Înainte de activarea anumitor servicii, RIDElance poate solicita utilizatorului să confirme că dorește începerea prestării serviciului înainte de expirarea termenului legal de retragere și că înțelege consecințele acestei solicitări.
+________________________________________
+11. Servicii prestate prin parteneri
+Anumite servicii RIDElance pot fi prestate prin parteneri, inclusiv:
+a) înființare PFA;
+b) găzduire sediu social/profesional;
+c) contabilitate;
+d) servicii administrative;
+e) alte servicii conexe.
+În aceste cazuri, termenul de prestare, disponibilitatea, documentele necesare și condițiile de furnizare pot depinde și de partenerul implicat.
+RIDElance nu răspunde pentru întârzieri, refuzuri sau imposibilitatea prestării serviciului cauzate de documente incomplete, informații greșite, lipsa răspunsului utilizatorului, cerințe ale partenerului sau decizii ale autorităților.
+________________________________________
+12. Facturare
+RIDElance poate emite facturi sau documente fiscale pentru sumele încasate, conform legislației aplicabile și informațiilor furnizate de utilizator.
+Utilizatorul este responsabil pentru corectitudinea datelor de facturare furnizate.
+Dacă utilizatorul solicită facturare pe PFA sau altă formă juridică, acesta trebuie să furnizeze datele corecte și complete necesare emiterii facturii.
+________________________________________
+13. Modificarea prețurilor
+RIDElance poate modifica prețurile abonamentelor și serviciilor.
+Pentru abonamentele active, modificările de preț vor fi comunicate utilizatorilor prin platformă, email sau alte mijloace rezonabile.
+Modificările pot intra în vigoare de la următoarea perioadă de facturare sau conform informării transmise utilizatorului, în limitele permise de lege.
+Continuarea utilizării serviciilor după intrarea în vigoare a modificărilor reprezintă acceptarea noilor condiții comerciale.
+________________________________________
+14. Contact
+Pentru întrebări privind plățile, abonamentele, facturarea sau rambursările, utilizatorul poate contacta RIDElance la:
+RENTEAZA MOBILITY SOLUTIONS SRL
+Email: contact@ridelance.ro
+Website: www.ridelance.ro
+Sediu social: Intrarea Doina nr. 28, cod poștal 077031, România
+

@@ -15,6 +15,7 @@ import {
   type SubscriptionResponse,
 } from '../../../services/stripe.service'
 import { getNextMondayBillingDate, formatRomanianDate, isPendingBilling } from '../../../utils/billing'
+import { PaymentPolicyAcceptance } from '../../common/PaymentPolicyAcceptance'
 
 const T = {
   ink: '#1a1a2e',
@@ -58,6 +59,7 @@ export function AbonamenteTab() {
   const [isLoading, setIsLoading] = useState(true)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [planChangeNotice, setPlanChangeNotice] = useState(false)
+  const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
 
   useEffect(() => {
     if (searchParams.get('plan_changed') === '1') {
@@ -94,6 +96,7 @@ export function AbonamenteTab() {
   const currentPlan = SUBSCRIPTION_PLANS.find(p => p.key === currentPlanKey) || SUBSCRIPTION_PLANS[1]
 
   const handleUpgrade = (key: PlanKey) => {
+    if (!paymentPolicyAccepted) return
     const origin = window.location.origin
     void stripeService.redirectToPlan(
       key,
@@ -259,6 +262,12 @@ export function AbonamenteTab() {
           <Typography sx={{ fontWeight: 700, color: T.ink, mb: 2, fontSize: '1rem' }}>
             Celelalte planuri disponibile
           </Typography>
+          <Box sx={{ mb: 2 }}>
+            <PaymentPolicyAcceptance
+              checked={paymentPolicyAccepted}
+              onChange={setPaymentPolicyAccepted}
+            />
+          </Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
             {SUBSCRIPTION_PLANS.map((plan) => {
               const isCurrent = plan.key === currentPlanKey
@@ -297,7 +306,7 @@ export function AbonamenteTab() {
                   <Button
                     variant={isCurrent ? 'outlined' : 'contained'}
                     fullWidth
-                    disabled={isCurrent}
+                    disabled={isCurrent || !paymentPolicyAccepted}
                     size="small"
                     onClick={() => handleUpgrade(plan.key)}
                     sx={{

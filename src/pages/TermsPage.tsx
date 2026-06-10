@@ -1,36 +1,12 @@
-import { Box, Container, Paper, Typography } from '@mui/material'
-import { TOKENS } from '../constants/tokens'
-import { SectionHeader } from '../components/common/SectionHeader'
-import { loremLongText } from '../data/constants'
-import { pageFrameSx } from '../constants/layout'
+import { LegalDocumentPage } from '../components/common/LegalDocumentPage'
 
 export function TermsPage() {
   return (
-    <Box sx={pageFrameSx}>
-      <Container maxWidth="md">
-        <Paper
-          elevation={0}
-          sx={{
-            p: { xs: 4, md: 6 },
-            borderRadius: TOKENS.radius.xl,
-            border: `1px solid ${TOKENS.border}`,
-            boxShadow: TOKENS.shadow.md,
-            backgroundColor: TOKENS.paper,
-          }}
-        >
-          <SectionHeader title="Termeni si conditii" />
-          <Typography
-            sx={{
-              lineHeight: 1.8,
-              color: TOKENS.textMuted,
-              textAlign: 'center',
-              mt: 2,
-            }}
-          >
-            {loremLongText}
-          </Typography>
-        </Paper>
-      </Container>
-    </Box>
+    <LegalDocumentPage
+      title="Termeni si Conditii Generale RIDElance"
+      updatedAt="04.06.2026"
+      documentPath="/terms-and-conditions.txt"
+      errorMessage="Nu am putut incarca termenii si conditiile. Te rugam sa reincarci pagina."
+    />
   )
 }

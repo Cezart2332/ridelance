@@ -6,9 +6,11 @@ import MenuRoundedIcon from '@mui/icons-material/MenuRounded'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded'
+import { FaFacebookF, FaInstagram } from 'react-icons/fa'
 import { TOKENS } from '../../constants/tokens'
 import { navItems } from '../../data/constants'
 import logo from '../../assets/logo.svg'
+import motto from '../../assets/motto.svg'
 import { useAppSelector } from '../../store/hooks'
 
 import { RouteFallback } from '../common/RouteFallback'
@@ -25,6 +27,12 @@ const ContactPage = lazy(() => import('../../pages/ContactPage').then((m) => ({ 
 const TermsPage = lazy(() => import('../../pages/TermsPage').then((m) => ({ default: m.TermsPage })))
 const PrivacyPolicyPage = lazy(() =>
   import('../../pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })),
+)
+const CookiesPolicyPage = lazy(() =>
+  import('../../pages/CookiesPolicyPage').then((m) => ({ default: m.CookiesPolicyPage })),
+)
+const PaymentPolicyPage = lazy(() =>
+  import('../../pages/PaymentPolicyPage').then((m) => ({ default: m.PaymentPolicyPage })),
 )
 const CarsPage = lazy(() => import('../../pages/CarsPage').then((m) => ({ default: m.CarsPage })))
 
@@ -408,6 +416,8 @@ export function AppLayout() {
             <Route path="/dashboard-demo" element={<Navigate to="/demo" replace />} />
             <Route path="/termeni-si-conditii" element={<TermsPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/politica-cookies" element={<CookiesPolicyPage />} />
+            <Route path="/politica-plati-abonamente" element={<PaymentPolicyPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
@@ -418,98 +428,233 @@ export function AppLayout() {
         component="footer"
         sx={{
           py: { xs: 6, md: 8 },
-          background: `radial-gradient(circle at 50% -20%, #21283c 0%, #10101d 100%)`,
-          color: '#FFFFFF',
+          background: 'linear-gradient(180deg, #202638 0%, #10101d 100%)',
+          color: '#fff',
           position: 'relative',
           overflow: 'hidden',
-          borderTop: `1px solid ${alpha('#fff', 0.08)}`,
+          borderTop: `1px solid ${alpha('#fff', 0.1)}`,
         }}
       >
         <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-              gap: { xs: 3, md: 4 },
-              pb: 3,
-              borderBottom: `1px solid ${alpha('#fff', 0.15)}`,
+              gridTemplateColumns: { xs: '1fr', md: '1fr minmax(280px, 380px) 1fr' },
+              gap: { xs: 4, md: 6 },
+              alignItems: 'center',
+              pb: { xs: 4, md: 5 },
+              borderBottom: `1px solid ${alpha('#fff', 0.14)}`,
             }}
           >
-            <Stack spacing={1.2} sx={{ alignItems: 'flex-start' }}>
+            <Stack
+              spacing={2}
+              sx={{
+                alignItems: { xs: 'center', md: 'flex-start' },
+                textAlign: { xs: 'center', md: 'left' },
+              }}
+            >
+              <Typography
+                sx={{
+                  color: alpha('#fff', 0.52),
+                  fontSize: '0.78rem',
+                  fontWeight: 900,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Contact
+              </Typography>
               <Box
                 component="a"
                 href="mailto:contact@ridelance.ro"
                 sx={{
-                  color: alpha('#fff', 0.9),
+                  color: alpha('#fff', 0.92),
                   textDecoration: 'none',
-                  fontWeight: 700,
-                  fontSize: '1.15rem',
+                  fontWeight: 800,
+                  fontSize: { xs: '1.05rem', md: '1.12rem' },
                   '&:hover': { color: '#fff' },
                 }}
               >
                 contact@ridelance.ro
               </Box>
-              <Box
-                component="a"
-                href="tel:+40070000000"
-                sx={{
-                  color: alpha('#fff', 0.9),
-                  textDecoration: 'none',
-                  fontWeight: 700,
-                  fontSize: '1.15rem',
-                  '&:hover': { color: '#fff' },
-                }}
-              >
-                +40 700 000 000
-              </Box>
+              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                <IconButton
+                  component="a"
+                  href="https://www.facebook.com/profile.php?id=61589705146000"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook RIDElance"
+                  sx={{
+                    width: 42,
+                    height: 42,
+                    color: '#fff',
+                    border: `1px solid ${alpha('#fff', 0.18)}`,
+                    backgroundColor: alpha('#fff', 0.07),
+                    '&:hover': {
+                      backgroundColor: alpha(TOKENS.primary, 0.18),
+                      borderColor: alpha(TOKENS.primary, 0.55),
+                      transform: 'translateY(-1px)',
+                    },
+                  }}
+                >
+                  <FaFacebookF size={18} />
+                </IconButton>
+                <IconButton
+                  component="a"
+                  href="https://www.instagram.com/ridelance/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram RIDElance"
+                  sx={{
+                    width: 42,
+                    height: 42,
+                    color: '#fff',
+                    border: `1px solid ${alpha('#fff', 0.18)}`,
+                    backgroundColor: alpha('#fff', 0.07),
+                    '&:hover': {
+                      backgroundColor: alpha(TOKENS.primary, 0.18),
+                      borderColor: alpha(TOKENS.primary, 0.55),
+                      transform: 'translateY(-1px)',
+                    },
+                  }}
+                >
+                  <FaInstagram size={19} />
+                </IconButton>
+              </Stack>
             </Stack>
 
-            <Stack
-              spacing={1.2}
-              sx={{ alignItems: { xs: 'flex-start', md: 'flex-end' } }}
+            <Box
+              sx={{
+                justifySelf: 'center',
+                width: '100%',
+                maxWidth: 380,
+              }}
             >
-              <Button
-                onClick={() => goTo('/termeni-si-conditii')}
+              <Stack spacing={1.35} sx={{ alignItems: 'center' }}>
+                <Box
+                  component="img"
+                  src={logo}
+                  alt="Ridelance"
+                  sx={{
+                    width: { xs: 220, sm: 275 },
+                    maxWidth: '100%',
+                    height: 'auto',
+                    display: 'block',
+                  }}
+                />
+                <Box
+                  component="img"
+                  src={motto}
+                  alt="Independent. Dar nu singur."
+                  sx={{
+                    width: { xs: 205, sm: 245 },
+                    maxWidth: '100%',
+                    height: 'auto',
+                    display: 'block',
+                    opacity: 0.92,
+                  }}
+                />
+              </Stack>
+            </Box>
+
+            <Stack
+              spacing={1.15}
+              sx={{
+                alignItems: { xs: 'center', md: 'flex-end' },
+                textAlign: { xs: 'center', md: 'right' },
+              }}
+            >
+              <Typography
                 sx={{
-                  p: 0,
-                  minWidth: 'unset',
-                  color: alpha('#fff', 0.9),
-                  fontWeight: 700,
-                  fontSize: '1.05rem',
-                  textTransform: 'none',
-                  '&:hover': { color: '#fff', backgroundColor: 'transparent' },
+                  color: alpha('#fff', 0.52),
+                  fontSize: '0.78rem',
+                  fontWeight: 900,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
                 }}
               >
-                Termeni si conditii
-              </Button>
-              <Button
-                onClick={() => goTo('/privacy-policy')}
-                sx={{
-                  p: 0,
-                  minWidth: 'unset',
-                  color: alpha('#fff', 0.9),
-                  fontWeight: 700,
-                  fontSize: '1.05rem',
-                  textTransform: 'none',
-                  '&:hover': { color: '#fff', backgroundColor: 'transparent' },
-                }}
-              >
-                Privacy Policy
-              </Button>
+                Legal
+              </Typography>
+              {[
+                { label: 'Termeni si conditii', path: '/termeni-si-conditii' },
+                { label: 'Politica de Confidentialitate', path: '/privacy-policy' },
+                { label: 'Politica de Cookies', path: '/politica-cookies' },
+                { label: 'Politica de Plati si Abonamente', path: '/politica-plati-abonamente' },
+              ].map((item) => (
+                <Button
+                  key={item.path}
+                  onClick={() => goTo(item.path)}
+                  sx={{
+                    p: 0,
+                    minWidth: 'unset',
+                    color: alpha('#fff', 0.78),
+                    fontWeight: 700,
+                    fontSize: '0.92rem',
+                    lineHeight: 1.25,
+                    textTransform: 'none',
+                    justifyContent: 'flex-end',
+                    '&:hover': {
+                      color: '#fff',
+                      backgroundColor: 'transparent',
+                    },
+                  }}
+                >
+                  {item.label}
+                </Button>
+              ))}
             </Stack>
           </Box>
 
-          <Typography
+          <Box
             sx={{
               pt: 3,
-              textAlign: 'center',
-              color: alpha('#fff', 0.7),
-              fontWeight: 600,
-              fontSize: '0.95rem',
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: 1.5,
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}
           >
-            © Copyright 2026 by ridelance.ro
-          </Typography>
+            <Typography
+              sx={{
+                color: alpha('#fff', 0.52),
+                fontWeight: 600,
+                fontSize: '0.9rem',
+              }}
+            >
+              © Copyright 2026 by ridelance.ro
+            </Typography>
+            <Stack
+              direction="row"
+              spacing={2}
+              sx={{ alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}
+            >
+              {[
+                { label: 'Servicii', path: '/servicii' },
+                { label: 'Abonamente', path: '/abonamente-preturi' },
+                { label: 'Contact', path: '/contact' },
+              ].map((item) => (
+                <Button
+                  key={item.path}
+                  onClick={() => goTo(item.path)}
+                  sx={{
+                    p: 0,
+                    minWidth: 'unset',
+                    color: alpha('#fff', 0.66),
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    textTransform: 'none',
+                    '&:hover': {
+                      color: '#fff',
+                      backgroundColor: 'transparent',
+                    },
+                  }}
+                >
+                  {item.label}
+                </Button>
+              ))}
+            </Stack>
+          </Box>
         </Container>
       </Box>
     </Box>

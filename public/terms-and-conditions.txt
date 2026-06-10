@@ -1,0 +1,549 @@
+TERMENI ȘI CONDIȚII GENERALE RIDELANCE
+Ultima actualizare: 04.06.2026
+Prezentele Termeni și Condiții Generale, denumite în continuare „Condițiile”, reglementează accesul și utilizarea platformei RIDElance, disponibilă prin website-ul www.ridelance.ro, dashboard-ul RIDElance și orice alte pagini, formulare, module sau servicii digitale puse la dispoziție sub brandul RIDElance.
+Vă rugăm să citiți cu atenție prezentele Condiții înainte de utilizarea platformei, crearea unui cont sau achiziționarea oricărui abonament ori serviciu RIDElance. Prin accesarea platformei, crearea unui cont, încărcarea documentelor, folosirea dashboard-ului sau achiziționarea unui serviciu, confirmați că ați citit, ați înțeles și acceptați prezentele Condiții.
+Platforma RIDElance este operată de:
+RENTEAZA MOBILITY SOLUTIONS SRL
+CUI: 51787316
+Nr. Registrul Comerțului: J2025034182001
+Sediu social: Intrarea Doina nr. 28, cod poștal 077031, România
+Email: contact@ridelance.ro
+Website: www.ridelance.ro
+Telefon/WhatsApp: nu este disponibil momentan
+________________________________________
+1. Definiții
+În sensul prezentelor Condiții, termenii de mai jos au următorul înțeles:
+RIDElance – platforma digitală operată de RENTEAZA MOBILITY SOLUTIONS SRL, destinată șoferilor care desfășoară sau intenționează să desfășoare activitate de ridesharing/transport alternativ, în special prin PFA, oferind instrumente digitale, organizare documente, ghidaj operațional, suport, acces la parteneri și servicii conexe.
+Platforma – website-ul www.ridelance.ro, dashboard-ul RIDElance, formularele, paginile, modulele, aplicațiile web, funcționalitățile și serviciile digitale puse la dispoziție de RIDElance.
+Operatorul platformei, noi, nouă, al nostru – RENTEAZA MOBILITY SOLUTIONS SRL.
+Utilizatorul, dumneavoastră, dvs. – orice persoană care accesează platforma, își creează cont, încarcă documente, achiziționează un serviciu sau folosește serviciile RIDElance.
+Șoferul – utilizatorul care desfășoară sau intenționează să desfășoare activitate de ridesharing/transport alternativ, prin PFA sau altă formă legală permisă.
+PFA – persoană fizică autorizată, înregistrată conform legislației aplicabile.
+Contul RIDElance – contul creat de utilizator în platformă, prin care acesta poate accesa dashboard-ul, documentele, serviciile, abonamentele, alertele, suportul și alte funcționalități disponibile.
+Dashboard-ul utilizatorului – zona digitală din platformă prin care utilizatorul poate gestiona informații, documente, venituri, cheltuieli, abonamente, servicii, notificări, alerte și alte elemente relevante pentru activitatea sa.
+Dashboard-ul contabilului – zona digitală dedicată contabilului partener, prin care acesta poate vizualiza documentele utilizatorilor alocați, poate solicita documente suplimentare, poate comunica cu utilizatorii și poate desfășura activități necesare prestării serviciilor contabile.
+Abonamentul – serviciu recurent, plătit săptămânal, care oferă acces la anumite funcționalități RIDElance, în funcție de planul ales.
+Serviciu individual – serviciu punctual, separat de abonamente, achiziționat de utilizator în funcție de nevoile sale.
+Partener RIDElance – terț colaborator al RIDElance, precum furnizor de servicii de înființare PFA, contabil, bancă, procesator de plăți, broker, furnizor de servicii auto, furnizor de combustibil/energie, furnizor de software sau alt prestator relevant.
+Contabil partener – profesionist sau entitate independentă care colaborează cu RIDElance și care poate presta servicii contabile pentru utilizatorii eligibili, în funcție de abonamentul sau serviciul achiziționat.
+Support agent RIDElance – persoană desemnată de RIDElance pentru suport operațional, asistență în utilizarea platformei, verificări operaționale, comunicare cu utilizatorul și sprijin în organizarea documentelor.
+Stripe – procesatorul de plăți utilizat de RIDElance pentru procesarea plăților online, inclusiv plăți cu cardul, abonamente și servicii individuale.
+Documente personale/PFA – documente precum carte de identitate, permis de conducere, certificat de înregistrare PFA, CUI, documente fiscale, cazier, atestate, adeverințe sau alte documente necesare pentru furnizarea serviciilor RIDElance.
+Documente vehicul – documente precum ITP, RCA, ecusoane Uber/Bolt, asigurare călători și bagaje sau alte documente relevante pentru activitatea de transport alternativ.
+Documentație recurentă – documente încărcate periodic de utilizator, precum extrase bancare, rapoarte Uber/Bolt, facturi de cheltuieli deductibile sau alte documente necesare pentru evidența lunară.
+________________________________________
+2. Ce este RIDElance
+RIDElance este o platformă digitală creată pentru a ajuta șoferii de ridesharing/transport alternativ să își organizeze mai eficient activitatea, documentele, veniturile, cheltuielile, obligațiile recurente și relația cu partenerii relevanți.
+Platforma poate oferi, în funcție de serviciul sau abonamentul ales:
+a) dashboard PFA;
+b) evidență venituri și cheltuieli;
+c) organizare documente personale, PFA și auto;
+d) încărcare documentație lunară;
+e) alerte pentru documente și termene;
+f) calculator estimativ de taxe;
+g) ghiduri și checklist-uri;
+h) suport operațional;
+i) acces la servicii partenere;
+j) acces la servicii de înființare PFA prin parteneri;
+k) acces la contabilitate prin parteneri, pentru abonamentele care includ acest beneficiu;
+l) acces la oferte auto pentru ridesharing;
+m) posibilitatea de listare a unor mașini pentru ridesharing;
+n) comunicare între utilizator, contabil partener și support agent;
+o) alte funcționalități disponibile în platformă.
+RIDElance nu este o platformă de transport alternativ, nu este Uber, nu este Bolt și nu intermediază curse de transport persoane.
+________________________________________
+3. Ce nu este RIDElance
+Utilizatorul înțelege și acceptă că RIDElance:
+a) nu este Uber, Bolt sau altă platformă de transport alternativ;
+b) nu este operator de transport alternativ pentru fiecare utilizator;
+c) nu garantează acceptarea utilizatorului pe Uber, Bolt sau alte platforme;
+d) nu garantează obținerea documentelor, autorizațiilor, atestatelor sau avizelor necesare;
+e) nu garantează un anumit nivel de venit;
+f) nu angajează șoferii;
+g) nu stabilește programul de lucru al șoferilor;
+h) nu controlează cursele efectuate de șoferi;
+i) nu încasează veniturile din curse în numele utilizatorului, cu excepția cazurilor în care un serviciu viitor ar prevedea expres acest lucru;
+j) nu înlocuiește obligația utilizatorului de a respecta legislația aplicabilă;
+k) nu înlocuiește relația contractuală dintre utilizator și Uber, Bolt, autorități, contabil, bancă sau alți furnizori;
+l) nu oferă consultanță juridică individuală;
+m) nu devine societate de contabilitate prin faptul că facilitează accesul la contabili parteneri.
+RIDElance oferă infrastructură digitală, suport operațional, organizare, ghidaj și acces la parteneri.
+________________________________________
+4. Documentele contractuale
+Relația dintre RIDElance și utilizator este reglementată de următoarele documente:
+a) prezentele Termeni și Condiții;
+b) Politica de Confidențialitate;
+c) Politica de Cookies;
+d) Politica de Plăți, Abonamente și Rambursări, dacă este publicată separat;
+e) condițiile comerciale afișate în platformă;
+f) descrierea abonamentelor și serviciilor;
+g) formularele completate de utilizator;
+h) acordurile sau consimțămintele exprimate în platformă;
+i) orice alte condiții speciale aplicabile unui serviciu anume.
+În caz de contradicție între prezentele Condiții și o condiție specială afișată expres pentru un anumit serviciu, condiția specială va prevala strict pentru acel serviciu.
+________________________________________
+5. Eligibilitatea utilizatorilor
+Pentru utilizarea platformei și achiziționarea serviciilor RIDElance, utilizatorul trebuie:
+a) să aibă capacitate legală deplină de exercițiu;
+b) să furnizeze date reale, complete și actuale;
+c) să folosească platforma în scop legal;
+d) să dețină sau să urmărească obținerea documentelor necesare activității sale;
+e) să respecte legislația aplicabilă transportului alternativ, activității PFA, fiscalității și protecției datelor;
+f) să nu folosească platforma pentru fraudă, documente false sau activități ilegale.
+Pentru activitatea de transport alternativ pot exista condiții legale suplimentare privind vârsta, permisul, atestatul profesional, documentele vehiculului, autorizațiile, ecusoanele, asigurările și alte cerințe. Utilizatorul este responsabil să verifice și să respecte aceste condiții.
+________________________________________
+6. Crearea contului
+Pentru accesarea anumitor funcționalități, utilizatorul trebuie să creeze un cont RIDElance.
+La crearea contului, utilizatorul poate fi solicitat să furnizeze:
+a) nume și prenume;
+b) email;
+c) număr de telefon, dacă este cazul;
+d) orașul în care activează sau intenționează să activeze;
+e) date PFA, dacă există;
+f) informații despre activitatea de ridesharing;
+g) documente personale, PFA sau auto;
+h) date necesare procesării plății.
+Utilizatorul este responsabil pentru păstrarea confidențialității credențialelor de acces. Orice activitate desfășurată prin contul utilizatorului este considerată efectuată de acesta, cu excepția cazului în care utilizatorul notifică imediat RIDElance cu privire la accesul neautorizat.
+RIDElance poate refuza crearea contului, poate limita accesul sau poate suspenda contul dacă există suspiciuni privind date false, documente neconforme, utilizare abuzivă, fraudă, neplată sau încălcarea prezentelor Condiții.
+________________________________________
+7. Verificarea contului și a documentelor
+RIDElance poate solicita încărcarea unor documente în platformă pentru verificare, organizare, transmitere către parteneri sau prestarea serviciilor achiziționate.
+Documentele pot include, fără limitare:
+a) carte de identitate;
+b) permis de conducere;
+c) atestat transport alternativ;
+d) adeverință medicală;
+e) adeverință/aviz psihologic;
+f) certificat de cazier judiciar;
+g) certificat de înregistrare PFA;
+h) CUI;
+i) documente ONRC;
+j) documente fiscale;
+k) ITP;
+l) RCA;
+m) ecuson Uber;
+n) ecuson Bolt;
+o) asigurare călători și bagaje;
+p) extrase bancare;
+q) rapoarte Uber/Bolt;
+r) facturi pentru cheltuieli deductibile;
+s) orice alte documente necesare serviciului ales.
+Verificarea documentelor de către RIDElance, support agenți sau partenerii săi are scop operațional și nu reprezintă o certificare legală absolută a validității acestora.
+Utilizatorul garantează că documentele transmise sunt reale, corecte, complete, actuale și obținute legal.
+RIDElance poate refuza, suspenda sau limita accesul utilizatorului la servicii dacă documentele sunt incomplete, neclare, expirate, neconforme, suspecte sau insuficiente pentru prestarea serviciului.
+________________________________________
+8. Documentația lunară
+În funcție de abonamentul sau serviciul ales, utilizatorul poate fi solicitat să încarce lunar documente necesare pentru organizarea activității, evidența cheltuielilor sau transmiterea către contabil/partener.
+Documentația lunară poate include:
+a) extrase bancare pentru conturile relevante;
+b) raport venituri Uber;
+c) raport venituri Bolt;
+d) facturi pentru cheltuieli deductibile;
+e) bonuri/facturi combustibil sau încărcare, dacă sunt relevante;
+f) facturi service, piese, mentenanță sau alte cheltuieli;
+g) alte documente necesare închiderii lunii.
+Documentele marcate ca „verificat”, „validat” sau similar în platformă indică faptul că au fost analizate operațional, dar nu garantează în mod absolut tratamentul fiscal sau contabil al acestora.
+Utilizatorul rămâne responsabil pentru corectitudinea documentelor și pentru respectarea obligațiilor fiscale, cu excepția obligațiilor asumate expres de un contabil partener în cadrul serviciilor contabile prestate.
+________________________________________
+9. Abonamentele RIDElance
+RIDElance poate oferi mai multe tipuri de abonamente, fiecare cu beneficii, funcționalități, niveluri de suport și prețuri proprii.
+La data ultimei actualizări, abonamentele disponibile sunt:
+________________________________________
+9.1. RIDElance Solo
+Preț: 49 lei/săptămână
+RIDElance Solo este destinat utilizatorilor care au deja contabil propriu sau doresc să își gestioneze singuri partea contabilă, dar vor acces la infrastructura digitală RIDElance.
+RIDElance Solo poate include:
+a) acces la dashboard PFA;
+b) evidență venituri și cheltuieli;
+c) organizare documente personale/PFA;
+d) organizare documente vehicul;
+e) alerte privind documentele și termenele importante;
+f) calculator estimativ de taxe;
+g) ghiduri și checklist-uri;
+h) acces la oferte partenere;
+i) suport tehnic și operațional privind utilizarea platformei;
+j) export lunar pentru contabilul propriu, dacă funcția este disponibilă.
+RIDElance Solo nu include contabilitate lunară, depuneri fiscale, chat direct cu contabilul, verificare fiscală personalizată, reprezentare ANAF/SPV sau asumarea responsabilității contabile de către RIDElance ori partenerii săi.
+Utilizatorul care alege RIDElance Solo este responsabil să colaboreze cu propriul contabil sau să își gestioneze obligațiile fiscale conform legii.
+________________________________________
+9.2. RIDElance Start
+Preț: 99 lei/săptămână
+RIDElance Start este destinat utilizatorilor care doresc acces la infrastructura digitală RIDElance, suport operațional și contabilitate efectivă printr-un partener contabil RIDElance.
+RIDElance Start poate include:
+a) funcționalitățile disponibile în RIDElance Solo;
+b) contabilitate lunară prin partener contabil RIDElance;
+c) acces la comunicare cu contabilul asociat, prin platformă sau prin canalele disponibile;
+d) organizarea documentelor necesare activității contabile;
+e) verificarea operațională a documentelor încărcate în dashboard;
+f) posibilitatea ca partenerul contabil să solicite documente sau informații suplimentare;
+g) notificări privind documentele recurente necesare;
+h) suport operațional din partea unui support agent RIDElance;
+i) suport privind utilizarea dashboard-ului;
+j) acces la ghiduri, checklist-uri și materiale operaționale;
+k) acces la parteneri și beneficii disponibile în platformă.
+Contabilitatea inclusă în RIDElance Start este furnizată printr-un partener contabil independent, autorizat să presteze astfel de servicii. RIDElance facilitează accesul utilizatorului la acest partener și pune la dispoziție infrastructura digitală necesară colaborării.
+________________________________________
+9.3. RIDElance Pro
+Preț: 149 lei/săptămână
+RIDElance Pro este destinat utilizatorilor care doresc acces la cel mai avansat nivel de suport disponibil în platformă, împreună cu contabilitate efectivă prin partener contabil RIDElance și beneficii extinse.
+RIDElance Pro poate include:
+a) funcționalitățile disponibile în RIDElance Start;
+b) contabilitate lunară prin partener contabil RIDElance;
+c) suport prioritar;
+d) comunicare prioritară cu support agentul asociat;
+e) acces extins la parteneri;
+f) beneficii comerciale suplimentare;
+g) oferte speciale;
+h) funcționalități premium;
+i) suport suplimentar pentru organizarea activității;
+j) suport operațional pentru identificarea și corectarea unor erori în documente sau informații;
+k) alte beneficii afișate în platformă.
+Contabilitatea inclusă în RIDElance Pro este furnizată printr-un partener contabil independent, iar RIDElance asigură infrastructura digitală, suportul operațional și fluxurile necesare colaborării dintre utilizator și partenerul contabil.
+RIDElance poate modifica structura, beneficiile și disponibilitatea abonamentelor, cu informarea utilizatorilor conform prezentelor Condiții.
+________________________________________
+10. Servicii individuale
+Pe lângă abonamente, RIDElance poate oferi servicii individuale, achiziționate separat.
+La data ultimei actualizări, serviciile individuale pot include:
+________________________________________
+10.1. Înființare PFA
+Preț: 450 lei / serviciu
+Serviciul de înființare PFA este destinat utilizatorilor care doresc să înceapă activitatea pe cont propriu în ridesharing/transport alternativ.
+Serviciul poate fi prestat direct de RIDElance sau prin parteneri specializați, în funcție de disponibilitate, flux operațional și documentele necesare.
+Serviciul poate include suport pentru pregătirea, completarea, organizarea sau transmiterea documentelor necesare înființării PFA, conform condițiilor afișate în platformă.
+RIDElance nu garantează soluționarea favorabilă sau într-un anumit termen a cererilor depuse la ONRC, ANAF sau alte instituții, întrucât aceste procese pot depinde de autorități, documente, verificări și condiții externe platformei.
+________________________________________
+10.2. Găzduire sediu social/profesional
+Preț: 449 lei/an
+Serviciul de găzduire sediu social/profesional este destinat utilizatorilor care au nevoie de o adresă pentru sediul profesional al PFA sau pentru alte scopuri administrative permise de lege.
+Serviciul poate fi furnizat prin partener RIDElance și poate fi supus unor condiții suplimentare stabilite de partener, inclusiv semnarea unor documente, furnizarea unor date suplimentare și respectarea duratei contractuale aplicabile.
+Utilizatorul înțelege că serviciul de găzduire sediu social/profesional nu reprezintă închirierea unui spațiu fizic de lucru și nu conferă automat dreptul de desfășurare efectivă a activității la adresa respectivă, cu excepția cazului în care acest lucru este permis expres prin contractul sau condițiile partenerului.
+________________________________________
+10.3. Start Ride
+Preț: 799 lei / serviciu
+Start Ride este un serviciu individual destinat utilizatorilor care doresc asistență inițială pentru pornirea activității pe cont propriu în ridesharing/transport alternativ.
+Serviciul poate include:
+a) ghidaj pentru înființare PFA;
+b) checklist documente;
+c) pași administrativi inițiali;
+d) suport pentru pregătirea documentelor necesare activității;
+e) orientare privind activarea pe platforme precum Uber/Bolt;
+f) acces la materiale de pornire;
+g) suport până la finalizarea pașilor incluși în oferta comercială;
+h) direcționare către parteneri relevanți, dacă este cazul.
+Start Ride nu include contabilitate lunară, depuneri fiscale recurente, reprezentare ANAF/SPV sau garanția acceptării pe platforme terțe, cu excepția cazului în care oferta comercială prevede expres altfel.
+________________________________________
+10.4. Adăugare anunț mașină
+Preț: 29 lei/lună/anunț
+Serviciul permite listarea unei mașini în secțiunea dedicată mașinilor pentru ridesharing sau într-un modul similar al platformei.
+RIDElance poate verifica manual anunțul înainte de publicare și poate refuza anunțurile incomplete, neconforme, suspecte sau incompatibile cu scopul platformei.
+Publicarea unui anunț nu garantează obținerea de șoferi, cereri, contracte, venituri sau colaborări.
+________________________________________
+11. Plăți și procesare plăți
+Plățile pentru abonamente și servicii individuale RIDElance sunt procesate online prin Stripe sau prin alți procesatori de plată afișați în platformă.
+RIDElance nu stochează direct datele complete ale cardului utilizatorului. Procesarea plății este realizată prin infrastructura procesatorului de plăți.
+Prin achiziționarea unui abonament, utilizatorul autorizează debitarea recurentă a metodei de plată selectate, conform prețului și ciclului de facturare aplicabil.
+Utilizatorul este responsabil să se asigure că metoda de plată este validă, activă și are fonduri suficiente.
+RIDElance poate emite facturi sau documente fiscale pentru sumele încasate, conform legislației aplicabile și informațiilor furnizate de utilizator.
+________________________________________
+12. Ciclul de abonament
+Abonamentele RIDElance funcționează, ca regulă generală, pe bază de plată săptămânală.
+Ciclul standard poate fi:
+luni ora 15:00 – următoarea luni ora 14:59
+Pentru utilizatorii noi, activarea completă poate începe după finalizarea onboardingului, verificarea informațiilor necesare și confirmarea plății.
+RIDElance poate stabili un alt ciclu de facturare, dacă acesta este afișat în platformă sau comunicat utilizatorului înainte de achiziție.
+________________________________________
+13. Neplata abonamentului
+În cazul în care plata abonamentului eșuează, RIDElance poate:
+a) notifica utilizatorul;
+b) încerca din nou debitarea metodei de plată;
+c) limita accesul la anumite funcționalități;
+d) suspenda temporar contul;
+e) suspenda suportul;
+f) opri transmiterea documentelor către parteneri;
+g) înceta furnizarea serviciilor până la achitarea sumelor restante.
+Utilizatorul rămâne responsabil pentru plata sumelor datorate pentru serviciile deja activate sau prestate.
+________________________________________
+14. Anularea abonamentului
+Utilizatorul poate solicita anularea abonamentului prin platformă sau prin transmiterea unei solicitări la adresa contact@ridelance.ro.
+Anularea produce efecte pentru perioada următoare de facturare, cu excepția cazului în care RIDElance comunică altfel.
+Sumele achitate pentru perioada activă nu se rambursează, cu excepția situațiilor prevăzute în prezentele Condiții sau impuse de lege.
+După anularea abonamentului, utilizatorul poate pierde accesul la funcționalități premium, documente, exporturi, rapoarte, suport, comunicarea cu contabilul partener sau alte beneficii incluse în abonament.
+________________________________________
+15. Politica de rambursare
+Sumele achitate pentru abonamente sau servicii digitale deja activate nu sunt rambursabile, cu excepția situației în care neexecutarea serviciului, eroarea de facturare sau eroarea de plată este cauzată direct de RIDElance.
+Nu se acordă rambursare pentru:
+a) neutilizarea contului;
+b) răzgândirea utilizatorului după activarea serviciului;
+c) documente incomplete furnizate de utilizator;
+d) refuzul utilizatorului de a continua onboardingul;
+e) imposibilitatea activării pe Uber/Bolt din cauze independente de RIDElance;
+f) respingerea unor documente de către autorități sau parteneri;
+g) neîndeplinirea condițiilor legale de către utilizator;
+h) întârzieri cauzate de instituții publice, platforme terțe sau parteneri;
+i) servicii deja prestate integral sau parțial.
+RIDElance poate analiza punctual cererile de rambursare, fără ca o rambursare acordată într-un caz să creeze o obligație pentru cazuri viitoare.
+________________________________________
+16. Dreptul de retragere pentru consumatori
+În cazul în care utilizatorul are calitatea de consumator potrivit legii, acesta poate beneficia de drepturile prevăzute de legislația aplicabilă privind contractele la distanță.
+În cazul serviciilor digitale, serviciilor activate imediat sau serviciilor începute cu acordul utilizatorului înainte de expirarea termenului legal de retragere, utilizatorul poate pierde dreptul de retragere sau poate datora plata proporțională pentru serviciile deja prestate, conform legislației aplicabile.
+Prin achiziționarea și activarea unui serviciu RIDElance, utilizatorul poate solicita începerea furnizării serviciului înainte de expirarea termenului legal de retragere, dacă această opțiune este afișată în platformă.
+________________________________________
+17. Parteneri RIDElance
+RIDElance poate colabora cu parteneri pentru furnizarea anumitor servicii sau beneficii.
+La data ultimei actualizări, partenerii pot include:
+a) Silso – pentru servicii de înființare PFA sau servicii conexe;
+b) parteneri contabili – pentru servicii de contabilitate, evidență sau suport fiscal;
+c) Stripe – pentru procesarea plăților;
+d) alți parteneri adăugați ulterior.
+Lista partenerilor poate fi modificată, completată sau actualizată în orice moment.
+Utilizatorul înțelege că partenerii sunt entități independente și pot avea propriile condiții, prețuri, termene, politici, proceduri și contracte.
+RIDElance nu răspunde pentru serviciile furnizate direct de parteneri, cu excepția cazului în care legea prevede altfel sau RIDElance își asumă expres o anumită obligație în scris.
+________________________________________
+18. Transmiterea documentelor către parteneri
+Pentru furnizarea anumitor servicii, RIDElance poate transmite date și documente ale utilizatorului către partenerii implicați în prestarea serviciului ales.
+Transmiterea poate avea loc, de exemplu, pentru:
+a) înființare PFA;
+b) găzduire sediu profesional;
+c) servicii de contabilitate;
+d) procesare plăți;
+e) verificare documente;
+f) suport operațional;
+g) servicii administrative;
+h) alte servicii solicitate de utilizator.
+Transmiterea se va realiza doar în măsura necesară furnizării serviciului, gestionării contului, respectării obligațiilor legale sau executării raportului contractual.
+Prin încărcarea documentelor și utilizarea serviciilor RIDElance, utilizatorul confirmă că înțelege și acceptă faptul că anumite date și documente pot fi transmise partenerilor implicați în furnizarea serviciilor solicitate.
+Detaliile privind prelucrarea datelor sunt prevăzute în Politica de Confidențialitate.
+________________________________________
+19. Contabilul partener și support agentul RIDElance
+Pentru abonamentele sau serviciile care includ contabilitate, RIDElance poate asocia utilizatorului un contabil partener și, după caz, un support agent RIDElance.
+________________________________________
+19.1. Contabilul partener
+Contabilul partener este un profesionist sau o entitate independentă care colaborează cu RIDElance și care poate presta servicii contabile pentru utilizatorii eligibili, în funcție de abonamentul sau serviciul achiziționat.
+Contabilul partener poate avea acces, printr-un dashboard dedicat, la anumite date și documente încărcate de utilizator, strict în scopul desfășurării activității contabile, fiscale și administrative aferente serviciului contractat.
+Contabilul partener poate, după caz:
+a) vizualiza documentele încărcate de utilizator;
+b) verifica documentele necesare activității contabile;
+c) solicita documente suplimentare;
+d) solicita clarificări de la utilizator;
+e) comunica cu utilizatorul prin platformă sau prin canalele disponibile;
+f) marca documente ca fiind verificate, incomplete, neclare sau insuficiente;
+g) semnala erori sau lipsuri în documentația transmisă;
+h) folosi documentele pentru prestarea serviciilor contabile incluse în abonament sau serviciu.
+Contabilul partener rămâne responsabil pentru serviciile contabile pe care le prestează, în condițiile legii și ale relației stabilite cu utilizatorul, dacă este cazul.
+RIDElance facilitează colaborarea dintre utilizator și contabilul partener, oferind infrastructura digitală, organizarea documentelor și suportul operațional necesar.
+________________________________________
+19.2. Support agentul RIDElance
+Pentru buna desfășurare a serviciilor, RIDElance poate asocia utilizatorului un support agent.
+Support agentul are rol operațional și poate ajuta utilizatorul în folosirea platformei, încărcarea documentelor, identificarea unor erori, completarea informațiilor și comunicarea cu partenerii implicați.
+În funcție de drepturile acordate în platformă, support agentul poate:
+a) vizualiza anumite documente și informații din dashboard-ul utilizatorului;
+b) semnala documente lipsă, expirate, incorecte, neclare sau incomplete;
+c) solicita utilizatorului clarificări sau documente suplimentare;
+d) încărca documente în numele utilizatorului, atunci când utilizatorul le transmite către RIDElance în acest scop;
+e) corecta sau propune corectarea anumitor informații eronate din dashboard, cu respectarea fluxurilor interne;
+f) transmite notificări sau observații utilizatorului;
+g) asista utilizatorul în folosirea corectă a platformei;
+h) facilita comunicarea dintre utilizator, RIDElance și partenerii implicați.
+Intervențiile support agentului au scop strict operațional și urmăresc reducerea erorilor, buna organizare a documentelor, respectarea fluxurilor platformei și sprijinirea utilizatorului în îndeplinirea obligațiilor sale administrative, contabile și legale.
+Support agentul nu înlocuiește contabilul, consultantul fiscal sau avocatul și nu oferă consultanță juridică, fiscală sau contabilă individuală, cu excepția cazului în care acest lucru este realizat de un profesionist autorizat printr-un serviciu distinct.
+________________________________________
+19.3. Scopul accesului la documente
+Accesul contabilului partener și al support agentului la documentele și informațiile utilizatorului are ca scop:
+a) prestarea serviciilor contractate;
+b) organizarea corectă a documentelor;
+c) reducerea riscului de erori administrative;
+d) desfășurarea corectă a activității contabile;
+e) respectarea obligațiilor legale și fiscale;
+f) semnalarea documentelor lipsă sau neconforme;
+g) asigurarea unui flux operațional coerent între utilizator, RIDElance și parteneri.
+Utilizatorul înțelege și acceptă că, pentru buna funcționare a serviciilor RIDElance, anumite date și documente pot fi accesate de personalul RIDElance și de partenerii implicați, strict în limitele necesare furnizării serviciilor contractate.
+Detaliile privind prelucrarea datelor personale, categoriile de destinatari și drepturile utilizatorului sunt prevăzute în Politica de Confidențialitate RIDElance.
+________________________________________
+20. Dashboard-ul RIDElance
+Dashboard-ul RIDElance poate permite utilizatorului să:
+a) încarce documente;
+b) vadă statusul documentelor;
+c) urmărească documentația lunară;
+d) vadă alerte și notificări;
+e) gestioneze cheltuieli;
+f) gestioneze venituri;
+g) urmărească abonamente;
+h) vadă servicii disponibile;
+i) acceseze suport;
+j) comunice cu support agentul sau contabilul partener, dacă funcția este disponibilă;
+k) descarce sau exporte anumite informații, dacă funcția este disponibilă.
+RIDElance poate modifica, adăuga sau elimina funcționalități ale dashboard-ului, în funcție de dezvoltarea platformei și de disponibilitatea serviciilor.
+________________________________________
+21. Venituri, cheltuieli și estimări fiscale
+Platforma poate afișa venituri, cheltuieli, estimări, calcule, rapoarte sau indicatori financiari.
+Aceste date pot proveni din:
+a) introducere manuală de către utilizator;
+b) documente încărcate de utilizator;
+c) rapoarte Uber/Bolt;
+d) extrase bancare;
+e) integrări tehnice, unde sunt disponibile;
+f) calcule automate sau semi-automate.
+Utilizatorul înțelege că informațiile afișate pot avea caracter orientativ și nu înlocuiesc verificarea de către un contabil, consultant fiscal sau alt specialist autorizat, cu excepția serviciilor contabile prestate expres de partenerul contabil asociat utilizatorului în baza abonamentului ales.
+Calculatorul de taxe, dacă este disponibil, are rol estimativ și informativ.
+RIDElance nu răspunde pentru deciziile fiscale, contabile sau juridice luate exclusiv pe baza informațiilor afișate în platformă.
+________________________________________
+22. Integrarea cu platforme terțe
+RIDElance poate permite conectarea, importul sau afișarea unor date provenite din platforme terțe, precum platforme de ridesharing, servicii bancare, servicii contabile, procesatori de plată sau alte aplicații.
+Utilizatorul înțelege că:
+a) RIDElance nu controlează platformele terțe;
+b) accesul la date poate fi modificat, limitat sau întrerupt;
+c) API-urile, rapoartele sau exporturile platformelor terțe pot suferi modificări;
+d) unele date pot întârzia sau pot conține erori;
+e) RIDElance nu garantează disponibilitatea permanentă a integrărilor.
+________________________________________
+23. Obligațiile utilizatorului
+Utilizatorul are obligația să:
+a) furnizeze date reale, corecte și actuale;
+b) încarce documente reale și valabile;
+c) actualizeze documentele expirate;
+d) respecte legislația aplicabilă;
+e) își achite abonamentele și serviciile;
+f) folosească platforma doar în scop legal;
+g) nu transmită date false;
+h) nu încarce documente falsificate;
+i) nu folosească datele altor persoane fără drept;
+j) nu încerce accesarea neautorizată a platformei;
+k) nu afecteze funcționarea platformei;
+l) nu copieze, reproducă sau exploateze comercial platforma;
+m) comunice civilizat cu echipa RIDElance și partenerii;
+n) răspundă solicitărilor de clarificare transmise de contabilul partener sau support agent;
+o) transmită la timp documentele necesare desfășurării serviciilor contabile sau administrative.
+Utilizatorul este singurul responsabil pentru activitatea sa de transport alternativ, pentru documentele sale, pentru obligațiile fiscale, pentru conduita în trafic și pentru relația sa cu platformele de ridesharing, cu excepția obligațiilor asumate expres de partenerul contabil în cadrul serviciilor contabile prestate.
+________________________________________
+24. Interdicții
+Utilizatorului îi este interzis:
+a) să folosească platforma pentru fraudă;
+b) să încarce documente false;
+c) să folosească identitatea altei persoane;
+d) să vândă, cesioneze sau transfere contul;
+e) să acceseze conturile altor utilizatori;
+f) să copieze platforma sau documentația RIDElance;
+g) să exploateze vulnerabilități tehnice;
+h) să transmită conținut ilegal, ofensator sau abuziv;
+i) să prejudicieze imaginea RIDElance;
+j) să folosească serviciile într-un scop contrar legii.
+________________________________________
+25. Suspendarea sau închiderea contului
+RIDElance poate suspenda, limita sau închide contul utilizatorului în cazul în care:
+a) utilizatorul nu achită abonamentul;
+b) furnizează date false;
+c) încarcă documente false, expirate sau neconforme;
+d) încalcă prezentele Condiții;
+e) folosește abuziv platforma;
+f) are un comportament agresiv, ofensator sau fraudulos;
+g) există suspiciuni rezonabile de fraudă;
+h) solicitarea vine din partea unei autorități competente;
+i) serviciul nu mai poate fi furnizat din motive tehnice, legale sau comerciale;
+j) utilizatorul refuză în mod repetat să transmită documentele necesare prestării serviciilor contractate.
+Suspendarea sau închiderea contului nu exonerează utilizatorul de plata sumelor datorate pentru serviciile deja activate sau prestate.
+________________________________________
+26. Limitarea răspunderii RIDElance
+În limita permisă de lege, RIDElance nu răspunde pentru:
+a) veniturile obținute sau neobținute de utilizator;
+b) neacceptarea utilizatorului pe Uber, Bolt sau alte platforme;
+c) suspendarea contului utilizatorului de către platforme terțe;
+d) respingerea documentelor de către autorități sau parteneri;
+e) întârzieri cauzate de ONRC, ANAF, ARR, Uber, Bolt sau alte entități;
+f) decizii fiscale, juridice sau comerciale luate de utilizator fără consultarea specialistului competent;
+g) erori cauzate de date introduse incorect de utilizator;
+h) documente false, incomplete sau expirate;
+i) indisponibilitatea platformelor terțe;
+j) întreruperi tehnice, mentenanță sau erori temporare;
+k) servicii furnizate direct de parteneri, cu excepția obligațiilor asumate expres de RIDElance;
+l) modificări legislative;
+m) pierderi indirecte, pierderi de profit sau prejudicii de oportunitate.
+În limita permisă de lege, răspunderea totală a RIDElance față de utilizator este limitată la suma efectiv plătită de utilizator către RIDElance în ultimele 30 de zile anterioare evenimentului care a generat prejudiciul.
+________________________________________
+27. Disclaimer fiscal, juridic și contabil
+Informațiile disponibile în platformă, ghiduri, checklist-uri, articole, notificări, estimări sau comunicări au caracter informativ și operațional.
+Acestea nu reprezintă consultanță juridică, fiscală sau contabilă individuală, cu excepția serviciilor contabile furnizate expres prin partenerul contabil RIDElance în cadrul abonamentelor sau serviciilor care includ acest beneficiu.
+În cazul abonamentelor sau serviciilor care includ contabilitate, serviciile contabile sunt prestate de un partener contabil independent, autorizat să desfășoare astfel de activități. RIDElance facilitează accesul la partenerul contabil și pune la dispoziție infrastructura digitală necesară colaborării.
+RIDElance nu devine prin aceasta societate de contabilitate și nu înlocuiește răspunderea profesională a partenerului contabil.
+Pentru decizii juridice sau fiscale complexe, utilizatorul poate avea nevoie de consultanță suplimentară din partea unui avocat, consultant fiscal sau alt profesionist autorizat.
+________________________________________
+28. Protecția datelor personale
+RENTEAZA MOBILITY SOLUTIONS SRL este operatorul datelor personale prelucrate prin platforma RIDElance, în sensul legislației privind protecția datelor.
+RIDElance poate colecta și prelucra date personale pentru:
+a) crearea și administrarea contului;
+b) verificarea identității;
+c) furnizarea serviciilor;
+d) încărcarea și gestionarea documentelor;
+e) transmiterea documentelor către parteneri;
+f) procesarea plăților;
+g) emiterea documentelor fiscale;
+h) comunicarea cu utilizatorul;
+i) suport;
+j) securitatea platformei;
+k) respectarea obligațiilor legale;
+l) prestarea serviciilor contabile prin parteneri, acolo unde abonamentul ales include acest beneficiu.
+Datele pot include date de identificare, date de contact, date PFA, date auto, documente personale, documente fiscale, extrase, rapoarte de venituri, facturi, date de plată și alte informații necesare serviciului ales.
+Datele și documentele pot fi accesate, în limitele necesare, de personalul RIDElance, support agenți, contabili parteneri, procesatori de plăți, furnizori tehnici și alți parteneri implicați în furnizarea serviciilor.
+Detaliile privind categoriile de date, scopurile, temeiurile legale, destinatarii, durata stocării și drepturile utilizatorului vor fi prevăzute în Politica de Confidențialitate RIDElance.
+________________________________________
+29. Comunicări și notificări
+RIDElance poate comunica cu utilizatorul prin:
+a) email;
+b) notificări în platformă;
+c) SMS, dacă este cazul;
+d) telefon, dacă va fi disponibil;
+e) WhatsApp, dacă va fi disponibil;
+f) notificări push, dacă vor fi implementate;
+g) alte mijloace furnizate de utilizator.
+Utilizatorul acceptă să primească notificări operaționale privind contul, documentele, abonamentele, plățile, serviciile, alertele, solicitările contabilului partener, solicitările support agentului și modificările importante.
+Comunicările de marketing vor fi transmise doar conform legislației aplicabile și consimțămintelor exprimate de utilizator.
+________________________________________
+30. Disponibilitatea platformei
+RIDElance depune eforturi rezonabile pentru menținerea platformei funcționale, dar nu garantează disponibilitatea continuă, fără întreruperi sau fără erori.
+Platforma poate fi indisponibilă temporar din motive precum:
+a) mentenanță;
+b) actualizări;
+c) erori tehnice;
+d) atacuri informatice;
+e) probleme de hosting;
+f) indisponibilitatea procesatorului de plăți;
+g) indisponibilitatea unor servicii terțe;
+h) modificări tehnice sau comerciale.
+RIDElance nu răspunde pentru întreruperi temporare care nu pot fi controlate în mod rezonabil.
+________________________________________
+31. Modificarea serviciilor și a prețurilor
+RIDElance poate modifica, suspenda sau elimina anumite funcționalități, servicii, abonamente, beneficii sau prețuri.
+Modificările importante vor fi comunicate utilizatorilor prin platformă, email sau alte mijloace rezonabile.
+Pentru abonamentele active, modificările de preț se vor aplica conform informării comunicate utilizatorului sau de la următoarea perioadă de facturare, dacă legea permite.
+Continuarea utilizării platformei după intrarea în vigoare a modificărilor reprezintă acceptarea acestora.
+________________________________________
+32. Proprietate intelectuală
+Denumirea RIDElance, logo-ul, designul platformei, textele, structura, documentele, ghidurile, materialele, bazele de date, interfețele, fluxurile, elementele grafice și conținutul digital aparțin RIDElance sau partenerilor săi, după caz.
+Utilizatorul nu are dreptul să copieze, reproducă, modifice, distribuie, vândă, închirieze, sublicențieze sau exploateze comercial aceste elemente fără acordul scris prealabil al RIDElance.
+Utilizarea platformei nu transferă utilizatorului niciun drept de proprietate intelectuală asupra RIDElance.
+________________________________________
+33. Forța majoră și cazul fortuit
+RIDElance nu răspunde pentru neexecutarea sau executarea cu întârziere a obligațiilor cauzată de evenimente independente de voința sa, precum:
+a) calamități naturale;
+b) război;
+c) pandemii;
+d) greve;
+e) atacuri cibernetice;
+f) întreruperi ale internetului;
+g) întreruperi ale serviciilor de hosting;
+h) decizii ale autorităților;
+i) modificări legislative;
+j) indisponibilitatea platformelor terțe;
+k) alte evenimente imprevizibile sau inevitabile.
+________________________________________
+34. Legea aplicabilă și soluționarea disputelor
+Prezentele Condiții sunt guvernate de legea română.
+Orice neînțelegere va fi soluționată, pe cât posibil, pe cale amiabilă.
+Dacă soluționarea amiabilă nu este posibilă, litigiile vor fi soluționate de instanțele competente din România, conform legislației aplicabile.
+________________________________________
+35. Contact
+Pentru întrebări, solicitări sau sesizări privind prezentele Condiții, utilizatorul poate contacta RIDElance la:
+RENTEAZA MOBILITY SOLUTIONS SRL
+Email: contact@ridelance.ro
+Website: www.ridelance.ro
+Sediu social: Intrarea Doina nr. 28, cod poștal 077031, România
+

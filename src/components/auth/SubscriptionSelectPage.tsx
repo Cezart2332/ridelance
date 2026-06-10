@@ -14,6 +14,8 @@ import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import { SUBSCRIPTION_PLANS, type PlanKey, stripeService } from '../../services/stripe.service'
 import { getNextMondayBillingDate, formatRomanianDate } from '../../utils/billing'
+import { TermsAcceptance } from '../common/TermsAcceptance'
+import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
 import logo from '../../assets/logo.svg'
 
 const TOKENS = {
@@ -38,6 +40,8 @@ const TOKENS = {
 export default function SubscriptionSelectPage() {
   const navigate = useNavigate()
   const [selected, setSelected] = useState<PlanKey | null>(null)
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
   const nextBilling = getNextMondayBillingDate()
 
   const handleSelect = (key: PlanKey) => {
@@ -46,7 +50,7 @@ export default function SubscriptionSelectPage() {
   }
 
   const handleContinue = () => {
-    if (!selected) return
+    if (!selected || !termsAccepted || !paymentPolicyAccepted) return
     stripeService.activateSubscription(selected, nextBilling)
     stripeService.redirectToPlan(selected)
   }
@@ -299,11 +303,13 @@ export default function SubscriptionSelectPage() {
 
           {/* Continue CTA */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', width: '100%', maxWidth: 400 }}>
+            <TermsAcceptance checked={termsAccepted} onChange={setTermsAccepted} />
+            <PaymentPolicyAcceptance checked={paymentPolicyAccepted} onChange={setPaymentPolicyAccepted} />
             <Button
               variant="contained"
               size="large"
               fullWidth
-              disabled={!selected}
+              disabled={!selected || !termsAccepted || !paymentPolicyAccepted}
               endIcon={<ArrowForwardRoundedIcon />}
               onClick={handleContinue}
               sx={{
@@ -324,7 +330,9 @@ export default function SubscriptionSelectPage() {
               }}
             >
               {selected
-                ? `Continuă cu ${SUBSCRIPTION_PLANS.find(p => p.key === selected)?.title}`
+                ? termsAccepted && paymentPolicyAccepted
+                  ? `Continuă cu ${SUBSCRIPTION_PLANS.find(p => p.key === selected)?.title}`
+                  : 'Acceptă politicile pentru a continua'
                 : 'Selectează un plan pentru a continua'}
             </Button>
             <Button
