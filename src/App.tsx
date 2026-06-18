@@ -31,6 +31,7 @@ const CarPosterDashboard = lazy(() =>
 const AppLayout = lazy(() =>
   import('./components/layout/AppLayout').then((m) => ({ default: m.AppLayout })),
 )
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage'))
 
 function App() {
   const navigate = useNavigate();
@@ -50,6 +51,7 @@ function App() {
           <Route path="/inregistrare/pfa" element={<RegisterPfaPage />} />
           <Route path="/inregistrare/abonament" element={<SubscriptionSelectPage />} />
           <Route path="/inregistrare/succes" element={<RegistrationSuccessPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
 
           {/* ── Protected routes ── */}
           <Route element={<ProtectedRoute />}>

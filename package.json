@@ -19,6 +19,8 @@
     "@mui/icons-material": "^9.0.0",
     "@mui/material": "^9.0.0",
     "@reduxjs/toolkit": "^2.11.2",
+    "@stripe/react-stripe-js": "^6.6.0",
+    "@stripe/stripe-js": "^9.8.0",
     "@studio-freight/lenis": "^1.0.42",
     "@tabler/icons-react": "^3.41.1",
     "@tailwindcss/postcss": "^4.2.4",

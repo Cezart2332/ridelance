@@ -154,14 +154,19 @@ export const stripeService = {
     const effectiveCancelUrl = cancelUrl || `${origin}/inregistrare/pfa`
 
     try {
-      const response = await api.post<{url: string}>('/payments/checkout-session', {
+      const response = await api.post<{clientSecret: string}>('/payments/checkout-session', {
         priceId: import.meta.env.VITE_PRICE_INFIINTARE_PFA,
         mode: 'payment',
         plan: 'infiintare_pfa',
         successUrl: effectiveSuccessUrl,
         cancelUrl: effectiveCancelUrl
       })
-      window.location.href = response.data.url
+      sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
+      sessionStorage.setItem('stripe_cancel_url', effectiveCancelUrl)
+      sessionStorage.setItem('stripe_checkout_title', 'Înființare PFA')
+      sessionStorage.setItem('stripe_checkout_price', '300 lei')
+      sessionStorage.setItem('stripe_checkout_desc', 'Serviciu de înființare PFA complet de către echipa RIDElance.')
+      window.location.href = '/checkout'
     } catch (error) {
       console.error('Failed to create checkout session', error)
     }
@@ -181,7 +186,7 @@ export const stripeService = {
     const effectiveCancelUrl = cancelUrl || `${origin}/inregistrare/abonament`
 
     try {
-      const response = await api.post<{url: string}>('/payments/checkout-session', {
+      const response = await api.post<{clientSecret: string}>('/payments/checkout-session', {
         priceId: plan.priceId,
         mode: 'subscription',
         plan: key,
@@ -190,7 +195,12 @@ export const stripeService = {
         successUrl: effectiveSuccessUrl,
         cancelUrl: effectiveCancelUrl
       })
-      window.location.href = response.data.url
+      sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
+      sessionStorage.setItem('stripe_cancel_url', effectiveCancelUrl)
+      sessionStorage.setItem('stripe_checkout_title', plan.title)
+      sessionStorage.setItem('stripe_checkout_price', plan.price)
+      sessionStorage.setItem('stripe_checkout_desc', plan.summary)
+      window.location.href = '/checkout'
     } catch (error) {
       console.error('Failed to create checkout session', error)
     }
@@ -206,7 +216,7 @@ export const stripeService = {
     const effectiveSuccessUrl = successUrl ?? `${origin}/?service_paid=1`
     const effectiveCancelUrl = cancelUrl ?? `${origin}/servicii`
 
-    const response = await api.post<{ url: string }>('/payments/public/service-checkout', {
+    const response = await api.post<{ clientSecret: string }>('/payments/public/service-checkout', {
       serviceKey: key,
       customerName: customer.customerName,
       customerEmail: customer.customerEmail,
@@ -214,7 +224,14 @@ export const stripeService = {
       successUrl: effectiveSuccessUrl,
       cancelUrl: effectiveCancelUrl,
     })
-    window.location.href = response.data.url
+    
+    const service = ONE_TIME_SERVICES.find(s => s.key === key)
+    sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
+    sessionStorage.setItem('stripe_cancel_url', effectiveCancelUrl)
+    sessionStorage.setItem('stripe_checkout_title', service?.title || 'Serviciu RIDElance')
+    sessionStorage.setItem('stripe_checkout_price', service?.price || '')
+    sessionStorage.setItem('stripe_checkout_desc', service?.desc || '')
+    window.location.href = '/checkout'
   },
 
   async redirectToService(key: ServiceKey): Promise<void> {
@@ -222,12 +239,17 @@ export const stripeService = {
     if (!service?.priceId) return
     
     try {
-      const response = await api.post<{url: string}>('/payments/checkout-session', {
+      const response = await api.post<{clientSecret: string}>('/payments/checkout-session', {
         priceId: service.priceId,
         mode: 'payment',
         plan: key
       })
-      window.location.href = response.data.url
+      sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
+      sessionStorage.setItem('stripe_cancel_url', '/app/dashboard?section=servicii')
+      sessionStorage.setItem('stripe_checkout_title', service.title)
+      sessionStorage.setItem('stripe_checkout_price', service.price)
+      sessionStorage.setItem('stripe_checkout_desc', service.desc)
+      window.location.href = '/checkout'
     } catch (error) {
       console.error('Failed to create checkout session', error)
     }

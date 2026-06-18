@@ -118,12 +118,19 @@ const carsService = {
 
   async redirectToListingPayment(carId: string): Promise<void> {
     const origin = window.location.origin;
-    const res = await api.post<{ url: string }>('/payments/car-listing-checkout', {
+    const res = await api.post<{ clientSecret: string }>('/payments/car-listing-checkout', {
       carId,
       successUrl: `${origin}/poster?car_paid=1&car_id=${carId}&session_id={{CHECKOUT_SESSION_ID}}`,
       cancelUrl: `${origin}/poster?car_payment_cancelled=1&car_id=${carId}`,
     });
-    window.location.href = res.data.url;
+
+    sessionStorage.setItem('stripe_client_secret', res.data.clientSecret);
+    sessionStorage.setItem('stripe_cancel_url', `/poster?car_payment_cancelled=1&car_id=${carId}`);
+    sessionStorage.setItem('stripe_checkout_title', 'Publicare Anunț Auto');
+    sessionStorage.setItem('stripe_checkout_price', '30 lei / lună');
+    sessionStorage.setItem('stripe_checkout_desc', 'Abonament lunar pentru menținerea activă a anunțului pe platformă.');
+
+    window.location.href = '/checkout';
   },
 
   async update(id: string, data: CreateCarRequest): Promise<void> {

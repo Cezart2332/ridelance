@@ -951,19 +951,6 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
                     {['Disponibilă acum', 'În curând', 'Indisponibilă', 'În service'].map(o => <MenuItem key={o} value={o}>{o}</MenuItem>)}
                   </TextField>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 6 }} component="div">
-                  <TextField
-                    select
-                    fullWidth
-                    label="Sursă închiriere"
-                    value={editingCar?.listingSource ?? 'Oferit de RIDElance'}
-                    onChange={(e) => setEditingCar({ ...editingCar, listingSource: e.target.value })}
-                  >
-                    {Object.keys(LISTING_SOURCE_TO_API).map((o) => (
-                      <MenuItem key={o} value={o}>{o}</MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
               </Grid>
               {isPoster && (
                 <Typography variant="caption" sx={{ display: 'block', mt: 1.5, color: DASHBOARD_TOKENS.textSubtle }}>
