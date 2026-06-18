@@ -13,6 +13,10 @@ export interface UserProfile {
 export interface MonthlyRevenuePoint {
   month: number;
   venitTotal: number;
+  venitCash: number;
+  venitCard: number;
+  venitBolt: number;
+  venitUber: number;
 }
 
 export interface RecentDocumentDto {

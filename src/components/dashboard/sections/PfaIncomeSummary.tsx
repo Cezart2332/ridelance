@@ -24,6 +24,7 @@ interface PfaIncomeSummaryProps {
   venitTotal: number;
   incomeYear?: number | null;
   incomeMonth?: number | null;
+  periodOverride?: string;
 }
 
 type IncomeMetric = {
@@ -108,12 +109,14 @@ export function PfaIncomeSummary({
   venitTotal,
   incomeYear,
   incomeMonth,
+  periodOverride,
 }: PfaIncomeSummaryProps) {
   const hasAnyIncome =
     venitCash > 0 || venitCard > 0 || venitBolt > 0 || venitUber > 0 || taxeEstimate > 0 || venitTotal > 0;
 
-  const periodLabel =
-    incomeMonth && incomeYear
+  const periodLabel = periodOverride
+    ? periodOverride
+    : incomeMonth && incomeYear
       ? `${monthNumberToLabel(incomeMonth)} ${incomeYear}`
       : 'Luna curentă';
 

@@ -38,6 +38,54 @@ export interface BoltOrdersResponse {
   totalTips: number;
 }
 
+export type BoltDashboardPeriod = 'month' | 'year' | 'total';
+
+export interface BoltDashboardPointDto {
+  label: string;
+  netEarnings: number;
+  ordersCount: number;
+  tips: number;
+  commissions: number;
+  rideHours: number;
+}
+
+export interface BoltDashboardRideDto {
+  id: string;
+  orderCreatedTime: string;
+  orderFinishedTime: string | null;
+  pickupAddress: string;
+  destinationAddress: string;
+  rideDistanceKm: number;
+  ridePrice: number;
+  netEarnings: number;
+  tip: number;
+  commission: number;
+  paymentMethod: string;
+  vehicleModel: string;
+  vehicleLicensePlate: string;
+  rideHours: number;
+}
+
+export interface BoltDashboardDto {
+  isConfigured: boolean;
+  isConnected: boolean;
+  lastFetchedAtUtc: string | null;
+  errorMessage: string | null;
+  period: BoltDashboardPeriod;
+  year: number | null;
+  month: number | null;
+  totalOrdersCount: number;
+  totalNetEarnings: number;
+  totalTips: number;
+  totalCommissions: number;
+  totalRideDistanceKm: number;
+  totalRideHours: number;
+  averageNetPerRide: number;
+  averageNetPerRideHour: number;
+  series: BoltDashboardPointDto[];
+  recentRides: BoltDashboardRideDto[];
+}
+
 export const boltService = {
   getIntegration: async (): Promise<BoltIntegrationDto | null> => {
     const response = await api.get<BoltIntegrationDto | null>('/bolt/integration');
@@ -52,6 +100,17 @@ export const boltService = {
   getOrders: async (limit?: number, offset?: number): Promise<BoltOrdersResponse> => {
     const response = await api.get<BoltOrdersResponse>('/bolt/orders', {
       params: { limit, offset }
+    });
+    return response.data;
+  },
+
+  getDashboard: async (
+    period: BoltDashboardPeriod = 'month',
+    year?: number,
+    month?: number
+  ): Promise<BoltDashboardDto> => {
+    const response = await api.get<BoltDashboardDto>('/bolt/dashboard', {
+      params: { period, year, month }
     });
     return response.data;
   },

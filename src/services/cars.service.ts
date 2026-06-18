@@ -41,6 +41,8 @@ export interface Car {
   active: boolean;
   listingSource: string;
   approvalStatus: string;
+  paymentStatus: string;
+  paidAtUtc?: string | null;
   postedByAdmin: boolean;
   images: CarImage[];
   createdAtUtc: string;
@@ -112,6 +114,16 @@ const carsService = {
   async create(data: CreateCarRequest): Promise<string> {
     const res = await api.post<{ id: string }>('/cars', data);
     return res.data.id;
+  },
+
+  async redirectToListingPayment(carId: string): Promise<void> {
+    const origin = window.location.origin;
+    const res = await api.post<{ url: string }>('/payments/car-listing-checkout', {
+      carId,
+      successUrl: `${origin}/poster?car_paid=1&car_id=${carId}&session_id={{CHECKOUT_SESSION_ID}}`,
+      cancelUrl: `${origin}/poster?car_payment_cancelled=1&car_id=${carId}`,
+    });
+    window.location.href = res.data.url;
   },
 
   async update(id: string, data: CreateCarRequest): Promise<void> {

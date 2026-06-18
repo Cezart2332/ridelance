@@ -149,8 +149,8 @@ export default function RegisterPfaPage() {
         setConfirmingPayment(true)
         return false
       }
-      navigate('/inregistrare/abonament', { replace: true })
-      return true
+      setConfirmingPayment(false)
+      return false
     }
     setConfirmingPayment(false)
     const target = resolveClientPath(sub)
@@ -280,9 +280,13 @@ export default function RegisterPfaPage() {
       // 3. Redirect to Stripe or direct redirect if they have already paid
       sessionStorage.setItem('pfa_registered', 'NuAmPfa')
       if (subStatus?.hasPaidInfiintare) {
-        navigate('/app/pending-approval', { replace: true })
+        navigate('/app/dashboard?section=documents', { replace: true })
       } else {
-        stripeService.redirectToInfiintarePfa()
+        const origin = window.location.origin
+        stripeService.redirectToInfiintarePfa(
+          `${origin}/app/dashboard?section=documents&pfa_setup_paid=1&session_id={{CHECKOUT_SESSION_ID}}`,
+          `${origin}/inregistrare/pfa`
+        )
       }
     } catch (err: any) {
       console.error(err)
@@ -307,9 +311,9 @@ export default function RegisterPfaPage() {
         phone: amPfaPhone,
         isOwner: false // default
       });
-      // AmPfa users already have PFA — they paid subscription already, go to app
+      // AmPfa users first go through admin validation, then pick a subscription.
       sessionStorage.setItem('pfa_registered', 'AmPfa')
-      navigate('/app/pending-approval', { replace: true })
+      navigate('/app/dashboard?section=documents', { replace: true })
     } catch (err: any) {
       setError(getErrorMessage(err, 'A aparut o eroare. Te rugam sa incerci din nou.'))
     } finally {

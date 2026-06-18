@@ -1,43 +1,83 @@
-import { useState, useEffect, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import {
+  Alert,
   Box,
   Button,
   Chip,
   CircularProgress,
   Paper,
   Stack,
-  TextField,
-  Typography,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Alert
-} from '@mui/material'
-import { alpha } from '@mui/material/styles'
-import ElectricCarRoundedIcon from '@mui/icons-material/ElectricCarRounded'
-import SyncRoundedIcon from '@mui/icons-material/SyncRounded'
-import CloudDoneRoundedIcon from '@mui/icons-material/CloudDoneRounded'
-import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded'
-import SettingsInputComponentRoundedIcon from '@mui/icons-material/SettingsInputComponentRounded'
-import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded'
-import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded'
-import LocalTaxiRoundedIcon from '@mui/icons-material/LocalTaxiRounded'
-import MonetizationOnRoundedIcon from '@mui/icons-material/MonetizationOnRounded'
-import PercentRoundedIcon from '@mui/icons-material/PercentRounded'
+  TextField,
+  Typography,
+} from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
+import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded';
+import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
+import CloudDoneRoundedIcon from '@mui/icons-material/CloudDoneRounded';
+import ElectricCarRoundedIcon from '@mui/icons-material/ElectricCarRounded';
+import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
+import LocalTaxiRoundedIcon from '@mui/icons-material/LocalTaxiRounded';
+import PercentRoundedIcon from '@mui/icons-material/PercentRounded';
+import SettingsInputComponentRoundedIcon from '@mui/icons-material/SettingsInputComponentRounded';
+import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
 
-import { boltService, type BoltIntegrationDto, type BoltOrderDto } from '../../../services/bolt.service'
-import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme'
+import {
+  boltService,
+  type BoltDashboardDto,
+  type BoltIntegrationDto,
+  type BoltOrderDto,
+} from '../../../services/bolt.service';
+import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme';
 
 const STATUS_CHIP_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  finished: { label: 'Finalizată', color: '#16a34a', bg: alpha('#22c55e', 0.1) },
+  finished: { label: 'Finalizată', color: '#047857', bg: alpha('#10b981', 0.12) },
   driver_booking: { label: 'Rezervată', color: '#1d4ed8', bg: alpha('#3b82f6', 0.1) },
   accepted: { label: 'Acceptată', color: '#1d4ed8', bg: alpha('#3b82f6', 0.1) },
-  pickup: { label: 'Preluare', color: '#ca8a04', bg: alpha('#eab308', 0.1) },
+  pickup: { label: 'Preluare', color: '#b45309', bg: alpha('#f59e0b', 0.12) },
   cancelled: { label: 'Anulată', color: '#dc2626', bg: alpha('#ef4444', 0.1) },
-  no_show: { label: 'Neprezentare', color: '#4b5563', bg: alpha('#9ca3af', 0.1) }
+  no_show: { label: 'Neprezentare', color: '#4b5563', bg: alpha('#9ca3af', 0.1) },
+};
+
+function formatLei(value: number) {
+  return `${value.toLocaleString('ro-RO', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} lei`;
+}
+
+function formatHours(value: number) {
+  return `${value.toLocaleString('ro-RO', {
+    minimumFractionDigits: value > 0 && value < 10 ? 1 : 0,
+    maximumFractionDigits: 1,
+  })} h`;
+}
+
+function formatKm(value: number) {
+  return `${value.toLocaleString('ro-RO', {
+    minimumFractionDigits: value > 0 && value < 10 ? 1 : 0,
+    maximumFractionDigits: 1,
+  })} km`;
+}
+
+function trimAddress(address: string) {
+  if (!address || address === 'Unknown') return 'Adresă indisponibilă';
+  const [firstPart] = address.split(',');
+  return firstPart?.trim() || address;
+}
+
+function getRideHours(order: BoltOrderDto) {
+  if (!order.orderFinishedTime) return 0;
+  const start = new Date(order.orderCreatedTime).getTime();
+  const finish = new Date(order.orderFinishedTime).getTime();
+  const hours = (finish - start) / 36e5;
+  return Number.isFinite(hours) && hours > 0 ? hours : 0;
 }
 
 function MobileDetailRow({ label, children }: { label: string; children: ReactNode }) {
@@ -45,7 +85,7 @@ function MobileDetailRow({ label, children }: { label: string; children: ReactNo
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: 'minmax(88px, auto) minmax(0, 1fr)',
+        gridTemplateColumns: 'minmax(92px, auto) minmax(0, 1fr)',
         gap: 1.5,
         alignItems: 'start',
       }}
@@ -53,216 +93,244 @@ function MobileDetailRow({ label, children }: { label: string; children: ReactNo
       <Typography sx={{ fontSize: '0.82rem', color: DASHBOARD_TOKENS.textMuted }}>
         {label}
       </Typography>
-      <Box
-        sx={{
-          minWidth: 0,
-          textAlign: 'right',
-          overflowWrap: 'anywhere',
-          wordBreak: 'break-word',
-        }}
-      >
+      <Box sx={{ minWidth: 0, textAlign: 'right', overflowWrap: 'anywhere' }}>
         {children}
       </Box>
     </Box>
-  )
+  );
 }
 
-export function BoltIntegrationTab() {
-  const [integration, setIntegration] = useState<BoltIntegrationDto | null>(null)
-  const [orders, setOrders] = useState<BoltOrderDto[]>([])
-  const [loading, setLoading] = useState(true)
-  const [syncing, setSyncing] = useState(false)
-  const [configuring, setConfiguring] = useState(false)
+function StatCard({
+  title,
+  value,
+  icon,
+  tone,
+}: {
+  title: string;
+  value: string;
+  icon: ReactNode;
+  tone: string;
+}) {
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        p: { xs: 1.6, sm: 2 },
+        minHeight: 116,
+        borderRadius: DASHBOARD_TOKENS.radius.lg,
+        border: `1px solid ${alpha(tone, 0.2)}`,
+        bgcolor: DASHBOARD_TOKENS.paper,
+        boxShadow: DASHBOARD_TOKENS.shadow.sm,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+      }}
+    >
+      <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'center', minWidth: 0 }}>
+        <Typography sx={{ minWidth: 0, fontSize: '0.78rem', color: DASHBOARD_TOKENS.textMuted, fontWeight: 800 }}>
+          {title}
+        </Typography>
+        <Box sx={{ flexShrink: 0, color: tone, display: 'flex', alignItems: 'center', '& svg': { fontSize: 22 } }}>
+          {icon}
+        </Box>
+      </Stack>
+      <Typography
+        sx={{
+          fontSize: { xs: '1.08rem', sm: '1.32rem' },
+          fontWeight: 900,
+          color: DASHBOARD_TOKENS.ink,
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        {value}
+      </Typography>
+    </Paper>
+  );
+}
 
-  // Aggregate stats states (returned from server)
-  const [totalOrdersCount, setTotalOrdersCount] = useState(0)
-  const [totalNetEarnings, setTotalNetEarnings] = useState(0)
-  const [totalCommissions, setTotalCommissions] = useState(0)
-  const [totalTips, setTotalTips] = useState(0)
-  const [loadingMore, setLoadingMore] = useState(false)
+interface BoltIntegrationTabProps {
+  embedded?: boolean;
+  onConnected?: () => void;
+}
 
-  // Form inputs
-  const [clientId, setClientId] = useState('')
-  const [clientSecret, setClientSecret] = useState('')
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegrationTabProps) {
+  const [integration, setIntegration] = useState<BoltIntegrationDto | null>(null);
+  const [dashboard, setDashboard] = useState<BoltDashboardDto | null>(null);
+  const [orders, setOrders] = useState<BoltOrderDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [configuring, setConfiguring] = useState(false);
+  const [totalOrdersCount, setTotalOrdersCount] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [clientId, setClientId] = useState('');
+  const [clientSecret, setClientSecret] = useState('');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
-      const [integrationData, ordersResponse] = await Promise.all([
+      const [integrationData, ordersResponse, dashboardData] = await Promise.all([
         boltService.getIntegration(),
-        boltService.getOrders(5, 0)
-      ])
-      setIntegration(integrationData)
-      if (ordersResponse) {
-        setOrders(ordersResponse.orders || [])
-        setTotalOrdersCount(ordersResponse.totalOrdersCount)
-        setTotalNetEarnings(ordersResponse.totalNetEarnings)
-        setTotalCommissions(ordersResponse.totalCommissions)
-        setTotalTips(ordersResponse.totalTips)
-      }
-      
+        boltService.getOrders(5, 0),
+        boltService.getDashboard('month'),
+      ]);
+
+      setIntegration(integrationData);
+      setOrders(ordersResponse.orders || []);
+      setTotalOrdersCount(ordersResponse.totalOrdersCount);
+      setDashboard(dashboardData);
+
       if (integrationData) {
-        setClientId(integrationData.clientId)
+        setClientId(integrationData.clientId);
       }
     } catch (err: any) {
-      console.error('Failed to load Bolt integration data', err)
-      setErrorMsg('Nu s-au putut încărca datele din backend.')
+      console.error('Failed to load Bolt integration data', err);
+      setErrorMsg('Nu s-au putut încărca datele Bolt.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadData()
-  }, [])
+    loadData();
+  }, []);
 
   const handleLoadMore = async () => {
-    if (loadingMore) return
-    setLoadingMore(true)
+    if (loadingMore) return;
+    setLoadingMore(true);
     try {
-      const ordersResponse = await boltService.getOrders(5, orders.length)
-      if (ordersResponse && ordersResponse.orders) {
-        setOrders((prev) => [...prev, ...ordersResponse.orders])
-        // Keep aggregates sync
-        setTotalOrdersCount(ordersResponse.totalOrdersCount)
-        setTotalNetEarnings(ordersResponse.totalNetEarnings)
-        setTotalCommissions(ordersResponse.totalCommissions)
-        setTotalTips(ordersResponse.totalTips)
-      }
+      const ordersResponse = await boltService.getOrders(5, orders.length);
+      setOrders((prev) => [...prev, ...(ordersResponse.orders || [])]);
+      setTotalOrdersCount(ordersResponse.totalOrdersCount);
     } catch (err) {
-      console.error('Failed to load more orders', err)
-      setErrorMsg('Eroare la încărcarea mai multor curse.')
+      console.error('Failed to load more orders', err);
+      setErrorMsg('Eroare la încărcarea mai multor curse.');
     } finally {
-      setLoadingMore(false)
+      setLoadingMore(false);
     }
-  }
+  };
 
   const handleConnect = async (e: FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!clientId || !clientSecret) {
-      setErrorMsg('Introduceți atât Client ID cât și Client Secret.')
-      return
+      setErrorMsg('Introduceți Client ID și Client Secret.');
+      return;
     }
 
-    setSyncing(true)
-    setErrorMsg(null)
+    setSyncing(true);
+    setErrorMsg(null);
     try {
-      await boltService.configureIntegration(clientId, clientSecret)
-      await loadData()
-      setConfiguring(false)
-      setClientSecret('')
+      await boltService.configureIntegration(clientId, clientSecret);
+      await loadData();
+      setConfiguring(false);
+      setClientSecret('');
+      onConnected?.();
     } catch (err: any) {
-      console.error('Failed to configure Bolt API', err)
-      setErrorMsg(err.response?.data?.detail || 'Eroare la autentificarea cu Bolt API. Verificați credențialele.')
+      console.error('Failed to configure Bolt API', err);
+      setErrorMsg(err.response?.data?.detail || 'Eroare la autentificarea cu Bolt API. Verifică datele introduse.');
     } finally {
-      setSyncing(false)
+      setSyncing(false);
     }
-  }
+  };
 
   const handleSyncNow = async () => {
-    setSyncing(true)
-    setErrorMsg(null)
+    setSyncing(true);
+    setErrorMsg(null);
     try {
-      await boltService.syncOrders()
-      await loadData()
+      await boltService.syncOrders();
+      await loadData();
     } catch (err: any) {
-      console.error('Sync failed', err)
-      setErrorMsg('Eroare la sincronizarea datelor de la Bolt API.')
+      console.error('Sync failed', err);
+      setErrorMsg('Eroare la sincronizarea datelor Bolt.');
     } finally {
-      setSyncing(false)
+      setSyncing(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <Stack sx={{ alignItems: 'center', justifyContent: 'center', height: 300 }}>
         <CircularProgress size={36} sx={{ color: DASHBOARD_TOKENS.primary }} />
       </Stack>
-    )
+    );
   }
 
-  const showForm = !integration || configuring
+  const showForm = !integration || configuring || !integration.isConnected || (embedded && Boolean(integration.errorMessage));
+  const totalTipsAndCommissions = (dashboard?.totalTips ?? 0) + (dashboard?.totalCommissions ?? 0);
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 1200, minWidth: 0, mx: 'auto', p: 0, py: { xs: 1, md: 0 }, boxSizing: 'border-box' }}>
-      {/* Title & Refresh */}
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={2}
-        sx={{
-          justifyContent: 'space-between',
-          alignItems: { xs: 'stretch', sm: 'center' },
-          mb: 3.5
-        }}
-      >
-        <Stack direction="row" spacing={1.6} sx={{ alignItems: 'center', minWidth: 0 }}>
-          <Box
-            sx={{
-              width: 44,
-              height: 44,
-              flexShrink: 0,
-              borderRadius: DASHBOARD_TOKENS.radius.md,
-              bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.14),
-              color: DASHBOARD_TOKENS.primaryStrong,
-              display: 'grid',
-              placeItems: 'center',
-            }}
-          >
-            <ElectricCarRoundedIcon />
-          </Box>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography sx={{ fontWeight: 800, fontSize: '1.45rem', color: DASHBOARD_TOKENS.ink }}>
-              Integrare Bolt API
-            </Typography>
-            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem', mt: 0.3 }}>
-              Sincronizare automată a curselor și facturarea lor prin PFA
-            </Typography>
-          </Box>
+    <Box sx={{ width: '100%', maxWidth: embedded ? 'none' : 1200, minWidth: 0, mx: 'auto', py: embedded ? 0 : { xs: 1, md: 0 }, boxSizing: 'border-box' }}>
+      {!embedded && (
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={2}
+          sx={{
+            justifyContent: 'space-between',
+            alignItems: { xs: 'stretch', sm: 'center' },
+            mb: 3.5,
+          }}
+        >
+          <Stack direction="row" spacing={1.6} sx={{ alignItems: 'center', minWidth: 0 }}>
+            <Box
+              sx={{
+                width: 44,
+                height: 44,
+                flexShrink: 0,
+                borderRadius: DASHBOARD_TOKENS.radius.md,
+                bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.14),
+                color: DASHBOARD_TOKENS.primaryStrong,
+                display: 'grid',
+                placeItems: 'center',
+              }}
+            >
+              <ElectricCarRoundedIcon />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography sx={{ fontWeight: 900, fontSize: '1.45rem', color: DASHBOARD_TOKENS.ink }}>
+                Bolt
+              </Typography>
+              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem', mt: 0.3 }}>
+                Încasări, curse și sincronizare
+              </Typography>
+            </Box>
+          </Stack>
+
+          {integration?.isConnected && !showForm && (
+            <Button
+              variant="outlined"
+              startIcon={syncing ? <CircularProgress size={16} color="inherit" /> : <SyncRoundedIcon />}
+              onClick={handleSyncNow}
+              disabled={syncing}
+              sx={{
+                borderRadius: DASHBOARD_TOKENS.radius.md,
+                fontWeight: 800,
+                textTransform: 'none',
+                borderColor: alpha(DASHBOARD_TOKENS.ink, 0.12),
+                color: DASHBOARD_TOKENS.ink,
+                py: { xs: 1.2, sm: 1 },
+                '&:hover': {
+                  borderColor: DASHBOARD_TOKENS.primary,
+                  bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.04),
+                },
+                '&:active': { transform: 'scale(0.98)' },
+              }}
+            >
+              Sincronizează acum
+            </Button>
+          )}
         </Stack>
-        {integration?.isConnected && !showForm && (
-          <Button
-            variant="outlined"
-            startIcon={syncing ? <CircularProgress size={16} color="inherit" /> : <SyncRoundedIcon />}
-            onClick={handleSyncNow}
-            disabled={syncing}
-            sx={{
-              borderRadius: DASHBOARD_TOKENS.radius.md,
-              fontWeight: 700,
-              textTransform: 'none',
-              borderColor: alpha(DASHBOARD_TOKENS.ink, 0.12),
-              color: DASHBOARD_TOKENS.ink,
-              py: { xs: 1.2, sm: 1 },
-              '&:hover': {
-                borderColor: DASHBOARD_TOKENS.primary,
-                bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.04)
-              }
-            }}
-          >
-            Sincronizează acum
-          </Button>
-        )}
-      </Stack>
+      )}
 
       {errorMsg && (
         <Alert
           severity="error"
           onClose={() => setErrorMsg(null)}
-          sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, mb: 3, fontWeight: 500 }}
+          sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, mb: 3, fontWeight: 700 }}
         >
           {errorMsg}
         </Alert>
       )}
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: showForm ? '1fr' : '1fr 2fr' },
-          gap: 3,
-          alignItems: 'start',
-          minWidth: 0
-        }}
-      >
-        {/* Connection Setup panel */}
+      {showForm ? (
         <Paper
           elevation={0}
           sx={{
@@ -271,449 +339,411 @@ export function BoltIntegrationTab() {
             border: `1px solid ${DASHBOARD_TOKENS.border}`,
             boxShadow: DASHBOARD_TOKENS.shadow.sm,
             bgcolor: DASHBOARD_TOKENS.paper,
-            minWidth: 0
+            maxWidth: 620,
+            mx: embedded ? 'auto' : 0,
           }}
         >
-          {showForm ? (
-            <form onSubmit={handleConnect}>
-              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 2 }}>
-                <Box sx={{ p: 1, borderRadius: DASHBOARD_TOKENS.radius.sm, bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.12), color: DASHBOARD_TOKENS.primaryStrong }}>
-                  <SettingsInputComponentRoundedIcon fontSize="small" />
-                </Box>
-                <Typography sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink }}>
-                  Configurare Conexiune
-                </Typography>
-              </Stack>
-              <Typography sx={{ fontSize: '0.85rem', color: DASHBOARD_TOKENS.textMuted, mb: 2.5 }}>
-                Obține credențialele API din panoul Bolt Fleet Management pentru a stabili conexiunea securizată.
+          <form onSubmit={handleConnect}>
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 2 }}>
+              <Box sx={{ p: 1, borderRadius: DASHBOARD_TOKENS.radius.sm, bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.12), color: DASHBOARD_TOKENS.primaryStrong }}>
+                <SettingsInputComponentRoundedIcon fontSize="small" />
+              </Box>
+              <Typography sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.ink }}>
+                {integration ? 'Reconectare Bolt' : 'Conectare Bolt'}
               </Typography>
+            </Stack>
 
-              <Stack spacing={2}>
-                <Box>
-                  <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: DASHBOARD_TOKENS.ink, mb: 0.8 }}>
-                    Client ID
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    placeholder="Introdu Client ID de la Bolt"
-                    value={clientId}
-                    onChange={(e) => setClientId(e.target.value)}
-                    sx={dashboardInputSx}
-                  />
-                </Box>
+            {integration?.errorMessage && (
+              <Alert severity="warning" sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, mb: 2, fontWeight: 700 }}>
+                Sincronizarea Bolt a raportat o eroare. Reconectează contul pentru a relua importul de curse.
+              </Alert>
+            )}
 
-                <Box>
-                  <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: DASHBOARD_TOKENS.ink, mb: 0.8 }}>
-                    Client Secret
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    type="password"
-                    placeholder="Introdu Client Secret-ul asociat"
-                    value={clientSecret}
-                    onChange={(e) => setClientSecret(e.target.value)}
-                    sx={dashboardInputSx}
-                  />
-                </Box>
+            <Stack spacing={2}>
+              <Box>
+                <Typography sx={{ fontSize: '0.82rem', fontWeight: 800, color: DASHBOARD_TOKENS.ink, mb: 0.8 }}>
+                  Client ID
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="Introdu Client ID de la Bolt"
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  sx={dashboardInputSx}
+                />
+              </Box>
 
-                <Stack direction="row" spacing={1.5} sx={{ pt: 1 }}>
-                  {integration && (
-                    <Button
-                      fullWidth
-                      variant="text"
-                      onClick={() => setConfiguring(false)}
-                      sx={{
-                        fontWeight: 700,
-                        textTransform: 'none',
-                        color: DASHBOARD_TOKENS.textMuted,
-                        borderRadius: DASHBOARD_TOKENS.radius.md
-                      }}
-                    >
-                      Renunță
-                    </Button>
-                  )}
+              <Box>
+                <Typography sx={{ fontSize: '0.82rem', fontWeight: 800, color: DASHBOARD_TOKENS.ink, mb: 0.8 }}>
+                  Client Secret
+                </Typography>
+                <TextField
+                  fullWidth
+                  type="password"
+                  placeholder="Introdu Client Secret-ul asociat"
+                  value={clientSecret}
+                  onChange={(e) => setClientSecret(e.target.value)}
+                  sx={dashboardInputSx}
+                />
+              </Box>
+
+              <Stack direction="row" spacing={1.5} sx={{ pt: 1 }}>
+                {integration?.isConnected && configuring && (
                   <Button
                     fullWidth
-                    type="submit"
-                    variant="contained"
-                    disabled={syncing}
+                    variant="text"
+                    onClick={() => setConfiguring(false)}
                     sx={{
-                      py: 1.3,
-                      fontWeight: 700,
+                      fontWeight: 800,
                       textTransform: 'none',
-                      boxShadow: 'none',
+                      color: DASHBOARD_TOKENS.textMuted,
                       borderRadius: DASHBOARD_TOKENS.radius.md,
-                      bgcolor: DASHBOARD_TOKENS.primary,
-                      color: DASHBOARD_TOKENS.ink,
-                      '&:hover': {
-                        bgcolor: DASHBOARD_TOKENS.primaryStrong,
-                        boxShadow: 'none'
-                      }
                     }}
                   >
-                    {syncing ? <CircularProgress size={20} color="inherit" /> : 'Salvare și Conectare'}
+                    Renunță
                   </Button>
-                </Stack>
-              </Stack>
-            </form>
-          ) : (
-            // Active connection summary
-            <div>
-              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-                <Typography sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink }}>
-                  Stare Conexiune
-                </Typography>
-                <Chip
-                  icon={integration.isConnected ? <CloudDoneRoundedIcon fontSize="small" /> : <ErrorOutlineRoundedIcon fontSize="small" />}
-                  label={integration.isConnected ? 'Conectat' : 'Eroare'}
-                  size="small"
-                  sx={{
-                    fontWeight: 700,
-                    borderRadius: DASHBOARD_TOKENS.radius.full,
-                    color: integration.isConnected ? '#16a34a' : '#dc2626',
-                    bgcolor: integration.isConnected ? alpha('#22c55e', 0.1) : alpha('#ef4444', 0.1),
-                    '& .MuiChip-icon': { color: 'inherit' }
-                  }}
-                />
-              </Stack>
-
-              <Stack spacing={2} sx={{ mb: 3 }}>
-                <Paper elevation={0} sx={{ p: 1.8, border: `1px solid ${DASHBOARD_TOKENS.border}`, bgcolor: DASHBOARD_TOKENS.surface, borderRadius: DASHBOARD_TOKENS.radius.md }}>
-                  <Typography sx={{ fontSize: '0.76rem', color: DASHBOARD_TOKENS.textSubtle, fontWeight: 700 }}>PARTENER FLEET</Typography>
-                  <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.ink, fontSize: '0.95rem', mt: 0.4 }}>
-                    {integration.companyName || 'Bolt Client'}
-                  </Typography>
-                  <Typography sx={{ fontSize: '0.8rem', color: DASHBOARD_TOKENS.textMuted, mt: 0.2 }}>
-                    ID Companie: {integration.companyId}
-                  </Typography>
-                </Paper>
-
-                <Paper elevation={0} sx={{ p: 1.8, border: `1px solid ${DASHBOARD_TOKENS.border}`, bgcolor: DASHBOARD_TOKENS.surface, borderRadius: DASHBOARD_TOKENS.radius.md }}>
-                  <Typography sx={{ fontSize: '0.76rem', color: DASHBOARD_TOKENS.textSubtle, fontWeight: 700 }}>CREDENTIELE MASCATE</Typography>
-                  <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.ink, fontSize: '0.9rem', mt: 0.4 }}>
-                    Client ID: {integration.clientId}
-                  </Typography>
-                </Paper>
-
-                <Paper elevation={0} sx={{ p: 1.8, border: `1px solid ${DASHBOARD_TOKENS.border}`, bgcolor: DASHBOARD_TOKENS.surface, borderRadius: DASHBOARD_TOKENS.radius.md }}>
-                  <Typography sx={{ fontSize: '0.76rem', color: DASHBOARD_TOKENS.textSubtle, fontWeight: 700 }}>ULTIMA SINCRONIZARE</Typography>
-                  <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.ink, fontSize: '0.9rem', mt: 0.4 }}>
-                    {integration.lastFetchedAtUtc ? new Date(integration.lastFetchedAtUtc).toLocaleString('ro-RO') : 'Niciodată'}
-                  </Typography>
-                </Paper>
-
-                {integration.errorMessage && (
-                  <Alert severity="warning" sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, fontSize: '0.8rem' }}>
-                    Sincronizarea automată a raportat o eroare: {integration.errorMessage}
-                  </Alert>
                 )}
-              </Stack>
-
-              <Button
-                fullWidth
-                variant="outlined"
-                onClick={() => setConfiguring(true)}
-                sx={{
-                  py: 1,
-                  fontWeight: 700,
-                  textTransform: 'none',
-                  borderRadius: DASHBOARD_TOKENS.radius.md,
-                  borderColor: alpha(DASHBOARD_TOKENS.ink, 0.12),
-                  color: DASHBOARD_TOKENS.ink,
-                  '&:hover': {
-                    borderColor: DASHBOARD_TOKENS.primary,
-                    bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.03)
-                  }
-                }}
-              >
-                Reconfigurare cont Bolt
-              </Button>
-            </div>
-          )}
-        </Paper>
-
-        {/* Orders list and stats - Only visible when connected */}
-        {!showForm && (
-          <Stack spacing={3} sx={{ minWidth: 0 }}>
-            {/* Quick stats widgets */}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
-                gap: 2
-              }}
-            >
-              {[
-                { title: 'Curse Month YTD', value: totalOrdersCount, icon: <LocalTaxiRoundedIcon />, color: DASHBOARD_TOKENS.primary },
-                { title: 'Venit Net Luna', value: `${totalNetEarnings.toFixed(2)} lei`, icon: <MonetizationOnRoundedIcon />, color: '#10b981' },
-                { title: 'Comision Bolt', value: `${totalCommissions.toFixed(2)} lei`, icon: <PercentRoundedIcon />, color: '#f59e0b' },
-                { title: 'Tips Primite', value: `${totalTips.toFixed(2)} lei`, icon: <AccountBalanceWalletRoundedIcon />, color: '#3b82f6' }
-              ].map((stat, idx) => (
-                <Paper
-                  key={idx}
-                  elevation={0}
+                <Button
+                  fullWidth
+                  type="submit"
+                  variant="contained"
+                  disabled={syncing}
                   sx={{
-                    p: { xs: 1.5, sm: 2 },
-                    borderRadius: DASHBOARD_TOKENS.radius.lg,
-                    border: `1px solid ${DASHBOARD_TOKENS.border}`,
-                    bgcolor: DASHBOARD_TOKENS.paper,
-                    boxShadow: DASHBOARD_TOKENS.shadow.sm,
-                    minWidth: 0
+                    py: 1.3,
+                    fontWeight: 900,
+                    textTransform: 'none',
+                    boxShadow: 'none',
+                    borderRadius: DASHBOARD_TOKENS.radius.md,
+                    bgcolor: DASHBOARD_TOKENS.primary,
+                    color: DASHBOARD_TOKENS.ink,
+                    '&:hover': {
+                      bgcolor: DASHBOARD_TOKENS.primaryStrong,
+                      boxShadow: 'none',
+                    },
                   }}
                 >
-                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1, minWidth: 0 }}>
-                    <Typography sx={{ minWidth: 0, fontSize: { xs: '0.7rem', sm: '0.78rem' }, color: DASHBOARD_TOKENS.textMuted, fontWeight: 700 }}>
-                      {stat.title}
-                    </Typography>
-                    <Box sx={{ flexShrink: 0, color: stat.color, display: 'flex', alignItems: 'center', '& svg': { fontSize: { xs: 18, sm: 24 } } }}>
-                      {stat.icon}
-                    </Box>
-                  </Stack>
-                  <Typography sx={{ fontSize: { xs: '1rem', sm: '1.25rem' }, fontWeight: 800, color: DASHBOARD_TOKENS.ink }}>
-                    {stat.value}
-                  </Typography>
-                </Paper>
-              ))}
-            </Box>
-
-            {/* Orders Table */}
-            <Paper
-              elevation={0}
-              sx={{
-                p: { xs: 2, sm: 3 },
-                borderRadius: DASHBOARD_TOKENS.radius.lg,
-                border: `1px solid ${DASHBOARD_TOKENS.border}`,
-                boxShadow: DASHBOARD_TOKENS.shadow.sm,
-                bgcolor: DASHBOARD_TOKENS.paper,
-                minWidth: 0,
-                overflow: 'hidden'
-              }}
-            >
-              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 2.5 }}>
-                <Box sx={{ p: 1, borderRadius: DASHBOARD_TOKENS.radius.sm, bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.12), color: DASHBOARD_TOKENS.primaryStrong }}>
-                  <CalendarMonthRoundedIcon fontSize="small" />
-                </Box>
-                <div>
-                  <Typography sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink }}>
-                    Istoric Curse
-                  </Typography>
-                  <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.8rem' }}>
-                    Cursele Bolt înregistrate în luna curentă
-                  </Typography>
-                </div>
+                  {syncing ? <CircularProgress size={20} color="inherit" /> : 'Salvează conexiunea'}
+                </Button>
               </Stack>
+            </Stack>
+          </form>
+        </Paper>
+      ) : (
+        <Stack spacing={3} sx={{ minWidth: 0 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 2, md: 2.5 },
+              borderRadius: DASHBOARD_TOKENS.radius.lg,
+              border: `1px solid ${DASHBOARD_TOKENS.border}`,
+              bgcolor: DASHBOARD_TOKENS.paper,
+              boxShadow: DASHBOARD_TOKENS.shadow.sm,
+            }}
+          >
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between' }}>
+              <Box>
+                <Typography sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.ink }}>
+                  Stare Bolt
+                </Typography>
+                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', mt: 0.4 }}>
+                  {integration.lastFetchedAtUtc
+                    ? `Ultima sincronizare: ${new Date(integration.lastFetchedAtUtc).toLocaleString('ro-RO')}`
+                    : 'Datele nu au fost sincronizate încă.'}
+                </Typography>
+              </Box>
+              <Chip
+                icon={<CloudDoneRoundedIcon fontSize="small" />}
+                label="Conectat"
+                size="small"
+                sx={{
+                  alignSelf: { xs: 'flex-start', sm: 'center' },
+                  fontWeight: 800,
+                  borderRadius: DASHBOARD_TOKENS.radius.full,
+                  color: '#047857',
+                  bgcolor: alpha('#10b981', 0.12),
+                  '& .MuiChip-icon': { color: 'inherit' },
+                }}
+              />
+            </Stack>
 
-              {orders.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 6 }}>
-                  <ElectricCarRoundedIcon sx={{ fontSize: 44, color: alpha(DASHBOARD_TOKENS.ink, 0.12), mb: 2 }} />
-                  <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontWeight: 700 }}>
-                    Nicio cursă înregistrată
-                  </Typography>
-                  <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.85rem', mt: 0.5 }}>
-                    Dacă ai curse recente, apasă pe butonul de sincronizare pentru a le descărca.
-                  </Typography>
-                </Box>
-              ) : (
-                <>
-                  {/* Table View for Desktop Devices */}
-                  <TableContainer sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto', maxWidth: '100%' }}>
-                    <Table sx={{ minWidth: 880 }}>
-                      <TableHead>
-                        <TableRow sx={{ '& th': { borderBottom: `1px solid ${DASHBOARD_TOKENS.border}`, fontWeight: 700, color: DASHBOARD_TOKENS.textMuted } }}>
-                          <TableCell>Referință</TableCell>
-                          <TableCell>Data cursei</TableCell>
-                          <TableCell>Șofer / Nr. Înmatriculare</TableCell>
-                          <TableCell align="right">Distanță (km)</TableCell>
-                          <TableCell align="right">Preț Cursă</TableCell>
-                          <TableCell align="right">Venit Net</TableCell>
-                          <TableCell>Metodă plată</TableCell>
-                          <TableCell>Status</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {orders.map((order) => {
-                          const statusCfg = STATUS_CHIP_CONFIG[order.orderStatus.toLowerCase()] || { label: order.orderStatus, color: '#4b5563', bg: alpha('#9ca3af', 0.1) }
-                          return (
-                            <TableRow
-                              key={order.id}
-                              sx={{
-                                '& td': { borderBottom: `1px solid ${DASHBOARD_TOKENS.border}`, py: 1.8 },
-                                '&:hover': { bgcolor: DASHBOARD_TOKENS.surface }
-                              }}
-                            >
-                              <TableCell sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink }}>
-                                {order.orderReference}
-                              </TableCell>
-                              <TableCell sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>
-                                {new Date(order.orderCreatedTime).toLocaleString('ro-RO')}
-                              </TableCell>
-                              <TableCell>
-                                <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: DASHBOARD_TOKENS.ink }}>
-                                  {order.driverName}
-                                </Typography>
-                                <Typography sx={{ fontSize: '0.78rem', color: DASHBOARD_TOKENS.textSubtle }}>
-                                  {order.vehicleLicensePlate} ({order.vehicleModel})
-                                </Typography>
-                              </TableCell>
-                              <TableCell align="right" sx={{ fontWeight: 500 }}>
-                                {(order.rideDistance / 1000).toFixed(1)} km
-                              </TableCell>
-                              <TableCell align="right" sx={{ fontWeight: 600 }}>
-                                {Number(order.ridePrice).toFixed(2)} lei
-                              </TableCell>
-                              <TableCell align="right" sx={{ fontWeight: 800, color: '#16a34a' }}>
-                                {Number(order.netEarnings).toFixed(2)} lei
-                              </TableCell>
-                              <TableCell sx={{ textTransform: 'capitalize', fontSize: '0.85rem' }}>
-                                {order.paymentMethod}
-                              </TableCell>
-                              <TableCell>
-                                <Chip
-                                  label={statusCfg.label}
-                                  size="small"
-                                  sx={{
-                                    fontWeight: 700,
-                                    fontSize: '0.7rem',
-                                    color: statusCfg.color,
-                                    bgcolor: statusCfg.bg,
-                                    borderRadius: DASHBOARD_TOKENS.radius.full
-                                  }}
-                                />
-                              </TableCell>
-                            </TableRow>
-                          )
-                        })}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+            {integration.errorMessage && (
+              <Alert
+                severity="warning"
+                icon={<ErrorOutlineRoundedIcon />}
+                sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, mt: 2, fontWeight: 700 }}
+                action={
+                  <Button color="inherit" size="small" onClick={() => setConfiguring(true)} sx={{ fontWeight: 900, textTransform: 'none' }}>
+                    Reconectează
+                  </Button>
+                }
+              >
+                Sincronizarea Bolt a raportat o eroare.
+              </Alert>
+            )}
+          </Paper>
 
-                  {/* Card List View for Mobile Devices */}
-                  <Stack spacing={1.5} sx={{ display: { xs: 'flex', md: 'none' }, minWidth: 0 }}>
-                    {orders.map((order) => {
-                      const statusCfg = STATUS_CHIP_CONFIG[order.orderStatus.toLowerCase()] || { label: order.orderStatus, color: '#4b5563', bg: alpha('#9ca3af', 0.1) }
-                      return (
-                        <Box
-                          key={order.id}
-                          sx={{
-                            p: 2,
-                            width: '100%',
-                            maxWidth: '100%',
-                            minWidth: 0,
-                            boxSizing: 'border-box',
-                            borderRadius: DASHBOARD_TOKENS.radius.md,
-                            border: `1px solid ${DASHBOARD_TOKENS.border}`,
-                            bgcolor: DASHBOARD_TOKENS.surface,
-                            overflow: 'hidden',
-                            '&:active': { bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.05) }
-                          }}
-                        >
-                          <Stack direction="row" spacing={1.2} sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1.5, minWidth: 0 }}>
-                            <Typography
-                              title={order.orderReference}
-                              noWrap
-                              sx={{ flex: 1, minWidth: 0, fontWeight: 800, fontSize: '0.95rem', color: DASHBOARD_TOKENS.ink }}
-                            >
-                              {order.orderReference}
-                            </Typography>
-                            <Chip
-                              label={statusCfg.label}
-                              size="small"
-                              sx={{
-                                fontWeight: 700,
-                                fontSize: '0.65rem',
-                                color: statusCfg.color,
-                                bgcolor: statusCfg.bg,
-                                borderRadius: DASHBOARD_TOKENS.radius.full,
-                                flexShrink: 0,
-                                maxWidth: 112
-                              }}
-                            />
-                          </Stack>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+              gap: 2,
+            }}
+          >
+            <StatCard
+              title="Curse luna curentă"
+              value={(dashboard?.totalOrdersCount ?? 0).toLocaleString('ro-RO')}
+              icon={<LocalTaxiRoundedIcon />}
+              tone={DASHBOARD_TOKENS.primaryStrong}
+            />
+            <StatCard
+              title="Încasat net"
+              value={formatLei(dashboard?.totalNetEarnings ?? 0)}
+              icon={<AccountBalanceWalletRoundedIcon />}
+              tone="#047857"
+            />
+            <StatCard
+              title="Ore în cursă"
+              value={formatHours(dashboard?.totalRideHours ?? 0)}
+              icon={<AccessTimeRoundedIcon />}
+              tone="#7c3aed"
+            />
+            <StatCard
+              title="Tips + comision"
+              value={formatLei(totalTipsAndCommissions)}
+              icon={<PercentRoundedIcon />}
+              tone="#b45309"
+            />
+          </Box>
 
-                          <Stack spacing={1} sx={{ mb: 1.5 }}>
-                            <MobileDetailRow label="Data cursei:">
-                              <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: DASHBOARD_TOKENS.ink }}>
-                                {new Date(order.orderCreatedTime).toLocaleString('ro-RO')}
-                              </Typography>
-                            </MobileDetailRow>
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 2, sm: 3 },
+              borderRadius: DASHBOARD_TOKENS.radius.lg,
+              border: `1px solid ${DASHBOARD_TOKENS.border}`,
+              boxShadow: DASHBOARD_TOKENS.shadow.sm,
+              bgcolor: DASHBOARD_TOKENS.paper,
+              minWidth: 0,
+              overflow: 'hidden',
+            }}
+          >
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 2.5 }}>
+              <Box sx={{ p: 1, borderRadius: DASHBOARD_TOKENS.radius.sm, bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.12), color: DASHBOARD_TOKENS.primaryStrong }}>
+                <CalendarMonthRoundedIcon fontSize="small" />
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.ink }}>
+                  Curse recente
+                </Typography>
+                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.8rem' }}>
+                  Date importate din Bolt
+                </Typography>
+              </Box>
+            </Stack>
 
-                            <MobileDetailRow label="Șofer / Auto:">
-                              <Box sx={{ minWidth: 0 }}>
-                                <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: DASHBOARD_TOKENS.ink }}>
-                                  {order.driverName}
-                                </Typography>
-                                <Typography sx={{ fontSize: '0.74rem', color: DASHBOARD_TOKENS.textSubtle }}>
-                                  {order.vehicleLicensePlate} ({order.vehicleModel})
-                                </Typography>
-                              </Box>
-                            </MobileDetailRow>
-
-                            <MobileDetailRow label="Distanță:">
-                              <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: DASHBOARD_TOKENS.ink }}>
-                                {(order.rideDistance / 1000).toFixed(1)} km
-                              </Typography>
-                            </MobileDetailRow>
-
-                            <MobileDetailRow label="Preț / Plată:">
-                              <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: DASHBOARD_TOKENS.ink }}>
-                                {Number(order.ridePrice).toFixed(2)} lei ({order.paymentMethod})
-                              </Typography>
-                            </MobileDetailRow>
-                          </Stack>
-
-                          <Box
+            {orders.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 6 }}>
+                <ElectricCarRoundedIcon sx={{ fontSize: 44, color: alpha(DASHBOARD_TOKENS.ink, 0.12), mb: 2 }} />
+                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontWeight: 800 }}>
+                  Nicio cursă înregistrată
+                </Typography>
+                <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.85rem', mt: 0.5 }}>
+                  Sincronizează datele dacă ai curse recente.
+                </Typography>
+              </Box>
+            ) : (
+              <>
+                <TableContainer sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto', maxWidth: '100%' }}>
+                  <Table sx={{ minWidth: 820 }}>
+                    <TableHead>
+                      <TableRow sx={{ '& th': { borderBottom: `1px solid ${DASHBOARD_TOKENS.border}`, fontWeight: 800, color: DASHBOARD_TOKENS.textMuted } }}>
+                        <TableCell>Data cursei</TableCell>
+                        <TableCell>Traseu</TableCell>
+                        <TableCell>Șofer / auto</TableCell>
+                        <TableCell align="right">Distanță</TableCell>
+                        <TableCell align="right">Durată</TableCell>
+                        <TableCell align="right">Venit net</TableCell>
+                        <TableCell>Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {orders.map((order) => {
+                        const statusCfg = STATUS_CHIP_CONFIG[order.orderStatus.toLowerCase()] || { label: order.orderStatus, color: '#4b5563', bg: alpha('#9ca3af', 0.1) };
+                        return (
+                          <TableRow
+                            key={order.id}
                             sx={{
-                              pt: 1.5,
-                              borderTop: `1px dashed ${DASHBOARD_TOKENS.border}`,
-                              display: 'flex',
-                              gap: 1.5,
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              minWidth: 0
+                              '& td': { borderBottom: `1px solid ${DASHBOARD_TOKENS.border}`, py: 1.8 },
+                              '&:hover': { bgcolor: DASHBOARD_TOKENS.surface },
                             }}
                           >
-                            <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted }}>Venit Net:</Typography>
-                            <Typography sx={{ minWidth: 0, textAlign: 'right', overflowWrap: 'anywhere', fontSize: '1.05rem', fontWeight: 900, color: '#16a34a' }}>
-                              {Number(order.netEarnings).toFixed(2)} lei
-                            </Typography>
-                          </Box>
-                        </Box>
-                      )
-                    })}
-                  </Stack>
+                            <TableCell sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', fontWeight: 700 }}>
+                              {new Date(order.orderCreatedTime).toLocaleString('ro-RO')}
+                            </TableCell>
+                            <TableCell sx={{ maxWidth: 260 }}>
+                              <Typography sx={{ fontWeight: 800, fontSize: '0.88rem', color: DASHBOARD_TOKENS.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {trimAddress(order.pickupAddress)} → {trimAddress(order.destinationAddress)}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography sx={{ fontWeight: 800, fontSize: '0.9rem', color: DASHBOARD_TOKENS.ink }}>
+                                {order.driverName}
+                              </Typography>
+                              <Typography sx={{ fontSize: '0.78rem', color: DASHBOARD_TOKENS.textSubtle }}>
+                                {order.vehicleLicensePlate} ({order.vehicleModel})
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+                              {formatKm(order.rideDistance / 1000)}
+                            </TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+                              {formatHours(getRideHours(order))}
+                            </TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 900, color: '#047857', fontVariantNumeric: 'tabular-nums' }}>
+                              {formatLei(Number(order.netEarnings))}
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={statusCfg.label}
+                                size="small"
+                                sx={{
+                                  fontWeight: 800,
+                                  fontSize: '0.7rem',
+                                  color: statusCfg.color,
+                                  bgcolor: statusCfg.bg,
+                                  borderRadius: DASHBOARD_TOKENS.radius.full,
+                                }}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
 
-                  {/* Load More Button */}
-                  {orders.length < totalOrdersCount && (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-                      <Button
-                        variant="outlined"
-                        onClick={handleLoadMore}
-                        disabled={loadingMore}
-                        startIcon={loadingMore ? <CircularProgress size={16} color="inherit" /> : null}
+                <Stack spacing={1.5} sx={{ display: { xs: 'flex', md: 'none' }, minWidth: 0 }}>
+                  {orders.map((order) => {
+                    const statusCfg = STATUS_CHIP_CONFIG[order.orderStatus.toLowerCase()] || { label: order.orderStatus, color: '#4b5563', bg: alpha('#9ca3af', 0.1) };
+                    return (
+                      <Box
+                        key={order.id}
                         sx={{
+                          p: 2,
+                          width: '100%',
+                          maxWidth: '100%',
+                          minWidth: 0,
+                          boxSizing: 'border-box',
                           borderRadius: DASHBOARD_TOKENS.radius.md,
-                          fontWeight: 700,
-                          textTransform: 'none',
-                          borderColor: alpha(DASHBOARD_TOKENS.ink, 0.12),
-                          color: DASHBOARD_TOKENS.ink,
-                          px: 4,
-                          py: 1.2,
-                          '&:hover': {
-                            borderColor: DASHBOARD_TOKENS.primary,
-                            bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.04)
-                          }
+                          border: `1px solid ${DASHBOARD_TOKENS.border}`,
+                          bgcolor: DASHBOARD_TOKENS.surface,
+                          overflow: 'hidden',
+                          '&:active': { bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.05) },
                         }}
                       >
-                        {loadingMore ? 'Se încarcă...' : 'Încarcă mai multe curse'}
-                      </Button>
-                    </Box>
-                  )}
-                </>
-              )}
-            </Paper>
-          </Stack>
-        )}
-      </Box>
+                        <Stack direction="row" spacing={1.2} sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1.5, minWidth: 0 }}>
+                          <Typography
+                            sx={{ flex: 1, minWidth: 0, fontWeight: 900, fontSize: '0.95rem', color: DASHBOARD_TOKENS.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          >
+                            {trimAddress(order.pickupAddress)} → {trimAddress(order.destinationAddress)}
+                          </Typography>
+                          <Chip
+                            label={statusCfg.label}
+                            size="small"
+                            sx={{
+                              fontWeight: 800,
+                              fontSize: '0.65rem',
+                              color: statusCfg.color,
+                              bgcolor: statusCfg.bg,
+                              borderRadius: DASHBOARD_TOKENS.radius.full,
+                              flexShrink: 0,
+                              maxWidth: 112,
+                            }}
+                          />
+                        </Stack>
+
+                        <Stack spacing={1} sx={{ mb: 1.5 }}>
+                          <MobileDetailRow label="Data cursei:">
+                            <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: DASHBOARD_TOKENS.ink }}>
+                              {new Date(order.orderCreatedTime).toLocaleString('ro-RO')}
+                            </Typography>
+                          </MobileDetailRow>
+
+                          <MobileDetailRow label="Șofer / auto:">
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography sx={{ fontSize: '0.82rem', fontWeight: 800, color: DASHBOARD_TOKENS.ink }}>
+                                {order.driverName}
+                              </Typography>
+                              <Typography sx={{ fontSize: '0.74rem', color: DASHBOARD_TOKENS.textSubtle }}>
+                                {order.vehicleLicensePlate} ({order.vehicleModel})
+                              </Typography>
+                            </Box>
+                          </MobileDetailRow>
+
+                          <MobileDetailRow label="Distanță:">
+                            <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: DASHBOARD_TOKENS.ink }}>
+                              {formatKm(order.rideDistance / 1000)}
+                            </Typography>
+                          </MobileDetailRow>
+
+                          <MobileDetailRow label="Durată:">
+                            <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: DASHBOARD_TOKENS.ink }}>
+                              {formatHours(getRideHours(order))}
+                            </Typography>
+                          </MobileDetailRow>
+                        </Stack>
+
+                        <Box
+                          sx={{
+                            pt: 1.5,
+                            borderTop: `1px dashed ${DASHBOARD_TOKENS.border}`,
+                            display: 'flex',
+                            gap: 1.5,
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            minWidth: 0,
+                          }}
+                        >
+                          <Typography sx={{ fontSize: '0.82rem', fontWeight: 800, color: DASHBOARD_TOKENS.textMuted }}>Venit net</Typography>
+                          <Typography sx={{ minWidth: 0, textAlign: 'right', overflowWrap: 'anywhere', fontSize: '1.05rem', fontWeight: 900, color: '#047857', fontVariantNumeric: 'tabular-nums' }}>
+                            {formatLei(Number(order.netEarnings))}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+
+                {orders.length < totalOrdersCount && (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                    <Button
+                      variant="outlined"
+                      onClick={handleLoadMore}
+                      disabled={loadingMore}
+                      startIcon={loadingMore ? <CircularProgress size={16} color="inherit" /> : null}
+                      sx={{
+                        borderRadius: DASHBOARD_TOKENS.radius.md,
+                        fontWeight: 800,
+                        textTransform: 'none',
+                        borderColor: alpha(DASHBOARD_TOKENS.ink, 0.12),
+                        color: DASHBOARD_TOKENS.ink,
+                        px: 4,
+                        py: 1.2,
+                        '&:hover': {
+                          borderColor: DASHBOARD_TOKENS.primary,
+                          bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.04),
+                        },
+                      }}
+                    >
+                      {loadingMore ? 'Se încarcă...' : 'Încarcă mai multe curse'}
+                    </Button>
+                  </Box>
+                )}
+              </>
+            )}
+          </Paper>
+        </Stack>
+      )}
     </Box>
-  )
+  );
 }

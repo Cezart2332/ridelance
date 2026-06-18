@@ -90,7 +90,8 @@ export default function SubscriptionSelectPage() {
               Alege abonamentul tău
             </Typography>
             <Typography sx={{ color: TOKENS.textMuted, fontSize: '1rem', lineHeight: 1.7 }}>
-              Plata se face automat în fiecare <strong>luni la 15:00</strong>. Prima ta plată va fi pe{' '}
+              După confirmarea contului, alegi abonamentul potrivit. Reînnoirea automată se face în fiecare{' '}
+              <strong>luni la 15:00</strong>, următoarea plată fiind programată pe{' '}
               <Box component="span" sx={{ color: TOKENS.primaryStrong, fontWeight: 700 }}>
                 {formatRomanianDate(nextBilling)}
               </Box>
@@ -115,9 +116,8 @@ export default function SubscriptionSelectPage() {
           >
             <InfoOutlinedIcon sx={{ color: TOKENS.primaryStrong, fontSize: 20, flexShrink: 0 }} />
             <Typography sx={{ color: TOKENS.ink, fontSize: '0.88rem', lineHeight: 1.6 }}>
-              Abonamentul se activează imediat după plată. Contul tău va fi marcat ca{' '}
-              <strong>"Activ — plată programată luni 15:00"</strong> până la prima factură automată.
-              Dacă plătești luni înainte de 15:00, prima factură va fi lunea viitoare.
+              Abonamentul se activează imediat după plată. Nu mai aștepți până luni pentru acces;
+              luni la 15:00 este doar momentul recurent de facturare.
             </Typography>
           </Paper>
 

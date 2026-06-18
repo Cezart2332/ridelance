@@ -92,11 +92,11 @@ const mockSummary: DashboardSummary = {
   incomeMonth: 5, // May
   revenueChartYear: 2026,
   monthlyRevenue: [
-    { month: 1, venitTotal: 4500 },
-    { month: 2, venitTotal: 5200 },
-    { month: 3, venitTotal: 4800 },
-    { month: 4, venitTotal: 6100 },
-    { month: 5, venitTotal: 8000 },
+    { month: 1, venitTotal: 4500, venitCash: 500, venitCard: 500, venitBolt: 2000, venitUber: 1500 },
+    { month: 2, venitTotal: 5200, venitCash: 600, venitCard: 600, venitBolt: 2200, venitUber: 1800 },
+    { month: 3, venitTotal: 4800, venitCash: 400, venitCard: 400, venitBolt: 2200, venitUber: 1800 },
+    { month: 4, venitTotal: 6100, venitCash: 700, venitCard: 700, venitBolt: 2500, venitUber: 2200 },
+    { month: 5, venitTotal: 8000, venitCash: 1000, venitCard: 1000, venitBolt: 3000, venitUber: 3000 },
   ],
   // YTD auto-computed tax breakdown
   taxYear: 2026,
@@ -135,6 +135,8 @@ export function HomeDashboardView() {
         venitBolt={mockSummary.venitBolt ?? 0}
         venitUber={mockSummary.venitUber ?? 0}
         incomeMonth={mockSummary.incomeMonth}
+        timeframe="month"
+        platform="all"
       />
 
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 2 }}>

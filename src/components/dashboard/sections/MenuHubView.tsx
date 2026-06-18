@@ -9,7 +9,6 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded';
-import ElectricCarRoundedIcon from '@mui/icons-material/ElectricCarRounded';
 
 import { userService, type UserProfile } from '../../../services/user.service';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
@@ -33,7 +32,6 @@ export function MenuHubView({ onNavigate, onLogout }: MenuHubViewProps) {
   const menuItems = [
     { id: 'documents', label: 'Documente', sub: 'Declarații, contracte & fișiere', icon: <FolderRoundedIcon />, color: '#3b82f6', bg: alpha('#3b82f6', 0.1) },
     { id: 'expenses', label: 'Cheltuieli', sub: 'Managementul cheltuielilor', icon: <AccountBalanceWalletRoundedIcon />, color: '#ef4444', bg: alpha('#ef4444', 0.1) },
-    { id: 'bolt_integration', label: 'Integrare Bolt', sub: 'Sincronizare curse & facturare', icon: <ElectricCarRoundedIcon />, color: '#10b981', bg: alpha('#10b981', 0.1) },
     { id: 'doc_recurring', label: 'Documente Recurente', sub: 'Declarații & facturi recurente', icon: <FolderSpecialRoundedIcon />, color: '#f59e0b', bg: alpha('#f59e0b', 0.1) },
     { id: 'cars', label: 'Mașini', sub: 'Managementul vehiculelor', icon: <DirectionsCarFilledRoundedIcon />, color: '#8b5cf6', bg: alpha('#8b5cf6', 0.1) },
     { id: 'abonamente', label: 'Abonamente', sub: 'Pachete active & prețuri', icon: <WorkspacePremiumRoundedIcon />, color: '#d97706', bg: alpha('#d97706', 0.1) },

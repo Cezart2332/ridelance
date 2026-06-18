@@ -6,6 +6,7 @@ import {
   TextField,
   Typography,
   Avatar,
+  Chip,
   CircularProgress,
   Alert,
 } from '@mui/material'
@@ -32,6 +33,8 @@ interface ClientSummary {
   userName: string
   userEmail: string
   status: string
+  accountStatus: string
+  subscriptionStatus: string | null
   registrationType: string
   documentCount: number
   createdAtUtc: string
@@ -47,6 +50,22 @@ function relativeTime(utcString: string): string {
   const days = Math.floor(hours / 24)
   if (days === 1) return 'Ieri'
   return `Acum ${days} zile`
+}
+
+function accountStatusColor(status: string) {
+  switch (status.toLowerCase()) {
+    case 'activ': return '#10b981'
+    case 'inactiv': return '#ef4444'
+    default: return '#6366f1'
+  }
+}
+
+function accountStatusDescription(status: string) {
+  switch (status.toLowerCase()) {
+    case 'activ': return 'Abonament plătit'
+    case 'inactiv': return 'Abonament neplătit'
+    default: return 'Onboarding / documente'
+  }
 }
 
 export function ContabilDashboard() {
@@ -91,6 +110,8 @@ export function ContabilDashboard() {
           userName: item.userName,
           userEmail: item.userEmail,
           status: item.status,
+          accountStatus: item.accountStatus ?? 'Nou',
+          subscriptionStatus: item.subscriptionStatus ?? null,
           registrationType: item.registrationType,
           documentCount: item.documentCount,
           createdAtUtc: item.createdAtUtc,
@@ -197,6 +218,20 @@ export function ContabilDashboard() {
                     <Typography variant="caption" sx={{ color: TOKENS.textMuted }} noWrap>{client.userEmail}</Typography>
                   </Box>
                 </Stack>
+
+                <Chip
+                  label={`${client.accountStatus} (${accountStatusDescription(client.accountStatus)})`}
+                  size="small"
+                  sx={{
+                    mb: 2,
+                    alignSelf: 'flex-start',
+                    fontWeight: 800,
+                    fontSize: '0.7rem',
+                    bgcolor: alpha(accountStatusColor(client.accountStatus), 0.1),
+                    color: accountStatusColor(client.accountStatus),
+                    border: `1px solid ${alpha(accountStatusColor(client.accountStatus), 0.2)}`,
+                  }}
+                />
 
                 <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }} component="div">
                   <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>

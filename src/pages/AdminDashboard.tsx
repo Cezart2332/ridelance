@@ -43,6 +43,16 @@ interface PfaSummary {
   userName: string
   registrationType: string
   status: string
+  accountStatus: string
+  subscriptionStatus: string | null
+  fullName: string | null
+  phone: string | null
+  contractDuration: number | null
+  street: string | null
+  number: string | null
+  city: string | null
+  county: string | null
+  isOwner: boolean
   documentCount: number
   createdAtUtc: string
   lastActivityAtUtc: string | null
@@ -81,6 +91,22 @@ function statusLabel(status: string) {
     case 'verified': return 'Verificat'
     case 'rejected': return 'Respins'
     default: return 'În așteptare'
+  }
+}
+
+function accountStatusColor(status: string) {
+  switch (status.toLowerCase()) {
+    case 'activ': return '#10b981'
+    case 'inactiv': return '#ef4444'
+    default: return '#6366f1'
+  }
+}
+
+function accountStatusDescription(status: string) {
+  switch (status.toLowerCase()) {
+    case 'activ': return 'Abonament plătit'
+    case 'inactiv': return 'Abonament neplătit'
+    default: return 'Onboarding / documente'
   }
 }
 
@@ -149,7 +175,17 @@ export function AdminDashboard() {
         setPfas(items.map((item: any) => ({
           id: item.id, userId: item.userId, userEmail: item.userEmail,
           userName: item.userName, registrationType: item.registrationType,
-          status: item.status, documentCount: item.documentCount, createdAtUtc: item.createdAtUtc,
+          status: item.status, accountStatus: item.accountStatus ?? 'Nou',
+          subscriptionStatus: item.subscriptionStatus ?? null,
+          fullName: item.fullName ?? null,
+          phone: item.phone ?? null,
+          contractDuration: item.contractDuration ?? null,
+          street: item.street ?? null,
+          number: item.number ?? null,
+          city: item.city ?? null,
+          county: item.county ?? null,
+          isOwner: Boolean(item.isOwner),
+          documentCount: item.documentCount, createdAtUtc: item.createdAtUtc,
           lastActivityAtUtc: item.lastActivityAtUtc,
         })))
       })
@@ -377,6 +413,31 @@ export function AdminDashboard() {
               <Typography variant="body1" sx={{ fontWeight: 700 }}>{relativeTime(pfa.createdAtUtc)}</Typography>
             </Box>
           </Stack>
+        </Paper>
+
+        <Paper elevation={0} sx={{ p: 3, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 850, color: TOKENS.ink, mb: 2 }}>
+            Date completate în formular
+          </Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', md: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
+            {[
+              { label: 'Nume formular', value: pfa.fullName || pfa.userName },
+              { label: 'Telefon', value: pfa.phone || 'Nu este completat' },
+              { label: 'Durată comodat', value: pfa.contractDuration ? `${pfa.contractDuration} ani` : 'Nu se aplică' },
+              { label: 'Adresă', value: [pfa.street, pfa.number].filter(Boolean).join(' ') || 'Nu se aplică' },
+              { label: 'Localitate', value: [pfa.city, pfa.county].filter(Boolean).join(', ') || 'Nu se aplică' },
+              { label: 'Proprietar sediu', value: pfa.isOwner ? 'Da' : 'Nu' },
+            ].map((item) => (
+              <Box key={item.label} sx={{ p: 1.5, borderRadius: TOKENS.radius.md, bgcolor: alpha(TOKENS.surface, 0.72), border: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
+                <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  {item.label}
+                </Typography>
+                <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 700, mt: 0.4 }}>
+                  {item.value}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
         </Paper>
 
         {/* Approve / Reject actions */}
@@ -636,6 +697,19 @@ export function AdminDashboard() {
                   </Box>
                   <Chip label={statusLabel(pfa.status)} size="small" sx={{ ml: 1, fontWeight: 700, fontSize: '0.7rem', bgcolor: alpha(statusColor(pfa.status), 0.1), color: statusColor(pfa.status), border: `1px solid ${alpha(statusColor(pfa.status), 0.2)}` }} />
                 </Box>
+                <Stack direction="row" spacing={1} sx={{ mb: 2, mt: 1.5, flexWrap: 'wrap', rowGap: 1 }}>
+                  <Chip
+                    label={`${pfa.accountStatus} (${accountStatusDescription(pfa.accountStatus)})`}
+                    size="small"
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: '0.7rem',
+                      bgcolor: alpha(accountStatusColor(pfa.accountStatus), 0.1),
+                      color: accountStatusColor(pfa.accountStatus),
+                      border: `1px solid ${alpha(accountStatusColor(pfa.accountStatus), 0.2)}`,
+                    }}
+                  />
+                </Stack>
                 <Stack direction="row" spacing={2} sx={{ mb: 3, mt: 1.5 }}>
                   <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>Tip: <strong>{formatRegistrationType(pfa.registrationType)}</strong></Typography>
                   <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>Documente: <strong>{pfa.documentCount}</strong></Typography>

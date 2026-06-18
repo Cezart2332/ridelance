@@ -9,13 +9,13 @@ export type PlanKey = 'solo' | 'start' | 'pro'
 export type ServiceKey = 'infiintare_pfa' | 'sediu_social' | 'start_ride'
 
 export interface SubscriptionResponse {
-  id: string
-  plan: PlanKey
-  status: string
+  id: string | null
+  plan: PlanKey | null
+  status: string | null
   stripeSubscriptionId: string | null
-  firstBillingDateUtc: string
+  firstBillingDateUtc: string | null
   nextBillingDateUtc: string | null
-  createdAtUtc: string
+  createdAtUtc: string | null
   dashboardAccessGranted: boolean
   pfaStatus: string | null
   pfaRegistrationType: string | null
@@ -177,7 +177,7 @@ export const stripeService = {
     if (!plan?.priceId) return
     
     const origin = window.location.origin
-    const effectiveSuccessUrl = successUrl || `${origin}/inregistrare/pfa?subscribed=1&session_id={{CHECKOUT_SESSION_ID}}&plan=${key}`
+    const effectiveSuccessUrl = successUrl || `${origin}/app/dashboard?subscribed=1&session_id={{CHECKOUT_SESSION_ID}}&plan=${key}`
     const effectiveCancelUrl = cancelUrl || `${origin}/inregistrare/abonament`
 
     try {

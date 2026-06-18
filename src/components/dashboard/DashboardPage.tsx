@@ -10,7 +10,6 @@ import { CarsView } from './sections/CarsView'
 import { AbonamenteTab } from './sections/AbonamenteTab'
 import { ServiciiTab } from './sections/ServiciiTab'
 import { IstoricPlatiTab } from './sections/IstoricPlatiTab'
-import { BoltIntegrationTab } from './sections/BoltIntegrationTab'
 import { MenuHubView } from './sections/MenuHubView'
 
 import AppLayout from './layout/AppLayout'
@@ -49,10 +48,9 @@ const bottomSectionConfig = [
   { id: 'abonamente', label: 'Abonamente', icon: 'MUI:WorkspacePremiumRounded' },
   { id: 'servicii', label: 'Servicii', icon: 'MUI:ShoppingCartRounded' },
   { id: 'istoric_plati', label: 'Istoric Plăți', icon: 'MUI:ReceiptLongRounded' },
-  { id: 'bolt_integration', label: 'Integrare Bolt', icon: 'MUI:ElectricCarRounded' },
 ] as const
 
-type SectionId = 'home' | 'cars' | 'profile' | 'documents' | 'support' | 'expenses' | 'doc_recurring' | 'abonamente' | 'servicii' | 'istoric_plati' | 'bolt_integration' | string
+type SectionId = 'home' | 'cars' | 'profile' | 'documents' | 'support' | 'expenses' | 'doc_recurring' | 'abonamente' | 'servicii' | 'istoric_plati' | string
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -73,6 +71,10 @@ export default function DashboardPage() {
   useEffect(() => {
     const section = searchParams.get('section')
     if (section) {
+      if (section === 'bolt_integration') {
+        setActiveSection('home')
+        return
+      }
       setActiveSection(section)
     }
   }, [searchParams])
@@ -95,6 +97,24 @@ export default function DashboardPage() {
 
   }, [navigate])
 
+  useEffect(() => {
+    if (pfaStatus !== 'Pending') return
+
+    const interval = window.setInterval(() => {
+      userService.getDashboardSummary()
+        .then((summary) => {
+          if (summary.pfaStatus === 'Approved') {
+            setPfaStatus('Approved')
+            setPfaRegistrationId(summary.pfaRegistrationId ?? null)
+            navigate('/inregistrare/abonament', { replace: true })
+          }
+        })
+        .catch(() => {})
+    }, 10000)
+
+    return () => window.clearInterval(interval)
+  }, [navigate, pfaStatus])
+
   const handleLogout = async () => {
     await authService.logout()
     navigate('/auth', { replace: true })
@@ -106,10 +126,13 @@ export default function DashboardPage() {
     if (activeSection === 'profile') return <ProfileTab />
     if (activeSection === 'documents') return <DocumentsTab onNavigate={setActiveSection} />
     if (activeSection === 'support') return <SupportChatTab />
-    if (activeSection === 'abonamente') return <AbonamenteTab />
+    if (activeSection === 'abonamente') {
+      return pfaStatus === 'Approved'
+        ? <AbonamenteTab />
+        : <DocumentsTab onNavigate={setActiveSection} />
+    }
     if (activeSection === 'servicii') return <ServiciiTab />
     if (activeSection === 'istoric_plati') return <IstoricPlatiTab />
-    if (activeSection === 'bolt_integration') return <BoltIntegrationTab />
     if (activeSection === 'more') return <MenuHubView onNavigate={setActiveSection} onLogout={handleLogout} />
 
     return (
@@ -130,21 +153,30 @@ export default function DashboardPage() {
     )
   }
 
-  // Show pending/rejected gate instead of the dashboard
-  if (pfaStatus === 'Pending' || pfaStatus === 'Rejected') {
+  // Rejected registrations need the correction flow; pending users can still upload documents.
+  if (pfaStatus === 'Rejected') {
     return <PendingApprovalPage status={pfaStatus} onLogout={handleLogout} />
   }
+
+  const visibleBottomSections = pfaStatus === 'Approved'
+    ? bottomSectionConfig
+    : bottomSectionConfig.filter((item) => item.id !== 'abonamente')
 
   return (
     <AppLayout
       activeSection={activeSection}
       setActiveSection={setActiveSection}
       sectionConfig={mainSectionConfig}
-      bottomSectionConfig={bottomSectionConfig}
+      bottomSectionConfig={visibleBottomSections}
       onLogout={handleLogout}
       showNotifications
       onOpenRecurringDocumentation={() => setActiveSection('doc_recurring')}
     >
+      {pfaStatus === 'Pending' && (
+        <Alert severity="info" sx={{ mb: 2, borderRadius: 2, fontWeight: 600 }}>
+          Contul este în onboarding. Poți încărca documente și discuta cu echipa RIDElance; abonamentul va fi ales după aprobare.
+        </Alert>
+      )}
       {renderSection()}
       <Snackbar
         open={snackbar.open}

@@ -533,21 +533,10 @@ export function AppLayout() {
               <Stack spacing={1.35} sx={{ alignItems: 'center' }}>
                 <Box
                   component="img"
-                  src={logo}
-                  alt="Ridelance"
-                  sx={{
-                    width: { xs: 220, sm: 275 },
-                    maxWidth: '100%',
-                    height: 'auto',
-                    display: 'block',
-                  }}
-                />
-                <Box
-                  component="img"
                   src={motto}
                   alt="Independent. Dar nu singur."
                   sx={{
-                    width: { xs: 205, sm: 245 },
+                    width: { xs: 230, sm: 295 },
                     maxWidth: '100%',
                     height: 'auto',
                     display: 'block',

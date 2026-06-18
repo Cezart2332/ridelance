@@ -20,6 +20,10 @@ import TouchAppRoundedIcon from '@mui/icons-material/TouchAppRounded';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
 import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import PendingActionsRoundedIcon from '@mui/icons-material/PendingActionsRounded';
+import PaymentsRoundedIcon from '@mui/icons-material/PaymentsRounded';
+import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
 import { carsService, getCarImageUrl, type Car, type CarLead } from '../../../../services/cars.service';
 import carListJson from '../../../../data/car-list.json';
 import {
@@ -46,6 +50,22 @@ interface LocalImage {
 const UBER_CATEGORIES = ['UberX', 'Uber Comfort', 'Uber Green', 'Uber Black', 'Uber Kids'];
 const BOLT_CATEGORIES = ['Bolt', 'Bolt Comfort', 'Bolt Green', 'Bolt Premium', 'Bolt Economy'];
 const BADGES = ['Consum Mic', 'Hybrid', 'GPL', 'Top Rated', 'Nou', 'Reducere'];
+
+const PAYMENT_LABELS: Record<string, string> = {
+  NotRequired: 'Nu necesită',
+  Pending: 'Necesită plată',
+  Paid: 'Plătit',
+  PastDue: 'Plată eșuată',
+  Cancelled: 'Anulat',
+};
+
+const PAYMENT_COLORS: Record<string, string> = {
+  NotRequired: '#64748b',
+  Pending: '#b45309',
+  Paid: '#047857',
+  PastDue: '#dc2626',
+  Cancelled: '#64748b',
+};
 
 interface CarBrandData {
   brand: string;
@@ -268,6 +288,7 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
 
     try {
       let carId = editingCar.id;
+      const isNewCar = !carId;
       const payload = {
         brand: editingCar.brand!,
         model: editingCar.model!,
@@ -303,6 +324,11 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
         await carsService.uploadImage(carId, img.file!);
       }
 
+      if (isPoster && isNewCar) {
+        await carsService.redirectToListingPayment(carId);
+        return;
+      }
+
       await fetchData();
       setIsCarModalOpen(false);
     } catch (error: any) {
@@ -323,6 +349,30 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
     { views: 0, clicks: 0, forms: 0 },
   );
 
+  const posterStats = {
+    totalCars: cars.length,
+    activeCars: cars.filter(car => car.active).length,
+    approvedCars: cars.filter(car => car.approvalStatus === 'Approved').length,
+    pendingApproval: cars.filter(car => car.approvalStatus === 'Pending').length,
+    pendingPayment: cars.filter(car => car.paymentStatus === 'Pending' || car.paymentStatus === 'PastDue').length,
+    paidCars: cars.filter(car => car.paymentStatus === 'Paid').length,
+    weeklyPotential: cars
+      .filter(car => car.paymentStatus === 'Paid' && car.approvalStatus === 'Approved')
+      .reduce((sum, car) => sum + (car.pricePerWeek ?? 0), 0),
+  };
+
+  const posterConversionRate = analyticsTotals.views > 0
+    ? Math.round((analyticsTotals.forms / analyticsTotals.views) * 1000) / 10
+    : 0;
+
+  const topPosterCars = [...cars]
+    .sort((a, b) => {
+      const aScore = (a.stats?.forms ?? 0) * 5 + (a.stats?.clicks ?? 0) * 2 + (a.stats?.views ?? 0);
+      const bScore = (b.stats?.forms ?? 0) * 5 + (b.stats?.clicks ?? 0) * 2 + (b.stats?.views ?? 0);
+      return bScore - aScore;
+    })
+    .slice(0, 3);
+
   const leadStatusColors: Record<string, string> = {
     'Nou': '#6366f1', 'Contactat': '#f59e0b', 'În discuție': '#3b82f6',
     'Acceptat': '#10b981', 'Respins': '#ef4444'
@@ -334,6 +384,16 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
       await fetchData();
     } catch {
       alert(approve ? 'Eroare la aprobare.' : 'Eroare la respingere.');
+    }
+  };
+
+  const handlePayListing = async (id: string) => {
+    try {
+      await carsService.redirectToListingPayment(id);
+    } catch (error: any) {
+      console.error('Error creating car listing checkout:', error);
+      const errorMessage = error.response?.data?.detail || error.response?.data?.title || 'Nu am putut porni plata pentru anunț.';
+      alert(errorMessage);
     }
   };
 
@@ -363,6 +423,194 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
 
       {loading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
 
+      {isPoster && (
+        <Stack spacing={2.5} sx={{ mb: 4 }}>
+          <Grid container spacing={2} component="div">
+            {[
+              {
+                label: 'Mașini publicate',
+                value: posterStats.totalCars,
+                sub: `${posterStats.activeCars} vizibile acum`,
+                icon: <DirectionsCarFilledRoundedIcon />,
+                color: DASHBOARD_TOKENS.primary,
+              },
+              {
+                label: 'Aprobate',
+                value: posterStats.approvedCars,
+                sub: `${posterStats.pendingApproval} în validare`,
+                icon: <CheckCircleRoundedIcon />,
+                color: '#047857',
+              },
+              {
+                label: 'Necesită plată',
+                value: posterStats.pendingPayment,
+                sub: `${posterStats.paidCars} plătite`,
+                icon: <PendingActionsRoundedIcon />,
+                color: posterStats.pendingPayment > 0 ? '#b45309' : '#047857',
+              },
+              {
+                label: 'Potențial / săptămână',
+                value: `${posterStats.weeklyPotential.toLocaleString('ro-RO')} RON`,
+                sub: 'din mașini aprobate și plătite',
+                icon: <PaymentsRoundedIcon />,
+                color: '#0f766e',
+              },
+            ].map((item) => (
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={item.label} component="div">
+                <Paper
+                  elevation={0}
+                  sx={{
+                    height: '100%',
+                    p: 2.5,
+                    borderRadius: DASHBOARD_TOKENS.radius.lg,
+                    border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+                    bgcolor: '#fff',
+                  }}
+                >
+                  <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 800 }}>
+                        {item.label}
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 950, color: DASHBOARD_TOKENS.ink, mt: 0.5 }}>
+                        {item.value}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 650 }}>
+                        {item.sub}
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: 2,
+                        display: 'grid',
+                        placeItems: 'center',
+                        color: item.color,
+                        bgcolor: alpha(item.color, 0.1),
+                      }}
+                    >
+                      {item.icon}
+                    </Box>
+                  </Stack>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+
+          <Grid container spacing={2} component="div">
+            <Grid size={{ xs: 12, lg: 5 }} component="div">
+              <Paper
+                elevation={0}
+                sx={{
+                  height: '100%',
+                  p: 2.5,
+                  borderRadius: DASHBOARD_TOKENS.radius.lg,
+                  border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+                  bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.035),
+                }}
+              >
+                <Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 2 }}>
+                  <Box
+                    sx={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 2,
+                      display: 'grid',
+                      placeItems: 'center',
+                      color: DASHBOARD_TOKENS.primaryStrong,
+                      bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.12),
+                    }}
+                  >
+                    <TrendingUpRoundedIcon />
+                  </Box>
+                  <Box>
+                    <Typography sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.ink }}>Performanță anunțuri</Typography>
+                    <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 650 }}>
+                      Din traficul și cererile primite în platformă
+                    </Typography>
+                  </Box>
+                </Stack>
+                <Grid container spacing={1.5} component="div">
+                  {[
+                    { label: 'Vizualizări', value: analyticsTotals.views },
+                    { label: 'Click-uri', value: analyticsTotals.clicks },
+                    { label: 'Cereri', value: analyticsTotals.forms },
+                    { label: 'Conversie', value: `${posterConversionRate}%` },
+                  ].map((item) => (
+                    <Grid size={{ xs: 6, sm: 3, lg: 6 }} key={item.label} component="div">
+                      <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: '#fff', border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.06)}` }}>
+                        <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 800 }}>
+                          {item.label}
+                        </Typography>
+                        <Typography sx={{ fontWeight: 950, color: DASHBOARD_TOKENS.ink, fontSize: '1.2rem' }}>
+                          {typeof item.value === 'number' ? item.value.toLocaleString('ro-RO') : item.value}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Paper>
+            </Grid>
+
+            <Grid size={{ xs: 12, lg: 7 }} component="div">
+              <Paper
+                elevation={0}
+                sx={{
+                  height: '100%',
+                  p: 2.5,
+                  borderRadius: DASHBOARD_TOKENS.radius.lg,
+                  border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+                  bgcolor: '#fff',
+                }}
+              >
+                <Typography sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.ink, mb: 2 }}>Top anunțuri</Typography>
+                <Stack spacing={1.5}>
+                  {topPosterCars.length === 0 && (
+                    <Typography variant="body2" sx={{ color: DASHBOARD_TOKENS.textSubtle }}>
+                      Adaugă prima mașină ca să apară statisticile aici.
+                    </Typography>
+                  )}
+                  {topPosterCars.map((car) => (
+                    <Stack
+                      key={car.id}
+                      direction={{ xs: 'column', sm: 'row' }}
+                      spacing={1.5}
+                      sx={{
+                        alignItems: { xs: 'flex-start', sm: 'center' },
+                        justifyContent: 'space-between',
+                        p: 1.5,
+                        borderRadius: 2,
+                        border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.06)}`,
+                      }}
+                    >
+                      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', minWidth: 0 }}>
+                        <Avatar src={getCarImageUrl(car.images[0]?.imageUrl)} variant="rounded" sx={{ width: 44, height: 44 }}>
+                          <DirectionsCarFilledRoundedIcon />
+                        </Avatar>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography sx={{ fontWeight: 850, color: DASHBOARD_TOKENS.ink }} noWrap>
+                            {car.brand} {car.model}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 650 }}>
+                            {car.pricePerWeek.toLocaleString('ro-RO')} RON / săptămână
+                          </Typography>
+                        </Box>
+                      </Stack>
+                      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
+                        <Chip icon={<VisibilityRoundedIcon />} label={(car.stats?.views ?? 0).toLocaleString('ro-RO')} size="small" sx={{ fontWeight: 800 }} />
+                        <Chip icon={<TouchAppRoundedIcon />} label={(car.stats?.clicks ?? 0).toLocaleString('ro-RO')} size="small" sx={{ fontWeight: 800 }} />
+                        <Chip icon={<DescriptionRoundedIcon />} label={(car.stats?.forms ?? 0).toLocaleString('ro-RO')} size="small" sx={{ fontWeight: 800 }} />
+                      </Stack>
+                    </Stack>
+                  ))}
+                </Stack>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Stack>
+      )}
+
       <Paper elevation={0} sx={{ mb: 4, borderRadius: DASHBOARD_TOKENS.radius.lg, border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`, overflow: 'hidden' }}>
         <Tabs
           value={activeTab}
@@ -391,6 +639,7 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
                       <TableCell sx={{ fontWeight: 800 }}>Status</TableCell>
                       {!isPoster && <TableCell sx={{ fontWeight: 800 }}>Sursă</TableCell>}
                       <TableCell sx={{ fontWeight: 800 }}>Validare</TableCell>
+                      <TableCell sx={{ fontWeight: 800 }}>Plată</TableCell>
                       <TableCell sx={{ fontWeight: 800 }}>Vizibilă</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 800 }}>Acțiuni</TableCell>
                     </TableRow>
@@ -442,11 +691,35 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
                             sx={{ fontWeight: 800, fontSize: '0.65rem', bgcolor: alpha(getApprovalStatusColor(car.approvalStatus), 0.1), color: getApprovalStatusColor(car.approvalStatus) }} />
                         </TableCell>
                         <TableCell>
+                          <Stack spacing={0.8} sx={{ alignItems: 'flex-start' }}>
+                            <Chip
+                              label={PAYMENT_LABELS[car.paymentStatus] ?? car.paymentStatus}
+                              size="small"
+                              sx={{
+                                fontWeight: 800,
+                                fontSize: '0.65rem',
+                                bgcolor: alpha(PAYMENT_COLORS[car.paymentStatus] ?? '#64748b', 0.1),
+                                color: PAYMENT_COLORS[car.paymentStatus] ?? '#64748b',
+                              }}
+                            />
+                            {isPoster && car.paymentStatus !== 'Paid' && car.paymentStatus !== 'NotRequired' && (
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() => handlePayListing(car.id)}
+                                sx={{ fontWeight: 800, fontSize: '0.68rem', borderRadius: 2, textTransform: 'none' }}
+                              >
+                                Plătește 30 lei/lună
+                              </Button>
+                            )}
+                          </Stack>
+                        </TableCell>
+                        <TableCell>
                           <Switch
                             checked={car.active}
                             onChange={() => handleToggleCarActive(car.id)}
                             color="primary"
-                            disabled={isPoster && car.approvalStatus !== 'Approved'}
+                            disabled={isPoster && (car.approvalStatus !== 'Approved' || car.paymentStatus !== 'Paid')}
                           />
                         </TableCell>
                         <TableCell align="right">
@@ -694,7 +967,7 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
               </Grid>
               {isPoster && (
                 <Typography variant="caption" sx={{ display: 'block', mt: 1.5, color: DASHBOARD_TOKENS.textSubtle }}>
-                  Anunțul va fi publicat după validarea echipei RIDElance.
+                  După salvare vei fi redirecționat către plata lunară de 30 lei pentru publicarea mașinii. Anunțul intră apoi în validarea echipei RIDElance.
                 </Typography>
               )}
             </Box>
