@@ -17,6 +17,7 @@ import {
 } from '@mui/material'
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
+import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
 
@@ -57,6 +58,7 @@ export function DeductibleExpensesPanel({
   const [expenses, setExpenses] = useState<DeductibleExpense[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [openingId, setOpeningId] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null)
 
@@ -189,7 +191,7 @@ export function DeductibleExpensesPanel({
       </Typography>
       <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.7, fontSize: '0.85rem', mb: 2 }}>
         {contabilContext
-          ? 'Verifică facturile de cheltuieli deductibile adăugate de client.'
+          ? 'Vizualizează facturile de cheltuieli deductibile adăugate de client.'
           : 'Alege tipul din catalog, suma în lei (opțional) și încarcă factura.'}
       </Typography>
 
@@ -338,6 +340,34 @@ export function DeductibleExpensesPanel({
                   />
                 </Stack>
                 <Stack direction="row" spacing={0.5} sx={{ mt: 1 }}>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    onClick={async () => {
+                      setOpeningId(expense.documentId)
+                      try {
+                        await documentService.openInNewTab(expense.documentId, expense.originalFileName)
+                      } finally {
+                        setOpeningId(null)
+                      }
+                    }}
+                    disabled={openingId === expense.documentId}
+                    startIcon={
+                      openingId === expense.documentId ? (
+                        <CircularProgress size={14} color="inherit" />
+                      ) : (
+                        <OpenInNewRoundedIcon sx={{ fontSize: 16 }} />
+                      )
+                    }
+                    sx={{
+                      textTransform: 'none',
+                      borderRadius: DASHBOARD_TOKENS.radius.full,
+                      fontSize: '0.8rem',
+                      boxShadow: 'none',
+                    }}
+                  >
+                    Deschide
+                  </Button>
                   <Button
                     size="small"
                     variant="outlined"

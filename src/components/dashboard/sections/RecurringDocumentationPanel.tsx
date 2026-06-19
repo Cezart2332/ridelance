@@ -13,6 +13,7 @@ import {
 import { alpha } from '@mui/material/styles'
 import UploadRoundedIcon from '@mui/icons-material/UploadRounded'
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
+import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
 
@@ -49,6 +50,7 @@ export function RecurringDocumentationPanel({
   const [documents, setDocuments] = useState<DocumentSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [uploadingCategory, setUploadingCategory] = useState<string | null>(null)
+  const [openingId, setOpeningId] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null)
 
@@ -168,7 +170,7 @@ export function RecurringDocumentationPanel({
       </Typography>
       <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.7, fontSize: '0.9rem', mb: 2 }}>
         {isContabil
-          ? 'Verifică documentele încărcate de client pentru luna curentă.'
+          ? 'Vizualizează documentele încărcate de client pentru luna selectată.'
           : 'Încarcă documentele obligatorii pentru închiderea lunii. Notificarea din prima zi a lunii te reamintește.'}
       </Typography>
 
@@ -308,6 +310,33 @@ export function RecurringDocumentationPanel({
 
                     {doc && (
                       <>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={async () => {
+                            setOpeningId(doc.id)
+                            try {
+                              await documentService.openInNewTab(doc.id, doc.originalFileName)
+                            } finally {
+                              setOpeningId(null)
+                            }
+                          }}
+                          disabled={openingId === doc.id}
+                          startIcon={
+                            openingId === doc.id ? (
+                              <CircularProgress size={14} color="inherit" />
+                            ) : (
+                              <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />
+                            )
+                          }
+                          sx={{
+                            textTransform: 'none',
+                            borderRadius: DASHBOARD_TOKENS.radius.full,
+                            boxShadow: 'none',
+                          }}
+                        >
+                          Deschide
+                        </Button>
                         <Button
                           size="small"
                           variant="outlined"

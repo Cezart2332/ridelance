@@ -589,4 +589,3 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
     </Stack>
   )
 }
-

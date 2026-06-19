@@ -16,6 +16,7 @@ import { alpha } from '@mui/material/styles'
 import InboxRoundedIcon from '@mui/icons-material/InboxRounded'
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded'
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
+import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
 import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded'
@@ -143,6 +144,7 @@ export function ContabilDocumentReviewList({
   onSnackbar,
 }: ContabilDocumentReviewListProps) {
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [openingId, setOpeningId] = useState<string | null>(null)
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null)
   const [selectedMonth, setSelectedMonth] = useState<string>('all')
 
@@ -163,6 +165,15 @@ export function ContabilDocumentReviewList({
       await documentService.downloadAndSave(doc.id, doc.originalFileName)
     } finally {
       setDownloadingId(null)
+    }
+  }
+
+  const handleOpen = async (doc: DocumentSummary) => {
+    setOpeningId(doc.id)
+    try {
+      await documentService.openInNewTab(doc.id, doc.originalFileName)
+    } finally {
+      setOpeningId(null)
     }
   }
 
@@ -319,6 +330,22 @@ export function ContabilDocumentReviewList({
                       </IconButton>
                     </>
                   )}
+                  <Button
+                    size="small"
+                    variant="contained"
+                    onClick={() => handleOpen(doc)}
+                    disabled={openingId === doc.id}
+                    startIcon={
+                      openingId === doc.id ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : (
+                        <OpenInNewRoundedIcon />
+                      )
+                    }
+                    sx={{ textTransform: 'none', borderRadius: TOKENS.radius.full, boxShadow: 'none' }}
+                  >
+                    Deschide
+                  </Button>
                   <Button
                     size="small"
                     variant="outlined"

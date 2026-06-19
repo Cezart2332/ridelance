@@ -62,6 +62,29 @@ export const documentService = {
     URL.revokeObjectURL(url);
   },
 
+  /** Open a document blob in a browser tab so PDFs/images can be viewed in-site. */
+  openInNewTab: async (id: string, fileName: string): Promise<void> => {
+    const previewWindow = window.open('', '_blank');
+    const blob = await documentService.download(id);
+    const url = URL.createObjectURL(blob);
+
+    if (previewWindow) {
+      previewWindow.document.title = fileName;
+      previewWindow.location.href = url;
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      return;
+    }
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  },
+
   /** Update the status of a document (Admin/Contabil only) */
   updateStatus: async (id: string, status: string): Promise<void> => {
     await api.put(`/documents/${id}/status`, { status });

@@ -19,7 +19,6 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Badge,
   BottomNavigation,
   BottomNavigationAction,
 } from '@mui/material'
@@ -27,10 +26,10 @@ import { alpha, useTheme } from '@mui/material/styles'
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded'
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded'
-import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneRounded'
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded'
 import { TOKENS } from '../../constants/tokens'
 import logo from '../../assets/logo.svg'
+import { NotificationsBell } from '../notifications/NotificationsBell'
 
 export interface NavSubItem {
   id: string
@@ -426,17 +425,7 @@ export function DashboardLayout({
             </Stack>
 
             <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-              <IconButton
-                sx={{
-                  bgcolor: alpha(TOKENS.paper, 0.9),
-                  border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
-                  '&:hover': { bgcolor: alpha(TOKENS.primary, 0.1), color: TOKENS.primaryStrong },
-                }}
-              >
-                <Badge variant="dot" color="error">
-                  <NotificationsNoneRoundedIcon fontSize="small" />
-                </Badge>
-              </IconButton>
+              <NotificationsBell />
               
               <IconButton
                 sx={{

@@ -21,6 +21,7 @@ import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsAct
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
+import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded'
@@ -136,6 +137,7 @@ export function AdminDashboard() {
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [openingId, setOpeningId] = useState<string | null>(null)
   const [statusUpdatingDocId, setStatusUpdatingDocId] = useState<string | null>(null)
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' })
 
@@ -219,6 +221,15 @@ export function AdminDashboard() {
       await documentService.downloadAndSave(doc.id, doc.originalFileName)
     } finally {
       setDownloadingId(null)
+    }
+  }, [])
+
+  const handleOpenDocument = useCallback(async (doc: DocumentSummary) => {
+    setOpeningId(doc.id)
+    try {
+      await documentService.openInNewTab(doc.id, doc.originalFileName)
+    } finally {
+      setOpeningId(null)
     }
   }, [])
 
@@ -558,6 +569,17 @@ export function AdminDashboard() {
                               </IconButton>
                             </>
                           )}
+                          <IconButton
+                            size="small"
+                            onClick={() => handleOpenDocument(doc)}
+                            disabled={openingId === doc.id}
+                            title="Deschide"
+                            sx={{ color: TOKENS.primaryStrong, '&:hover': { bgcolor: alpha(TOKENS.primary, 0.1) } }}
+                          >
+                            {openingId === doc.id
+                              ? <CircularProgress size={16} sx={{ color: TOKENS.primary }} />
+                              : <OpenInNewRoundedIcon fontSize="small" />}
+                          </IconButton>
                           <IconButton
                             size="small"
                             onClick={() => handleDownload(doc)}
