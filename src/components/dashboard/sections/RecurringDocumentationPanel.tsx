@@ -27,6 +27,8 @@ import { formatMonthLabelRomania } from '../../../constants/recurringDocumentati
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 
 type RecurringDocumentationPanelProps = {
+  year?: number
+  month?: number
   /** When set, contabil can upload/verify for this client */
   contabilContext?: {
     userId: string
@@ -38,6 +40,8 @@ type RecurringDocumentationPanelProps = {
 }
 
 export function RecurringDocumentationPanel({
+  year,
+  month,
   contabilContext,
   onUploadSuccess,
   onSnackbar,
@@ -68,17 +72,24 @@ export function RecurringDocumentationPanel({
     void loadDocuments()
   }, [loadDocuments])
 
+  const targetDate = useMemo(() => {
+    if (year !== undefined && month !== undefined) {
+      return new Date(Date.UTC(year, month - 1, 15))
+    }
+    return new Date()
+  }, [year, month])
+
   const docsByCategory = useMemo(() => {
     const map = new Map<string, DocumentSummary>()
     for (const doc of documents) {
-      if (!isUploadedInRomaniaMonth(doc.uploadedAtUtc)) continue
+      if (!isUploadedInRomaniaMonth(doc.uploadedAtUtc, targetDate)) continue
       const existing = map.get(doc.category)
       if (!existing || new Date(doc.uploadedAtUtc) > new Date(existing.uploadedAtUtc)) {
         map.set(doc.category, doc)
       }
     }
     return map
-  }, [documents])
+  }, [documents, targetDate])
 
   const handleUpload = async (category: string, file: File, itemLabel: string) => {
     setUploadingCategory(category)
@@ -132,7 +143,15 @@ export function RecurringDocumentationPanel({
     }
   }
 
-  const monthLabel = formatMonthLabelRomania()
+  const monthLabel = useMemo(() => {
+    if (year !== undefined && month !== undefined) {
+      const target = new Date(Date.UTC(year, month - 1, 15))
+      const formatter = new Intl.DateTimeFormat('ro-RO', { month: 'long', year: 'numeric' })
+      const raw = formatter.format(target)
+      return raw.charAt(0).toUpperCase() + raw.slice(1)
+    }
+    return formatMonthLabelRomania()
+  }, [year, month])
 
   return (
     <Paper
@@ -163,7 +182,7 @@ export function RecurringDocumentationPanel({
             if (recurringItemUsesExpenseUpload(item)) {
               const expenseDocs = documents.filter(
                 (d) =>
-                  d.category === 'Cheltuiala' && isUploadedInRomaniaMonth(d.uploadedAtUtc),
+                  d.category === 'Cheltuiala' && isUploadedInRomaniaMonth(d.uploadedAtUtc, targetDate),
               )
               const fulfilled = expenseDocs.length > 0
               const statusStyle = fulfilled

@@ -32,6 +32,8 @@ import { currentMonthYear } from '../../../utils/monthLabels'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme'
 
 type DeductibleExpensesPanelProps = {
+  year?: number
+  month?: number
   pfaRegistrationId: string | null
   contabilContext?: {
     userId: string
@@ -42,6 +44,8 @@ type DeductibleExpensesPanelProps = {
 }
 
 export function DeductibleExpensesPanel({
+  year: propYear,
+  month: propMonth,
   pfaRegistrationId,
   contabilContext,
   onSnackbar,
@@ -59,8 +63,11 @@ export function DeductibleExpensesPanel({
   const [selectedOption, setSelectedOption] = useState<DeductibleExpenseOption | null>(null)
   const [customName, setCustomName] = useState('')
   const [amount, setAmount] = useState('')
-  const [year, setYear] = useState(defaultYear)
-  const [month, setMonth] = useState(defaultMonth)
+  const [localYear, setLocalYear] = useState(defaultYear)
+  const [localMonth, setLocalMonth] = useState(defaultMonth)
+
+  const year = propYear ?? localYear
+  const month = propMonth ?? localMonth
 
   const loadExpenses = useCallback(async () => {
     if (!effectivePfaId) {
@@ -186,24 +193,26 @@ export function DeductibleExpensesPanel({
           : 'Alege tipul din catalog, suma în lei (opțional) și încarcă factura.'}
       </Typography>
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
-        <FormControl size="small" sx={{ minWidth: 110 }}>
-          <InputLabel>An</InputLabel>
-          <Select label="An" value={year} onChange={(e) => setYear(Number(e.target.value))}>
-            {[defaultYear - 1, defaultYear, defaultYear + 1].map((y) => (
-              <MenuItem key={y} value={y}>{y}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl size="small" sx={{ minWidth: 90 }}>
-          <InputLabel>Lună</InputLabel>
-          <Select label="Lună" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-            {Array.from({ length: 12 }, (_, i) => (
-              <MenuItem key={i + 1} value={i + 1}>{i + 1}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Stack>
+      {propYear === undefined || propMonth === undefined ? (
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
+          <FormControl size="small" sx={{ minWidth: 110 }}>
+            <InputLabel>An</InputLabel>
+            <Select label="An" value={year} onChange={(e) => setLocalYear(Number(e.target.value))}>
+              {[defaultYear - 1, defaultYear, defaultYear + 1].map((y) => (
+                <MenuItem key={y} value={y}>{y}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 90 }}>
+            <InputLabel>Lună</InputLabel>
+            <Select label="Lună" value={month} onChange={(e) => setLocalMonth(Number(e.target.value))}>
+              {Array.from({ length: 12 }, (_, i) => (
+                <MenuItem key={i + 1} value={i + 1}>{i + 1}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
+      ) : null}
 
       {!contabilContext && (
         <Stack spacing={1.5} sx={{ mb: 2 }}>

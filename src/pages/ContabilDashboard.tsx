@@ -20,6 +20,7 @@ import { authService } from '../services/auth.service'
 import { useNavigate } from 'react-router-dom'
 
 // Icons
+import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded'
@@ -70,7 +71,7 @@ function accountStatusDescription(status: string) {
 
 export function ContabilDashboard() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('clients')
+  const [activeTab, setActiveTab] = useState('dashboard')
   const [selectedPfaId, setSelectedPfaId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
 
@@ -89,12 +90,44 @@ export function ContabilDashboard() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null)
 
+  const [stats, setStats] = useState<{
+    totalClients: number
+    docsToVerify: number
+    missingMonthlyDocs: number
+    readyToProcess: number
+    processedThisMonth: number
+    unreadMessages: number
+    monthLabel: string
+  } | null>(null)
+  const [statsLoading, setStatsLoading] = useState(false)
+  const [statsError, setStatsError] = useState<string | null>(null)
+
   // Load user profile
   useEffect(() => {
     userService.getProfile()
       .then(setProfile)
       .catch(() => {/* silently fail */})
   }, [])
+
+  // Load stats
+  const loadStats = async () => {
+    setStatsLoading(true)
+    setStatsError(null)
+    try {
+      const data = await pfaService.getContabilStats()
+      setStats(data)
+    } catch {
+      setStatsError('Nu s-au putut încărca statisticile.')
+    } finally {
+      setStatsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'dashboard' && !selectedPfaId) {
+      void loadStats()
+    }
+  }, [activeTab, selectedPfaId])
 
   // Load clients (PFAs visible to this contabil)
   useEffect(() => {
@@ -133,6 +166,7 @@ export function ContabilDashboard() {
   }, [activeTab])
 
   const navItems = [
+    { id: 'dashboard', label: 'Acasă', icon: <HomeRoundedIcon /> },
     { id: 'clients', label: 'Clienți PFA', icon: <GroupsRoundedIcon /> },
     { id: 'notificari', label: 'Notificări', icon: <NotificationsActiveRoundedIcon /> },
   ]
@@ -155,6 +189,158 @@ export function ContabilDashboard() {
       c.userName.toLowerCase().includes(search.toLowerCase()) ||
       c.userEmail.toLowerCase().includes(search.toLowerCase())
   )
+
+  const renderGlobalStats = () => {
+    if (statsLoading) {
+      return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress size={36} sx={{ color: TOKENS.primary }} />
+        </Box>
+      )
+    }
+
+    if (statsError) {
+      return (
+        <Alert severity="error" sx={{ borderRadius: TOKENS.radius.md }}>
+          {statsError}
+        </Alert>
+      )
+    }
+
+    if (!stats) return null
+
+    const statCards = [
+      {
+        key: 'totalClients',
+        label: 'Clienți PFA',
+        value: stats.totalClients,
+        color: '#3b82f6', // blue
+        desc: 'Total PFA-uri active asignate',
+      },
+      {
+        key: 'docsToVerify',
+        label: 'Documente de verificat',
+        value: stats.docsToVerify,
+        color: '#f59e0b', // amber
+        desc: 'Documente încărcate, neverificate',
+      },
+      {
+        key: 'missingMonthlyDocs',
+        label: 'Documente lunare lipsă',
+        value: stats.missingMonthlyDocs,
+        color: '#ef4444', // red
+        desc: 'Clienți cu cel puțin un document lipsă',
+      },
+      {
+        key: 'readyToProcess',
+        label: 'Gata de procesare',
+        value: stats.readyToProcess,
+        color: '#6366f1', // indigo
+        desc: 'Venituri, cheltuieli și acte validate',
+      },
+      {
+        key: 'processedThisMonth',
+        label: 'Procesați luna curentă',
+        value: stats.processedThisMonth,
+        color: '#10b981', // emerald
+        desc: 'PFA-uri cu luna curentă închisă',
+      },
+      {
+        key: 'unreadMessages',
+        label: 'Mesaje necitite',
+        value: stats.unreadMessages,
+        color: '#8b5cf6', // purple
+        desc: 'Mesaje de asistență necitite',
+      },
+    ]
+
+    return (
+      <Stack spacing={4}>
+        <Box
+          sx={{
+            p: 4,
+            borderRadius: TOKENS.radius.xl,
+            background: `linear-gradient(135deg, ${alpha(TOKENS.primary, 0.08)} 0%, ${alpha(TOKENS.paper, 0.6)} 100%)`,
+            border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
+            backdropFilter: 'blur(10px)',
+            boxShadow: TOKENS.shadow.sm,
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 800, color: TOKENS.textSubtle, mb: 1, letterSpacing: 0.5, textTransform: 'uppercase', fontSize: '0.75rem' }}>
+            Portofoliu Contabil · Perioadă Curentă
+          </Typography>
+          <Typography variant="h3" sx={{ fontWeight: 900, color: TOKENS.primaryStrong, mb: 1 }}>
+            {stats.monthLabel}
+          </Typography>
+          <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
+            Urmărește statusul lunii curente, procesează documentele primite și răspunde la mesajele clienților tăi.
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, gap: 3 }}>
+          {statCards.map((card) => (
+            <Paper
+              key={card.key}
+              elevation={0}
+              onClick={() => setActiveTab('clients')}
+              sx={{
+                p: 3,
+                cursor: 'pointer',
+                borderRadius: TOKENS.radius.xl,
+                border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+                boxShadow: TOKENS.shadow.sm,
+                background: TOKENS.paper,
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                position: 'relative',
+                overflow: 'hidden',
+                '&:hover': {
+                  borderColor: alpha(card.color, 0.4),
+                  boxShadow: TOKENS.shadow.md,
+                  transform: 'translateY(-3px)',
+                  '& .value-text': {
+                    color: card.color,
+                  },
+                },
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: 4,
+                  height: '100%',
+                  bgcolor: card.color,
+                },
+              }}
+            >
+              <Box>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: TOKENS.textSubtle, mb: 1 }}>
+                  {card.label}
+                </Typography>
+                <Typography
+                  className="value-text"
+                  variant="h3"
+                  sx={{
+                    fontWeight: 900,
+                    color: TOKENS.ink,
+                    transition: 'color 0.2s',
+                    mb: 1,
+                  }}
+                >
+                  {card.value}
+                </Typography>
+              </Box>
+              <Typography variant="caption" sx={{ color: TOKENS.textMuted, fontSize: '0.75rem' }}>
+                {card.desc}
+              </Typography>
+            </Paper>
+          ))}
+        </Box>
+      </Stack>
+    )
+  }
 
   const renderClientList = () => (
     <Stack spacing={3} component="div">
@@ -264,7 +450,10 @@ export function ContabilDashboard() {
     return (
       <ContabilClientWorkspace
         client={clientInfo}
-        onBack={() => setSelectedPfaId(null)}
+        onBack={() => {
+          setSelectedPfaId(null)
+          void loadStats() // Refresh stats when returning from a client workspace
+        }}
         chatSlot={
           <ProfessionalChatBox clientUserId={client.userId} clientName={client.userName} />
         }
@@ -363,7 +552,9 @@ export function ContabilDashboard() {
         ? renderClientDetail()
         : activeTab === 'notificari'
           ? renderNotifications()
-          : renderClientList()}
+          : activeTab === 'dashboard'
+            ? renderGlobalStats()
+            : renderClientList()}
     </DashboardLayout>
   )
 }

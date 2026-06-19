@@ -24,6 +24,9 @@ import {
 
 interface PfaMonthlyIncomeFormProps {
   pfaRegistrationId: string;
+  year?: number;
+  month?: number;
+  readOnly?: boolean;
 }
 
 const emptyIncome = (pfaRegistrationId: string, year: number, month: number): PfaMonthlyIncome => ({
@@ -38,22 +41,26 @@ const emptyIncome = (pfaRegistrationId: string, year: number, month: number): Pf
   taxeEstimate: 0,
   venitTotal: 0,
   updatedAtUtc: null,
+  isProcessed: false,
+  processedAtUtc: null,
+  processedByUserId: null,
+  processedByUserName: null,
 });
 
-export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeFormProps) {
+export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month: propMonth, readOnly = false }: PfaMonthlyIncomeFormProps) {
   const initial = currentMonthYear();
   const [selectedYear, setSelectedYear] = useState(initial.year);
   const [selectedMonth, setSelectedMonth] = useState(initial.label);
   const [income, setIncome] = useState<PfaMonthlyIncome>(() =>
-    emptyIncome(pfaRegistrationId, initial.year, initial.month)
+    emptyIncome(pfaRegistrationId, propYear ?? initial.year, propMonth ?? initial.month)
   );
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  const year = selectedYear;
-  const month = monthLabelToNumber(selectedMonth);
+  const year = propYear ?? selectedYear;
+  const month = propMonth ?? monthLabelToNumber(selectedMonth);
 
   const yearOptions = useMemo(() => {
     const current = new Date().getFullYear();
@@ -139,28 +146,30 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeForm
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Typography variant="h6" sx={{ fontWeight: 800 }}>Venituri client</Typography>
-        <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', sm: 'auto' }, flexWrap: 'wrap' }}>
-          <Select
-            size="small"
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            sx={{ width: { xs: '100%', sm: 100 }, flex: { sm: '0 0 auto' }, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
-          >
-            {yearOptions.map((y) => (
-              <MenuItem key={y} value={y}>{y}</MenuItem>
-            ))}
-          </Select>
-          <Select
-            size="small"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            sx={{ width: { xs: '100%', sm: 160 }, flex: { sm: '0 0 auto' }, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
-          >
-            {ROMANIAN_MONTHS.map((m) => (
-              <MenuItem key={m} value={m}>{m}</MenuItem>
-            ))}
-          </Select>
-        </Stack>
+        {propYear === undefined || propMonth === undefined ? (
+          <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', sm: 'auto' }, flexWrap: 'wrap' }}>
+            <Select
+              size="small"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              sx={{ width: { xs: '100%', sm: 100 }, flex: { sm: '0 0 auto' }, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+            >
+              {yearOptions.map((y) => (
+                <MenuItem key={y} value={y}>{y}</MenuItem>
+              ))}
+            </Select>
+            <Select
+              size="small"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              sx={{ width: { xs: '100%', sm: 160 }, flex: { sm: '0 0 auto' }, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+            >
+              {ROMANIAN_MONTHS.map((m) => (
+                <MenuItem key={m} value={m}>{m}</MenuItem>
+              ))}
+            </Select>
+          </Stack>
+        ) : null}
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -179,9 +188,12 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeForm
                 fullWidth
                 type="number"
                 label={`${label} (RON)`}
-                value={income[key] === 0 ? '' : income[key]}
-                onChange={(e) => setField(key, e.target.value)}
-                slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
+                value={readOnly ? income[key] : (income[key] === 0 ? '' : income[key])}
+                onChange={(e) => !readOnly && setField(key, e.target.value)}
+                slotProps={{
+                  input: { readOnly },
+                  htmlInput: { min: 0, step: '0.01' }
+                }}
                 sx={inputSx}
               />
             ))}
@@ -235,14 +247,16 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId }: PfaMonthlyIncomeForm
             </>
           )}
 
-          <Button
-            variant="contained"
-            onClick={handleSave}
-            disabled={saving}
-            sx={{ alignSelf: 'flex-start', fontWeight: 700, textTransform: 'none', borderRadius: TOKENS.radius.md }}
-          >
-            {saving ? <CircularProgress size={22} color="inherit" /> : 'Salvează veniturile'}
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="contained"
+              onClick={handleSave}
+              disabled={saving}
+              sx={{ alignSelf: 'flex-start', fontWeight: 700, textTransform: 'none', borderRadius: TOKENS.radius.md }}
+            >
+              {saving ? <CircularProgress size={22} color="inherit" /> : 'Salvează veniturile'}
+            </Button>
+          )}
         </Stack>
       )}
     </Paper>
