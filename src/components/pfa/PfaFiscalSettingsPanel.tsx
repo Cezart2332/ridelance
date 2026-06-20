@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import { isAxiosError } from 'axios'
 
 import { TOKENS } from '../../constants/tokens'
 import {
@@ -99,11 +100,47 @@ const fieldSx = {
   },
 }
 
+function buildDefaultSettings(pfaId: string): PfaFiscalSettings {
+  return {
+    fiscalProfile: {
+      id: null,
+      pfaRegistrationId: pfaId,
+      taxationSystem: 'RealSystem',
+      isVatPayer: false,
+      hasEmployees: false,
+      accountingRegime: 'SingleEntry',
+      specialVatCodeStatus: 'ToVerify',
+      specialVatCodeObtainedAtUtc: null,
+      specialVatCodeDocumentId: null,
+      uberStatus: 'Inactive',
+      boltStatus: 'Inactive',
+      otherPlatformsStatus: 'No',
+      cashRevenueStatus: 'ToVerify',
+      cashRegisterStatus: 'ToVerify',
+      vehicleUsageType: 'OwnCar',
+      vehicleSupportingDocumentLabel: null,
+      vehicleSupportingDocumentId: null,
+      updatedAtUtc: null,
+    },
+    platformAccounts: [],
+    fleetConsent: {
+      id: null,
+      pfaRegistrationId: pfaId,
+      fleetAccountsAccepted: false,
+      fleetAccountsAcceptedAtUtc: null,
+      boltApiAccepted: false,
+      boltApiAcceptedAtUtc: null,
+      consentTextVersion: '2026-06',
+    },
+  }
+}
+
 export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSettingsPanelProps) {
   const [settings, setSettings] = useState<PfaFiscalSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [apiUnavailable, setApiUnavailable] = useState(false)
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
@@ -124,43 +161,53 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
 
   const [accounts, setAccounts] = useState<Record<string, UpsertPfaPlatformAccountItem>>({})
 
+  const applySettings = (data: PfaFiscalSettings) => {
+    setSettings(data)
+    const profile = data.fiscalProfile
+    setForm({
+      specialVatCodeStatus: profile.specialVatCodeStatus,
+      specialVatCodeObtainedAtUtc: dateInputValue(profile.specialVatCodeObtainedAtUtc),
+      uberStatus: profile.uberStatus,
+      boltStatus: profile.boltStatus,
+      otherPlatformsStatus: profile.otherPlatformsStatus,
+      cashRevenueStatus: profile.cashRevenueStatus,
+      cashRegisterStatus: profile.cashRegisterStatus,
+      vehicleUsageType: profile.vehicleUsageType,
+      vehicleSupportingDocumentLabel: profile.vehicleSupportingDocumentLabel ?? '',
+    })
+
+    const nextAccounts: Record<string, UpsertPfaPlatformAccountItem> = {}
+    ;(['Uber', 'Bolt'] as Provider[]).forEach((provider) => {
+      ;(['Driver', 'Fleet'] as AccountKind[]).forEach((kind) => {
+        const account = findAccount(data.platformAccounts, provider, kind)
+        nextAccounts[accountKey(provider, kind)] = {
+          provider,
+          kind,
+          email: account?.email ?? '',
+          phone: account?.phone ?? '',
+          fullName: account?.fullName ?? '',
+          password: '',
+          status: account?.status ?? (kind === 'Fleet' ? 'NotConfigured' : 'Configured'),
+        }
+      })
+    })
+    setAccounts(nextAccounts)
+  }
+
   const loadSettings = () => {
     setLoading(true)
     setError(null)
+    setApiUnavailable(false)
     pfaService.getFiscalSettings(pfaId)
-      .then((data) => {
-        setSettings(data)
-        const profile = data.fiscalProfile
-        setForm({
-          specialVatCodeStatus: profile.specialVatCodeStatus,
-          specialVatCodeObtainedAtUtc: dateInputValue(profile.specialVatCodeObtainedAtUtc),
-          uberStatus: profile.uberStatus,
-          boltStatus: profile.boltStatus,
-          otherPlatformsStatus: profile.otherPlatformsStatus,
-          cashRevenueStatus: profile.cashRevenueStatus,
-          cashRegisterStatus: profile.cashRegisterStatus,
-          vehicleUsageType: profile.vehicleUsageType,
-          vehicleSupportingDocumentLabel: profile.vehicleSupportingDocumentLabel ?? '',
-        })
-
-        const nextAccounts: Record<string, UpsertPfaPlatformAccountItem> = {}
-        ;(['Uber', 'Bolt'] as Provider[]).forEach((provider) => {
-          ;(['Driver', 'Fleet'] as AccountKind[]).forEach((kind) => {
-            const account = findAccount(data.platformAccounts, provider, kind)
-            nextAccounts[accountKey(provider, kind)] = {
-              provider,
-              kind,
-              email: account?.email ?? '',
-              phone: account?.phone ?? '',
-              fullName: account?.fullName ?? '',
-              password: '',
-              status: account?.status ?? (kind === 'Fleet' ? 'NotConfigured' : 'Configured'),
-            }
-          })
-        })
-        setAccounts(nextAccounts)
+      .then(applySettings)
+      .catch((err) => {
+        if (isAxiosError(err) && err.response?.status === 404) {
+          setApiUnavailable(true)
+          applySettings(buildDefaultSettings(pfaId))
+          return
+        }
+        setError('Nu s-au putut încărca setările fiscale PFA.')
       })
-      .catch(() => setError('Nu s-au putut încărca setările fiscale PFA.'))
       .finally(() => setLoading(false))
   }
 
@@ -195,6 +242,11 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
   }
 
   const handleSaveProfile = async () => {
+    if (apiUnavailable) {
+      setSnackbar({ open: true, message: 'API-ul pentru profil fiscal nu este încă disponibil pe backend.', severity: 'error' })
+      return
+    }
+
     setSaving(true)
     try {
       const updated = await pfaService.updateFiscalProfile(pfaId, {
@@ -205,14 +257,25 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
       })
       setSettings((current) => current ? { ...current, fiscalProfile: updated } : current)
       setSnackbar({ open: true, message: 'Profilul fiscal a fost salvat.', severity: 'success' })
-    } catch {
-      setSnackbar({ open: true, message: 'Profilul fiscal nu a putut fi salvat.', severity: 'error' })
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: isAxiosError(err) && err.response?.status === 404
+          ? 'API-ul pentru profil fiscal nu este încă disponibil pe backend.'
+          : 'Profilul fiscal nu a putut fi salvat.',
+        severity: 'error',
+      })
     } finally {
       setSaving(false)
     }
   }
 
   const handleSaveAccounts = async () => {
+    if (apiUnavailable) {
+      setSnackbar({ open: true, message: 'API-ul pentru conturile fleet nu este încă disponibil pe backend.', severity: 'error' })
+      return
+    }
+
     setSaving(true)
     try {
       const updated = await pfaService.updatePlatformAccounts(pfaId, Object.values(accounts))
@@ -223,14 +286,25 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
         Object.keys(next).forEach((key) => { next[key] = { ...next[key], password: '' } })
         return next
       })
-    } catch {
-      setSnackbar({ open: true, message: 'Conturile nu au putut fi salvate.', severity: 'error' })
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: isAxiosError(err) && err.response?.status === 404
+          ? 'API-ul pentru conturile fleet nu este încă disponibil pe backend.'
+          : 'Conturile nu au putut fi salvate.',
+        severity: 'error',
+      })
     } finally {
       setSaving(false)
     }
   }
 
   const handleMarkConfigured = async (provider: Provider) => {
+    if (apiUnavailable) {
+      setSnackbar({ open: true, message: 'API-ul pentru conturile fleet nu este încă disponibil pe backend.', severity: 'error' })
+      return
+    }
+
     setSaving(true)
     try {
       const updated = await pfaService.markFleetConfigured(pfaId, provider)
@@ -243,8 +317,14 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
       })
       updateAccount(provider, 'Fleet', { status: updated.status })
       setSnackbar({ open: true, message: `${provider} Fleet a fost marcat configurat.`, severity: 'success' })
-    } catch {
-      setSnackbar({ open: true, message: 'Statusul contului fleet nu a putut fi actualizat.', severity: 'error' })
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: isAxiosError(err) && err.response?.status === 404
+          ? 'API-ul pentru conturile fleet nu este încă disponibil pe backend.'
+          : 'Statusul contului fleet nu a putut fi actualizat.',
+        severity: 'error',
+      })
     } finally {
       setSaving(false)
     }
@@ -266,6 +346,12 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
 
   return (
     <Stack spacing={2}>
+      {apiUnavailable && (
+        <Alert severity="warning" sx={{ borderRadius: TOKENS.radius.md }}>
+          API-ul pentru profil fiscal nu este încă disponibil pe backend-ul curent. Afișez valorile implicite; salvarea devine activă după deploy backend.
+        </Alert>
+      )}
+
       <Paper elevation={0} sx={{ p: 3, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ justifyContent: 'space-between', gap: 2, mb: 2 }}>
           <Box>
@@ -317,7 +403,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
               </TextField>
             </Box>
             <TextField label="Document justificativ auto" value={form.vehicleSupportingDocumentLabel} onChange={(e) => setForm((f) => ({ ...f, vehicleSupportingDocumentLabel: e.target.value }))} placeholder="Ex: Contract de comodat verificat" sx={fieldSx} />
-            <Button variant="contained" onClick={handleSaveProfile} disabled={saving} sx={{ alignSelf: 'flex-start', fontWeight: 800, boxShadow: 'none' }}>
+            <Button variant="contained" onClick={handleSaveProfile} disabled={saving || apiUnavailable} sx={{ alignSelf: 'flex-start', fontWeight: 800, boxShadow: 'none' }}>
               Salvează profil fiscal
             </Button>
           </Stack>
@@ -378,7 +464,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
                             <TextField select size="small" label="Status" value={draft?.status ?? 'NotConfigured'} onChange={(e) => updateAccount(provider, kind, { status: e.target.value })} sx={fieldSx}>
                               {fleetStatusOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
                             </TextField>
-                            <Button size="small" variant="outlined" onClick={() => handleMarkConfigured(provider)} disabled={saving} sx={{ alignSelf: 'flex-start', fontWeight: 800 }}>
+                            <Button size="small" variant="outlined" onClick={() => handleMarkConfigured(provider)} disabled={saving || apiUnavailable} sx={{ alignSelf: 'flex-start', fontWeight: 800 }}>
                               Configurat
                             </Button>
                           </>
@@ -399,7 +485,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
           ))}
         </Box>
         {editable && (
-          <Button variant="contained" onClick={handleSaveAccounts} disabled={saving} sx={{ mt: 2, fontWeight: 800, boxShadow: 'none' }}>
+          <Button variant="contained" onClick={handleSaveAccounts} disabled={saving || apiUnavailable} sx={{ mt: 2, fontWeight: 800, boxShadow: 'none' }}>
             Salvează conturi
           </Button>
         )}
