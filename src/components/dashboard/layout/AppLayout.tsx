@@ -36,10 +36,21 @@ export default function AppLayout({
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
   const allSections = [...sectionConfig, ...bottomSectionConfig];
   
-  // Custom title resolution for mobile more view
-  const sectionTitle = activeSection === 'more' 
-    ? 'Meniu' 
-    : allSections.find((item) => item.id === activeSection)?.label || '';
+  const pageTitles: Record<string, string> = {
+    home: 'Dashboard PFA',
+    profile: 'Profilul meu',
+    documents: 'Documentele mele',
+    support: 'Chat & Suport',
+    expenses: 'Cheltuieli deductibile',
+    doc_recurring: 'Documentație recurentă',
+    cars: 'Mașini disponibile',
+    abonamente: 'Abonamente',
+    servicii: 'Servicii',
+    istoric_plati: 'Istoric plăți',
+    more: 'Meniu',
+  };
+
+  const sectionTitle = pageTitles[activeSection] ?? allSections.find((item) => item.id === activeSection)?.label ?? '';
 
   const getBottomNavValue = () => {
     if (['home', 'profile', 'support'].includes(activeSection)) {
@@ -171,7 +182,7 @@ export default function AppLayout({
             icon={<PersonRoundedIcon />}
           />
           <BottomNavigationAction
-            label="Suport"
+            label="Chat"
             value="support"
             icon={<HeadphonesRoundedIcon />}
           />

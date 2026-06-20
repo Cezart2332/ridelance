@@ -28,10 +28,10 @@ import iconSupport from '../../assets/SVG/2- Regular/headphones.svg'
 import iconWallet from '../../assets/SVG/2- Regular/credit-card.svg'
 
 const mainSectionConfig = [
-  { id: 'home', label: 'Acasa', icon: iconHome },
+  { id: 'home', label: 'Acasă', icon: iconHome },
   { id: 'profile', label: 'Profil', icon: iconProfile },
   { id: 'documents', label: 'Documente', icon: iconDocs },
-  { id: 'support', label: 'Suport / Contabilitate', icon: iconSupport },
+  { id: 'support', label: 'Chat & Suport', icon: iconSupport },
   {
     id: 'accordion_group',
     label: 'Cheltuieli & Documentatie recurenta',

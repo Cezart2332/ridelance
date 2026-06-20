@@ -30,6 +30,7 @@ import { BoltIntegrationTab } from './BoltIntegrationTab';
 import { PfaIncomeSummary } from './PfaIncomeSummary';
 import { PfaTaxSummaryWidget } from './PfaTaxSummaryWidget';
 import { RevenueCharts } from './RevenueCharts';
+import logo from '../../../assets/logo.svg';
 
 /* ── Types ────────────────────────────────────────────────────────────────── */
 
@@ -54,7 +55,7 @@ const PLATFORM_LABELS: Record<StatsPlatform, string> = {
 function pfaStatusChip(status: string | null) {
   if (!status) return null;
   const map: Record<string, { label: string; color: string; bg: string }> = {
-    Pending:  { label: 'In verificare', color: '#b54708', bg: alpha('#ed6c02', 0.1) },
+    Pending:  { label: 'În verificare', color: '#b54708', bg: alpha('#ed6c02', 0.1) },
     Approved: { label: 'Aprobat',       color: '#2e7d32', bg: alpha('#2e7d32', 0.08) },
     Rejected: { label: 'Respins',       color: '#b71c1c', bg: alpha('#d32f2f', 0.08) },
   };
@@ -395,6 +396,37 @@ export function HomeDashboardView() {
   return (
     <>
       <Stack spacing={2.5}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2.4, md: 3 },
+            borderRadius: DASHBOARD_TOKENS.radius.xl,
+            border: `1px solid ${alpha(DASHBOARD_TOKENS.primary, 0.16)}`,
+            background: `linear-gradient(135deg, ${alpha(DASHBOARD_TOKENS.paper, 0.98)} 0%, ${alpha(DASHBOARD_TOKENS.primary, 0.08)} 100%)`,
+            boxShadow: DASHBOARD_TOKENS.shadow.sm,
+          }}
+        >
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.2} sx={{ alignItems: { xs: 'flex-start', md: 'center' }, justifyContent: 'space-between' }}>
+            <Box sx={{ minWidth: 0 }}>
+              <Box component="img" src={logo} alt="RIDElance" sx={{ height: 34, width: 'auto', mb: 1.6 }} />
+              <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 950, fontSize: { xs: '1.55rem', md: '2rem' }, lineHeight: 1.08 }}>
+                Dashboard PFA
+              </Typography>
+              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.8, maxWidth: 680, lineHeight: 1.6 }}>
+                Urmărește veniturile, taxele estimate, documentele și activitatea platformelor într-un singur loc.
+              </Typography>
+            </Box>
+            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
+              {pfaStatusChip(summary.pfaStatus)}
+              <Chip
+                label={`${summary.approvedDocuments}/${summary.totalDocuments} documente valide`}
+                size="small"
+                sx={{ fontWeight: 800, borderRadius: DASHBOARD_TOKENS.radius.full, bgcolor: alpha(DASHBOARD_TOKENS.ink, 0.05), color: DASHBOARD_TOKENS.ink }}
+              />
+            </Stack>
+          </Stack>
+        </Paper>
+
         <BoltDashboardPanel
           dashboard={boltDashboard}
           loading={boltLoading}

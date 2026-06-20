@@ -109,7 +109,7 @@ export function AboutPage() {
             </Typography>
           </Paper>
 
-          {/* FAQ Section */}
+          {/* Întrebări Frecvente */}
           <Box sx={{ width: '100%', mt: 4 }}>
             <SectionHeader title="Întrebări frecvente" />
             <Box sx={{ maxWidth: 800, mx: 'auto' }}>

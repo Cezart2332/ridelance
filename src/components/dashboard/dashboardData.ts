@@ -1,6 +1,6 @@
 import type { FaqItem } from './types'
 
-// ── FAQ — static content, not fetched from API ──────────────────────────────
+// ── Întrebări Frecvente — static content, not fetched from API ──────────────
 export const dashboardFaqItems: FaqItem[] = [
   {
     title: 'Cum incarc un document nou?',

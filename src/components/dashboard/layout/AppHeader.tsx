@@ -1,8 +1,9 @@
-import { IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Box, IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import { NotificationsBell } from '../../notifications/NotificationsBell';
+import logo from '../../../assets/logo.svg';
 
 interface AppHeaderProps {
   sidebarOpen: boolean;
@@ -68,6 +69,9 @@ export default function AppHeader({
           >
             <ArrowBackRoundedIcon fontSize="small" color="primary" />
           </IconButton>
+        )}
+        {!isMdUp && (
+          <Box component="img" src={logo} alt="RIDElance" sx={{ height: 26, width: 'auto', flexShrink: 0 }} />
         )}
         <Typography noWrap sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '1.15rem', letterSpacing: -0.4, minWidth: 0 }}>
           {title}

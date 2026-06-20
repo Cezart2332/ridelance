@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   Accordion, AccordionDetails, AccordionSummary, Button,
-  CircularProgress, Divider, Paper, Stack, TextField, Typography,
+  Alert, CircularProgress, Divider, Paper, Stack, TextField, Typography,
 } from '@mui/material'
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 
@@ -12,20 +12,31 @@ import { getChatConnection, startChatConnection, stopChatConnection } from '../.
 import { useAppSelector } from '../../../store/hooks'
 import { groupMessagesByDate } from '../../../utils/chat'
 import { Box } from '@mui/material'
+import { AccountantChatTab } from './AccountantChatTab'
+import { getBucharestBusinessHoursStatus } from '../../../utils/businessHours'
 
 export function SupportChatTab() {
+  const [activeChat, setActiveChat] = useState<'support' | 'accountant'>('support')
   const [roomId, setRoomId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessageDto[]>([])
   const [chatMessage, setChatMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [noAgent, setNoAgent] = useState(false)
   const [sending, setSending] = useState(false)
+  const [, setClockTick] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const myUserId = useAppSelector((s) => s.auth.userId) || ''
+  const supportHours = getBucharestBusinessHoursStatus(10, 18)
 
   // Bootstrap: get support room, load history, connect to hub
   useEffect(() => {
-    let currentRoomId: string;
+    if (activeChat !== 'support') return
+
+    let currentRoomId: string
+    setLoading(true)
+    setNoAgent(false)
+    setMessages([])
+    setRoomId(null)
 
     chatService.getSupportRoom()
       .then(async ({ roomId: id }) => {
@@ -62,15 +73,20 @@ export function SupportChatTab() {
       }
       stopChatConnection()
     }
-  }, [])
+  }, [activeChat])
 
   // Auto scroll to bottom when messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockTick((value) => value + 1), 60000)
+    return () => window.clearInterval(timer)
+  }, [])
+
   const handleSend = async () => {
-    if (!chatMessage.trim() || !roomId || sending) return
+    if (!chatMessage.trim() || !roomId || sending || !supportHours.isOpen) return
 
     setSending(true)
     try {
@@ -95,7 +111,7 @@ export function SupportChatTab() {
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
       >
-        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2 }}>FAQ</Typography>
+        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2 }}>Întrebări Frecvente</Typography>
         {dashboardFaqItems.map((item) => (
           <Accordion
             key={item.title}
@@ -137,6 +153,48 @@ export function SupportChatTab() {
       <Paper
         elevation={0}
         sx={{
+          p: 1,
+          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          border: `1px solid ${DASHBOARD_TOKENS.border}`,
+          boxShadow: DASHBOARD_TOKENS.shadow.sm,
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+          gap: 1,
+        }}
+      >
+        {[
+          { id: 'support' as const, label: 'Chat suport', hours: 'Luni-Vineri 10:00-18:00' },
+          { id: 'accountant' as const, label: 'Chat contabil', hours: 'Luni-Vineri 10:00-15:00' },
+        ].map((item) => {
+          const selected = activeChat === item.id
+          return (
+            <Button
+              key={item.id}
+              onClick={() => setActiveChat(item.id)}
+              sx={{
+                justifyContent: 'space-between',
+                px: 2,
+                py: 1.2,
+                borderRadius: DASHBOARD_TOKENS.radius.md,
+                textTransform: 'none',
+                color: selected ? DASHBOARD_TOKENS.primaryStrong : DASHBOARD_TOKENS.ink,
+                bgcolor: selected ? `rgba(92,203,245,0.12)` : 'transparent',
+                border: `1px solid ${selected ? 'rgba(92,203,245,0.35)' : 'transparent'}`,
+                '&:hover': { bgcolor: `rgba(92,203,245,0.08)` },
+              }}
+            >
+              <span style={{ fontWeight: 800 }}>{item.label}</span>
+              <span style={{ fontSize: '0.75rem', opacity: 0.72 }}>{item.hours}</span>
+            </Button>
+          )
+        })}
+      </Paper>
+
+      {activeChat === 'accountant' && <AccountantChatTab />}
+
+      {activeChat === 'support' && <Paper
+        elevation={0}
+        sx={{
           p: { xs: 2.5, md: 3 },
           borderRadius: DASHBOARD_TOKENS.radius.lg,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
@@ -146,6 +204,14 @@ export function SupportChatTab() {
         <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>
           Chat suport
         </Typography>
+        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.86rem', mt: 0.4 }}>
+          Program: {supportHours.label}
+        </Typography>
+        {!supportHours.isOpen && (
+          <Alert severity="info" sx={{ mt: 2, borderRadius: DASHBOARD_TOKENS.radius.md }}>
+            Chatul suport este disponibil doar în program. Poți citi mesajele existente, dar poți trimite mesaje în intervalul afișat.
+          </Alert>
+        )}
 
         {loading ? (
           <Stack sx={{ alignItems: 'center', py: 4 }}>
@@ -213,11 +279,12 @@ export function SupportChatTab() {
                 }}
                 placeholder="Scrie un mesaj pentru echipă..."
                 sx={dashboardInputSx}
+                disabled={!supportHours.isOpen}
               />
               <Button
                 variant="contained"
                 onClick={handleSend}
-                disabled={sending || !chatMessage.trim()}
+                disabled={sending || !chatMessage.trim() || !supportHours.isOpen}
                 sx={{
                   borderRadius: DASHBOARD_TOKENS.radius.full,
                   px: 2.4,
@@ -233,7 +300,7 @@ export function SupportChatTab() {
             </Stack>
           </>
         )}
-      </Paper>
+      </Paper>}
     </div>
   )
 }

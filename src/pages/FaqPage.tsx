@@ -18,7 +18,7 @@ export function FaqPage() {
     <Box sx={pageFrameSx}>
       <Container maxWidth="lg">
         <Stack spacing={4}>
-          <SectionHeader title="Intrebari Frecvente" />
+          <SectionHeader title="Întrebări Frecvente" />
           <Box>
             {faqItems.map((item, index) => (
               <Accordion

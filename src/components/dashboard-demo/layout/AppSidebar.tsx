@@ -2,6 +2,7 @@ import { Box, Button, Drawer, Stack, Typography, useMediaQuery, Accordion, Accor
 import { alpha, useTheme } from '@mui/material/styles';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
+import logo from '../../../assets/logo.svg';
 
 interface AppSidebarProps {
   sidebarOpen: boolean;
@@ -18,9 +19,7 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, activeSection,
   const sidebarContent = (
     <Stack sx={{ height: '100%', p: 2, backgroundColor: '#fff' }} spacing={2}>
       <Box sx={{ mt: 2 }}>
-        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 900, fontSize: '1rem' }}>
-          Ridelance Dashboard(Demo)
-        </Typography>
+        <Box component="img" src={logo} alt="RIDElance" sx={{ height: 38, width: 'auto', display: 'block' }} />
       </Box>
       
       <Box sx={{ mt: 4 }}>

@@ -1159,9 +1159,9 @@ export function HomePage() {
         </Container>
       </Box>
 
-      {/* ═══════ 9. FAQ ═══════ */}
+      {/* ═══════ 9. Întrebări Frecvente ═══════ */}
       <Container maxWidth="md" sx={{ mt: { xs: 8, md: 12 } }}>
-        <SectionHeader title="Intrebari frecvente" />
+        <SectionHeader title="Întrebări Frecvente" />
         <Box>
           {homeSec9.map((item, index) => (
             <Accordion

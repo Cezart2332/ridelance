@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+  Alert,
   Button,
   CircularProgress, Divider, Paper, Stack, TextField, Typography,
 } from '@mui/material'
@@ -10,6 +11,7 @@ import { getChatConnection, startChatConnection, stopChatConnection } from '../.
 import { useAppSelector } from '../../../store/hooks'
 import { groupMessagesByDate } from '../../../utils/chat'
 import { Box } from '@mui/material'
+import { getBucharestBusinessHoursStatus } from '../../../utils/businessHours'
 
 export function AccountantChatTab() {
   const [roomId, setRoomId] = useState<string | null>(null)
@@ -19,8 +21,10 @@ export function AccountantChatTab() {
   const [loading, setLoading] = useState(true)
   const [noAgent, setNoAgent] = useState(false)
   const [sending, setSending] = useState(false)
+  const [, setClockTick] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const myUserId = useAppSelector((s) => s.auth.userId) || ''
+  const accountantHours = getBucharestBusinessHoursStatus(10, 15)
 
   // Bootstrap: get support room, load history, connect to hub
   useEffect(() => {
@@ -38,6 +42,7 @@ export function AccountantChatTab() {
 
         // Connect to SignalR
         const conn = getChatConnection()
+        conn.off('ReceiveMessage')
         conn.on('ReceiveMessage', (msg: ChatMessageDto) => {
           setMessages((prev) => [...prev, msg])
         })
@@ -68,8 +73,13 @@ export function AccountantChatTab() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockTick((value) => value + 1), 60000)
+    return () => window.clearInterval(timer)
+  }, [])
+
   const handleSend = async () => {
-    if (!chatMessage.trim() || !roomId || sending) return
+    if (!chatMessage.trim() || !roomId || sending || !accountantHours.isOpen) return
 
     setSending(true)
     try {
@@ -99,6 +109,14 @@ export function AccountantChatTab() {
         <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>
           Chat contabil {supportName ? `— ${supportName}` : ''}
         </Typography>
+        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.86rem', mt: 0.4 }}>
+          Program: {accountantHours.label}
+        </Typography>
+        {!accountantHours.isOpen && (
+          <Alert severity="info" sx={{ mt: 2, borderRadius: DASHBOARD_TOKENS.radius.md }}>
+            Chatul contabil este disponibil doar în program. Poți citi mesajele existente, dar poți trimite mesaje în intervalul afișat.
+          </Alert>
+        )}
 
         {loading ? (
           <Stack sx={{ alignItems: 'center', py: 4 }}>
@@ -166,11 +184,12 @@ export function AccountantChatTab() {
                 }}
                 placeholder="Scrie un mesaj pentru echipă..."
                 sx={dashboardInputSx}
+                disabled={!accountantHours.isOpen}
               />
               <Button
                 variant="contained"
                 onClick={handleSend}
-                disabled={sending || !chatMessage.trim()}
+                disabled={sending || !chatMessage.trim() || !accountantHours.isOpen}
                 sx={{
                   borderRadius: DASHBOARD_TOKENS.radius.full,
                   px: 2.4,

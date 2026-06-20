@@ -31,7 +31,7 @@ export function SupportChatTab({ chatMessage, chatMessages, onChatChange, onSend
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
       >
-        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2 }}>FAQ</Typography>
+        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2 }}>Întrebări Frecvente</Typography>
         {dashboardFaqItems.map((item) => (
           <Accordion
             key={item.title}

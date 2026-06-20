@@ -8,6 +8,7 @@ import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
 import ElectricCarRoundedIcon from '@mui/icons-material/ElectricCarRounded';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
+import logo from '../../../assets/logo.svg';
 
 type NavItem = {
   id: string;
@@ -254,9 +255,7 @@ export default function AppSidebar({
           flexShrink: 0,
         }}
       >
-        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 900, fontSize: '1rem' }}>
-          Ridelance Dashboard
-        </Typography>
+        <Box component="img" src={logo} alt="RIDElance" sx={{ height: 38, width: 'auto', display: 'block' }} />
       </Box>
 
       <Box

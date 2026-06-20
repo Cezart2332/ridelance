@@ -1,5 +1,6 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
 import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded'
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded'
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded'
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded'
@@ -203,8 +204,9 @@ function statusChipSx(status: string) {
 function statusLabel(status: string): string {
   const s = status.toLowerCase()
   if (s === 'approved' || s === 'verified') return 'Valid'
-  if (s === 'pending') return 'In verificare'
-  return 'Lipsa'
+  if (s === 'pending') return 'În curs de aprobare'
+  if (s === 'rejected') return 'Respins'
+  return 'Lipsă'
 }
 
 type ExpiryState = 'valid' | 'soon30' | 'soon7' | 'expired'
@@ -378,6 +380,15 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
     }
   }
 
+  const handleOpen = async (id: string, fileName: string) => {
+    try {
+      await documentService.openInNewTab(id, fileName)
+    } catch (err: unknown) {
+      console.error('Open failed:', err)
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Documentul nu a putut fi deschis. Te rugăm să încerci din nou.'), severity: 'error' })
+    }
+  }
+
   if (loading) {
     return (
       <Stack sx={{ alignItems: 'center', justifyContent: 'center', height: 200 }}>
@@ -420,11 +431,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
                   {config.title}
                 </Typography>
               </Tooltip>
-              {doc ? (
-                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.78rem', mt: 0.3, wordBreak: 'break-all' }} title={doc.originalFileName}>
-                  (încărcat) · {doc.originalFileName}
-                </Typography>
-              ) : (
+              {!doc && (
                 <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.78rem', mt: 0.3 }}>
                   Lipsă
                 </Typography>
@@ -449,22 +456,34 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
                     size="small"
                     sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full, ...statusChipSx(doc.status) }}
                   />
-                  <Button
+                  <Tooltip title="Vizualizează">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleOpen(doc.id, doc.originalFileName)}
+                      sx={{
+                        borderRadius: DASHBOARD_TOKENS.radius.full,
+                        color: DASHBOARD_TOKENS.textMuted,
+                        backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.04),
+                        '&:hover': { color: DASHBOARD_TOKENS.primaryStrong, backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.12) },
+                      }}
+                    >
+                      <VisibilityRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Descarcă">
+                    <IconButton
                     size="small"
-                    startIcon={<DownloadRoundedIcon fontSize="small" />}
                     onClick={() => handleDownload(doc.id, doc.originalFileName)}
                     sx={{
-                      minWidth: 'unset',
                       borderRadius: DASHBOARD_TOKENS.radius.full,
-                      textTransform: 'none',
-                      fontWeight: 700,
                       color: DASHBOARD_TOKENS.primaryStrong,
                       backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
                       '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
                     }}
                   >
-                    Descarcă
-                  </Button>
+                      <DownloadRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 </>
               ) : (
                 <Chip
@@ -654,22 +673,34 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
                   size="small"
                   sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full, ...statusChipSx(doc.status) }}
                 />
-                <Button
+                <Tooltip title="Vizualizează">
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpen(doc.id, doc.originalFileName)}
+                    sx={{
+                      borderRadius: DASHBOARD_TOKENS.radius.full,
+                      color: DASHBOARD_TOKENS.textMuted,
+                      backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.04),
+                      '&:hover': { color: DASHBOARD_TOKENS.primaryStrong, backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.12) },
+                    }}
+                  >
+                    <VisibilityRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Descarcă">
+                  <IconButton
                   size="small"
-                  startIcon={<DownloadRoundedIcon fontSize="small" />}
                   onClick={() => handleDownload(doc.id, doc.originalFileName)}
                   sx={{
-                    minWidth: 'unset',
                     borderRadius: DASHBOARD_TOKENS.radius.full,
-                    textTransform: 'none',
-                    fontWeight: 700,
                     color: DASHBOARD_TOKENS.primaryStrong,
                     backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
                     '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
                   }}
                 >
-                  Descarcă
-                </Button>
+                    <DownloadRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Stack>
             </Stack>
           </Paper>

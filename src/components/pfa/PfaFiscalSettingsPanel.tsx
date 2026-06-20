@@ -25,6 +25,7 @@ import {
 
 type Provider = 'Uber' | 'Bolt'
 type AccountKind = 'Driver' | 'Fleet'
+type FiscalScreen = 'summary' | 'menu' | 'tax' | 'platforms' | 'cash' | 'vehicle' | 'uber' | 'bolt' | 'fleet'
 
 interface PfaFiscalSettingsPanelProps {
   pfaId: string
@@ -100,6 +101,19 @@ const fieldSx = {
   },
 }
 
+function InfoGrid({ rows }: { rows: { label: string; value: string }[] }) {
+  return (
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, gap: 1.5 }}>
+      {rows.map((row) => (
+        <Box key={row.label} sx={{ p: 1.5, borderRadius: TOKENS.radius.md, bgcolor: alpha(TOKENS.surface, 0.7), border: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
+          <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.4 }}>{row.label}</Typography>
+          <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 750, mt: 0.4 }}>{row.value}</Typography>
+        </Box>
+      ))}
+    </Box>
+  )
+}
+
 function buildDefaultSettings(pfaId: string): PfaFiscalSettings {
   return {
     fiscalProfile: {
@@ -141,6 +155,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [apiUnavailable, setApiUnavailable] = useState(false)
+  const [screen, setScreen] = useState<FiscalScreen>('summary')
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
@@ -212,6 +227,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
   }
 
   useEffect(() => {
+    setScreen('summary')
     loadSettings()
   }, [pfaId])
 
@@ -330,6 +346,88 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
     }
   }
 
+  const sectionCards: { key: FiscalScreen; title: string; description: string }[] = [
+    { key: 'tax', title: 'Profil fiscal', description: 'Cod special TVA, dată obținere și document verificat.' },
+    { key: 'platforms', title: 'Platforme active', description: 'Status Uber, Bolt și alte platforme.' },
+    { key: 'cash', title: 'Cash / casă de marcat', description: 'Venituri cash și obligația de casă de marcat.' },
+    { key: 'vehicle', title: 'Utilizare auto', description: 'Tip mașină folosită și document justificativ.' },
+    { key: 'uber', title: 'Conturi Uber', description: 'Cont Uber Driver și Uber Fleet.' },
+    { key: 'bolt', title: 'Conturi Bolt', description: 'Cont Bolt Driver, Bolt Fleet și status configurare.' },
+    { key: 'fleet', title: 'Permisiuni Fleet / API', description: 'Accept pentru conturi fleet și integrarea Bolt Fleet API.' },
+  ]
+
+  const renderStandardHeader = () => (
+    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
+      <Chip label="Sistem real" size="small" sx={{ fontWeight: 800 }} />
+      <Chip label="Neplătitor TVA" size="small" sx={{ fontWeight: 800 }} />
+      <Chip label="Fără angajați" size="small" sx={{ fontWeight: 800 }} />
+      <Chip label="Partidă simplă" size="small" sx={{ fontWeight: 800 }} />
+    </Stack>
+  )
+
+  const renderScreenHeader = (title: string, description: string, backTo: FiscalScreen = 'menu') => (
+    <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'flex-start' }, gap: 2, mb: 2 }}>
+      <Box>
+        <Typography variant="h6" sx={{ fontWeight: 850 }}>{title}</Typography>
+        <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{description}</Typography>
+      </Box>
+      <Button variant="outlined" onClick={() => setScreen(backTo)} sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' }, fontWeight: 800 }}>
+        Înapoi
+      </Button>
+    </Stack>
+  )
+
+  const renderProfileSaveButton = (label = 'Salvează secțiunea') => editable && (
+    <Button variant="contained" onClick={handleSaveProfile} disabled={saving || apiUnavailable} sx={{ alignSelf: 'flex-start', fontWeight: 800, boxShadow: 'none' }}>
+      {label}
+    </Button>
+  )
+
+  const renderAccountCard = (provider: Provider, kind: AccountKind) => {
+    const key = accountKey(provider, kind)
+    const account = findAccount(settings?.platformAccounts ?? [], provider, kind)
+    const draft = accounts[key]
+
+    return (
+      <Paper key={key} elevation={0} sx={{ p: 2, borderRadius: TOKENS.radius.md, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, bgcolor: alpha(TOKENS.surface, 0.65) }}>
+        <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 1.5 }}>
+          <Typography sx={{ fontWeight: 850 }}>{provider} {kind === 'Driver' ? 'Driver' : 'Fleet'}</Typography>
+          <Chip
+            label={kind === 'Driver' ? (account?.email ? 'Completat' : 'Necompletat') : optionLabel(fleetStatusOptions, account?.status ?? draft?.status)}
+            size="small"
+            sx={{ fontWeight: 800 }}
+          />
+        </Stack>
+
+        {editable ? (
+          <Stack spacing={1.2}>
+            <TextField size="small" label="Email" value={draft?.email ?? ''} onChange={(e) => updateAccount(provider, kind, { email: e.target.value })} sx={fieldSx} />
+            <TextField size="small" label="Nr telefon" value={draft?.phone ?? ''} onChange={(e) => updateAccount(provider, kind, { phone: e.target.value })} sx={fieldSx} />
+            <TextField size="small" label="Nume Prenume" value={draft?.fullName ?? ''} onChange={(e) => updateAccount(provider, kind, { fullName: e.target.value })} sx={fieldSx} />
+            {kind === 'Fleet' && (
+              <>
+                <TextField size="small" label={account?.hasPassword ? 'Parolă nouă (opțional)' : 'Parolă'} type="password" value={draft?.password ?? ''} onChange={(e) => updateAccount(provider, kind, { password: e.target.value })} sx={fieldSx} />
+                <TextField select size="small" label="Status" value={draft?.status ?? 'NotConfigured'} onChange={(e) => updateAccount(provider, kind, { status: e.target.value })} sx={fieldSx}>
+                  {fleetStatusOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
+                </TextField>
+                <Button size="small" variant="outlined" onClick={() => handleMarkConfigured(provider)} disabled={saving || apiUnavailable} sx={{ alignSelf: 'flex-start', fontWeight: 800 }}>
+                  Configurat
+                </Button>
+              </>
+            )}
+          </Stack>
+        ) : (
+          <Stack spacing={0.7}>
+            <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Email: <strong>{account?.email ?? '—'}</strong></Typography>
+            <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Nr telefon: <strong>{account?.phone ?? '—'}</strong></Typography>
+            <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Nume Prenume: <strong>{account?.fullName ?? '—'}</strong></Typography>
+            {kind === 'Fleet' && <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Parolă: <strong>{account?.hasPassword ? '********' : '—'}</strong></Typography>}
+          </Stack>
+        )}
+      </Paper>
+    )
+  }
+
   if (loading) {
     return (
       <Paper elevation={0} sx={{ p: 3, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}` }}>
@@ -344,6 +442,168 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
 
   if (!settings) return null
 
+  const taxRows = [
+    { label: 'Sistem de impozitare', value: 'Sistem real' },
+    { label: 'TVA', value: 'Neplătitor TVA' },
+    { label: 'Angajați', value: 'Fără angajați' },
+    { label: 'Regim contabil', value: 'Partidă simplă' },
+    { label: 'Cod special TVA', value: optionLabel(specialVatOptions, settings.fiscalProfile.specialVatCodeStatus) },
+    { label: 'Data obținerii', value: roDate(settings.fiscalProfile.specialVatCodeObtainedAtUtc) },
+    { label: 'Document', value: settings.fiscalProfile.specialVatCodeDocumentId ? 'Verificat' : '—' },
+  ]
+
+  const platformRows = [
+    { label: 'Uber', value: optionLabel(platformOptions, settings.fiscalProfile.uberStatus) },
+    { label: 'Bolt', value: optionLabel(platformOptions, settings.fiscalProfile.boltStatus) },
+    { label: 'Alte platforme', value: optionLabel(triOptions, settings.fiscalProfile.otherPlatformsStatus) },
+  ]
+
+  const cashRows = [
+    { label: 'Venituri cash', value: optionLabel(triOptions, settings.fiscalProfile.cashRevenueStatus) },
+    { label: 'Casă de marcat', value: optionLabel(cashRegisterOptions, settings.fiscalProfile.cashRegisterStatus) },
+  ]
+
+  const vehicleRows = [
+    { label: 'Auto folosit', value: optionLabel(vehicleOptions, settings.fiscalProfile.vehicleUsageType) },
+    { label: 'Document justificativ', value: settings.fiscalProfile.vehicleSupportingDocumentLabel || '—' },
+  ]
+
+  const renderSectionContent = () => {
+    switch (screen) {
+      case 'tax':
+        return (
+          <Stack spacing={2}>
+            {renderScreenHeader('Profil fiscal', 'Setările fiscale standard și codul special TVA.', 'menu')}
+            {renderStandardHeader()}
+            {editable ? (
+              <Stack spacing={2}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
+                  <TextField select label="Cod special TVA" value={form.specialVatCodeStatus} onChange={(e) => setForm((f) => ({ ...f, specialVatCodeStatus: e.target.value }))} sx={fieldSx}>
+                    {specialVatOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
+                  </TextField>
+                  <TextField
+                    label="Data obținerii"
+                    type="date"
+                    value={form.specialVatCodeObtainedAtUtc}
+                    onChange={(e) => setForm((f) => ({ ...f, specialVatCodeObtainedAtUtc: e.target.value }))}
+                    slotProps={{ inputLabel: { shrink: true } }}
+                    sx={fieldSx}
+                  />
+                  <TextField label="Document cod TVA" value={settings.fiscalProfile.specialVatCodeDocumentId ? 'Verificat' : '—'} disabled sx={fieldSx} />
+                </Box>
+                {renderProfileSaveButton('Salvează profil fiscal')}
+              </Stack>
+            ) : (
+              <InfoGrid rows={taxRows} />
+            )}
+          </Stack>
+        )
+      case 'platforms':
+        return (
+          <Stack spacing={2}>
+            {renderScreenHeader('Platforme active', 'Statusul platformelor pe care lucrează PFA-ul.', 'menu')}
+            {editable ? (
+              <Stack spacing={2}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
+                  <TextField select label="Uber" value={form.uberStatus} onChange={(e) => setForm((f) => ({ ...f, uberStatus: e.target.value }))} sx={fieldSx}>
+                    {platformOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
+                  </TextField>
+                  <TextField select label="Bolt" value={form.boltStatus} onChange={(e) => setForm((f) => ({ ...f, boltStatus: e.target.value }))} sx={fieldSx}>
+                    {platformOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
+                  </TextField>
+                  <TextField select label="Alte platforme" value={form.otherPlatformsStatus} onChange={(e) => setForm((f) => ({ ...f, otherPlatformsStatus: e.target.value }))} sx={fieldSx}>
+                    {triOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
+                  </TextField>
+                </Box>
+                {renderProfileSaveButton()}
+              </Stack>
+            ) : (
+              <InfoGrid rows={platformRows} />
+            )}
+          </Stack>
+        )
+      case 'cash':
+        return (
+          <Stack spacing={2}>
+            {renderScreenHeader('Cash / casă de marcat', 'Informații despre venituri cash și casă de marcat.', 'menu')}
+            {editable ? (
+              <Stack spacing={2}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
+                  <TextField select label="Are venituri cash" value={form.cashRevenueStatus} onChange={(e) => setForm((f) => ({ ...f, cashRevenueStatus: e.target.value }))} sx={fieldSx}>
+                    {triOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
+                  </TextField>
+                  <TextField select label="Are casă de marcat" value={form.cashRegisterStatus} onChange={(e) => setForm((f) => ({ ...f, cashRegisterStatus: e.target.value }))} sx={fieldSx}>
+                    {cashRegisterOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
+                  </TextField>
+                </Box>
+                {renderProfileSaveButton()}
+              </Stack>
+            ) : (
+              <InfoGrid rows={cashRows} />
+            )}
+          </Stack>
+        )
+      case 'vehicle':
+        return (
+          <Stack spacing={2}>
+            {renderScreenHeader('Utilizare auto', 'Situația mașinii folosite de PFA și documentul justificativ.', 'menu')}
+            {editable ? (
+              <Stack spacing={2}>
+                <TextField select label="Tip utilizare auto" value={form.vehicleUsageType} onChange={(e) => setForm((f) => ({ ...f, vehicleUsageType: e.target.value }))} sx={fieldSx}>
+                  {vehicleOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
+                </TextField>
+                <TextField label="Document justificativ auto" value={form.vehicleSupportingDocumentLabel} onChange={(e) => setForm((f) => ({ ...f, vehicleSupportingDocumentLabel: e.target.value }))} placeholder="Ex: Contract de comodat verificat" sx={fieldSx} />
+                {renderProfileSaveButton()}
+              </Stack>
+            ) : (
+              <InfoGrid rows={vehicleRows} />
+            )}
+          </Stack>
+        )
+      case 'uber':
+      case 'bolt': {
+        const provider: Provider = screen === 'uber' ? 'Uber' : 'Bolt'
+        return (
+          <Stack spacing={2}>
+            {renderScreenHeader(`Conturi ${provider}`, `Cont ${provider} Driver și ${provider} Fleet.`, 'menu')}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
+              {renderAccountCard(provider, 'Driver')}
+              {renderAccountCard(provider, 'Fleet')}
+            </Box>
+            {editable && (
+              <Button variant="contained" onClick={handleSaveAccounts} disabled={saving || apiUnavailable} sx={{ alignSelf: 'flex-start', fontWeight: 800, boxShadow: 'none' }}>
+                Salvează conturi {provider}
+              </Button>
+            )}
+          </Stack>
+        )
+      }
+      case 'fleet':
+        return (
+          <Stack spacing={2}>
+            {renderScreenHeader('Permisiuni Fleet / API', 'Permisiuni pentru conturile fleet și integrarea Bolt Fleet API.', 'menu')}
+            <Alert severity="info" sx={{ borderRadius: TOKENS.radius.md }}>
+              Conturile fleet sunt create de RIDElance și pot fi utilizate de suport și contabil pentru gestionarea colaborării.
+            </Alert>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Chip
+                label={settings.fleetConsent.fleetAccountsAccepted ? 'Permisiune conturi fleet acceptată' : 'Permisiune conturi fleet neacceptată'}
+                color={settings.fleetConsent.fleetAccountsAccepted ? 'success' : 'default'}
+                sx={{ fontWeight: 800 }}
+              />
+              <Chip
+                label={settings.fleetConsent.boltApiAccepted ? 'Bolt Fleet API acceptat' : 'Bolt Fleet API neacceptat'}
+                color={settings.fleetConsent.boltApiAccepted ? 'success' : 'default'}
+                sx={{ fontWeight: 800 }}
+              />
+            </Stack>
+          </Stack>
+        )
+      default:
+        return null
+    }
+  }
+
   return (
     <Stack spacing={2}>
       {apiUnavailable && (
@@ -353,142 +613,42 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
       )}
 
       <Paper elevation={0} sx={{ p: 3, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ justifyContent: 'space-between', gap: 2, mb: 2 }}>
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 850 }}>Profil fiscal / Setări contabile PFA</Typography>
-            <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
-              Setări completate în Admin și vizibile pentru contabil.
-            </Typography>
-          </Box>
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
-            <Chip label="Sistem real" size="small" sx={{ fontWeight: 800 }} />
-            <Chip label="Neplătitor TVA" size="small" sx={{ fontWeight: 800 }} />
-            <Chip label="Fără angajați" size="small" sx={{ fontWeight: 800 }} />
-            <Chip label="Partidă simplă" size="small" sx={{ fontWeight: 800 }} />
-          </Stack>
-        </Stack>
-
-        {editable ? (
+        {screen === 'summary' && (
           <Stack spacing={2}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
-              <TextField select label="Cod special TVA" value={form.specialVatCodeStatus} onChange={(e) => setForm((f) => ({ ...f, specialVatCodeStatus: e.target.value }))} sx={fieldSx}>
-                {specialVatOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
-              </TextField>
-              <TextField
-                label="Data obținerii"
-                type="date"
-                value={form.specialVatCodeObtainedAtUtc}
-                onChange={(e) => setForm((f) => ({ ...f, specialVatCodeObtainedAtUtc: e.target.value }))}
-                slotProps={{ inputLabel: { shrink: true } }}
-                sx={fieldSx}
-              />
-              <TextField label="Document cod TVA" value={settings.fiscalProfile.specialVatCodeDocumentId ? 'Verificat' : '—'} disabled sx={fieldSx} />
-              <TextField select label="Uber" value={form.uberStatus} onChange={(e) => setForm((f) => ({ ...f, uberStatus: e.target.value }))} sx={fieldSx}>
-                {platformOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
-              </TextField>
-              <TextField select label="Bolt" value={form.boltStatus} onChange={(e) => setForm((f) => ({ ...f, boltStatus: e.target.value }))} sx={fieldSx}>
-                {platformOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
-              </TextField>
-              <TextField select label="Alte platforme" value={form.otherPlatformsStatus} onChange={(e) => setForm((f) => ({ ...f, otherPlatformsStatus: e.target.value }))} sx={fieldSx}>
-                {triOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
-              </TextField>
-              <TextField select label="Are venituri cash" value={form.cashRevenueStatus} onChange={(e) => setForm((f) => ({ ...f, cashRevenueStatus: e.target.value }))} sx={fieldSx}>
-                {triOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
-              </TextField>
-              <TextField select label="Are casă de marcat" value={form.cashRegisterStatus} onChange={(e) => setForm((f) => ({ ...f, cashRegisterStatus: e.target.value }))} sx={fieldSx}>
-                {cashRegisterOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
-              </TextField>
-              <TextField select label="Tip utilizare auto" value={form.vehicleUsageType} onChange={(e) => setForm((f) => ({ ...f, vehicleUsageType: e.target.value }))} sx={fieldSx}>
-                {vehicleOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
-              </TextField>
-            </Box>
-            <TextField label="Document justificativ auto" value={form.vehicleSupportingDocumentLabel} onChange={(e) => setForm((f) => ({ ...f, vehicleSupportingDocumentLabel: e.target.value }))} placeholder="Ex: Contract de comodat verificat" sx={fieldSx} />
-            <Button variant="contained" onClick={handleSaveProfile} disabled={saving || apiUnavailable} sx={{ alignSelf: 'flex-start', fontWeight: 800, boxShadow: 'none' }}>
-              Salvează profil fiscal
+            <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ justifyContent: 'space-between', gap: 2 }}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 850 }}>Profil fiscal</Typography>
+                <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
+                  Sumar important despre PFA, completat în Admin și vizibil pentru contabil.
+                </Typography>
+              </Box>
+              {renderStandardHeader()}
+            </Stack>
+            <InfoGrid rows={summaryRows} />
+            <Button variant="contained" onClick={() => setScreen('menu')} sx={{ alignSelf: 'flex-start', fontWeight: 800, boxShadow: 'none' }}>
+              {editable ? 'Configurează profil fiscal' : 'Vezi setări detaliate'}
             </Button>
           </Stack>
-        ) : (
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, gap: 1.5 }}>
-            {summaryRows.map((row) => (
-              <Box key={row.label} sx={{ p: 1.5, borderRadius: TOKENS.radius.md, bgcolor: alpha(TOKENS.surface, 0.7), border: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
-                <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.4 }}>{row.label}</Typography>
-                <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 750, mt: 0.4 }}>{row.value}</Typography>
-              </Box>
-            ))}
-          </Box>
         )}
-      </Paper>
 
-      <Paper elevation={0} sx={{ p: 3, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
-        <Typography variant="h6" sx={{ fontWeight: 850, mb: 0.5 }}>Conturi Uber & Bolt</Typography>
-        <Typography variant="body2" sx={{ color: TOKENS.textMuted, mb: 2 }}>
-          Conturile fleet sunt create de RIDElance pentru suport și gestionare contabilă corectă.
-        </Typography>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
-          <Chip
-            label={settings.fleetConsent.fleetAccountsAccepted ? 'Permisiune conturi fleet acceptată' : 'Permisiune conturi fleet neacceptată'}
-            color={settings.fleetConsent.fleetAccountsAccepted ? 'success' : 'default'}
-            sx={{ fontWeight: 800 }}
-          />
-          <Chip
-            label={settings.fleetConsent.boltApiAccepted ? 'Bolt Fleet API acceptat' : 'Bolt Fleet API neacceptat'}
-            color={settings.fleetConsent.boltApiAccepted ? 'success' : 'default'}
-            sx={{ fontWeight: 800 }}
-          />
-        </Stack>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
-          {(['Uber', 'Bolt'] as Provider[]).map((provider) => (
-            <Stack key={provider} spacing={1.5}>
-              {(['Driver', 'Fleet'] as AccountKind[]).map((kind) => {
-                const key = accountKey(provider, kind)
-                const account = findAccount(settings.platformAccounts, provider, kind)
-                const draft = accounts[key]
-                return (
-                  <Paper key={key} elevation={0} sx={{ p: 2, borderRadius: TOKENS.radius.md, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, bgcolor: alpha(TOKENS.surface, 0.65) }}>
-                    <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                      <Typography sx={{ fontWeight: 850 }}>{provider} {kind === 'Driver' ? 'Driver' : 'Fleet'}</Typography>
-                      <Chip
-                        label={kind === 'Driver' ? (account?.email ? 'Completat' : 'Necompletat') : optionLabel(fleetStatusOptions, account?.status ?? draft?.status)}
-                        size="small"
-                        sx={{ fontWeight: 800 }}
-                      />
-                    </Stack>
-                    {editable ? (
-                      <Stack spacing={1.2}>
-                        <TextField size="small" label="Email" value={draft?.email ?? ''} onChange={(e) => updateAccount(provider, kind, { email: e.target.value })} sx={fieldSx} />
-                        <TextField size="small" label="Nr telefon" value={draft?.phone ?? ''} onChange={(e) => updateAccount(provider, kind, { phone: e.target.value })} sx={fieldSx} />
-                        <TextField size="small" label="Nume Prenume" value={draft?.fullName ?? ''} onChange={(e) => updateAccount(provider, kind, { fullName: e.target.value })} sx={fieldSx} />
-                        {kind === 'Fleet' && (
-                          <>
-                            <TextField size="small" label={account?.hasPassword ? 'Parolă nouă (opțional)' : 'Parolă'} type="password" value={draft?.password ?? ''} onChange={(e) => updateAccount(provider, kind, { password: e.target.value })} sx={fieldSx} />
-                            <TextField select size="small" label="Status" value={draft?.status ?? 'NotConfigured'} onChange={(e) => updateAccount(provider, kind, { status: e.target.value })} sx={fieldSx}>
-                              {fleetStatusOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
-                            </TextField>
-                            <Button size="small" variant="outlined" onClick={() => handleMarkConfigured(provider)} disabled={saving || apiUnavailable} sx={{ alignSelf: 'flex-start', fontWeight: 800 }}>
-                              Configurat
-                            </Button>
-                          </>
-                        )}
-                      </Stack>
-                    ) : (
-                      <Stack spacing={0.7}>
-                        <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Email: <strong>{account?.email ?? '—'}</strong></Typography>
-                        <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Nr telefon: <strong>{account?.phone ?? '—'}</strong></Typography>
-                        <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Nume Prenume: <strong>{account?.fullName ?? '—'}</strong></Typography>
-                        {kind === 'Fleet' && <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Parolă: <strong>{account?.hasPassword ? '********' : '—'}</strong></Typography>}
-                      </Stack>
-                    )}
-                  </Paper>
-                )
-              })}
-            </Stack>
-          ))}
-        </Box>
-        {editable && (
-          <Button variant="contained" onClick={handleSaveAccounts} disabled={saving || apiUnavailable} sx={{ mt: 2, fontWeight: 800, boxShadow: 'none' }}>
-            Salvează conturi
-          </Button>
+        {screen === 'menu' && (
+          <Stack spacing={2}>
+            {renderScreenHeader('Setări profil fiscal', 'Alege secțiunea pe care vrei să o vezi sau să o configurezi.', 'summary')}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
+              {sectionCards.map((section) => (
+                <Paper key={section.key} elevation={0} sx={{ p: 2, borderRadius: TOKENS.radius.md, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, bgcolor: alpha(TOKENS.surface, 0.68) }}>
+                  <Typography sx={{ fontWeight: 850, mb: 0.6 }}>{section.title}</Typography>
+                  <Typography variant="body2" sx={{ color: TOKENS.textMuted, minHeight: 42 }}>{section.description}</Typography>
+                  <Button fullWidth variant="outlined" onClick={() => setScreen(section.key)} sx={{ mt: 2, fontWeight: 800 }}>
+                    Deschide
+                  </Button>
+                </Paper>
+              ))}
+            </Box>
+          </Stack>
         )}
+
+        {screen !== 'summary' && screen !== 'menu' && renderSectionContent()}
       </Paper>
 
       <Snackbar open={snackbar.open} autoHideDuration={3500} onClose={() => setSnackbar((s) => ({ ...s, open: false }))}>
