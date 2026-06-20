@@ -6,6 +6,7 @@ import character2 from '../../../assets/Stickers/character 2.png'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { userService, type UserProfile, type DashboardSummary } from '../../../services/user.service'
 import { documentService } from '../../../services/document.service'
+import { pfaService, type PfaPlatformAccount } from '../../../services/pfa.service'
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
 import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
 import { formatRole } from '../../../utils/roleLabels'
@@ -16,6 +17,7 @@ export function ProfileTab() {
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [downloading, setDownloading] = useState(false)
+  const [consentLoading, setConsentLoading] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -35,6 +37,35 @@ export function ProfileTab() {
       await documentService.downloadAndSave(summary.pfaCertificatId, 'Certificat_Inregistrare.pdf')
     } finally {
       setDownloading(false)
+    }
+  }
+
+  const handleAcceptConsent = async (type: 'fleet' | 'bolt') => {
+    if (!summary?.pfaRegistrationId) return
+    setConsentLoading(true)
+    try {
+      const nextConsent = await pfaService.acceptFleetConsent(summary.pfaRegistrationId, {
+        fleetAccountsAccepted: type === 'fleet' ? true : Boolean(summary.fiscalSettings?.fleetConsent.fleetAccountsAccepted),
+        boltApiAccepted: type === 'bolt' ? true : Boolean(summary.fiscalSettings?.fleetConsent.boltApiAccepted),
+      })
+      setSummary((current) => current && current.fiscalSettings
+        ? { ...current, fiscalSettings: { ...current.fiscalSettings, fleetConsent: nextConsent } }
+        : current)
+    } finally {
+      setConsentLoading(false)
+    }
+  }
+
+  const findAccount = (provider: string, kind: string): PfaPlatformAccount | undefined =>
+    summary?.fiscalSettings?.platformAccounts.find((account) => account.provider === provider && account.kind === kind)
+
+  const accountStatusLabel = (account?: PfaPlatformAccount) => {
+    if (!account) return 'Neconfigurat'
+    if (account.kind === 'Driver') return account.email ? 'Completat' : 'Necompletat'
+    switch (account.status) {
+      case 'Configured': return 'Configurat'
+      case 'InProgress': return 'În curs'
+      default: return 'Neconfigurat'
     }
   }
 
@@ -117,14 +148,13 @@ export function ProfileTab() {
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
       >
-        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>Conturi Uber & Bolt</Typography>
+        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>Conturi de șofer</Typography>
         <Stack spacing={1.4} sx={{ mt: 2 }}>
-          {[
-            { provider: 'Uber', accountEmail: '—', status: 'Neconfigurat' },
-            { provider: 'Bolt', accountEmail: '—', status: 'Neconfigurat' },
-          ].map((account) => (
+          {(['Uber', 'Bolt'] as const).map((provider) => {
+            const account = findAccount(provider, 'Driver')
+            return (
             <Paper
-              key={account.provider}
+              key={provider}
               elevation={0}
               sx={{
                 p: 1.6,
@@ -135,10 +165,10 @@ export function ProfileTab() {
             >
               <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
                 <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700 }}>
-                  {account.provider}
+                  Cont {provider} driver
                 </Typography>
                 <Chip
-                  label={account.status}
+                  label={accountStatusLabel(account)}
                   size="small"
                   sx={{
                     fontWeight: 700,
@@ -148,11 +178,72 @@ export function ProfileTab() {
                   }}
                 />
               </Stack>
-              <Typography sx={{ mt: 1, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>
-                Email: {account.accountEmail}
-              </Typography>
+              <Typography sx={{ mt: 1, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>Email: {account?.email ?? '—'}</Typography>
+              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>Nr telefon: {account?.phone ?? '—'}</Typography>
+              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>Nume Prenume: {account?.fullName ?? '—'}</Typography>
             </Paper>
-          ))}
+          )})}
+        </Stack>
+      </Paper>
+
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2.5, md: 3 },
+          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          border: `1px solid ${DASHBOARD_TOKENS.border}`,
+          boxShadow: DASHBOARD_TOKENS.shadow.sm,
+        }}
+      >
+        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>Conturi de flotă</Typography>
+        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 1, fontSize: '0.9rem' }}>
+          Aceste conturi sunt create de RIDElance și pot fi utilizate de RIDElance suport și contabil pentru gestionarea corectă a colaborării.
+        </Typography>
+        <Stack spacing={1.4} sx={{ mt: 2 }}>
+          {(['Uber', 'Bolt'] as const).map((provider) => {
+            const account = findAccount(provider, 'Fleet')
+            return (
+              <Paper
+                key={provider}
+                elevation={0}
+                sx={{
+                  p: 1.6,
+                  borderRadius: DASHBOARD_TOKENS.radius.md,
+                  border: `1px solid ${DASHBOARD_TOKENS.border}`,
+                  backgroundColor: DASHBOARD_TOKENS.surface,
+                }}
+              >
+                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
+                  <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700 }}>
+                    {provider} Fleet
+                  </Typography>
+                  <Chip label={accountStatusLabel(account)} size="small" sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full }} />
+                </Stack>
+                <Typography sx={{ mt: 1, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>Email: {account?.email ?? '—'}</Typography>
+                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>Nr telefon: {account?.phone ?? '—'}</Typography>
+                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>Parolă: {account?.hasPassword ? '********' : '—'}</Typography>
+              </Paper>
+            )
+          })}
+        </Stack>
+
+        <Stack spacing={1.2} sx={{ mt: 2 }}>
+          <Button
+            variant={summary?.fiscalSettings?.fleetConsent.fleetAccountsAccepted ? 'outlined' : 'contained'}
+            disabled={consentLoading || summary?.fiscalSettings?.fleetConsent.fleetAccountsAccepted}
+            onClick={() => handleAcceptConsent('fleet')}
+            sx={{ fontWeight: 750, textTransform: 'none' }}
+          >
+            {summary?.fiscalSettings?.fleetConsent.fleetAccountsAccepted ? 'Permisiune conturi fleet acceptată' : 'Accept permisiunea pentru conturile fleet'}
+          </Button>
+          <Button
+            variant={summary?.fiscalSettings?.fleetConsent.boltApiAccepted ? 'outlined' : 'contained'}
+            disabled={consentLoading || summary?.fiscalSettings?.fleetConsent.boltApiAccepted}
+            onClick={() => handleAcceptConsent('bolt')}
+            sx={{ fontWeight: 750, textTransform: 'none' }}
+          >
+            {summary?.fiscalSettings?.fleetConsent.boltApiAccepted ? 'Bolt Fleet API acceptat' : 'Accept integrarea Bolt Fleet API'}
+          </Button>
         </Stack>
       </Paper>
 

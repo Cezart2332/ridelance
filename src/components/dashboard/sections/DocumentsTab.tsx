@@ -36,49 +36,97 @@ interface MainDocConfig {
 
 const PERSONAL_PFA_DOCS: MainDocConfig[] = [
   {
-    id: 'id_card',
-    title: 'Carte de identitate',
-    categories: ['CarteIdentitate', 'Buletin'],
-    primaryCategory: 'CarteIdentitate',
-    tooltip: 'Carte de identitate sau Buletin valid.',
+    id: 'registration_certificate',
+    title: 'Certificat de înregistrare (CAEN 4939)',
+    categories: ['CertificatInregistrare'],
+    primaryCategory: 'CertificatInregistrare',
+    tooltip: 'Certificat de înregistrare din care să reiasă domeniul de activitate, cod CAEN 4939.',
   },
   {
-    id: 'driver_license',
-    title: 'Permis de conducere',
-    categories: ['PermisConducere'],
-    primaryCategory: 'PermisConducere',
-    tooltip: 'Permis de conducere valid.',
+    id: 'constatator',
+    title: 'Certificat constatator (CAEN 4939)',
+    categories: ['CertificatConstatator'],
+    primaryCategory: 'CertificatConstatator',
+    tooltip: 'Certificat constatator din care să reiasă domeniul de activitate, cod CAEN 4939.',
   },
   {
     id: 'alt_transport',
-    title: 'Atestat transport alternativ (Uber/Bolt)',
+    title: 'Certificat de atestare profesională (Atestat)',
     categories: ['AtestatTransport', 'AtestatSofer'],
     primaryCategory: 'AtestatTransport',
-    tooltip: 'Atestat profesional pentru conducătorii auto.',
-  },
-  {
-    id: 'medical_cert',
-    title: 'Adeverinta medicala + psihologica',
-    categories: ['AdeverintaMedicala'],
-    primaryCategory: 'AdeverintaMedicala',
-    tooltip: 'Adeverință medicală și aviz psihologic.',
+    tooltip: 'Certificatul de atestare profesională al conducătorilor auto pentru transport de persoane în regim de închiriere.',
   },
   {
     id: 'criminal_record',
-    title: 'Certificat de cazier judiciar',
+    title: 'Cazier judiciar al conducătorilor auto',
     categories: ['CazierJudiciar'],
     primaryCategory: 'CazierJudiciar',
-    tooltip: 'Cazier judiciar fără înscrieri.',
+    tooltip: 'Original, valabilitate 6 luni.',
+  },
+  {
+    id: 'medical_cert',
+    title: 'Aviz medical și psihologic al titularului',
+    categories: ['AdeverintaMedicala'],
+    primaryCategory: 'AdeverintaMedicala',
+    tooltip: 'Aviz medical și psihologic al persoanei fizice titulare.',
+  },
+  {
+    id: 'arr_payment',
+    title: 'Dovada plății tarifului de eliberare ARR',
+    categories: ['DovadaPlataArr'],
+    primaryCategory: 'DovadaPlataArr',
+    tooltip: 'Dovada plății tarifului de eliberare — 300 lei, achitat în contul Agenției teritoriale ARR.',
+  },
+]
+
+const CONFORMITY_DOCS: MainDocConfig[] = [
+  {
+    id: 'transport_authorization',
+    title: 'Autorizația pentru transport alternativ',
+    categories: ['AutorizatieTransportAlternativ'],
+    primaryCategory: 'AutorizatieTransportAlternativ',
+  },
+  {
+    id: 'registration_document',
+    title: 'Certificatul de înmatriculare (Talon)',
+    categories: ['Talon', 'ITP'],
+    primaryCategory: 'Talon',
+  },
+  {
+    id: 'car_identity_book',
+    title: 'Cartea de identitate a autoturismului (toate paginile)',
+    categories: ['CarteIdentitateAuto'],
+    primaryCategory: 'CarteIdentitateAuto',
+  },
+  {
+    id: 'vehicle_contract_conformity',
+    title: 'Contract de închiriere / comodat autentificat / leasing',
+    categories: ['ContractVehicul'],
+    primaryCategory: 'ContractVehicul',
+  },
+  {
+    id: 'leasing_agreement',
+    title: 'Acord de leasing',
+    categories: ['AcordLeasing'],
+    primaryCategory: 'AcordLeasing',
+    complianceNote: 'După caz.',
+  },
+  {
+    id: 'conformity_payment',
+    title: 'Dovada plății tarif copie conformă și ecusoane',
+    categories: ['DovadaPlataCopieConformaEcusoane'],
+    primaryCategory: 'DovadaPlataCopieConformaEcusoane',
+    complianceNote: '1 an: 116 lei; 2 ani: 216 lei; 3 ani: 316 lei.',
   },
 ]
 
 const VEHICLE_DOCS: MainDocConfig[] = [
   {
-    id: 'itp',
-    title: 'ITP',
-    categories: ['ITP'],
-    primaryCategory: 'ITP',
-    tooltip: 'Inspecție Tehnică Periodică valabilă.',
+    id: 'talon',
+    title: 'Talon (ITP 6 luni)',
+    categories: ['Talon', 'ITP'],
+    primaryCategory: 'Talon',
+    tooltip: 'Certificat de înmatriculare / Talon cu ITP valabil 6 luni.',
   },
   {
     id: 'rca',
@@ -86,6 +134,13 @@ const VEHICLE_DOCS: MainDocConfig[] = [
     categories: ['RCA'],
     primaryCategory: 'RCA',
     tooltip: 'Poliță de asigurare de răspundere civilă auto.',
+  },
+  {
+    id: 'copie_conforma',
+    title: 'Copie conformă',
+    categories: ['CopieConforma'],
+    primaryCategory: 'CopieConforma',
+    tooltip: 'Copie conformă valabilă pentru vehicul.',
   },
   {
     id: 'ecuson_uber',
@@ -110,10 +165,29 @@ const VEHICLE_DOCS: MainDocConfig[] = [
     complianceNote: 'Optional pentru Uber, obligatoriu pentru Bolt.',
     purchaseLink: '#',
   },
+  {
+    id: 'vehicle_contract',
+    title: 'Contract de comodat / de închiriere vehicul',
+    categories: ['ContractVehicul'],
+    primaryCategory: 'ContractVehicul',
+    tooltip: 'Contract justificativ pentru utilizarea vehiculului.',
+  },
 ]
 
 // Categories that require an expiry date when uploading
-const EXPIRABLE_CATEGORIES = new Set(['Buletin', 'CarteIdentitate', 'AsigurareCalatori', 'ITP', 'RCA', 'PermisConducere'])
+const EXPIRABLE_CATEGORIES = new Set([
+  'Buletin',
+  'CarteIdentitate',
+  'AsigurareCalatori',
+  'ITP',
+  'Talon',
+  'RCA',
+  'PermisConducere',
+  'CopieConforma',
+  'EcusonUber',
+  'EcusonBolt',
+  'ContractVehicul',
+])
 
 function statusChipSx(status: string) {
   const s = status.toLowerCase()
@@ -243,6 +317,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
   const allMainCategories = useMemo(() => {
     const cats = new Set<string>()
     PERSONAL_PFA_DOCS.forEach((d) => d.categories.forEach((c) => cats.add(c)))
+    CONFORMITY_DOCS.forEach((d) => d.categories.forEach((c) => cats.add(c)))
     VEHICLE_DOCS.forEach((d) => d.categories.forEach((c) => cats.add(c)))
     return cats
   }, [])
@@ -604,8 +679,8 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
   }
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
-      {/* Documente personale / PFA */}
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(3, minmax(0, 1fr))' }, gap: 3 }}>
+      {/* Documente Autorizatie Transport Alternativ */}
       <Paper
         elevation={0}
         sx={{
@@ -620,7 +695,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
       >
         <Box>
           <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2, fontSize: '1.1rem' }}>
-            Documente personale / PFA
+            Documente Autorizație Transport Alternativ
           </Typography>
           <Stack spacing={1.4}>
             {PERSONAL_PFA_DOCS.map(renderDocRow)}
@@ -665,6 +740,29 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
               }}
             />
           </Button>
+        </Box>
+      </Paper>
+
+      {/* Documente Copie Conforma si Ecusoane */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2.5, md: 3 },
+          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          border: `1px solid ${DASHBOARD_TOKENS.border}`,
+          boxShadow: DASHBOARD_TOKENS.shadow.sm,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box>
+          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2, fontSize: '1.1rem' }}>
+            Documente Copie Conformă și Ecusoane
+          </Typography>
+          <Stack spacing={1.4}>
+            {CONFORMITY_DOCS.map(renderDocRow)}
+          </Stack>
         </Box>
       </Paper>
 

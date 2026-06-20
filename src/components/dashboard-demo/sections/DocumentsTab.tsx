@@ -30,49 +30,97 @@ interface MainDocConfig {
 
 const PERSONAL_PFA_DOCS: MainDocConfig[] = [
   {
-    id: 'id_card',
-    title: 'Carte de identitate',
-    categories: ['CarteIdentitate', 'Buletin'],
-    primaryCategory: 'CarteIdentitate',
-    tooltip: 'Carte de identitate sau Buletin valid.',
+    id: 'registration_certificate',
+    title: 'Certificat de înregistrare (CAEN 4939)',
+    categories: ['CertificatInregistrare'],
+    primaryCategory: 'CertificatInregistrare',
+    tooltip: 'Certificat de înregistrare din care să reiasă cod CAEN 4939.',
   },
   {
-    id: 'driver_license',
-    title: 'Permis de conducere',
-    categories: ['PermisConducere'],
-    primaryCategory: 'PermisConducere',
-    tooltip: 'Permis de conducere valid.',
+    id: 'constatator',
+    title: 'Certificat constatator (CAEN 4939)',
+    categories: ['CertificatConstatator'],
+    primaryCategory: 'CertificatConstatator',
+    tooltip: 'Certificat constatator cu domeniul de activitate CAEN 4939.',
   },
   {
     id: 'alt_transport',
-    title: 'Atestat transport alternativ (Uber/Bolt)',
+    title: 'Certificat de atestare profesională (Atestat)',
     categories: ['AtestatTransport', 'AtestatSofer'],
     primaryCategory: 'AtestatTransport',
-    tooltip: 'Atestat profesional pentru conducătorii auto.',
-  },
-  {
-    id: 'medical_cert',
-    title: 'Adeverinta medicala + psihologica',
-    categories: ['AdeverintaMedicala'],
-    primaryCategory: 'AdeverintaMedicala',
-    tooltip: 'Adeverință medicală și aviz psihologic.',
+    tooltip: 'Certificatul de atestare profesională al conducătorilor auto.',
   },
   {
     id: 'criminal_record',
-    title: 'Certificat de cazier judiciar',
+    title: 'Cazier judiciar al conducătorilor auto',
     categories: ['CazierJudiciar'],
     primaryCategory: 'CazierJudiciar',
-    tooltip: 'Cazier judiciar fără înscrieri.',
+    tooltip: 'Original, valabilitate 6 luni.',
+  },
+  {
+    id: 'medical_cert',
+    title: 'Aviz medical și psihologic al titularului',
+    categories: ['AdeverintaMedicala'],
+    primaryCategory: 'AdeverintaMedicala',
+    tooltip: 'Aviz medical și psihologic al persoanei fizice titulare.',
+  },
+  {
+    id: 'arr_payment',
+    title: 'Dovada plății tarifului de eliberare ARR',
+    categories: ['DovadaPlataArr'],
+    primaryCategory: 'DovadaPlataArr',
+    tooltip: 'Dovada plății tarifului de eliberare — 300 lei.',
+  },
+]
+
+const CONFORMITY_DOCS: MainDocConfig[] = [
+  {
+    id: 'transport_authorization',
+    title: 'Autorizația pentru transport alternativ',
+    categories: ['AutorizatieTransportAlternativ'],
+    primaryCategory: 'AutorizatieTransportAlternativ',
+  },
+  {
+    id: 'registration_document',
+    title: 'Certificatul de înmatriculare (Talon)',
+    categories: ['Talon', 'ITP'],
+    primaryCategory: 'Talon',
+  },
+  {
+    id: 'car_identity_book',
+    title: 'Cartea de identitate a autoturismului (toate paginile)',
+    categories: ['CarteIdentitateAuto'],
+    primaryCategory: 'CarteIdentitateAuto',
+  },
+  {
+    id: 'vehicle_contract_conformity',
+    title: 'Contract de închiriere / comodat autentificat / leasing',
+    categories: ['ContractVehicul'],
+    primaryCategory: 'ContractVehicul',
+  },
+  {
+    id: 'leasing_agreement',
+    title: 'Acord de leasing',
+    categories: ['AcordLeasing'],
+    primaryCategory: 'AcordLeasing',
+    complianceNote: 'După caz.',
+  },
+  {
+    id: 'conformity_payment',
+    title: 'Dovada plății tarif copie conformă și ecusoane',
+    categories: ['DovadaPlataCopieConformaEcusoane'],
+    primaryCategory: 'DovadaPlataCopieConformaEcusoane',
+    complianceNote: '1 an: 116 lei; 2 ani: 216 lei; 3 ani: 316 lei.',
   },
 ]
 
 const VEHICLE_DOCS: MainDocConfig[] = [
   {
-    id: 'itp',
-    title: 'ITP',
-    categories: ['ITP'],
-    primaryCategory: 'ITP',
-    tooltip: 'Inspecție Tehnică Periodică valabilă.',
+    id: 'talon',
+    title: 'Talon (ITP 6 luni)',
+    categories: ['Talon', 'ITP'],
+    primaryCategory: 'Talon',
+    tooltip: 'Certificat de înmatriculare / Talon cu ITP valabil 6 luni.',
   },
   {
     id: 'rca',
@@ -80,6 +128,13 @@ const VEHICLE_DOCS: MainDocConfig[] = [
     categories: ['RCA'],
     primaryCategory: 'RCA',
     tooltip: 'Poliță de asigurare de răspundere civilă auto.',
+  },
+  {
+    id: 'copie_conforma',
+    title: 'Copie conformă',
+    categories: ['CopieConforma'],
+    primaryCategory: 'CopieConforma',
+    tooltip: 'Copie conformă valabilă pentru vehicul.',
   },
   {
     id: 'ecuson_uber',
@@ -103,6 +158,13 @@ const VEHICLE_DOCS: MainDocConfig[] = [
     tooltip: 'Asigurare de persoane și bagaje.',
     complianceNote: 'Optional pentru Uber, obligatoriu pentru Bolt.',
     purchaseLink: '#',
+  },
+  {
+    id: 'vehicle_contract',
+    title: 'Contract de comodat / de închiriere vehicul',
+    categories: ['ContractVehicul'],
+    primaryCategory: 'ContractVehicul',
+    tooltip: 'Contract justificativ pentru utilizarea vehiculului.',
   },
 ]
 
@@ -201,21 +263,20 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
   // Static read-only mockup data
   const documents: MockDocument[] = [
     {
-      id: 'demo_id_card',
-      originalFileName: 'ci_sofer_demo.jpg',
-      category: 'CarteIdentitate',
-      status: 'In verificare',
-      fileSize: 450000,
-      uploadedAtUtc: new Date().toISOString(),
-    },
-    {
-      id: 'demo_license',
-      originalFileName: 'permis_fata_verso.png',
-      category: 'PermisConducere',
+      id: 'demo_cert_inreg',
+      originalFileName: 'certificat_inregistrare_caen_4939.pdf',
+      category: 'CertificatInregistrare',
       status: 'Valid',
       fileSize: 520000,
-      uploadedAtUtc: new Date().toISOString(),
-      expiresAtUtc: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 4).toISOString(), // 4 years
+      uploadedAtUtc: '2026-06-12T09:00:00.000Z',
+    },
+    {
+      id: 'demo_constatator',
+      originalFileName: 'certificat_constatator_caen_4939.pdf',
+      category: 'CertificatConstatator',
+      status: 'Valid',
+      fileSize: 610000,
+      uploadedAtUtc: '2026-06-12T09:05:00.000Z',
     },
     {
       id: 'demo_med',
@@ -223,7 +284,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
       category: 'AdeverintaMedicala',
       status: 'Valid',
       fileSize: 840000,
-      uploadedAtUtc: new Date().toISOString(),
+      uploadedAtUtc: '2026-06-12T09:20:00.000Z',
     },
     {
       id: 'demo_cazier',
@@ -231,16 +292,40 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
       category: 'CazierJudiciar',
       status: 'Valid',
       fileSize: 1040000,
-      uploadedAtUtc: new Date().toISOString(),
+      uploadedAtUtc: '2026-06-12T09:30:00.000Z',
     },
     {
-      id: 'demo_itp',
-      originalFileName: 'itp_vizat_anul_curent.pdf',
-      category: 'ITP',
+      id: 'demo_atestat',
+      originalFileName: 'atestat_transport_alternativ.pdf',
+      category: 'AtestatTransport',
+      status: 'In verificare',
+      fileSize: 720000,
+      uploadedAtUtc: '2026-06-12T09:40:00.000Z',
+    },
+    {
+      id: 'demo_autorizatie',
+      originalFileName: 'autorizatie_transport_alternativ.pdf',
+      category: 'AutorizatieTransportAlternativ',
+      status: 'Valid',
+      fileSize: 940000,
+      uploadedAtUtc: '2026-06-12T10:00:00.000Z',
+    },
+    {
+      id: 'demo_talon',
+      originalFileName: 'talon_itp_6_luni.pdf',
+      category: 'Talon',
       status: 'Valid',
       fileSize: 310000,
-      uploadedAtUtc: new Date().toISOString(),
-      expiresAtUtc: new Date(Date.now() + 1000 * 60 * 60 * 24 * 180).toISOString(), // ~6 months
+      uploadedAtUtc: '2026-06-12T10:10:00.000Z',
+      expiresAtUtc: '2026-12-12T00:00:00.000Z',
+    },
+    {
+      id: 'demo_civ',
+      originalFileName: 'carte_identitate_auto_toate_paginile.pdf',
+      category: 'CarteIdentitateAuto',
+      status: 'Valid',
+      fileSize: 1180000,
+      uploadedAtUtc: '2026-06-12T10:12:00.000Z',
     },
     {
       id: 'demo_rca',
@@ -248,8 +333,17 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
       category: 'RCA',
       status: 'Valid',
       fileSize: 280000,
-      uploadedAtUtc: new Date().toISOString(),
-      expiresAtUtc: new Date(Date.now() + 1000 * 60 * 60 * 24 * 25).toISOString(), // 25 days (soon30 badge)
+      uploadedAtUtc: '2026-06-12T10:20:00.000Z',
+      expiresAtUtc: '2026-07-15T00:00:00.000Z',
+    },
+    {
+      id: 'demo_copie',
+      originalFileName: 'copie_conforma_vehicul.pdf',
+      category: 'CopieConforma',
+      status: 'Valid',
+      fileSize: 470000,
+      uploadedAtUtc: '2026-06-12T10:25:00.000Z',
+      expiresAtUtc: '2027-06-12T00:00:00.000Z',
     },
     {
       id: 'demo_ecuson_u',
@@ -257,24 +351,24 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
       category: 'EcusonUber',
       status: 'In verificare',
       fileSize: 640000,
-      uploadedAtUtc: new Date().toISOString(),
+      uploadedAtUtc: '2026-06-12T10:30:00.000Z',
     },
-    // Mock Alte Documente
     {
-      id: 'demo_cert_inreg',
-      originalFileName: 'Certificat_Inregistrare_PFA.pdf',
-      category: 'CertificatInregistrare',
+      id: 'demo_asig_calatori',
+      originalFileName: 'asigurare_calatori_bagaje.pdf',
+      category: 'AsigurareCalatori',
       status: 'Valid',
-      fileSize: 14336,
-      uploadedAtUtc: new Date().toISOString(),
+      fileSize: 360000,
+      uploadedAtUtc: '2026-06-12T10:35:00.000Z',
+      expiresAtUtc: '2027-06-12T00:00:00.000Z',
     },
     {
       id: 'demo_comodat_car',
-      originalFileName: 'Vehicul_Contract_Comodat_Auto.pdf',
-      category: 'Other',
+      originalFileName: 'contract_comodat_auto.pdf',
+      category: 'ContractVehicul',
       status: 'Valid',
       fileSize: 42100,
-      uploadedAtUtc: new Date().toISOString(),
+      uploadedAtUtc: '2026-06-12T10:40:00.000Z',
     }
   ]
 
@@ -288,12 +382,14 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
   // Determine all categories handled in main lists
   const allMainCategories = new Set<string>()
   PERSONAL_PFA_DOCS.forEach((d) => d.categories.forEach((c) => allMainCategories.add(c)))
+  CONFORMITY_DOCS.forEach((d) => d.categories.forEach((c) => allMainCategories.add(c)))
   VEHICLE_DOCS.forEach((d) => d.categories.forEach((c) => allMainCategories.add(c)))
 
   const otherDocuments = documents.filter((doc) => {
     // Collect all main categories dynamically
     const mainCats = new Set<string>()
     PERSONAL_PFA_DOCS.forEach((d) => d.categories.forEach((c) => mainCats.add(c)))
+    CONFORMITY_DOCS.forEach((d) => d.categories.forEach((c) => mainCats.add(c)))
     VEHICLE_DOCS.forEach((d) => d.categories.forEach((c) => mainCats.add(c)))
     return !mainCats.has(doc.category)
   })
@@ -310,6 +406,15 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
   const formatDocumentCategory = (category: string) => {
     switch (category) {
       case 'CertificatInregistrare': return 'Certificat de Înregistrare'
+      case 'CertificatConstatator': return 'Certificat constatator'
+      case 'DovadaPlataArr': return 'Dovada plății tarif ARR'
+      case 'AutorizatieTransportAlternativ': return 'Autorizație transport alternativ'
+      case 'Talon': return 'Talon / Certificat de înmatriculare'
+      case 'CarteIdentitateAuto': return 'Cartea de identitate a autoturismului'
+      case 'ContractVehicul': return 'Contract închiriere / comodat / leasing'
+      case 'AcordLeasing': return 'Acord de leasing'
+      case 'DovadaPlataCopieConformaEcusoane': return 'Dovada plății copie conformă și ecusoane'
+      case 'CopieConforma': return 'Copie conformă'
       case 'CarteIdentitate': return 'Carte de Identitate'
       case 'Buletin': return 'Buletin / CI'
       case 'PermisConducere': return 'Permis de Conducere'
@@ -488,8 +593,8 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
   }
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
-      {/* Documente personale / PFA */}
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(3, minmax(0, 1fr))' }, gap: 3 }}>
+      {/* Documente Autorizatie Transport Alternativ */}
       <Paper
         elevation={0}
         sx={{
@@ -504,7 +609,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
       >
         <Box>
           <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2, fontSize: '1.1rem' }}>
-            Documente personale / PFA
+            Documente Autorizație Transport Alternativ
           </Typography>
           <Stack spacing={1.4}>
             {PERSONAL_PFA_DOCS.map(renderDocRow)}
@@ -537,6 +642,29 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
           >
             Încarcă alt document PFA
           </Button>
+        </Box>
+      </Paper>
+
+      {/* Documente Copie Conforma si Ecusoane */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2.5, md: 3 },
+          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          border: `1px solid ${DASHBOARD_TOKENS.border}`,
+          boxShadow: DASHBOARD_TOKENS.shadow.sm,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box>
+          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2, fontSize: '1.1rem' }}>
+            Documente Copie Conformă și Ecusoane
+          </Typography>
+          <Stack spacing={1.4}>
+            {CONFORMITY_DOCS.map(renderDocRow)}
+          </Stack>
         </Box>
       </Paper>
 

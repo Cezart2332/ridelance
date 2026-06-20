@@ -31,6 +31,7 @@ import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded'
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded'
 import RateReviewRoundedIcon from '@mui/icons-material/RateReviewRounded'
+import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded'
 
 import { TOKENS } from '../../constants/tokens'
 import { documentService, type DocumentSummary } from '../../services/document.service'
@@ -38,6 +39,7 @@ import { pfaService, type PfaInternalNote, type PfaActivityLog } from '../../ser
 import { PfaMonthlyIncomeForm } from './PfaMonthlyIncomeForm'
 import { RecurringDocumentationPanel } from '../dashboard/sections/RecurringDocumentationPanel'
 import { DeductibleExpensesPanel } from '../dashboard/sections/DeductibleExpensesPanel'
+import { PfaFiscalSettingsPanel } from '../pfa/PfaFiscalSettingsPanel'
 
 export interface ContabilClientInfo {
   id: string
@@ -350,6 +352,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
               }}
             >
               <Tab icon={<TrendingUpRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Venituri" />
+              <Tab icon={<AccountBalanceRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Profil fiscal" />
               <Tab icon={<EventNoteRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Doc. lunară" />
               <Tab icon={<ReceiptLongRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Cheltuieli" />
               <Tab icon={<HistoryRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Note & Istoric" />
@@ -357,7 +360,8 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
 
             <Box sx={{ p: { xs: 2, md: 2.5 } }}>
               {tab === 0 && <PfaMonthlyIncomeForm pfaRegistrationId={client.id} year={selectedYear} month={selectedMonth} readOnly={true} />}
-              {tab === 1 && (
+              {tab === 1 && <PfaFiscalSettingsPanel pfaId={client.id} />}
+              {tab === 2 && (
                 <RecurringDocumentationPanel
                   year={selectedYear}
                   month={selectedMonth}
@@ -369,7 +373,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
                   onSnackbar={showSnackbar}
                 />
               )}
-              {tab === 2 && (
+              {tab === 3 && (
                 <DeductibleExpensesPanel
                   year={selectedYear}
                   month={selectedMonth}
@@ -382,7 +386,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
                   onChanged={loadDocuments}
                 />
               )}
-              {tab === 3 && (
+              {tab === 4 && (
                 <Box sx={{ mt: 1 }}>
                   <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.2fr 1fr' }, gap: 3 }}>
                     <Box>

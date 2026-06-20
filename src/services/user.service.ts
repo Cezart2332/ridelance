@@ -1,4 +1,5 @@
 import { api } from '../lib/axios';
+import type { PfaFiscalSettings } from './pfa.service';
 
 export interface UserProfile {
   id: string;
@@ -71,6 +72,7 @@ export interface DashboardSummary {
   ytdTotalTax: number;
   ytdNetIncome: number;
   ytdExpenses: YtdExpenseItem[];
+  fiscalSettings?: PfaFiscalSettings | null;
 }
 
 export const userService = {
@@ -89,4 +91,3 @@ export const userService = {
     return response.data;
   },
 };
-

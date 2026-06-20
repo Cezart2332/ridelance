@@ -40,6 +40,81 @@ export interface PfaActivityLog {
   performedByUserName: string;
 }
 
+export interface PfaFiscalProfile {
+  id: string | null;
+  pfaRegistrationId: string;
+  taxationSystem: string;
+  isVatPayer: boolean;
+  hasEmployees: boolean;
+  accountingRegime: string;
+  specialVatCodeStatus: string;
+  specialVatCodeObtainedAtUtc: string | null;
+  specialVatCodeDocumentId: string | null;
+  uberStatus: string;
+  boltStatus: string;
+  otherPlatformsStatus: string;
+  cashRevenueStatus: string;
+  cashRegisterStatus: string;
+  vehicleUsageType: string;
+  vehicleSupportingDocumentLabel: string | null;
+  vehicleSupportingDocumentId: string | null;
+  updatedAtUtc: string | null;
+}
+
+export interface PfaPlatformAccount {
+  id: string | null;
+  pfaRegistrationId: string;
+  provider: 'Uber' | 'Bolt' | string;
+  kind: 'Driver' | 'Fleet' | string;
+  email: string | null;
+  phone: string | null;
+  fullName: string | null;
+  hasPassword: boolean;
+  status: string;
+  configuredAtUtc: string | null;
+  updatedAtUtc: string | null;
+}
+
+export interface PfaFleetConsent {
+  id: string | null;
+  pfaRegistrationId: string;
+  fleetAccountsAccepted: boolean;
+  fleetAccountsAcceptedAtUtc: string | null;
+  boltApiAccepted: boolean;
+  boltApiAcceptedAtUtc: string | null;
+  consentTextVersion: string;
+}
+
+export interface PfaFiscalSettings {
+  fiscalProfile: PfaFiscalProfile;
+  platformAccounts: PfaPlatformAccount[];
+  fleetConsent: PfaFleetConsent;
+}
+
+export interface UpsertPfaFiscalProfileRequest {
+  specialVatCodeStatus: string;
+  specialVatCodeObtainedAtUtc?: string | null;
+  specialVatCodeDocumentId?: string | null;
+  uberStatus: string;
+  boltStatus: string;
+  otherPlatformsStatus: string;
+  cashRevenueStatus: string;
+  cashRegisterStatus: string;
+  vehicleUsageType: string;
+  vehicleSupportingDocumentLabel?: string | null;
+  vehicleSupportingDocumentId?: string | null;
+}
+
+export interface UpsertPfaPlatformAccountItem {
+  provider: 'Uber' | 'Bolt';
+  kind: 'Driver' | 'Fleet';
+  email?: string | null;
+  phone?: string | null;
+  fullName?: string | null;
+  password?: string | null;
+  status?: string | null;
+}
+
 export interface UpsertPfaMonthlyIncomeRequest {
   year: number;
   month: number;
@@ -154,6 +229,52 @@ export const pfaService = {
     monthLabel: string;
   }> => {
     const response = await api.get('/pfa-registrations/contabil-stats');
+    return response.data;
+  },
+
+  getFiscalSettings: async (pfaId: string): Promise<PfaFiscalSettings> => {
+    const response = await api.get<PfaFiscalSettings>(`/pfa-registrations/${pfaId}/fiscal-profile`);
+    return response.data;
+  },
+
+  updateFiscalProfile: async (
+    pfaId: string,
+    data: UpsertPfaFiscalProfileRequest
+  ): Promise<PfaFiscalProfile> => {
+    const response = await api.put<PfaFiscalProfile>(`/pfa-registrations/${pfaId}/fiscal-profile`, data);
+    return response.data;
+  },
+
+  updatePlatformAccounts: async (
+    pfaId: string,
+    accounts: UpsertPfaPlatformAccountItem[]
+  ): Promise<PfaPlatformAccount[]> => {
+    const response = await api.put<PfaPlatformAccount[]>(
+      `/pfa-registrations/${pfaId}/platform-accounts`,
+      { accounts }
+    );
+    return response.data;
+  },
+
+  markFleetConfigured: async (
+    pfaId: string,
+    provider: 'Uber' | 'Bolt'
+  ): Promise<PfaPlatformAccount> => {
+    const response = await api.post<PfaPlatformAccount>(
+      `/pfa-registrations/${pfaId}/fleet-configured`,
+      { provider }
+    );
+    return response.data;
+  },
+
+  acceptFleetConsent: async (
+    pfaId: string,
+    data: { fleetAccountsAccepted: boolean; boltApiAccepted: boolean }
+  ): Promise<PfaFleetConsent> => {
+    const response = await api.post<PfaFleetConsent>(
+      `/pfa-registrations/${pfaId}/fleet-consent`,
+      data
+    );
     return response.data;
   },
 };

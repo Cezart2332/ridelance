@@ -36,6 +36,7 @@ import { formatRegistrationType, formatDocumentCategory } from '../utils/formatt
 import { AdminChatView } from '../components/dashboard/sections/AdminChatView'
 import { CarsAdminView } from '../components/dashboard/sections/admin/CarsAdminView'
 import { ServicesAdminView } from '../components/dashboard/sections/admin/ServicesAdminView'
+import { PfaFiscalSettingsPanel } from '../components/pfa/PfaFiscalSettingsPanel'
 
 interface PfaSummary {
   id: string
@@ -485,6 +486,8 @@ export function AdminDashboard() {
             </Button>
           </Stack>
         )}
+
+        <PfaFiscalSettingsPanel pfaId={pfa.id} editable />
 
         {/* Documents table */}
         <Paper elevation={0} sx={{ borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm, overflow: 'hidden' }}>

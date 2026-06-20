@@ -23,43 +23,68 @@ export const dashboardMetrics: DashboardMetric[] = [
 ]
 
 export const dashboardProfileFields: ProfileField[] = [
+  { label: 'Prenume', value: 'Andrei' },
+  { label: 'Nume', value: 'Popescu' },
   { label: 'Email', value: 'sofer.demo@ridelance.ro' },
+  { label: 'Telefon', value: '0722 456 190' },
+  { label: 'Rol', value: 'Client PFA' },
   { label: 'Parola', value: '**********' },
   { label: 'Plan activ', value: 'RIDElance Pro' },
 ]
 
 export const dashboardRideAccounts: RideAccount[] = [
   {
-    provider: 'Uber',
+    provider: 'Cont Uber driver',
     accountEmail: 'demo.uber@ridelance.ro',
-    status: 'Activ',
+    status: 'Completat',
   },
   {
-    provider: 'Bolt',
+    provider: 'Cont Bolt Driver',
     accountEmail: 'demo.bolt@ridelance.ro',
-    status: 'Activ',
+    status: 'Completat',
+  },
+  {
+    provider: 'Uber Fleet',
+    accountEmail: 'fleet.uber@ridelance.ro',
+    status: 'Configurat',
+  },
+  {
+    provider: 'Bolt Fleet',
+    accountEmail: 'fleet.bolt@ridelance.ro',
+    status: 'Configurat',
   },
 ]
 
 export const personalPfaDocuments: DocumentItem[] = [
-  { title: 'Carte de identitate', status: 'In verificare', tooltip: dashboardLoremText },
-  { title: 'Permis de conducere', status: 'Valid', tooltip: dashboardLoremText },
+  { title: 'Certificat de înregistrare (CAEN 4939)', status: 'Valid', tooltip: 'Certificat de înregistrare din care reiese codul CAEN 4939.' },
+  { title: 'Certificat constatator (CAEN 4939)', status: 'Valid', tooltip: 'Certificat constatator cu domeniul de activitate actualizat.' },
   {
-    title: 'Atestat transport alternativ (Uber/Bolt)',
-    status: 'Lipsa',
-    tooltip: dashboardLoremText,
+    title: 'Certificat de atestare profesională (Atestat)',
+    status: 'In verificare',
+    tooltip: 'Atestat profesional pentru transport de persoane în regim de închiriere.',
   },
+  { title: 'Cazier judiciar al conducătorilor auto', status: 'Valid', tooltip: 'Original, valabilitate 6 luni.' },
   {
-    title: 'Adeverinta medicala + psihologica',
+    title: 'Aviz medical și psihologic al titularului',
     status: 'Valid',
-    tooltip: dashboardLoremText,
+    tooltip: 'Aviz medical și psihologic al persoanei fizice titulare.',
   },
-  { title: 'Certificat de cazier judiciar', status: 'Valid', tooltip: dashboardLoremText },
+  { title: 'Dovada plății tarifului de eliberare ARR', status: 'Lipsa', tooltip: 'Dovada plății tarifului ARR de 300 lei.' },
+]
+
+export const conformityDocuments: DocumentItem[] = [
+  { title: 'Autorizația pentru transport alternativ', status: 'Valid', tooltip: dashboardLoremText },
+  { title: 'Certificatul de înmatriculare (Talon)', status: 'Valid', tooltip: dashboardLoremText },
+  { title: 'Cartea de identitate a autoturismului (toate paginile)', status: 'Valid', tooltip: dashboardLoremText },
+  { title: 'Contract de închiriere / comodat autentificat / leasing', status: 'Valid', tooltip: dashboardLoremText },
+  { title: 'Acord de leasing', status: 'Lipsa', tooltip: dashboardLoremText },
+  { title: 'Dovada plății tarif copie conformă și ecusoane', status: 'In verificare', tooltip: '1 an: 116 lei; 2 ani: 216 lei; 3 ani: 316 lei.' },
 ]
 
 export const vehicleDocuments: DocumentItem[] = [
-  { title: 'ITP', status: 'Valid', tooltip: dashboardLoremText },
+  { title: 'Talon (ITP 6 luni)', status: 'Valid', tooltip: dashboardLoremText },
   { title: 'RCA', status: 'Valid', tooltip: dashboardLoremText },
+  { title: 'Copie conformă', status: 'Valid', tooltip: dashboardLoremText },
   { title: 'Ecuson Uber', status: 'In verificare', tooltip: dashboardLoremText },
   { title: 'Ecuson Bolt', status: 'Lipsa', tooltip: dashboardLoremText },
   {
@@ -69,6 +94,7 @@ export const vehicleDocuments: DocumentItem[] = [
     purchaseLink: '#',
     complianceNote: 'Optional pentru Uber, obligatoriu pentru Bolt.',
   },
+  { title: 'Contract de comodat / de închiriere vehicul', status: 'Valid', tooltip: dashboardLoremText },
 ]
 
 export const dashboardFaqItems: FaqItem[] = [

@@ -140,7 +140,7 @@ export default function AuthPage() {
             src={logo}
             alt="Ridelance"
             sx={{ height: 50, width: 'auto', cursor: 'pointer' }}
-            onClick={() => navigate('/app')}
+            onClick={() => navigate('/')}
           />
 
           <Paper
@@ -415,7 +415,7 @@ export default function AuthPage() {
           </Paper>
 
           <Button
-            onClick={() => navigate('/app')}
+            onClick={() => navigate('/')}
             sx={{
               textTransform: 'none',
               color: TOKENS.textMuted,

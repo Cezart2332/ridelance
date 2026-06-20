@@ -23,6 +23,24 @@ export function formatDocumentCategory(category: string | null | undefined): str
   switch (category) {
     case 'CertificatInregistrare':
       return 'Certificat de Înregistrare';
+    case 'CertificatConstatator':
+      return 'Certificat constatator';
+    case 'DovadaPlataArr':
+      return 'Dovada plății tarif ARR';
+    case 'AutorizatieTransportAlternativ':
+      return 'Autorizație transport alternativ';
+    case 'Talon':
+      return 'Talon / Certificat de înmatriculare';
+    case 'CarteIdentitateAuto':
+      return 'Cartea de identitate a autoturismului';
+    case 'ContractVehicul':
+      return 'Contract închiriere / comodat / leasing';
+    case 'AcordLeasing':
+      return 'Acord de leasing';
+    case 'DovadaPlataCopieConformaEcusoane':
+      return 'Dovada plății copie conformă și ecusoane';
+    case 'CopieConforma':
+      return 'Copie conformă';
     case 'Buletin':
       return 'Buletin / CI';
     case 'AtestatSofer':
