@@ -1,4 +1,5 @@
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
+import { lazyWithRetry } from './utils/lazyWithRetry'
 import { Route, Routes } from 'react-router-dom'
 import { ScrollToTop } from './components/layout/ScrollToTop'
 import InstallPWA from './components/pwa/InstallPWA'
@@ -17,21 +18,21 @@ import { authService } from './services/auth.service'
 import { useNavigate } from 'react-router-dom'
 
 // Dashboards & marketing shell — lazy-loaded to split the production bundle
-const DashboardPage = lazy(() => import('./components/dashboard/DashboardPage'))
-const DashboardDemoPage = lazy(() => import('./components/dashboard-demo/DashboardDemoPage'))
-const AdminDashboard = lazy(() =>
+const DashboardPage = lazyWithRetry(() => import('./components/dashboard/DashboardPage'))
+const DashboardDemoPage = lazyWithRetry(() => import('./components/dashboard-demo/DashboardDemoPage'))
+const AdminDashboard = lazyWithRetry(() =>
   import('./pages/AdminDashboard').then((m) => ({ default: m.AdminDashboard })),
 )
-const ContabilDashboard = lazy(() =>
+const ContabilDashboard = lazyWithRetry(() =>
   import('./pages/ContabilDashboard').then((m) => ({ default: m.ContabilDashboard })),
 )
-const CarPosterDashboard = lazy(() =>
+const CarPosterDashboard = lazyWithRetry(() =>
   import('./pages/CarPosterDashboard').then((m) => ({ default: m.CarPosterDashboard })),
 )
-const AppLayout = lazy(() =>
+const AppLayout = lazyWithRetry(() =>
   import('./components/layout/AppLayout').then((m) => ({ default: m.AppLayout })),
 )
-const CheckoutPage = lazy(() => import('./pages/CheckoutPage'))
+const CheckoutPage = lazyWithRetry(() => import('./pages/CheckoutPage'))
 
 function App() {
   const navigate = useNavigate();

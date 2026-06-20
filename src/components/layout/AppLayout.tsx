@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { AppBar, Box, Button, Container, Drawer, IconButton, Stack, Toolbar, Typography, useMediaQuery, Avatar } from '@mui/material'
 import { alpha, useTheme } from '@mui/material/styles'
 import { useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom'
@@ -15,26 +15,27 @@ import { useAppSelector } from '../../store/hooks'
 
 import { RouteFallback } from '../common/RouteFallback'
 import { ServicePaymentSuccessDialog } from '../services/ServicePaymentSuccessDialog'
+import { lazyWithRetry } from '../../utils/lazyWithRetry'
 
-const HomePage = lazy(() => import('../../pages/HomePage').then((m) => ({ default: m.HomePage })))
-const FaqPage = lazy(() => import('../../pages/FaqPage').then((m) => ({ default: m.FaqPage })))
-const ServicesPage = lazy(() => import('../../pages/ServicesPage').then((m) => ({ default: m.ServicesPage })))
-const AboutPage = lazy(() => import('../../pages/AboutPage').then((m) => ({ default: m.AboutPage })))
-const CalculatorPage = lazy(() => import('../../pages/CalculatorPage').then((m) => ({ default: m.CalculatorPage })))
-const PricingPage = lazy(() => import('../../pages/PricingPage').then((m) => ({ default: m.PricingPage })))
-const PartnersPage = lazy(() => import('../../pages/PartnersPage').then((m) => ({ default: m.PartnersPage })))
-const ContactPage = lazy(() => import('../../pages/ContactPage').then((m) => ({ default: m.ContactPage })))
-const TermsPage = lazy(() => import('../../pages/TermsPage').then((m) => ({ default: m.TermsPage })))
-const PrivacyPolicyPage = lazy(() =>
+const HomePage = lazyWithRetry(() => import('../../pages/HomePage').then((m) => ({ default: m.HomePage })))
+const FaqPage = lazyWithRetry(() => import('../../pages/FaqPage').then((m) => ({ default: m.FaqPage })))
+const ServicesPage = lazyWithRetry(() => import('../../pages/ServicesPage').then((m) => ({ default: m.ServicesPage })))
+const AboutPage = lazyWithRetry(() => import('../../pages/AboutPage').then((m) => ({ default: m.AboutPage })))
+const CalculatorPage = lazyWithRetry(() => import('../../pages/CalculatorPage').then((m) => ({ default: m.CalculatorPage })))
+const PricingPage = lazyWithRetry(() => import('../../pages/PricingPage').then((m) => ({ default: m.PricingPage })))
+const PartnersPage = lazyWithRetry(() => import('../../pages/PartnersPage').then((m) => ({ default: m.PartnersPage })))
+const ContactPage = lazyWithRetry(() => import('../../pages/ContactPage').then((m) => ({ default: m.ContactPage })))
+const TermsPage = lazyWithRetry(() => import('../../pages/TermsPage').then((m) => ({ default: m.TermsPage })))
+const PrivacyPolicyPage = lazyWithRetry(() =>
   import('../../pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })),
 )
-const CookiesPolicyPage = lazy(() =>
+const CookiesPolicyPage = lazyWithRetry(() =>
   import('../../pages/CookiesPolicyPage').then((m) => ({ default: m.CookiesPolicyPage })),
 )
-const PaymentPolicyPage = lazy(() =>
+const PaymentPolicyPage = lazyWithRetry(() =>
   import('../../pages/PaymentPolicyPage').then((m) => ({ default: m.PaymentPolicyPage })),
 )
-const CarsPage = lazy(() => import('../../pages/CarsPage').then((m) => ({ default: m.CarsPage })))
+const CarsPage = lazyWithRetry(() => import('../../pages/CarsPage').then((m) => ({ default: m.CarsPage })))
 
 export function AppLayout() {
   const location = useLocation()

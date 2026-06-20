@@ -7,8 +7,19 @@ import App from './App'
 import { TOKENS } from './constants/tokens'
 import { store } from './store/store'
 import { AuthInitializer } from './components/auth/AuthInitializer'
+import { clearChunkReloadFlag } from './utils/lazyWithRetry'
 // @ts-ignore
 import '@fontsource-variable/geist'
+
+clearChunkReloadFlag()
+
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault()
+  if (!sessionStorage.getItem('rl_chunk_reload')) {
+    sessionStorage.setItem('rl_chunk_reload', '1')
+    window.location.reload()
+  }
+})
 
 // Service Worker (push notifications only). Avoid reload loops on mobile:
 // skipWaiting + controllerchange + reload resets in-memory flags every load.
