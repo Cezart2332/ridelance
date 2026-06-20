@@ -104,14 +104,6 @@ function accountStatusColor(status: string) {
   }
 }
 
-function accountStatusDescription(status: string) {
-  switch (status.toLowerCase()) {
-    case 'activ': return 'Abonament plătit'
-    case 'inactiv': return 'Abonament neplătit'
-    default: return 'Onboarding / documente'
-  }
-}
-
 const inputSx = {
   '& .MuiOutlinedInput-root': {
     backgroundColor: alpha(TOKENS.paper, 0.92),
@@ -724,7 +716,7 @@ export function AdminDashboard() {
                 </Box>
                 <Stack direction="row" spacing={1} sx={{ mb: 2, mt: 1.5, flexWrap: 'wrap', rowGap: 1 }}>
                   <Chip
-                    label={`${pfa.accountStatus} (${accountStatusDescription(pfa.accountStatus)})`}
+                    label={pfa.accountStatus}
                     size="small"
                     sx={{
                       fontWeight: 800,

@@ -61,14 +61,6 @@ function accountStatusColor(status: string) {
   }
 }
 
-function accountStatusDescription(status: string) {
-  switch (status.toLowerCase()) {
-    case 'activ': return 'Abonament plătit'
-    case 'inactiv': return 'Abonament neplătit'
-    default: return 'Onboarding / documente'
-  }
-}
-
 export function ContabilDashboard() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -406,7 +398,7 @@ export function ContabilDashboard() {
                 </Stack>
 
                 <Chip
-                  label={`${client.accountStatus} (${accountStatusDescription(client.accountStatus)})`}
+                  label={client.accountStatus}
                   size="small"
                   sx={{
                     mb: 2,
