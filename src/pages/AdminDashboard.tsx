@@ -30,12 +30,14 @@ import ChatRoundedIcon from '@mui/icons-material/ChatRounded'
 import AttachFileRoundedIcon from '@mui/icons-material/AttachFileRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded'
+import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
 import { validateRomanianCIF } from '../utils/validation'
 import { formatRegistrationType, formatDocumentCategory } from '../utils/formatters'
 
 import { AdminChatView } from '../components/dashboard/sections/AdminChatView'
 import { CarsAdminView } from '../components/dashboard/sections/admin/CarsAdminView'
 import { ServicesAdminView } from '../components/dashboard/sections/admin/ServicesAdminView'
+import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminOverviewView'
 import { PfaFiscalSettingsPanel } from '../components/pfa/PfaFiscalSettingsPanel'
 
 interface PfaSummary {
@@ -116,7 +118,7 @@ const inputSx = {
 
 export function AdminDashboard() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('pfa')
+  const [activeTab, setActiveTab] = useState('overview')
   const [search, setSearch] = useState('')
 
   // PFA list
@@ -161,7 +163,7 @@ export function AdminDashboard() {
   }, [])
 
   useEffect(() => {
-    if ((activeTab !== 'pfa' && activeTab !== 'pfa_inrolate') || selectedPfa) return
+    if ((activeTab !== 'pfa' && activeTab !== 'pfa_inrolate' && activeTab !== 'chat') || selectedPfa) return
     setPfasLoading(true)
     setPfasError(null)
     pfaService.getAll()
@@ -353,6 +355,7 @@ export function AdminDashboard() {
   }
 
   const navItems = [
+    { id: 'overview', label: 'Overview', icon: <HomeRoundedIcon /> },
     { id: 'pfa', label: 'Cereri PFA', icon: <PeopleAltRoundedIcon /> },
     { id: 'pfa_inrolate', label: 'PFA-uri înrolate', icon: <HowToRegRoundedIcon /> },
     { id: 'masini', label: 'Mașini Ridesharing', icon: <DirectionsCarFilledRoundedIcon /> },
@@ -840,6 +843,15 @@ export function AdminDashboard() {
   const renderContent = () => {
     if ((activeTab === 'pfa' || activeTab === 'pfa_inrolate') && selectedPfa) return renderPfaDetail()
     switch (activeTab) {
+      case 'overview': return (
+        <AdminOverviewView
+          onImpersonate={handleImpersonate}
+          onOpenChat={() => {
+            setSelectedPfa(null)
+            setActiveTab('chat')
+          }}
+        />
+      )
       case 'pfa':
       case 'pfa_inrolate': return renderPfaList()
       case 'masini': return <CarsAdminView />
