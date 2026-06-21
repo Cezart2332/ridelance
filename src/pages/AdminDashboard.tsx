@@ -3,7 +3,7 @@ import {
   Box, Paper, Stack, TextField, Typography, Card, CardContent,
   CircularProgress, Alert, Chip, Button, IconButton, Avatar,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Dialog, DialogTitle, DialogContent, DialogActions, Snackbar,
+  Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Snackbar,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
@@ -27,10 +27,15 @@ import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded'
 import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded'
+import DiscountRoundedIcon from '@mui/icons-material/DiscountRounded'
 import AttachFileRoundedIcon from '@mui/icons-material/AttachFileRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded'
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
+import LoginRoundedIcon from '@mui/icons-material/LoginRounded'
+import PauseCircleOutlineRoundedIcon from '@mui/icons-material/PauseCircleOutlineRounded'
+import PlayCircleOutlineRoundedIcon from '@mui/icons-material/PlayCircleOutlineRounded'
+import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded'
 import { validateRomanianCIF } from '../utils/validation'
 import { formatRegistrationType, formatDocumentCategory } from '../utils/formatters'
 
@@ -39,6 +44,12 @@ import { CarsAdminView } from '../components/dashboard/sections/admin/CarsAdminV
 import { ServicesAdminView } from '../components/dashboard/sections/admin/ServicesAdminView'
 import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminOverviewView'
 import { PfaFiscalSettingsPanel } from '../components/pfa/PfaFiscalSettingsPanel'
+import {
+  adminOverviewService,
+  type AdminOverviewPfaCard,
+  type AdminPfaDetail,
+  type AdminPlanFilter,
+} from '../services/adminOverview.service'
 
 interface PfaSummary {
   id: string
@@ -60,6 +71,32 @@ interface PfaSummary {
   documentCount: number
   createdAtUtc: string
   lastActivityAtUtc: string | null
+}
+
+type DetailAction = 'plan' | 'discount' | 'suspend' | 'reactivate' | 'note' | null
+
+function normalizePfaSummary(item: any): PfaSummary {
+  return {
+    id: item.id,
+    userId: item.userId,
+    userEmail: item.userEmail,
+    userName: item.userName,
+    registrationType: item.registrationType,
+    status: item.status,
+    accountStatus: item.accountStatus ?? 'Nou',
+    subscriptionStatus: item.subscriptionStatus ?? null,
+    fullName: item.fullName ?? null,
+    phone: item.phone ?? null,
+    contractDuration: item.contractDuration ?? null,
+    street: item.street ?? null,
+    number: item.number ?? null,
+    city: item.city ?? null,
+    county: item.county ?? null,
+    isOwner: Boolean(item.isOwner),
+    documentCount: item.documentCount,
+    createdAtUtc: item.createdAtUtc,
+    lastActivityAtUtc: item.lastActivityAtUtc,
+  }
 }
 
 function relativeTime(utcString: string): string {
@@ -98,12 +135,26 @@ function statusLabel(status: string) {
   }
 }
 
-function accountStatusColor(status: string) {
-  switch (status.toLowerCase()) {
-    case 'activ': return '#10b981'
-    case 'inactiv': return '#ef4444'
-    default: return '#6366f1'
-  }
+function formatLei(bani: number | null | undefined) {
+  const value = (bani ?? 0) / 100
+  return `${value.toLocaleString('ro-RO', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} lei`
+}
+
+function formatDate(utc: string | null | undefined) {
+  if (!utc) return '—'
+  return new Date(utc).toLocaleString('ro-RO', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function getApiErrorMessage(error: unknown, fallback: string) {
+  if (typeof error !== 'object' || error === null || !('response' in error)) return fallback
+  const response = (error as { response?: { data?: { detail?: unknown } } }).response
+  return typeof response?.data?.detail === 'string' ? response.data.detail : fallback
 }
 
 const inputSx = {
@@ -135,6 +186,16 @@ export function AdminDashboard() {
   const [openingId, setOpeningId] = useState<string | null>(null)
   const [statusUpdatingDocId, setStatusUpdatingDocId] = useState<string | null>(null)
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' })
+  const [pfaDetail, setPfaDetail] = useState<AdminPfaDetail | null>(null)
+  const [pfaDetailLoading, setPfaDetailLoading] = useState(false)
+  const [pfaDetailError, setPfaDetailError] = useState<string | null>(null)
+  const [detailAction, setDetailAction] = useState<DetailAction>(null)
+  const [detailActionError, setDetailActionError] = useState<string | null>(null)
+  const [detailActionLoading, setDetailActionLoading] = useState(false)
+  const [planActionValue, setPlanActionValue] = useState<AdminPlanFilter>('start')
+  const [discountType, setDiscountType] = useState<'percent' | 'fixed'>('percent')
+  const [discountValue, setDiscountValue] = useState('10')
+  const [detailActionNote, setDetailActionNote] = useState('')
 
   // Status update dialog
   const [statusDialog, setStatusDialog] = useState<{ open: boolean; action: 'Approved' | 'Rejected' | null }>({ open: false, action: null })
@@ -169,22 +230,7 @@ export function AdminDashboard() {
     pfaService.getAll()
       .then((data) => {
         const items = data?.items ?? data ?? []
-        setPfas(items.map((item: any) => ({
-          id: item.id, userId: item.userId, userEmail: item.userEmail,
-          userName: item.userName, registrationType: item.registrationType,
-          status: item.status, accountStatus: item.accountStatus ?? 'Nou',
-          subscriptionStatus: item.subscriptionStatus ?? null,
-          fullName: item.fullName ?? null,
-          phone: item.phone ?? null,
-          contractDuration: item.contractDuration ?? null,
-          street: item.street ?? null,
-          number: item.number ?? null,
-          city: item.city ?? null,
-          county: item.county ?? null,
-          isOwner: Boolean(item.isOwner),
-          documentCount: item.documentCount, createdAtUtc: item.createdAtUtc,
-          lastActivityAtUtc: item.lastActivityAtUtc,
-        })))
+        setPfas(items.map(normalizePfaSummary))
       })
       .catch(() => setPfasError('Nu s-au putut încărca înregistrările PFA.'))
       .finally(() => setPfasLoading(false))
@@ -198,6 +244,21 @@ export function AdminDashboard() {
       .then(setDocuments)
       .catch(() => setDocsError('Ne pare rău, documentele nu au putut fi încărcate. Te rugăm să verifici conexiunea și să încerci din nou.'))
       .finally(() => setDocsLoading(false))
+  }, [selectedPfa])
+
+  useEffect(() => {
+    if (!selectedPfa) {
+      setPfaDetail(null)
+      setPfaDetailError(null)
+      return
+    }
+
+    setPfaDetailLoading(true)
+    setPfaDetailError(null)
+    adminOverviewService.getPfaDetails(selectedPfa.id)
+      .then(setPfaDetail)
+      .catch(() => setPfaDetailError('Nu am putut încărca detaliile extinse. Afișez datele existente pentru acest PFA.'))
+      .finally(() => setPfaDetailLoading(false))
   }, [selectedPfa])
 
   useEffect(() => {
@@ -333,6 +394,72 @@ export function AdminDashboard() {
     }
   }
 
+  const handleOpenOverviewPfaDetails = (pfa: AdminOverviewPfaCard) => {
+    setSelectedPfa({
+      id: pfa.id,
+      userId: pfa.userId,
+      userEmail: pfa.email,
+      userName: pfa.companyName,
+      registrationType: '—',
+      status: pfa.accountStatus.toLowerCase().includes('activ') ? 'Approved' : 'Pending',
+      accountStatus: pfa.accountStatus,
+      subscriptionStatus: pfa.subscriptionStatus,
+      fullName: pfa.holderName,
+      phone: pfa.phone,
+      contractDuration: null,
+      street: null,
+      number: null,
+      city: null,
+      county: null,
+      isOwner: false,
+      documentCount: 0,
+      createdAtUtc: new Date().toISOString(),
+      lastActivityAtUtc: pfa.lastActivityAtUtc,
+    })
+    setActiveTab('pfa_inrolate')
+  }
+
+  const openDetailAction = (action: DetailAction) => {
+    setDetailAction(action)
+    setDetailActionError(null)
+    setPlanActionValue('start')
+    setDiscountType('percent')
+    setDiscountValue('10')
+    setDetailActionNote(action === 'note' ? pfaDetail?.internalNote ?? '' : '')
+  }
+
+  const submitDetailAction = async () => {
+    if (!selectedPfa || !detailAction) return
+    setDetailActionLoading(true)
+    setDetailActionError(null)
+    try {
+      if (detailAction === 'plan') {
+        await adminOverviewService.changePfaPlan(selectedPfa.id, planActionValue as 'solo' | 'start' | 'pro', 'next_cycle')
+      } else if (detailAction === 'discount') {
+        await adminOverviewService.applyPfaDiscount(selectedPfa.id, {
+          type: discountType,
+          value: Number(discountValue),
+          note: detailActionNote,
+        })
+      } else if (detailAction === 'suspend') {
+        await adminOverviewService.suspendPfa(selectedPfa.id, detailActionNote)
+      } else if (detailAction === 'reactivate') {
+        await adminOverviewService.reactivatePfa(selectedPfa.id, detailActionNote)
+      } else if (detailAction === 'note') {
+        await adminOverviewService.updatePfaInternalNote(selectedPfa.id, detailActionNote)
+      }
+
+      setDetailAction(null)
+      setSnackbar({ open: true, message: 'Modificarea a fost salvată.', severity: 'success' })
+      const updated = await adminOverviewService.getPfaDetails(selectedPfa.id).catch(() => null)
+      if (updated) setPfaDetail(updated)
+    } catch (err: unknown) {
+      setDetailActionError(getApiErrorMessage(err, 'Acțiunea nu a putut fi salvată. Verifică backend-ul și încearcă din nou.'))
+    } finally {
+      setDetailActionLoading(false)
+    }
+  }
+
   const handleTestRecurringDocumentation = async () => {
     setTestNotifLoading(true)
     try {
@@ -355,7 +482,7 @@ export function AdminDashboard() {
   }
 
   const navItems = [
-    { id: 'overview', label: 'Overview', icon: <HomeRoundedIcon /> },
+    { id: 'overview', label: 'Acasă', icon: <HomeRoundedIcon /> },
     { id: 'pfa', label: 'Cereri PFA', icon: <PeopleAltRoundedIcon /> },
     { id: 'pfa_inrolate', label: 'PFA-uri înrolate', icon: <HowToRegRoundedIcon /> },
     { id: 'masini', label: 'Mașini Ridesharing', icon: <DirectionsCarFilledRoundedIcon /> },
@@ -375,10 +502,61 @@ export function AdminDashboard() {
       : p.status.toLowerCase() !== 'approved'
   )
 
+  const customerAgeLabel = (createdAtUtc: string) => {
+    const weeks = Math.max(0, Math.floor((Date.now() - new Date(createdAtUtc).getTime()) / (7 * 24 * 60 * 60 * 1000)))
+    if (weeks < 1) return 'Client RIDElance activ de sub o săptămână'
+    if (weeks === 1) return 'Client RIDElance activ de 1 săptămână'
+    return `Client RIDElance activ de ${weeks} săptămâni`
+  }
+
+  const subscriptionStatusLabel = (status: string | null) => {
+    if (!status) return 'Fără abonament'
+    switch (status.toLowerCase()) {
+      case 'active':
+      case 'activependingbilling':
+        return 'Activ'
+      case 'paidpendingaccess':
+      case 'trial':
+        return 'Trial'
+      case 'pastdue':
+        return 'Plată eșuată'
+      case 'cancelled':
+      case 'canceled':
+        return 'Anulat'
+      case 'expired':
+      case 'suspended':
+        return 'Suspendat'
+      default:
+        return status
+    }
+  }
+
+  const pfaCurrentMonthStatus = (pfa: PfaSummary) => {
+    if (pfa.status.toLowerCase() !== 'approved') return 'În onboarding'
+    return pfa.documentCount > 0 ? 'În verificare' : 'Documente lipsă'
+  }
+
+  const pfaPlanLabel = (pfa: PfaSummary) => {
+    const status = pfa.subscriptionStatus?.toLowerCase() ?? ''
+    if (status.includes('solo')) return 'Solo'
+    if (status.includes('start')) return 'Start'
+    if (status.includes('pro')) return 'Pro'
+    return pfa.subscriptionStatus ? 'Nespecificat' : 'Fără plan'
+  }
+
   // ─── PFA Detail View ────────────────────────────────────────────────────────
   const renderPfaDetail = () => {
     const pfa = selectedPfa!
     const isPending = pfa.status.toLowerCase() === 'pending'
+    const active = pfaDetail
+    const accountStatus = active?.accountStatus ?? pfa.accountStatus
+    const detailSummary = [
+      { label: 'Plan abonament', value: active?.plan ?? pfaPlanLabel(pfa) },
+      { label: 'Status abonament', value: active?.subscriptionStatus ?? subscriptionStatusLabel(pfa.subscriptionStatus) },
+      { label: 'Tip înregistrare', value: active?.registrationType ?? formatRegistrationType(pfa.registrationType) },
+      { label: 'Status lună curentă', value: active?.currentMonthStatus ?? pfaCurrentMonthStatus(pfa) },
+      { label: 'Ultima activitate', value: active?.lastActivityLabel ?? (pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : relativeTime(pfa.createdAtUtc)) },
+    ]
 
     return (
       <Stack spacing={3}>
@@ -395,31 +573,41 @@ export function AdminDashboard() {
             {pfa.userName[0]}
           </Avatar>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="h5" sx={{ fontWeight: 800, lineHeight: 1.2 }}>{pfa.userName}</Typography>
-            <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{pfa.userEmail}</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 800, lineHeight: 1.2 }}>{active?.companyName ?? pfa.userName}</Typography>
+            <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
+              {[active?.email ?? pfa.userEmail, active?.phone ?? pfa.phone].filter(Boolean).join(' · ')}
+            </Typography>
           </Box>
           <Chip
-            label={statusLabel(pfa.status)}
+            label={accountStatus || statusLabel(pfa.status)}
             sx={{ fontWeight: 700, fontSize: '0.75rem', bgcolor: alpha(statusColor(pfa.status), 0.1), color: statusColor(pfa.status), border: `1px solid ${alpha(statusColor(pfa.status), 0.25)}` }}
           />
         </Box>
 
+        {pfaDetailLoading && (
+          <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}` }}>
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+              <CircularProgress size={18} sx={{ color: TOKENS.primary }} />
+              <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Se încarcă detaliile extinse...</Typography>
+            </Stack>
+          </Paper>
+        )}
+        {pfaDetailError && <Alert severity="warning">{pfaDetailError}</Alert>}
+
         {/* Info */}
         <Paper elevation={0} sx={{ p: 3, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
-          <Stack direction="row" spacing={4} sx={{ flexWrap: 'wrap' }} component="div">
-            <Box>
-              <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8 }}>Tip înregistrare</Typography>
-              <Typography variant="body1" sx={{ fontWeight: 700 }}>{formatRegistrationType(pfa.registrationType)}</Typography>
-            </Box>
-            <Box>
-              <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8 }}>Documente</Typography>
-              <Typography variant="body1" sx={{ fontWeight: 700 }}>{pfa.documentCount}</Typography>
-            </Box>
-            <Box>
-              <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8 }}>Înregistrat</Typography>
-              <Typography variant="body1" sx={{ fontWeight: 700 }}>{relativeTime(pfa.createdAtUtc)}</Typography>
-            </Box>
-          </Stack>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(5, minmax(0, 1fr))' }, gap: 1.5 }}>
+            {detailSummary.map((item) => (
+              <Box key={item.label} sx={{ p: 1.5, borderRadius: TOKENS.radius.md, bgcolor: alpha(TOKENS.surface, 0.72), border: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
+                <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800 }}>
+                  {item.label}
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 850, color: TOKENS.ink, mt: 0.35 }}>
+                  {item.value || '—'}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
         </Paper>
 
         <Paper elevation={0} sx={{ p: 3, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
@@ -469,20 +657,96 @@ export function AdminDashboard() {
           </Stack>
         )}
 
-        {/* Impersonate action */}
-        {!isPending && pfa.status.toLowerCase() === 'approved' && (
-          <Stack direction="row" spacing={2}>
+        {!isPending && (
+          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
             <Button
               variant="contained"
+              startIcon={<LoginRoundedIcon />}
               onClick={() => handleImpersonate(pfa.userId)}
-              sx={{ fontWeight: 700, bgcolor: TOKENS.primary, '&:hover': { bgcolor: TOKENS.primaryStrong }, boxShadow: 'none' }}
+              sx={{ fontWeight: 800, bgcolor: TOKENS.primary, '&:hover': { bgcolor: TOKENS.primaryStrong }, boxShadow: 'none' }}
             >
               Autentificare ca utilizator
             </Button>
+            <Button variant="outlined" startIcon={<TrendingUpRoundedIcon />} onClick={() => openDetailAction('plan')}>Schimbă plan</Button>
+            <Button variant="outlined" startIcon={<DiscountRoundedIcon />} onClick={() => openDetailAction('discount')}>Aplică discount</Button>
+            <Button variant="outlined" startIcon={<PauseCircleOutlineRoundedIcon />} onClick={() => openDetailAction('suspend')}>Suspendă cont</Button>
+            <Button variant="outlined" startIcon={<PlayCircleOutlineRoundedIcon />} onClick={() => openDetailAction('reactivate')}>Reactivează cont</Button>
+            <Button variant="outlined" startIcon={<ChatRoundedIcon />} onClick={() => { setSelectedPfa(null); setActiveTab('chat') }}>Chat</Button>
           </Stack>
         )}
 
         <PfaFiscalSettingsPanel pfaId={pfa.id} editable />
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 2 }}>
+          <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 850, color: TOKENS.ink, mb: 2 }}>Abonament & plăți</Typography>
+            <Stack spacing={1.2}>
+              {[
+                ['Plan actual', active?.plan ?? pfaPlanLabel(pfa)],
+                ['Preț', active?.priceBani == null ? '—' : formatLei(active.priceBani)],
+                ['Status abonament', active?.subscriptionStatus ?? subscriptionStatusLabel(pfa.subscriptionStatus)],
+                ['Data început', formatDate(active?.subscriptionStartedAtUtc)],
+                ['Următoarea plată', formatDate(active?.nextPaymentAtUtc)],
+                ['Ultima plată', formatDate(active?.lastPaymentAtUtc)],
+                ['Plăți eșuate', String(active?.failedPayments ?? 0)],
+                ['Reducere activă', active?.activeDiscount || '—'],
+                ['Istoric plăți', active?.customerAgeLabel ?? customerAgeLabel(pfa.createdAtUtc)],
+              ].map(([label, value]) => (
+                <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
+                  <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{label}</Typography>
+                  <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 800, textAlign: 'right' }}>{value}</Typography>
+                </Stack>
+              ))}
+            </Stack>
+          </Paper>
+
+          <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 850, color: TOKENS.ink, mb: 2 }}>Contabilitate</Typography>
+            <Stack spacing={1.2}>
+              {[
+                ['Status lună curentă', active?.currentMonthStatus ?? pfaCurrentMonthStatus(pfa)],
+                ['Ultima lună procesată', active?.lastProcessedMonth || '—'],
+                ['Documente lunare lipsă', String(active?.missingMonthlyDocuments ?? 0)],
+                ['Documente lunare de verificat', String(active?.documentsToReview ?? pfa.documentCount)],
+              ].map(([label, value]) => (
+                <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
+                  <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{label}</Typography>
+                  <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 800, textAlign: 'right' }}>{value}</Typography>
+                </Stack>
+              ))}
+            </Stack>
+          </Paper>
+        </Box>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 2 }}>
+          <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 850, color: TOKENS.ink, mb: 2 }}>Istoric activitate</Typography>
+            {active?.activityLog?.length ? (
+              <Stack spacing={1.5}>
+                {active.activityLog.slice(0, 8).map((event) => (
+                  <Box key={event.id}>
+                    <Typography variant="body2" sx={{ fontWeight: 800, color: TOKENS.ink }}>{event.description}</Typography>
+                    <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>
+                      {event.performedBy} · {formatDate(event.createdAtUtc)}
+                    </Typography>
+                  </Box>
+                ))}
+              </Stack>
+            ) : (
+              <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Nu există activitate înregistrată.</Typography>
+            )}
+          </Paper>
+
+          <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
+            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 850, color: TOKENS.ink }}>Note interne</Typography>
+              <Button size="small" onClick={() => openDetailAction('note')}>Editează</Button>
+            </Stack>
+            <Typography variant="body2" sx={{ color: active?.internalNote ? TOKENS.ink : TOKENS.textMuted, whiteSpace: 'pre-wrap' }}>
+              {active?.internalNote || 'Nu există note interne pentru acest client.'}
+            </Typography>
+          </Paper>
+        </Box>
 
         {/* Documents table */}
         <Paper elevation={0} sx={{ borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm, overflow: 'hidden' }}>
@@ -686,6 +950,67 @@ export function AdminDashboard() {
             </Button>
           </DialogActions>
         </Dialog>
+
+        <Dialog open={Boolean(detailAction)} onClose={() => setDetailAction(null)} maxWidth="xs" fullWidth>
+          <DialogTitle sx={{ fontWeight: 900 }}>
+            {{
+              plan: 'Schimbă plan',
+              discount: 'Aplică discount',
+              suspend: 'Suspendă cont',
+              reactivate: 'Reactivează cont',
+              note: 'Note interne',
+            }[detailAction ?? 'note']}
+          </DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ pt: 1 }}>
+              {detailAction === 'plan' && (
+                <>
+                  <TextField select label="Plan nou" value={planActionValue} onChange={(event) => setPlanActionValue(event.target.value as AdminPlanFilter)} sx={inputSx}>
+                    <MenuItem value="solo">Solo</MenuItem>
+                    <MenuItem value="start">Start</MenuItem>
+                    <MenuItem value="pro">Pro</MenuItem>
+                  </TextField>
+                  <TextField select label="Aplicare" value="next_cycle" sx={inputSx} disabled>
+                    <MenuItem value="next_cycle">Din următorul ciclu</MenuItem>
+                  </TextField>
+                </>
+              )}
+              {detailAction === 'discount' && (
+                <>
+                  <TextField select label="Tip discount" value={discountType} onChange={(event) => setDiscountType(event.target.value as 'percent' | 'fixed')} sx={inputSx}>
+                    <MenuItem value="percent">Procent</MenuItem>
+                    <MenuItem value="fixed">Sumă fixă</MenuItem>
+                  </TextField>
+                  <TextField label="Valoare" value={discountValue} onChange={(event) => setDiscountValue(event.target.value)} sx={inputSx} />
+                  <TextField label="Notă" value={detailActionNote} onChange={(event) => setDetailActionNote(event.target.value)} sx={inputSx} />
+                </>
+              )}
+              {(detailAction === 'suspend' || detailAction === 'reactivate' || detailAction === 'note') && (
+                <TextField
+                  label={detailAction === 'note' ? 'Note interne' : 'Notă'}
+                  multiline
+                  minRows={4}
+                  value={detailActionNote}
+                  onChange={(event) => setDetailActionNote(event.target.value)}
+                  fullWidth
+                  sx={inputSx}
+                />
+              )}
+              {detailActionError && <Alert severity="error">{detailActionError}</Alert>}
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 3 }}>
+            <Button onClick={() => setDetailAction(null)} disabled={detailActionLoading}>Anulează</Button>
+            <Button
+              variant="contained"
+              disabled={detailActionLoading}
+              onClick={submitDetailAction}
+              sx={{ boxShadow: 'none', bgcolor: TOKENS.primary, fontWeight: 800 }}
+            >
+              {detailActionLoading ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Salvează'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Stack>
     )
   }
@@ -707,40 +1032,67 @@ export function AdminDashboard() {
       )}
       {!pfasLoading && !pfasError && displayPfas.length > 0 && (
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, gap: 24 }}>
-          {displayPfas.map((pfa) => (
+          {displayPfas.map((pfa) => {
+            const isApproved = pfa.status.toLowerCase() === 'approved'
+            const details = [
+              { label: 'Nume firmă / Denumire PFA', value: pfa.userName || pfa.fullName || '—' },
+              { label: 'Nume titular', value: pfa.fullName || pfa.userName || '—' },
+              { label: 'Email', value: pfa.userEmail },
+              { label: 'Telefon', value: pfa.phone || 'Telefon necompletat' },
+              { label: 'Plan / tip abonament', value: pfaPlanLabel(pfa) },
+              { label: 'Status abonament', value: subscriptionStatusLabel(pfa.subscriptionStatus) },
+              { label: 'Vechime client', value: customerAgeLabel(pfa.createdAtUtc) },
+              { label: 'Status cont', value: pfa.accountStatus },
+              { label: 'Status lună curentă', value: pfaCurrentMonthStatus(pfa) },
+              { label: 'Ultima activitate', value: pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : relativeTime(pfa.createdAtUtc) },
+            ]
+
+            return (
             <Card key={pfa.id} elevation={0} sx={{ border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, borderRadius: TOKENS.radius.lg, boxShadow: TOKENS.shadow.sm, background: `linear-gradient(160deg, ${alpha(TOKENS.primary, 0.05)} 0%, ${TOKENS.paper} 32%)`, transition: 'all 0.2s', '&:hover': { borderColor: alpha(TOKENS.primary, 0.42), boxShadow: TOKENS.shadow.md } }}>
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, gap: 1.5 }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: TOKENS.ink }} noWrap>{pfa.userName}</Typography>
-                    <Typography variant="caption" sx={{ color: TOKENS.textMuted }} noWrap>{pfa.userEmail}</Typography>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 900, color: TOKENS.ink, lineHeight: 1.2 }} title={pfa.userName}>{pfa.userName}</Typography>
+                    <Typography variant="caption" sx={{ color: TOKENS.textMuted, display: 'block', mt: 0.4 }}>{pfa.fullName || pfa.userEmail}</Typography>
                   </Box>
-                  <Chip label={statusLabel(pfa.status)} size="small" sx={{ ml: 1, fontWeight: 700, fontSize: '0.7rem', bgcolor: alpha(statusColor(pfa.status), 0.1), color: statusColor(pfa.status), border: `1px solid ${alpha(statusColor(pfa.status), 0.2)}` }} />
+                  <Chip label={statusLabel(pfa.status)} size="small" sx={{ fontWeight: 800, fontSize: '0.68rem', bgcolor: alpha(statusColor(pfa.status), 0.1), color: statusColor(pfa.status), border: `1px solid ${alpha(statusColor(pfa.status), 0.2)}` }} />
                 </Box>
-                <Stack direction="row" spacing={1} sx={{ mb: 2, mt: 1.5, flexWrap: 'wrap', rowGap: 1 }}>
-                  <Chip
-                    label={pfa.accountStatus}
-                    size="small"
-                    sx={{
-                      fontWeight: 800,
-                      fontSize: '0.7rem',
-                      bgcolor: alpha(accountStatusColor(pfa.accountStatus), 0.1),
-                      color: accountStatusColor(pfa.accountStatus),
-                      border: `1px solid ${alpha(accountStatusColor(pfa.accountStatus), 0.2)}`,
-                    }}
-                  />
+
+                <Stack spacing={1.05} sx={{ mb: 2.5 }}>
+                  {details.map((item) => (
+                    <Stack key={item.label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
+                      <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800, maxWidth: '48%' }}>
+                        {item.label}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: TOKENS.ink, fontWeight: 850, textAlign: 'right', minWidth: 0, overflowWrap: 'anywhere' }}>
+                        {item.value}
+                      </Typography>
+                    </Stack>
+                  ))}
+                  <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
+                    <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800 }}>Tip înregistrare</Typography>
+                    <Typography variant="caption" sx={{ color: TOKENS.ink, fontWeight: 850, textAlign: 'right' }}>{formatRegistrationType(pfa.registrationType)}</Typography>
+                  </Stack>
+                  <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
+                    <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800 }}>Documente</Typography>
+                    <Typography variant="caption" sx={{ color: TOKENS.ink, fontWeight: 850 }}>{pfa.documentCount}</Typography>
+                  </Stack>
                 </Stack>
-                <Stack direction="row" spacing={2} sx={{ mb: 3, mt: 1.5 }}>
-                  <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>Tip: <strong>{formatRegistrationType(pfa.registrationType)}</strong></Typography>
-                  <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>Documente: <strong>{pfa.documentCount}</strong></Typography>
+
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Button fullWidth variant="contained" size="small" onClick={() => setSelectedPfa(pfa)}
+                    sx={{ bgcolor: TOKENS.primary, boxShadow: 'none', color: TOKENS.ink, fontWeight: 850, '&:hover': { bgcolor: TOKENS.primaryStrong, boxShadow: 'none' } }}>
+                    Vezi detalii
+                  </Button>
+                  <Button fullWidth variant="outlined" size="small" disabled={!isApproved} onClick={() => handleImpersonate(pfa.userId)}
+                    sx={{ borderColor: alpha(TOKENS.ink, 0.14), color: TOKENS.ink, fontWeight: 800, '&:hover': { bgcolor: alpha(TOKENS.primary, 0.08), borderColor: alpha(TOKENS.primary, 0.42) } }}>
+                    Intră în dashboard client
+                  </Button>
                 </Stack>
-                <Button fullWidth variant="outlined" size="small" onClick={() => setSelectedPfa(pfa)}
-                  sx={{ borderColor: alpha(TOKENS.ink, 0.14), color: TOKENS.ink, fontWeight: 700, '&:hover': { bgcolor: alpha(TOKENS.primary, 0.08), borderColor: alpha(TOKENS.primary, 0.42) } }}>
-                  Vezi detalii
-                </Button>
               </CardContent>
             </Card>
-          ))}
+            )
+          })}
         </Box>
       )}
     </Stack>
@@ -846,10 +1198,7 @@ export function AdminDashboard() {
       case 'overview': return (
         <AdminOverviewView
           onImpersonate={handleImpersonate}
-          onOpenChat={() => {
-            setSelectedPfa(null)
-            setActiveTab('chat')
-          }}
+          onOpenPfaDetails={handleOpenOverviewPfaDetails}
         />
       )
       case 'pfa':

@@ -6,10 +6,6 @@ import {
   Button,
   Chip,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Divider,
   MenuItem,
   Paper,
@@ -25,30 +21,19 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded'
-import AssignmentTurnedInRoundedIcon from '@mui/icons-material/AssignmentTurnedInRounded'
-import BlockRoundedIcon from '@mui/icons-material/BlockRounded'
-import ChatRoundedIcon from '@mui/icons-material/ChatRounded'
-import CreditCardRoundedIcon from '@mui/icons-material/CreditCardRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
-import DiscountRoundedIcon from '@mui/icons-material/DiscountRounded'
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded'
 import LoginRoundedIcon from '@mui/icons-material/LoginRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
-import PauseCircleOutlineRoundedIcon from '@mui/icons-material/PauseCircleOutlineRounded'
 import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded'
-import PlayCircleOutlineRoundedIcon from '@mui/icons-material/PlayCircleOutlineRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
-import SavingsRoundedIcon from '@mui/icons-material/SavingsRounded'
-import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded'
 import { TOKENS } from '../../../../constants/tokens'
-import { PfaFiscalSettingsPanel } from '../../../pfa/PfaFiscalSettingsPanel'
 import {
   adminOverviewService,
   type AdminOverviewData,
   type AdminOverviewFilters,
   type AdminOverviewPfaCard,
   type AdminPaymentRow,
-  type AdminPfaDetail,
   type AdminPlanFilter,
   type AdminProductFilter,
   type AdminRevenueType,
@@ -57,10 +42,8 @@ import {
 
 interface AdminOverviewViewProps {
   onImpersonate: (userId: string) => void
-  onOpenChat: () => void
+  onOpenPfaDetails: (pfa: AdminOverviewPfaCard) => void
 }
-
-type DetailAction = 'plan' | 'discount' | 'suspend' | 'reactivate' | 'note' | null
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
@@ -105,12 +88,6 @@ function statusColor(status: string) {
   if (s.includes('pending') || s.includes('aștept') || s.includes('verificare') || s.includes('trial')) return '#b45309'
   if (s.includes('refund') || s.includes('anulat')) return '#64748b'
   return TOKENS.primaryStrong
-}
-
-function getApiErrorMessage(error: unknown, fallback: string) {
-  if (typeof error !== 'object' || error === null || !('response' in error)) return fallback
-  const response = (error as { response?: { data?: { detail?: unknown } } }).response
-  return typeof response?.data?.detail === 'string' ? response.data.detail : fallback
 }
 
 function StatusChip({ status }: { status: string }) {
@@ -330,308 +307,11 @@ function DataPaper({ children }: { children: React.ReactNode }) {
   )
 }
 
-function PfaDetailDialog({
-  pfa,
-  detail,
-  loading,
-  error,
-  action,
-  actionError,
-  actionLoading,
-  onClose,
-  onImpersonate,
-  onOpenChat,
-  onActionChange,
-  onSubmitAction,
-}: {
-  pfa: AdminOverviewPfaCard | null
-  detail: AdminPfaDetail | null
-  loading: boolean
-  error: string | null
-  action: DetailAction
-  actionError: string | null
-  actionLoading: boolean
-  onClose: () => void
-  onImpersonate: (userId: string) => void
-  onOpenChat: () => void
-  onActionChange: (action: DetailAction) => void
-  onSubmitAction: (payload: Record<string, string | number | null>) => void
-}) {
-  const [plan, setPlan] = useState<AdminPlanFilter>('start')
-  const [discountType, setDiscountType] = useState<'percent' | 'fixed'>('percent')
-  const [discountValue, setDiscountValue] = useState('10')
-  const [note, setNote] = useState('')
-
-  useEffect(() => {
-    const resetTimer = window.setTimeout(() => {
-      setPlan('start')
-      setDiscountType('percent')
-      setDiscountValue('10')
-      setNote(detail?.internalNote ?? '')
-    }, 0)
-    return () => window.clearTimeout(resetTimer)
-  }, [detail?.id, detail?.internalNote, action])
-
-  const active = detail ?? (pfa
-    ? {
-        id: pfa.id,
-        userId: pfa.userId,
-        companyName: pfa.companyName,
-        holderName: pfa.holderName,
-        email: pfa.email,
-        phone: pfa.phone,
-        accountStatus: pfa.accountStatus,
-        plan: pfa.plan,
-        subscriptionStatus: pfa.subscriptionStatus,
-        registrationType: '—',
-        currentMonthStatus: pfa.currentMonthStatus,
-        lastActivityLabel: pfa.lastActivityLabel,
-        priceBani: null,
-        subscriptionStartedAtUtc: null,
-        nextPaymentAtUtc: null,
-        lastPaymentAtUtc: null,
-        failedPayments: 0,
-        activeDiscount: null,
-        customerAgeLabel: pfa.customerAgeLabel,
-        lastProcessedMonth: null,
-        missingMonthlyDocuments: 0,
-        documentsToReview: 0,
-        internalNote: '',
-        activityLog: [],
-      }
-    : null)
-
-  const renderActionFields = () => {
-    if (action === 'plan') {
-      return (
-        <Stack spacing={2}>
-          <TextField select label="Plan nou" value={plan} onChange={(e) => setPlan(e.target.value as AdminPlanFilter)} sx={inputSx}>
-            <MenuItem value="solo">Solo</MenuItem>
-            <MenuItem value="start">Start</MenuItem>
-            <MenuItem value="pro">Pro</MenuItem>
-          </TextField>
-          <TextField select label="Aplicare" defaultValue="next_cycle" sx={inputSx}>
-            <MenuItem value="next_cycle">Din următorul ciclu</MenuItem>
-            <MenuItem value="immediate">Imediat</MenuItem>
-          </TextField>
-        </Stack>
-      )
-    }
-
-    if (action === 'discount') {
-      return (
-        <Stack spacing={2}>
-          <TextField select label="Tip discount" value={discountType} onChange={(e) => setDiscountType(e.target.value as 'percent' | 'fixed')} sx={inputSx}>
-            <MenuItem value="percent">Procent</MenuItem>
-            <MenuItem value="fixed">Sumă fixă</MenuItem>
-          </TextField>
-          <TextField label="Valoare" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} sx={inputSx} />
-          <TextField label="Notă" value={note} onChange={(e) => setNote(e.target.value)} sx={inputSx} />
-        </Stack>
-      )
-    }
-
-    if (action === 'suspend' || action === 'reactivate' || action === 'note') {
-      return (
-        <TextField
-          label={action === 'note' ? 'Note interne' : 'Notă'}
-          multiline
-          minRows={4}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          fullWidth
-          sx={inputSx}
-        />
-      )
-    }
-
-    return null
-  }
-
-  const actionTitle = {
-    plan: 'Schimbă plan',
-    discount: 'Aplică discount',
-    suspend: 'Suspendă cont',
-    reactivate: 'Reactivează cont',
-    note: 'Note interne',
-  }[action ?? 'note']
-
-  return (
-    <Dialog open={Boolean(pfa)} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle sx={{ fontWeight: 950, pb: 1 }}>
-        Detalii client PFA
-      </DialogTitle>
-      <DialogContent sx={{ pt: 2 }}>
-        {loading && (
-          <Stack sx={{ py: 8, alignItems: 'center' }}>
-            <CircularProgress size={30} sx={{ color: TOKENS.primary }} />
-          </Stack>
-        )}
-        {error && <Alert severity="warning" sx={{ mb: 2 }}>{error}</Alert>}
-        {active && !loading && (
-          <Stack spacing={3}>
-            <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, bgcolor: alpha(TOKENS.primary, 0.04) }}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' } }}>
-                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-                  <Avatar sx={{ bgcolor: alpha(TOKENS.primary, 0.14), color: TOKENS.primaryStrong, fontWeight: 900 }}>
-                    {active.companyName.slice(0, 1).toUpperCase()}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 950, color: TOKENS.ink }}>{active.companyName}</Typography>
-                    <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{active.email} · {active.phone}</Typography>
-                  </Box>
-                </Stack>
-                <StatusChip status={active.accountStatus} />
-              </Stack>
-            </Paper>
-
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(5, minmax(0, 1fr))' }, gap: 1.5 }}>
-              {[
-                { label: 'Plan abonament', value: active.plan },
-                { label: 'Status abonament', value: active.subscriptionStatus },
-                { label: 'Tip înregistrare', value: active.registrationType },
-                { label: 'Status lună curentă', value: active.currentMonthStatus },
-                { label: 'Ultima activitate', value: active.lastActivityLabel },
-              ].map((item) => (
-                <Box key={item.label} sx={{ p: 1.5, borderRadius: TOKENS.radius.md, bgcolor: alpha(TOKENS.surface, 0.82), border: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
-                  <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 850 }}>{item.label}</Typography>
-                  <Typography sx={{ color: TOKENS.ink, fontWeight: 850 }}>{item.value || '—'}</Typography>
-                </Box>
-              ))}
-            </Box>
-
-            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
-              <Button variant="contained" startIcon={<LoginRoundedIcon />} onClick={() => onImpersonate(active.userId)} sx={{ boxShadow: 'none', bgcolor: TOKENS.primary, fontWeight: 800 }}>
-                Autentificare ca utilizator
-              </Button>
-              <Button variant="outlined" startIcon={<TrendingUpRoundedIcon />} onClick={() => onActionChange('plan')}>Schimbă plan</Button>
-              <Button variant="outlined" startIcon={<DiscountRoundedIcon />} onClick={() => onActionChange('discount')}>Aplică discount</Button>
-              <Button variant="outlined" startIcon={<PauseCircleOutlineRoundedIcon />} onClick={() => onActionChange('suspend')}>Suspendă cont</Button>
-              <Button variant="outlined" startIcon={<PlayCircleOutlineRoundedIcon />} onClick={() => onActionChange('reactivate')}>Reactivează cont</Button>
-              <Button variant="outlined" startIcon={<ChatRoundedIcon />} onClick={onOpenChat}>Chat</Button>
-            </Stack>
-
-            <PfaFiscalSettingsPanel pfaId={active.id} editable />
-
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 2 }}>
-              <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}` }}>
-                <SectionTitle title="Abonament & plăți" />
-                <Stack spacing={1.2} sx={{ mt: 2 }}>
-                  {[
-                    ['Plan actual', active.plan],
-                    ['Preț', active.priceBani == null ? '—' : formatLei(active.priceBani)],
-                    ['Status abonament', active.subscriptionStatus],
-                    ['Data început', formatDate(active.subscriptionStartedAtUtc)],
-                    ['Următoarea plată', formatDate(active.nextPaymentAtUtc)],
-                    ['Ultima plată', formatDate(active.lastPaymentAtUtc)],
-                    ['Plăți eșuate', active.failedPayments.toLocaleString('ro-RO')],
-                    ['Reducere activă', active.activeDiscount || '—'],
-                    ['Istoric plăți', active.customerAgeLabel],
-                  ].map(([label, value]) => (
-                    <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
-                      <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{label}</Typography>
-                      <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 800, textAlign: 'right' }}>{value}</Typography>
-                    </Stack>
-                  ))}
-                </Stack>
-              </Paper>
-
-              <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}` }}>
-                <SectionTitle title="Contabilitate" />
-                <Stack spacing={1.2} sx={{ mt: 2 }}>
-                  {[
-                    ['Status lună curentă', active.currentMonthStatus],
-                    ['Ultima lună procesată', active.lastProcessedMonth || '—'],
-                    ['Documente lunare lipsă', active.missingMonthlyDocuments.toLocaleString('ro-RO')],
-                    ['Documente lunare de verificat', active.documentsToReview.toLocaleString('ro-RO')],
-                  ].map(([label, value]) => (
-                    <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
-                      <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{label}</Typography>
-                      <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 800, textAlign: 'right' }}>{value}</Typography>
-                    </Stack>
-                  ))}
-                </Stack>
-              </Paper>
-            </Box>
-
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 2 }}>
-              <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}` }}>
-                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <SectionTitle title="Istoric activitate" />
-                </Stack>
-                {active.activityLog.length === 0 ? (
-                  <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Nu există activitate înregistrată.</Typography>
-                ) : (
-                  <Stack spacing={1.5}>
-                    {active.activityLog.slice(0, 8).map((event) => (
-                      <Box key={event.id}>
-                        <Typography variant="body2" sx={{ fontWeight: 800, color: TOKENS.ink }}>{event.description}</Typography>
-                        <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>
-                          {event.performedBy} · {formatDate(event.createdAtUtc)}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Stack>
-                )}
-              </Paper>
-
-              <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}` }}>
-                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <SectionTitle title="Note interne" />
-                  <Button size="small" onClick={() => onActionChange('note')}>Editează</Button>
-                </Stack>
-                <Typography variant="body2" sx={{ color: active.internalNote ? TOKENS.ink : TOKENS.textMuted, whiteSpace: 'pre-wrap' }}>
-                  {active.internalNote || 'Nu există note interne pentru acest client.'}
-                </Typography>
-              </Paper>
-            </Box>
-          </Stack>
-        )}
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button onClick={onClose}>Închide</Button>
-      </DialogActions>
-
-      <Dialog open={Boolean(action)} onClose={() => onActionChange(null)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 900 }}>{actionTitle}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ pt: 1 }}>
-            {renderActionFields()}
-            {actionError && <Alert severity="error">{actionError}</Alert>}
-          </Stack>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={() => onActionChange(null)} disabled={actionLoading}>Anulează</Button>
-          <Button
-            variant="contained"
-            disabled={actionLoading}
-            onClick={() => {
-              if (action === 'plan') onSubmitAction({ plan, effective: 'next_cycle' })
-              else if (action === 'discount') onSubmitAction({ type: discountType, value: Number(discountValue), note })
-              else onSubmitAction({ note })
-            }}
-            sx={{ boxShadow: 'none', bgcolor: TOKENS.primary, fontWeight: 800 }}
-          >
-            {actionLoading ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Salvează'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Dialog>
-  )
-}
-
-export function AdminOverviewView({ onImpersonate, onOpenChat }: AdminOverviewViewProps) {
+export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOverviewViewProps) {
   const [filters, setFilters] = useState<AdminOverviewFilters>(initialFilters)
   const [data, setData] = useState<AdminOverviewData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedPfa, setSelectedPfa] = useState<AdminOverviewPfaCard | null>(null)
-  const [pfaDetail, setPfaDetail] = useState<AdminPfaDetail | null>(null)
-  const [pfaDetailLoading, setPfaDetailLoading] = useState(false)
-  const [pfaDetailError, setPfaDetailError] = useState<string | null>(null)
-  const [action, setAction] = useState<DetailAction>(null)
-  const [actionError, setActionError] = useState<string | null>(null)
-  const [actionLoading, setActionLoading] = useState(false)
 
   const loadOverview = useCallback(async () => {
     setLoading(true)
@@ -657,92 +337,34 @@ export function AdminOverviewView({ onImpersonate, onOpenChat }: AdminOverviewVi
     setFilters((prev) => ({ ...prev, [key]: value }))
   }
 
-  const openPfaDetail = async (pfa: AdminOverviewPfaCard) => {
-    setSelectedPfa(pfa)
-    setPfaDetail(null)
-    setPfaDetailError(null)
-    setPfaDetailLoading(true)
-    try {
-      const detail = await adminOverviewService.getPfaDetails(pfa.id)
-      setPfaDetail(detail)
-    } catch {
-      setPfaDetailError('Detaliile extinse vor fi disponibile după publicarea endpointului admin. Afișez datele existente din overview.')
-    } finally {
-      setPfaDetailLoading(false)
-    }
-  }
-
-  const submitAction = async (payload: Record<string, string | number | null>) => {
-    if (!selectedPfa || !action) return
-    setActionLoading(true)
-    setActionError(null)
-    try {
-      if (action === 'plan') {
-        await adminOverviewService.changePfaPlan(
-          selectedPfa.id,
-          payload.plan as 'solo' | 'start' | 'pro',
-          payload.effective as 'immediate' | 'next_cycle',
-        )
-      } else if (action === 'discount') {
-        await adminOverviewService.applyPfaDiscount(selectedPfa.id, {
-          type: payload.type as 'percent' | 'fixed',
-          value: Number(payload.value),
-          note: String(payload.note ?? ''),
-        })
-      } else if (action === 'suspend') {
-        await adminOverviewService.suspendPfa(selectedPfa.id, String(payload.note ?? ''))
-      } else if (action === 'reactivate') {
-        await adminOverviewService.reactivatePfa(selectedPfa.id, String(payload.note ?? ''))
-      } else if (action === 'note') {
-        await adminOverviewService.updatePfaInternalNote(selectedPfa.id, String(payload.note ?? ''))
-      }
-      setAction(null)
-      await loadOverview()
-      const detail = await adminOverviewService.getPfaDetails(selectedPfa.id).catch(() => null)
-      if (detail) setPfaDetail(detail)
-    } catch (err: unknown) {
-      setActionError(getApiErrorMessage(err, 'Acțiunea nu a putut fi salvată. Verifică endpointul backend și încearcă din nou.'))
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const financialCards = useMemo(() => {
+  const operationalCards = useMemo(() => {
     if (!data) return []
     return [
       {
-        label: 'Venit total luna curentă',
-        value: formatLei(data.financialKpis.totalCurrentMonthRevenueBani),
-        icon: <AccountBalanceWalletRoundedIcon />,
+        label: 'PFA-uri active',
+        value: data.pfaStats.active.toLocaleString('ro-RO'),
+        helper: `${data.pfaStats.newRequests.toLocaleString('ro-RO')} cereri noi`,
+        icon: <PeopleAltRoundedIcon />,
+        color: '#047857',
+      },
+      {
+        label: 'Anunțuri auto plătite',
+        value: data.carStats.paidActive.toLocaleString('ro-RO'),
+        helper: `${formatLei(data.carStats.monthlyRevenueBani)} lunar`,
+        icon: <DirectionsCarFilledRoundedIcon />,
         color: '#0f766e',
       },
       {
-        label: 'Venit recurent lunar estimat',
-        value: formatLei(data.financialKpis.estimatedMonthlyRecurringRevenueBani),
-        icon: <TrendingUpRoundedIcon />,
-        color: '#2563eb',
-      },
-      {
-        label: 'Venit one-time luna curentă',
-        value: formatLei(data.financialKpis.oneTimeCurrentMonthRevenueBani),
+        label: 'Servicii one-time',
+        value: data.serviceSales.length.toLocaleString('ro-RO'),
+        helper: formatLei(data.financialKpis.oneTimeCurrentMonthRevenueBani),
         icon: <ReceiptLongRoundedIcon />,
         color: '#7c3aed',
       },
       {
-        label: 'Comisioane parteneri',
-        value: formatLei(data.financialKpis.partnerCommissionsBani),
-        icon: <SavingsRoundedIcon />,
-        color: '#0891b2',
-      },
-      {
-        label: 'Plăți reușite',
-        value: data.financialKpis.successfulPayments.toLocaleString('ro-RO'),
-        icon: <CreditCardRoundedIcon />,
-        color: '#047857',
-      },
-      {
-        label: 'Plăți eșuate',
+        label: 'Atenție plăți',
         value: data.financialKpis.failedPayments.toLocaleString('ro-RO'),
+        helper: 'plăți eșuate',
         icon: <ErrorOutlineRoundedIcon />,
         color: '#dc2626',
       },
@@ -750,17 +372,61 @@ export function AdminOverviewView({ onImpersonate, onOpenChat }: AdminOverviewVi
   }, [data])
 
   return (
-    <Stack spacing={3}>
-      <Box>
-        <Typography variant="h4" sx={{ fontWeight: 950, color: TOKENS.ink, mb: 0.5 }}>
-          Overview general platformă RIDElance
-        </Typography>
-        <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
-          Control financiar, abonamente, servicii, anunțuri auto și acțiuni urgente într-un singur panou.
-        </Typography>
-      </Box>
+    <Stack spacing={2.5}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2.5, md: 3.5 },
+          borderRadius: TOKENS.radius.xl,
+          border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
+          boxShadow: TOKENS.shadow.sm,
+          background: `linear-gradient(135deg, ${TOKENS.paper} 0%, ${alpha(TOKENS.primary, 0.08)} 100%)`,
+        }}
+      >
+        <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', lg: 'flex-end' } }}>
+          <Box sx={{ maxWidth: 620 }}>
+            <Typography variant="overline" sx={{ color: TOKENS.textSubtle, fontWeight: 900, letterSpacing: 1 }}>
+              Acasă admin
+            </Typography>
+            <Typography variant="h4" sx={{ fontWeight: 950, color: TOKENS.ink, mt: 0.5, mb: 1 }}>
+              Situația RIDElance pe scurt
+            </Typography>
+            <Typography variant="body2" sx={{ color: TOKENS.textMuted, maxWidth: 560 }}>
+              Finanțe, abonamente, servicii și alerte importante într-un ecran mai ușor de scanat.
+            </Typography>
+          </Box>
 
-      <Paper elevation={0} sx={{ p: 2, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
+          {data && !loading && (
+            <Box sx={{ minWidth: { xs: '100%', sm: 360 }, p: 2.2, borderRadius: TOKENS.radius.lg, bgcolor: alpha(TOKENS.paper, 0.82), border: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
+              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 1 }}>
+                <Box sx={{ width: 42, height: 42, borderRadius: TOKENS.radius.md, display: 'grid', placeItems: 'center', bgcolor: alpha('#0f766e', 0.1), color: '#0f766e' }}>
+                  <AccountBalanceWalletRoundedIcon />
+                </Box>
+                <Box>
+                  <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 850 }}>Venit luna curentă</Typography>
+                  <Typography variant="h4" sx={{ color: TOKENS.ink, fontWeight: 950, fontVariantNumeric: 'tabular-nums' }}>
+                    {formatLei(data.financialKpis.totalCurrentMonthRevenueBani)}
+                  </Typography>
+                </Box>
+              </Stack>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 1 }}>
+                {[
+                  ['Recurent', formatLei(data.financialKpis.estimatedMonthlyRecurringRevenueBani)],
+                  ['One-time', formatLei(data.financialKpis.oneTimeCurrentMonthRevenueBani)],
+                  ['Comisioane', formatLei(data.financialKpis.partnerCommissionsBani)],
+                ].map(([label, value]) => (
+                  <Box key={label} sx={{ p: 1, borderRadius: TOKENS.radius.sm, bgcolor: alpha(TOKENS.surface, 0.7) }}>
+                    <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800 }}>{label}</Typography>
+                    <Typography variant="caption" sx={{ display: 'block', color: TOKENS.ink, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{value}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
+        </Stack>
+      </Paper>
+
+      <Paper elevation={0} sx={{ p: 1.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.06)}`, boxShadow: TOKENS.shadow.sm, bgcolor: alpha(TOKENS.paper, 0.88) }}>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(4, minmax(0, 1fr))' }, gap: 1.5 }}>
           <TextField select size="small" label="Perioadă" value={filters.periodPreset} onChange={(e) => updateFilter('periodPreset', e.target.value as AdminOverviewFilters['periodPreset'])} sx={inputSx}>
             <MenuItem value="today">Azi</MenuItem>
@@ -820,8 +486,8 @@ export function AdminOverviewView({ onImpersonate, onOpenChat }: AdminOverviewVi
             </Alert>
           )}
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(6, minmax(0, 1fr))' }, gap: 1.5 }}>
-            {financialCards.map((card) => <MetricCard key={card.label} {...card} />)}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(4, minmax(0, 1fr))' }, gap: 1.5 }}>
+            {operationalCards.map((card) => <MetricCard key={card.label} {...card} />)}
           </Box>
 
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1.1fr 0.9fr' }, gap: 2 }}>
@@ -860,27 +526,45 @@ export function AdminOverviewView({ onImpersonate, onOpenChat }: AdminOverviewVi
           </Box>
 
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }, gap: 1.5 }}>
-              {[
-                { label: 'Mașini listate total', value: data.carStats.totalListed, icon: <DirectionsCarFilledRoundedIcon /> },
-                { label: 'Anunțuri active plătite', value: data.carStats.paidActive, icon: <CreditCardRoundedIcon />, color: '#047857' },
-                { label: 'Anunțuri în verificare', value: data.carStats.pendingReview, icon: <AssignmentTurnedInRoundedIcon />, color: '#b45309' },
-                { label: 'Anunțuri cu plată eșuată', value: data.carStats.failedPayment, icon: <ErrorOutlineRoundedIcon />, color: '#dc2626' },
-                { label: 'Lead-uri generate', value: data.carStats.leadsGenerated, icon: <PeopleAltRoundedIcon />, color: '#2563eb' },
-                { label: 'Venit lunar din anunțuri', value: formatLei(data.carStats.monthlyRevenueBani), icon: <TrendingUpRoundedIcon />, color: '#0f766e' },
-              ].map((item) => <MetricCard key={item.label} label={item.label} value={item.value} icon={item.icon} color={item.color} />)}
-            </Box>
+            <DataPaper>
+              <Box sx={{ p: 2.5 }}>
+                <SectionTitle title="Mașini și lead-uri" subtitle="Doar ce contează pentru venitul recurent auto." />
+                <Stack spacing={1.4} sx={{ mt: 2 }}>
+                  {[
+                    ['Listate total', data.carStats.totalListed.toLocaleString('ro-RO')],
+                    ['Active plătite', data.carStats.paidActive.toLocaleString('ro-RO')],
+                    ['În verificare', data.carStats.pendingReview.toLocaleString('ro-RO')],
+                    ['Plată eșuată', data.carStats.failedPayment.toLocaleString('ro-RO')],
+                    ['Lead-uri generate', data.carStats.leadsGenerated.toLocaleString('ro-RO')],
+                  ].map(([label, value]) => (
+                    <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
+                      <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{label}</Typography>
+                      <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{value}</Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+              </Box>
+            </DataPaper>
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }, gap: 1.5 }}>
-              {[
-                { label: 'PFA-uri înscrise total', value: data.pfaStats.totalEnrolled, icon: <PeopleAltRoundedIcon /> },
-                { label: 'PFA-uri active', value: data.pfaStats.active, icon: <AssignmentTurnedInRoundedIcon />, color: '#047857' },
-                { label: 'Cereri noi', value: data.pfaStats.newRequests, icon: <ReceiptLongRoundedIcon />, color: '#2563eb' },
-                { label: 'PFA-uri cu blocaj client', value: data.pfaStats.clientBlocked, icon: <BlockRoundedIcon />, color: '#dc2626' },
-                { label: 'PFA-uri inactive', value: data.pfaStats.inactive, icon: <PauseCircleOutlineRoundedIcon />, color: '#64748b' },
-                { label: 'PFA-uri plata eșuată', value: data.pfaStats.failedPayment, icon: <ErrorOutlineRoundedIcon />, color: '#dc2626' },
-              ].map((item) => <MetricCard key={item.label} label={item.label} value={item.value} icon={item.icon} color={item.color} />)}
-            </Box>
+            <DataPaper>
+              <Box sx={{ p: 2.5 }}>
+                <SectionTitle title="PFA-uri și blocaje" subtitle="Volum activ și situații care cer follow-up." />
+                <Stack spacing={1.4} sx={{ mt: 2 }}>
+                  {[
+                    ['Înscrise total', data.pfaStats.totalEnrolled.toLocaleString('ro-RO')],
+                    ['Active', data.pfaStats.active.toLocaleString('ro-RO')],
+                    ['Cereri noi', data.pfaStats.newRequests.toLocaleString('ro-RO')],
+                    ['Blocaj client', data.pfaStats.clientBlocked.toLocaleString('ro-RO')],
+                    ['Plată eșuată', data.pfaStats.failedPayment.toLocaleString('ro-RO')],
+                  ].map(([label, value]) => (
+                    <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
+                      <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{label}</Typography>
+                      <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{value}</Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+              </Box>
+            </DataPaper>
           </Box>
 
           <DataPaper>
@@ -938,7 +622,7 @@ export function AdminOverviewView({ onImpersonate, onOpenChat }: AdminOverviewVi
                       </Stack>
                     ))}
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      <Button fullWidth variant="contained" onClick={() => openPfaDetail(pfa)} endIcon={<OpenInNewRoundedIcon />} sx={{ boxShadow: 'none', bgcolor: TOKENS.primary, fontWeight: 850 }}>
+                      <Button fullWidth variant="contained" onClick={() => onOpenPfaDetails(pfa)} endIcon={<OpenInNewRoundedIcon />} sx={{ boxShadow: 'none', bgcolor: TOKENS.primary, fontWeight: 850 }}>
                         Vezi detalii
                       </Button>
                       <Button fullWidth variant="outlined" onClick={() => onImpersonate(pfa.userId)} startIcon={<LoginRoundedIcon />}>
@@ -958,31 +642,6 @@ export function AdminOverviewView({ onImpersonate, onOpenChat }: AdminOverviewVi
         </>
       )}
 
-      <PfaDetailDialog
-        pfa={selectedPfa}
-        detail={pfaDetail}
-        loading={pfaDetailLoading}
-        error={pfaDetailError}
-        action={action}
-        actionError={actionError}
-        actionLoading={actionLoading}
-        onClose={() => {
-          setSelectedPfa(null)
-          setPfaDetail(null)
-          setAction(null)
-          setActionError(null)
-        }}
-        onImpersonate={onImpersonate}
-        onOpenChat={() => {
-          setSelectedPfa(null)
-          onOpenChat()
-        }}
-        onActionChange={(nextAction) => {
-          setAction(nextAction)
-          setActionError(null)
-        }}
-        onSubmitAction={submitAction}
-      />
     </Stack>
   )
 }
