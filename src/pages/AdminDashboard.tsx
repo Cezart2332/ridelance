@@ -60,6 +60,7 @@ interface PfaSummary {
   status: string
   accountStatus: string
   subscriptionStatus: string | null
+  subscriptionPlan: string | null
   fullName: string | null
   phone: string | null
   contractDuration: number | null
@@ -85,6 +86,7 @@ function normalizePfaSummary(item: any): PfaSummary {
     status: item.status,
     accountStatus: item.accountStatus ?? 'Nou',
     subscriptionStatus: item.subscriptionStatus ?? null,
+    subscriptionPlan: item.subscriptionPlan ?? null,
     fullName: item.fullName ?? null,
     phone: item.phone ?? null,
     contractDuration: item.contractDuration ?? null,
@@ -404,6 +406,7 @@ export function AdminDashboard() {
       status: pfa.accountStatus.toLowerCase().includes('activ') ? 'Approved' : 'Pending',
       accountStatus: pfa.accountStatus,
       subscriptionStatus: pfa.subscriptionStatus,
+      subscriptionPlan: pfa.plan,
       fullName: pfa.holderName,
       phone: pfa.phone,
       contractDuration: null,
@@ -537,11 +540,12 @@ export function AdminDashboard() {
   }
 
   const pfaPlanLabel = (pfa: PfaSummary) => {
-    const status = pfa.subscriptionStatus?.toLowerCase() ?? ''
-    if (status.includes('solo')) return 'Solo'
-    if (status.includes('start')) return 'Start'
-    if (status.includes('pro')) return 'Pro'
-    return pfa.subscriptionStatus ? 'Nespecificat' : 'Fără plan'
+    switch (pfa.subscriptionPlan?.toLowerCase()) {
+      case 'solo': return 'Solo'
+      case 'start': return 'Start'
+      case 'pro': return 'Pro'
+      default: return 'Fără plan'
+    }
   }
 
   // ─── PFA Detail View ────────────────────────────────────────────────────────
@@ -555,7 +559,7 @@ export function AdminDashboard() {
       { label: 'Status abonament', value: active?.subscriptionStatus ?? subscriptionStatusLabel(pfa.subscriptionStatus) },
       { label: 'Tip înregistrare', value: active?.registrationType ?? formatRegistrationType(pfa.registrationType) },
       { label: 'Status lună curentă', value: active?.currentMonthStatus ?? pfaCurrentMonthStatus(pfa) },
-      { label: 'Ultima activitate', value: active?.lastActivityLabel ?? (pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : relativeTime(pfa.createdAtUtc)) },
+      { label: 'Ultima activitate', value: active?.lastActivityLabel ?? (pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : 'Fără activitate') },
     ]
 
     return (
@@ -1031,53 +1035,52 @@ export function AdminDashboard() {
         </Box>
       )}
       {!pfasLoading && !pfasError && displayPfas.length > 0 && (
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, gap: 24 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
           {displayPfas.map((pfa) => {
             const isApproved = pfa.status.toLowerCase() === 'approved'
-            const details = [
-              { label: 'Nume firmă / Denumire PFA', value: pfa.userName || pfa.fullName || '—' },
-              { label: 'Nume titular', value: pfa.fullName || pfa.userName || '—' },
-              { label: 'Email', value: pfa.userEmail },
-              { label: 'Telefon', value: pfa.phone || 'Telefon necompletat' },
-              { label: 'Plan / tip abonament', value: pfaPlanLabel(pfa) },
-              { label: 'Status abonament', value: subscriptionStatusLabel(pfa.subscriptionStatus) },
-              { label: 'Vechime client', value: customerAgeLabel(pfa.createdAtUtc) },
-              { label: 'Status cont', value: pfa.accountStatus },
-              { label: 'Status lună curentă', value: pfaCurrentMonthStatus(pfa) },
-              { label: 'Ultima activitate', value: pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : relativeTime(pfa.createdAtUtc) },
-            ]
+            const lastActivity = pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : 'Fără activitate'
 
             return (
-            <Card key={pfa.id} elevation={0} sx={{ border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, borderRadius: TOKENS.radius.lg, boxShadow: TOKENS.shadow.sm, background: `linear-gradient(160deg, ${alpha(TOKENS.primary, 0.05)} 0%, ${TOKENS.paper} 32%)`, transition: 'all 0.2s', '&:hover': { borderColor: alpha(TOKENS.primary, 0.42), boxShadow: TOKENS.shadow.md } }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, gap: 1.5 }}>
+            <Card key={pfa.id} elevation={0} sx={{ border: `1px solid ${alpha(TOKENS.ink, 0.07)}`, borderRadius: TOKENS.radius.lg, boxShadow: 'none', bgcolor: TOKENS.paper, transition: 'all 0.2s', '&:hover': { borderColor: alpha(TOKENS.primary, 0.35), boxShadow: TOKENS.shadow.sm } }}>
+              <CardContent sx={{ p: 2.25 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5, gap: 1.5 }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 900, color: TOKENS.ink, lineHeight: 1.2 }} title={pfa.userName}>{pfa.userName}</Typography>
-                    <Typography variant="caption" sx={{ color: TOKENS.textMuted, display: 'block', mt: 0.4 }}>{pfa.fullName || pfa.userEmail}</Typography>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 900, color: TOKENS.ink, lineHeight: 1.2 }} noWrap title={pfa.userName}>
+                      {pfa.userName || pfa.fullName || 'PFA fără nume'}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: TOKENS.textMuted, display: 'block', mt: 0.35 }} noWrap title={pfa.fullName || pfa.userEmail}>
+                      {pfa.fullName || pfa.userEmail}
+                    </Typography>
                   </Box>
                   <Chip label={statusLabel(pfa.status)} size="small" sx={{ fontWeight: 800, fontSize: '0.68rem', bgcolor: alpha(statusColor(pfa.status), 0.1), color: statusColor(pfa.status), border: `1px solid ${alpha(statusColor(pfa.status), 0.2)}` }} />
                 </Box>
 
-                <Stack spacing={1.05} sx={{ mb: 2.5 }}>
-                  {details.map((item) => (
-                    <Stack key={item.label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
-                      <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800, maxWidth: '48%' }}>
-                        {item.label}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: TOKENS.ink, fontWeight: 850, textAlign: 'right', minWidth: 0, overflowWrap: 'anywhere' }}>
-                        {item.value}
-                      </Typography>
-                    </Stack>
+                <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', rowGap: 0.75, mb: 1.6 }}>
+                  {[pfaPlanLabel(pfa), subscriptionStatusLabel(pfa.subscriptionStatus), pfaCurrentMonthStatus(pfa)].map((label) => (
+                    <Chip
+                      key={label}
+                      label={label}
+                      size="small"
+                      sx={{ height: 24, borderRadius: TOKENS.radius.sm, bgcolor: alpha(TOKENS.ink, 0.04), color: TOKENS.ink, fontSize: '0.68rem', fontWeight: 800 }}
+                    />
                   ))}
-                  <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
-                    <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800 }}>Tip înregistrare</Typography>
-                    <Typography variant="caption" sx={{ color: TOKENS.ink, fontWeight: 850, textAlign: 'right' }}>{formatRegistrationType(pfa.registrationType)}</Typography>
-                  </Stack>
-                  <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
-                    <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800 }}>Documente</Typography>
-                    <Typography variant="caption" sx={{ color: TOKENS.ink, fontWeight: 850 }}>{pfa.documentCount}</Typography>
-                  </Stack>
                 </Stack>
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 1.8 }}>
+                  {[
+                    ['Email', pfa.userEmail],
+                    ['Telefon', pfa.phone || '—'],
+                    ['Documente', pfa.documentCount.toString()],
+                    ['Activitate', lastActivity],
+                  ].map(([label, value]) => (
+                    <Box key={label} sx={{ minWidth: 0 }}>
+                      <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 750 }}>{label}</Typography>
+                      <Typography variant="caption" sx={{ display: 'block', color: TOKENS.ink, fontWeight: 850, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={value}>
+                        {value}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
 
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <Button fullWidth variant="contained" size="small" onClick={() => setSelectedPfa(pfa)}

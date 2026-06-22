@@ -146,6 +146,7 @@ interface RawPfa {
   status: string
   accountStatus?: string | null
   subscriptionStatus?: string | null
+  subscriptionPlan?: string | null
   fullName?: string | null
   phone?: string | null
   city?: string | null
@@ -255,6 +256,15 @@ function normalizeStatus(status: string | null | undefined) {
   return status
 }
 
+function normalizePlan(plan: string | null | undefined) {
+  switch (plan?.toLowerCase()) {
+    case 'solo': return 'Solo'
+    case 'start': return 'Start'
+    case 'pro': return 'Pro'
+    default: return 'Fără plan'
+  }
+}
+
 function statusLabel(status: string) {
   const s = status.toLowerCase()
   if (s === 'paid' || s === 'succeeded' || s === 'active') return 'Reușită'
@@ -280,12 +290,12 @@ function makePfaCard(pfa: RawPfa): AdminOverviewPfaCard {
     holderName: pfa.fullName || pfa.userName || 'Titular necompletat',
     email: pfa.userEmail,
     phone: pfa.phone || 'Telefon necompletat',
-    plan: pfa.subscriptionStatus ? 'Nespecificat' : 'Fără plan',
+    plan: normalizePlan(pfa.subscriptionPlan),
     subscriptionStatus: normalizeStatus(pfa.subscriptionStatus),
     customerAgeLabel: customerAge(pfa.createdAtUtc),
     accountStatus: normalizeStatus(pfa.accountStatus ?? pfa.status),
     currentMonthStatus: pfa.documentCount && pfa.documentCount > 0 ? 'În verificare' : 'Documente lipsă',
-    lastActivityLabel: relativeTime(pfa.lastActivityAtUtc ?? pfa.createdAtUtc),
+    lastActivityLabel: pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : 'Fără activitate',
     lastActivityAtUtc: pfa.lastActivityAtUtc ?? null,
   }
 }

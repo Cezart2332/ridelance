@@ -17,3 +17,8 @@ FROM nginx:stable-alpine AS production
 COPY --from=build /usr/src/app/nginx /etc/nginx/conf.d
 
 COPY --from=build /usr/src/app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -q --spider http://127.0.0.1/ || exit 1

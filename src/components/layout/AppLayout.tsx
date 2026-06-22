@@ -178,7 +178,7 @@ export function AppLayout() {
               <Button
                 variant="contained"
                 endIcon={<ArrowForwardRoundedIcon />}
-                onClick={() => goTo('/demo')}
+                onClick={() => goTo('/app')}
                 sx={{
                   display: { xs: 'none', md: 'inline-flex' },
                   px: 3,
@@ -194,7 +194,7 @@ export function AppLayout() {
                   },
                 }}
               >
-                Demo
+                Începe acum
               </Button>
             ) : (
               <IconButton
@@ -381,7 +381,7 @@ export function AppLayout() {
           <Button
             variant="contained"
             endIcon={<ArrowForwardRoundedIcon />}
-            onClick={() => goTo(accessToken ? '/app' : '/demo')}
+            onClick={() => goTo('/app')}
             sx={{
               mt: 'auto',
               color: '#fff',
@@ -392,7 +392,7 @@ export function AppLayout() {
               boxShadow: 'none',
             }}
           >
-            {accessToken ? 'Profilul meu' : 'Dashboard'}
+            {accessToken ? 'Profilul meu' : 'Începe acum'}
           </Button>
         </Stack>
       </Drawer>

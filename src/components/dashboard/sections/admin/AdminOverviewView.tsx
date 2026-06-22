@@ -389,7 +389,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
               Acasă admin
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 950, color: TOKENS.ink, mt: 0.5, mb: 1 }}>
-              Situația RIDElance pe scurt
+              Acasă
             </Typography>
             <Typography variant="body2" sx={{ color: TOKENS.textMuted, maxWidth: 560 }}>
               Finanțe, abonamente, servicii și alerte importante într-un ecran mai ușor de scanat.
@@ -592,35 +592,51 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
             <SectionTitle title="PFA-uri înrolate" subtitle="Cardurile operaționale pentru clienții PFA activi sau în lucru." />
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' }, gap: 2, mt: 2 }}>
               {data.enrolledPfas.map((pfa) => (
-                <Paper key={pfa.id} elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm, bgcolor: TOKENS.paper }}>
-                  <Stack spacing={1.5}>
+                <Paper key={pfa.id} elevation={0} sx={{ p: 2.25, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.07)}`, boxShadow: 'none', bgcolor: TOKENS.paper, '&:hover': { borderColor: alpha(TOKENS.primary, 0.35), boxShadow: TOKENS.shadow.sm } }}>
+                  <Stack spacing={1.4}>
                     <Stack direction="row" spacing={1.4} sx={{ alignItems: 'flex-start' }}>
-                      <Avatar sx={{ bgcolor: alpha(TOKENS.primary, 0.14), color: TOKENS.primaryStrong, fontWeight: 900 }}>
+                      <Avatar variant="rounded" sx={{ width: 40, height: 40, borderRadius: TOKENS.radius.md, bgcolor: alpha(TOKENS.primary, 0.12), color: TOKENS.primaryStrong, fontWeight: 900 }}>
                         {pfa.companyName.slice(0, 1).toUpperCase()}
                       </Avatar>
                       <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography sx={{ fontWeight: 950, color: TOKENS.ink, lineHeight: 1.2 }} title={pfa.companyName}>
+                        <Typography sx={{ fontWeight: 950, color: TOKENS.ink, lineHeight: 1.2 }} noWrap title={pfa.companyName}>
                           {pfa.companyName}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{pfa.holderName}</Typography>
+                        <Typography variant="caption" sx={{ color: TOKENS.textMuted, display: 'block' }} noWrap title={pfa.holderName}>
+                          {pfa.holderName}
+                        </Typography>
                       </Box>
                     </Stack>
-                    <Divider />
-                    {[
-                      ['Email', pfa.email],
-                      ['Telefon', pfa.phone],
-                      ['Plan / tip abonament', pfa.plan],
-                      ['Status abonament', pfa.subscriptionStatus],
-                      ['Vechime client', pfa.customerAgeLabel],
-                      ['Status cont', pfa.accountStatus],
-                      ['Status lună curentă', pfa.currentMonthStatus],
-                      ['Ultima activitate', pfa.lastActivityLabel],
-                    ].map(([label, value]) => (
-                      <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
-                        <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800 }}>{label}</Typography>
-                        <Typography variant="caption" sx={{ color: TOKENS.ink, fontWeight: 850, textAlign: 'right' }}>{value}</Typography>
-                      </Stack>
-                    ))}
+
+                    <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', rowGap: 0.75 }}>
+                      {[pfa.plan, pfa.subscriptionStatus, pfa.currentMonthStatus].map((label) => (
+                        <Chip
+                          key={label}
+                          label={label}
+                          size="small"
+                          sx={{ height: 24, borderRadius: TOKENS.radius.sm, bgcolor: alpha(TOKENS.ink, 0.04), color: TOKENS.ink, fontSize: '0.68rem', fontWeight: 800 }}
+                        />
+                      ))}
+                    </Stack>
+
+                    <Divider sx={{ borderColor: alpha(TOKENS.ink, 0.06) }} />
+
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                      {[
+                        ['Email', pfa.email],
+                        ['Telefon', pfa.phone],
+                        ['Cont', pfa.accountStatus],
+                        ['Activitate', pfa.lastActivityLabel],
+                      ].map(([label, value]) => (
+                        <Box key={label} sx={{ minWidth: 0 }}>
+                          <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 750 }}>{label}</Typography>
+                          <Typography variant="caption" sx={{ display: 'block', color: TOKENS.ink, fontWeight: 850, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={value}>
+                            {value}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                       <Button fullWidth variant="contained" onClick={() => onOpenPfaDetails(pfa)} endIcon={<OpenInNewRoundedIcon />} sx={{ boxShadow: 'none', bgcolor: TOKENS.primary, fontWeight: 850 }}>
                         Vezi detalii
