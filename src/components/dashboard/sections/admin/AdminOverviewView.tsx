@@ -609,7 +609,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                     </Stack>
 
                     <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', rowGap: 0.75 }}>
-                      {[pfa.plan, pfa.subscriptionStatus, pfa.currentMonthStatus].map((label) => (
+                      {[pfa.plan, pfa.subscriptionStatus].map((label) => (
                         <Chip
                           key={label}
                           label={label}

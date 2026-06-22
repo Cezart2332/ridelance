@@ -1056,7 +1056,7 @@ export function AdminDashboard() {
                 </Box>
 
                 <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', rowGap: 0.75, mb: 1.6 }}>
-                  {[pfaPlanLabel(pfa), subscriptionStatusLabel(pfa.subscriptionStatus), pfaCurrentMonthStatus(pfa)].map((label) => (
+                  {[pfaPlanLabel(pfa), subscriptionStatusLabel(pfa.subscriptionStatus)].map((label) => (
                     <Chip
                       key={label}
                       label={label}

@@ -403,7 +403,7 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
       c.model.toLowerCase().includes(search.toLowerCase());
     if (!matchesSearch) return false;
     if (!isPoster && activeTab === 0) return c.approvalStatus === 'Approved';
-    if (!isPoster && activeTab === 3) return c.approvalStatus === 'Pending';
+    if (!isPoster && activeTab === 3) return c.approvalStatus !== 'Approved';
     return true;
   });
 
