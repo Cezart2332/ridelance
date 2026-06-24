@@ -57,6 +57,7 @@ const periodLabels: Record<BoltDashboardPeriod, string> = {
   year: 'An',
   total: 'Total',
 };
+const visiblePeriods: BoltDashboardPeriod[] = ['month', 'year'];
 
 function formatLei(value: number) {
   return `${value.toLocaleString('ro-RO', {
@@ -265,9 +266,9 @@ export function BoltDashboardPanel({
   const earningsSeries = dashboard?.series ?? [];
   const distributionData = dashboard
     ? [
-        { name: 'Net', value: dashboard.totalNetEarnings },
-        { name: 'Tips', value: dashboard.totalTips },
-        { name: 'Comision', value: dashboard.totalCommissions },
+        { name: 'Cash', value: dashboard.totalCashEarnings },
+        { name: 'Card', value: dashboard.totalCardEarnings },
+        { name: 'Business', value: dashboard.totalBusinessEarnings },
       ]
     : [];
 
@@ -403,7 +404,7 @@ export function BoltDashboardPanel({
                 },
               }}
             >
-              {(Object.keys(periodLabels) as BoltDashboardPeriod[]).map((value) => (
+              {visiblePeriods.map((value) => (
                 <ToggleButton key={value} value={value}>
                   {periodLabels[value]}
                 </ToggleButton>
@@ -436,7 +437,7 @@ export function BoltDashboardPanel({
             value={formatLei(dashboard.totalNetEarnings)}
             icon={<AccountBalanceWalletRoundedIcon />}
             tone="#0f9f6e"
-            helper={dashboard.averageNetPerRide > 0 ? `${formatLeiDetailed(dashboard.averageNetPerRide)} / cursă` : undefined}
+            helper={`Cash ${formatLeiDetailed(dashboard.totalCashEarnings)} · card ${formatLeiDetailed(dashboard.totalCardEarnings)}`}
           />
           <KpiCard
             label="Curse"
@@ -457,7 +458,7 @@ export function BoltDashboardPanel({
             value={formatKm(dashboard.totalRideDistanceKm)}
             icon={<RouteRoundedIcon />}
             tone="#ea8a16"
-            helper={`Tips ${formatLeiDetailed(dashboard.totalTips)} · comision ${formatLeiDetailed(dashboard.totalCommissions)}`}
+            helper={`Business ${formatLeiDetailed(dashboard.totalBusinessEarnings)} · comision ${formatLeiDetailed(dashboard.totalCommissions)}`}
           />
         </Box>
       </Paper>
@@ -524,7 +525,7 @@ export function BoltDashboardPanel({
               </Box>
             </ChartCard>
 
-            <ChartCard title="Net, tips și comision">
+            <ChartCard title="Cash, card și business">
               <Box sx={{ width: '100%', height: { xs: 260, md: 320 }, minWidth: 0 }}>
                 <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <BarChart layout="vertical" data={distributionData} margin={{ top: 8, right: 24, bottom: 8, left: 12 }}>

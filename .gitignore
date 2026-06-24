@@ -27,6 +27,7 @@ backend
 .env
 .agent/
 .specs/
+examplecsv/
 
 # Stripe Example
 stripe-example/

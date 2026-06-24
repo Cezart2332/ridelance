@@ -76,6 +76,9 @@ export interface BoltDashboardDto {
   month: number | null;
   totalOrdersCount: number;
   totalNetEarnings: number;
+  totalCashEarnings: number;
+  totalCardEarnings: number;
+  totalBusinessEarnings: number;
   totalTips: number;
   totalCommissions: number;
   totalRideDistanceKm: number;

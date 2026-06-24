@@ -136,7 +136,7 @@ export function PfaIncomeSummary({
           Venituri {periodLabel}
         </Typography>
         <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', mt: 0.5 }}>
-          Date introduse de contabilul tău
+          Totalul contabil folosește Venit Bolt + Venit Uber. Cash/card sunt informative.
         </Typography>
       </Box>
 

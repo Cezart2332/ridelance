@@ -20,6 +20,16 @@ export interface MonthlyRevenuePoint {
   venitUber: number;
 }
 
+export interface DashboardPeriodStats {
+  year: number;
+  month: number | null;
+  venitCash: number;
+  venitCard: number;
+  venitBolt: number;
+  venitUber: number;
+  venitTotal: number;
+}
+
 export interface RecentDocumentDto {
   id: string;
   originalFileName: string;
@@ -59,6 +69,8 @@ export interface DashboardSummary {
   venitTotal?: number | null;
   incomeYear?: number | null;
   incomeMonth?: number | null;
+  monthlyStats: DashboardPeriodStats;
+  yearlyStats: DashboardPeriodStats;
   revenueChartYear?: number;
   monthlyRevenue?: MonthlyRevenuePoint[];
   // YTD auto-computed tax breakdown

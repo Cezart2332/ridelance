@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -7,7 +8,7 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 import StarRoundedIcon from '@mui/icons-material/StarRounded'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
@@ -39,10 +40,12 @@ const TOKENS = {
 
 export default function SubscriptionSelectPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [selected, setSelected] = useState<PlanKey | null>(null)
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
   const nextBilling = getNextMondayBillingDate()
+  const isSuspendedAccount = searchParams.get('reason') === 'suspended'
 
   const handleSelect = (key: PlanKey) => {
     setSelected(key)
@@ -98,6 +101,12 @@ export default function SubscriptionSelectPage() {
               .
             </Typography>
           </Box>
+
+          {isSuspendedAccount && (
+            <Alert severity="warning" sx={{ maxWidth: 640, width: '100%', borderRadius: TOKENS.radius.lg }}>
+              Contul tău este suspendat. Pentru reactivare, alege un abonament sau contactează suportul dacă ai nevoie de ajutor.
+            </Alert>
+          )}
 
           {/* Info banner */}
           <Paper

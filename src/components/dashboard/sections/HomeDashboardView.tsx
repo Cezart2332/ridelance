@@ -24,22 +24,22 @@ import {
   type BoltDashboardDto,
   type BoltDashboardPeriod,
 } from '../../../services/bolt.service';
+import { uberService, type UberDashboardDto, type UberDashboardPeriod } from '../../../services/uber.service';
 import { userService, type DashboardSummary } from '../../../services/user.service';
 import { BoltDashboardPanel } from './BoltDashboardPanel';
 import { BoltIntegrationTab } from './BoltIntegrationTab';
 import { PfaIncomeSummary } from './PfaIncomeSummary';
 import { PfaTaxSummaryWidget } from './PfaTaxSummaryWidget';
 import { RevenueCharts } from './RevenueCharts';
+import { UberCsvPanel } from './UberCsvPanel';
 import logo from '../../../assets/logo.svg';
 
 /* ── Types ────────────────────────────────────────────────────────────────── */
 
-export type StatsTimeframe = 'day' | 'week' | 'month' | 'year';
+export type StatsTimeframe = 'month' | 'year';
 export type StatsPlatform = 'all' | 'bolt' | 'uber';
 
 const TIMEFRAME_LABELS: Record<StatsTimeframe, string> = {
-  day: 'Zi',
-  week: 'Săptămână',
   month: 'Lună',
   year: 'An',
 };
@@ -71,60 +71,20 @@ function pfaStatusChip(status: string | null) {
 
 /**
  * Compute the filtered income values based on timeframe & platform.
- * Backend stores data per-month, so:
- *  - month → current month values
- *  - year  → sum of all 12 months from monthlyRevenue
- *  - day   → current month / daysInMonth
- *  - week  → current month / ~4.33
+ * Backend exposes accounting totals per current month and current year.
+ * Cash/card remain visible only as informative breakdown.
  */
 function computeFilteredIncome(
   summary: DashboardSummary,
   timeframe: StatsTimeframe,
   platform: StatsPlatform,
 ) {
-  // Per-source values for the current month
-  const mCash = summary.venitCash ?? 0;
-  const mCard = summary.venitCard ?? 0;
-  const mBolt = summary.venitBolt ?? 0;
-  const mUber = summary.venitUber ?? 0;
-  const mTaxe = summary.taxeEstimate ?? 0;
-
-  // For year timeframe, sum all months from monthlyRevenue
-  const yearRevenue = summary.monthlyRevenue ?? [];
-
-  let cash: number, card: number, bolt: number, uber: number, taxe: number;
-
-  if (timeframe === 'year') {
-    cash = yearRevenue.reduce((s, p) => s + (p.venitCash ?? 0), 0);
-    card = yearRevenue.reduce((s, p) => s + (p.venitCard ?? 0), 0);
-    bolt = yearRevenue.reduce((s, p) => s + (p.venitBolt ?? 0), 0);
-    uber = yearRevenue.reduce((s, p) => s + (p.venitUber ?? 0), 0);
-    // Estimate taxes proportionally
-    const monthTotal = mCash + mCard + mBolt + mUber;
-    const yearTotal = cash + card + bolt + uber;
-    taxe = monthTotal > 0 ? mTaxe * (yearTotal / monthTotal) : 0;
-  } else if (timeframe === 'day') {
-    const now = new Date();
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    cash = mCash / daysInMonth;
-    card = mCard / daysInMonth;
-    bolt = mBolt / daysInMonth;
-    uber = mUber / daysInMonth;
-    taxe = mTaxe / daysInMonth;
-  } else if (timeframe === 'week') {
-    cash = mCash / 4.33;
-    card = mCard / 4.33;
-    bolt = mBolt / 4.33;
-    uber = mUber / 4.33;
-    taxe = mTaxe / 4.33;
-  } else {
-    // month
-    cash = mCash;
-    card = mCard;
-    bolt = mBolt;
-    uber = mUber;
-    taxe = mTaxe;
-  }
+  const stats = timeframe === 'year' ? summary.yearlyStats : summary.monthlyStats;
+  let cash = stats?.venitCash ?? summary.venitCash ?? 0;
+  let card = stats?.venitCard ?? summary.venitCard ?? 0;
+  let bolt = stats?.venitBolt ?? summary.venitBolt ?? 0;
+  let uber = stats?.venitUber ?? summary.venitUber ?? 0;
+  const taxe = timeframe === 'year' ? summary.ytdTotalTax : summary.taxeEstimate ?? 0;
 
   // Platform filter
   if (platform === 'bolt') {
@@ -137,7 +97,7 @@ function computeFilteredIncome(
     cash = 0;
   }
 
-  const total = cash + card + bolt + uber;
+  const total = bolt + uber;
 
   return {
     venitCash: Math.round(cash * 100) / 100,
@@ -282,9 +242,11 @@ export function HomeDashboardView() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(true);
   const [boltDashboard, setBoltDashboard] = useState<BoltDashboardDto | null>(null);
-  const [boltPeriod, setBoltPeriod] = useState<BoltDashboardPeriod>('month');
   const [boltLoading, setBoltLoading] = useState(true);
   const [boltError, setBoltError] = useState<string | null>(null);
+  const [uberDashboard, setUberDashboard] = useState<UberDashboardDto | null>(null);
+  const [uberLoading, setUberLoading] = useState(true);
+  const [uberError, setUberError] = useState<string | null>(null);
   const [boltModalOpen, setBoltModalOpen] = useState(false);
 
   // ── Filter state ──
@@ -297,7 +259,8 @@ export function HomeDashboardView() {
     Promise.allSettled([
       userService.getDashboardSummary(),
       boltService.getDashboard('month'),
-    ]).then(([summaryResult, boltResult]) => {
+      uberService.getDashboard('month'),
+    ]).then(([summaryResult, boltResult, uberResult]) => {
       if (!mounted) return;
 
       if (summaryResult.status === 'fulfilled') {
@@ -313,10 +276,19 @@ export function HomeDashboardView() {
         console.error(boltResult.reason);
         setBoltError('Nu s-au putut încărca datele Bolt.');
       }
+
+      if (uberResult.status === 'fulfilled') {
+        setUberDashboard(uberResult.value);
+        setUberError(null);
+      } else {
+        console.error(uberResult.reason);
+        setUberError('Nu s-au putut încărca datele Uber.');
+      }
     }).finally(() => {
       if (!mounted) return;
       setSummaryLoading(false);
       setBoltLoading(false);
+      setUberLoading(false);
     });
 
     return () => {
@@ -324,20 +296,32 @@ export function HomeDashboardView() {
     };
   }, []);
 
-  const handleBoltPeriodChange = (period: BoltDashboardPeriod) => {
-    setBoltPeriod(period);
+  const handlePeriodChange = (period: StatsTimeframe) => {
+    setTimeframe(period);
     setBoltLoading(true);
+    setUberLoading(true);
     setBoltError(null);
+    setUberError(null);
 
-    boltService.getDashboard(period)
-      .then((data) => {
-        setBoltDashboard(data);
-      })
-      .catch((err) => {
-        console.error(err);
+    Promise.allSettled([
+      boltService.getDashboard(period),
+      uberService.getDashboard(period),
+    ]).then(([boltResult, uberResult]) => {
+      if (boltResult.status === 'fulfilled') setBoltDashboard(boltResult.value);
+      else {
+        console.error(boltResult.reason);
         setBoltError('Nu s-au putut încărca datele Bolt pentru perioada selectată.');
-      })
-      .finally(() => setBoltLoading(false));
+      }
+
+      if (uberResult.status === 'fulfilled') setUberDashboard(uberResult.value);
+      else {
+        console.error(uberResult.reason);
+        setUberError('Nu s-au putut încărca datele Uber pentru perioada selectată.');
+      }
+    }).finally(() => {
+      setBoltLoading(false);
+      setUberLoading(false);
+    });
   };
 
   const openBoltIntegration = () => {
@@ -348,7 +332,7 @@ export function HomeDashboardView() {
     setBoltLoading(true);
     setBoltError(null);
 
-    boltService.getDashboard(boltPeriod)
+    boltService.getDashboard(timeframe)
       .then((data) => {
         setBoltDashboard(data);
       })
@@ -362,6 +346,13 @@ export function HomeDashboardView() {
   const handleBoltConnected = () => {
     setBoltModalOpen(false);
     refreshBoltDashboard();
+  };
+
+  const handleUberImported = (dashboard: UberDashboardDto) => {
+    setUberDashboard(dashboard);
+    userService.getDashboardSummary()
+      .then(setSummary)
+      .catch((err) => console.error(err));
   };
 
   if (summaryLoading) {
@@ -387,11 +378,7 @@ export function HomeDashboardView() {
   const timeframeLabel =
     timeframe === 'year'
       ? String(summary.incomeYear ?? new Date().getFullYear())
-      : timeframe === 'day'
-        ? 'medie zilnică'
-        : timeframe === 'week'
-          ? 'medie săptămânală'
-          : undefined; // month uses default
+      : undefined; // month uses default
 
   return (
     <>
@@ -431,16 +418,26 @@ export function HomeDashboardView() {
           dashboard={boltDashboard}
           loading={boltLoading}
           error={boltError}
-          period={boltPeriod}
-          onPeriodChange={handleBoltPeriodChange}
+          period={timeframe as BoltDashboardPeriod}
+          onPeriodChange={(period) => {
+            if (period === 'month' || period === 'year') handlePeriodChange(period);
+          }}
           onOpenBoltIntegration={openBoltIntegration}
+        />
+
+        <UberCsvPanel
+          dashboard={uberDashboard}
+          loading={uberLoading}
+          error={uberError}
+          period={timeframe as UberDashboardPeriod}
+          onImported={handleUberImported}
         />
 
         {/* ── Stats Filter Bar ── */}
         <StatsFilterBar
           timeframe={timeframe}
           platform={platform}
-          onTimeframeChange={setTimeframe}
+          onTimeframeChange={handlePeriodChange}
           onPlatformChange={setPlatform}
         />
 
@@ -468,8 +465,11 @@ export function HomeDashboardView() {
           incomeMonth={summary.incomeMonth}
           timeframe={timeframe}
           platform={platform}
-          boltDashboard={boltDashboard}
         />
+
+        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', fontWeight: 700 }}>
+          CAS/CASS sunt estimări anuale pe {summary.taxYear}, calculate din venitul Bolt + Uber YTD.
+        </Typography>
 
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 2 }}>
           <Paper

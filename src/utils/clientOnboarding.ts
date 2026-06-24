@@ -19,6 +19,10 @@ export function canAccessDashboard(sub: SubscriptionResponse | null): boolean {
     sub.dashboardAccessGranted
 }
 
+export function isSuspendedSubscription(sub: SubscriptionResponse | null): boolean {
+  return sub?.status === 'Expired' || sub?.status === 'Suspended'
+}
+
 /** Client onboarding route for a known subscription snapshot. */
 export function resolveClientPath(sub: SubscriptionResponse | null): string {
   if (!sub) return '/inregistrare/pfa'
@@ -26,6 +30,7 @@ export function resolveClientPath(sub: SubscriptionResponse | null): string {
   if (sub.pfaStatus === 'Pending') return '/app/dashboard?section=documents'
   if (isAwaitingAdminApproval(sub)) return '/app/pending-approval'
   if (isAwaitingBillingGate(sub)) return '/app/pending-access'
+  if (sub.pfaStatus === 'Approved' && isSuspendedSubscription(sub)) return '/inregistrare/abonament?reason=suspended'
   if (sub.pfaStatus === 'Approved' && !canAccessDashboard(sub)) return '/inregistrare/abonament'
   if (canAccessDashboard(sub)) return '/app/dashboard'
   return '/app'

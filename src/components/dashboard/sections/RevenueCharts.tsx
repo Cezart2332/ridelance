@@ -6,7 +6,6 @@ import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import { TOKENS } from '../../../constants/tokens';
 import { MONTH_CHART_LABELS, monthNumberToLabel } from '../../../utils/monthLabels';
 import type { MonthlyRevenuePoint } from '../../../services/user.service';
-import type { BoltDashboardDto } from '../../../services/bolt.service';
 import type { StatsTimeframe, StatsPlatform } from './HomeDashboardView';
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
@@ -21,7 +20,6 @@ interface RevenueChartsProps {
   incomeMonth?: number | null;
   timeframe: StatsTimeframe;
   platform: StatsPlatform;
-  boltDashboard?: BoltDashboardDto | null;
 }
 
 /* ── Helpers ────────────────────────────────────────────────────────────────── */
@@ -46,93 +44,6 @@ function buildMonthlyChartData(
       value: p ? getPointValue(p, platform) : 0,
     };
   });
-}
-
-/** Build daily chart data for the current month.
- *  If bolt dashboard series is available and platform includes bolt, use real daily data.
- *  Otherwise distribute monthly totals evenly across days. */
-function buildDailyChartData(
-  currentMonthPoint: MonthlyRevenuePoint | undefined,
-  platform: StatsPlatform,
-  boltDashboard: BoltDashboardDto | null | undefined,
-) {
-  const now = new Date();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
-  // If we have real Bolt daily data and platform is bolt or all
-  const hasBoltDaily =
-    boltDashboard?.series &&
-    boltDashboard.series.length > 0 &&
-    boltDashboard.period === 'month';
-
-  if (hasBoltDaily && (platform === 'bolt' || platform === 'all')) {
-    const boltByDay = new Map(
-      boltDashboard!.series.map((s) => [parseInt(s.label, 10), s.netEarnings]),
-    );
-
-    if (platform === 'bolt') {
-      return days.map((d) => ({
-        name: String(d),
-        value: Number(boltByDay.get(d) ?? 0),
-      }));
-    }
-
-    // platform === 'all': bolt daily + distribute other sources evenly
-    const otherTotal = (currentMonthPoint?.venitCash ?? 0) +
-      (currentMonthPoint?.venitCard ?? 0) +
-      (currentMonthPoint?.venitUber ?? 0);
-    const otherPerDay = otherTotal / daysInMonth;
-
-    return days.map((d) => ({
-      name: String(d),
-      value: Math.round(((boltByDay.get(d) ?? 0) + otherPerDay) * 100) / 100,
-    }));
-  }
-
-  // No bolt daily data — distribute evenly
-  const monthTotal = currentMonthPoint ? getPointValue(currentMonthPoint, platform) : 0;
-  const perDay = monthTotal / daysInMonth;
-
-  return days.map((d) => ({
-    name: String(d),
-    value: Math.round(perDay * 100) / 100,
-  }));
-}
-
-/** Build weekly chart data (4-5 weeks) from daily data */
-function buildWeeklyChartData(
-  currentMonthPoint: MonthlyRevenuePoint | undefined,
-  platform: StatsPlatform,
-  boltDashboard: BoltDashboardDto | null | undefined,
-) {
-  const dailyData = buildDailyChartData(currentMonthPoint, platform, boltDashboard);
-  const weeks: { name: string; value: number }[] = [];
-  const numWeeks = Math.ceil(dailyData.length / 7);
-
-  for (let w = 0; w < numWeeks; w++) {
-    const start = w * 7;
-    const end = Math.min(start + 7, dailyData.length);
-    const weekTotal = dailyData.slice(start, end).reduce((s, d) => s + d.value, 0);
-    weeks.push({
-      name: `Săpt. ${w + 1}`,
-      value: Math.round(weekTotal * 100) / 100,
-    });
-  }
-
-  return weeks;
-}
-
-/** Build yearly chart data — one bar per year from monthlyRevenue */
-function buildYearlyChartData(
-  points: MonthlyRevenuePoint[],
-  platform: StatsPlatform,
-  year: number,
-) {
-  const yearTotal = points.reduce((s, p) => s + getPointValue(p, platform), 0);
-  return [
-    { name: String(year), value: Math.round(yearTotal * 100) / 100 },
-  ];
 }
 
 /* ── ChartCard ──────────────────────────────────────────────────────────────── */
@@ -187,7 +98,6 @@ export function RevenueCharts({
   incomeMonth,
   timeframe,
   platform,
-  boltDashboard,
 }: RevenueChartsProps) {
   // Determine current month point
   const currentMonth = incomeMonth ?? new Date().getMonth() + 1;
@@ -197,23 +107,15 @@ export function RevenueCharts({
   let mainChartData: { name: string; value: number }[];
   let mainChartTitle: string;
 
-  switch (timeframe) {
-    case 'day':
-      mainChartData = buildDailyChartData(currentMonthPoint, platform, boltDashboard);
-      mainChartTitle = `Venit zilnic — ${monthNumberToLabel(currentMonth)} ${year}`;
-      break;
-    case 'week':
-      mainChartData = buildWeeklyChartData(currentMonthPoint, platform, boltDashboard);
-      mainChartTitle = `Venit săptămânal — ${monthNumberToLabel(currentMonth)} ${year}`;
-      break;
-    case 'year':
-      mainChartData = buildYearlyChartData(monthlyRevenue, platform, year);
-      mainChartTitle = `Venit total — ${year}`;
-      break;
-    default: // month
-      mainChartData = buildMonthlyChartData(monthlyRevenue, platform);
-      mainChartTitle = `Venit total pe luni — ${year}`;
-      break;
+  if (timeframe === 'year') {
+    mainChartData = buildMonthlyChartData(monthlyRevenue, platform);
+    mainChartTitle = `Venituri YTD — ${year}`;
+  } else {
+    mainChartData = [{
+      name: monthNumberToLabel(currentMonth),
+      value: currentMonthPoint ? getPointValue(currentMonthPoint, platform) : 0,
+    }];
+    mainChartTitle = `Venit luna curentă — ${monthNumberToLabel(currentMonth)} ${year}`;
   }
 
   const hasMainData = mainChartData.some((v) => v.value > 0);
@@ -237,13 +139,9 @@ export function RevenueCharts({
   const breakdownMonthLabel =
     timeframe === 'year'
       ? String(year)
-      : timeframe === 'day'
-        ? 'medie zilnică'
-        : timeframe === 'week'
-          ? 'medie săptămânală'
-          : incomeMonth
-            ? monthNumberToLabel(incomeMonth)
-            : 'luna curentă';
+      : incomeMonth
+        ? monthNumberToLabel(incomeMonth)
+        : 'luna curentă';
 
   if (!hasMainData && !hasBreakdown) {
     return (
@@ -310,10 +208,10 @@ export function RevenueCharts({
                     axisLine={false}
                     tick={{
                       fill: DASHBOARD_TOKENS.textMuted,
-                      fontSize: timeframe === 'day' ? 9 : 11,
+                      fontSize: 11,
                       fontWeight: 600,
                     }}
-                    interval={timeframe === 'day' ? 1 : 0}
+                    interval={0}
                   />
                   <YAxis
                     tickLine={false}
@@ -341,7 +239,7 @@ export function RevenueCharts({
                     dataKey="value"
                     fill={barColor}
                     radius={[4, 4, 0, 0]}
-                    maxBarSize={timeframe === 'day' ? 16 : 40}
+                    maxBarSize={40}
                   />
                 </BarChart>
               </ResponsiveContainer>
