@@ -267,6 +267,50 @@ function TaxRow({ label, value, total }: { label: string; value: number; total: 
   );
 }
 
+/* ── Contribution threshold row ────────────────────────────────────────────── */
+
+function ThresholdProgressRow({
+  label,
+  profit,
+  target,
+  caption,
+  capped,
+}: {
+  label: string;
+  profit: number;
+  target: number;
+  caption: string;
+  capped?: boolean;
+}) {
+  const progress = capped ? 100 : target > 0 ? Math.min(100, (profit / target) * 100) : 0;
+  const remaining = Math.max(0, target - profit);
+  return (
+    <Box>
+      <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'baseline', mb: 0.5 }}>
+        <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted }}>
+          {label}
+        </Typography>
+        <Typography sx={{ fontSize: '0.78rem', fontWeight: 800, color: DASHBOARD_TOKENS.ink, fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
+          {capped ? 'Plafon atins' : `mai ai ${formatLei(remaining)}`}
+        </Typography>
+      </Stack>
+      <LinearProgress
+        variant="determinate"
+        value={progress}
+        sx={{
+          height: 6,
+          borderRadius: 4,
+          bgcolor: alpha(CHART_BAR_COLOR, 0.12),
+          '& .MuiLinearProgress-bar': { bgcolor: CHART_BAR_COLOR, borderRadius: 4 },
+        }}
+      />
+      <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.74rem', lineHeight: 1.5, mt: 0.6 }}>
+        {caption}
+      </Typography>
+    </Box>
+  );
+}
+
 /* ── Main Component ────────────────────────────────────────────────────────── */
 
 export function HomeDashboardView({ onNavigate }: HomeDashboardViewProps) {
@@ -335,10 +379,10 @@ export function HomeDashboardView({ onNavigate }: HomeDashboardViewProps) {
 
   // ── Aggregate income for the selected timeframe ──
   const stats = timeframe === 'year' ? summary.yearlyStats : summary.monthlyStats;
+  const venitCash = stats?.venitCash ?? summary.venitCash ?? 0;
+  const venitCard = stats?.venitCard ?? summary.venitCard ?? 0;
   const venitBolt = stats?.venitBolt ?? summary.venitBolt ?? 0;
   const venitUber = stats?.venitUber ?? summary.venitUber ?? 0;
-  const venitTotal = venitBolt + venitUber;
-  const taxeEstimate = timeframe === 'year' ? summary.ytdTotalTax : summary.taxeEstimate ?? 0;
 
   const periodLabel =
     timeframe === 'year'
@@ -399,6 +443,53 @@ export function HomeDashboardView({ onNavigate }: HomeDashboardViewProps) {
     : 'Importă rapoartele CSV din pagina Platforme';
 
   const hasFiscalData = summary.ytdTotalIncome > 0;
+
+  // ── CAS / CASS contribution thresholds ──
+  // Falls back to the 2025+ minimum gross salary if the API doesn't send them.
+  const minSalary = summary.taxYear >= 2025 ? 4050 : 3300;
+  const profitYtd = summary.taxThresholds?.profit ?? summary.ytdProfit;
+  const casT1 = summary.taxThresholds?.casFirstThreshold ?? minSalary * 12;
+  const casT2 = summary.taxThresholds?.casSecondThreshold ?? minSalary * 24;
+  const cassT1 = summary.taxThresholds?.cassFirstThreshold ?? minSalary * 6;
+  const cassMax = summary.taxThresholds?.cassMaximumThreshold ?? minSalary * 72;
+
+  const casThreshold =
+    profitYtd < casT1
+      ? {
+          target: casT1,
+          capped: false,
+          caption: `Sub ${formatLei(casT1)} profit (12 salarii minime) nu datorezi CAS. Peste acest prag, CAS este ${formatLei(casT1 * 0.25)} pe an.`,
+        }
+      : profitYtd < casT2
+        ? {
+            target: casT2,
+            capped: false,
+            caption: `Ai trecut de pragul de 12 salarii — CAS anual: ${formatLei(casT1 * 0.25)}. Peste ${formatLei(casT2)} (24 de salarii), CAS crește la ${formatLei(casT2 * 0.25)}.`,
+          }
+        : {
+            target: casT2,
+            capped: true,
+            caption: `Ai depășit pragul de 24 de salarii minime — CAS este plafonat la ${formatLei(casT2 * 0.25)} pe an.`,
+          };
+
+  const cassThreshold =
+    profitYtd < cassT1
+      ? {
+          target: cassT1,
+          capped: false,
+          caption: `Sub ${formatLei(cassT1)} profit (6 salarii minime) plătești oricum CASS minim: ${formatLei(cassT1 * 0.1)} pe an. Peste prag, CASS devine 10% din profit.`,
+        }
+      : profitYtd < cassMax
+        ? {
+            target: cassMax,
+            capped: false,
+            caption: `CASS este 10% din profit. Se plafonează la ${formatLei(cassMax * 0.1)} pe an, când profitul depășește ${formatLei(cassMax)} (72 de salarii minime).`,
+          }
+        : {
+            target: cassMax,
+            capped: true,
+            caption: `Ai depășit plafonul de 72 de salarii minime — CASS este plafonat la ${formatLei(cassMax * 0.1)} pe an.`,
+          };
 
   return (
     <Stack spacing={3}>
@@ -463,17 +554,24 @@ export function HomeDashboardView({ onNavigate }: HomeDashboardViewProps) {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(4, minmax(0, 1fr))' },
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', md: 'repeat(3, minmax(0, 1fr))' },
           gap: 2,
         }}
       >
-        <KpiTile label="Venit total" value={formatLei(venitTotal)} helper="Bolt + Uber, total contabil" highlight />
-        <KpiTile label="Venit Bolt" value={formatLei(venitBolt)} />
-        <KpiTile label="Venit Uber" value={formatLei(venitUber)} />
+        <KpiTile label="Venit Cash" value={formatLei(venitCash)} helper={`Încasări numerar, ${periodLabel}`} />
+        <KpiTile label="Venit Card" value={formatLei(venitCard)} helper={`Încasări card, ${periodLabel}`} />
+        <KpiTile label="Venit Bolt" value={formatLei(venitBolt)} helper={`Total Bolt, ${periodLabel}`} />
+        <KpiTile label="Venit Uber" value={formatLei(venitUber)} helper={`Total Uber, ${periodLabel}`} />
         <KpiTile
           label="Taxe estimate"
-          value={formatLei(taxeEstimate)}
-          helper={timeframe === 'year' ? `CAS + CASS + impozit, ${summary.taxYear}` : 'Estimare pentru luna curentă'}
+          value={formatLei(summary.ytdTotalTax)}
+          helper={`CAS + CASS + impozit pe anul ${summary.taxYear}`}
+        />
+        <KpiTile
+          label="Venit net total"
+          value={formatLei(summary.ytdNetIncome)}
+          helper={`După taxe, anul ${summary.taxYear}`}
+          highlight
         />
       </Box>
 
@@ -562,6 +660,28 @@ export function HomeDashboardView({ onNavigate }: HomeDashboardViewProps) {
                 <TaxRow label="CASS — sănătate (10%)" value={summary.ytdCass} total={summary.ytdTotalIncome} />
                 <TaxRow label="Impozit pe venit (10%)" value={summary.ytdIncomeTax} total={summary.ytdTotalIncome} />
               </Stack>
+
+              <Box>
+                <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '0.86rem', mb: 1.4 }}>
+                  Cât mai ai până la următorul prag
+                </Typography>
+                <Stack spacing={1.8}>
+                  <ThresholdProgressRow
+                    label="Prag CAS"
+                    profit={profitYtd}
+                    target={casThreshold.target}
+                    caption={casThreshold.caption}
+                    capped={casThreshold.capped}
+                  />
+                  <ThresholdProgressRow
+                    label="Prag CASS"
+                    profit={profitYtd}
+                    target={cassThreshold.target}
+                    caption={cassThreshold.caption}
+                    capped={cassThreshold.capped}
+                  />
+                </Stack>
+              </Box>
 
               <Box sx={{ mt: 'auto' }}>
                 <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.78rem', lineHeight: 1.5 }}>

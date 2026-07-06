@@ -373,20 +373,29 @@ export function DashboardLayout({
         </Drawer>
       )}
 
-      {/* Desktop Sidebar — sticky so the profile/logout card stays visible on long pages */}
+      {/* Desktop Sidebar — fixed to the viewport so the profile/logout card stays
+          visible on long pages (sticky breaks because #root has overflow-x: hidden).
+          The outer nav only reserves the horizontal space in the flex row. */}
       <Box
         component="nav"
         sx={{
           width: { md: SIDEBAR_WIDTH },
           flexShrink: { md: 0 },
           display: { xs: 'none', md: 'block' },
-          position: 'sticky',
-          top: 0,
-          height: '100vh',
-          alignSelf: 'flex-start',
         }}
       >
-        {sidebarContent}
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: SIDEBAR_WIDTH,
+            height: '100dvh',
+            zIndex: (t) => t.zIndex.appBar + 1,
+          }}
+        >
+          {sidebarContent}
+        </Box>
       </Box>
 
       {/* Main Area */}

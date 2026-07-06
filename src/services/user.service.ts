@@ -48,6 +48,20 @@ export interface YtdExpenseItem {
   documentStatus: string;
 }
 
+export interface TaxThresholds {
+  profit: number;
+  casFirstThreshold: number;
+  casSecondThreshold: number;
+  cassFirstThreshold: number;
+  cassMaximumThreshold: number;
+  remainingToNextCasThreshold: number;
+  remainingToNextCassThreshold: number;
+  hasReachedCasFirstThreshold: boolean;
+  hasReachedCasSecondThreshold: boolean;
+  hasReachedCassFirstThreshold: boolean;
+  hasReachedCassMaximumThreshold: boolean;
+}
+
 export interface DashboardSummary {
   pfaRegistrationId?: string | null;
   pfaStatus: string | null;
@@ -84,6 +98,7 @@ export interface DashboardSummary {
   ytdTotalTax: number;
   ytdNetIncome: number;
   ytdExpenses: YtdExpenseItem[];
+  taxThresholds?: TaxThresholds | null;
   fiscalSettings?: PfaFiscalSettings | null;
 }
 

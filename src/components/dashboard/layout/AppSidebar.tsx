@@ -27,9 +27,38 @@ interface AppSidebarProps {
   onLogout?: () => void;
 }
 
+/** Single source of truth for nav icon colors — MUI icons and image icons must match. */
+const navIconColor = (isActive: boolean) =>
+  isActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.55);
+
+/**
+ * Renders an image icon as a CSS mask so it takes the exact same token color
+ * as the MUI icons (the old CSS-filter approach only approximated it).
+ */
+function ImgNavIcon({ src, isActive }: { src: string; isActive: boolean }) {
+  return (
+    <Box
+      sx={{
+        width: 18,
+        height: 18,
+        flexShrink: 0,
+        backgroundColor: navIconColor(isActive),
+        // Quoted: asset paths can contain spaces, which break unquoted url().
+        WebkitMaskImage: `url("${src}")`,
+        maskImage: `url("${src}")`,
+        WebkitMaskRepeat: 'no-repeat',
+        maskRepeat: 'no-repeat',
+        WebkitMaskPosition: 'center',
+        maskPosition: 'center',
+        WebkitMaskSize: 'contain',
+        maskSize: 'contain',
+      }}
+    />
+  );
+}
+
 function MuiNavIcon({ iconName, isActive }: { iconName: string; isActive: boolean }) {
-  const color = isActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.5);
-  const sx = { fontSize: 18, color };
+  const sx = { fontSize: 18, color: navIconColor(isActive) };
   switch (iconName) {
     case 'DirectionsCarFilledRounded':
       return <DirectionsCarFilledRoundedIcon sx={sx} />;
@@ -104,19 +133,7 @@ function NavItems({
                         <MuiNavIcon iconName={item.icon.split(':')[1]} isActive={isChildActive} />
                       </Box>
                     ) : (
-                      <img
-                        src={item.icon}
-                        alt=""
-                        style={{
-                          width: 18,
-                          height: 18,
-                          flexShrink: 0,
-                          filter: isChildActive
-                            ? 'invert(62%) sepia(49%) saturate(512%) hue-rotate(155deg) brightness(96%) contrast(92%)'
-                            : 'invert(15%) sepia(10%) saturate(704%) hue-rotate(201deg) brightness(94%) contrast(89%)',
-                          opacity: isChildActive ? 1 : 0.55,
-                        }}
-                      />
+                      <ImgNavIcon src={item.icon} isActive={isChildActive} />
                     ))}
                   <Typography
                     noWrap
@@ -197,19 +214,7 @@ function NavItems({
                     <MuiNavIcon iconName={item.icon.split(':')[1]} isActive={isActive} />
                   </Box>
                 ) : (
-                  <img
-                    src={item.icon}
-                    alt=""
-                    style={{
-                        width: 18,
-                        height: 18,
-                        flexShrink: 0,
-                        filter: isActive
-                        ? 'invert(62%) sepia(49%) saturate(512%) hue-rotate(155deg) brightness(96%) contrast(92%)'
-                        : 'invert(15%) sepia(10%) saturate(704%) hue-rotate(201deg) brightness(94%) contrast(89%)',
-                        opacity: isActive ? 1 : 0.55,
-                    }}
-                  />
+                  <ImgNavIcon src={item.icon} isActive={isActive} />
                 ))}
               <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {displayLabel}

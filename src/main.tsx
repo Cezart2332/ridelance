@@ -165,6 +165,23 @@ const theme = createTheme({
           WebkitUserSelect: 'text',
           userSelect: 'text',
         },
+        '::selection': {
+          backgroundColor: 'rgba(92, 203, 245, 0.3)',
+        },
+        '*::-webkit-scrollbar': {
+          width: 8,
+          height: 8,
+        },
+        '*::-webkit-scrollbar-thumb': {
+          backgroundColor: 'rgba(26, 26, 46, 0.14)',
+          borderRadius: 8,
+        },
+        '*::-webkit-scrollbar-thumb:hover': {
+          backgroundColor: 'rgba(26, 26, 46, 0.24)',
+        },
+        '*::-webkit-scrollbar-track': {
+          backgroundColor: 'transparent',
+        },
       },
     },
     MuiButton: {
@@ -175,11 +192,16 @@ const theme = createTheme({
         root: {
           borderRadius: TOKENS.radius.md, // 8px for standard buttons
           transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-          '&:hover': {
-            transform: 'translateY(-1.5px)',
-          },
+          // Calm interactions: no hover "jump" (nav items are buttons too),
+          // just a gentle press and a visible keyboard-focus ring.
           '&:active': {
-            transform: 'scale(0.97)',
+            transform: 'scale(0.98)',
+          },
+          '&.Mui-focusVisible': {
+            boxShadow: `0 0 0 3px rgba(92, 203, 245, 0.35)`,
+          },
+          '&.MuiButton-containedPrimary:hover': {
+            backgroundColor: TOKENS.primaryStrong,
           },
         },
       },
@@ -189,11 +211,11 @@ const theme = createTheme({
         root: {
           borderRadius: TOKENS.radius.lg, // 12px for cards
           border: `1px solid ${TOKENS.border}`,
-          boxShadow: TOKENS.shadow.md,
-          transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
+          boxShadow: TOKENS.shadow.sm,
+          transition: `border-color ${TOKENS.duration} ${TOKENS.easing}, box-shadow ${TOKENS.duration} ${TOKENS.easing}`,
           '&:hover': {
-            transform: 'translateY(-2px)',
-            boxShadow: TOKENS.shadow.lg,
+            borderColor: TOKENS.borderHover,
+            boxShadow: TOKENS.shadow.md,
           },
         },
       },
@@ -244,7 +266,111 @@ const theme = createTheme({
           '& .MuiOutlinedInput-root': {
             borderRadius: TOKENS.radius.md, // 8px for text fields
             transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
+            '&:hover:not(.Mui-focused) .MuiOutlinedInput-notchedOutline': {
+              borderColor: TOKENS.borderHover,
+            },
           },
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          fontWeight: 650,
+        },
+      },
+    },
+    MuiTooltip: {
+      styleOverrides: {
+        tooltip: {
+          backgroundColor: TOKENS.ink,
+          borderRadius: TOKENS.radius.sm,
+          fontWeight: 600,
+          fontSize: '0.74rem',
+          padding: '6px 10px',
+        },
+        arrow: {
+          color: TOKENS.ink,
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          borderRadius: TOKENS.radius.xl,
+          boxShadow: TOKENS.shadow.xl,
+        },
+      },
+    },
+    MuiMenu: {
+      styleOverrides: {
+        paper: {
+          borderRadius: TOKENS.radius.md,
+          border: `1px solid ${TOKENS.border}`,
+          boxShadow: TOKENS.shadow.lg,
+          marginTop: 4,
+        },
+        list: {
+          padding: 6,
+        },
+      },
+    },
+    MuiMenuItem: {
+      styleOverrides: {
+        root: {
+          borderRadius: TOKENS.radius.sm,
+          fontSize: '0.9rem',
+          fontWeight: 550,
+          minHeight: 38,
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          borderBottomColor: TOKENS.border,
+        },
+        head: {
+          fontWeight: 750,
+          color: TOKENS.textMuted,
+          fontSize: '0.8rem',
+          letterSpacing: 0.2,
+          whiteSpace: 'nowrap',
+        },
+      },
+    },
+    MuiTableRow: {
+      styleOverrides: {
+        root: {
+          '&:last-child .MuiTableCell-root': {
+            borderBottom: 'none',
+          },
+        },
+      },
+    },
+    MuiLinearProgress: {
+      styleOverrides: {
+        root: {
+          borderRadius: TOKENS.radius.full,
+        },
+        bar: {
+          borderRadius: TOKENS.radius.full,
+        },
+      },
+    },
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          fontWeight: 650,
+        },
+      },
+    },
+    MuiToggleButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          fontWeight: 650,
         },
       },
     },
