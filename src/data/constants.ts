@@ -22,6 +22,7 @@ export const navItems = [
   { label: 'Fiscal', path: '/fiscal' },
   { label: 'Parteneri', path: '/parteneri' },
   { label: 'Despre Ridelance', path: '/despre-ridelance' },
+  { label: 'Programare', path: '/programare' },
   { label: 'Contact', path: '/contact' },
 ]
 
