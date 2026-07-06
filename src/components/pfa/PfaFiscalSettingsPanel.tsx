@@ -34,6 +34,7 @@ import {
   type PfaPlatformAccount,
   type UpsertPfaPlatformAccountItem,
 } from '../../services/pfa.service'
+import { documentService } from '../../services/document.service'
 
 type Provider = 'Uber' | 'Bolt'
 type AccountKind = 'Driver' | 'Fleet'
@@ -42,6 +43,11 @@ type FiscalSection = 'overview' | 'tax' | 'platforms' | 'cash' | 'vehicle' | 'ub
 interface PfaFiscalSettingsPanelProps {
   pfaId: string
   editable?: boolean
+  /**
+   * User id of the PFA owner. When provided (admin / contabil context),
+   * enables uploading the intra-community VAT certificate for that client.
+   */
+  clientUserId?: string
 }
 
 const FIXED_FISCAL_FIELDS = [
@@ -246,7 +252,7 @@ function buildDefaultSettings(pfaId: string): PfaFiscalSettings {
   }
 }
 
-export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSettingsPanelProps) {
+export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }: PfaFiscalSettingsPanelProps) {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
 
@@ -276,6 +282,8 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
   })
 
   const [accounts, setAccounts] = useState<Record<string, UpsertPfaPlatformAccountItem>>({})
+  const [uploadingVatDoc, setUploadingVatDoc] = useState(false)
+  const [openingVatDoc, setOpeningVatDoc] = useState(false)
 
   const applySettings = (data: PfaFiscalSettings) => {
     setSettings(data)
@@ -368,6 +376,40 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
       })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleUploadVatDocument = async (file: File) => {
+    if (!clientUserId || !settings) return
+    setUploadingVatDoc(true)
+    try {
+      const ext = file.name.split('.').pop()
+      const namedFile = new File([file], `Certificat TVA intracomunitar.${ext}`, { type: file.type })
+      const uploadResponse = await documentService.upload(namedFile, 'CertificatTvaIntracomunitar', pfaId, clientUserId)
+
+      const updated = await pfaService.updateFiscalProfile(pfaId, {
+        ...form,
+        specialVatCodeObtainedAtUtc: form.specialVatCodeObtainedAtUtc || null,
+        specialVatCodeDocumentId: uploadResponse.documentId,
+        vehicleSupportingDocumentId: settings.fiscalProfile.vehicleSupportingDocumentId ?? null,
+      })
+      setSettings((current) => current ? { ...current, fiscalProfile: updated } : current)
+      setSnackbar({ open: true, message: 'Documentul TVA intracomunitar a fost încărcat.', severity: 'success' })
+    } catch {
+      setSnackbar({ open: true, message: 'Documentul TVA intracomunitar nu a putut fi încărcat.', severity: 'error' })
+    } finally {
+      setUploadingVatDoc(false)
+    }
+  }
+
+  const handleOpenVatDocument = async () => {
+    const documentId = settings?.fiscalProfile.specialVatCodeDocumentId
+    if (!documentId) return
+    setOpeningVatDoc(true)
+    try {
+      await documentService.openInNewTab(documentId, 'Certificat TVA intracomunitar')
+    } finally {
+      setOpeningVatDoc(false)
     }
   }
 
@@ -657,14 +699,51 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false }: PfaFiscalSet
                       {specialVatOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
                     </TextField>
                     <TextField fullWidth size="small" label="Data obținerii" type="date" value={form.specialVatCodeObtainedAtUtc} onChange={(e) => setForm((f) => ({ ...f, specialVatCodeObtainedAtUtc: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} sx={inputSx} />
-                    <LockedField label="Document cod TVA" value={profile.specialVatCodeDocumentId ? 'Verificat' : '—'} />
+                    <LockedField label="Document TVA intracomunitar" value={profile.specialVatCodeDocumentId ? 'Încărcat' : 'Lipsă'} />
                   </>
                 ) : (
                   <>
                     <SettingRow label="Cod special TVA" value={optionLabel(specialVatOptions, profile.specialVatCodeStatus)} />
                     <SettingRow label="Data obținerii" value={roDate(profile.specialVatCodeObtainedAtUtc)} />
-                    <SettingRow label="Document cod TVA" value={profile.specialVatCodeDocumentId ? 'Verificat' : '—'} />
+                    <SettingRow label="Document TVA intracomunitar" value={profile.specialVatCodeDocumentId ? 'Încărcat' : 'Lipsă'} />
                   </>
+                )}
+                {(clientUserId || profile.specialVatCodeDocumentId) && (
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
+                    {clientUserId && (
+                      <Button
+                        component="label"
+                        variant="contained"
+                        size="small"
+                        disabled={uploadingVatDoc}
+                        startIcon={uploadingVatDoc ? <CircularProgress size={14} color="inherit" /> : undefined}
+                        sx={{ fontWeight: 700, textTransform: 'none', boxShadow: 'none' }}
+                      >
+                        {profile.specialVatCodeDocumentId ? 'Reîncarcă documentul TVA intracomunitar' : 'Încarcă documentul TVA intracomunitar'}
+                        <input
+                          type="file"
+                          hidden
+                          accept=".pdf,.png,.jpg,.jpeg,.webp"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) void handleUploadVatDocument(file)
+                            e.target.value = ''
+                          }}
+                        />
+                      </Button>
+                    )}
+                    {profile.specialVatCodeDocumentId && (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={handleOpenVatDocument}
+                        disabled={openingVatDoc}
+                        sx={{ fontWeight: 700, textTransform: 'none' }}
+                      >
+                        {openingVatDoc ? 'Se deschide…' : 'Deschide documentul'}
+                      </Button>
+                    )}
+                  </Stack>
                 )}
               </>,
               handleSaveProfile,

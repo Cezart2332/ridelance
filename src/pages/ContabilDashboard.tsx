@@ -9,6 +9,10 @@ import {
   Chip,
   CircularProgress,
   Alert,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { DashboardLayout } from '../components/layout/DashboardLayout'
@@ -61,6 +65,15 @@ function accountStatusColor(status: string) {
   }
 }
 
+function isActiveClient(client: { accountStatus: string }) {
+  return client.accountStatus.toLowerCase() === 'activ'
+}
+
+const ROMANIAN_MONTHS = [
+  'Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie',
+  'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie',
+]
+
 export function ContabilDashboard() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -94,6 +107,11 @@ export function ContabilDashboard() {
   const [statsLoading, setStatsLoading] = useState(false)
   const [statsError, setStatsError] = useState<string | null>(null)
 
+  // Month filter for the home page stats
+  const now = new Date()
+  const [statsYear, setStatsYear] = useState(now.getFullYear())
+  const [statsMonth, setStatsMonth] = useState(now.getMonth() + 1)
+
   // Load user profile
   useEffect(() => {
     userService.getProfile()
@@ -102,11 +120,11 @@ export function ContabilDashboard() {
   }, [])
 
   // Load stats
-  const loadStats = async () => {
+  const loadStats = async (year = statsYear, month = statsMonth) => {
     setStatsLoading(true)
     setStatsError(null)
     try {
-      const data = await pfaService.getContabilStats()
+      const data = await pfaService.getContabilStats(year, month)
       setStats(data)
     } catch {
       setStatsError('Nu s-au putut încărca statisticile.')
@@ -117,13 +135,14 @@ export function ContabilDashboard() {
 
   useEffect(() => {
     if (activeTab === 'dashboard' && !selectedPfaId) {
-      void loadStats()
+      void loadStats(statsYear, statsMonth)
     }
-  }, [activeTab, selectedPfaId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, selectedPfaId, statsYear, statsMonth])
 
-  // Load clients (PFAs visible to this contabil)
+  // Load clients (PFAs visible to this contabil) — needed on home (active/inactive split) and on the list
   useEffect(() => {
-    if (activeTab !== 'clients') return
+    if (activeTab !== 'clients' && activeTab !== 'dashboard') return
     setClientsLoading(true)
     setClientsError(null)
     pfaService.getAll()
@@ -201,84 +220,137 @@ export function ContabilDashboard() {
 
     if (!stats) return null
 
+    const activeClients = clients.filter(isActiveClient).length
+    const inactiveClients = clients.length - activeClients
+
     const statCards = [
       {
-        key: 'totalClients',
-        label: 'Clienți PFA',
-        value: stats.totalClients,
-        color: '#3b82f6', // blue
-        desc: 'Total PFA-uri active asignate',
+        key: 'activeClients',
+        label: 'PFA-uri active',
+        value: activeClients,
+        color: '#10b981',
+        desc: 'Clienți cu abonament activ',
+      },
+      {
+        key: 'inactiveClients',
+        label: 'PFA-uri inactive',
+        value: inactiveClients,
+        color: '#ef4444',
+        desc: 'Clienți suspendați, noi sau fără abonament',
       },
       {
         key: 'docsToVerify',
         label: 'Documente de verificat',
         value: stats.docsToVerify,
-        color: '#f59e0b', // amber
+        color: '#f59e0b',
         desc: 'Documente încărcate, neverificate',
       },
       {
         key: 'missingMonthlyDocs',
         label: 'Documente lunare lipsă',
         value: stats.missingMonthlyDocs,
-        color: '#ef4444', // red
+        color: '#dc2626',
         desc: 'Clienți cu cel puțin un document lipsă',
       },
       {
         key: 'readyToProcess',
         label: 'Gata de procesare',
         value: stats.readyToProcess,
-        color: '#6366f1', // indigo
+        color: '#6366f1',
         desc: 'Venituri, cheltuieli și acte validate',
       },
       {
         key: 'processedThisMonth',
-        label: 'Procesați luna curentă',
+        label: 'Procesați în luna aleasă',
         value: stats.processedThisMonth,
-        color: '#10b981', // emerald
-        desc: 'PFA-uri cu luna curentă închisă',
+        color: '#0f766e',
+        desc: 'PFA-uri cu luna închisă',
       },
       {
         key: 'unreadMessages',
         label: 'Mesaje necitite',
         value: stats.unreadMessages,
-        color: '#8b5cf6', // purple
+        color: '#8b5cf6',
         desc: 'Mesaje de asistență necitite',
+      },
+      {
+        key: 'totalClients',
+        label: 'Total clienți PFA',
+        value: stats.totalClients,
+        color: '#3b82f6',
+        desc: 'Toate PFA-urile din portofoliul tău',
       },
     ]
 
     return (
-      <Stack spacing={4}>
+      <Stack spacing={3}>
         <Box
           sx={{
-            p: 4,
+            p: { xs: 2.5, md: 3.5 },
             borderRadius: TOKENS.radius.xl,
             background: `linear-gradient(135deg, ${alpha(TOKENS.primary, 0.08)} 0%, ${alpha(TOKENS.paper, 0.6)} 100%)`,
             border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
-            backdropFilter: 'blur(10px)',
             boxShadow: TOKENS.shadow.sm,
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 800, color: TOKENS.textSubtle, mb: 1, letterSpacing: 0.5, textTransform: 'uppercase', fontSize: '0.75rem' }}>
-            Portofoliu Contabil · Perioadă Curentă
-          </Typography>
-          <Typography variant="h3" sx={{ fontWeight: 900, color: TOKENS.primaryStrong, mb: 1 }}>
-            {stats.monthLabel}
-          </Typography>
-          <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
-            Urmărește statusul lunii curente, procesează documentele primite și răspunde la mesajele clienților tăi.
-          </Typography>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={2}
+            sx={{ alignItems: { xs: 'flex-start', md: 'center' }, justifyContent: 'space-between' }}
+          >
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: TOKENS.textSubtle, mb: 0.5, letterSpacing: 0.5, textTransform: 'uppercase', fontSize: '0.72rem' }}>
+                Portofoliu contabil
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 900, color: TOKENS.primaryStrong, mb: 0.5 }}>
+                {stats.monthLabel}
+              </Typography>
+              <Typography variant="body2" sx={{ color: TOKENS.textMuted, maxWidth: 520 }}>
+                Urmărește statusul lunii selectate, procesează documentele primite și răspunde la mesajele clienților.
+              </Typography>
+            </Box>
+
+            <Stack direction="row" spacing={1.5}>
+              <FormControl size="small" sx={{ width: 150 }}>
+                <InputLabel>Lună</InputLabel>
+                <Select
+                  label="Lună"
+                  value={statsMonth}
+                  onChange={(e) => setStatsMonth(Number(e.target.value))}
+                  sx={{ borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+                >
+                  {ROMANIAN_MONTHS.map((m, idx) => (
+                    <MenuItem key={m} value={idx + 1}>{m}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl size="small" sx={{ width: 110 }}>
+                <InputLabel>An</InputLabel>
+                <Select
+                  label="An"
+                  value={statsYear}
+                  onChange={(e) => setStatsYear(Number(e.target.value))}
+                  sx={{ borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+                >
+                  {[now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
+                    <MenuItem key={y} value={y}>{y}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
+          </Stack>
         </Box>
 
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, gap: 3 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 2 }}>
           {statCards.map((card) => (
             <Paper
               key={card.key}
               elevation={0}
               onClick={() => setActiveTab('clients')}
               sx={{
-                p: 3,
+                p: 2.5,
                 cursor: 'pointer',
-                borderRadius: TOKENS.radius.xl,
+                borderRadius: TOKENS.radius.lg,
                 border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
                 boxShadow: TOKENS.shadow.sm,
                 background: TOKENS.paper,
@@ -286,8 +358,7 @@ export function ContabilDashboard() {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                position: 'relative',
-                overflow: 'hidden',
+                minWidth: 0,
                 '&:hover': {
                   borderColor: alpha(card.color, 0.4),
                   boxShadow: TOKENS.shadow.md,
@@ -296,35 +367,27 @@ export function ContabilDashboard() {
                     color: card.color,
                   },
                 },
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: 4,
-                  height: '100%',
-                  bgcolor: card.color,
-                },
               }}
             >
               <Box>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: TOKENS.textSubtle, mb: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: TOKENS.textSubtle, mb: 0.75, fontSize: '0.8rem' }}>
                   {card.label}
                 </Typography>
                 <Typography
                   className="value-text"
-                  variant="h3"
+                  variant="h4"
                   sx={{
                     fontWeight: 900,
                     color: TOKENS.ink,
                     transition: 'color 0.2s',
-                    mb: 1,
+                    mb: 0.75,
+                    fontVariantNumeric: 'tabular-nums',
                   }}
                 >
                   {card.value}
                 </Typography>
               </Box>
-              <Typography variant="caption" sx={{ color: TOKENS.textMuted, fontSize: '0.75rem' }}>
+              <Typography variant="caption" sx={{ color: TOKENS.textMuted, fontSize: '0.74rem' }}>
                 {card.desc}
               </Typography>
             </Paper>
@@ -361,68 +424,102 @@ export function ContabilDashboard() {
       {!clientsLoading && !clientsError && filteredClients.length === 0 && (
         <Box sx={{ py: 8, textAlign: 'center' }}>
           <Typography variant="body1" sx={{ color: TOKENS.textMuted }}>
-            {search ? 'Niciun client găsit.' : 'Nu ai clienți asignați momentan.'}
+            {search ? 'Niciun client găsit.' : 'Nu ai încă clienți în portofoliu.'}
           </Typography>
         </Box>
       )}
 
       {!clientsLoading && !clientsError && filteredClients.length > 0 && (
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, gap: 24 }}>
-          {filteredClients.map((client) => (
-            <Box key={client.id}>
-              <Paper
-                elevation={0}
-                onClick={() => setSelectedPfaId(client.id)}
-                sx={{
-                  p: 3,
-                  cursor: 'pointer',
-                  borderRadius: TOKENS.radius.lg,
-                  border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
-                  boxShadow: TOKENS.shadow.sm,
-                  background: `linear-gradient(160deg, ${alpha(TOKENS.primary, 0.05)} 0%, ${TOKENS.paper} 32%)`,
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    borderColor: alpha(TOKENS.primary, 0.4),
-                    boxShadow: TOKENS.shadow.md,
-                  },
-                }}
-              >
-                <Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 2 }} component="div">
-                  <Avatar sx={{ bgcolor: alpha(TOKENS.primary, 0.1), color: TOKENS.primaryStrong, fontWeight: 700 }}>
-                    {client.userName[0] ?? '?'}
-                  </Avatar>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 800 }} noWrap>{client.userName}</Typography>
-                    <Typography variant="caption" sx={{ color: TOKENS.textMuted }} noWrap>{client.userEmail}</Typography>
-                  </Box>
-                </Stack>
-
+        <Stack spacing={3}>
+          {[
+            { title: 'PFA-uri active', items: filteredClients.filter(isActiveClient), accent: '#10b981' },
+            { title: 'PFA-uri inactive', items: filteredClients.filter((c) => !isActiveClient(c)), accent: '#ef4444' },
+          ].map((group) => (
+            <Box key={group.title}>
+              <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1.5 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 850, color: TOKENS.ink }}>
+                  {group.title}
+                </Typography>
                 <Chip
-                  label={client.accountStatus}
+                  label={group.items.length}
                   size="small"
                   sx={{
-                    mb: 2,
-                    alignSelf: 'flex-start',
+                    height: 22,
                     fontWeight: 800,
-                    fontSize: '0.7rem',
-                    bgcolor: alpha(accountStatusColor(client.accountStatus), 0.1),
-                    color: accountStatusColor(client.accountStatus),
-                    border: `1px solid ${alpha(accountStatusColor(client.accountStatus), 0.2)}`,
+                    fontSize: '0.72rem',
+                    color: group.accent,
+                    bgcolor: alpha(group.accent, 0.1),
                   }}
                 />
+              </Stack>
 
-                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }} component="div">
-                  <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>
-                    {client.registrationType}
+              {group.items.length === 0 ? (
+                <Paper
+                  elevation={0}
+                  sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px dashed ${alpha(TOKENS.ink, 0.14)}` }}
+                >
+                  <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
+                    Niciun client în această categorie.
                   </Typography>
-                  <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>
-                    {relativeTime(client.createdAtUtc)}
-                  </Typography>
-                </Stack>
-              </Paper>
+                </Paper>
+              ) : (
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, gap: 2 }}>
+                  {group.items.map((client) => (
+                    <Paper
+                      key={client.id}
+                      elevation={0}
+                      onClick={() => setSelectedPfaId(client.id)}
+                      sx={{
+                        p: 2.25,
+                        cursor: 'pointer',
+                        borderRadius: TOKENS.radius.lg,
+                        border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+                        bgcolor: TOKENS.paper,
+                        transition: 'all 0.2s',
+                        minWidth: 0,
+                        '&:hover': {
+                          borderColor: alpha(TOKENS.primary, 0.4),
+                          boxShadow: TOKENS.shadow.md,
+                          transform: 'translateY(-2px)',
+                        },
+                      }}
+                    >
+                      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 1.5 }} component="div">
+                        <Avatar sx={{ width: 40, height: 40, bgcolor: alpha(TOKENS.primary, 0.1), color: TOKENS.primaryStrong, fontWeight: 700 }}>
+                          {client.userName[0] ?? '?'}
+                        </Avatar>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 800 }} noWrap>{client.userName}</Typography>
+                          <Typography variant="caption" sx={{ color: TOKENS.textMuted }} noWrap>{client.userEmail}</Typography>
+                        </Box>
+                        <Chip
+                          label={client.accountStatus}
+                          size="small"
+                          sx={{
+                            flexShrink: 0,
+                            fontWeight: 800,
+                            fontSize: '0.68rem',
+                            bgcolor: alpha(accountStatusColor(client.accountStatus), 0.1),
+                            color: accountStatusColor(client.accountStatus),
+                          }}
+                        />
+                      </Stack>
+
+                      <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }} component="div">
+                        <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>
+                          {client.registrationType}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>
+                          {relativeTime(client.createdAtUtc)}
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Box>
+              )}
             </Box>
           ))}
-        </Box>
+        </Stack>
       )}
     </Stack>
   )

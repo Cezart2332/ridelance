@@ -41,7 +41,7 @@ import {
 } from '../../../../services/adminOverview.service'
 
 interface AdminOverviewViewProps {
-  onImpersonate: (userId: string) => void
+  onImpersonate: (userId: string, userName: string) => void
   onOpenPfaDetails: (pfa: AdminOverviewPfaCard) => void
 }
 
@@ -385,14 +385,11 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
       >
         <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', lg: 'flex-end' } }}>
           <Box sx={{ maxWidth: 620 }}>
-            <Typography variant="overline" sx={{ color: TOKENS.textSubtle, fontWeight: 900, letterSpacing: 1 }}>
-              Acasă admin
-            </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 950, color: TOKENS.ink, mt: 0.5, mb: 1 }}>
-              Acasă
+            <Typography variant="h4" sx={{ fontWeight: 950, color: TOKENS.ink, mb: 1, fontSize: { xs: '1.5rem', md: '1.8rem' } }}>
+              Privire de ansamblu
             </Typography>
             <Typography variant="body2" sx={{ color: TOKENS.textMuted, maxWidth: 560 }}>
-              Finanțe, abonamente, servicii și alerte importante într-un ecran mai ușor de scanat.
+              Finanțe, abonamente, servicii și alerte importante într-un singur ecran.
             </Typography>
           </Box>
 
@@ -490,7 +487,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
             {operationalCards.map((card) => <MetricCard key={card.label} {...card} />)}
           </Box>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1.1fr 0.9fr' }, gap: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
             <DataPaper>
               <Box sx={{ p: 2.5 }}>
                 <SectionTitle title="Venituri pe categorii" subtitle="Sursele principale de bani din platformă." />
@@ -641,7 +638,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                       <Button fullWidth variant="contained" onClick={() => onOpenPfaDetails(pfa)} endIcon={<OpenInNewRoundedIcon />} sx={{ boxShadow: 'none', bgcolor: TOKENS.primary, fontWeight: 850 }}>
                         Vezi detalii
                       </Button>
-                      <Button fullWidth variant="outlined" onClick={() => onImpersonate(pfa.userId)} startIcon={<LoginRoundedIcon />}>
+                      <Button fullWidth variant="outlined" onClick={() => onImpersonate(pfa.userId, pfa.holderName || pfa.companyName)} startIcon={<LoginRoundedIcon />}>
                         Intră în dashboard client
                       </Button>
                     </Stack>

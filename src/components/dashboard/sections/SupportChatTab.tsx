@@ -219,7 +219,7 @@ export function SupportChatTab() {
           </Stack>
         ) : noAgent ? (
           <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 2, fontSize: '0.9rem' }}>
-            Chat-ul va fi disponibil dupa asignarea unui administrator pentru suport.
+            Chat-ul va fi disponibil imediat ce un membru al echipei de suport preia conversatia.
           </Typography>
         ) : (
           <>

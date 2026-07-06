@@ -12,7 +12,7 @@ export const dashboardFaqItems: FaqItem[] = [
   },
   {
     title: 'Cum pot vorbi cu contabilul meu?',
-    text: 'Acceseaza sectiunea "Suport" din meniu pentru a deschide chat-ul direct cu contabilul tau asignat.',
+    text: 'Acceseaza sectiunea "Suport" din meniu pentru a deschide chat-ul direct cu contabilul tau.',
   },
 ]
 

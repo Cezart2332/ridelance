@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { store } from '../store/store'
-import { setCredentials, clearCredentials } from '../store/authSlice'
+import { setCredentials, clearCredentials, startImpersonation } from '../store/authSlice'
 import { clearNotificationPromptSession } from '../lib/push'
+import { refreshAccessToken } from '../lib/refreshSession'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
@@ -67,8 +68,8 @@ export const authService = {
     return !!store.getState().auth.accessToken
   },
 
-  impersonate: async (userId: string) => {
-    const token = store.getState().auth.accessToken
+  impersonate: async (userId: string, targetName: string) => {
+    const { accessToken: token, userId: adminUserId, role: adminRole } = store.getState().auth
     const response = await authAxios.post<{
       accessToken: string
       role: string
@@ -79,9 +80,22 @@ export const authService = {
 
     const { accessToken, role, userId: targetUserId } = response.data
 
-    // Store the new impersonated credentials in Redux
+    // Remember who the admin is (their session stays in the refresh cookie),
+    // then switch the in-memory credentials to the impersonated user.
+    if (adminUserId && adminRole) {
+      store.dispatch(startImpersonation({ adminUserId, adminRole, targetName }))
+    }
     store.dispatch(setCredentials({ accessToken, role, userId: targetUserId }))
 
     return response.data
+  },
+
+  /**
+   * Ends impersonation by re-running the silent refresh: the refresh cookie
+   * still belongs to the admin, so this restores the admin credentials
+   * (which also clears the impersonation flag in the store).
+   */
+  stopImpersonation: async () => {
+    return refreshAccessToken()
   },
 }

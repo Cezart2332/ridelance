@@ -124,7 +124,7 @@ export function AccountantChatTab() {
           </Stack>
         ) : noAgent ? (
           <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 2, fontSize: '0.9rem' }}>
-            Chat-ul va fi disponibil dupa asignarea unui contabil.
+            Chat-ul va fi disponibil imediat ce un contabil preia contul tau.
           </Typography>
         ) : (
           <>

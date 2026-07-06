@@ -38,6 +38,7 @@ export default function AppLayout({
   
   const pageTitles: Record<string, string> = {
     home: 'Dashboard PFA',
+    platforms: 'Platforme — Bolt & Uber',
     profile: 'Profilul meu',
     documents: 'Documentele mele',
     support: 'Chat & Suport',

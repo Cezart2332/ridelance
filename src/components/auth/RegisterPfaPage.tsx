@@ -22,9 +22,10 @@ import { useAppSelector } from '../../store/hooks'
 import { resolveClientPath } from '../../utils/clientOnboarding'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
-import { pfaService } from '../../services/pfa.service'
+import { pfaService, type PfaCompanyInfo } from '../../services/pfa.service'
 import { documentService } from '../../services/document.service'
 import { getErrorMessage } from '../../utils/errorHandler'
+import { validateRomanianCIF } from '../../utils/validation'
 import { stripeService, type SubscriptionResponse } from '../../services/stripe.service'
 import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
 
@@ -223,6 +224,30 @@ export default function RegisterPfaPage() {
   // "Am PFA" form state
   const [amPfaName, setAmPfaName] = useState('')
   const [amPfaPhone, setAmPfaPhone] = useState('')
+  const [amPfaCui, setAmPfaCui] = useState('')
+  const [companyInfo, setCompanyInfo] = useState<PfaCompanyInfo | null>(null)
+  const [companyLookupLoading, setCompanyLookupLoading] = useState(false)
+  const [companyLookupError, setCompanyLookupError] = useState<string | null>(null)
+
+  const handleLookupCompany = async () => {
+    setCompanyLookupError(null)
+    setCompanyInfo(null)
+    const cuiValidation = validateRomanianCIF(amPfaCui)
+    if (typeof cuiValidation === 'string') {
+      setCompanyLookupError(cuiValidation)
+      return
+    }
+    setCompanyLookupLoading(true)
+    try {
+      const info = await pfaService.getCompanyInfo(amPfaCui)
+      setCompanyInfo(info)
+      if (info.name && !amPfaName) setAmPfaName(info.name)
+    } catch (err) {
+      setCompanyLookupError(getErrorMessage(err, 'Nu am putut prelua datele firmei. Verifică CUI-ul și încearcă din nou.'))
+    } finally {
+      setCompanyLookupLoading(false)
+    }
+  }
 
   // "Nu am PFA" form state
   const [buletinFile, setBuletinFile] = useState<File | null>(null)
@@ -302,6 +327,15 @@ export default function RegisterPfaPage() {
       setError('Te rugam sa completezi toate campurile.')
       return
     }
+    const cuiValidation = validateRomanianCIF(amPfaCui)
+    if (typeof cuiValidation === 'string') {
+      setError(cuiValidation)
+      return
+    }
+    if (!companyInfo) {
+      setError('Te rugăm să cauți firma după CUI pentru a-ți prelua datele PFA-ului.')
+      return
+    }
 
     setIsLoading(true)
     try {
@@ -309,6 +343,11 @@ export default function RegisterPfaPage() {
         registrationType: 'AmPfa',
         fullName: amPfaName,
         phone: amPfaPhone,
+        cui: companyInfo.cui,
+        street: companyInfo.street ?? undefined,
+        number: companyInfo.streetNumber ?? undefined,
+        city: companyInfo.city ?? undefined,
+        county: companyInfo.county ?? undefined,
         isOwner: false // default
       });
       // AmPfa users first go through admin validation, then pick a subscription.
@@ -440,6 +479,75 @@ export default function RegisterPfaPage() {
                 </Paper>
 
                 <Stack spacing={2.5}>
+                  <Box>
+                    <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
+                      CUI-ul PFA-ului tău
+                    </Typography>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                      <TextField
+                        fullWidth
+                        placeholder="Ex: 12345678 sau RO12345678"
+                        value={amPfaCui}
+                        onChange={(e) => {
+                          setAmPfaCui(e.target.value)
+                          setCompanyInfo(null)
+                          setCompanyLookupError(null)
+                        }}
+                        sx={inputSx}
+                      />
+                      <Button
+                        variant="outlined"
+                        onClick={handleLookupCompany}
+                        disabled={companyLookupLoading || !amPfaCui.trim()}
+                        sx={{
+                          flexShrink: 0,
+                          px: 3,
+                          fontWeight: 700,
+                          textTransform: 'none',
+                          borderRadius: TOKENS.radius.md,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {companyLookupLoading ? <CircularProgress size={18} /> : 'Caută firma'}
+                      </Button>
+                    </Stack>
+                    <Typography sx={{ mt: 0.8, color: TOKENS.textMuted, fontSize: '0.8rem' }}>
+                      Pe baza CUI-ului preluăm automat datele oficiale ale PFA-ului tău (denumire, adresă).
+                    </Typography>
+                    {companyLookupError && (
+                      <Alert severity="error" sx={{ mt: 1, borderRadius: TOKENS.radius.md }}>
+                        {companyLookupError}
+                      </Alert>
+                    )}
+                    {companyInfo && (
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          mt: 1.5,
+                          p: 2,
+                          borderRadius: TOKENS.radius.lg,
+                          border: `1px solid ${alpha('#10b981', 0.3)}`,
+                          backgroundColor: alpha('#10b981', 0.05),
+                        }}
+                      >
+                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.8 }}>
+                          <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18, color: '#059669' }} />
+                          <Typography sx={{ fontWeight: 800, fontSize: '0.9rem', color: '#065f46' }}>
+                            {companyInfo.name}
+                          </Typography>
+                        </Stack>
+                        <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.82rem' }}>
+                          CUI: {companyInfo.cui}
+                          {companyInfo.address ? ` · ${companyInfo.address}` : ''}
+                        </Typography>
+                        {!companyInfo.isActive && (
+                          <Alert severity="warning" sx={{ mt: 1, borderRadius: TOKENS.radius.md }}>
+                            Atenție: acest CUI figurează ca radiat sau inactiv la ANAF.
+                          </Alert>
+                        )}
+                      </Paper>
+                    )}
+                  </Box>
                   <Box>
                     <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>Nume complet</Typography>
                     <TextField fullWidth placeholder="Numele tau" value={amPfaName} onChange={(e) => setAmPfaName(e.target.value)} sx={inputSx} />

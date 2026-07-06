@@ -179,6 +179,49 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
           <CircularProgress size={28} sx={{ color: TOKENS.primary }} />
         </Box>
+      ) : readOnly ? (
+        <Stack spacing={2}>
+          {/* Read-only synthesis — same info as the client's dashboard cards */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, gap: 1.5 }}>
+            {[
+              { label: 'Venit total', value: venitTotal, helper: 'Cash + Card + Bolt + Uber', highlight: true },
+              { label: 'Venit Bolt', value: income.venitBolt },
+              { label: 'Venit Uber', value: income.venitUber },
+              { label: 'Încasări cash', value: income.venitCash },
+              { label: 'Încasări card', value: income.venitCard },
+              { label: 'Taxe estimate (anual)', value: income.taxeEstimate, helper: 'CAS + CASS + impozit' },
+            ].map(({ label, value, helper, highlight }) => (
+              <Paper
+                key={label}
+                elevation={0}
+                sx={{
+                  p: 2,
+                  borderRadius: TOKENS.radius.lg,
+                  border: `1px solid ${highlight ? alpha(TOKENS.primary, 0.35) : alpha(TOKENS.ink, 0.08)}`,
+                  bgcolor: highlight ? alpha(TOKENS.primary, 0.05) : TOKENS.paper,
+                  minWidth: 0,
+                }}
+              >
+                <Typography sx={{ fontSize: '0.78rem', color: TOKENS.textMuted, fontWeight: 700 }}>
+                  {label}
+                </Typography>
+                <Typography sx={{ fontWeight: 900, fontSize: '1.35rem', mt: 0.6, color: highlight ? TOKENS.primaryStrong : TOKENS.ink, fontVariantNumeric: 'tabular-nums' }}>
+                  {value.toLocaleString('ro-RO')} lei
+                </Typography>
+                {helper && (
+                  <Typography sx={{ fontSize: '0.72rem', color: TOKENS.textSubtle, mt: 0.4 }}>
+                    {helper}
+                  </Typography>
+                )}
+              </Paper>
+            ))}
+          </Box>
+          {income.updatedAtUtc && (
+            <Typography sx={{ fontSize: '0.78rem', color: TOKENS.textSubtle }}>
+              Ultima actualizare: {new Date(income.updatedAtUtc).toLocaleString('ro-RO')}
+            </Typography>
+          )}
+        </Stack>
       ) : (
         <Stack spacing={2}>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
@@ -188,10 +231,9 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
                 fullWidth
                 type="number"
                 label={`${label} (RON)`}
-                value={readOnly ? income[key] : (income[key] === 0 ? '' : income[key])}
-                onChange={(e) => !readOnly && setField(key, e.target.value)}
+                value={income[key] === 0 ? '' : income[key]}
+                onChange={(e) => setField(key, e.target.value)}
                 slotProps={{
-                  input: { readOnly },
                   htmlInput: { min: 0, step: '0.01' }
                 }}
                 sx={inputSx}

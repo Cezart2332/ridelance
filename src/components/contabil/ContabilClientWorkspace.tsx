@@ -360,7 +360,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
 
             <Box sx={{ p: { xs: 2, md: 2.5 } }}>
               {tab === 0 && <PfaMonthlyIncomeForm pfaRegistrationId={client.id} year={selectedYear} month={selectedMonth} readOnly={true} />}
-              {tab === 1 && <PfaFiscalSettingsPanel pfaId={client.id} />}
+              {tab === 1 && <PfaFiscalSettingsPanel pfaId={client.id} editable clientUserId={client.userId} />}
               {tab === 2 && (
                 <RecurringDocumentationPanel
                   year={selectedYear}

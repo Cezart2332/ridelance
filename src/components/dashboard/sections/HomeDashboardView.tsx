@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import type { MouseEvent } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import {
   Box,
+  Button,
   Chip,
   CircularProgress,
-  Dialog,
-  DialogContent,
-  IconButton,
+  LinearProgress,
   Paper,
   Stack,
   ToggleButton,
@@ -14,50 +13,49 @@ import {
   Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
-import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
+import LocalTaxiRoundedIcon from '@mui/icons-material/LocalTaxiRounded';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
-import {
-  boltService,
-  type BoltDashboardDto,
-  type BoltDashboardPeriod,
-} from '../../../services/bolt.service';
-import { uberService, type UberDashboardDto, type UberDashboardPeriod } from '../../../services/uber.service';
+import { boltService, type BoltDashboardDto } from '../../../services/bolt.service';
+import { uberService, type UberDashboardDto } from '../../../services/uber.service';
 import { userService, type DashboardSummary } from '../../../services/user.service';
-import { BoltDashboardPanel } from './BoltDashboardPanel';
-import { BoltIntegrationTab } from './BoltIntegrationTab';
-import { PfaIncomeSummary } from './PfaIncomeSummary';
-import { PfaTaxSummaryWidget } from './PfaTaxSummaryWidget';
-import { RevenueCharts } from './RevenueCharts';
-import { UberCsvPanel } from './UberCsvPanel';
-import logo from '../../../assets/logo.svg';
+import { MONTH_CHART_LABELS, monthNumberToLabel } from '../../../utils/monthLabels';
 
 /* ── Types ────────────────────────────────────────────────────────────────── */
 
 export type StatsTimeframe = 'month' | 'year';
 export type StatsPlatform = 'all' | 'bolt' | 'uber';
 
-const TIMEFRAME_LABELS: Record<StatsTimeframe, string> = {
-  month: 'Lună',
-  year: 'An',
-};
+interface HomeDashboardViewProps {
+  onNavigate?: (sectionId: string) => void;
+}
 
-const PLATFORM_LABELS: Record<StatsPlatform, string> = {
-  all: 'Toate',
-  bolt: 'Bolt',
-  uber: 'Uber',
-};
+/** Darker step of the brand cyan — 3:1 contrast on white, validated. */
+const CHART_BAR_COLOR = '#0e7fa8';
 
 /* ── Helpers ───────────────────────────────────────────────────────────────── */
+
+function formatLei(value: number) {
+  return `${Math.round(value).toLocaleString('ro-RO')} lei`;
+}
 
 function pfaStatusChip(status: string | null) {
   if (!status) return null;
   const map: Record<string, { label: string; color: string; bg: string }> = {
-    Pending:  { label: 'În verificare', color: '#b54708', bg: alpha('#ed6c02', 0.1) },
-    Approved: { label: 'Aprobat',       color: '#2e7d32', bg: alpha('#2e7d32', 0.08) },
-    Rejected: { label: 'Respins',       color: '#b71c1c', bg: alpha('#d32f2f', 0.08) },
+    Pending:  { label: 'PFA în verificare', color: '#b54708', bg: alpha('#ed6c02', 0.1) },
+    Approved: { label: 'PFA aprobat',       color: '#2e7d32', bg: alpha('#2e7d32', 0.08) },
+    Rejected: { label: 'PFA respins',       color: '#b71c1c', bg: alpha('#d32f2f', 0.08) },
   };
   const cfg = map[status] ?? { label: status, color: DASHBOARD_TOKENS.textMuted, bg: alpha(DASHBOARD_TOKENS.ink, 0.06) };
   return (
@@ -69,189 +67,214 @@ function pfaStatusChip(status: string | null) {
   );
 }
 
-/**
- * Compute the filtered income values based on timeframe & platform.
- * Backend exposes accounting totals per current month and current year.
- * Cash/card remain visible only as informative breakdown.
- */
-function computeFilteredIncome(
-  summary: DashboardSummary,
-  timeframe: StatsTimeframe,
-  platform: StatsPlatform,
-) {
-  const stats = timeframe === 'year' ? summary.yearlyStats : summary.monthlyStats;
-  let cash = stats?.venitCash ?? summary.venitCash ?? 0;
-  let card = stats?.venitCard ?? summary.venitCard ?? 0;
-  let bolt = stats?.venitBolt ?? summary.venitBolt ?? 0;
-  let uber = stats?.venitUber ?? summary.venitUber ?? 0;
-  const taxe = timeframe === 'year' ? summary.ytdTotalTax : summary.taxeEstimate ?? 0;
+/* ── KPI Tile ──────────────────────────────────────────────────────────────── */
 
-  // Platform filter
-  if (platform === 'bolt') {
-    card = 0;
-    uber = 0;
-    cash = 0;
-  } else if (platform === 'uber') {
-    card = 0;
-    bolt = 0;
-    cash = 0;
-  }
-
-  const total = bolt + uber;
-
-  return {
-    venitCash: Math.round(cash * 100) / 100,
-    venitCard: Math.round(card * 100) / 100,
-    venitBolt: Math.round(bolt * 100) / 100,
-    venitUber: Math.round(uber * 100) / 100,
-    taxeEstimate: Math.round(taxe * 100) / 100,
-    venitTotal: Math.round(total * 100) / 100,
-  };
-}
-
-/* ── Filter Bar ────────────────────────────────────────────────────────────── */
-
-function StatsFilterBar({
-  timeframe,
-  platform,
-  onTimeframeChange,
-  onPlatformChange,
+function KpiTile({
+  label,
+  value,
+  helper,
+  highlight,
 }: {
-  timeframe: StatsTimeframe;
-  platform: StatsPlatform;
-  onTimeframeChange: (v: StatsTimeframe) => void;
-  onPlatformChange: (v: StatsPlatform) => void;
+  label: string;
+  value: string;
+  helper?: string;
+  highlight?: boolean;
 }) {
-  const toggleSx = {
-    bgcolor: DASHBOARD_TOKENS.paper,
-    borderRadius: DASHBOARD_TOKENS.radius.md,
-    p: 0.4,
-    boxShadow: DASHBOARD_TOKENS.shadow.sm,
-    border: `1px solid ${DASHBOARD_TOKENS.border}`,
-    '& .MuiToggleButtonGroup-grouped': {
-      border: 0,
-      px: { xs: 1.2, sm: 2 },
-      py: 0.7,
-      borderRadius: `${DASHBOARD_TOKENS.radius.sm}px !important`,
-      color: DASHBOARD_TOKENS.textMuted,
-      fontWeight: 800,
-      fontSize: '0.82rem',
-      textTransform: 'none' as const,
-      transition: 'all 180ms ease',
-      '&.Mui-selected': {
-        bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.18),
-        color: DASHBOARD_TOKENS.ink,
-      },
-      '&:hover': {
-        bgcolor: alpha(DASHBOARD_TOKENS.ink, 0.04),
-      },
-    },
-  };
-
   return (
     <Paper
       elevation={0}
       sx={{
-        p: { xs: 1.5, md: 2 },
-        borderRadius: DASHBOARD_TOKENS.radius.xl,
-        border: `1px solid ${DASHBOARD_TOKENS.border}`,
-        bgcolor: DASHBOARD_TOKENS.surfaceAlt,
+        p: { xs: 2.2, md: 2.6 },
+        borderRadius: DASHBOARD_TOKENS.radius.lg,
+        border: `1px solid ${highlight ? alpha(DASHBOARD_TOKENS.primary, 0.35) : DASHBOARD_TOKENS.border}`,
+        bgcolor: DASHBOARD_TOKENS.paper,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,
+        minWidth: 0,
       }}
     >
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={2}
-        sx={{ alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between' }}
+      <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontWeight: 700, fontSize: '0.82rem' }}>
+        {label}
+      </Typography>
+      <Typography
+        sx={{
+          color: DASHBOARD_TOKENS.ink,
+          fontWeight: 900,
+          fontSize: { xs: '1.5rem', md: '1.75rem' },
+          lineHeight: 1.15,
+          mt: 1,
+          fontVariantNumeric: 'tabular-nums',
+          letterSpacing: -0.4,
+        }}
       >
-        {/* Timeframe */}
-        <Stack direction="row" spacing={1.2} sx={{ alignItems: 'center' }}>
-          <Box
-            sx={{
-              width: 34,
-              height: 34,
-              flexShrink: 0,
-              borderRadius: DASHBOARD_TOKENS.radius.md,
-              display: 'grid',
-              placeItems: 'center',
-              color: DASHBOARD_TOKENS.primaryStrong,
-              bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.12),
-              '& svg': { fontSize: 18 },
-            }}
-          >
-            <CalendarTodayRoundedIcon />
-          </Box>
-          <ToggleButtonGroup
-            exclusive
-            value={timeframe}
-            onChange={(_: MouseEvent<HTMLElement>, v: StatsTimeframe | null) => {
-              if (v) onTimeframeChange(v);
-            }}
-            size="small"
-            sx={toggleSx}
-          >
-            {(Object.keys(TIMEFRAME_LABELS) as StatsTimeframe[]).map((k) => (
-              <ToggleButton key={k} value={k}>
-                {TIMEFRAME_LABELS[k]}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
-        </Stack>
-
-        {/* Platform */}
-        <Stack direction="row" spacing={1.2} sx={{ alignItems: 'center' }}>
-          <Box
-            sx={{
-              width: 34,
-              height: 34,
-              flexShrink: 0,
-              borderRadius: DASHBOARD_TOKENS.radius.md,
-              display: 'grid',
-              placeItems: 'center',
-              color: '#7c3aed',
-              bgcolor: alpha('#7c3aed', 0.1),
-              '& svg': { fontSize: 18 },
-            }}
-          >
-            <FilterListRoundedIcon />
-          </Box>
-          <ToggleButtonGroup
-            exclusive
-            value={platform}
-            onChange={(_: MouseEvent<HTMLElement>, v: StatsPlatform | null) => {
-              if (v) onPlatformChange(v);
-            }}
-            size="small"
-            sx={toggleSx}
-          >
-            {(Object.keys(PLATFORM_LABELS) as StatsPlatform[]).map((k) => (
-              <ToggleButton key={k} value={k}>
-                {PLATFORM_LABELS[k]}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
-        </Stack>
-      </Stack>
+        {value}
+      </Typography>
+      {helper && (
+        <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 600, fontSize: '0.78rem', mt: 0.6 }}>
+          {helper}
+        </Typography>
+      )}
     </Paper>
+  );
+}
+
+/* ── Section Card ──────────────────────────────────────────────────────────── */
+
+function SectionCard({
+  title,
+  subtitle,
+  action,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        p: { xs: 2.2, md: 3 },
+        borderRadius: DASHBOARD_TOKENS.radius.xl,
+        border: `1px solid ${DASHBOARD_TOKENS.border}`,
+        bgcolor: DASHBOARD_TOKENS.paper,
+        boxShadow: DASHBOARD_TOKENS.shadow.sm,
+        minWidth: 0,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-start', justifyContent: 'space-between', mb: 2.2 }}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '1.02rem' }}>
+            {title}
+          </Typography>
+          {subtitle && (
+            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.84rem', mt: 0.4, lineHeight: 1.5 }}>
+              {subtitle}
+            </Typography>
+          )}
+        </Box>
+        {action}
+      </Stack>
+      <Box sx={{ flexGrow: 1, minWidth: 0 }}>{children}</Box>
+    </Paper>
+  );
+}
+
+/* ── Platform Row ──────────────────────────────────────────────────────────── */
+
+function PlatformRow({
+  icon,
+  name,
+  statusChip,
+  amount,
+  detail,
+  onClick,
+}: {
+  icon: ReactNode;
+  name: string;
+  statusChip?: ReactNode;
+  amount: string;
+  detail: string;
+  onClick?: () => void;
+}) {
+  return (
+    <Stack
+      direction="row"
+      spacing={1.6}
+      onClick={onClick}
+      sx={{
+        alignItems: 'center',
+        p: 1.6,
+        borderRadius: DASHBOARD_TOKENS.radius.md,
+        border: `1px solid ${DASHBOARD_TOKENS.border}`,
+        bgcolor: DASHBOARD_TOKENS.surface,
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'border-color 180ms ease, background-color 180ms ease',
+        '&:hover': onClick
+          ? { borderColor: alpha(DASHBOARD_TOKENS.primary, 0.4), bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.04) }
+          : undefined,
+      }}
+    >
+      <Box
+        sx={{
+          width: 40,
+          height: 40,
+          flexShrink: 0,
+          borderRadius: DASHBOARD_TOKENS.radius.md,
+          display: 'grid',
+          placeItems: 'center',
+          color: DASHBOARD_TOKENS.primaryStrong,
+          bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.12),
+          '& svg': { fontSize: 22 },
+        }}
+      >
+        {icon}
+      </Box>
+      <Box sx={{ minWidth: 0, flex: 1 }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '0.95rem' }}>
+            {name}
+          </Typography>
+          {statusChip}
+        </Stack>
+        <Typography noWrap sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.8rem', mt: 0.25 }}>
+          {detail}
+        </Typography>
+      </Box>
+      <Typography
+        sx={{
+          color: DASHBOARD_TOKENS.ink,
+          fontWeight: 900,
+          fontSize: '1rem',
+          fontVariantNumeric: 'tabular-nums',
+          flexShrink: 0,
+        }}
+      >
+        {amount}
+      </Typography>
+    </Stack>
+  );
+}
+
+/* ── Tax breakdown row ─────────────────────────────────────────────────────── */
+
+function TaxRow({ label, value, total }: { label: string; value: number; total: number }) {
+  const progress = total > 0 ? Math.min(100, (value / total) * 100) : 0;
+  return (
+    <Box>
+      <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+        <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted }}>
+          {label}
+        </Typography>
+        <Typography sx={{ fontSize: '0.84rem', fontWeight: 800, color: DASHBOARD_TOKENS.ink, fontVariantNumeric: 'tabular-nums' }}>
+          {formatLei(value)}
+        </Typography>
+      </Stack>
+      <LinearProgress
+        variant="determinate"
+        value={progress}
+        sx={{
+          height: 6,
+          borderRadius: 4,
+          bgcolor: alpha(CHART_BAR_COLOR, 0.12),
+          '& .MuiLinearProgress-bar': { bgcolor: CHART_BAR_COLOR, borderRadius: 4 },
+        }}
+      />
+    </Box>
   );
 }
 
 /* ── Main Component ────────────────────────────────────────────────────────── */
 
-export function HomeDashboardView() {
+export function HomeDashboardView({ onNavigate }: HomeDashboardViewProps) {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(true);
   const [boltDashboard, setBoltDashboard] = useState<BoltDashboardDto | null>(null);
-  const [boltLoading, setBoltLoading] = useState(true);
-  const [boltError, setBoltError] = useState<string | null>(null);
   const [uberDashboard, setUberDashboard] = useState<UberDashboardDto | null>(null);
-  const [uberLoading, setUberLoading] = useState(true);
-  const [uberError, setUberError] = useState<string | null>(null);
-  const [boltModalOpen, setBoltModalOpen] = useState(false);
-
-  // ── Filter state ──
   const [timeframe, setTimeframe] = useState<StatsTimeframe>('month');
-  const [platform, setPlatform] = useState<StatsPlatform>('all');
 
   useEffect(() => {
     let mounted = true;
@@ -263,32 +286,16 @@ export function HomeDashboardView() {
     ]).then(([summaryResult, boltResult, uberResult]) => {
       if (!mounted) return;
 
-      if (summaryResult.status === 'fulfilled') {
-        setSummary(summaryResult.value);
-      } else {
-        console.error(summaryResult.reason);
-      }
+      if (summaryResult.status === 'fulfilled') setSummary(summaryResult.value);
+      else console.error(summaryResult.reason);
 
-      if (boltResult.status === 'fulfilled') {
-        setBoltDashboard(boltResult.value);
-        setBoltError(null);
-      } else {
-        console.error(boltResult.reason);
-        setBoltError('Nu s-au putut încărca datele Bolt.');
-      }
+      if (boltResult.status === 'fulfilled') setBoltDashboard(boltResult.value);
+      else console.error(boltResult.reason);
 
-      if (uberResult.status === 'fulfilled') {
-        setUberDashboard(uberResult.value);
-        setUberError(null);
-      } else {
-        console.error(uberResult.reason);
-        setUberError('Nu s-au putut încărca datele Uber.');
-      }
+      if (uberResult.status === 'fulfilled') setUberDashboard(uberResult.value);
+      else console.error(uberResult.reason);
     }).finally(() => {
-      if (!mounted) return;
-      setSummaryLoading(false);
-      setBoltLoading(false);
-      setUberLoading(false);
+      if (mounted) setSummaryLoading(false);
     });
 
     return () => {
@@ -296,64 +303,19 @@ export function HomeDashboardView() {
     };
   }, []);
 
-  const handlePeriodChange = (period: StatsTimeframe) => {
-    setTimeframe(period);
-    setBoltLoading(true);
-    setUberLoading(true);
-    setBoltError(null);
-    setUberError(null);
+  const handleTimeframeChange = (nextTimeframe: StatsTimeframe) => {
+    setTimeframe(nextTimeframe);
 
     Promise.allSettled([
-      boltService.getDashboard(period),
-      uberService.getDashboard(period),
+      boltService.getDashboard(nextTimeframe),
+      uberService.getDashboard(nextTimeframe),
     ]).then(([boltResult, uberResult]) => {
       if (boltResult.status === 'fulfilled') setBoltDashboard(boltResult.value);
-      else {
-        console.error(boltResult.reason);
-        setBoltError('Nu s-au putut încărca datele Bolt pentru perioada selectată.');
-      }
-
       if (uberResult.status === 'fulfilled') setUberDashboard(uberResult.value);
-      else {
-        console.error(uberResult.reason);
-        setUberError('Nu s-au putut încărca datele Uber pentru perioada selectată.');
-      }
-    }).finally(() => {
-      setBoltLoading(false);
-      setUberLoading(false);
     });
   };
 
-  const openBoltIntegration = () => {
-    setBoltModalOpen(true);
-  };
-
-  const refreshBoltDashboard = () => {
-    setBoltLoading(true);
-    setBoltError(null);
-
-    boltService.getDashboard(timeframe)
-      .then((data) => {
-        setBoltDashboard(data);
-      })
-      .catch((err) => {
-        console.error(err);
-        setBoltError('Nu s-au putut încărca datele Bolt după conectare.');
-      })
-      .finally(() => setBoltLoading(false));
-  };
-
-  const handleBoltConnected = () => {
-    setBoltModalOpen(false);
-    refreshBoltDashboard();
-  };
-
-  const handleUberImported = (dashboard: UberDashboardDto) => {
-    setUberDashboard(dashboard);
-    userService.getDashboardSummary()
-      .then(setSummary)
-      .catch((err) => console.error(err));
-  };
+  const goToPlatforms = onNavigate ? () => onNavigate('platforms') : undefined;
 
   if (summaryLoading) {
     return (
@@ -366,204 +328,324 @@ export function HomeDashboardView() {
   if (!summary) {
     return (
       <Typography sx={{ color: DASHBOARD_TOKENS.textMuted }}>
-        Nu s-au putut incarca datele. Incearca din nou mai tarziu.
+        Nu s-au putut încărca datele. Încearcă din nou mai târziu.
       </Typography>
     );
   }
 
-  // ── Compute filtered income ──
-  const filtered = computeFilteredIncome(summary, timeframe, platform);
+  // ── Aggregate income for the selected timeframe ──
+  const stats = timeframe === 'year' ? summary.yearlyStats : summary.monthlyStats;
+  const venitBolt = stats?.venitBolt ?? summary.venitBolt ?? 0;
+  const venitUber = stats?.venitUber ?? summary.venitUber ?? 0;
+  const venitTotal = venitBolt + venitUber;
+  const taxeEstimate = timeframe === 'year' ? summary.ytdTotalTax : summary.taxeEstimate ?? 0;
 
-  // ── Period label for PfaIncomeSummary ──
-  const timeframeLabel =
+  const periodLabel =
     timeframe === 'year'
       ? String(summary.incomeYear ?? new Date().getFullYear())
-      : undefined; // month uses default
+      : summary.incomeMonth && summary.incomeYear
+        ? `${monthNumberToLabel(summary.incomeMonth)} ${summary.incomeYear}`
+        : 'luna curentă';
+
+  // ── Chart data: one series, monthly totals for the year ──
+  const chartYear = summary.revenueChartYear ?? new Date().getFullYear();
+  const byMonth = new Map((summary.monthlyRevenue ?? []).map((p) => [p.month, p]));
+  const chartData = MONTH_CHART_LABELS.map((label, index) => ({
+    name: label,
+    value: byMonth.get(index + 1)?.venitTotal ?? 0,
+  }));
+  const hasChartData = chartData.some((p) => p.value > 0);
+
+  // ── Platform synthesis rows ──
+  const boltConfigured = boltDashboard?.isConfigured ?? false;
+  const boltStatusChip = boltDashboard ? (
+    boltConfigured ? (
+      <Chip
+        label={boltDashboard.isConnected ? 'Conectat' : 'Necesită reconectare'}
+        size="small"
+        sx={{
+          height: 20,
+          fontSize: '0.68rem',
+          borderRadius: DASHBOARD_TOKENS.radius.full,
+          fontWeight: 800,
+          color: boltDashboard.isConnected ? '#047857' : '#b45309',
+          bgcolor: boltDashboard.isConnected ? alpha('#10b981', 0.12) : alpha('#f59e0b', 0.14),
+        }}
+      />
+    ) : (
+      <Chip
+        label="Neconectat"
+        size="small"
+        sx={{
+          height: 20,
+          fontSize: '0.68rem',
+          borderRadius: DASHBOARD_TOKENS.radius.full,
+          fontWeight: 800,
+          color: DASHBOARD_TOKENS.textMuted,
+          bgcolor: alpha(DASHBOARD_TOKENS.ink, 0.06),
+        }}
+      />
+    )
+  ) : undefined;
+
+  const boltDetail = boltConfigured
+    ? `${(boltDashboard?.totalOrdersCount ?? 0).toLocaleString('ro-RO')} curse · ${(boltDashboard?.totalRideHours ?? 0).toLocaleString('ro-RO', { maximumFractionDigits: 1 })} h în cursă`
+    : 'Conectează contul din pagina Platforme';
+
+  const uberStats = uberDashboard?.stats;
+  const lastUberImport = uberDashboard?.imports?.[0];
+  const uberDetail = lastUberImport
+    ? `${(uberStats?.trips ?? 0).toLocaleString('ro-RO')} curse · ultimul import ${new Date(lastUberImport.importedAtUtc).toLocaleDateString('ro-RO')}`
+    : 'Importă rapoartele CSV din pagina Platforme';
+
+  const hasFiscalData = summary.ytdTotalIncome > 0;
 
   return (
-    <>
-      <Stack spacing={2.5}>
-        <Paper
-          elevation={0}
-          sx={{
-            p: { xs: 2.4, md: 3 },
-            borderRadius: DASHBOARD_TOKENS.radius.xl,
-            border: `1px solid ${alpha(DASHBOARD_TOKENS.primary, 0.16)}`,
-            background: `linear-gradient(135deg, ${alpha(DASHBOARD_TOKENS.paper, 0.98)} 0%, ${alpha(DASHBOARD_TOKENS.primary, 0.08)} 100%)`,
-            boxShadow: DASHBOARD_TOKENS.shadow.sm,
-          }}
-        >
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.2} sx={{ alignItems: { xs: 'flex-start', md: 'center' }, justifyContent: 'space-between' }}>
-            <Box sx={{ minWidth: 0 }}>
-              <Box component="img" src={logo} alt="RIDElance" sx={{ height: 34, width: 'auto', mb: 1.6 }} />
-              <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 950, fontSize: { xs: '1.55rem', md: '2rem' }, lineHeight: 1.08 }}>
-                Dashboard PFA
-              </Typography>
-              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.8, maxWidth: 680, lineHeight: 1.6 }}>
-                Urmărește veniturile, taxele estimate, documentele și activitatea platformelor într-un singur loc.
-              </Typography>
-            </Box>
-            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
-              {pfaStatusChip(summary.pfaStatus)}
-              <Chip
-                label={`${summary.approvedDocuments}/${summary.totalDocuments} documente valide`}
-                size="small"
-                sx={{ fontWeight: 800, borderRadius: DASHBOARD_TOKENS.radius.full, bgcolor: alpha(DASHBOARD_TOKENS.ink, 0.05), color: DASHBOARD_TOKENS.ink }}
-              />
-            </Stack>
-          </Stack>
-        </Paper>
+    <Stack spacing={3}>
+      {/* ── Header ── */}
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        spacing={2}
+        sx={{ alignItems: { xs: 'flex-start', md: 'center' }, justifyContent: 'space-between' }}
+      >
+        <Box sx={{ minWidth: 0 }}>
+          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 900, fontSize: { xs: '1.4rem', md: '1.65rem' }, lineHeight: 1.15 }}>
+            Privire de ansamblu
+          </Typography>
+          <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.5, fontSize: '0.92rem' }}>
+            Sinteza veniturilor și a taxelor pentru {periodLabel}.
+          </Typography>
+        </Box>
 
-        <BoltDashboardPanel
-          dashboard={boltDashboard}
-          loading={boltLoading}
-          error={boltError}
-          period={timeframe as BoltDashboardPeriod}
-          onPeriodChange={(period) => {
-            if (period === 'month' || period === 'year') handlePeriodChange(period);
-          }}
-          onOpenBoltIntegration={openBoltIntegration}
-        />
-
-        <UberCsvPanel
-          dashboard={uberDashboard}
-          loading={uberLoading}
-          error={uberError}
-          period={timeframe as UberDashboardPeriod}
-          onImported={handleUberImported}
-        />
-
-        {/* ── Stats Filter Bar ── */}
-        <StatsFilterBar
-          timeframe={timeframe}
-          platform={platform}
-          onTimeframeChange={handlePeriodChange}
-          onPlatformChange={setPlatform}
-        />
-
-        <PfaIncomeSummary
-          venitCash={filtered.venitCash}
-          venitCard={filtered.venitCard}
-          venitBolt={filtered.venitBolt}
-          venitUber={filtered.venitUber}
-          taxeEstimate={filtered.taxeEstimate}
-          venitTotal={filtered.venitTotal}
-          incomeYear={summary.incomeYear}
-          incomeMonth={timeframe === 'month' ? summary.incomeMonth : undefined}
-          periodOverride={timeframeLabel}
-        />
-
-        <PfaTaxSummaryWidget summary={summary} />
-
-        <RevenueCharts
-          year={summary.revenueChartYear ?? new Date().getFullYear()}
-          monthlyRevenue={summary.monthlyRevenue ?? []}
-          venitCash={filtered.venitCash}
-          venitCard={filtered.venitCard}
-          venitBolt={filtered.venitBolt}
-          venitUber={filtered.venitUber}
-          incomeMonth={summary.incomeMonth}
-          timeframe={timeframe}
-          platform={platform}
-        />
-
-        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', fontWeight: 700 }}>
-          CAS/CASS sunt estimări anuale pe {summary.taxYear}, calculate din venitul Bolt + Uber YTD.
-        </Typography>
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 2 }}>
-          <Paper
-            elevation={0}
+        <Stack direction="row" spacing={1.2} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 1 }}>
+          {pfaStatusChip(summary.pfaStatus)}
+          <Chip
+            label={`${summary.approvedDocuments}/${summary.totalDocuments} documente valide`}
+            size="small"
+            sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full, bgcolor: alpha(DASHBOARD_TOKENS.ink, 0.05), color: DASHBOARD_TOKENS.ink }}
+          />
+          <ToggleButtonGroup
+            exclusive
+            value={timeframe}
+            onChange={(_: MouseEvent<HTMLElement>, v: StatsTimeframe | null) => {
+              if (v) handleTimeframeChange(v);
+            }}
+            size="small"
             sx={{
-              gridColumn: { xs: 'span 12', md: 'span 6' },
-              p: 2.5,
-              borderRadius: DASHBOARD_TOKENS.radius.lg,
-              border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+              bgcolor: DASHBOARD_TOKENS.paper,
+              borderRadius: DASHBOARD_TOKENS.radius.md,
+              p: 0.4,
               boxShadow: DASHBOARD_TOKENS.shadow.sm,
+              border: `1px solid ${DASHBOARD_TOKENS.border}`,
+              '& .MuiToggleButtonGroup-grouped': {
+                border: 0,
+                px: 1.8,
+                py: 0.55,
+                borderRadius: `${DASHBOARD_TOKENS.radius.sm}px !important`,
+                color: DASHBOARD_TOKENS.textMuted,
+                fontWeight: 800,
+                fontSize: '0.8rem',
+                textTransform: 'none',
+                '&.Mui-selected': {
+                  bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.18),
+                  color: DASHBOARD_TOKENS.ink,
+                },
+              },
             }}
           >
-            <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 0.5 }}>
-              Status inregistrare PFA
-            </Typography>
-            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', mb: 2 }}>
-              Starea cererii tale de inregistrare PFA
-            </Typography>
-
-            {summary.pfaStatus ? (
-              <Stack spacing={1.5}>
-                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>Status</Typography>
-                  {pfaStatusChip(summary.pfaStatus)}
-                </Stack>
-                {summary.pfaCreatedAtUtc && (
-                  <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>Data cererii</Typography>
-                    <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.ink, fontSize: '0.9rem' }}>
-                      {new Date(summary.pfaCreatedAtUtc).toLocaleDateString('ro-RO')}
-                    </Typography>
-                  </Stack>
-                )}
-              </Stack>
-            ) : (
-              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>
-                Nu ai o cerere de inregistrare PFA activa.
-              </Typography>
-            )}
-          </Paper>
-        </Box>
+            <ToggleButton value="month">Lună</ToggleButton>
+            <ToggleButton value="year">An</ToggleButton>
+          </ToggleButtonGroup>
+        </Stack>
       </Stack>
 
-      <Dialog
-        open={boltModalOpen}
-        onClose={() => setBoltModalOpen(false)}
-        fullWidth
-        maxWidth="md"
-        slotProps={{
-          paper: {
-            sx: {
-              borderRadius: DASHBOARD_TOKENS.radius.xl,
-              overflow: 'hidden',
-              bgcolor: DASHBOARD_TOKENS.paper,
-            },
-          },
+      {/* ── KPI row ── */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(4, minmax(0, 1fr))' },
+          gap: 2,
         }}
       >
-        <Stack
-          direction="row"
-          spacing={2}
+        <KpiTile label="Venit total" value={formatLei(venitTotal)} helper="Bolt + Uber, total contabil" highlight />
+        <KpiTile label="Venit Bolt" value={formatLei(venitBolt)} />
+        <KpiTile label="Venit Uber" value={formatLei(venitUber)} />
+        <KpiTile
+          label="Taxe estimate"
+          value={formatLei(taxeEstimate)}
+          helper={timeframe === 'year' ? `CAS + CASS + impozit, ${summary.taxYear}` : 'Estimare pentru luna curentă'}
+        />
+      </Box>
+
+      {/* ── Chart + fiscal synthesis ── */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1.7fr) minmax(300px, 1fr)' },
+          gap: 2,
+          alignItems: 'stretch',
+        }}
+      >
+        <SectionCard
+          title="Evoluția veniturilor"
+          subtitle={`Total lunar Bolt + Uber în ${chartYear}`}
+        >
+          {hasChartData ? (
+            <Box sx={{ width: '100%', height: { xs: 260, md: 320 }, minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={alpha(DASHBOARD_TOKENS.ink, 0.07)} />
+                  <XAxis
+                    dataKey="name"
+                    tickLine={false}
+                    axisLine={false}
+                    interval={0}
+                    tick={{ fill: DASHBOARD_TOKENS.textMuted, fontSize: 11, fontWeight: 600 }}
+                  />
+                  <YAxis
+                    width={52}
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: DASHBOARD_TOKENS.textMuted, fontSize: 11, fontWeight: 600 }}
+                    tickFormatter={(value) => `${Number(value).toLocaleString('ro-RO')}`}
+                  />
+                  <Tooltip
+                    cursor={{ fill: alpha(CHART_BAR_COLOR, 0.07) }}
+                    contentStyle={{
+                      border: `1px solid ${DASHBOARD_TOKENS.border}`,
+                      borderRadius: DASHBOARD_TOKENS.radius.md,
+                      boxShadow: DASHBOARD_TOKENS.shadow.sm,
+                    }}
+                    labelStyle={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink }}
+                    formatter={(value) => [`${Number(value ?? 0).toLocaleString('ro-RO')} lei`, 'Venit total']}
+                  />
+                  <Bar dataKey="value" fill={CHART_BAR_COLOR} radius={[4, 4, 0, 0]} maxBarSize={36} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          ) : (
+            <Stack sx={{ height: { xs: 220, md: 300 }, alignItems: 'center', justifyContent: 'center', textAlign: 'center', px: 2 }}>
+              <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>
+                Încă nu există venituri înregistrate în {chartYear}.
+              </Typography>
+              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.88rem', mt: 0.6, maxWidth: 380 }}>
+                Graficul se completează automat pe măsură ce apar încasări Bolt și importuri Uber.
+              </Typography>
+            </Stack>
+          )}
+        </SectionCard>
+
+        <SectionCard
+          title={`Estimare fiscală ${summary.taxYear}`}
+          subtitle="Calcul automat din venitul anual Bolt + Uber, după deducerea cheltuielilor."
+        >
+          {hasFiscalData ? (
+            <Stack spacing={2.4} sx={{ height: '100%' }}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: DASHBOARD_TOKENS.radius.lg,
+                  border: `1px solid ${alpha('#10b981', 0.25)}`,
+                  bgcolor: alpha('#10b981', 0.06),
+                }}
+              >
+                <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#059669' }}>
+                  Venit net estimat, după taxe
+                </Typography>
+                <Typography sx={{ fontWeight: 900, fontSize: '1.7rem', color: '#047857', letterSpacing: -0.6, fontVariantNumeric: 'tabular-nums' }}>
+                  {formatLei(summary.ytdNetIncome)}
+                </Typography>
+              </Box>
+
+              <Stack spacing={1.6}>
+                <TaxRow label="CAS — pensie (25%)" value={summary.ytdCas} total={summary.ytdTotalIncome} />
+                <TaxRow label="CASS — sănătate (10%)" value={summary.ytdCass} total={summary.ytdTotalIncome} />
+                <TaxRow label="Impozit pe venit (10%)" value={summary.ytdIncomeTax} total={summary.ytdTotalIncome} />
+              </Stack>
+
+              <Box sx={{ mt: 'auto' }}>
+                <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.78rem', lineHeight: 1.5 }}>
+                  Estimare anuală, nu o obligație finală — cifrele se actualizează pe măsură ce se adaugă venituri și cheltuieli deductibile.
+                </Typography>
+                {onNavigate && (
+                  <Button
+                    variant="text"
+                    endIcon={<ArrowForwardRoundedIcon sx={{ fontSize: 16 }} />}
+                    onClick={() => onNavigate('expenses')}
+                    sx={{
+                      mt: 0.8,
+                      px: 0,
+                      fontWeight: 800,
+                      textTransform: 'none',
+                      color: DASHBOARD_TOKENS.primaryStrong,
+                      '&:hover': { bgcolor: 'transparent', color: CHART_BAR_COLOR },
+                    }}
+                  >
+                    Vezi cheltuielile deductibile
+                  </Button>
+                )}
+              </Box>
+            </Stack>
+          ) : (
+            <Stack sx={{ height: '100%', minHeight: 200, alignItems: 'center', justifyContent: 'center', textAlign: 'center', px: 2 }}>
+              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem', maxWidth: 300 }}>
+                Estimarea fiscală apare după primele venituri înregistrate în {summary.taxYear}.
+              </Typography>
+            </Stack>
+          )}
+        </SectionCard>
+      </Box>
+
+      {/* ── Platforms synthesis ── */}
+      <SectionCard
+        title="Platforme"
+        subtitle={`Sinteza încasărilor pe ${periodLabel}. Conectarea, importul CSV și istoricul complet sunt în pagina Platforme.`}
+        action={
+          goToPlatforms && (
+            <Button
+              variant="outlined"
+              endIcon={<ArrowForwardRoundedIcon />}
+              onClick={goToPlatforms}
+              sx={{
+                flexShrink: 0,
+                borderRadius: DASHBOARD_TOKENS.radius.md,
+                borderColor: alpha(DASHBOARD_TOKENS.primary, 0.4),
+                color: DASHBOARD_TOKENS.ink,
+                fontWeight: 800,
+                textTransform: 'none',
+                whiteSpace: 'nowrap',
+                '&:hover': { borderColor: DASHBOARD_TOKENS.primaryStrong, bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.06) },
+              }}
+            >
+              Detalii
+            </Button>
+          )
+        }
+      >
+        <Box
           sx={{
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            px: { xs: 2, sm: 3 },
-            py: 2,
-            borderBottom: `1px solid ${DASHBOARD_TOKENS.border}`,
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+            gap: 1.5,
           }}
         >
-          <Box sx={{ minWidth: 0 }}>
-            <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 950, fontSize: '1.15rem' }}>
-              Conectare Bolt
-            </Typography>
-            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.86rem', mt: 0.35 }}>
-              Conectează contul pentru încasări și curse direct în Acasă.
-            </Typography>
-          </Box>
-          <IconButton
-            aria-label="Închide"
-            onClick={() => setBoltModalOpen(false)}
-            sx={{
-              flexShrink: 0,
-              color: DASHBOARD_TOKENS.textMuted,
-              bgcolor: DASHBOARD_TOKENS.surface,
-              '&:hover': { bgcolor: alpha(DASHBOARD_TOKENS.ink, 0.06) },
-            }}
-          >
-            <CloseRoundedIcon />
-          </IconButton>
-        </Stack>
-        <DialogContent sx={{ p: { xs: 2, sm: 3 }, bgcolor: DASHBOARD_TOKENS.surface, overflowX: 'hidden' }}>
-          <BoltIntegrationTab embedded onConnected={handleBoltConnected} />
-        </DialogContent>
-      </Dialog>
-    </>
+          <PlatformRow
+            icon={<BoltRoundedIcon />}
+            name="Bolt"
+            statusChip={boltStatusChip}
+            amount={formatLei(boltDashboard?.totalNetEarnings ?? 0)}
+            detail={boltDetail}
+            onClick={goToPlatforms}
+          />
+          <PlatformRow
+            icon={<LocalTaxiRoundedIcon />}
+            name="Uber"
+            amount={formatLei(uberStats?.netEarnings ?? 0)}
+            detail={uberDetail}
+            onClick={goToPlatforms}
+          />
+        </Box>
+      </SectionCard>
+    </Stack>
   );
 }

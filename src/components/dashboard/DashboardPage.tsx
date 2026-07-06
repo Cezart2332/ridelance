@@ -11,6 +11,7 @@ import { AbonamenteTab } from './sections/AbonamenteTab'
 import { ServiciiTab } from './sections/ServiciiTab'
 import { IstoricPlatiTab } from './sections/IstoricPlatiTab'
 import { MenuHubView } from './sections/MenuHubView'
+import { PlatformsView } from './sections/PlatformsView'
 
 import AppLayout from './layout/AppLayout'
 
@@ -29,6 +30,7 @@ import iconWallet from '../../assets/SVG/2- Regular/credit-card.svg'
 
 const mainSectionConfig = [
   { id: 'home', label: 'Acasă', icon: iconHome },
+  { id: 'platforms', label: 'Platforme', icon: 'MUI:ElectricCarRounded' },
   { id: 'profile', label: 'Profil', icon: iconProfile },
   { id: 'documents', label: 'Documente', icon: iconDocs },
   { id: 'support', label: 'Chat & Suport', icon: iconSupport },
@@ -72,7 +74,7 @@ export default function DashboardPage() {
     const section = searchParams.get('section')
     if (section) {
       if (section === 'bolt_integration') {
-        setActiveSection('home')
+        setActiveSection('platforms')
         return
       }
       setActiveSection(section)
@@ -121,7 +123,8 @@ export default function DashboardPage() {
   }
 
   const renderSection = () => {
-    if (activeSection === 'home') return <HomeDashboardView />
+    if (activeSection === 'home') return <HomeDashboardView onNavigate={setActiveSection} />
+    if (activeSection === 'platforms') return <PlatformsView />
     if (activeSection === 'cars') return <CarsView />
     if (activeSection === 'profile') return <ProfileTab />
     if (activeSection === 'documents') return <DocumentsTab onNavigate={setActiveSection} />

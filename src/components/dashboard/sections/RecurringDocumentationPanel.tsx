@@ -19,6 +19,7 @@ import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
 
 import {
   RECURRING_DOCUMENTATION_ITEMS,
+  recurringItemUploadedByContabil,
   recurringItemUsesExpenseUpload,
 } from '../../../constants/recurringDocumentationItems'
 import { documentService, type DocumentSummary } from '../../../services/document.service'
@@ -234,6 +235,10 @@ export function RecurringDocumentationPanel({
             const statusStyle = doc
               ? documentStatusColors(doc.status)
               : { color: DASHBOARD_TOKENS.textMuted, bg: alpha(DASHBOARD_TOKENS.ink, 0.06) }
+            // Deconturi (TVA intracomunitar, taxă nerezident) are uploaded by the
+            // accountant; everything else is uploaded by the client.
+            const uploadedByContabil = recurringItemUploadedByContabil(item)
+            const canUpload = uploadedByContabil ? isContabil : !isContabil
 
             return (
               <Paper
@@ -271,8 +276,14 @@ export function RecurringDocumentationPanel({
                     </Typography>
                   )}
 
+                  {uploadedByContabil && !isContabil && !doc && (
+                    <Typography sx={{ fontSize: '0.78rem', color: DASHBOARD_TOKENS.textMuted }}>
+                      Acest decont este întocmit și încărcat lunar de contabilul tău.
+                    </Typography>
+                  )}
+
                   <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                    {!isContabil && (
+                    {canUpload && (
                       <Button
                         variant="contained"
                         component="label"

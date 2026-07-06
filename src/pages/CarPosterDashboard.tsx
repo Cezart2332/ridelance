@@ -4,12 +4,14 @@ import { CarsAdminView } from '../components/dashboard/sections/admin/CarsAdminV
 import { authService } from '../services/auth.service'
 import { userService, type UserProfile } from '../services/user.service'
 import { useEffect, useState } from 'react'
+import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 import { ROLE_LABELS } from '../utils/roleLabels'
 
 export function CarPosterDashboard() {
   const navigate = useNavigate()
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [activeSection, setActiveSection] = useState('home')
 
   useEffect(() => {
     userService.getProfile().then(setProfile).catch(() => {})
@@ -24,14 +26,20 @@ export function CarPosterDashboard() {
 
   return (
     <DashboardLayout
-      navItems={[{ id: 'cars', label: 'Mașinile mele', icon: <DirectionsCarFilledRoundedIcon /> }]}
-      activeId="cars"
-      onNavClick={() => {}}
+      navItems={[
+        { id: 'home', label: 'Acasă', icon: <HomeRoundedIcon /> },
+        { id: 'cars', label: 'Mașinile mele', icon: <DirectionsCarFilledRoundedIcon /> },
+      ]}
+      activeId={activeSection}
+      onNavClick={setActiveSection}
       onLogout={handleLogout}
       userName={userName}
       userRole={ROLE_LABELS.CarPoster}
     >
-      <CarsAdminView variant="poster" />
+      <CarsAdminView
+        variant="poster"
+        posterSection={activeSection === 'home' ? 'overview' : 'manage'}
+      />
     </DashboardLayout>
   )
 }

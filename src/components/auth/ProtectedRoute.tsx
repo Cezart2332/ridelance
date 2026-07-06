@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { CircularProgress, Box } from '@mui/material'
 import { NotificationPermissionPrompt } from '../notifications/NotificationPermissionPrompt'
+import { ImpersonationBanner } from './ImpersonationBanner'
 import { useAppSelector } from '../../store/hooks'
 
 /**
@@ -27,6 +28,7 @@ export default function ProtectedRoute() {
   return (
     <>
       <NotificationPermissionPrompt />
+      <ImpersonationBanner />
       <Outlet />
     </>
   )

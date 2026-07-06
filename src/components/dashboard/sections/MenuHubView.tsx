@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Paper, Stack, Typography, Grid, Button, CircularProgress, Avatar, alpha } from '@mui/material';
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';
+import ElectricCarRoundedIcon from '@mui/icons-material/ElectricCarRounded';
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
@@ -30,6 +31,7 @@ export function MenuHubView({ onNavigate, onLogout }: MenuHubViewProps) {
   }, []);
 
   const menuItems = [
+    { id: 'platforms', label: 'Platforme', sub: 'Bolt & Uber — conectare și import CSV', icon: <ElectricCarRoundedIcon />, color: '#10b981', bg: alpha('#10b981', 0.1) },
     { id: 'documents', label: 'Documente', sub: 'Declarații, contracte & fișiere', icon: <FolderRoundedIcon />, color: '#3b82f6', bg: alpha('#3b82f6', 0.1) },
     { id: 'expenses', label: 'Cheltuieli', sub: 'Managementul cheltuielilor', icon: <AccountBalanceWalletRoundedIcon />, color: '#ef4444', bg: alpha('#ef4444', 0.1) },
     { id: 'doc_recurring', label: 'Documente Recurente', sub: 'Declarații & facturi recurente', icon: <FolderSpecialRoundedIcon />, color: '#f59e0b', bg: alpha('#f59e0b', 0.1) },

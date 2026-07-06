@@ -373,13 +373,17 @@ export function DashboardLayout({
         </Drawer>
       )}
 
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar — sticky so the profile/logout card stays visible on long pages */}
       <Box
         component="nav"
         sx={{
           width: { md: SIDEBAR_WIDTH },
           flexShrink: { md: 0 },
           display: { xs: 'none', md: 'block' },
+          position: 'sticky',
+          top: 0,
+          height: '100vh',
+          alignSelf: 'flex-start',
         }}
       >
         {sidebarContent}

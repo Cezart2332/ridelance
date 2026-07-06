@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Avatar, Chip, CircularProgress, Paper, Stack, Typography, Button, Box } from '@mui/material'
+import { Alert, Avatar, Chip, CircularProgress, Paper, Snackbar, Stack, TextField, Typography, Button, Box } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 
 import character2 from '../../../assets/Stickers/character 2.png'
@@ -11,6 +11,11 @@ import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
 import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
 import { formatRole } from '../../../utils/roleLabels'
 
+type DriverAccountDraft = { email: string; phone: string; fullName: string }
+type DriverDrafts = Record<'Uber' | 'Bolt', DriverAccountDraft>
+
+const emptyDriverDraft: DriverAccountDraft = { email: '', phone: '', fullName: '' }
+
 export function ProfileTab() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -18,6 +23,19 @@ export function ProfileTab() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [downloading, setDownloading] = useState(false)
   const [consentLoading, setConsentLoading] = useState(false)
+  const [driverDrafts, setDriverDrafts] = useState<DriverDrafts>({ Uber: emptyDriverDraft, Bolt: emptyDriverDraft })
+  const [savingDrivers, setSavingDrivers] = useState(false)
+  const [driverSnackbar, setDriverSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' })
+
+  const buildDriverDrafts = (data: DashboardSummary | null): DriverDrafts => {
+    const draftFor = (provider: 'Uber' | 'Bolt'): DriverAccountDraft => {
+      const account = data?.fiscalSettings?.platformAccounts.find(
+        (a) => a.provider === provider && a.kind === 'Driver',
+      )
+      return { email: account?.email ?? '', phone: account?.phone ?? '', fullName: account?.fullName ?? '' }
+    }
+    return { Uber: draftFor('Uber'), Bolt: draftFor('Bolt') }
+  }
 
   useEffect(() => {
     Promise.all([
@@ -26,9 +44,41 @@ export function ProfileTab() {
     ]).then(([profileData, summaryData]) => {
       setProfile(profileData)
       setSummary(summaryData)
+      setDriverDrafts(buildDriverDrafts(summaryData))
     }).catch(console.error)
       .finally(() => setLoading(false))
   }, [])
+
+  const updateDriverDraft = (provider: 'Uber' | 'Bolt', patch: Partial<DriverAccountDraft>) => {
+    setDriverDrafts((prev) => ({ ...prev, [provider]: { ...prev[provider], ...patch } }))
+  }
+
+  const handleSaveDriverAccounts = async () => {
+    if (!summary?.pfaRegistrationId) return
+    setSavingDrivers(true)
+    try {
+      const updated = await pfaService.updatePlatformAccounts(
+        summary.pfaRegistrationId,
+        (['Uber', 'Bolt'] as const).map((provider) => ({
+          provider,
+          kind: 'Driver',
+          email: driverDrafts[provider].email,
+          phone: driverDrafts[provider].phone,
+          fullName: driverDrafts[provider].fullName,
+          password: '',
+          status: 'Configured',
+        })),
+      )
+      setSummary((current) => current && current.fiscalSettings
+        ? { ...current, fiscalSettings: { ...current.fiscalSettings, platformAccounts: updated } }
+        : current)
+      setDriverSnackbar({ open: true, message: 'Conturile de șofer au fost salvate.', severity: 'success' })
+    } catch {
+      setDriverSnackbar({ open: true, message: 'Conturile de șofer nu au putut fi salvate.', severity: 'error' })
+    } finally {
+      setSavingDrivers(false)
+    }
+  }
 
   const handleDownloadCertificat = async () => {
     if (!summary?.pfaCertificatId) return
@@ -149,9 +199,13 @@ export function ProfileTab() {
         }}
       >
         <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>Conturi de șofer</Typography>
+        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.5, fontSize: '0.85rem' }}>
+          Completează datele conturilor tale de șofer Uber și Bolt. Contabilul le folosește pentru a-ți verifica rapoartele.
+        </Typography>
         <Stack spacing={1.4} sx={{ mt: 2 }}>
           {(['Uber', 'Bolt'] as const).map((provider) => {
             const account = findAccount(provider, 'Driver')
+            const draft = driverDrafts[provider]
             return (
             <Paper
               key={provider}
@@ -163,7 +217,7 @@ export function ProfileTab() {
                 backgroundColor: DASHBOARD_TOKENS.surface,
               }}
             >
-              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
+              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 1.5 }}>
                 <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700 }}>
                   Cont {provider} driver
                 </Typography>
@@ -173,16 +227,55 @@ export function ProfileTab() {
                   sx={{
                     fontWeight: 700,
                     borderRadius: DASHBOARD_TOKENS.radius.full,
-                    color: '#ed6c02',
-                    backgroundColor: alpha('#ed6c02', 0.1),
+                    color: account?.email ? '#2e7d32' : '#ed6c02',
+                    backgroundColor: account?.email ? alpha('#2e7d32', 0.08) : alpha('#ed6c02', 0.1),
                   }}
                 />
               </Stack>
-              <Typography sx={{ mt: 1, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>Email: {account?.email ?? '—'}</Typography>
-              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>Nr telefon: {account?.phone ?? '—'}</Typography>
-              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>Nume Prenume: {account?.fullName ?? '—'}</Typography>
+              <Stack spacing={1.2}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Email"
+                  value={draft.email}
+                  onChange={(e) => updateDriverDraft(provider, { email: e.target.value })}
+                  sx={{ '& .MuiOutlinedInput-root': { bgcolor: DASHBOARD_TOKENS.paper, borderRadius: DASHBOARD_TOKENS.radius.sm } }}
+                />
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Nr telefon"
+                  value={draft.phone}
+                  onChange={(e) => updateDriverDraft(provider, { phone: e.target.value })}
+                  sx={{ '& .MuiOutlinedInput-root': { bgcolor: DASHBOARD_TOKENS.paper, borderRadius: DASHBOARD_TOKENS.radius.sm } }}
+                />
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Nume și prenume"
+                  value={draft.fullName}
+                  onChange={(e) => updateDriverDraft(provider, { fullName: e.target.value })}
+                  sx={{ '& .MuiOutlinedInput-root': { bgcolor: DASHBOARD_TOKENS.paper, borderRadius: DASHBOARD_TOKENS.radius.sm } }}
+                />
+              </Stack>
             </Paper>
           )})}
+          <Button
+            variant="contained"
+            onClick={handleSaveDriverAccounts}
+            disabled={savingDrivers || !summary?.pfaRegistrationId}
+            sx={{
+              alignSelf: 'flex-start',
+              fontWeight: 700,
+              textTransform: 'none',
+              boxShadow: 'none',
+              bgcolor: DASHBOARD_TOKENS.primary,
+              color: DASHBOARD_TOKENS.ink,
+              '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong, boxShadow: 'none' },
+            }}
+          >
+            {savingDrivers ? <CircularProgress size={20} color="inherit" /> : 'Salvează conturile de șofer'}
+          </Button>
         </Stack>
       </Paper>
 
@@ -293,6 +386,17 @@ export function ProfileTab() {
           </Stack>
         </Paper>
       )}
+
+      <Snackbar
+        open={driverSnackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setDriverSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity={driverSnackbar.severity} sx={{ borderRadius: 2, fontWeight: 600 }}>
+          {driverSnackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

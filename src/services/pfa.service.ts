@@ -134,12 +134,31 @@ export interface CreatePfaRequest {
   city?: string;
   county?: string;
   isOwner: boolean;
+  cui?: string;
+}
+
+export interface PfaCompanyInfo {
+  cui: string;
+  name: string;
+  address: string | null;
+  street: string | null;
+  streetNumber: string | null;
+  city: string | null;
+  county: string | null;
+  registrationDate: string | null;
+  isActive: boolean;
 }
 
 export const pfaService = {
   create: async (data: CreatePfaRequest): Promise<string> => {
     // Returns the Guid of the newly created PFA Registration
     const response = await api.post<string>('/pfa-registrations', data);
+    return response.data;
+  },
+
+  /** Public company data for a Romanian CUI (proxied through backend to ANAF). */
+  getCompanyInfo: async (cui: string): Promise<PfaCompanyInfo> => {
+    const response = await api.get<PfaCompanyInfo>(`/pfa-registrations/company-info/${encodeURIComponent(cui)}`);
     return response.data;
   },
 
@@ -219,7 +238,7 @@ export const pfaService = {
     return response.data;
   },
 
-  getContabilStats: async (): Promise<{
+  getContabilStats: async (year?: number, month?: number): Promise<{
     totalClients: number;
     docsToVerify: number;
     missingMonthlyDocs: number;
@@ -228,7 +247,7 @@ export const pfaService = {
     unreadMessages: number;
     monthLabel: string;
   }> => {
-    const response = await api.get('/pfa-registrations/contabil-stats');
+    const response = await api.get('/pfa-registrations/contabil-stats', { params: { year, month } });
     return response.data;
   },
 

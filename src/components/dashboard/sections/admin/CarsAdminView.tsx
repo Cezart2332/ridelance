@@ -114,10 +114,13 @@ const brandsList = allBrandsData.map(item => item.brand);
 
 interface CarsAdminViewProps {
   variant?: 'admin' | 'poster';
+  /** For the poster dashboard: 'overview' = home page with global stats, 'manage' = car list + leads. */
+  posterSection?: 'overview' | 'manage';
 }
 
-export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
+export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: CarsAdminViewProps) {
   const isPoster = variant === 'poster';
+  const isPosterOverview = isPoster && posterSection === 'overview';
   const [activeTab, setActiveTab] = useState(0);
   const [cars, setCars] = useState<Car[]>([]);
   const [leads, setLeads] = useState<CarLead[]>([]);
@@ -144,7 +147,7 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
       const carsData = isPoster
         ? await carsService.getMyCars()
         : await carsService.getAllAdmin();
-      const leadsData = isPoster ? [] : await carsService.getLeads();
+      const leadsData = await carsService.getLeads();
       setCars(carsData);
       setLeads(leadsData);
     } catch (error) {
@@ -152,7 +155,7 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isPoster]);
 
   useEffect(() => {
     fetchData();
@@ -410,10 +413,17 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
   return (
     <Box>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4" sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.ink }}>
-          {isPoster ? 'Anunțurile mele' : 'Gestiune Fleet'}
-        </Typography>
-        {activeTab === 0 && (
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.ink }}>
+            {isPosterOverview ? 'Acasă' : isPoster ? 'Mașinile mele' : 'Gestiune Fleet'}
+          </Typography>
+          {isPosterOverview && (
+            <Typography variant="body2" sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 600, mt: 0.5 }}>
+              O privire de ansamblu asupra anunțurilor și solicitărilor tale
+            </Typography>
+          )}
+        </Box>
+        {activeTab === 0 && !isPosterOverview && (
           <Button variant="contained" startIcon={<AddRoundedIcon />}
             onClick={() => handleOpenCarModal()}
             sx={{ bgcolor: DASHBOARD_TOKENS.primary, fontWeight: 700, borderRadius: 2 }}>
@@ -424,7 +434,7 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
 
       {loading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
 
-      {isPoster && (
+      {isPosterOverview && (
         <Stack spacing={2.5} sx={{ mb: 4 }}>
           <Grid container spacing={2} component="div">
             {[
@@ -609,9 +619,83 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
               </Paper>
             </Grid>
           </Grid>
+
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2.5,
+              borderRadius: DASHBOARD_TOKENS.radius.lg,
+              border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+              bgcolor: '#fff',
+            }}
+          >
+            <Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 2 }}>
+              <Box
+                sx={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 2,
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: DASHBOARD_TOKENS.primaryStrong,
+                  bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.12),
+                }}
+              >
+                <AssignmentIndRoundedIcon />
+              </Box>
+              <Box>
+                <Typography sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.ink }}>Solicitări recente</Typography>
+                <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 650 }}>
+                  Ultimele cereri primite pentru mașinile tale — le poți gestiona din „Mașinile mele”
+                </Typography>
+              </Box>
+            </Stack>
+            <Stack spacing={1.5}>
+              {leads.length === 0 && (
+                <Typography variant="body2" sx={{ color: DASHBOARD_TOKENS.textSubtle }}>
+                  Nu ai primit încă solicitări. Ele vor apărea aici imediat ce cineva este interesat de o mașină.
+                </Typography>
+              )}
+              {leads.slice(0, 5).map((lead) => (
+                <Stack
+                  key={lead.id}
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1.5}
+                  sx={{
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    justifyContent: 'space-between',
+                    p: 1.5,
+                    borderRadius: 2,
+                    border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.06)}`,
+                  }}
+                >
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography sx={{ fontWeight: 850, color: DASHBOARD_TOKENS.ink }} noWrap>
+                      {lead.userName}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 650 }}>
+                      {lead.carName} • {lead.city} • {new Date(lead.createdAtUtc).toLocaleDateString('ro-RO')}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label={lead.status}
+                    size="small"
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: '0.65rem',
+                      bgcolor: alpha(leadStatusColors[lead.status] ?? '#999', 0.1),
+                      color: leadStatusColors[lead.status] ?? '#999',
+                      border: `1px solid ${alpha(leadStatusColors[lead.status] ?? '#999', 0.2)}`,
+                    }}
+                  />
+                </Stack>
+              ))}
+            </Stack>
+          </Paper>
         </Stack>
       )}
 
+      {!isPosterOverview && (
       <Paper elevation={0} sx={{ mb: 4, borderRadius: DASHBOARD_TOKENS.radius.lg, border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`, overflow: 'hidden' }}>
         <Tabs
           value={activeTab}
@@ -619,8 +703,8 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
           sx={{ px: 2, borderBottom: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.05)}`, '& .MuiTab-root': { fontWeight: 700, py: 2 } }}
         >
           <Tab icon={<DirectionsCarFilledRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label={isPoster ? 'Mașini' : 'Parc Auto'} />
-          {!isPoster && <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Solicitări" />}
-          {!isPoster && <Tab icon={<BarChartRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Analytics" />}
+          <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Solicitări" />
+          <Tab icon={<BarChartRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label={isPoster ? 'Statistici' : 'Analytics'} />
           {!isPoster && <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Validare" />}
         </Tabs>
 
@@ -855,6 +939,7 @@ export function CarsAdminView({ variant = 'admin' }: CarsAdminViewProps) {
           )}
         </Box>
       </Paper>
+      )}
 
       {/* Car Edit/Add Modal — Rearranged Layout */}
       <Dialog open={isCarModalOpen} onClose={() => setIsCarModalOpen(false)} maxWidth="lg" fullWidth

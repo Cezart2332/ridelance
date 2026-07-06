@@ -73,6 +73,16 @@ export function formatDocumentCategory(category: string | null | undefined): str
       return 'Raport venituri Bolt';
     case 'Cheltuiala':
       return 'Cheltuială deductibilă';
+    case 'FacturaComisionUber':
+      return 'Factură comision Uber';
+    case 'FacturaComisionBolt':
+      return 'Factură comision Bolt';
+    case 'DecontTvaIntracomunitar':
+      return 'Decont TVA intracomunitar';
+    case 'DecontTaxaNerezident':
+      return 'Decont taxă nerezident';
+    case 'CertificatTvaIntracomunitar':
+      return 'Certificat TVA intracomunitar';
     case 'CererePfa':
       return 'Cerere Înregistrare PFA';
     case 'Other':

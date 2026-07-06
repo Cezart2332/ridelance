@@ -387,9 +387,9 @@ export function AdminDashboard() {
     navigate('/auth', { replace: true })
   }
 
-  const handleImpersonate = async (userId: string) => {
+  const handleImpersonate = async (userId: string, userName: string) => {
     try {
-      await authService.impersonate(userId)
+      await authService.impersonate(userId, userName)
       navigate('/app', { replace: true })
     } catch {
       setStatusError('Eroare la autentificarea ca utilizator.')
@@ -666,7 +666,7 @@ export function AdminDashboard() {
             <Button
               variant="contained"
               startIcon={<LoginRoundedIcon />}
-              onClick={() => handleImpersonate(pfa.userId)}
+              onClick={() => handleImpersonate(pfa.userId, pfa.userName || pfa.fullName || pfa.userEmail)}
               sx={{ fontWeight: 800, bgcolor: TOKENS.primary, '&:hover': { bgcolor: TOKENS.primaryStrong }, boxShadow: 'none' }}
             >
               Autentificare ca utilizator
@@ -679,7 +679,7 @@ export function AdminDashboard() {
           </Stack>
         )}
 
-        <PfaFiscalSettingsPanel pfaId={pfa.id} editable />
+        <PfaFiscalSettingsPanel pfaId={pfa.id} editable clientUserId={pfa.userId} />
 
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 2 }}>
           <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
@@ -1087,7 +1087,7 @@ export function AdminDashboard() {
                     sx={{ bgcolor: TOKENS.primary, boxShadow: 'none', color: TOKENS.ink, fontWeight: 850, '&:hover': { bgcolor: TOKENS.primaryStrong, boxShadow: 'none' } }}>
                     Vezi detalii
                   </Button>
-                  <Button fullWidth variant="outlined" size="small" disabled={!isApproved} onClick={() => handleImpersonate(pfa.userId)}
+                  <Button fullWidth variant="outlined" size="small" disabled={!isApproved} onClick={() => handleImpersonate(pfa.userId, pfa.userName || pfa.fullName || pfa.userEmail)}
                     sx={{ borderColor: alpha(TOKENS.ink, 0.14), color: TOKENS.ink, fontWeight: 800, '&:hover': { bgcolor: alpha(TOKENS.primary, 0.08), borderColor: alpha(TOKENS.primary, 0.42) } }}>
                     Intră în dashboard client
                   </Button>
