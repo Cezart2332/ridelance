@@ -14,6 +14,8 @@ import { groupMessagesByDate } from '../../../utils/chat'
 import { Box } from '@mui/material'
 import { AccountantChatTab } from './AccountantChatTab'
 import { getBucharestBusinessHoursStatus } from '../../../utils/businessHours'
+import { OfficeBookingCalendar } from '../../office/OfficeBookingCalendar'
+import { userService, type UserProfile } from '../../../services/user.service'
 
 export function SupportChatTab() {
   const [activeChat, setActiveChat] = useState<'support' | 'accountant'>('support')
@@ -27,6 +29,11 @@ export function SupportChatTab() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const myUserId = useAppSelector((s) => s.auth.userId) || ''
   const supportHours = getBucharestBusinessHoursStatus(10, 18)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+
+  useEffect(() => {
+    userService.getProfile().then(setProfile).catch(() => {})
+  }, [])
 
   // Bootstrap: get support room, load history, connect to hub
   useEffect(() => {
@@ -301,6 +308,20 @@ export function SupportChatTab() {
           </>
         )}
       </Paper>}
+
+      {/* ── Programare vizită la birou ── */}
+      <Box>
+        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 1.5 }}>
+          Programează o vizită la birou
+        </Typography>
+        <OfficeBookingCalendar
+          compact
+          defaultName={profile ? `${profile.firstName} ${profile.lastName}` : ''}
+          defaultEmail={profile?.email ?? ''}
+          defaultPhone={profile?.phoneNumber ?? ''}
+          key={profile ? 'with-profile' : 'no-profile'}
+        />
+      </Box>
     </div>
   )
 }

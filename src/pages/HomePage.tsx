@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '../store/hooks'
 import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
+import { OfficeBookingCalendar } from '../components/office/OfficeBookingCalendar'
 import {
   homeSec3,
   homeSec6,
@@ -1158,6 +1159,15 @@ export function HomePage() {
           </Box>
         </Container>
       </Box>
+
+      {/* ═══════ 8b. Programare vizită la birou ═══════ */}
+      <Container maxWidth="lg" sx={{ mt: { xs: 8, md: 12 } }}>
+        <SectionHeader
+          title="Programează o vizită la biroul RIDElance"
+          subtitle="Vino să ne cunoaștem: alege ziua și ora care ți se potrivesc, iar noi te așteptăm cu răspunsuri la toate întrebările."
+        />
+        <OfficeBookingCalendar />
+      </Container>
 
       {/* ═══════ 9. Întrebări Frecvente ═══════ */}
       <Container maxWidth="md" sx={{ mt: { xs: 8, md: 12 } }}>

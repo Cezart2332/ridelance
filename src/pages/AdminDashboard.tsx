@@ -42,6 +42,8 @@ import { formatRegistrationType, formatDocumentCategory } from '../utils/formatt
 import { AdminChatView } from '../components/dashboard/sections/AdminChatView'
 import { CarsAdminView } from '../components/dashboard/sections/admin/CarsAdminView'
 import { ServicesAdminView } from '../components/dashboard/sections/admin/ServicesAdminView'
+import { OfficeCalendarAdminView } from '../components/dashboard/sections/admin/OfficeCalendarAdminView'
+import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminOverviewView'
 import { PfaFiscalSettingsPanel } from '../components/pfa/PfaFiscalSettingsPanel'
 import {
@@ -490,6 +492,7 @@ export function AdminDashboard() {
     { id: 'pfa_inrolate', label: 'PFA-uri înrolate', icon: <HowToRegRoundedIcon /> },
     { id: 'masini', label: 'Mașini Ridesharing', icon: <DirectionsCarFilledRoundedIcon /> },
     { id: 'servicii', label: 'Servicii', icon: <ShoppingCartRoundedIcon /> },
+    { id: 'calendar', label: 'Calendar birou', icon: <EventAvailableRoundedIcon /> },
     { id: 'chat', label: 'Chat Clienți', icon: <ChatRoundedIcon /> },
     { id: 'contabili', label: 'Înrolare Contabili', icon: <SupervisedUserCircleRoundedIcon /> },
     { id: 'notificari', label: 'Notificări', icon: <NotificationsActiveRoundedIcon /> },
@@ -1208,6 +1211,7 @@ export function AdminDashboard() {
       case 'pfa_inrolate': return renderPfaList()
       case 'masini': return <CarsAdminView />
       case 'servicii': return <ServicesAdminView />
+      case 'calendar': return <OfficeCalendarAdminView />
       case 'chat': return <AdminChatView pfas={pfas} />
       case 'contabili': return renderContabili()
       case 'notificari': return renderNotificari()
