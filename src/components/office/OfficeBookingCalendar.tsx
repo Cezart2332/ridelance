@@ -49,6 +49,8 @@ interface OfficeBookingCalendarProps {
   defaultPhone?: string;
   /** Compact paddings for embedding inside dashboard tabs. */
   compact?: boolean;
+  /** Single-column layout without the info panel, for narrow containers (e.g. contact page). */
+  embedded?: boolean;
 }
 
 export function OfficeBookingCalendar({
@@ -56,6 +58,7 @@ export function OfficeBookingCalendar({
   defaultEmail = '',
   defaultPhone = '',
   compact = false,
+  embedded = false,
 }: OfficeBookingCalendarProps) {
   const now = new Date();
   const [viewYear, setViewYear] = useState(now.getFullYear());
@@ -213,13 +216,16 @@ export function OfficeBookingCalendar({
         border: `1px solid ${TOKENS.border}`,
         overflow: 'hidden',
         display: 'grid',
-        gridTemplateColumns: {
-          xs: '1fr',
-          md: step === 'form' ? 'minmax(0, 0.9fr) minmax(0, 1.4fr)' : 'minmax(0, 0.9fr) minmax(0, 1.4fr) minmax(0, 0.9fr)',
-        },
+        gridTemplateColumns: embedded
+          ? '1fr'
+          : {
+              xs: '1fr',
+              md: step === 'form' ? 'minmax(0, 0.9fr) minmax(0, 1.4fr)' : 'minmax(0, 0.9fr) minmax(0, 1.4fr) minmax(0, 0.9fr)',
+            },
       }}
     >
       {/* ── Info panel ── */}
+      {!embedded && (
       <Box
         sx={{
           p: compact ? 2.5 : { xs: 2.5, md: 3.5 },
@@ -291,6 +297,7 @@ export function OfficeBookingCalendar({
           </Box>
         )}
       </Box>
+      )}
 
       {step === 'form' ? (
         /* ── Booking form ── */
@@ -301,6 +308,26 @@ export function OfficeBookingCalendar({
             </IconButton>
             <Typography sx={{ fontWeight: 850, color: TOKENS.ink }}>Datele tale</Typography>
           </Stack>
+
+          {embedded && selectedDate && selectedTime && (
+            <Box
+              sx={{
+                mb: 2,
+                p: 1.8,
+                maxWidth: 460,
+                borderRadius: TOKENS.radius.md,
+                border: `1px solid ${alpha(TOKENS.primary, 0.35)}`,
+                bgcolor: alpha(TOKENS.primary, 0.08),
+              }}
+            >
+              <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: TOKENS.textMuted }}>
+                Intervalul ales
+              </Typography>
+              <Typography sx={{ fontWeight: 850, color: TOKENS.ink, mt: 0.3 }}>
+                {formatSelectedDate(selectedDate)} · {selectedTime}
+              </Typography>
+            </Box>
+          )}
 
           <Stack spacing={2} sx={{ maxWidth: 460 }}>
             <TextField
@@ -355,8 +382,10 @@ export function OfficeBookingCalendar({
           <Box
             sx={{
               p: compact ? 2.5 : { xs: 2.5, md: 3.5 },
-              borderRight: { md: `1px solid ${TOKENS.border}` },
-              borderBottom: { xs: `1px solid ${TOKENS.border}`, md: 'none' },
+              borderRight: embedded ? 'none' : { md: `1px solid ${TOKENS.border}` },
+              borderBottom: embedded
+                ? `1px solid ${TOKENS.border}`
+                : { xs: `1px solid ${TOKENS.border}`, md: 'none' },
             }}
           >
             <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
@@ -466,10 +495,10 @@ export function OfficeBookingCalendar({
           </Box>
 
           {/* ── Slots ── */}
-          <Box sx={{ p: compact ? 2.5 : { xs: 2.5, md: 3.5 }, minHeight: { md: 380 } }}>
+          <Box sx={{ p: compact ? 2.5 : { xs: 2.5, md: 3.5 }, minHeight: embedded ? undefined : { md: 380 } }}>
             {!selectedDate ? (
-              <Stack sx={{ height: '100%', alignItems: 'center', justifyContent: 'center', textAlign: 'center', py: 6 }}>
-                <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', maxWidth: 220 }}>
+              <Stack sx={{ height: '100%', alignItems: 'center', justifyContent: 'center', textAlign: 'center', py: embedded ? 2 : 6 }}>
+                <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', maxWidth: embedded ? 'none' : 220 }}>
                   Alege o zi din calendar ca să vezi orele disponibile.
                 </Typography>
               </Stack>
@@ -496,7 +525,9 @@ export function OfficeBookingCalendar({
                   <Box
                     sx={{
                       display: 'grid',
-                      gridTemplateColumns: { xs: 'repeat(3, 1fr)', sm: 'repeat(4, 1fr)', md: 'repeat(2, 1fr)' },
+                      gridTemplateColumns: embedded
+                        ? { xs: 'repeat(3, 1fr)', sm: 'repeat(4, 1fr)' }
+                        : { xs: 'repeat(3, 1fr)', sm: 'repeat(4, 1fr)', md: 'repeat(2, 1fr)' },
                       gap: 1,
                       maxHeight: { md: 340 },
                       overflowY: 'auto',

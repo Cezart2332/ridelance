@@ -2,6 +2,7 @@ import { Box, Button, Container, Paper, Stack, TextField, Typography } from '@mu
 import { alpha } from '@mui/material/styles'
 import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
+import { OfficeBookingCalendar, OFFICE_ADDRESS } from '../components/office/OfficeBookingCalendar'
 import { pageFrameSx } from '../constants/layout'
 
 const inputSx = {
@@ -28,170 +29,189 @@ const inputSx = {
   '& .MuiInputLabel-root': { color: TOKENS.textMuted, fontWeight: 600 },
 }
 
+const contactEmails = [
+  {
+    email: 'contact@ridelance.ro',
+    text: 'Pentru întrebări generale despre platformă, suport, informații administrative sau alte solicitări legate de utilizarea Ridelance.',
+  },
+  {
+    email: 'sales@ridelance.ro',
+    text: 'Pentru întrebări despre abonamente, oferte, activarea serviciilor, colaborări și oportunități comerciale.',
+  },
+]
+
+function ColumnHeading({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <Box>
+      <Typography
+        component="h2"
+        sx={{ fontWeight: 850, fontSize: '1.2rem', color: TOKENS.ink }}
+      >
+        {title}
+      </Typography>
+      <Typography
+        variant="body2"
+        sx={{ color: TOKENS.textMuted, mt: 0.5, lineHeight: 1.6 }}
+      >
+        {subtitle}
+      </Typography>
+    </Box>
+  )
+}
+
 export function ContactPage() {
   return (
     <Box sx={pageFrameSx}>
-      <Container maxWidth="sm">
+      <Container maxWidth="lg">
         <Stack spacing={4}>
           <SectionHeader
             title="Contact"
-            subtitle="Dacă ai întrebări despre platformă, abonamente, zona fiscală sau o posibilă colaborare, ne poți trimite un mesaj prin formularul de mai jos. Revenim către tine cât mai curând posibil."
+            subtitle="Dacă ai întrebări despre platformă, abonamente, zona fiscală sau o posibilă colaborare, trimite-ne un mesaj sau programează direct o vizită la biroul nostru. Revenim către tine cât mai curând posibil."
           />
 
-          <Paper
-            elevation={0}
+          <Box
             sx={{
-              backgroundColor: TOKENS.paper,
-              border: `1px solid ${TOKENS.border}`,
-              boxShadow: TOKENS.shadow.lg,
-              p: { xs: 3, md: 5 },
-              borderRadius: TOKENS.radius.xl,
-              transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-              '&:hover': {
-                boxShadow: TOKENS.shadow.xl,
-                borderColor: TOKENS.borderHover,
-              },
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+              gap: { xs: 4, md: 5 },
+              alignItems: 'start',
             }}
           >
-            <Stack component="form" spacing={3}>
-              <TextField
-                fullWidth
-                size="medium"
-                label="Nume complet"
-                placeholder="Nume complet"
-                sx={inputSx}
+            {/* ── Contact form ── */}
+            <Stack spacing={2.5}>
+              <ColumnHeading
+                title="Trimite-ne un mesaj"
+                subtitle="Completează formularul și îți răspundem pe email."
               />
-              <TextField
-                type="email"
-                fullWidth
-                size="medium"
-                label="Adresă de email"
-                placeholder="Adresă de email"
-                sx={inputSx}
-              />
-              <TextField
-                fullWidth
-                multiline
-                minRows={5}
-                label="Mesajul tău"
-                placeholder="Mesajul tău"
-                sx={inputSx}
-              />
-              <Button
-                variant="contained"
-                size="large"
+              <Paper
+                elevation={0}
                 sx={{
-                  mt: 1,
-                  px: 5,
-                  py: 1.4,
-                  fontSize: '1.05rem',
-                  color: '#FFFFFF',
-                  backgroundColor: TOKENS.primary,
-                  borderRadius: TOKENS.radius.full,
-                  fontWeight: 700,
-                  boxShadow: 'none',
-                  alignSelf: { xs: 'stretch', sm: 'flex-start' },
+                  backgroundColor: TOKENS.paper,
+                  border: `1px solid ${TOKENS.border}`,
+                  boxShadow: TOKENS.shadow.lg,
+                  p: { xs: 3, md: 4 },
+                  borderRadius: TOKENS.radius.xl,
+                  transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
                   '&:hover': {
-                    backgroundColor: TOKENS.primaryStrong,
-                    boxShadow: 'none',
-                    transform: 'translateY(-2px)',
+                    boxShadow: TOKENS.shadow.xl,
+                    borderColor: TOKENS.borderHover,
                   },
                 }}
               >
-                Trimite mesajul
-              </Button>
+                <Stack component="form" spacing={3}>
+                  <TextField
+                    fullWidth
+                    size="medium"
+                    label="Nume complet"
+                    placeholder="Nume complet"
+                    sx={inputSx}
+                  />
+                  <TextField
+                    type="email"
+                    fullWidth
+                    size="medium"
+                    label="Adresă de email"
+                    placeholder="Adresă de email"
+                    sx={inputSx}
+                  />
+                  <TextField
+                    fullWidth
+                    multiline
+                    minRows={5}
+                    label="Mesajul tău"
+                    placeholder="Mesajul tău"
+                    sx={inputSx}
+                  />
+                  <Button
+                    variant="contained"
+                    size="large"
+                    sx={{
+                      mt: 1,
+                      px: 5,
+                      py: 1.4,
+                      fontSize: '1.05rem',
+                      color: '#FFFFFF',
+                      backgroundColor: TOKENS.primary,
+                      borderRadius: TOKENS.radius.full,
+                      fontWeight: 700,
+                      boxShadow: 'none',
+                      alignSelf: { xs: 'stretch', sm: 'flex-start' },
+                      '&:hover': {
+                        backgroundColor: TOKENS.primaryStrong,
+                        boxShadow: 'none',
+                        transform: 'translateY(-2px)',
+                      },
+                    }}
+                  >
+                    Trimite mesajul
+                  </Button>
+                </Stack>
+              </Paper>
             </Stack>
-          </Paper>
 
-          {/* Info Emails Section */}
-          <Stack spacing={2.5}>
-            <Box
-              sx={{
-                p: 3,
-                borderRadius: TOKENS.radius.lg,
-                border: `1px solid ${TOKENS.border}`,
-                backgroundColor: alpha(TOKENS.primary, 0.03),
-                transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-                '&:hover': {
-                  borderColor: TOKENS.primary,
-                  backgroundColor: alpha(TOKENS.primary, 0.05),
-                  transform: 'translateY(-2px)',
-                  boxShadow: TOKENS.shadow.sm,
-                },
-              }}
-            >
-              <Typography
-                component="a"
-                href="mailto:contact@ridelance.ro"
-                sx={{
-                  fontWeight: 800,
-                  color: TOKENS.primary,
-                  textDecoration: 'none',
-                  fontSize: '1.1rem',
-                  display: 'block',
-                  mb: 0.8,
-                  '&:hover': { textDecoration: 'underline' },
-                }}
-              >
-                contact@ridelance.ro
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: TOKENS.textMuted,
-                  lineHeight: 1.7,
-                  fontSize: '0.92rem',
-                }}
-              >
-                Pentru întrebări generale despre platformă, suport, informații
-                administrative sau alte solicitări legate de utilizarea
-                Ridelance.
-              </Typography>
-            </Box>
+            {/* ── Office booking calendar ── */}
+            <Stack spacing={2.5}>
+              <ColumnHeading
+                title="Programează o vizită la birou"
+                subtitle={`Luni – Vineri, 09:00 – 17:00 · vizite de 30 de minute · ${OFFICE_ADDRESS}.`}
+              />
+              <OfficeBookingCalendar embedded />
+            </Stack>
+          </Box>
 
-            <Box
-              sx={{
-                p: 3,
-                borderRadius: TOKENS.radius.lg,
-                border: `1px solid ${TOKENS.border}`,
-                backgroundColor: alpha(TOKENS.primary, 0.03),
-                transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-                '&:hover': {
-                  borderColor: TOKENS.primary,
-                  backgroundColor: alpha(TOKENS.primary, 0.05),
-                  transform: 'translateY(-2px)',
-                  boxShadow: TOKENS.shadow.sm,
-                },
-              }}
-            >
-              <Typography
-                component="a"
-                href="mailto:sales@ridelance.ro"
+          {/* ── Info Emails Section ── */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+              gap: { xs: 2.5, md: 5 },
+            }}
+          >
+            {contactEmails.map((item) => (
+              <Box
+                key={item.email}
                 sx={{
-                  fontWeight: 800,
-                  color: TOKENS.primary,
-                  textDecoration: 'none',
-                  fontSize: '1.1rem',
-                  display: 'block',
-                  mb: 0.8,
-                  '&:hover': { textDecoration: 'underline' },
+                  p: 3,
+                  borderRadius: TOKENS.radius.lg,
+                  border: `1px solid ${TOKENS.border}`,
+                  backgroundColor: alpha(TOKENS.primary, 0.03),
+                  transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
+                  '&:hover': {
+                    borderColor: TOKENS.primary,
+                    backgroundColor: alpha(TOKENS.primary, 0.05),
+                    transform: 'translateY(-2px)',
+                    boxShadow: TOKENS.shadow.sm,
+                  },
                 }}
               >
-                sales@ridelance.ro
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: TOKENS.textMuted,
-                  lineHeight: 1.7,
-                  fontSize: '0.92rem',
-                }}
-              >
-                Pentru întrebări despre abonamente, oferte, activarea
-                serviciilor, colaborări și oportunități comerciale.
-              </Typography>
-            </Box>
-          </Stack>
+                <Typography
+                  component="a"
+                  href={`mailto:${item.email}`}
+                  sx={{
+                    fontWeight: 800,
+                    color: TOKENS.primary,
+                    textDecoration: 'none',
+                    fontSize: '1.1rem',
+                    display: 'block',
+                    mb: 0.8,
+                    '&:hover': { textDecoration: 'underline' },
+                  }}
+                >
+                  {item.email}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: TOKENS.textMuted,
+                    lineHeight: 1.7,
+                    fontSize: '0.92rem',
+                  }}
+                >
+                  {item.text}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
         </Stack>
       </Container>
     </Box>

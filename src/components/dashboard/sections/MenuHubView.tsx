@@ -10,6 +10,7 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded';
+import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded';
 
 import { userService, type UserProfile } from '../../../services/user.service';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
@@ -38,6 +39,7 @@ export function MenuHubView({ onNavigate, onLogout }: MenuHubViewProps) {
     { id: 'cars', label: 'Mașini', sub: 'Managementul vehiculelor', icon: <DirectionsCarFilledRoundedIcon />, color: '#8b5cf6', bg: alpha('#8b5cf6', 0.1) },
     { id: 'abonamente', label: 'Abonamente', sub: 'Pachete active & prețuri', icon: <WorkspacePremiumRoundedIcon />, color: '#d97706', bg: alpha('#d97706', 0.1) },
     { id: 'servicii', label: 'Servicii', icon: <ShoppingCartRoundedIcon />, sub: 'Magazin & comenzi', color: '#ec4899', bg: alpha('#ec4899', 0.1) },
+    { id: 'asigurari', label: 'Asigurări', sub: 'Oferte prin asigurari.ro', icon: <ShieldRoundedIcon />, color: '#0ea5e9', bg: alpha('#0ea5e9', 0.1) },
     { id: 'istoric_plati', label: 'Istoric Plăți', sub: 'Chitanțe & tranzacții', icon: <ReceiptLongRoundedIcon />, color: '#06b6d4', bg: alpha('#06b6d4', 0.1) },
   ];
 

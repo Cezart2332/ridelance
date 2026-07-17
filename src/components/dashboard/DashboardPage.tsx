@@ -9,6 +9,7 @@ import { SupportChatTab } from './sections/SupportChatTab'
 import { CarsView } from './sections/CarsView'
 import { AbonamenteTab } from './sections/AbonamenteTab'
 import { ServiciiTab } from './sections/ServiciiTab'
+import { InsuranceTab } from './sections/InsuranceTab'
 import { IstoricPlatiTab } from './sections/IstoricPlatiTab'
 import { MenuHubView } from './sections/MenuHubView'
 import { PlatformsView } from './sections/PlatformsView'
@@ -49,6 +50,7 @@ const bottomSectionConfig = [
   { id: 'cars', label: 'Mașini', icon: 'MUI:DirectionsCarFilledRounded' },
   { id: 'abonamente', label: 'Abonamente', icon: 'MUI:WorkspacePremiumRounded' },
   { id: 'servicii', label: 'Servicii', icon: 'MUI:ShoppingCartRounded' },
+  { id: 'asigurari', label: 'Asigurări', icon: 'MUI:ShieldRounded' },
   { id: 'istoric_plati', label: 'Istoric Plăți', icon: 'MUI:ReceiptLongRounded' },
 ] as const
 
@@ -135,6 +137,7 @@ export default function DashboardPage() {
         : <DocumentsTab onNavigate={setActiveSection} />
     }
     if (activeSection === 'servicii') return <ServiciiTab />
+    if (activeSection === 'asigurari') return <InsuranceTab />
     if (activeSection === 'istoric_plati') return <IstoricPlatiTab />
     if (activeSection === 'more') return <MenuHubView onNavigate={setActiveSection} onLogout={handleLogout} />
 

@@ -22,6 +22,7 @@ import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 import { ProcessVisual } from '../components/home/ProcessVisual'
 import { CarCarousel } from '../components/home/CarCarousel'
+import { InsuranceLinksGrid } from '../components/insurance/InsuranceLinksGrid'
 
 export function HomePage() {
   const navigate = useNavigate()
@@ -1097,6 +1098,15 @@ export function HomePage() {
           </Box>
         </Container>
       </Box>
+
+      {/* ═══════ ASIGURĂRI SECTION ═══════ */}
+      <Container maxWidth="lg" sx={{ mt: { xs: 8, md: 12 }, mb: { xs: 8, md: 12 } }}>
+        <SectionHeader
+          title="Asigurări"
+          subtitle="Oferte rapide pentru orice tip de asigurare, prin partenerul nostru asigurari.ro. Alege categoria potrivită și primești oferta direct online."
+        />
+        <InsuranceLinksGrid />
+      </Container>
 
       {/* ═══════ PARTNERS SECTION ═══════ */}
       <Box sx={{ py: { xs: 8, md: 12 }, borderBottom: `1px solid ${TOKENS.border}`, backgroundColor: alpha(TOKENS.surfaceAlt, 0.4) }}>

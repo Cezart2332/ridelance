@@ -4,7 +4,6 @@ import silso from '../assets/silso.png'
 import ace from '../assets/ace.svg'
 import mol from '../assets/mol.png'
 import asigurari from '../assets/asigurari.ro.png'
-import george from '../assets/george.png'
 import character2 from '../assets/Stickers/character 2.png'
 import scene1 from '../assets/Stickers/scene 1.png'
 import scene4 from '../assets/Stickers/scene 4.png'
@@ -22,7 +21,6 @@ export const navItems = [
   { label: 'Fiscal', path: '/fiscal' },
   { label: 'Parteneri', path: '/parteneri' },
   { label: 'Despre Ridelance', path: '/despre-ridelance' },
-  { label: 'Programare', path: '/programare' },
   { label: 'Contact', path: '/contact' },
 ]
 
@@ -111,8 +109,8 @@ export const partnerLogos = [
     image: asigurari,
   },
   {
-    name: 'George',
-    image: george,
+    name: 'BCR',
+    image: '/logobcr.jpeg',
   },
 ]
 
