@@ -140,7 +140,7 @@ function BcrPanelContent() {
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
           <Typography sx={{ color: TOKENS.ink, fontSize: '1rem', lineHeight: 1.8, fontWeight: 550 }}>
-            „{BCR_GEORGE_MESSAGE}”
+            {BCR_GEORGE_MESSAGE}
           </Typography>
           <Button
             variant="contained"
