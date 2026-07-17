@@ -24,8 +24,6 @@ const AboutPage = lazyWithRetry(() => import('../../pages/AboutPage').then((m) =
 const CalculatorPage = lazyWithRetry(() => import('../../pages/CalculatorPage').then((m) => ({ default: m.CalculatorPage })))
 const PricingPage = lazyWithRetry(() => import('../../pages/PricingPage').then((m) => ({ default: m.PricingPage })))
 const PartnersPage = lazyWithRetry(() => import('../../pages/PartnersPage').then((m) => ({ default: m.PartnersPage })))
-const PartnerDetailPage = lazyWithRetry(() => import('../../pages/PartnerDetailPage').then((m) => ({ default: m.PartnerDetailPage })))
-const BcrOffersPage = lazyWithRetry(() => import('../../pages/BcrOffersPage').then((m) => ({ default: m.BcrOffersPage })))
 const ContactPage = lazyWithRetry(() => import('../../pages/ContactPage').then((m) => ({ default: m.ContactPage })))
 const TermsPage = lazyWithRetry(() => import('../../pages/TermsPage').then((m) => ({ default: m.TermsPage })))
 const PrivacyPolicyPage = lazyWithRetry(() =>
@@ -414,8 +412,8 @@ export function AppLayout() {
             <Route path="/calculator-taxe" element={<Navigate to="/fiscal" replace />} />
             <Route path="/abonamente-preturi" element={<PricingPage />} />
             <Route path="/parteneri" element={<PartnersPage />} />
-            <Route path="/parteneri/bcr/oferte" element={<BcrOffersPage />} />
-            <Route path="/parteneri/:slug" element={<PartnerDetailPage />} />
+            <Route path="/parteneri/bcr/oferte" element={<Navigate to="/parteneri/bcr" replace />} />
+            <Route path="/parteneri/:slug" element={<PartnersPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/programare" element={<Navigate to="/contact" replace />} />
             <Route path="/dashboard" element={<Navigate to="/demo" replace />} />
