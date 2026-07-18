@@ -5,8 +5,29 @@ import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded'
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded'
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Box, Button, Chip, CircularProgress, IconButton, Paper, Stack, Typography, Snackbar, Alert, Tooltip } from '@mui/material'
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
+import HourglassTopRoundedIcon from '@mui/icons-material/HourglassTopRounded'
+import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded'
+import UploadRoundedIcon from '@mui/icons-material/UploadRounded'
+import BadgeRoundedIcon from '@mui/icons-material/BadgeRounded'
+import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded'
+import DirectionsCarRoundedIcon from '@mui/icons-material/DirectionsCarRounded'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import {
+  Alert,
+  Box,
+  Button,
+  ButtonBase,
+  Chip,
+  CircularProgress,
+  IconButton,
+  LinearProgress,
+  Paper,
+  Snackbar,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material'
 import { alpha } from '@mui/material/styles'
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
@@ -175,6 +196,42 @@ const VEHICLE_DOCS: MainDocConfig[] = [
   },
 ]
 
+interface DocGroup {
+  id: string;
+  label: string;
+  description: string;
+  icon: ReactNode;
+  docs: MainDocConfig[];
+  /** 'pfa' | 'vehicle' — grupurile care acceptă și documente libere */
+  otherKind?: 'pfa' | 'vehicle';
+}
+
+const DOC_GROUPS: DocGroup[] = [
+  {
+    id: 'autorizatie',
+    label: 'Autorizație transport',
+    description: 'Documentele necesare pentru Autorizația de Transport Alternativ.',
+    icon: <BadgeRoundedIcon sx={{ fontSize: 18 }} />,
+    docs: PERSONAL_PFA_DOCS,
+    otherKind: 'pfa',
+  },
+  {
+    id: 'conformitate',
+    label: 'Copie conformă & ecusoane',
+    description: 'Documentele necesare pentru copia conformă și ecusoanele vehiculului.',
+    icon: <VerifiedRoundedIcon sx={{ fontSize: 18 }} />,
+    docs: CONFORMITY_DOCS,
+  },
+  {
+    id: 'vehicul',
+    label: 'Vehicul',
+    description: 'Documentele vehiculului cu care lucrezi pe platforme.',
+    icon: <DirectionsCarRoundedIcon sx={{ fontSize: 18 }} />,
+    docs: VEHICLE_DOCS,
+    otherKind: 'vehicle',
+  },
+]
+
 // Categories that require an expiry date when uploading
 const EXPIRABLE_CATEGORIES = new Set([
   'Buletin',
@@ -204,7 +261,7 @@ function statusChipSx(status: string) {
 function statusLabel(status: string): string {
   const s = status.toLowerCase()
   if (s === 'approved' || s === 'verified') return 'Valid'
-  if (s === 'pending') return 'În curs de aprobare'
+  if (s === 'pending') return 'În aprobare'
   if (s === 'rejected') return 'Respins'
   return 'Lipsă'
 }
@@ -278,6 +335,31 @@ function ExpiryBadge({ expiresAtUtc }: { expiresAtUtc?: string | null }) {
   )
 }
 
+/** Iconița colorată din stânga fiecărui rând, în funcție de starea documentului. */
+function rowVisual(doc: DocumentSummary | null) {
+  if (!doc) {
+    return { icon: <UploadFileRoundedIcon sx={{ fontSize: 20 }} />, color: DASHBOARD_TOKENS.textSubtle, bg: alpha(DASHBOARD_TOKENS.ink, 0.05) }
+  }
+  if (getExpiryState(doc.expiresAtUtc) === 'expired') {
+    return { icon: <ErrorRoundedIcon sx={{ fontSize: 20 }} />, color: '#dc2626', bg: alpha('#ef4444', 0.1) }
+  }
+  const s = doc.status.toLowerCase()
+  if (s === 'approved' || s === 'verified') {
+    return { icon: <CheckCircleRoundedIcon sx={{ fontSize: 20 }} />, color: '#059669', bg: alpha('#10b981', 0.1) }
+  }
+  if (s === 'pending') {
+    return { icon: <HourglassTopRoundedIcon sx={{ fontSize: 20 }} />, color: '#b45309', bg: alpha('#f59e0b', 0.12) }
+  }
+  return { icon: <ErrorRoundedIcon sx={{ fontSize: 20 }} />, color: '#dc2626', bg: alpha('#ef4444', 0.1) }
+}
+
+const iconActionSx = {
+  borderRadius: DASHBOARD_TOKENS.radius.full,
+  color: DASHBOARD_TOKENS.textMuted,
+  backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.04),
+  '&:hover': { color: DASHBOARD_TOKENS.primaryStrong, backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.12) },
+} as const
+
 interface DocumentsTabProps {
   onNavigate?: (section: string) => void;
 }
@@ -286,6 +368,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
   const [documents, setDocuments] = useState<DocumentSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState<string | null>(null)
+  const [activeGroupId, setActiveGroupId] = useState<string>(DOC_GROUPS[0].id)
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'error' })
 
   // Pending expiry date input state: category -> date string
@@ -318,9 +401,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
   // Determine all categories handled in main lists
   const allMainCategories = useMemo(() => {
     const cats = new Set<string>()
-    PERSONAL_PFA_DOCS.forEach((d) => d.categories.forEach((c) => cats.add(c)))
-    CONFORMITY_DOCS.forEach((d) => d.categories.forEach((c) => cats.add(c)))
-    VEHICLE_DOCS.forEach((d) => d.categories.forEach((c) => cats.add(c)))
+    DOC_GROUPS.forEach((g) => g.docs.forEach((d) => d.categories.forEach((c) => cats.add(c))))
     return cats
   }, [])
 
@@ -337,6 +418,49 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
 
   const pfaOtherDocs = useMemo(() => otherDocuments.filter(d => !isVehicleOtherDoc(d)), [otherDocuments])
   const vehicleOtherDocs = useMemo(() => otherDocuments.filter(d => isVehicleOtherDoc(d)), [otherDocuments])
+
+  // Progres per grup + totaluri pentru antet
+  const groupStats = useMemo(() => {
+    const stats = new Map<string, { uploaded: number; total: number; attention: number }>()
+    let valid = 0
+    let pending = 0
+    let missing = 0
+    let expired = 0
+
+    DOC_GROUPS.forEach((group) => {
+      let uploaded = 0
+      let attention = 0
+      group.docs.forEach((config) => {
+        const doc = findDocForConfig(config)
+        if (doc) {
+          uploaded += 1
+          const s = doc.status.toLowerCase()
+          const isExpired = getExpiryState(doc.expiresAtUtc) === 'expired'
+          if (isExpired) {
+            expired += 1
+            attention += 1
+          } else if (s === 'approved' || s === 'verified') {
+            valid += 1
+          } else if (s === 'pending') {
+            pending += 1
+          } else {
+            attention += 1
+          }
+        } else {
+          missing += 1
+          attention += 1
+        }
+      })
+      stats.set(group.id, { uploaded, total: group.docs.length, attention })
+    })
+
+    const total = DOC_GROUPS.reduce((sum, g) => sum + g.docs.length, 0)
+    const uploadedTotal = [...stats.values()].reduce((sum, s) => sum + s.uploaded, 0)
+    return { perGroup: stats, total, uploadedTotal, valid, pending, missing, expired }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documents])
+
+  const activeGroup = DOC_GROUPS.find((g) => g.id === activeGroupId) ?? DOC_GROUPS[0]
 
   const handleFileSelected = (file: File, category: string) => {
     if (EXPIRABLE_CATEGORIES.has(category)) {
@@ -397,101 +521,120 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
     )
   }
 
-  const renderDocRow = (config: MainDocConfig) => {
+  const renderDocRow = (config: MainDocConfig, isLast: boolean) => {
     const doc = findDocForConfig(config)
     const category = config.primaryCategory
     const isUploading = uploading === category
     const isExpirable = EXPIRABLE_CATEGORIES.has(category)
     const hasPendingFile = !!pendingFile[category]
+    const visual = rowVisual(doc)
+    const isExpired = doc ? getExpiryState(doc.expiresAtUtc) === 'expired' : false
 
     return (
-      <Paper
+      <Box
         key={config.id}
-        elevation={0}
         sx={{
-          p: 1.5,
-          borderRadius: DASHBOARD_TOKENS.radius.md,
-          border: `1px solid ${hasPendingFile ? alpha(DASHBOARD_TOKENS.primary, 0.35) : DASHBOARD_TOKENS.border}`,
-          backgroundColor: hasPendingFile ? alpha(DASHBOARD_TOKENS.primary, 0.03) : DASHBOARD_TOKENS.surface,
-          transition: 'all 0.2s',
+          px: { xs: 2, md: 2.5 },
+          py: 1.8,
+          borderBottom: isLast ? 'none' : `1px solid ${DASHBOARD_TOKENS.border}`,
+          backgroundColor: hasPendingFile ? alpha(DASHBOARD_TOKENS.primary, 0.04) : 'transparent',
+          transition: 'background-color 0.2s',
+          '&:hover': { backgroundColor: hasPendingFile ? alpha(DASHBOARD_TOKENS.primary, 0.04) : DASHBOARD_TOKENS.surface },
         }}
       >
-        <Stack spacing={1}>
-          <Stack 
-            direction={{ xs: 'column', sm: 'row' }} 
-            sx={{ 
-              justifyContent: 'space-between', 
-              alignItems: { xs: 'stretch', sm: 'center' }, 
-              gap: 1.5 
-            }}
-          >
-            <div style={{ overflow: 'hidden', minWidth: 0, flex: 1 }}>
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          sx={{ alignItems: { xs: 'stretch', md: 'center' }, gap: { xs: 1.2, md: 2 } }}
+        >
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flex: 1, minWidth: 0 }}>
+            <Box
+              sx={{
+                width: 38,
+                height: 38,
+                flexShrink: 0,
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: DASHBOARD_TOKENS.radius.md,
+                color: visual.color,
+                backgroundColor: visual.bg,
+              }}
+            >
+              {visual.icon}
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
               <Tooltip title={config.tooltip || ''}>
-                <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700, cursor: config.tooltip ? 'help' : 'default', fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+                <Typography
+                  sx={{
+                    color: DASHBOARD_TOKENS.ink,
+                    fontWeight: 700,
+                    fontSize: '0.92rem',
+                    lineHeight: 1.4,
+                    cursor: config.tooltip ? 'help' : 'default',
+                  }}
+                >
                   {config.title}
                 </Typography>
               </Tooltip>
-              {!doc && (
-                <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.78rem', mt: 0.3 }}>
-                  Lipsă
+              {config.complianceNote && (
+                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.78rem', mt: 0.2 }}>
+                  {config.complianceNote}
                 </Typography>
               )}
-            </div>
-            <Stack 
-              direction="row" 
-              spacing={0.8} 
-              sx={{ 
-                alignItems: 'center', 
-                flexWrap: 'wrap', 
-                gap: 0.8,
-                justifyContent: { xs: 'flex-start', sm: 'flex-end' },
-                flexShrink: 0 
-              }}
-            >
-              {doc ? (
-                <>
-                  <ExpiryBadge expiresAtUtc={doc.expiresAtUtc} />
-                  <Chip
-                    label={statusLabel(doc.status)}
-                    size="small"
-                    sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full, ...statusChipSx(doc.status) }}
-                  />
-                  <Tooltip title="Vizualizează">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleOpen(doc.id, doc.originalFileName)}
-                      sx={{
-                        borderRadius: DASHBOARD_TOKENS.radius.full,
-                        color: DASHBOARD_TOKENS.textMuted,
-                        backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.04),
-                        '&:hover': { color: DASHBOARD_TOKENS.primaryStrong, backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.12) },
-                      }}
-                    >
-                      <VisibilityRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Descarcă">
-                    <IconButton
-                    size="small"
-                    onClick={() => handleDownload(doc.id, doc.originalFileName)}
-                    sx={{
-                      borderRadius: DASHBOARD_TOKENS.radius.full,
-                      color: DASHBOARD_TOKENS.primaryStrong,
-                      backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
-                      '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
-                    }}
-                  >
-                      <DownloadRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </>
-              ) : (
-                <Chip
-                  label="Lipsă"
-                  size="small"
-                  sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full, ...statusChipSx('missing') }}
-                />
+              {config.purchaseLink && (
+                <Button
+                  onClick={() => onNavigate?.('support')}
+                  sx={{
+                    px: 0,
+                    minWidth: 'unset',
+                    textTransform: 'none',
+                    color: DASHBOARD_TOKENS.primaryStrong,
+                    fontWeight: 700,
+                    fontSize: '0.78rem',
+                    '&:hover': { background: 'transparent', textDecoration: 'underline' },
+                  }}
+                >
+                  Solicită detalii
+                </Button>
               )}
+            </Box>
+          </Stack>
+
+          <Stack
+            direction="row"
+            sx={{
+              alignItems: 'center',
+              gap: 0.8,
+              flexWrap: 'wrap',
+              flexShrink: 0,
+              justifyContent: { xs: 'flex-start', md: 'flex-end' },
+              pl: { xs: '53px', md: 0 },
+            }}
+          >
+            {doc && <ExpiryBadge expiresAtUtc={doc.expiresAtUtc} />}
+            <Chip
+              label={doc ? (isExpired ? 'De reînnoit' : statusLabel(doc.status)) : 'Lipsă'}
+              size="small"
+              sx={{
+                fontWeight: 700,
+                borderRadius: DASHBOARD_TOKENS.radius.full,
+                ...statusChipSx(isExpired ? 'expired' : doc ? doc.status : 'missing'),
+              }}
+            />
+            {doc && (
+              <>
+                <Tooltip title="Vizualizează">
+                  <IconButton size="small" onClick={() => handleOpen(doc.id, doc.originalFileName)} sx={iconActionSx}>
+                    <VisibilityRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Descarcă">
+                  <IconButton size="small" onClick={() => handleDownload(doc.id, doc.originalFileName)} sx={iconActionSx}>
+                    <DownloadRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
+            <Tooltip title={doc ? 'Încarcă din nou' : 'Încarcă document'}>
               <IconButton
                 component="label"
                 disabled={isUploading}
@@ -500,11 +643,11 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
                 sx={{
                   borderRadius: DASHBOARD_TOKENS.radius.full,
                   color: DASHBOARD_TOKENS.primaryStrong,
-                  backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
-                  '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
+                  backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.1),
+                  '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.2) },
                 }}
               >
-                {isUploading ? <CircularProgress size={18} /> : <AddRoundedIcon fontSize="small" />}
+                {isUploading ? <CircularProgress size={18} /> : <UploadRoundedIcon fontSize="small" />}
                 <input
                   hidden
                   type="file"
@@ -516,202 +659,159 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
                   }}
                 />
               </IconButton>
-            </Stack>
+            </Tooltip>
           </Stack>
-
-          {config.complianceNote && (
-            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.82rem', mt: 0.5 }}>
-              {config.complianceNote}
-            </Typography>
-          )}
-
-          {config.purchaseLink && (
-            <Button
-              onClick={() => onNavigate?.('support')}
-              sx={{
-                alignSelf: 'flex-start',
-                px: 0,
-                minWidth: 'unset',
-                textTransform: 'none',
-                color: DASHBOARD_TOKENS.primaryStrong,
-                fontWeight: 700,
-                fontSize: '0.82rem',
-                '&:hover': { background: 'transparent', textDecoration: 'underline' }
-              }}
-            >
-              Solicită detalii
-            </Button>
-          )}
-
-          {/* Expiry date picker — shown when an expirable file has been selected */}
-          {hasPendingFile && isExpirable && (
-            <Box
-              sx={{
-                mt: 1.5,
-                pt: 1.5,
-                borderTop: `1px dashed ${alpha(DASHBOARD_TOKENS.primary, 0.2)}`,
-                display: 'flex',
-                gap: 1,
-                alignItems: 'center',
-                flexWrap: 'wrap',
-              }}
-            >
-              <CalendarTodayRoundedIcon sx={{ fontSize: 16, color: DASHBOARD_TOKENS.primary }} />
-              <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: DASHBOARD_TOKENS.ink, flexShrink: 0 }}>
-                Data expirării:
-              </Typography>
-              <input
-                type="date"
-                value={pendingExpiry[category] ?? ''}
-                min={new Date().toISOString().split('T')[0]}
-                onChange={(e) => setPendingExpiry((prev) => ({ ...prev, [category]: e.target.value }))}
-                style={{
-                  padding: '4px 8px',
-                  borderRadius: 8,
-                  border: `1px solid ${alpha(DASHBOARD_TOKENS.primary, 0.3)}`,
-                  fontSize: '0.8rem',
-                  fontFamily: 'inherit',
-                  background: 'transparent',
-                  color: 'inherit',
-                  outline: 'none',
-                }}
-              />
-              <Stack direction="row" spacing={0.8}>
-                <Button
-                  size="small"
-                  variant="contained"
-                  disabled={isUploading}
-                  onClick={() => {
-                    const file = pendingFile[category]
-                    if (file) {
-                      void handleUpload(file, category, pendingExpiry[category] || undefined)
-                    }
-                  }}
-                  sx={{
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    borderRadius: DASHBOARD_TOKENS.radius.full,
-                    fontSize: '0.78rem',
-                    py: 0.4,
-                    bgcolor: DASHBOARD_TOKENS.primary,
-                    '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong },
-                  }}
-                >
-                  {isUploading ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : 'Încarcă'}
-                </Button>
-                <Button
-                  size="small"
-                  variant="text"
-                  disabled={isUploading}
-                  onClick={() => {
-                    setPendingFile((prev) => { const n = { ...prev }; delete n[category]; return n })
-                    setPendingExpiry((prev) => { const n = { ...prev }; delete n[category]; return n })
-                  }}
-                  sx={{
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    borderRadius: DASHBOARD_TOKENS.radius.full,
-                    fontSize: '0.78rem',
-                    py: 0.4,
-                    color: DASHBOARD_TOKENS.textMuted,
-                  }}
-                >
-                  Anulează
-                </Button>
-              </Stack>
-            </Box>
-          )}
         </Stack>
-      </Paper>
-    )
-  }
 
-  const renderOtherDocList = (docsList: DocumentSummary[]) => {
-    return (
-      <Stack spacing={1.2}>
-        {docsList.map((doc) => (
-          <Paper
-            key={doc.id}
-            elevation={0}
+        {/* Expiry date picker — shown when an expirable file has been selected */}
+        {hasPendingFile && isExpirable && (
+          <Box
             sx={{
-              p: 1.5,
-              borderRadius: DASHBOARD_TOKENS.radius.md,
-              border: `1px solid ${DASHBOARD_TOKENS.border}`,
-              backgroundColor: DASHBOARD_TOKENS.surface,
+              mt: 1.5,
+              pt: 1.5,
+              ml: { xs: 0, md: '53px' },
+              borderTop: `1px dashed ${alpha(DASHBOARD_TOKENS.primary, 0.25)}`,
+              display: 'flex',
+              gap: 1,
+              alignItems: 'center',
+              flexWrap: 'wrap',
             }}
           >
-            <Stack 
-              direction={{ xs: 'column', sm: 'row' }} 
-              sx={{ 
-                justifyContent: 'space-between', 
-                alignItems: { xs: 'stretch', sm: 'center' }, 
-                gap: 1.5 
+            <CalendarTodayRoundedIcon sx={{ fontSize: 16, color: DASHBOARD_TOKENS.primary }} />
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: DASHBOARD_TOKENS.ink, flexShrink: 0 }}>
+              Data expirării:
+            </Typography>
+            <input
+              type="date"
+              value={pendingExpiry[category] ?? ''}
+              min={new Date().toISOString().split('T')[0]}
+              onChange={(e) => setPendingExpiry((prev) => ({ ...prev, [category]: e.target.value }))}
+              style={{
+                padding: '4px 8px',
+                borderRadius: 8,
+                border: `1px solid ${alpha(DASHBOARD_TOKENS.primary, 0.3)}`,
+                fontSize: '0.8rem',
+                fontFamily: 'inherit',
+                background: 'transparent',
+                color: 'inherit',
+                outline: 'none',
               }}
-            >
-              <div style={{ overflow: 'hidden', minWidth: 0, flex: 1 }}>
-                <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700, fontSize: '0.88rem', wordBreak: 'break-all' }} title={doc.originalFileName}>
-                  {doc.originalFileName}
-                </Typography>
-                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.75rem', mt: 0.3 }}>
-                  {formatDocumentCategory(doc.category)} · {(doc.fileSize / 1024).toFixed(0)} KB
-                </Typography>
-              </div>
-              <Stack 
-                direction="row" 
-                spacing={0.8} 
-                sx={{ 
-                  alignItems: 'center', 
-                  flexWrap: 'wrap', 
-                  gap: 0.8,
-                  justifyContent: { xs: 'flex-start', sm: 'flex-end' },
-                  flexShrink: 0 
+            />
+            <Stack direction="row" spacing={0.8}>
+              <Button
+                size="small"
+                variant="contained"
+                disabled={isUploading}
+                onClick={() => {
+                  const file = pendingFile[category]
+                  if (file) {
+                    void handleUpload(file, category, pendingExpiry[category] || undefined)
+                  }
+                }}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  borderRadius: DASHBOARD_TOKENS.radius.full,
+                  fontSize: '0.78rem',
+                  py: 0.4,
+                  bgcolor: DASHBOARD_TOKENS.primary,
+                  '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong },
                 }}
               >
-                <ExpiryBadge expiresAtUtc={doc.expiresAtUtc} />
-                <Chip
-                  label={statusLabel(doc.status)}
-                  size="small"
-                  sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full, ...statusChipSx(doc.status) }}
-                />
-                <Tooltip title="Vizualizează">
-                  <IconButton
-                    size="small"
-                    onClick={() => handleOpen(doc.id, doc.originalFileName)}
-                    sx={{
-                      borderRadius: DASHBOARD_TOKENS.radius.full,
-                      color: DASHBOARD_TOKENS.textMuted,
-                      backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.04),
-                      '&:hover': { color: DASHBOARD_TOKENS.primaryStrong, backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.12) },
-                    }}
-                  >
-                    <VisibilityRoundedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Descarcă">
-                  <IconButton
-                  size="small"
-                  onClick={() => handleDownload(doc.id, doc.originalFileName)}
-                  sx={{
-                    borderRadius: DASHBOARD_TOKENS.radius.full,
-                    color: DASHBOARD_TOKENS.primaryStrong,
-                    backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
-                    '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
-                  }}
-                >
-                    <DownloadRoundedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
+                {isUploading ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : 'Încarcă'}
+              </Button>
+              <Button
+                size="small"
+                variant="text"
+                disabled={isUploading}
+                onClick={() => {
+                  setPendingFile((prev) => { const n = { ...prev }; delete n[category]; return n })
+                  setPendingExpiry((prev) => { const n = { ...prev }; delete n[category]; return n })
+                }}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderRadius: DASHBOARD_TOKENS.radius.full,
+                  fontSize: '0.78rem',
+                  py: 0.4,
+                  color: DASHBOARD_TOKENS.textMuted,
+                }}
+              >
+                Anulează
+              </Button>
             </Stack>
-          </Paper>
-        ))}
-      </Stack>
+          </Box>
+        )}
+      </Box>
     )
   }
 
+  const renderOtherDocRow = (doc: DocumentSummary, isLast: boolean) => (
+    <Box
+      key={doc.id}
+      sx={{
+        px: { xs: 2, md: 2.5 },
+        py: 1.6,
+        borderBottom: isLast ? 'none' : `1px solid ${DASHBOARD_TOKENS.border}`,
+        '&:hover': { backgroundColor: DASHBOARD_TOKENS.surface },
+      }}
+    >
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        sx={{ alignItems: { xs: 'stretch', md: 'center' }, gap: { xs: 1, md: 2 } }}
+      >
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography
+            sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700, fontSize: '0.88rem', wordBreak: 'break-all' }}
+            title={doc.originalFileName}
+          >
+            {doc.originalFileName}
+          </Typography>
+          <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.75rem', mt: 0.2 }}>
+            {formatDocumentCategory(doc.category)} · {(doc.fileSize / 1024).toFixed(0)} KB
+          </Typography>
+        </Box>
+        <Stack direction="row" sx={{ alignItems: 'center', gap: 0.8, flexWrap: 'wrap', flexShrink: 0 }}>
+          <ExpiryBadge expiresAtUtc={doc.expiresAtUtc} />
+          <Chip
+            label={getExpiryState(doc.expiresAtUtc) === 'expired' ? 'De reînnoit' : statusLabel(doc.status)}
+            size="small"
+            sx={{
+              fontWeight: 700,
+              borderRadius: DASHBOARD_TOKENS.radius.full,
+              ...statusChipSx(getExpiryState(doc.expiresAtUtc) === 'expired' ? 'expired' : doc.status),
+            }}
+          />
+          <Tooltip title="Vizualizează">
+            <IconButton size="small" onClick={() => handleOpen(doc.id, doc.originalFileName)} sx={iconActionSx}>
+              <VisibilityRoundedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Descarcă">
+            <IconButton size="small" onClick={() => handleDownload(doc.id, doc.originalFileName)} sx={iconActionSx}>
+              <DownloadRoundedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      </Stack>
+    </Box>
+  )
+
+  const activeOtherDocs = activeGroup.otherKind === 'pfa' ? pfaOtherDocs : activeGroup.otherKind === 'vehicle' ? vehicleOtherDocs : []
+  const progressPercent = groupStats.total > 0 ? Math.round((groupStats.uploadedTotal / groupStats.total) * 100) : 0
+
+  const summaryChips = [
+    { label: `${groupStats.valid} valide`, color: '#059669', bg: alpha('#10b981', 0.08) },
+    { label: `${groupStats.pending} în aprobare`, color: '#b45309', bg: alpha('#f59e0b', 0.1) },
+    { label: `${groupStats.missing} lipsă`, color: DASHBOARD_TOKENS.textMuted, bg: alpha(DASHBOARD_TOKENS.ink, 0.05) },
+    ...(groupStats.expired > 0
+      ? [{ label: `${groupStats.expired} expirate`, color: '#dc2626', bg: alpha('#ef4444', 0.08) }]
+      : []),
+  ]
+
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(3, minmax(0, 1fr))' }, gap: 3 }}>
-      {/* Documente Autorizatie Transport Alternativ */}
+    <Stack spacing={2.5}>
+      {/* Antet: progres general */}
       <Paper
         elevation={0}
         sx={{
@@ -719,147 +819,191 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
           borderRadius: DASHBOARD_TOKENS.radius.lg,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
         }}
       >
-        <Box>
-          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2, fontSize: '1.1rem' }}>
-            Documente Autorizație Transport Alternativ
-          </Typography>
-          <Stack spacing={1.4}>
-            {PERSONAL_PFA_DOCS.map(renderDocRow)}
-          </Stack>
-
-          {pfaOtherDocs.length > 0 && (
-            <Box sx={{ mt: 3, pt: 3, borderTop: `1px solid ${DASHBOARD_TOKENS.border}` }}>
-              <Typography variant="subtitle2" sx={{ color: DASHBOARD_TOKENS.textMuted, fontWeight: 800, mb: 1.5, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.75rem' }}>
-                Alte documente personale / PFA
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          sx={{ justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, gap: 2 }}
+        >
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '1.15rem' }}>
+              Documentele tale
+            </Typography>
+            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.88rem', mt: 0.4 }}>
+              Încarcă și urmărește documentele necesare pentru autorizare și pentru vehicul.
+            </Typography>
+          </Box>
+          <Box sx={{ minWidth: { md: 300 } }}>
+            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'baseline', mb: 0.7 }}>
+              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.8rem', fontWeight: 650 }}>
+                Progres documente
               </Typography>
-              {renderOtherDocList(pfaOtherDocs)}
-            </Box>
-          )}
-        </Box>
-
-        <Box sx={{ mt: 3, pt: 2, display: 'flex', justifyContent: 'flex-start' }}>
-          <Button
-            component="label"
-            size="small"
-            startIcon={<AddRoundedIcon fontSize="small" />}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 700,
-              color: DASHBOARD_TOKENS.primaryStrong,
-              backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
-              borderRadius: DASHBOARD_TOKENS.radius.full,
-              px: 2.5,
-              py: 0.8,
-              '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
-            }}
-          >
-            Încarcă alt document PFA
-            <input
-              hidden
-              type="file"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  void handleUpload(file, 'Other')
-                }
-                e.target.value = ''
+              <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontSize: '0.85rem', fontWeight: 800 }}>
+                {groupStats.uploadedTotal}/{groupStats.total}
+              </Typography>
+            </Stack>
+            <LinearProgress
+              variant="determinate"
+              value={progressPercent}
+              sx={{
+                height: 8,
+                borderRadius: DASHBOARD_TOKENS.radius.full,
+                backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.06),
+                '& .MuiLinearProgress-bar': { borderRadius: DASHBOARD_TOKENS.radius.full, backgroundColor: DASHBOARD_TOKENS.primary },
               }}
             />
-          </Button>
-        </Box>
+            <Stack direction="row" sx={{ gap: 0.8, mt: 1.2, flexWrap: 'wrap' }}>
+              {summaryChips.map((chip) => (
+                <Chip
+                  key={chip.label}
+                  label={chip.label}
+                  size="small"
+                  sx={{ fontWeight: 700, fontSize: '0.7rem', height: 22, color: chip.color, backgroundColor: chip.bg, borderRadius: DASHBOARD_TOKENS.radius.full }}
+                />
+              ))}
+            </Stack>
+          </Box>
+        </Stack>
       </Paper>
 
-      {/* Documente Copie Conforma si Ecusoane */}
-      <Paper
-        elevation={0}
+      {/* Taburi categorii */}
+      <Box
         sx={{
-          p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
-          border: `1px solid ${DASHBOARD_TOKENS.border}`,
-          boxShadow: DASHBOARD_TOKENS.shadow.sm,
           display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
+          gap: 1,
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        <Box>
-          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2, fontSize: '1.1rem' }}>
-            Documente Copie Conformă și Ecusoane
-          </Typography>
-          <Stack spacing={1.4}>
-            {CONFORMITY_DOCS.map(renderDocRow)}
-          </Stack>
-        </Box>
-      </Paper>
-
-      {/* Documente vehicul */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
-          border: `1px solid ${DASHBOARD_TOKENS.border}`,
-          boxShadow: DASHBOARD_TOKENS.shadow.sm,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Box>
-          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2, fontSize: '1.1rem' }}>
-            Documente vehicul
-          </Typography>
-          <Stack spacing={1.4}>
-            {VEHICLE_DOCS.map(renderDocRow)}
-          </Stack>
-
-          {vehicleOtherDocs.length > 0 && (
-            <Box sx={{ mt: 3, pt: 3, borderTop: `1px solid ${DASHBOARD_TOKENS.border}` }}>
-              <Typography variant="subtitle2" sx={{ color: DASHBOARD_TOKENS.textMuted, fontWeight: 800, mb: 1.5, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.75rem' }}>
-                Alte documente vehicul
-              </Typography>
-              {renderOtherDocList(vehicleOtherDocs)}
-            </Box>
-          )}
-        </Box>
-
-        <Box sx={{ mt: 3, pt: 2, display: 'flex', justifyContent: 'flex-start' }}>
-          <Button
-            component="label"
-            size="small"
-            startIcon={<AddRoundedIcon fontSize="small" />}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 700,
-              color: DASHBOARD_TOKENS.primaryStrong,
-              backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
-              borderRadius: DASHBOARD_TOKENS.radius.full,
-              px: 2.5,
-              py: 0.8,
-              '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
-            }}
-          >
-            Încarcă alt document vehicul
-            <input
-              hidden
-              type="file"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  // Prepend Vehicul_ to filename so that we can sort it cleanly under Vehicle column in otherDocuments list
-                  const renamedFile = new File([file], `Vehicul_${file.name}`, { type: file.type })
-                  void handleUpload(renamedFile, 'Other')
-                }
-                e.target.value = ''
+        {DOC_GROUPS.map((group) => {
+          const stats = groupStats.perGroup.get(group.id)
+          const isActive = group.id === activeGroupId
+          return (
+            <ButtonBase
+              key={group.id}
+              onClick={() => setActiveGroupId(group.id)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 2,
+                py: 1.1,
+                flexShrink: 0,
+                borderRadius: DASHBOARD_TOKENS.radius.full,
+                border: `1px solid ${isActive ? alpha(DASHBOARD_TOKENS.primary, 0.5) : DASHBOARD_TOKENS.border}`,
+                backgroundColor: isActive ? alpha(DASHBOARD_TOKENS.primary, 0.1) : DASHBOARD_TOKENS.paper,
+                color: isActive ? DASHBOARD_TOKENS.ink : DASHBOARD_TOKENS.textMuted,
+                transition: 'all 0.2s',
+                '&:hover': { borderColor: alpha(DASHBOARD_TOKENS.primary, 0.5), backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.06) },
               }}
-            />
-          </Button>
+            >
+              <Box sx={{ display: 'grid', placeItems: 'center', color: isActive ? DASHBOARD_TOKENS.primaryStrong : DASHBOARD_TOKENS.textSubtle }}>
+                {group.icon}
+              </Box>
+              <Typography noWrap sx={{ fontWeight: isActive ? 800 : 650, fontSize: '0.88rem', color: 'inherit' }}>
+                {group.label}
+              </Typography>
+              <Chip
+                label={`${stats?.uploaded ?? 0}/${stats?.total ?? 0}`}
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  borderRadius: DASHBOARD_TOKENS.radius.full,
+                  color: stats && stats.uploaded === stats.total ? '#059669' : DASHBOARD_TOKENS.textMuted,
+                  backgroundColor: stats && stats.uploaded === stats.total ? alpha('#10b981', 0.1) : alpha(DASHBOARD_TOKENS.ink, 0.05),
+                }}
+              />
+            </ButtonBase>
+          )
+        })}
+      </Box>
+
+      {/* Panoul categoriei active */}
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          border: `1px solid ${DASHBOARD_TOKENS.border}`,
+          boxShadow: DASHBOARD_TOKENS.shadow.sm,
+          overflow: 'hidden',
+        }}
+      >
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          sx={{
+            px: { xs: 2, md: 2.5 },
+            py: 2,
+            gap: 1.5,
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            justifyContent: 'space-between',
+            borderBottom: `1px solid ${DASHBOARD_TOKENS.border}`,
+            backgroundColor: DASHBOARD_TOKENS.surface,
+          }}
+        >
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '1rem' }}>
+              {activeGroup.label}
+            </Typography>
+            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.82rem', mt: 0.2 }}>
+              {activeGroup.description}
+            </Typography>
+          </Box>
+          {activeGroup.otherKind && (
+            <Button
+              component="label"
+              size="small"
+              startIcon={<AddRoundedIcon fontSize="small" />}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 700,
+                flexShrink: 0,
+                color: DASHBOARD_TOKENS.primaryStrong,
+                backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
+                borderRadius: DASHBOARD_TOKENS.radius.full,
+                px: 2,
+                py: 0.7,
+                '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
+              }}
+            >
+              {activeGroup.otherKind === 'pfa' ? 'Încarcă alt document PFA' : 'Încarcă alt document vehicul'}
+              <input
+                hidden
+                type="file"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    if (activeGroup.otherKind === 'vehicle') {
+                      // Prepend Vehicul_ to filename so that we can sort it cleanly under Vehicle group in otherDocuments list
+                      const renamedFile = new File([file], `Vehicul_${file.name}`, { type: file.type })
+                      void handleUpload(renamedFile, 'Other')
+                    } else {
+                      void handleUpload(file, 'Other')
+                    }
+                  }
+                  e.target.value = ''
+                }}
+              />
+            </Button>
+          )}
+        </Stack>
+
+        <Box>
+          {activeGroup.docs.map((config, index) => renderDocRow(config, index === activeGroup.docs.length - 1))}
         </Box>
+
+        {activeOtherDocs.length > 0 && (
+          <>
+            <Box sx={{ px: { xs: 2, md: 2.5 }, py: 1.2, borderTop: `1px solid ${DASHBOARD_TOKENS.border}`, backgroundColor: DASHBOARD_TOKENS.surface }}>
+              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.72rem' }}>
+                {activeGroup.otherKind === 'pfa' ? 'Alte documente personale / PFA' : 'Alte documente vehicul'}
+              </Typography>
+            </Box>
+            {activeOtherDocs.map((doc, index) => renderOtherDocRow(doc, index === activeOtherDocs.length - 1))}
+          </>
+        )}
       </Paper>
 
       <Snackbar
@@ -872,6 +1016,6 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </Stack>
   )
 }

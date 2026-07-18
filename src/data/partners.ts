@@ -126,9 +126,9 @@ export const partners: Partner[] = [
     slug: 'mol',
     name: 'MOL',
     image: mol,
-    tagline: 'Una dintre cele mai extinse rețele de stații de carburant din România.',
+    tagline: 'Condiții avantajoase pentru carburanți și spălătorie auto, în rețeaua MOL la nivel național.',
     description:
-      'MOL este una dintre cele mai extinse rețele de stații de carburant din România și Europa Centrală — un partener relevant pentru șoferii care petrec întreaga zi pe drum.',
+      'MOL România este partener RIDElance și oferă beneficii dedicate comunității noastre. Prin acest parteneriat, șoferii și antreprenorii care fac parte din ecosistemul RIDElance pot beneficia de condiții avantajoase pentru alimentarea cu carburanți (benzină, motorină și GPL), precum și pentru utilizarea serviciilor de spălătorie auto din rețeaua MOL, la nivel național. Scopul acestui parteneriat este de a contribui la reducerea costurilor de operare și de a oferi avantaje reale celor care își desfășoară activitatea în domeniul transportului alternativ.',
     website: 'https://mol.ro',
   },
 ]

@@ -1,7 +1,7 @@
+import { useEffect, useRef } from 'react'
 import { Box, Button, ButtonBase, Chip, Container, Divider, Paper, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import QrCode2RoundedIcon from '@mui/icons-material/QrCode2Rounded'
@@ -38,86 +38,83 @@ const ctaButtonSx = {
 
 function PartnerTabs({ active }: { active: Partner }) {
   const navigate = useNavigate()
+  const railRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const rail = railRef.current
+    const el = rail?.querySelector<HTMLElement>('[data-active="true"]')
+    if (rail && el) {
+      rail.scrollLeft = el.offsetLeft - (rail.clientWidth - el.clientWidth) / 2
+    }
+  }, [active.slug])
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: { xs: 'row', md: 'column' },
-        gap: 1,
-        overflowX: { xs: 'auto', md: 'visible' },
-        pb: { xs: 1, md: 0 },
-      }}
-    >
-      {partners.map((partner) => {
-        const isActive = partner.slug === active.slug
-        return (
-          <ButtonBase
-            key={partner.slug}
-            onClick={() => navigate(`/parteneri/${partner.slug}`)}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-start',
-              gap: 1.5,
-              px: 2,
-              py: 1.5,
-              minWidth: { xs: 170, md: 'unset' },
-              width: { md: '100%' },
-              textAlign: 'left',
-              borderRadius: TOKENS.radius.lg,
-              border: `1px solid ${isActive ? alpha(TOKENS.primary, 0.45) : TOKENS.border}`,
-              backgroundColor: isActive ? alpha(TOKENS.primary, 0.07) : TOKENS.paper,
-              boxShadow: isActive ? TOKENS.shadow.glow : 'none',
-              transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-              '&:hover': {
-                borderColor: alpha(TOKENS.primary, 0.45),
-                backgroundColor: alpha(TOKENS.primary, 0.05),
-              },
-            }}
-          >
-            <Box
+    <Box sx={{ borderBottom: `1px solid ${TOKENS.border}` }}>
+      <Box
+        ref={railRef}
+        sx={{
+          display: 'flex',
+          justifyContent: { xs: 'flex-start', md: 'center' },
+          gap: { xs: 0.5, md: 1 },
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
+        }}
+      >
+        {partners.map((partner) => {
+          const isActive = partner.slug === active.slug
+          return (
+            <ButtonBase
+              key={partner.slug}
+              data-active={isActive ? 'true' : undefined}
+              onClick={() => navigate(`/parteneri/${partner.slug}`)}
               sx={{
-                width: 46,
-                height: 46,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                px: { xs: 1.5, md: 2.2 },
+                py: 1.6,
                 flexShrink: 0,
-                display: 'grid',
-                placeItems: 'center',
-                borderRadius: TOKENS.radius.md,
-                backgroundColor: alpha(TOKENS.surfaceAlt, 0.9),
-                overflow: 'hidden',
-                p: 0.6,
+                borderBottom: `2px solid ${isActive ? TOKENS.primary : 'transparent'}`,
+                mb: '-1px',
+                transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
+                '&:hover': {
+                  '& .partner-tab-label': { color: TOKENS.ink },
+                  '& .partner-tab-logo': { opacity: 1, filter: 'grayscale(0)' },
+                },
               }}
             >
               <Box
                 component="img"
                 src={partner.image}
-                alt={partner.name}
-                sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                alt=""
+                className="partner-tab-logo"
+                sx={{
+                  height: 22,
+                  width: 'auto',
+                  maxWidth: 44,
+                  objectFit: 'contain',
+                  opacity: isActive ? 1 : 0.55,
+                  filter: isActive ? 'grayscale(0)' : 'grayscale(1)',
+                  transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
+                }}
               />
-            </Box>
-            <Typography
-              noWrap
-              sx={{
-                fontWeight: isActive ? 850 : 700,
-                fontSize: '0.95rem',
-                color: isActive ? TOKENS.ink : TOKENS.textMuted,
-                flex: 1,
-                minWidth: 0,
-              }}
-            >
-              {partner.name}
-            </Typography>
-            <ChevronRightRoundedIcon
-              sx={{
-                fontSize: 20,
-                color: isActive ? TOKENS.primaryStrong : TOKENS.textSubtle,
-                display: { xs: 'none', md: 'block' },
-              }}
-            />
-          </ButtonBase>
-        )
-      })}
+              <Typography
+                noWrap
+                className="partner-tab-label"
+                sx={{
+                  fontWeight: isActive ? 800 : 650,
+                  fontSize: '0.92rem',
+                  color: isActive ? TOKENS.ink : TOKENS.textMuted,
+                  transition: `color ${TOKENS.duration} ${TOKENS.easing}`,
+                }}
+              >
+                {partner.name}
+              </Typography>
+            </ButtonBase>
+          )
+        })}
+      </Box>
     </Box>
   )
 }
@@ -385,24 +382,15 @@ export function PartnersPage() {
 
   return (
     <Box sx={pageFrameSx}>
-      <Container maxWidth="xl">
-        <Stack spacing={{ xs: 3, md: 5 }}>
+      <Container maxWidth="lg">
+        <Stack spacing={{ xs: 3, md: 4 }}>
           <SectionHeader
             title="Parteneri"
-            subtitle="Colaborăm cu parteneri care aduc beneficii concrete șoferilor RIDElance. Alege un partener din listă pentru detalii și oferte."
+            subtitle="Colaborăm cu parteneri care aduc beneficii concrete șoferilor RIDElance. Alege un partener pentru detalii și oferte."
           />
 
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: '270px minmax(0, 1fr)' },
-              gap: { xs: 2.5, md: 4 },
-              alignItems: 'start',
-            }}
-          >
-            <PartnerTabs active={partner} />
-            <PartnerPanel partner={partner} />
-          </Box>
+          <PartnerTabs active={partner} />
+          <PartnerPanel partner={partner} />
         </Stack>
       </Container>
     </Box>

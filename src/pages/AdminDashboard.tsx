@@ -37,6 +37,7 @@ import PauseCircleOutlineRoundedIcon from '@mui/icons-material/PauseCircleOutlin
 import PlayCircleOutlineRoundedIcon from '@mui/icons-material/PlayCircleOutlineRounded'
 import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded'
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
+import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import { validateRomanianCIF } from '../utils/validation'
 import { formatRegistrationType, formatDocumentCategory } from '../utils/formatters'
 
@@ -45,6 +46,7 @@ import { CarsAdminView } from '../components/dashboard/sections/admin/CarsAdminV
 import { ServicesAdminView } from '../components/dashboard/sections/admin/ServicesAdminView'
 import { OfficeCalendarAdminView } from '../components/dashboard/sections/admin/OfficeCalendarAdminView'
 import { InsuranceTab } from '../components/dashboard/sections/InsuranceTab'
+import { OblioAdminView } from '../components/dashboard/sections/admin/OblioAdminView'
 import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminOverviewView'
 import { PfaFiscalSettingsPanel } from '../components/pfa/PfaFiscalSettingsPanel'
@@ -494,6 +496,7 @@ export function AdminDashboard() {
     { id: 'pfa_inrolate', label: 'PFA-uri înrolate', icon: <HowToRegRoundedIcon /> },
     { id: 'masini', label: 'Mașini Ridesharing', icon: <DirectionsCarFilledRoundedIcon /> },
     { id: 'servicii', label: 'Servicii', icon: <ShoppingCartRoundedIcon /> },
+    { id: 'facturare', label: 'Facturare Oblio', icon: <ReceiptLongRoundedIcon /> },
     { id: 'asigurari', label: 'Asigurări', icon: <ShieldRoundedIcon /> },
     { id: 'calendar', label: 'Calendar birou', icon: <EventAvailableRoundedIcon /> },
     { id: 'chat', label: 'Chat Clienți', icon: <ChatRoundedIcon /> },
@@ -1214,6 +1217,7 @@ export function AdminDashboard() {
       case 'pfa_inrolate': return renderPfaList()
       case 'masini': return <CarsAdminView />
       case 'servicii': return <ServicesAdminView />
+      case 'facturare': return <OblioAdminView />
       case 'asigurari': return <InsuranceTab />
       case 'calendar': return <OfficeCalendarAdminView />
       case 'chat': return <AdminChatView pfas={pfas} />
