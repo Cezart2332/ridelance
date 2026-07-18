@@ -153,11 +153,6 @@ export function OblioAdminView() {
           Facturare Oblio
         </Typography>
       </Stack>
-      <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.95rem', mb: 3, lineHeight: 1.7 }}>
-        Facturile se generează automat în Oblio pentru fiecare tranzacție (abonamente și plăți
-        one-time). Momentan facturile NU se trimit în SPV (e-Factura).
-      </Typography>
-
       <Box
         sx={{
           display: 'grid',
@@ -228,15 +223,6 @@ export function OblioAdminView() {
               {status.error && (
                 <Alert severity={status.connectionOk ? 'warning' : 'error'} sx={{ borderRadius: 2 }}>
                   {status.error}
-                </Alert>
-              )}
-
-              {!status.configured && (
-                <Alert severity="info" sx={{ borderRadius: 2 }}>
-                  Setează în backend variabilele: <code>Oblio__ClientId</code> (emailul contului
-                  Oblio), <code>Oblio__ClientSecret</code> (token API din Oblio → Setări → Date
-                  cont), <code>Oblio__Cif</code> (CIF-ul firmei) și <code>Oblio__SeriesName</code>{' '}
-                  (seria de facturi, ex. RDL).
                 </Alert>
               )}
             </Stack>

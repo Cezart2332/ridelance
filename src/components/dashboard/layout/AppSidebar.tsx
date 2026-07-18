@@ -8,6 +8,7 @@ import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
 import ElectricCarRoundedIcon from '@mui/icons-material/ElectricCarRounded';
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded';
+import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import logo from '../../../assets/logo.svg';
 
@@ -73,6 +74,8 @@ function MuiNavIcon({ iconName, isActive }: { iconName: string; isActive: boolea
       return <ElectricCarRoundedIcon sx={sx} />;
     case 'ShieldRounded':
       return <ShieldRoundedIcon sx={sx} />;
+    case 'AccountBalanceRounded':
+      return <AccountBalanceRoundedIcon sx={sx} />;
     default:
       return null;
   }

@@ -1,5 +1,4 @@
 import docs from '../assets/docs.svg'
-import renteaza from '../assets/renteaza.svg'
 import silso from '../assets/silso.png'
 import ace from '../assets/ace.svg'
 import mol from '../assets/mol.png'
@@ -84,12 +83,6 @@ export const pricingCards = [
 ]
 
 export const partnerLogos = [
-  {
-    name: 'RENTeaza',
-    image: renteaza,
-    href: 'https://renteaza.ro',
-    desc: 'RENTeaza este cea mai mare platformă digitală de mobilitate care modernizează listarea, administrarea și rezervarea vehiculelor, atât pentru persoane fizice, cât și pentru operatori.',
-  },
   {
     name: 'Silso',
     image: silso,

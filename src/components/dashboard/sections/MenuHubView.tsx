@@ -10,6 +10,7 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded';
+import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded';
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded';
 
 import { userService, type UserProfile } from '../../../services/user.service';
@@ -33,6 +34,7 @@ export function MenuHubView({ onNavigate, onLogout }: MenuHubViewProps) {
 
   const menuItems = [
     { id: 'platforms', label: 'Platforme', sub: 'Bolt & Uber — conectare și import CSV', icon: <ElectricCarRoundedIcon />, color: '#10b981', bg: alpha('#10b981', 0.1) },
+    { id: 'banca', label: 'Banca', sub: 'Cont bancar conectat & tranzacții', icon: <AccountBalanceRoundedIcon />, color: '#0284c7', bg: alpha('#0284c7', 0.1) },
     { id: 'documents', label: 'Documente', sub: 'Declarații, contracte & fișiere', icon: <FolderRoundedIcon />, color: '#3b82f6', bg: alpha('#3b82f6', 0.1) },
     { id: 'expenses', label: 'Cheltuieli', sub: 'Managementul cheltuielilor', icon: <AccountBalanceWalletRoundedIcon />, color: '#ef4444', bg: alpha('#ef4444', 0.1) },
     { id: 'doc_recurring', label: 'Documente Recurente', sub: 'Declarații & facturi recurente', icon: <FolderSpecialRoundedIcon />, color: '#f59e0b', bg: alpha('#f59e0b', 0.1) },

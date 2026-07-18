@@ -1,4 +1,3 @@
-import renteaza from '../assets/renteaza.svg'
 import silso from '../assets/silso.png'
 import ace from '../assets/ace.svg'
 import mol from '../assets/mol.png'
@@ -86,15 +85,6 @@ export const partners: Partner[] = [
     tagline: 'Contul George pentru afacerea ta: banking 100% online, fără comisioane la încasări și plăți electronice.',
     description: BCR_GEORGE_MESSAGE,
     website: 'https://www.bcr.ro',
-  },
-  {
-    slug: 'renteaza',
-    name: 'RENTeaza',
-    image: renteaza,
-    tagline: 'Cea mai mare platformă digitală de mobilitate pentru listarea și rezervarea vehiculelor.',
-    description:
-      'RENTeaza este cea mai mare platformă digitală de mobilitate care modernizează listarea, administrarea și rezervarea vehiculelor, atât pentru persoane fizice, cât și pentru operatori.',
-    website: 'https://renteaza.ro',
   },
   {
     slug: 'silso',
