@@ -82,6 +82,14 @@ export default function DashboardPage() {
         return
       }
       setActiveSection(section)
+      return
+    }
+
+    // Callback de la conectarea bancară: redirect-ul whitelistat la provider nu poate
+    // conține query, așa că banca ne întoarce pe /app/dashboard cu ?ref= (GoCardless)
+    // sau ?state=&code=/&error= (Enable Banking) — deschidem direct tabul Banca.
+    if (searchParams.get('ref') || (searchParams.get('state') && (searchParams.get('code') || searchParams.get('error')))) {
+      setActiveSection('banca')
     }
   }, [searchParams])
 
