@@ -116,27 +116,41 @@ export function BankTab({ onNavigate }: BankTabProps) {
     }
   }, [])
 
-  // Callback de la bancă: ?section=banca&ref=...
+  // Callback de la bancă: GoCardless întoarce ?ref=..., Enable Banking ?state=...&code=...
+  // (sau ?state=...&error=... când userul anulează autorizarea).
   useEffect(() => {
-    const ref = searchParams.get('ref')
+    const reference = searchParams.get('ref') ?? searchParams.get('state')
+    const code = searchParams.get('code')
+    const authError = searchParams.get('error')
+
+    const stripCallbackParams = () => {
+      const next = new URLSearchParams(searchParams)
+      for (const param of ['ref', 'state', 'code', 'error', 'error_description']) {
+        next.delete(param)
+      }
+      setSearchParams(next, { replace: true })
+    }
 
     const boot = async () => {
-      if (ref) {
+      if (reference && !authError) {
         setFinalizing(true)
         try {
-          const data = await bankService.finalizeConnection(ref)
+          const data = await bankService.finalizeConnection(reference, code)
           setConnection(data)
           if (data.status === 'Linked') setSnackbar('Banca a fost conectată cu succes!')
         } catch {
           await loadConnection()
         } finally {
-          const next = new URLSearchParams(searchParams)
-          next.delete('ref')
-          setSearchParams(next, { replace: true })
+          stripCallbackParams()
           setFinalizing(false)
           setLoading(false)
         }
         return
+      }
+
+      if (authError) {
+        stripCallbackParams()
+        setSnackbar('Conectarea băncii a fost anulată sau a eșuat. Poți încerca din nou.')
       }
 
       await loadConnection()

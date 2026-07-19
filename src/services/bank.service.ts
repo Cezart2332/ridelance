@@ -68,8 +68,11 @@ export const bankService = {
     return data;
   },
 
-  async finalizeConnection(reference: string): Promise<BankConnectionDto> {
-    const { data } = await api.post<BankConnectionDto>('/bank/connection/finalize', { reference });
+  async finalizeConnection(reference: string, code?: string | null): Promise<BankConnectionDto> {
+    const { data } = await api.post<BankConnectionDto>('/bank/connection/finalize', {
+      reference,
+      code: code ?? null,
+    });
     return data;
   },
 
