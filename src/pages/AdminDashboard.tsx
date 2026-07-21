@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   Box, Paper, Stack, TextField, Typography, Card, CardContent,
   CircularProgress, Alert, Chip, Button, IconButton, Avatar,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Snackbar,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -20,11 +19,8 @@ import SupervisedUserCircleRoundedIcon from '@mui/icons-material/SupervisedUserC
 import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
-import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
-import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
-import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded'
 import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded'
 import DiscountRoundedIcon from '@mui/icons-material/DiscountRounded'
@@ -39,7 +35,7 @@ import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded'
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import { validateRomanianCIF } from '../utils/validation'
-import { formatRegistrationType, formatDocumentCategory } from '../utils/formatters'
+import { formatRegistrationType } from '../utils/formatters'
 
 import { AdminChatView } from '../components/dashboard/sections/AdminChatView'
 import { CarsAdminView } from '../components/dashboard/sections/admin/CarsAdminView'
@@ -49,6 +45,7 @@ import { InsuranceTab } from '../components/dashboard/sections/InsuranceTab'
 import { OblioAdminView } from '../components/dashboard/sections/admin/OblioAdminView'
 import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminOverviewView'
+import { OnboardingSectionsPanel } from '../components/dashboard/sections/admin/OnboardingSectionsPanel'
 import { PfaFiscalSettingsPanel } from '../components/pfa/PfaFiscalSettingsPanel'
 import {
   adminOverviewService,
@@ -117,12 +114,6 @@ function relativeTime(utcString: string): string {
   const days = Math.floor(hours / 24)
   if (days === 1) return 'Ieri'
   return `Acum ${days} zile`
-}
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
 function statusColor(status: string) {
@@ -207,6 +198,7 @@ export function AdminDashboard() {
 
   // Status update dialog
   const [statusDialog, setStatusDialog] = useState<{ open: boolean; action: 'Approved' | 'Rejected' | null }>({ open: false, action: null })
+  const [onboardingRefreshKey, setOnboardingRefreshKey] = useState(0)
   const [reviewNote, setReviewNote] = useState('')
   const [cui, setCui] = useState('')
   const [certificatFile, setCertificatFile] = useState<File | null>(null)
@@ -359,6 +351,7 @@ export function AdminDashboard() {
       
       setSelectedPfa((prev) => prev ? { ...prev, status: statusDialog.action! } : prev)
       setStatusDialog({ open: false, action: null })
+      setOnboardingRefreshKey((k) => k + 1)
       setSnackbar({ open: true, message: `Statusul a fost actualizat cu succes.`, severity: 'success' });
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Actualizarea statusului a eșuat. Încearcă din nou.'
@@ -761,120 +754,28 @@ export function AdminDashboard() {
           </Paper>
         </Box>
 
-        {/* Documents table */}
-        <Paper elevation={0} sx={{ borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm, overflow: 'hidden' }}>
-          <Box sx={{ p: 2.5, borderBottom: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>Documente încărcate</Typography>
+        {/* Onboarding pe secțiuni + documente */}
+        <OnboardingSectionsPanel
+          pfaId={pfa.id}
+          pfaStatus={pfa.status}
+          documents={documents}
+          statusUpdatingDocId={statusUpdatingDocId}
+          openingId={openingId}
+          downloadingId={downloadingId}
+          onUpdateDocStatus={handleUpdateDocStatus}
+          onOpenDocument={handleOpenDocument}
+          onDownload={handleDownload}
+          onOpenPfaApproveDialog={() => handleOpenStatusDialog('Approved')}
+          onOpenPfaRejectDialog={() => handleOpenStatusDialog('Rejected')}
+          onSnackbar={(message, severity) => setSnackbar({ open: true, message, severity })}
+          refreshKey={onboardingRefreshKey}
+        />
+        {docsLoading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+            <CircularProgress size={24} sx={{ color: TOKENS.primary }} />
           </Box>
-
-          {docsLoading && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
-              <CircularProgress size={28} sx={{ color: TOKENS.primary }} />
-            </Box>
-          )}
-          {docsError && <Alert severity="error" sx={{ m: 2 }}>{docsError}</Alert>}
-          {!docsLoading && !docsError && documents.length === 0 && (
-            <Box sx={{ py: 6, textAlign: 'center' }}>
-              <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Niciun document încărcat.</Typography>
-            </Box>
-          )}
-          {!docsLoading && !docsError && documents.length > 0 && (
-            <TableContainer sx={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%', maxWidth: '100%' }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ bgcolor: alpha(TOKENS.surface, 0.7) }}>
-                    <TableCell sx={{ fontWeight: 700, color: TOKENS.textMuted }}>Fișier</TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: TOKENS.textMuted }}>Categorie</TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: TOKENS.textMuted }}>Mărime</TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: TOKENS.textMuted }}>Încărcat</TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: TOKENS.textMuted }}>Status</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 700, color: TOKENS.textMuted }}>Descărcare</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {documents.map((doc) => (
-                    <TableRow key={doc.id} sx={{ '&:hover': { bgcolor: alpha(TOKENS.primary, 0.03) } }}>
-                      <TableCell>
-                        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }} component="div">
-                          <Box sx={{ width: 32, height: 32, borderRadius: TOKENS.radius.sm, bgcolor: alpha(TOKENS.primary, 0.08), display: 'flex', alignItems: 'center', justifyContent: 'center', color: TOKENS.primaryStrong, flexShrink: 0 }}>
-                            <InsertDriveFileRoundedIcon sx={{ fontSize: 16 }} />
-                          </Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600, maxWidth: 200 }} noWrap title={doc.originalFileName}>
-                            {doc.originalFileName}
-                          </Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>{formatDocumentCategory(doc.category)}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>{formatBytes(doc.fileSize)}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>{relativeTime(doc.uploadedAtUtc)}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={statusLabel(doc.status)}
-                          size="small"
-                          sx={{ fontSize: '0.68rem', fontWeight: 700, bgcolor: alpha(statusColor(doc.status), 0.1), color: statusColor(doc.status) }}
-                        />
-                      </TableCell>
-                      <TableCell align="right">
-                        <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }} component="div">
-                          {doc.status.toLowerCase() === 'pending' && (
-                            <>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleUpdateDocStatus(doc.id, 'Verified')}
-                                disabled={statusUpdatingDocId === doc.id}
-                                sx={{ color: '#10b981', '&:hover': { bgcolor: alpha('#10b981', 0.1) } }}
-                                title="Aprobă document"
-                              >
-                                {statusUpdatingDocId === doc.id ? <CircularProgress size={16} color="inherit" /> : <CheckCircleRoundedIcon fontSize="small" />}
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleUpdateDocStatus(doc.id, 'Rejected')}
-                                disabled={statusUpdatingDocId === doc.id}
-                                sx={{ color: '#ef4444', '&:hover': { bgcolor: alpha('#ef4444', 0.1) } }}
-                                title="Respinge document"
-                              >
-                                <CancelRoundedIcon fontSize="small" />
-                              </IconButton>
-                            </>
-                          )}
-                          <IconButton
-                            size="small"
-                            onClick={() => handleOpenDocument(doc)}
-                            disabled={openingId === doc.id}
-                            title="Deschide"
-                            sx={{ color: TOKENS.primaryStrong, '&:hover': { bgcolor: alpha(TOKENS.primary, 0.1) } }}
-                          >
-                            {openingId === doc.id
-                              ? <CircularProgress size={16} sx={{ color: TOKENS.primary }} />
-                              : <OpenInNewRoundedIcon fontSize="small" />}
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDownload(doc)}
-                            disabled={downloadingId === doc.id}
-                            title="Descarcă"
-                            sx={{ color: TOKENS.primaryStrong, '&:hover': { bgcolor: alpha(TOKENS.primary, 0.1) } }}
-                          >
-                            {downloadingId === doc.id
-                              ? <CircularProgress size={16} sx={{ color: TOKENS.primary }} />
-                              : <FileDownloadRoundedIcon fontSize="small" />}
-                          </IconButton>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </Paper>
+        )}
+        {docsError && <Alert severity="error">{docsError}</Alert>}
 
         {/* Status update confirm dialog */}
         <Dialog open={statusDialog.open} onClose={() => setStatusDialog({ open: false, action: null })} maxWidth="xs" fullWidth>

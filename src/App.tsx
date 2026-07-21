@@ -1,21 +1,17 @@
 import { Suspense } from 'react'
 import { lazyWithRetry } from './utils/lazyWithRetry'
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { ScrollToTop } from './components/layout/ScrollToTop'
 import InstallPWA from './components/pwa/InstallPWA'
 import { RouteFallback } from './components/common/RouteFallback'
 
 // Auth (kept eager — small, needed immediately on /auth)
 import AuthPage from './components/auth/AuthPage'
-import RegisterPfaPage from './components/auth/RegisterPfaPage'
 import RegistrationSuccessPage from './components/auth/RegistrationSuccessPage'
 import SubscriptionSelectPage from './components/auth/SubscriptionSelectPage'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import RoleRedirect from './components/auth/RoleRedirect'
 import PendingAccessPage from './components/auth/PendingAccessPage'
-import PendingApprovalPage from './components/auth/PendingApprovalPage'
-import { authService } from './services/auth.service'
-import { useNavigate } from 'react-router-dom'
 
 // Dashboards & marketing shell — lazy-loaded to split the production bundle
 const DashboardPage = lazyWithRetry(() => import('./components/dashboard/DashboardPage'))
@@ -34,13 +30,13 @@ const AppLayout = lazyWithRetry(() =>
 )
 const CheckoutPage = lazyWithRetry(() => import('./pages/CheckoutPage'))
 
-function App() {
-  const navigate = useNavigate();
-  const handleLogout = () => {
-    authService.logout();
-    navigate('/auth');
-  };
+// Onboarding (fără acces la panel până la validarea completă)
+const OnboardingHubPage = lazyWithRetry(() => import('./components/onboarding/OnboardingHubPage'))
+const OnboardingPfaPage = lazyWithRetry(() => import('./components/onboarding/OnboardingPfaPage'))
+const OnboardingSectionPage = lazyWithRetry(() => import('./components/onboarding/OnboardingSectionPage'))
+const OnboardingDocumentPage = lazyWithRetry(() => import('./components/onboarding/OnboardingDocumentPage'))
 
+function App() {
   return (
     <>
       <ScrollToTop />
@@ -49,7 +45,7 @@ function App() {
         <Routes>
           {/* ── Public auth pages ── */}
           <Route path="/auth" element={<AuthPage />} />
-          <Route path="/inregistrare/pfa" element={<RegisterPfaPage />} />
+          <Route path="/inregistrare/pfa" element={<Navigate to="/onboarding/pfa" replace />} />
           <Route path="/inregistrare/abonament" element={<SubscriptionSelectPage />} />
           <Route path="/inregistrare/succes" element={<RegistrationSuccessPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
@@ -58,7 +54,10 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/app" element={<RoleRedirect />} />
             <Route path="/app/pending-access" element={<PendingAccessPage />} />
-            <Route path="/app/pending-approval" element={<PendingApprovalPage status="Pending" onLogout={handleLogout} />} />
+            <Route path="/onboarding" element={<OnboardingHubPage />} />
+            <Route path="/onboarding/pfa" element={<OnboardingPfaPage />} />
+            <Route path="/onboarding/sections/:sectionKey" element={<OnboardingSectionPage />} />
+            <Route path="/onboarding/sections/:sectionKey/documents/:docId" element={<OnboardingDocumentPage />} />
             <Route path="/app/dashboard/*" element={<DashboardPage />} />
             <Route path="/contabil/*" element={<ContabilDashboard />} />
             <Route path="/admin/*" element={<AdminDashboard />} />

@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
+import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
+import HourglassTopRoundedIcon from '@mui/icons-material/HourglassTopRounded'
 import {
+  Alert,
   Box,
   Button,
   Checkbox,
   CircularProgress,
-  Container,
   FormControlLabel,
   MenuItem,
   Paper,
@@ -14,198 +16,41 @@ import {
   Tabs,
   TextField,
   Typography,
-  Alert
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useAppSelector } from '../../store/hooks'
-import { resolveClientPath } from '../../utils/clientOnboarding'
-import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
-import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
-import { pfaService, type PfaCompanyInfo } from '../../services/pfa.service'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
 import { documentService } from '../../services/document.service'
+import { pfaService, type PfaCompanyInfo } from '../../services/pfa.service'
+import { stripeService } from '../../services/stripe.service'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { validateRomanianCIF } from '../../utils/validation'
-import { stripeService, type SubscriptionResponse } from '../../services/stripe.service'
 import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
-
-import logo from '../../assets/logo.svg'
-import iconUpload from '../../assets/SVG/2- Regular/upload.svg'
-
-const TOKENS = {
-  ink: '#1a1a2e',
-  primary: '#5CCBF5',
-  primaryStrong: '#45B8E2',
-  paper: '#FFFFFF',
-  surface: '#F8F9FC',
-  border: 'rgba(0, 0, 0, 0.06)',
-  borderHover: 'rgba(0, 0, 0, 0.12)',
-  textMuted: 'rgba(26, 26, 46, 0.55)',
-  radius: { md: 8, lg: 12, xl: 16, full: 9999 },
-  shadow: {
-    sm: '0 1px 2px rgba(0,0,0,0.04)',
-    md: '0 2px 8px rgba(0,0,0,0.06)',
-    glow: '0 2px 8px rgba(92,203,245,0.12)',
-  },
-}
-
-const inputSx = {
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: '#fff',
-    color: TOKENS.ink,
-    borderRadius: TOKENS.radius.md,
-    fontWeight: 500,
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: TOKENS.border },
-    '&:hover .MuiOutlinedInput-notchedOutline': {
-      borderColor: alpha(TOKENS.ink, 0.18),
-    },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-      borderColor: TOKENS.primary,
-      borderWidth: 2,
-    },
-  },
-  '& .MuiInputBase-input::placeholder': {
-    color: alpha(TOKENS.ink, 0.45),
-    opacity: 1,
-  },
-}
-
-function UploadField({ label, file, onFileChange }: { label: string; file: File | null; onFileChange: (file: File | null) => void }) {
-  return (
-    <Box>
-      <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
-        {label}
-      </Typography>
-      <Box
-        component="label"
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-          px: 2.5,
-          py: 1.8,
-          borderRadius: TOKENS.radius.md,
-          border: `1.5px dashed ${file ? TOKENS.primary : TOKENS.borderHover}`,
-          backgroundColor: file ? alpha(TOKENS.primary, 0.03) : '#fff',
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-          '&:hover': {
-            borderColor: TOKENS.primary,
-            backgroundColor: alpha(TOKENS.primary, 0.02),
-          },
-        }}
-      >
-        {file ? (
-          <CheckCircleOutlineRoundedIcon sx={{ color: TOKENS.primary, fontSize: 22 }} />
-        ) : (
-          <img
-            src={iconUpload}
-            alt="upload"
-            style={{
-              width: 22,
-              height: 22,
-              filter: 'invert(84%) sepia(21%) saturate(1450%) hue-rotate(167deg) brightness(98%) contrast(98%)',
-              opacity: 0.7,
-            }}
-          />
-        )}
-        <Typography sx={{ color: file ? TOKENS.ink : TOKENS.textMuted, fontWeight: file ? 600 : 500, fontSize: '0.92rem' }}>
-          {file ? file.name : `Incarca ${label.toLowerCase()}`}
-        </Typography>
-        <input
-          type="file"
-          hidden
-          onChange={(e) => {
-            const f = e.target.files?.[0]
-            if (f) onFileChange(f)
-          }}
-        />
-      </Box>
-    </Box>
-  )
-}
+import OnboardingLayout from './OnboardingLayout'
+import { TOKENS, inputSx } from './onboardingTheme'
+import { UploadField } from './UploadField'
+import { useOnboardingState } from './useOnboardingState'
 
 type Locality = { nume: string }
 type County = { auto: string; nume: string; localitati: Locality[] }
 
-export default function RegisterPfaPage() {
-  const [tab, setTab] = useState(0) // 0 = Am PFA, 1 = Nu am PFA
+function redirectToInfiintarePayment() {
+  const origin = window.location.origin
+  stripeService.redirectToInfiintarePfa(
+    `${origin}/onboarding?pfa_setup_paid=1&session_id={{CHECKOUT_SESSION_ID}}`,
+    `${origin}/onboarding/pfa`,
+  )
+}
+
+export default function OnboardingPfaPage() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const { accessToken, isInitialized } = useAppSelector((s) => s.auth)
-  const awaitingPaymentConfirm = searchParams.get('subscribed') === '1'
+  const { state, loading } = useOnboardingState()
 
-  // Location data
+  const [tab, setTab] = useState(0) // 0 = Am PFA, 1 = Nu am PFA
   const [countiesData, setCountiesData] = useState<County[]>([])
-  const [routeChecking, setRouteChecking] = useState(true)
-  const [confirmingPayment, setConfirmingPayment] = useState(awaitingPaymentConfirm)
-  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const [subStatus, setSubStatus] = useState<SubscriptionResponse | null>(null)
-
-  const syncOnboardingRoute = useCallback(async () => {
-    const sub = await stripeService.getSubscriptionStatus()
-    setSubStatus(sub)
-    if (!sub) {
-      if (awaitingPaymentConfirm) {
-        setConfirmingPayment(true)
-        return false
-      }
-      setConfirmingPayment(false)
-      return false
-    }
-    setConfirmingPayment(false)
-    const target = resolveClientPath(sub)
-    if (target !== '/inregistrare/pfa') {
-      if (target === '/app/pending-approval' && sub?.pfaStatus === 'Rejected') {
-        return false
-      }
-      navigate(target, { replace: true })
-      return true
-    }
-    return false
-  }, [navigate, awaitingPaymentConfirm])
 
   useEffect(() => {
-    if (!isInitialized) return
-    if (!accessToken) {
-      navigate('/auth', { replace: true })
-      return
-    }
-
-    let cancelled = false
-    const pollStartedAt = Date.now()
-
-    const run = async () => {
-      const redirected = await syncOnboardingRoute()
-      if (!cancelled) setRouteChecking(false)
-      if (!redirected && awaitingPaymentConfirm) {
-        pollTimerRef.current = setInterval(async () => {
-          if (Date.now() - pollStartedAt > 30_000) {
-            if (pollTimerRef.current) clearInterval(pollTimerRef.current)
-            pollTimerRef.current = null
-            setConfirmingPayment(false)
-            return
-          }
-          const sub = await stripeService.getSubscriptionStatus()
-          if (sub) {
-            setSubStatus(sub)
-            if (pollTimerRef.current) clearInterval(pollTimerRef.current)
-            pollTimerRef.current = null
-            setConfirmingPayment(false)
-            const target = resolveClientPath(sub)
-            if (target !== '/inregistrare/pfa') {
-              if (target === '/app/pending-approval' && sub.pfaStatus === 'Rejected') {
-                return
-              }
-              navigate(target, { replace: true })
-            }
-          }
-        }, 2500)
-      }
-    }
-
-    void run()
-
     fetch('https://raw.githubusercontent.com/virgil-av/judet-oras-localitati-romania/master/judete.json')
       .then((res) => res.json())
       .then((data) => {
@@ -214,12 +59,14 @@ export default function RegisterPfaPage() {
         }
       })
       .catch((err) => console.error('Failed to load counties:', err))
+  }, [])
 
-    return () => {
-      cancelled = true
-      if (pollTimerRef.current) clearInterval(pollTimerRef.current)
+  // Secțiunea PFA e deja validată → înapoi la hub
+  useEffect(() => {
+    if (state?.pfaStatus === 'Approved') {
+      navigate('/onboarding', { replace: true })
     }
-  }, [isInitialized, accessToken, navigate, syncOnboardingRoute, awaitingPaymentConfirm])
+  }, [state?.pfaStatus, navigate])
 
   // "Am PFA" form state
   const [amPfaName, setAmPfaName] = useState('')
@@ -262,6 +109,7 @@ export default function RegisterPfaPage() {
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [retryAfterReject, setRetryAfterReject] = useState(false)
 
   const availableCities = useMemo(() => {
     if (!judet || countiesData.length === 0) return []
@@ -275,7 +123,7 @@ export default function RegisterPfaPage() {
       setError('Te rugam sa completezi adresa si sa incarci macar buletinul.')
       return
     }
-    if (!subStatus?.hasPaidInfiintare && !paymentPolicyAccepted) {
+    if (!state?.hasPaidInfiintare && !paymentPolicyAccepted) {
       setError('Te rugam sa accepti Politica de Plati si Abonamente pentru a continua.')
       return
     }
@@ -291,29 +139,25 @@ export default function RegisterPfaPage() {
         number: numar,
         city: oras,
         county: judet,
-        isOwner: suntProprietar
-      });
+        isOwner: suntProprietar,
+      })
 
       // 2. Upload Documents
       if (buletinFile) {
-        await documentService.upload(buletinFile, 'Buletin', pfaId);
+        await documentService.upload(buletinFile, 'Buletin', pfaId)
       }
       if (atestatFile) {
-        await documentService.upload(atestatFile, 'AtestatSofer', pfaId);
+        await documentService.upload(atestatFile, 'AtestatSofer', pfaId)
       }
 
-      // 3. Redirect to Stripe or direct redirect if they have already paid
+      // 3. Plata înființării (dacă nu e deja achitată), apoi înapoi la hub
       sessionStorage.setItem('pfa_registered', 'NuAmPfa')
-      if (subStatus?.hasPaidInfiintare) {
-        navigate('/app/dashboard?section=documents', { replace: true })
+      if (state?.hasPaidInfiintare) {
+        navigate('/onboarding', { replace: true })
       } else {
-        const origin = window.location.origin
-        stripeService.redirectToInfiintarePfa(
-          `${origin}/app/dashboard?section=documents&pfa_setup_paid=1&session_id={{CHECKOUT_SESSION_ID}}`,
-          `${origin}/inregistrare/pfa`
-        )
+        redirectToInfiintarePayment()
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err)
       setError(getErrorMessage(err, 'A aparut o eroare la inregistrare. Te rugam sa incerci din nou.'))
     } finally {
@@ -348,19 +192,19 @@ export default function RegisterPfaPage() {
         number: companyInfo.streetNumber ?? undefined,
         city: companyInfo.city ?? undefined,
         county: companyInfo.county ?? undefined,
-        isOwner: false // default
-      });
-      // AmPfa users first go through admin validation, then pick a subscription.
+        isOwner: false, // default
+      })
+      // Dosarul intră la validarea adminului — userul așteaptă în hub
       sessionStorage.setItem('pfa_registered', 'AmPfa')
-      navigate('/app/dashboard?section=documents', { replace: true })
-    } catch (err: any) {
+      navigate('/onboarding', { replace: true })
+    } catch (err) {
       setError(getErrorMessage(err, 'A aparut o eroare. Te rugam sa incerci din nou.'))
     } finally {
       setIsLoading(false)
     }
   }
 
-  if (!isInitialized || routeChecking || confirmingPayment) {
+  if (loading) {
     return (
       <Box
         sx={{
@@ -371,74 +215,177 @@ export default function RegisterPfaPage() {
           backgroundColor: TOKENS.surface,
         }}
       >
-        <Stack spacing={2} sx={{ alignItems: 'center' }}>
-          <CircularProgress sx={{ color: TOKENS.primary }} />
-          <Typography sx={{ color: TOKENS.textMuted, fontWeight: 600 }}>
-            {confirmingPayment ? 'Se confirmă plata...' : 'Se încarcă...'}
-          </Typography>
-        </Stack>
+        <CircularProgress sx={{ color: TOKENS.primary }} />
       </Box>
     )
   }
 
-  return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: TOKENS.surface,
-        py: 4,
-      }}
-    >
-      <Container maxWidth="sm">
-        <Stack sx={{ alignItems: 'center' }} spacing={4}>
-          {/* Logo */}
-          <Box
-            component="img"
-            src={logo}
-            alt="Ridelance"
-            sx={{ height: 50, width: 'auto', cursor: 'pointer' }}
-            onClick={() => navigate(accessToken ? '/app' : '/auth')}
-          />
+  const isPending = state?.pfaStatus === 'Pending'
+  const isRejected = state?.pfaStatus === 'Rejected'
+  const needsPayment =
+    isPending && state?.registrationType === 'NuAmPfa' && !state.hasPaidInfiintare
 
+  // ── Dosar trimis, plata înființării încă neconfirmată ──
+  if (needsPayment) {
+    return (
+      <OnboardingLayout state={state} activeKey="Pfa">
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 3, sm: 5 },
+            borderRadius: `${TOKENS.radius.xl}px`,
+            border: `1px solid ${TOKENS.border}`,
+            boxShadow: TOKENS.shadow.md,
+            backgroundColor: TOKENS.paper,
+            textAlign: 'center',
+          }}
+        >
+          <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: TOKENS.ink, mb: 1 }}>
+            Finalizează plata pentru Înființare PFA
+          </Typography>
+          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mb: 3 }}>
+            Dosarul tău a fost creat. Ca să pornim înființarea PFA-ului, mai e nevoie doar de
+            achitarea serviciului de înființare.
+          </Typography>
+          <Button
+            variant="contained"
+            size="large"
+            endIcon={<ArrowForwardRoundedIcon />}
+            onClick={redirectToInfiintarePayment}
+            sx={{
+              py: 1.3,
+              px: 4,
+              fontWeight: 700,
+              borderRadius: `${TOKENS.radius.md}px`,
+              color: '#fff',
+              backgroundColor: TOKENS.primary,
+              boxShadow: TOKENS.shadow.glow,
+              '&:hover': { backgroundColor: TOKENS.primaryStrong },
+            }}
+          >
+            Plătește înființarea
+          </Button>
+        </Paper>
+      </OnboardingLayout>
+    )
+  }
+
+  // ── Dosar trimis, în validare la admin ──
+  if (isPending) {
+    return (
+      <OnboardingLayout state={state} activeKey="Pfa">
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 3, sm: 5 },
+            borderRadius: `${TOKENS.radius.xl}px`,
+            border: `1px solid ${TOKENS.border}`,
+            boxShadow: TOKENS.shadow.md,
+            backgroundColor: TOKENS.paper,
+            textAlign: 'center',
+          }}
+        >
+          <Box
+            sx={{
+              width: 64,
+              height: 64,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: alpha('#ed6c02', 0.1),
+              mx: 'auto',
+              mb: 2,
+            }}
+          >
+            <HourglassTopRoundedIcon sx={{ fontSize: 30, color: '#b54708' }} />
+          </Box>
+          <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: TOKENS.ink, mb: 1 }}>
+            Dosarul tău PFA este în validare
+          </Typography>
+          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', maxWidth: 440, mx: 'auto' }}>
+            {state?.registrationType === 'NuAmPfa'
+              ? 'Echipa RIDElance se ocupă de înființarea PFA-ului tău. Te anunțăm imediat ce este gata și se deblochează pasul următor.'
+              : 'Echipa RIDElance îți verifică datele PFA-ului. Te anunțăm imediat ce dosarul este validat și se deblochează pasul următor.'}
+          </Typography>
+          <Button
+            onClick={() => navigate('/onboarding')}
+            sx={{ mt: 3, textTransform: 'none', fontWeight: 700, color: TOKENS.primary }}
+          >
+            ← Înapoi la pașii de înrolare
+          </Button>
+        </Paper>
+      </OnboardingLayout>
+    )
+  }
+
+  // ── Formularul (dosar nou sau reluare după respingere) ──
+  return (
+    <OnboardingLayout state={state} activeKey="Pfa">
+      <Stack spacing={3}>
+        {isRejected && !retryAfterReject && (
           <Paper
             elevation={0}
             sx={{
-              width: '100%',
+              p: { xs: 3, sm: 4 },
+              borderRadius: `${TOKENS.radius.xl}px`,
+              border: `1px solid ${alpha('#d32f2f', 0.25)}`,
+              backgroundColor: TOKENS.paper,
+            }}
+          >
+            <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px`, mb: 2 }}>
+              Dosarul tău PFA a fost respins.
+              {state?.pfaReviewNote ? ` Motiv: ${state.pfaReviewNote}` : ''}
+            </Alert>
+            <Button
+              variant="contained"
+              onClick={() => setRetryAfterReject(true)}
+              sx={{
+                fontWeight: 700,
+                textTransform: 'none',
+                borderRadius: `${TOKENS.radius.md}px`,
+                color: '#fff',
+                backgroundColor: TOKENS.primary,
+                '&:hover': { backgroundColor: TOKENS.primaryStrong },
+              }}
+            >
+              Completează din nou
+            </Button>
+          </Paper>
+        )}
+
+        {(!isRejected || retryAfterReject) && (
+          <Paper
+            elevation={0}
+            sx={{
               p: { xs: 3, sm: 5 },
-              borderRadius: TOKENS.radius.xl,
+              borderRadius: `${TOKENS.radius.xl}px`,
               border: `1px solid ${TOKENS.border}`,
               boxShadow: TOKENS.shadow.md,
               backgroundColor: TOKENS.paper,
             }}
           >
-            <Typography
-              sx={{ fontWeight: 800, fontSize: '1.3rem', color: TOKENS.ink, mb: 1, textAlign: 'center' }}
-            >
-              Inregistrare cont
+            <Typography sx={{ fontWeight: 800, fontSize: '1.3rem', color: TOKENS.ink, mb: 1, textAlign: 'center' }}>
+              Pasul 1: PFA
             </Typography>
-            <Typography
-              sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mb: 3, textAlign: 'center' }}
-            >
+            <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mb: 3, textAlign: 'center' }}>
               Selecteaza situatia ta actuala pentru a continua
             </Typography>
 
             {error && (
-              <Alert severity="error" sx={{ mb: 3, borderRadius: TOKENS.radius.md }}>
+              <Alert severity="error" sx={{ mb: 3, borderRadius: `${TOKENS.radius.md}px` }}>
                 {error}
               </Alert>
             )}
 
             <Tabs
               value={tab}
-              onChange={(_, v) => { setTab(v); setError(null); }}
+              onChange={(_, v) => { setTab(v); setError(null) }}
               variant="fullWidth"
               sx={{
                 mb: 4,
                 backgroundColor: alpha(TOKENS.ink, 0.03),
-                borderRadius: TOKENS.radius.md,
+                borderRadius: `${TOKENS.radius.md}px`,
                 p: 0.5,
                 '& .MuiTabs-indicator': {
                   backgroundColor: TOKENS.primary,
@@ -465,7 +412,7 @@ export default function RegisterPfaPage() {
                   elevation={0}
                   sx={{
                     p: 3,
-                    borderRadius: TOKENS.radius.lg,
+                    borderRadius: `${TOKENS.radius.lg}px`,
                     backgroundColor: alpha(TOKENS.primary, 0.04),
                     border: `1px solid ${alpha(TOKENS.primary, 0.1)}`,
                   }}
@@ -504,7 +451,7 @@ export default function RegisterPfaPage() {
                           px: 3,
                           fontWeight: 700,
                           textTransform: 'none',
-                          borderRadius: TOKENS.radius.md,
+                          borderRadius: `${TOKENS.radius.md}px`,
                           whiteSpace: 'nowrap',
                         }}
                       >
@@ -515,7 +462,7 @@ export default function RegisterPfaPage() {
                       Pe baza CUI-ului preluăm automat datele oficiale ale PFA-ului tău (denumire, adresă).
                     </Typography>
                     {companyLookupError && (
-                      <Alert severity="error" sx={{ mt: 1, borderRadius: TOKENS.radius.md }}>
+                      <Alert severity="error" sx={{ mt: 1, borderRadius: `${TOKENS.radius.md}px` }}>
                         {companyLookupError}
                       </Alert>
                     )}
@@ -525,7 +472,7 @@ export default function RegisterPfaPage() {
                         sx={{
                           mt: 1.5,
                           p: 2,
-                          borderRadius: TOKENS.radius.lg,
+                          borderRadius: `${TOKENS.radius.lg}px`,
                           border: `1px solid ${alpha('#10b981', 0.3)}`,
                           backgroundColor: alpha('#10b981', 0.05),
                         }}
@@ -541,7 +488,7 @@ export default function RegisterPfaPage() {
                           {companyInfo.address ? ` · ${companyInfo.address}` : ''}
                         </Typography>
                         {!companyInfo.isActive && (
-                          <Alert severity="warning" sx={{ mt: 1, borderRadius: TOKENS.radius.md }}>
+                          <Alert severity="warning" sx={{ mt: 1, borderRadius: `${TOKENS.radius.md}px` }}>
                             Atenție: acest CUI figurează ca radiat sau inactiv la ANAF.
                           </Alert>
                         )}
@@ -568,7 +515,7 @@ export default function RegisterPfaPage() {
                       py: 1.4,
                       fontWeight: 700,
                       fontSize: '1rem',
-                      borderRadius: TOKENS.radius.md,
+                      borderRadius: `${TOKENS.radius.md}px`,
                       color: '#fff',
                       backgroundColor: TOKENS.primary,
                       boxShadow: TOKENS.shadow.glow,
@@ -607,7 +554,7 @@ export default function RegisterPfaPage() {
                     onChange={(e) => setDurataContract(e.target.value)}
                     sx={{
                       backgroundColor: '#fff',
-                      borderRadius: TOKENS.radius.md,
+                      borderRadius: `${TOKENS.radius.md}px`,
                       fontWeight: 500,
                       '& .MuiOutlinedInput-notchedOutline': { borderColor: TOKENS.border },
                       '&:hover .MuiOutlinedInput-notchedOutline': {
@@ -663,7 +610,7 @@ export default function RegisterPfaPage() {
                         MenuProps={{ sx: { '& .MuiPaper-root': { maxHeight: 250 } } }}
                         sx={{
                           backgroundColor: '#fff',
-                          borderRadius: TOKENS.radius.md,
+                          borderRadius: `${TOKENS.radius.md}px`,
                           fontWeight: 500,
                           color: oras ? TOKENS.ink : alpha(TOKENS.ink, 0.45),
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: TOKENS.border },
@@ -692,7 +639,7 @@ export default function RegisterPfaPage() {
                         MenuProps={{ sx: { '& .MuiPaper-root': { maxHeight: 250 } } }}
                         sx={{
                           backgroundColor: '#fff',
-                          borderRadius: TOKENS.radius.md,
+                          borderRadius: `${TOKENS.radius.md}px`,
                           fontWeight: 500,
                           color: judet ? TOKENS.ink : alpha(TOKENS.ink, 0.45),
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: TOKENS.border },
@@ -736,7 +683,7 @@ export default function RegisterPfaPage() {
                   />
                 </Box>
 
-                {!subStatus?.hasPaidInfiintare && (
+                {!state?.hasPaidInfiintare && (
                   <PaymentPolicyAcceptance
                     checked={paymentPolicyAccepted}
                     onChange={setPaymentPolicyAccepted}
@@ -748,7 +695,7 @@ export default function RegisterPfaPage() {
                   variant="contained"
                   size="large"
                   fullWidth
-                  disabled={isLoading || (!subStatus?.hasPaidInfiintare && !paymentPolicyAccepted)}
+                  disabled={isLoading || (!state?.hasPaidInfiintare && !paymentPolicyAccepted)}
                   endIcon={<ArrowForwardRoundedIcon />}
                   onClick={handleSubmitNuAmPfa}
                   sx={{
@@ -756,7 +703,7 @@ export default function RegisterPfaPage() {
                     py: 1.4,
                     fontWeight: 700,
                     fontSize: '1rem',
-                    borderRadius: TOKENS.radius.md,
+                    borderRadius: `${TOKENS.radius.md}px`,
                     color: '#fff',
                     backgroundColor: TOKENS.primary,
                     boxShadow: TOKENS.shadow.glow,
@@ -767,7 +714,7 @@ export default function RegisterPfaPage() {
                     '&.Mui-disabled': {
                       backgroundColor: alpha(TOKENS.primary, 0.6),
                       color: '#fff',
-                    }
+                    },
                   }}
                 >
                   {isLoading ? 'Se proceseaza...' : 'Trimite documentele'}
@@ -775,20 +722,8 @@ export default function RegisterPfaPage() {
               </Stack>
             )}
           </Paper>
-
-          <Button
-            onClick={() => navigate('/auth')}
-            sx={{
-              textTransform: 'none',
-              color: TOKENS.textMuted,
-              fontWeight: 600,
-              '&:hover': { color: TOKENS.ink, backgroundColor: 'transparent' },
-            }}
-          >
-            ← Inapoi la autentificare
-          </Button>
-        </Stack>
-      </Container>
-    </Box>
+        )}
+      </Stack>
+    </OnboardingLayout>
   )
 }

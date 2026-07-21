@@ -1,5 +1,4 @@
 import docs from '../assets/docs.svg'
-import silso from '../assets/silso.png'
 import ace from '../assets/ace.svg'
 import mol from '../assets/mol.png'
 import asigurari from '../assets/asigurari.ro.png'
@@ -82,13 +81,7 @@ export const pricingCards = [
   },
 ]
 
-export const partnerLogos = [
-  {
-    name: 'Silso',
-    image: silso,
-    href: 'https://silso.ro',
-    desc: 'Silso este un partener specializat în servicii administrative și suport pentru antreprenori, de la înființări de firme și PFA până la contabilitate și găzduire sediu social.',
-  },
+export const partnerLogos: { name: string; image: string; href?: string }[] = [
   {
     name: 'ACE',
     image: ace,
@@ -266,7 +259,7 @@ export const homeSec9 = [
   },
   {
     q: 'Cum funcționează înființarea PFA?',
-    a: 'Completezi datele și documentele necesare în platformă, iar solicitarea este transmisă ulterior către partenerul RIDElance, SILSO.',
+    a: 'Completezi datele și documentele necesare în platformă, iar solicitarea este preluată și procesată de echipa RIDElance.',
   },
   {
     q: 'Ce documente sunt necesare pentru găzduire sediu social?',

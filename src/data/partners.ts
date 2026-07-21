@@ -1,4 +1,3 @@
-import silso from '../assets/silso.png'
 import ace from '../assets/ace.svg'
 import mol from '../assets/mol.png'
 import asigurari from '../assets/asigurari.ro.png'
@@ -87,15 +86,6 @@ export const partners: Partner[] = [
     website: 'https://www.bcr.ro',
   },
   {
-    slug: 'silso',
-    name: 'Silso',
-    image: silso,
-    tagline: 'Servicii administrative și suport pentru antreprenori: înființări, contabilitate, sediu social.',
-    description:
-      'Silso este un partener specializat în servicii administrative și suport pentru antreprenori, de la înființări de firme și PFA până la contabilitate și găzduire sediu social.',
-    website: 'https://silso.ro',
-  },
-  {
     slug: 'asigurari-ro',
     name: 'asigurari.ro',
     image: asigurari,
@@ -125,3 +115,28 @@ export const partners: Partner[] = [
 
 export const getPartnerBySlug = (slug: string) =>
   partners.find((partner) => partner.slug === slug)
+
+/** Taburi RIDElance afișate în bara de pe pagina Parteneri, alături de parteneri. */
+export interface OfferTab {
+  slug: string
+  name: string
+  tagline: string
+}
+
+export const offerTabs: OfferTab[] = [
+  {
+    slug: 'pfa',
+    name: 'PFA',
+    tagline:
+      'Înființare PFA, găzduire sediu social și pachete de start pentru ridesharing, direct prin RIDElance.',
+  },
+  {
+    slug: 'inchiriere-masini',
+    name: 'Închiriere Mașini',
+    tagline:
+      'Mașini pregătite pentru Uber și Bolt: închiriere săptămânală sau „la rămânere”, cu aplicare 100% online.',
+  },
+]
+
+export const getOfferTabBySlug = (slug: string) =>
+  offerTabs.find((tab) => tab.slug === slug)

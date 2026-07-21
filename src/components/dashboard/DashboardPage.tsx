@@ -19,7 +19,8 @@ import AppLayout from './layout/AppLayout'
 
 import { authService } from '../../services/auth.service'
 import { userService } from '../../services/user.service'
-import PendingApprovalPage from '../auth/PendingApprovalPage'
+import { stripeService } from '../../services/stripe.service'
+import { canAccessDashboard, resolveClientPath } from '../../utils/clientOnboarding'
 import { useRecurringDocumentationReminder } from '../../hooks/useRecurringDocumentationReminder'
 
 import { Box, CircularProgress, Snackbar, Alert } from '@mui/material'
@@ -94,40 +95,29 @@ export default function DashboardPage() {
   }, [searchParams])
 
   useEffect(() => {
-    userService.getDashboardSummary()
-      .then((summary) => {
-        if (!summary.pfaStatus) {
-          // No PFA registration at all → redirect to registration
-          navigate('/inregistrare/pfa', { replace: true })
-        } else {
-          setPfaStatus(summary.pfaStatus)
-          setPfaRegistrationId(summary.pfaRegistrationId ?? null)
+    // Dashboardul este accesibil doar după onboarding complet + abonament activ;
+    // altfel userul e trimis înapoi în fluxul de onboarding/plată.
+    // Excepție: întoarcerea din checkout (?subscribed=1) — webhookul Stripe poate întârzia.
+    const justSubscribed = new URLSearchParams(window.location.search).get('subscribed') === '1'
+    const boot = async () => {
+      try {
+        const [summary, sub] = await Promise.all([
+          userService.getDashboardSummary(),
+          stripeService.getSubscriptionStatus(),
+        ])
+        if (summary.pfaStatus !== 'Approved' || (sub && !justSubscribed && !canAccessDashboard(sub))) {
+          navigate(resolveClientPath(sub), { replace: true })
+          return
         }
-      })
-      .catch(() => {
+        setPfaStatus(summary.pfaStatus)
+        setPfaRegistrationId(summary.pfaRegistrationId ?? null)
+      } catch {
         // If API fails, just show the dashboard anyway to not block the user
         setPfaStatus('Approved')
-      })
-
+      }
+    }
+    void boot()
   }, [navigate])
-
-  useEffect(() => {
-    if (pfaStatus !== 'Pending') return
-
-    const interval = window.setInterval(() => {
-      userService.getDashboardSummary()
-        .then((summary) => {
-          if (summary.pfaStatus === 'Approved') {
-            setPfaStatus('Approved')
-            setPfaRegistrationId(summary.pfaRegistrationId ?? null)
-            navigate('/inregistrare/abonament', { replace: true })
-          }
-        })
-        .catch(() => {})
-    }, 10000)
-
-    return () => window.clearInterval(interval)
-  }, [navigate, pfaStatus])
 
   const handleLogout = async () => {
     await authService.logout()
@@ -142,11 +132,7 @@ export default function DashboardPage() {
     if (activeSection === 'profile') return <ProfileTab />
     if (activeSection === 'documents') return <DocumentsTab onNavigate={setActiveSection} />
     if (activeSection === 'support') return <SupportChatTab />
-    if (activeSection === 'abonamente') {
-      return pfaStatus === 'Approved'
-        ? <AbonamenteTab />
-        : <DocumentsTab onNavigate={setActiveSection} />
-    }
+    if (activeSection === 'abonamente') return <AbonamenteTab />
     if (activeSection === 'servicii') return <ServiciiTab />
     if (activeSection === 'asigurari') return <InsuranceTab />
     if (activeSection === 'istoric_plati') return <IstoricPlatiTab />
@@ -170,30 +156,16 @@ export default function DashboardPage() {
     )
   }
 
-  // Rejected registrations need the correction flow; pending users can still upload documents.
-  if (pfaStatus === 'Rejected') {
-    return <PendingApprovalPage status={pfaStatus} onLogout={handleLogout} />
-  }
-
-  const visibleBottomSections = pfaStatus === 'Approved'
-    ? bottomSectionConfig
-    : bottomSectionConfig.filter((item) => item.id !== 'abonamente')
-
   return (
     <AppLayout
       activeSection={activeSection}
       setActiveSection={setActiveSection}
       sectionConfig={mainSectionConfig}
-      bottomSectionConfig={visibleBottomSections}
+      bottomSectionConfig={bottomSectionConfig}
       onLogout={handleLogout}
       showNotifications
       onOpenRecurringDocumentation={() => setActiveSection('doc_recurring')}
     >
-      {pfaStatus === 'Pending' && (
-        <Alert severity="info" sx={{ mb: 2, borderRadius: 2, fontWeight: 600 }}>
-          Contul este în onboarding. Poți încărca documente și discuta cu echipa RIDElance; abonamentul va fi ales după aprobare.
-        </Alert>
-      )}
       {renderSection()}
       <Snackbar
         open={snackbar.open}

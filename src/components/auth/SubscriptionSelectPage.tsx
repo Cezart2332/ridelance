@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   Container,
   Paper,
   Typography,
@@ -14,6 +15,7 @@ import StarRoundedIcon from '@mui/icons-material/StarRounded'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import { SUBSCRIPTION_PLANS, type PlanKey, stripeService } from '../../services/stripe.service'
+import { canAccessDashboard } from '../../utils/clientOnboarding'
 import { getNextMondayBillingDate, formatRomanianDate } from '../../utils/billing'
 import { TermsAcceptance } from '../common/TermsAcceptance'
 import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
@@ -46,6 +48,25 @@ export default function SubscriptionSelectPage() {
   const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
   const nextBilling = getNextMondayBillingDate()
   const isSuspendedAccount = searchParams.get('reason') === 'suspended'
+  const [gateChecking, setGateChecking] = useState(true)
+
+  // Abonamentul se alege doar după onboarding complet; cu abonament activ → dashboard.
+  useEffect(() => {
+    stripeService
+      .getSubscriptionStatus()
+      .then((sub) => {
+        if (sub && !sub.onboardingSectionsValidated) {
+          navigate('/onboarding', { replace: true })
+          return
+        }
+        if (canAccessDashboard(sub)) {
+          navigate('/app/dashboard', { replace: true })
+          return
+        }
+        setGateChecking(false)
+      })
+      .catch(() => setGateChecking(false))
+  }, [navigate])
 
   const handleSelect = (key: PlanKey) => {
     setSelected(key)
@@ -56,6 +77,22 @@ export default function SubscriptionSelectPage() {
     if (!selected || !termsAccepted || !paymentPolicyAccepted) return
     stripeService.activateSubscription(selected, nextBilling)
     stripeService.redirectToPlan(selected)
+  }
+
+  if (gateChecking) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: TOKENS.surface,
+        }}
+      >
+        <CircularProgress sx={{ color: TOKENS.primary }} />
+      </Box>
+    )
   }
 
   return (

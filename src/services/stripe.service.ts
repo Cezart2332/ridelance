@@ -21,6 +21,7 @@ export interface SubscriptionResponse {
   pfaRegistrationType: string | null
   pendingPlan: PlanKey | null
   hasPaidInfiintare: boolean
+  onboardingSectionsValidated: boolean
 }
 
 

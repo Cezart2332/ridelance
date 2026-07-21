@@ -9,7 +9,16 @@ export interface DocumentSummary {
   fileSize: number;
   uploadedAtUtc: string;
   expiresAtUtc?: string | null;
+  /** Prevalidarea AI: None | Queued | Processing | Passed | Failed | Error */
+  aiStatus: string;
+  aiSummary?: string | null;
+  aiDetectedType?: string | null;
+  aiExtractedExpiresAtUtc?: string | null;
 }
+
+/** Documentul este încă în coada de prevalidare automată (AI). */
+export const isAiPending = (doc: DocumentSummary) =>
+  doc.aiStatus === 'Queued' || doc.aiStatus === 'Processing';
 
 export const documentService = {
   upload: async (file: File, category: string, pfaRegistrationId?: string, userId?: string, expiresAt?: string) => {

@@ -122,6 +122,7 @@ export function BankTab({ onNavigate }: BankTabProps) {
     const reference = searchParams.get('ref') ?? searchParams.get('state')
     const code = searchParams.get('code')
     const authError = searchParams.get('error')
+    const authErrorDescription = searchParams.get('error_description')
 
     const stripCallbackParams = () => {
       const next = new URLSearchParams(searchParams)
@@ -150,7 +151,8 @@ export function BankTab({ onNavigate }: BankTabProps) {
 
       if (authError) {
         stripCallbackParams()
-        setSnackbar('Conectarea băncii a fost anulată sau a eșuat. Poți încerca din nou.')
+        const detail = authErrorDescription ? `${authError}: ${authErrorDescription}` : authError
+        setSnackbar(`Conectarea băncii a eșuat la autorizare (${detail}). Poți încerca din nou.`)
       }
 
       await loadConnection()

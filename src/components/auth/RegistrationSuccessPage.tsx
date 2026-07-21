@@ -107,7 +107,7 @@ export default function RegistrationSuccessPage() {
             >
               Veti fi contactat pe adresa de email/whatsapp de catre{' '}
               <Box component="span" sx={{ fontWeight: 700, color: TOKENS.ink }}>
-                Silso
+                echipa RIDElance
               </Box>
               , pentru semnare electronica si olograf a documentatiei si verificare.
             </Typography>
