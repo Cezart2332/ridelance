@@ -21,7 +21,7 @@ import { alpha } from '@mui/material/styles'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { documentService } from '../../services/document.service'
+import { documentService, type DocumentSummary } from '../../services/document.service'
 import { pfaService, type PfaCompanyInfo } from '../../services/pfa.service'
 import { stripeService } from '../../services/stripe.service'
 import { getErrorMessage } from '../../utils/errorHandler'
@@ -43,9 +43,92 @@ function redirectToInfiintarePayment() {
   )
 }
 
+/** Documentele pasului PFA care au fost respinse (AI sau admin) și trebuie reîncărcate. */
+const PFA_STEP_CATEGORIES: Record<string, string> = {
+  Buletin: 'Buletin',
+  AtestatSofer: 'Atestat șofer',
+}
+
+function rejectedPfaDocs(documents: DocumentSummary[]): DocumentSummary[] {
+  return Object.keys(PFA_STEP_CATEGORIES).flatMap((category) => {
+    const newest = documents
+      .filter((d) => d.category === category)
+      .sort((a, b) => new Date(b.uploadedAtUtc).getTime() - new Date(a.uploadedAtUtc).getTime())[0]
+    return newest && newest.status.toLowerCase() === 'rejected' ? [newest] : []
+  })
+}
+
+function PfaDocReupload({
+  doc,
+  pfaRegistrationId,
+  onUploaded,
+}: {
+  doc: DocumentSummary
+  pfaRegistrationId?: string | null
+  onUploaded: () => Promise<unknown>
+}) {
+  const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const label = PFA_STEP_CATEGORIES[doc.category] ?? doc.category
+  const reason =
+    doc.aiStatus === 'Failed' && doc.aiSummary
+      ? `respins la verificarea automată: ${doc.aiSummary}`
+      : 'respins de echipa RIDElance.'
+
+  const handleUpload = async () => {
+    if (!file) return
+    setUploading(true)
+    setUploadError(null)
+    try {
+      await documentService.upload(file, doc.category, pfaRegistrationId ?? undefined)
+      setFile(null)
+      await onUploaded()
+    } catch (err) {
+      setUploadError(getErrorMessage(err, 'Nu am putut încărca documentul. Încearcă din nou.'))
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <Stack spacing={1.5} sx={{ textAlign: 'left' }}>
+      <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+        Documentul „{label}” a fost {reason} Încarcă o variantă corectă mai jos.
+      </Alert>
+      {uploadError && (
+        <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+          {uploadError}
+        </Alert>
+      )}
+      <UploadField label={`Reîncarcă: ${label}`} file={file} onFileChange={setFile} disabled={uploading} />
+      <Button
+        variant="contained"
+        disabled={!file || uploading}
+        onClick={handleUpload}
+        sx={{
+          alignSelf: 'flex-start',
+          fontWeight: 700,
+          textTransform: 'none',
+          borderRadius: `${TOKENS.radius.md}px`,
+          px: 3,
+          py: 1,
+          color: '#fff',
+          backgroundColor: TOKENS.primary,
+          '&:hover': { backgroundColor: TOKENS.primaryStrong },
+          '&.Mui-disabled': { backgroundColor: alpha(TOKENS.primary, 0.4), color: '#fff' },
+        }}
+      >
+        {uploading ? 'Se încarcă...' : 'Salvează documentul'}
+      </Button>
+    </Stack>
+  )
+}
+
 export default function OnboardingPfaPage() {
   const navigate = useNavigate()
-  const { state, loading } = useOnboardingState()
+  const { state, documents, loading, refresh } = useOnboardingState()
 
   const [tab, setTab] = useState(0) // 0 = Am PFA, 1 = Nu am PFA
   const [countiesData, setCountiesData] = useState<County[]>([])
@@ -98,7 +181,6 @@ export default function OnboardingPfaPage() {
 
   // "Nu am PFA" form state
   const [buletinFile, setBuletinFile] = useState<File | null>(null)
-  const [atestatFile, setAtestatFile] = useState<File | null>(null)
   const [durataContract, setDurataContract] = useState('3')
   const [strada, setStrada] = useState('')
   const [numar, setNumar] = useState('')
@@ -120,7 +202,7 @@ export default function OnboardingPfaPage() {
   const handleSubmitNuAmPfa = async () => {
     setError(null)
     if (!buletinFile || !strada || !numar || !oras || !judet) {
-      setError('Te rugam sa completezi adresa si sa incarci macar buletinul.')
+      setError('Te rugam sa completezi adresa si sa incarci buletinul.')
       return
     }
     if (!state?.hasPaidInfiintare && !paymentPolicyAccepted) {
@@ -142,12 +224,9 @@ export default function OnboardingPfaPage() {
         isOwner: suntProprietar,
       })
 
-      // 2. Upload Documents
+      // 2. Upload Documents (atestatul de șofer se cere la secțiunea „Autorizație transport”)
       if (buletinFile) {
         await documentService.upload(buletinFile, 'Buletin', pfaId)
-      }
-      if (atestatFile) {
-        await documentService.upload(atestatFile, 'AtestatSofer', pfaId)
       }
 
       // 3. Plata înființării (dacă nu e deja achitată), apoi înapoi la hub
@@ -272,6 +351,7 @@ export default function OnboardingPfaPage() {
 
   // ── Dosar trimis, în validare la admin ──
   if (isPending) {
+    const rejectedDocs = rejectedPfaDocs(documents)
     return (
       <OnboardingLayout state={state} activeKey="Pfa">
         <Paper
@@ -308,6 +388,20 @@ export default function OnboardingPfaPage() {
               ? 'Echipa RIDElance se ocupă de înființarea PFA-ului tău. Te anunțăm imediat ce este gata și se deblochează pasul următor.'
               : 'Echipa RIDElance îți verifică datele PFA-ului. Te anunțăm imediat ce dosarul este validat și se deblochează pasul următor.'}
           </Typography>
+
+          {rejectedDocs.length > 0 && (
+            <Stack spacing={3} sx={{ mt: 3 }}>
+              {rejectedDocs.map((doc) => (
+                <PfaDocReupload
+                  key={doc.id}
+                  doc={doc}
+                  pfaRegistrationId={state?.pfaRegistrationId}
+                  onUploaded={refresh}
+                />
+              ))}
+            </Stack>
+          )}
+
           <Button
             onClick={() => navigate('/onboarding')}
             sx={{ mt: 3, textTransform: 'none', fontWeight: 700, color: TOKENS.primary }}
@@ -536,12 +630,6 @@ export default function OnboardingPfaPage() {
                   label="Buletin"
                   file={buletinFile}
                   onFileChange={setBuletinFile}
-                />
-
-                <UploadField
-                  label="Atestat Sofer"
-                  file={atestatFile}
-                  onFileChange={setAtestatFile}
                 />
 
                 <Box>

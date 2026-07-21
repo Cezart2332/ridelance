@@ -73,7 +73,11 @@ export default function OnboardingDocumentPage() {
   const currentDoc = existingDocs.find((d) => d.status.toLowerCase() !== 'rejected') ?? existingDocs[0] ?? null
 
   const isExpirable = docConfig ? EXPIRABLE_CATEGORIES.has(docConfig.primaryCategory) : false
-  const readOnly = status === 'AwaitingValidation' || status === 'Validated'
+  // Un document respins (de AI sau de admin) poate fi reîncărcat chiar dacă
+  // secțiunea e deja trimisă la validare — altfel userul rămâne blocat.
+  const currentDocRejected = currentDoc?.status.toLowerCase() === 'rejected'
+  const readOnly =
+    status === 'Validated' || (status === 'AwaitingValidation' && !currentDocRejected)
 
   const [file, setFile] = useState<File | null>(null)
   const [expiresAt, setExpiresAt] = useState('')

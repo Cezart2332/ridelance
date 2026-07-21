@@ -14,7 +14,10 @@ export default function RoleRedirect() {
 
   useEffect(() => {
     if (role === 'Client') {
-      stripeService.getSubscriptionStatus().then(setSub)
+      stripeService
+        .getSubscriptionStatus()
+        .then(setSub)
+        .catch(() => setSub(null))
     }
   }, [role])
 

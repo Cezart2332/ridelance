@@ -105,15 +105,22 @@ export default function DashboardPage() {
           userService.getDashboardSummary(),
           stripeService.getSubscriptionStatus(),
         ])
-        if (summary.pfaStatus !== 'Approved' || (sub && !justSubscribed && !canAccessDashboard(sub))) {
+        // Fail-closed: panelul se arată DOAR cu PFA aprobat + secțiunile de onboarding
+        // validate + abonament activ. ?subscribed=1 (întoarcerea din checkout) tolerează
+        // doar webhookul Stripe întârziat al abonamentului — nu și onboardingul nevalidat.
+        const allowed =
+          summary.pfaStatus === 'Approved' &&
+          sub?.onboardingSectionsValidated === true &&
+          (justSubscribed || canAccessDashboard(sub))
+        if (!allowed) {
           navigate(resolveClientPath(sub), { replace: true })
           return
         }
         setPfaStatus(summary.pfaStatus)
         setPfaRegistrationId(summary.pfaRegistrationId ?? null)
       } catch {
-        // If API fails, just show the dashboard anyway to not block the user
-        setPfaStatus('Approved')
+        // Fail-closed: dacă nu putem verifica dreptul de acces, nu arătăm panelul.
+        navigate('/onboarding', { replace: true })
       }
     }
     void boot()
