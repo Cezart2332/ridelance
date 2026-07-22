@@ -19,8 +19,6 @@ import SupervisedUserCircleRoundedIcon from '@mui/icons-material/SupervisedUserC
 import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
-import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
-import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
 import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded'
 import DiscountRoundedIcon from '@mui/icons-material/DiscountRounded'
@@ -616,6 +614,30 @@ export function AdminDashboard() {
           </Box>
         </Paper>
 
+        {/* Onboarding pe secțiuni + documente — aprobarea/respingerea PFA se face
+            din secțiunea 1; validarea ultimei secțiuni finalizează automat contul. */}
+        <OnboardingSectionsPanel
+          pfaId={pfa.id}
+          pfaStatus={pfa.status}
+          documents={documents}
+          statusUpdatingDocId={statusUpdatingDocId}
+          openingId={openingId}
+          downloadingId={downloadingId}
+          onUpdateDocStatus={handleUpdateDocStatus}
+          onOpenDocument={handleOpenDocument}
+          onDownload={handleDownload}
+          onOpenPfaApproveDialog={() => handleOpenStatusDialog('Approved')}
+          onOpenPfaRejectDialog={() => handleOpenStatusDialog('Rejected')}
+          onSnackbar={(message, severity) => setSnackbar({ open: true, message, severity })}
+          refreshKey={onboardingRefreshKey}
+        />
+        {docsLoading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+            <CircularProgress size={24} sx={{ color: TOKENS.primary }} />
+          </Box>
+        )}
+        {docsError && <Alert severity="error">{docsError}</Alert>}
+
         <Paper elevation={0} sx={{ p: 3, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 850, color: TOKENS.ink, mb: 2 }}>
             Date completate în formular
@@ -640,28 +662,6 @@ export function AdminDashboard() {
             ))}
           </Box>
         </Paper>
-
-        {/* Approve / Reject actions */}
-        {isPending && (
-          <Stack direction="row" spacing={2}>
-            <Button
-              variant="contained"
-              startIcon={<CheckCircleRoundedIcon />}
-              onClick={() => handleOpenStatusDialog('Approved')}
-              sx={{ fontWeight: 700, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: 'none' }}
-            >
-              Aprobă
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<CancelRoundedIcon />}
-              onClick={() => handleOpenStatusDialog('Rejected')}
-              sx={{ fontWeight: 700, borderColor: '#ef4444', color: '#ef4444', '&:hover': { bgcolor: alpha('#ef4444', 0.06), borderColor: '#dc2626' } }}
-            >
-              Respinge
-            </Button>
-          </Stack>
-        )}
 
         {!isPending && (
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
@@ -753,29 +753,6 @@ export function AdminDashboard() {
             </Typography>
           </Paper>
         </Box>
-
-        {/* Onboarding pe secțiuni + documente */}
-        <OnboardingSectionsPanel
-          pfaId={pfa.id}
-          pfaStatus={pfa.status}
-          documents={documents}
-          statusUpdatingDocId={statusUpdatingDocId}
-          openingId={openingId}
-          downloadingId={downloadingId}
-          onUpdateDocStatus={handleUpdateDocStatus}
-          onOpenDocument={handleOpenDocument}
-          onDownload={handleDownload}
-          onOpenPfaApproveDialog={() => handleOpenStatusDialog('Approved')}
-          onOpenPfaRejectDialog={() => handleOpenStatusDialog('Rejected')}
-          onSnackbar={(message, severity) => setSnackbar({ open: true, message, severity })}
-          refreshKey={onboardingRefreshKey}
-        />
-        {docsLoading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-            <CircularProgress size={24} sx={{ color: TOKENS.primary }} />
-          </Box>
-        )}
-        {docsError && <Alert severity="error">{docsError}</Alert>}
 
         {/* Status update confirm dialog */}
         <Dialog open={statusDialog.open} onClose={() => setStatusDialog({ open: false, action: null })} maxWidth="xs" fullWidth>

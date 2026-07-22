@@ -22,6 +22,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { EXPIRABLE_CATEGORIES, getOnboardingSection } from '../../constants/documentSections'
 import { documentService, isAiPending, type DocumentSummary } from '../../services/document.service'
 import { getErrorMessage } from '../../utils/errorHandler'
+import { buildUploadFile } from '../../utils/imagesToPdf'
 import OnboardingLayout from './OnboardingLayout'
 import { TOKENS, inputSx } from './onboardingTheme'
 import { UploadField } from './UploadField'
@@ -79,25 +80,30 @@ export default function OnboardingDocumentPage() {
   const readOnly =
     status === 'Validated' || (status === 'AwaitingValidation' && !currentDocRejected)
 
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [expiresAt, setExpiresAt] = useState('')
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [snackbar, setSnackbar] = useState<string | null>(null)
 
   const handleUpload = async () => {
-    if (!docConfig || !file) return
+    if (!docConfig || files.length === 0) return
     setUploading(true)
     setError(null)
     try {
+      const uploadFile = await buildUploadFile(files, docConfig.title)
+      if (uploadFile.size > 10 * 1024 * 1024) {
+        setError('Documentul rezultat depășește 10 MB. Încarcă mai puține imagini sau imagini mai mici.')
+        return
+      }
       await documentService.upload(
-        file,
+        uploadFile,
         docConfig.primaryCategory,
         state?.pfaRegistrationId ?? undefined,
         undefined,
         isExpirable && expiresAt ? new Date(expiresAt).toISOString() : undefined,
       )
-      setFile(null)
+      setFiles([])
       setExpiresAt('')
       setSnackbar('Documentul a fost încărcat!')
       await refresh()
@@ -229,9 +235,9 @@ export default function OnboardingDocumentPage() {
 
               <UploadField
                 label={currentDoc ? 'Încarcă o versiune nouă' : 'Încarcă documentul'}
-                placeholder="PDF, JPG sau PNG (max. 10 MB)"
-                file={file}
-                onFileChange={setFile}
+                placeholder="PDF sau una ori mai multe imagini JPG/PNG (max. 10 MB)"
+                files={files}
+                onFilesChange={setFiles}
                 disabled={uploading}
               />
 
@@ -257,7 +263,7 @@ export default function OnboardingDocumentPage() {
               <Button
                 variant="contained"
                 size="large"
-                disabled={!file || uploading}
+                disabled={files.length === 0 || uploading}
                 onClick={handleUpload}
                 sx={{
                   py: 1.3,

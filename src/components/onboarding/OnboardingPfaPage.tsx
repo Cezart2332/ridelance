@@ -25,6 +25,7 @@ import { documentService, type DocumentSummary } from '../../services/document.s
 import { pfaService, type PfaCompanyInfo } from '../../services/pfa.service'
 import { stripeService } from '../../services/stripe.service'
 import { getErrorMessage } from '../../utils/errorHandler'
+import { buildUploadFile } from '../../utils/imagesToPdf'
 import { validateRomanianCIF } from '../../utils/validation'
 import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
 import OnboardingLayout from './OnboardingLayout'
@@ -67,7 +68,7 @@ function PfaDocReupload({
   pfaRegistrationId?: string | null
   onUploaded: () => Promise<unknown>
 }) {
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
@@ -78,12 +79,13 @@ function PfaDocReupload({
       : 'respins de echipa RIDElance.'
 
   const handleUpload = async () => {
-    if (!file) return
+    if (files.length === 0) return
     setUploading(true)
     setUploadError(null)
     try {
-      await documentService.upload(file, doc.category, pfaRegistrationId ?? undefined)
-      setFile(null)
+      const uploadFile = await buildUploadFile(files, label)
+      await documentService.upload(uploadFile, doc.category, pfaRegistrationId ?? undefined)
+      setFiles([])
       await onUploaded()
     } catch (err) {
       setUploadError(getErrorMessage(err, 'Nu am putut încărca documentul. Încearcă din nou.'))
@@ -102,10 +104,10 @@ function PfaDocReupload({
           {uploadError}
         </Alert>
       )}
-      <UploadField label={`Reîncarcă: ${label}`} file={file} onFileChange={setFile} disabled={uploading} />
+      <UploadField label={`Reîncarcă: ${label}`} files={files} onFilesChange={setFiles} disabled={uploading} />
       <Button
         variant="contained"
-        disabled={!file || uploading}
+        disabled={files.length === 0 || uploading}
         onClick={handleUpload}
         sx={{
           alignSelf: 'flex-start',
@@ -180,7 +182,7 @@ export default function OnboardingPfaPage() {
   }
 
   // "Nu am PFA" form state
-  const [buletinFile, setBuletinFile] = useState<File | null>(null)
+  const [buletinFiles, setBuletinFiles] = useState<File[]>([])
   const [durataContract, setDurataContract] = useState('3')
   const [strada, setStrada] = useState('')
   const [numar, setNumar] = useState('')
@@ -201,7 +203,7 @@ export default function OnboardingPfaPage() {
 
   const handleSubmitNuAmPfa = async () => {
     setError(null)
-    if (!buletinFile || !strada || !numar || !oras || !judet) {
+    if (buletinFiles.length === 0 || !strada || !numar || !oras || !judet) {
       setError('Te rugam sa completezi adresa si sa incarci buletinul.')
       return
     }
@@ -225,8 +227,9 @@ export default function OnboardingPfaPage() {
       })
 
       // 2. Upload Documents (atestatul de șofer se cere la secțiunea „Autorizație transport”)
-      if (buletinFile) {
-        await documentService.upload(buletinFile, 'Buletin', pfaId)
+      if (buletinFiles.length > 0) {
+        const buletin = await buildUploadFile(buletinFiles, 'Buletin')
+        await documentService.upload(buletin, 'Buletin', pfaId)
       }
 
       // 3. Plata înființării (dacă nu e deja achitată), apoi înapoi la hub
@@ -628,8 +631,8 @@ export default function OnboardingPfaPage() {
               <Stack spacing={2.5}>
                 <UploadField
                   label="Buletin"
-                  file={buletinFile}
-                  onFileChange={setBuletinFile}
+                  files={buletinFiles}
+                  onFilesChange={setBuletinFiles}
                 />
 
                 <Box>
