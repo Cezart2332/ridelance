@@ -69,7 +69,6 @@ export interface PfaPlatformAccount {
   email: string | null;
   phone: string | null;
   fullName: string | null;
-  hasPassword: boolean;
   status: string;
   configuredAtUtc: string | null;
   updatedAtUtc: string | null;
@@ -111,7 +110,6 @@ export interface UpsertPfaPlatformAccountItem {
   email?: string | null;
   phone?: string | null;
   fullName?: string | null;
-  password?: string | null;
   status?: string | null;
 }
 

@@ -35,6 +35,12 @@ const OnboardingHubPage = lazyWithRetry(() => import('./components/onboarding/On
 const OnboardingPfaPage = lazyWithRetry(() => import('./components/onboarding/OnboardingPfaPage'))
 const OnboardingSectionPage = lazyWithRetry(() => import('./components/onboarding/OnboardingSectionPage'))
 const OnboardingDocumentPage = lazyWithRetry(() => import('./components/onboarding/OnboardingDocumentPage'))
+const OnboardingEligibilityPage = lazyWithRetry(() => import('./components/onboarding/OnboardingEligibilityPage'))
+const OnboardingConsultoPage = lazyWithRetry(() => import('./components/onboarding/OnboardingConsultoPage'))
+const OnboardingStep2Page = lazyWithRetry(() => import('./components/onboarding/OnboardingStep2Page'))
+const OnboardingArrPage = lazyWithRetry(() => import('./components/onboarding/OnboardingArrPage'))
+const OnboardingPlatformsPage = lazyWithRetry(() => import('./components/onboarding/OnboardingPlatformsPage'))
+const OnboardingVehiclePage = lazyWithRetry(() => import('./components/onboarding/OnboardingVehiclePage'))
 
 function App() {
   return (
@@ -55,7 +61,13 @@ function App() {
             <Route path="/app" element={<RoleRedirect />} />
             <Route path="/app/pending-access" element={<PendingAccessPage />} />
             <Route path="/onboarding" element={<OnboardingHubPage />} />
+            <Route path="/onboarding/eligibility" element={<OnboardingEligibilityPage />} />
             <Route path="/onboarding/pfa" element={<OnboardingPfaPage />} />
+            <Route path="/onboarding/pfa/consulto" element={<OnboardingConsultoPage />} />
+            <Route path="/onboarding/step2" element={<OnboardingStep2Page />} />
+            <Route path="/onboarding/arr" element={<OnboardingArrPage />} />
+            <Route path="/onboarding/platforms" element={<OnboardingPlatformsPage />} />
+            <Route path="/onboarding/vehicle" element={<OnboardingVehiclePage />} />
             <Route path="/onboarding/sections/:sectionKey" element={<OnboardingSectionPage />} />
             <Route path="/onboarding/sections/:sectionKey/documents/:docId" element={<OnboardingDocumentPage />} />
             <Route path="/app/dashboard/*" element={<DashboardPage />} />

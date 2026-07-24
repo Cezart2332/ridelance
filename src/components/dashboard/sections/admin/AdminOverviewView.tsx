@@ -548,8 +548,9 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                 <SectionTitle title="PFA-uri și blocaje" subtitle="Volum activ și situații care cer follow-up." />
                 <Stack spacing={1.4} sx={{ mt: 2 }}>
                   {[
-                    ['Înscrise total', data.pfaStats.totalEnrolled.toLocaleString('ro-RO')],
+                    ['Înrolați (onboarding complet)', data.pfaStats.totalEnrolled.toLocaleString('ro-RO')],
                     ['Active', data.pfaStats.active.toLocaleString('ro-RO')],
+                    ['În onboarding', data.pfaStats.inOnboarding.toLocaleString('ro-RO')],
                     ['Cereri noi', data.pfaStats.newRequests.toLocaleString('ro-RO')],
                     ['Blocaj client', data.pfaStats.clientBlocked.toLocaleString('ro-RO')],
                     ['Plată eșuată', data.pfaStats.failedPayment.toLocaleString('ro-RO')],

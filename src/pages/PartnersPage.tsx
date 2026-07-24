@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import {
   Box,
   Button,
@@ -6,7 +6,6 @@ import {
   Chip,
   Container,
   Divider,
-  LinearProgress,
   Paper,
   Stack,
   Typography,
@@ -16,8 +15,6 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import QrCode2RoundedIcon from '@mui/icons-material/QrCode2Rounded'
-import AssignmentIndRoundedIcon from '@mui/icons-material/AssignmentIndRounded'
-import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
 import { pageFrameSx } from '../constants/layout'
@@ -27,27 +24,10 @@ import {
   BCR_OFFERS,
   BCR_ONBOARDING_URL,
   BCR_QR_CODES,
-  getOfferTabBySlug,
   getPartnerBySlug,
-  offerTabs,
   partners,
-  type OfferTab,
   type Partner,
 } from '../data/partners'
-import { homeSec6 } from '../data/constants'
-import {
-  ServicePurchaseModal,
-  type ServicePurchaseTarget,
-} from '../components/services/ServicePurchaseModal'
-import type { ServiceKey } from '../services/stripe.service'
-import { carsService, type Car } from '../services/cars.service'
-import CarCard from '../components/dashboard/sections/cars/CarCard'
-import RentFormModal from '../components/dashboard/sections/cars/RentFormModal'
-
-const offerTabIcons: Record<string, typeof AssignmentIndRoundedIcon> = {
-  pfa: AssignmentIndRoundedIcon,
-  'inchiriere-masini': DirectionsCarFilledRoundedIcon,
-}
 
 const ctaButtonSx = {
   px: 4,
@@ -66,16 +46,7 @@ const ctaButtonSx = {
   },
 } as const
 
-interface PartnerTabItem {
-  slug: string
-  name: string
-  image?: string
-}
-
-const tabItems: PartnerTabItem[] = [
-  ...partners.map(({ slug, name, image }) => ({ slug, name, image })),
-  ...offerTabs.map(({ slug, name }) => ({ slug, name })),
-]
+const tabItems = partners.map(({ slug, name, image }) => ({ slug, name, image }))
 
 function PartnerTabs({ activeSlug }: { activeSlug: string }) {
   const navigate = useNavigate()
@@ -104,7 +75,6 @@ function PartnerTabs({ activeSlug }: { activeSlug: string }) {
       >
         {tabItems.map((tab) => {
           const isActive = tab.slug === activeSlug
-          const TabIcon = tab.image ? undefined : offerTabIcons[tab.slug]
           return (
             <ButtonBase
               key={tab.slug}
@@ -126,35 +96,21 @@ function PartnerTabs({ activeSlug }: { activeSlug: string }) {
                 },
               }}
             >
-              {tab.image ? (
-                <Box
-                  component="img"
-                  src={tab.image}
-                  alt=""
-                  className="partner-tab-logo"
-                  sx={{
-                    height: 22,
-                    width: 'auto',
-                    maxWidth: 44,
-                    objectFit: 'contain',
-                    opacity: isActive ? 1 : 0.55,
-                    filter: isActive ? 'grayscale(0)' : 'grayscale(1)',
-                    transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-                  }}
-                />
-              ) : (
-                TabIcon && (
-                  <TabIcon
-                    className="partner-tab-logo"
-                    sx={{
-                      fontSize: 22,
-                      color: isActive ? TOKENS.primaryStrong : TOKENS.textMuted,
-                      opacity: isActive ? 1 : 0.7,
-                      transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-                    }}
-                  />
-                )
-              )}
+              <Box
+                component="img"
+                src={tab.image}
+                alt=""
+                className="partner-tab-logo"
+                sx={{
+                  height: 22,
+                  width: 'auto',
+                  maxWidth: 44,
+                  objectFit: 'contain',
+                  opacity: isActive ? 1 : 0.55,
+                  filter: isActive ? 'grayscale(0)' : 'grayscale(1)',
+                  transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
+                }}
+              />
               <Typography
                 noWrap
                 className="partner-tab-label"
@@ -328,224 +284,6 @@ function BcrPanelContent() {
   )
 }
 
-function PfaPanelContent() {
-  const [purchaseTarget, setPurchaseTarget] = useState<ServicePurchaseTarget | null>(null)
-
-  const openPurchase = (serviceKey: ServiceKey, title: string, price: string) => {
-    setPurchaseTarget({ key: serviceKey, title, price })
-  }
-
-  return (
-    <Stack spacing={4}>
-      <Typography sx={{ color: TOKENS.ink, fontSize: '1rem', lineHeight: 1.85 }}>
-        Prin RIDElance îți deschizi PFA-ul și îl pregătești pentru ridesharing fără drumuri și fără
-        birocrație: alegi serviciul de care ai nevoie, completezi datele în platformă, iar echipa
-        noastră se ocupă de restul.
-      </Typography>
-
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' },
-          gap: 3,
-          alignItems: 'stretch',
-        }}
-      >
-        {homeSec6.map((svc) => (
-          <Box
-            key={svc.serviceKey}
-            sx={{
-              p: { xs: 2.5, md: 3 },
-              borderRadius: TOKENS.radius.lg,
-              border: `1px solid ${TOKENS.border}`,
-              backgroundColor: TOKENS.paper,
-              boxShadow: TOKENS.shadow.sm,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1.5,
-              transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-              '&:hover': {
-                boxShadow: TOKENS.shadow.md,
-                borderColor: alpha(TOKENS.primary, 0.4),
-              },
-            }}
-          >
-            <Stack
-              direction="row"
-              sx={{ alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}
-            >
-              <Typography sx={{ fontWeight: 850, fontSize: '1.12rem', color: TOKENS.ink }}>
-                {svc.title}
-              </Typography>
-              <Box sx={{ textAlign: 'right' }}>
-                <Typography
-                  sx={{ color: TOKENS.primaryStrong, fontWeight: 800, fontSize: '1.1rem', lineHeight: 1.2 }}
-                >
-                  {svc.price}
-                </Typography>
-                {'priceNote' in svc && svc.priceNote && (
-                  <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.7rem', mt: 0.3, lineHeight: 1.3 }}>
-                    {svc.priceNote}
-                  </Typography>
-                )}
-              </Box>
-            </Stack>
-            <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', lineHeight: 1.65, flexGrow: 1 }}>
-              {svc.desc}
-            </Typography>
-            <Button
-              variant="contained"
-              onClick={() => openPurchase(svc.serviceKey, svc.title, svc.price)}
-              sx={{ ...ctaButtonSx, alignSelf: 'flex-start', px: 3, py: 0.9, fontSize: '0.92rem' }}
-            >
-              {svc.cta}
-            </Button>
-          </Box>
-        ))}
-      </Box>
-
-      <ServicePurchaseModal
-        open={purchaseTarget !== null}
-        service={purchaseTarget}
-        onClose={() => setPurchaseTarget(null)}
-      />
-    </Stack>
-  )
-}
-
-function CarsRentalPanelContent() {
-  const navigate = useNavigate()
-  const [cars, setCars] = useState<Car[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedCar, setSelectedCar] = useState<Car | null>(null)
-  const [modalOpen, setModalOpen] = useState(false)
-
-  const fetchCars = useCallback(async () => {
-    setLoading(true)
-    try {
-      const data = await carsService.getAll()
-      setCars(data)
-    } catch (error) {
-      console.error('Error fetching cars:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchCars()
-  }, [fetchCars])
-
-  const handleRentClick = (car: Car) => {
-    setSelectedCar(car)
-    setModalOpen(true)
-  }
-
-  const visibleCars = cars.slice(0, 6)
-
-  return (
-    <Stack spacing={4}>
-      <Typography sx={{ color: TOKENS.ink, fontSize: '1rem', lineHeight: 1.85 }}>
-        Flota RIDElance îți pune la dispoziție mașini pregătite pentru Uber și Bolt, cu închiriere
-        săptămânală sau opțiuni de tip „la rămânere”. Alegi mașina, trimiți cererea online și ești
-        gata de curse.
-      </Typography>
-
-      {loading && (
-        <LinearProgress
-          sx={{ borderRadius: 2, height: 6, bgcolor: alpha(TOKENS.primary, 0.1) }}
-        />
-      )}
-
-      {visibleCars.length > 0 ? (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
-            gap: 3,
-          }}
-        >
-          {visibleCars.map((car) => (
-            <CarCard key={car.id} car={car} onRentClick={handleRentClick} />
-          ))}
-        </Box>
-      ) : (
-        !loading && (
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.95rem' }}>
-            Momentan nu sunt mașini disponibile. Revino în curând sau contactează-ne pentru detalii.
-          </Typography>
-        )
-      )}
-
-      <Button
-        variant="contained"
-        onClick={() => navigate('/masini')}
-        sx={{ ...ctaButtonSx, alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
-      >
-        Vezi toate mașinile
-      </Button>
-
-      <RentFormModal open={modalOpen} onClose={() => setModalOpen(false)} car={selectedCar} />
-    </Stack>
-  )
-}
-
-function OfferPanel({ tab }: { tab: OfferTab }) {
-  const TabIcon = offerTabIcons[tab.slug]
-
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        borderRadius: TOKENS.radius.xl,
-        border: `1px solid ${TOKENS.border}`,
-        boxShadow: TOKENS.shadow.md,
-        overflow: 'hidden',
-      }}
-    >
-      <Box
-        sx={{
-          p: { xs: 2.5, md: 3.5 },
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: { xs: 'flex-start', sm: 'center' },
-          gap: 2.5,
-          background: `linear-gradient(135deg, ${alpha(TOKENS.primary, 0.08)} 0%, ${alpha(TOKENS.primary, 0.02)} 60%)`,
-        }}
-      >
-        <Box
-          sx={{
-            width: 120,
-            height: 72,
-            flexShrink: 0,
-            display: 'grid',
-            placeItems: 'center',
-            borderRadius: TOKENS.radius.lg,
-            backgroundColor: TOKENS.paper,
-            border: `1px solid ${TOKENS.border}`,
-          }}
-        >
-          {TabIcon && <TabIcon sx={{ fontSize: 36, color: TOKENS.primaryStrong }} />}
-        </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontWeight: 850, fontSize: { xs: '1.35rem', md: '1.6rem' }, color: TOKENS.ink }}>
-            {tab.name}
-          </Typography>
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.4 }}>
-            {tab.tagline}
-          </Typography>
-        </Box>
-      </Box>
-
-      <Divider sx={{ borderColor: TOKENS.border }} />
-
-      <Box sx={{ p: { xs: 2.5, md: 3.5 } }}>
-        {tab.slug === 'pfa' ? <PfaPanelContent /> : <CarsRentalPanelContent />}
-      </Box>
-    </Paper>
-  )
-}
-
 function PartnerPanel({ partner }: { partner: Partner }) {
   return (
     <Paper
@@ -649,9 +387,8 @@ function PartnerPanel({ partner }: { partner: Partner }) {
 export function PartnersPage() {
   const { slug } = useParams()
   const partner = slug ? getPartnerBySlug(slug) : partners[0]
-  const offerTab = slug && !partner ? getOfferTabBySlug(slug) : undefined
 
-  if (!partner && !offerTab) {
+  if (!partner) {
     return <Navigate to="/parteneri" replace />
   }
 
@@ -664,8 +401,8 @@ export function PartnersPage() {
             subtitle="Colaborăm cu parteneri care aduc beneficii concrete șoferilor RIDElance. Alege un partener pentru detalii și oferte."
           />
 
-          <PartnerTabs activeSlug={partner?.slug ?? offerTab!.slug} />
-          {partner ? <PartnerPanel partner={partner} /> : <OfferPanel tab={offerTab!} />}
+          <PartnerTabs activeSlug={partner.slug} />
+          <PartnerPanel partner={partner} />
         </Stack>
       </Container>
     </Box>

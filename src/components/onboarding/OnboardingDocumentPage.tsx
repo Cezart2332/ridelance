@@ -23,6 +23,7 @@ import { EXPIRABLE_CATEGORIES, getOnboardingSection } from '../../constants/docu
 import { documentService, isAiPending, type DocumentSummary } from '../../services/document.service'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { buildUploadFile } from '../../utils/imagesToPdf'
+import ExtractedFieldsPanel from './ExtractedFieldsPanel'
 import OnboardingLayout from './OnboardingLayout'
 import { TOKENS, inputSx } from './onboardingTheme'
 import { UploadField } from './UploadField'
@@ -207,6 +208,11 @@ export default function OnboardingDocumentPage() {
               ? `Documentul a fost respins la verificarea automată: ${currentDoc.aiSummary} Încarcă o variantă corectată mai jos.`
               : 'Documentul a fost respins. Încarcă o variantă corectată mai jos.'}
           </Alert>
+        )}
+
+        {/* Datele precompletate din OCR — confirmare/corectare de către client */}
+        {currentDoc && currentDoc.status.toLowerCase() !== 'rejected' && (
+          <ExtractedFieldsPanel documentId={currentDoc.id} readOnly={readOnly} />
         )}
 
         {/* Upload */}

@@ -20,6 +20,34 @@ export interface DocumentSummary {
 export const isAiPending = (doc: DocumentSummary) =>
   doc.aiStatus === 'Queued' || doc.aiStatus === 'Processing';
 
+// --- Câmpuri extrase prin OCR (precompletare + confirmare) ---
+export type ExtractedFieldReviewState =
+  | 'Auto'
+  | 'NeedsUserConfirmation'
+  | 'NeedsManualReview'
+  | 'Confirmed';
+
+export interface ExtractedField {
+  id: string;
+  fieldKey: string;
+  aiValue: string | null;
+  confirmedValue: string | null;
+  effectiveValue: string | null;
+  effectiveConfidence: number;
+  validatorPassed: boolean;
+  isSensitive: boolean;
+  reviewState: ExtractedFieldReviewState;
+  confirmedSource: 'None' | 'User' | 'Admin';
+}
+
+export interface ExtractedFieldsResponse {
+  documentId: string;
+  category: string;
+  overallConfidence: number | null;
+  requiresManualReview: boolean;
+  fields: ExtractedField[];
+}
+
 export const documentService = {
   upload: async (file: File, category: string, pfaRegistrationId?: string, userId?: string, expiresAt?: string) => {
     const formData = new FormData();
@@ -97,5 +125,20 @@ export const documentService = {
   /** Update the status of a document (Admin/Contabil only) */
   updateStatus: async (id: string, status: string): Promise<void> => {
     await api.put(`/documents/${id}/status`, { status });
+  },
+
+  /** Câmpurile extrase prin OCR pentru un document (ecran de confirmare). */
+  getExtractedFields: async (id: string): Promise<ExtractedFieldsResponse> => {
+    const response = await api.get<ExtractedFieldsResponse>(`/documents/${id}/extracted-fields`);
+    return response.data;
+  },
+
+  /** Clientul confirmă/corectează valorile precompletate. */
+  confirmExtractedFields: async (
+    id: string,
+    fields: { fieldKey: string; value: string | null }[],
+  ): Promise<ExtractedFieldsResponse> => {
+    const response = await api.post<ExtractedFieldsResponse>(`/documents/${id}/extracted-fields/confirm`, { fields });
+    return response.data;
   },
 };

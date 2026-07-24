@@ -93,7 +93,6 @@ export function ProfileTab() {
           email: driverDrafts[provider].email,
           phone: driverDrafts[provider].phone,
           fullName: driverDrafts[provider].fullName,
-          password: '',
           status: 'Configured',
         })),
       )
@@ -435,7 +434,6 @@ export function ProfileTab() {
                     const rows = [
                       { label: 'Email', value: account?.email ?? '—' },
                       { label: 'Nr telefon', value: account?.phone ?? '—' },
-                      { label: 'Parolă', value: account?.hasPassword ? '********' : '—' },
                     ]
                     return (
                       <Paper

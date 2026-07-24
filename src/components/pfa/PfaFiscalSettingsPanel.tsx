@@ -310,7 +310,6 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
           email: account?.email ?? '',
           phone: account?.phone ?? '',
           fullName: account?.fullName ?? '',
-          password: '',
           status: account?.status ?? (kind === 'Fleet' ? 'NotConfigured' : 'Configured'),
         }
       })
@@ -424,11 +423,6 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
       const updated = await pfaService.updatePlatformAccounts(pfaId, Object.values(accounts))
       setSettings((current) => current ? { ...current, platformAccounts: updated } : current)
       setSnackbar({ open: true, message: 'Conturile au fost salvate.', severity: 'success' })
-      setAccounts((prev) => {
-        const next = { ...prev }
-        Object.keys(next).forEach((key) => { next[key] = { ...next[key], password: '' } })
-        return next
-      })
     } catch (err) {
       setSnackbar({
         open: true,
@@ -615,7 +609,6 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
             <TextField size="small" fullWidth label="Nume Prenume" value={draft?.fullName ?? ''} onChange={(e) => updateAccount(provider, kind, { fullName: e.target.value })} sx={inputSx} />
             {kind === 'Fleet' && (
               <>
-                <TextField size="small" fullWidth label={account?.hasPassword ? 'Parolă nouă (opțional)' : 'Parolă'} type="password" value={draft?.password ?? ''} onChange={(e) => updateAccount(provider, kind, { password: e.target.value })} sx={inputSx} />
                 <TextField select size="small" fullWidth label="Status" value={draft?.status ?? 'NotConfigured'} onChange={(e) => updateAccount(provider, kind, { status: e.target.value })} sx={inputSx}>
                   {fleetStatusOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
                 </TextField>
@@ -630,7 +623,6 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
             <SettingRow label="Email" value={account?.email ?? '—'} />
             <SettingRow label="Nr telefon" value={account?.phone ?? '—'} />
             <SettingRow label="Nume Prenume" value={account?.fullName ?? '—'} />
-            {kind === 'Fleet' && <SettingRow label="Parolă" value={account?.hasPassword ? '********' : '—'} />}
           </Stack>
         )}
       </Box>

@@ -101,6 +101,7 @@ export interface AdminOverviewData {
     clientBlocked: number
     inactive: number
     failedPayment: number
+    inOnboarding: number
   }
   enrolledPfas: AdminOverviewPfaCard[]
 }
@@ -418,6 +419,7 @@ async function buildFallbackOverview(filters: AdminOverviewFilters): Promise<Adm
       clientBlocked: 0,
       inactive: pfas.filter((pfa) => normalizeStatus(pfa.accountStatus ?? pfa.status) === 'Inactiv').length,
       failedPayment: pfas.filter((pfa) => pfa.subscriptionStatus?.toLowerCase() === 'pastdue').length,
+      inOnboarding: pfas.filter((pfa) => (pfa.accountStatus ?? '').toLowerCase().includes('onboarding')).length,
     },
     enrolledPfas,
   }

@@ -115,28 +115,3 @@ export const partners: Partner[] = [
 
 export const getPartnerBySlug = (slug: string) =>
   partners.find((partner) => partner.slug === slug)
-
-/** Taburi RIDElance afișate în bara de pe pagina Parteneri, alături de parteneri. */
-export interface OfferTab {
-  slug: string
-  name: string
-  tagline: string
-}
-
-export const offerTabs: OfferTab[] = [
-  {
-    slug: 'pfa',
-    name: 'PFA',
-    tagline:
-      'Înființare PFA, găzduire sediu social și pachete de start pentru ridesharing, direct prin RIDElance.',
-  },
-  {
-    slug: 'inchiriere-masini',
-    name: 'Închiriere Mașini',
-    tagline:
-      'Mașini pregătite pentru Uber și Bolt: închiriere săptămânală sau „la rămânere”, cu aplicare 100% online.',
-  },
-]
-
-export const getOfferTabBySlug = (slug: string) =>
-  offerTabs.find((tab) => tab.slug === slug)
