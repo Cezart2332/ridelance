@@ -11,13 +11,11 @@ import {
   Radio,
   RadioGroup,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import type { ExtractedField } from '../../services/document.service'
 import {
   onboardingService,
   type EligibilityProfile,
@@ -26,7 +24,7 @@ import {
 import { getErrorMessage } from '../../utils/errorHandler'
 import { DocumentFirstUpload } from './DocumentFirstUpload'
 import OnboardingLayout from './OnboardingLayout'
-import { TOKENS, inputSx } from './onboardingTheme'
+import { TOKENS } from './onboardingTheme'
 import { useOnboardingState } from './useOnboardingState'
 
 function statusVisual(status: EligibilityStatus): { color: string; bg: string; label: string } {
@@ -49,26 +47,7 @@ export default function OnboardingEligibilityPage() {
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<EligibilityProfile | null>(null)
 
-  const [dateOfBirth, setDateOfBirth] = useState('')
-  const [categoryBObtainedOn, setCategoryBObtainedOn] = useState('')
-  const [drivingCategories, setDrivingCategories] = useState('')
-  const [drivingLicenceExpiresOn, setDrivingLicenceExpiresOn] = useState('')
   const [hasDriverCertificate, setHasDriverCertificate] = useState<'yes' | 'no'>('yes')
-  const [driverCertificateExpiresOn, setDriverCertificateExpiresOn] = useState('')
-
-  // Precompletează câmpurile din valorile citite de OCR (fără a suprascrie ce a editat userul).
-  const applyExtracted = (fields: ExtractedField[]) => {
-    const val = (key: string) => fields.find((f) => f.fieldKey === key)?.effectiveValue ?? ''
-    const fill = (setter: (u: (prev: string) => string) => void, key: string) => {
-      const v = val(key)
-      if (v) setter((prev) => prev || v)
-    }
-    fill(setDateOfBirth, 'date_of_birth')
-    fill(setCategoryBObtainedOn, 'category_b_obtained_on')
-    fill(setDrivingCategories, 'driving_categories')
-    fill(setDrivingLicenceExpiresOn, 'licence_expires_on')
-    fill(setDriverCertificateExpiresOn, 'atestat_expires_on')
-  }
 
   useEffect(() => {
     let active = true
@@ -77,12 +56,7 @@ export default function OnboardingEligibilityPage() {
       .then((p) => {
         if (!active || !p) return
         setResult(p)
-        setDateOfBirth(p.dateOfBirth ?? '')
-        setCategoryBObtainedOn(p.categoryBObtainedOn ?? '')
-        setDrivingCategories(p.drivingCategories ?? '')
-        setDrivingLicenceExpiresOn(p.drivingLicenceExpiresOn ?? '')
         setHasDriverCertificate(p.hasDriverCertificate ? 'yes' : 'no')
-        setDriverCertificateExpiresOn(p.driverCertificateExpiresOn ?? '')
       })
       .catch(() => {})
       .finally(() => active && setLoading(false))
@@ -95,14 +69,14 @@ export default function OnboardingEligibilityPage() {
     setSaving(true)
     setError(null)
     try {
+      // Trimitem doar răspunsul la întrebare — restul datelor se citesc din documente (OCR).
       const profile = await onboardingService.submitEligibility({
-        dateOfBirth: dateOfBirth || null,
-        categoryBObtainedOn: categoryBObtainedOn || null,
-        drivingCategories: drivingCategories || null,
-        drivingLicenceExpiresOn: drivingLicenceExpiresOn || null,
+        dateOfBirth: null,
+        categoryBObtainedOn: null,
+        drivingCategories: null,
+        drivingLicenceExpiresOn: null,
         hasDriverCertificate: hasDriverCertificate === 'yes',
-        driverCertificateExpiresOn:
-          hasDriverCertificate === 'yes' ? driverCertificateExpiresOn || null : null,
+        driverCertificateExpiresOn: null,
       })
       setResult(profile)
       navigate('/onboarding')
@@ -133,8 +107,9 @@ export default function OnboardingEligibilityPage() {
             Eligibilitate
           </Typography>
           <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.5 }}>
-            Încarcă documentele — datele se citesc automat și le confirmi mai jos. Verificăm vârsta
-            de minimum 21 de ani, categoria B de cel puțin 2 ani și atestatul valabil.
+            Încarcă documentele și trimite-le. Datele se citesc automat din ele și le verifică
+            echipa RIDElance — tu nu trebuie să completezi nimic. Dacă un document nu e bun,
+            primești email cu motivul și îl reîncarci.
           </Typography>
         </Box>
 
@@ -169,7 +144,7 @@ export default function OnboardingEligibilityPage() {
           </Alert>
         )}
 
-        {/* Document-first: întâi documentele, apoi confirmarea datelor citite */}
+        {/* Document-first: userul doar încarcă; datele se citesc pe backend (OCR) */}
         <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
           <Typography sx={{ fontWeight: 750, fontSize: '1.02rem', color: TOKENS.ink, mb: 2 }}>
             Documentele tale
@@ -181,7 +156,6 @@ export default function OnboardingEligibilityPage() {
               hint="Citim data nașterii pentru verificarea vârstei. Nu stocăm CNP-ul."
               documents={documents}
               pfaRegistrationId={state?.pfaRegistrationId}
-              onExtracted={applyExtracted}
               onUploaded={refresh}
             />
             <DocumentFirstUpload
@@ -190,7 +164,6 @@ export default function OnboardingEligibilityPage() {
               hint="Citim data obținerii categoriei B și data de expirare."
               documents={documents}
               pfaRegistrationId={state?.pfaRegistrationId}
-              onExtracted={applyExtracted}
               onUploaded={refresh}
             />
             {hasDriverCertificate === 'yes' && (
@@ -200,7 +173,6 @@ export default function OnboardingEligibilityPage() {
                 hint="Citim data de expirare a atestatului."
                 documents={documents}
                 pfaRegistrationId={state?.pfaRegistrationId}
-                onExtracted={applyExtracted}
                 onUploaded={refresh}
               />
             )}
@@ -208,48 +180,7 @@ export default function OnboardingEligibilityPage() {
         </Paper>
 
         <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
-          <Typography sx={{ fontWeight: 750, fontSize: '1.02rem', color: TOKENS.ink, mb: 0.5 }}>
-            Confirmă datele
-          </Typography>
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.85rem', mb: 2 }}>
-            Precompletate din documente. Verifică-le și corectează dacă e nevoie.
-          </Typography>
           <Stack spacing={2.5}>
-            <TextField
-              label="Data nașterii"
-              type="date"
-              value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={inputSx}
-              fullWidth
-            />
-            <TextField
-              label="Data obținerii categoriei B"
-              type="date"
-              value={categoryBObtainedOn}
-              onChange={(e) => setCategoryBObtainedOn(e.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={inputSx}
-              fullWidth
-            />
-            <TextField
-              label="Categorii permis (ex. B, BE)"
-              value={drivingCategories}
-              onChange={(e) => setDrivingCategories(e.target.value)}
-              sx={inputSx}
-              fullWidth
-            />
-            <TextField
-              label="Permisul expiră la"
-              type="date"
-              value={drivingLicenceExpiresOn}
-              onChange={(e) => setDrivingLicenceExpiresOn(e.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={inputSx}
-              fullWidth
-            />
-
             <Box>
               <Typography sx={{ fontWeight: 700, color: TOKENS.ink, mb: 0.5 }}>
                 Ai atestat de transport alternativ?
@@ -263,18 +194,6 @@ export default function OnboardingEligibilityPage() {
                 <FormControlLabel value="no" control={<Radio />} label="Nu" />
               </RadioGroup>
             </Box>
-
-            {hasDriverCertificate === 'yes' && (
-              <TextField
-                label="Atestatul expiră la"
-                type="date"
-                value={driverCertificateExpiresOn}
-                onChange={(e) => setDriverCertificateExpiresOn(e.target.value)}
-                slotProps={{ inputLabel: { shrink: true } }}
-                sx={inputSx}
-                fullWidth
-              />
-            )}
 
             {hasDriverCertificate === 'no' && (
               <Alert severity="warning" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>

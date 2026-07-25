@@ -98,7 +98,6 @@ export default function OnboardingStep2Page() {
 
   // Bank
   const [bankName, setBankName] = useState('')
-  const [iban, setIban] = useState('')
   const [savingBank, setSavingBank] = useState(false)
 
   // Oblio
@@ -150,7 +149,7 @@ export default function OnboardingStep2Page() {
     setSavingBank(true)
     setError(null)
     try {
-      await onboardingService.submitBankDeclaration({ bankName: bankName || null, iban })
+      await onboardingService.submitBankDeclaration({ bankName: bankName || null })
       await reload()
     } catch (err) {
       setError(getErrorMessage(err))
@@ -239,13 +238,9 @@ export default function OnboardingStep2Page() {
             <DocumentFirstUpload
               category="ExtrasBancar"
               label="Extras de cont / confirmare IBAN"
-              hint="Citim automat IBAN-ul din document și îl comparăm cu cel introdus."
+              hint="Citim automat IBAN-ul din document. Nu trebuie să-l scrii."
               documents={documents}
               pfaRegistrationId={state?.pfaRegistrationId}
-              onExtracted={(fields) => {
-                const extractedIban = fields.find((f) => f.fieldKey === 'iban')?.effectiveValue
-                if (extractedIban) setIban((prev) => prev || extractedIban)
-              }}
               onUploaded={refresh}
             />
           </Box>
@@ -257,10 +252,9 @@ export default function OnboardingStep2Page() {
                 </MenuItem>
               ))}
             </TextField>
-            <TextField label="IBAN" value={iban} onChange={(e) => setIban(e.target.value)} placeholder="RO..." sx={inputSx} fullWidth />
           </Stack>
           <Box sx={{ mt: 2 }}>
-            <Button variant="contained" onClick={saveBank} disabled={savingBank || !iban}
+            <Button variant="contained" onClick={saveBank} disabled={savingBank}
               sx={{ textTransform: 'none', fontWeight: 700, backgroundColor: TOKENS.primary, '&:hover': { backgroundColor: TOKENS.primaryStrong } }}>
               {savingBank ? 'Se salvează...' : 'Salvează contul'}
             </Button>

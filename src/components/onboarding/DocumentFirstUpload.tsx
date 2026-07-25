@@ -1,13 +1,8 @@
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 
-import {
-  documentService,
-  isAiPending,
-  type DocumentSummary,
-  type ExtractedField,
-} from '../../services/document.service'
+import { documentService, isAiPending, type DocumentSummary } from '../../services/document.service'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { buildUploadFile } from '../../utils/imagesToPdf'
 import { TOKENS } from './onboardingTheme'
@@ -19,9 +14,7 @@ interface DocumentFirstUploadProps {
   hint?: string
   documents: DocumentSummary[]
   pfaRegistrationId?: string | null
-  /** Câmpurile extrase (OCR) ale documentului — folosite de părinte pentru precompletare. */
-  onExtracted: (fields: ExtractedField[]) => void
-  /** Reîncarcă starea de onboarding (ca lista de documente să reflecte noul upload). */
+  /** Reîncarcă starea de onboarding după upload. */
   onUploaded?: () => void
 }
 
@@ -29,8 +22,9 @@ const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
   new Date(b.uploadedAtUtc).getTime() - new Date(a.uploadedAtUtc).getTime()
 
 /**
- * Bloc „document-first": întâi încarci documentul, OCR-ul citește datele și părintele precompletează
- * câmpurile pentru confirmare. Dacă OCR-ul nu e disponibil, câmpurile rămân editabile manual.
+ * Bloc „document-first": utilizatorul DOAR încarcă documentul. Datele se citesc automat pe backend
+ * (OCR) și se completează singure în dosar — userul nu confirmă nimic și nu așteaptă rezultatul.
+ * Dacă documentul nu e bun, primește email cu motivul și îl reîncarcă aici.
  */
 export function DocumentFirstUpload({
   category,
@@ -38,7 +32,6 @@ export function DocumentFirstUpload({
   hint,
   documents,
   pfaRegistrationId,
-  onExtracted,
   onUploaded,
 }: DocumentFirstUploadProps) {
   const current = useMemo(
@@ -51,43 +44,7 @@ export function DocumentFirstUpload({
   const [replacing, setReplacing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const onExtractedRef = useRef(onExtracted)
-  onExtractedRef.current = onExtracted
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  // Citește câmpurile extrase pentru documentul curent; dacă AI-ul e încă în lucru, mai încearcă.
-  useEffect(() => {
-    if (!current) return
-    let attempts = 0
-
-    const fetchFields = async () => {
-      try {
-        const r = await documentService.getExtractedFields(current.id)
-        if (r.fields.length > 0) {
-          onExtractedRef.current(r.fields)
-          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
-        }
-      } catch {
-        // documentul poate să nu aibă câmpuri extrase — nu e o eroare vizibilă
-      }
-    }
-
-    void fetchFields()
-    if (isAiPending(current)) {
-      pollRef.current = setInterval(() => {
-        attempts += 1
-        if (attempts > 8) {
-          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
-          return
-        }
-        void fetchFields()
-      }, 3000)
-    }
-
-    return () => {
-      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
-    }
-  }, [current?.id, current?.aiStatus]) // eslint-disable-line react-hooks/exhaustive-deps
+  const rejected = current?.status.toLowerCase() === 'rejected'
 
   const upload = async () => {
     if (files.length === 0) return
@@ -110,27 +67,32 @@ export function DocumentFirstUpload({
     }
   }
 
-  const showUpload = !current || replacing
+  const showUpload = !current || replacing || rejected
+
+  const statusChip = () => {
+    if (!current) return null
+    if (rejected) return <Chip size="small" label="Respins — reîncarcă" color="error" sx={{ fontWeight: 700, fontSize: '0.68rem' }} />
+    if (isAiPending(current)) return <Chip size="small" label="Se verifică automat" sx={{ fontWeight: 700, fontSize: '0.68rem' }} />
+    return <Chip size="small" icon={<CheckCircleRoundedIcon />} label="Încărcat" color="success" sx={{ fontWeight: 700, fontSize: '0.68rem' }} />
+  }
 
   return (
     <Box>
       <Stack direction="row" sx={{ alignItems: 'center', gap: 1, mb: 0.8 }}>
         <Typography sx={{ fontWeight: 700, color: TOKENS.ink, fontSize: '0.95rem' }}>{label}</Typography>
-        {current && (
-          <Chip
-            size="small"
-            icon={isAiPending(current) ? undefined : <CheckCircleRoundedIcon />}
-            label={isAiPending(current) ? 'Se citește...' : 'Încărcat'}
-            sx={{ fontWeight: 700, fontSize: '0.68rem' }}
-            color={isAiPending(current) ? 'default' : 'success'}
-          />
-        )}
+        {statusChip()}
       </Stack>
 
       {hint && <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.83rem', mb: 1 }}>{hint}</Typography>}
       {error && <Alert severity="error" sx={{ mb: 1, borderRadius: `${TOKENS.radius.md}px` }}>{error}</Alert>}
 
-      {current && !replacing && (
+      {rejected && current?.aiSummary && (
+        <Alert severity="error" sx={{ mb: 1, borderRadius: `${TOKENS.radius.md}px` }}>
+          {current.aiSummary}
+        </Alert>
+      )}
+
+      {current && !replacing && !rejected && (
         <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
           <Typography sx={{ flex: 1, color: TOKENS.textMuted, fontSize: '0.85rem' }} noWrap>
             {current.originalFileName}

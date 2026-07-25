@@ -33,8 +33,6 @@ const CheckoutPage = lazyWithRetry(() => import('./pages/CheckoutPage'))
 // Onboarding (fără acces la panel până la validarea completă)
 const OnboardingHubPage = lazyWithRetry(() => import('./components/onboarding/OnboardingHubPage'))
 const OnboardingPfaPage = lazyWithRetry(() => import('./components/onboarding/OnboardingPfaPage'))
-const OnboardingSectionPage = lazyWithRetry(() => import('./components/onboarding/OnboardingSectionPage'))
-const OnboardingDocumentPage = lazyWithRetry(() => import('./components/onboarding/OnboardingDocumentPage'))
 const OnboardingEligibilityPage = lazyWithRetry(() => import('./components/onboarding/OnboardingEligibilityPage'))
 const OnboardingConsultoPage = lazyWithRetry(() => import('./components/onboarding/OnboardingConsultoPage'))
 const OnboardingStep2Page = lazyWithRetry(() => import('./components/onboarding/OnboardingStep2Page'))
@@ -68,8 +66,8 @@ function App() {
             <Route path="/onboarding/arr" element={<OnboardingArrPage />} />
             <Route path="/onboarding/platforms" element={<OnboardingPlatformsPage />} />
             <Route path="/onboarding/vehicle" element={<OnboardingVehiclePage />} />
-            <Route path="/onboarding/sections/:sectionKey" element={<OnboardingSectionPage />} />
-            <Route path="/onboarding/sections/:sectionKey/documents/:docId" element={<OnboardingDocumentPage />} />
+            {/* Rutele vechi pe secțiuni au dispărut — un singur onboarding, pe cei 6 pași. */}
+            <Route path="/onboarding/sections/*" element={<Navigate to="/onboarding" replace />} />
             <Route path="/app/dashboard/*" element={<DashboardPage />} />
             <Route path="/contabil/*" element={<ContabilDashboard />} />
             <Route path="/admin/*" element={<AdminDashboard />} />

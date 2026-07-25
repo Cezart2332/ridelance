@@ -38,6 +38,7 @@ export function useOnboardingState() {
   }, [refresh])
 
   const awaiting =
+    (state?.steps?.some((s) => s.status === 'AwaitingValidation') ?? false) ||
     (state?.sections.some((s) => s.status === 'AwaitingValidation') ?? false) ||
     documents.some(isAiPending)
 

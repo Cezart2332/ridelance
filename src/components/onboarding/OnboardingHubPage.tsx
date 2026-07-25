@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { onboardingService } from '../../services/onboarding.service'
+import { getErrorMessage } from '../../utils/errorHandler'
 import OnboardingLayout from './OnboardingLayout'
 import { TOKENS } from './onboardingTheme'
 import { useOnboardingState } from './useOnboardingState'
@@ -41,8 +42,8 @@ export default function OnboardingHubPage() {
     try {
       await onboardingService.skipStep()
       await refresh()
-    } catch {
-      setSkipError('Nu am putut sări peste pas. Completează întâi formularul PFA.')
+    } catch (err) {
+      setSkipError(getErrorMessage(err, 'Nu am putut sări peste pas.'))
     } finally {
       setSkipping(false)
     }

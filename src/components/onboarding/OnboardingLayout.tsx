@@ -9,21 +9,29 @@ import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import logo from '../../assets/logo.svg'
-import { ONBOARDING_SECTIONS } from '../../constants/documentSections'
 import { authService } from '../../services/auth.service'
 import type { OnboardingState } from '../../services/onboarding.service'
 import { TOKENS } from './onboardingTheme'
 
 interface OnboardingLayoutProps {
   state: OnboardingState | null
-  /** Cheia secțiunii evidențiate în stepper (pagina curentă). */
+  /** Cheia pasului evidențiat în stepper (pagina curentă). */
   activeKey?: string
   children: ReactNode
 }
 
+/**
+ * Aliasuri pentru cheile pe care le trimit paginile — cheile canonice vin de la server
+ * (OnboardingStepCatalog): eligibility, pfa, fiscal, arr, platforms, vehicle.
+ */
+const KEY_ALIASES: Record<string, string> = {
+  autorizatietransport: 'arr',
+  vehicul: 'vehicle',
+}
+
 function stepVisual(status: string | undefined, isActive: boolean) {
   switch (status) {
-    case 'Validated':
+    case 'Completed':
       return {
         icon: <CheckRoundedIcon sx={{ fontSize: 16 }} />,
         color: '#2e7d32',
@@ -42,6 +50,7 @@ function stepVisual(status: string | undefined, isActive: boolean) {
         bg: alpha('#d32f2f', 0.1),
       }
     case 'InProgress':
+    case 'NotStarted':
       return {
         icon: null,
         color: isActive ? '#fff' : TOKENS.primaryStrong,
@@ -57,7 +66,7 @@ function stepVisual(status: string | undefined, isActive: boolean) {
 }
 
 /**
- * Shell-ul paginilor de onboarding: logo, stepper orizontal cu cele 4 secțiuni,
+ * Shell-ul paginilor de onboarding: logo, stepper orizontal cu cei 6 pași (derivați pe server),
  * logout și panoul de conținut full-width.
  */
 export default function OnboardingLayout({ state, activeKey, children }: OnboardingLayoutProps) {
@@ -67,6 +76,9 @@ export default function OnboardingLayout({ state, activeKey, children }: Onboard
     authService.logout()
     navigate('/auth')
   }
+
+  const normalizedActive = activeKey ? (KEY_ALIASES[activeKey.toLowerCase()] ?? activeKey.toLowerCase()) : undefined
+  const steps = state?.steps ?? []
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: TOKENS.surface, pb: 8 }}>
@@ -94,7 +106,8 @@ export default function OnboardingLayout({ state, activeKey, children }: Onboard
         </Container>
       </Box>
 
-      {/* Stepper orizontal */}
+      {/* Stepper orizontal — cei 6 pași */}
+      {steps.length > 0 && (
       <Box sx={{ backgroundColor: TOKENS.paper, borderBottom: `1px solid ${TOKENS.border}` }}>
         <Container maxWidth="md">
           <Stack
@@ -106,13 +119,12 @@ export default function OnboardingLayout({ state, activeKey, children }: Onboard
               alignItems: 'center',
             }}
           >
-            {ONBOARDING_SECTIONS.map((section, index) => {
-              const sectionState = state?.sections.find((s) => s.key === section.key)
-              const isActive = activeKey?.toLowerCase() === section.key.toLowerCase()
-              const visual = stepVisual(sectionState?.status, isActive)
+            {steps.map((step, index) => {
+              const isActive = normalizedActive === step.key.toLowerCase()
+              const visual = stepVisual(step.status, isActive)
               return (
                 <Stack
-                  key={section.key}
+                  key={step.key}
                   direction="row"
                   sx={{ alignItems: 'center', gap: { xs: 1, sm: 2 }, flexShrink: 0 }}
                 >
@@ -135,7 +147,7 @@ export default function OnboardingLayout({ state, activeKey, children }: Onboard
                         flexShrink: 0,
                       }}
                     >
-                      {visual.icon ?? section.order}
+                      {visual.icon ?? step.order + 1}
                     </Box>
                     <Typography
                       sx={{
@@ -146,7 +158,7 @@ export default function OnboardingLayout({ state, activeKey, children }: Onboard
                         display: { xs: isActive ? 'block' : 'none', sm: 'block' },
                       }}
                     >
-                      {section.label}
+                      {step.label}
                     </Typography>
                   </Stack>
                 </Stack>
@@ -155,6 +167,7 @@ export default function OnboardingLayout({ state, activeKey, children }: Onboard
           </Stack>
         </Container>
       </Box>
+      )}
 
       {/* Conținut */}
       <Container maxWidth="md" sx={{ pt: 4 }}>

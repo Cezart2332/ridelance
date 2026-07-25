@@ -23,6 +23,7 @@ import {
   type ArrSubmissionMethod,
 } from '../../services/onboarding.service'
 import { getErrorMessage } from '../../utils/errorHandler'
+import { DocumentFirstUpload } from './DocumentFirstUpload'
 import OnboardingLayout from './OnboardingLayout'
 import { TOKENS, inputSx } from './onboardingTheme'
 import { useOnboardingState } from './useOnboardingState'
@@ -35,9 +36,43 @@ const STATUS_LABELS: Record<string, string> = {
   Rejected: 'Respinsă',
 }
 
+/** Documentele dosarului ARR — userul doar le încarcă, datele se citesc automat (OCR). */
+const ARR_DOCUMENTS: { category: string; label: string; hint: string }[] = [
+  {
+    category: 'CertificatInregistrare',
+    label: 'Certificat de înregistrare (CAEN 4939)',
+    hint: 'Citim automat CUI-ul și denumirea PFA-ului.',
+  },
+  {
+    category: 'CertificatConstatator',
+    label: 'Certificat constatator (CAEN 4939)',
+    hint: 'Citim automat numărul din registrul comerțului.',
+  },
+  {
+    category: 'AtestatTransport',
+    label: 'Certificat de atestare profesională (atestat)',
+    hint: 'Citim automat data de expirare.',
+  },
+  {
+    category: 'CazierJudiciar',
+    label: 'Cazier judiciar',
+    hint: 'Valabil 6 luni de la eliberare.',
+  },
+  {
+    category: 'AdeverintaMedicala',
+    label: 'Aviz medical și psihologic',
+    hint: 'Ambele avize, pe titular.',
+  },
+  {
+    category: 'DovadaPlataArr',
+    label: 'Dovada plății tarifului ARR',
+    hint: 'Ordin de plată sau chitanța de la ARR.',
+  },
+]
+
 export default function OnboardingArrPage() {
   const navigate = useNavigate()
-  const { state } = useOnboardingState()
+  const { state, documents, refresh } = useOnboardingState()
 
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -80,6 +115,20 @@ export default function OnboardingArrPage() {
       setArr(await onboardingService.getArrState())
     })
 
+  // „Trimite datele" salvează cererea și întoarce userul în hub-ul de onboarding.
+  const submitAndReturn = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      setArr(await onboardingService.submitArrRequest(agencyName || null, method))
+      navigate('/onboarding')
+    } catch (err) {
+      setError(getErrorMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   if (loading) {
     return (
       <OnboardingLayout state={state} activeKey="autorizatietransport">
@@ -110,14 +159,23 @@ export default function OnboardingArrPage() {
           <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 0.5 }}>
             Documentele pentru autorizație
           </Typography>
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', mb: 1.5 }}>
-            Încarcă certificatul de înregistrare, atestatul, cazierul, adeverința medicală și dovada
-            de plată ARR, apoi trimite-le la validare. Sunt necesare pentru înrolare.
+          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', mb: 2 }}>
+            Încarcă documentele și trimite-le. Datele se citesc automat din ele, iar echipa RIDElance
+            le verifică — tu nu completezi nimic. Dacă un document nu e bun, primești email cu motivul.
           </Typography>
-          <Button variant="outlined" onClick={() => navigate('/onboarding/sections/AutorizatieTransport')}
-            sx={{ textTransform: 'none', fontWeight: 700, borderColor: TOKENS.primary, color: TOKENS.primaryStrong }}>
-            Deschide documentele
-          </Button>
+          <Stack spacing={2.5}>
+            {ARR_DOCUMENTS.map((d) => (
+              <DocumentFirstUpload
+                key={d.category}
+                category={d.category}
+                label={d.label}
+                hint={d.hint}
+                documents={documents}
+                pfaRegistrationId={state?.pfaRegistrationId}
+                onUploaded={refresh}
+              />
+            ))}
+          </Stack>
         </Paper>
 
         {arr && (
@@ -195,6 +253,23 @@ export default function OnboardingArrPage() {
           )}
         </Paper>
 
+        {/* Autorizația primită de la ARR — datele ei (număr, expirare) se citesc automat. */}
+        {arr?.submittedAtUtc && (
+          <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
+            <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 2 }}>
+              Autorizația primită de la ARR
+            </Typography>
+            <DocumentFirstUpload
+              category="AutorizatieTransportAlternativ"
+              label="Autorizația de transport alternativ"
+              hint="Încarc-o imediat ce o primești — citim automat numărul și data de expirare."
+              documents={documents}
+              pfaRegistrationId={state?.pfaRegistrationId}
+              onUploaded={refresh}
+            />
+          </Paper>
+        )}
+
         {arr?.status === 'Issued' && (
           <Alert severity="success" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
             Autorizație emisă{arr.authorizationNumber ? ` (nr. ${arr.authorizationNumber})` : ''}
@@ -208,10 +283,11 @@ export default function OnboardingArrPage() {
           </Button>
           <Button
             variant="contained"
-            onClick={() => navigate('/onboarding')}
+            disabled={busy}
+            onClick={submitAndReturn}
             sx={{ textTransform: 'none', fontWeight: 700, backgroundColor: TOKENS.primary, '&:hover': { backgroundColor: TOKENS.primaryStrong } }}
           >
-            Trimite datele
+            {busy ? 'Se trimite...' : 'Trimite datele'}
           </Button>
         </Stack>
       </Stack>

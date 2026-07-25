@@ -378,7 +378,8 @@ export const onboardingService = {
   /** Pasul 2.3 — declarația contului bancar. */
   async submitBankDeclaration(payload: {
     bankName?: string | null
-    iban: string
+    /** Opțional — în mod normal IBAN-ul se citește din documentul încărcat (OCR). */
+    iban?: string | null
     confirmationDocumentId?: string | null
   }): Promise<Step2State['bank']> {
     const { data } = await api.post<Step2State['bank']>('/onboarding/step2/bank', payload)

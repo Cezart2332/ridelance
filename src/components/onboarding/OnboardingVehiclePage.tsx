@@ -120,6 +120,30 @@ export default function OnboardingVehiclePage() {
       apply(await onboardingService.submitCopyRequest(years, badges))
     })
 
+  // „Trimite datele" salvează vehiculul (și cererea, dacă există) și întoarce userul în hub.
+  const submitAndReturn = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      apply(
+        await onboardingService.submitVehicle({
+          ownershipMode,
+          addLater,
+          plateNumber: plateNumber || null,
+          vin: vin || null,
+          make: make || null,
+          model: model || null,
+          firstRegistrationYear: year ? Number(year) : null,
+        }),
+      )
+      navigate('/onboarding')
+    } catch (err) {
+      setError(getErrorMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const generate = () => run(async () => apply(await onboardingService.generateVehicleDossier()))
   const markSubmitted = () =>
     run(async () => {
@@ -140,7 +164,7 @@ export default function OnboardingVehiclePage() {
   const copy = data?.copyRequest ?? null
   const copyFeePerYear = data?.copyFeePerYearBani ?? 10000
   const badgeFeePerSet = data?.badgeFeePerSetBani ?? 800
-  const maxYears = data?.maxCopyYears ?? 5
+  const maxYears = data?.maxCopyYears ?? 3
   const copyTotal = copyFeePerYear * years
   const badgesTotal = badgeFeePerSet * (uberSets + boltSets)
 
@@ -164,19 +188,45 @@ export default function OnboardingVehiclePage() {
           <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 0.5 }}>
             Documentele vehiculului
           </Typography>
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', mb: 1.5 }}>
-            Încarcă documentele mașinii (talon, RCA, contract) și copia conformă & ecusoanele, apoi
-            trimite-le la validare. Sunt necesare pentru înrolare.
+          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', mb: 2 }}>
+            Încarcă documentele mașinii. Datele se citesc automat din ele, iar echipa RIDElance le
+            verifică — tu nu completezi nimic.
           </Typography>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <Button variant="outlined" onClick={() => navigate('/onboarding/sections/CopieConforma')}
-              sx={{ textTransform: 'none', fontWeight: 700, borderColor: TOKENS.primary, color: TOKENS.primaryStrong }}>
-              Copie conformă & ecusoane
-            </Button>
-            <Button variant="outlined" onClick={() => navigate('/onboarding/sections/Vehicul')}
-              sx={{ textTransform: 'none', fontWeight: 700, borderColor: TOKENS.primary, color: TOKENS.primaryStrong }}>
-              Documentele mașinii
-            </Button>
+          <Stack spacing={2.5}>
+            <DocumentFirstUpload
+              category="RCA"
+              label="RCA"
+              hint="Citim automat numărul de înmatriculare."
+              documents={documents}
+              pfaRegistrationId={state?.pfaRegistrationId}
+              onUploaded={refresh}
+            />
+            <DocumentFirstUpload
+              category="AsigurareCalatori"
+              label="Asigurare călători și bagaje"
+              hint="Obligatorie pentru transportul alternativ."
+              documents={documents}
+              pfaRegistrationId={state?.pfaRegistrationId}
+              onUploaded={refresh}
+            />
+            {ownershipMode !== 'Owned' && !addLater && (
+              <DocumentFirstUpload
+                category="ContractVehicul"
+                label="Contract de închiriere / comodat / leasing"
+                hint="Documentul care atestă dreptul de folosință asupra mașinii."
+                documents={documents}
+                pfaRegistrationId={state?.pfaRegistrationId}
+                onUploaded={refresh}
+              />
+            )}
+            <DocumentFirstUpload
+              category="DovadaPlataCopieConformaEcusoane"
+              label="Dovada plății copie conformă și ecusoane"
+              hint="Ordinul de plată sau chitanța de la ARR."
+              documents={documents}
+              pfaRegistrationId={state?.pfaRegistrationId}
+              onUploaded={refresh}
+            />
           </Stack>
         </Paper>
 
@@ -215,37 +265,21 @@ export default function OnboardingVehiclePage() {
                   hint="Citim automat nr. de înmatriculare, VIN, marca și modelul."
                   documents={documents}
                   pfaRegistrationId={state?.pfaRegistrationId}
-                  onExtracted={(fields) => {
-                    const get = (k: string) => fields.find((f) => f.fieldKey === k)?.effectiveValue ?? ''
-                    if (get('plate_number')) setPlateNumber((p) => p || get('plate_number'))
-                    if (get('vin')) setVin((p) => p || get('vin'))
-                    if (get('make')) setMake((p) => p || get('make'))
-                    if (get('model')) setModel((p) => p || get('model'))
-                  }}
                   onUploaded={refresh}
                 />
                 <DocumentFirstUpload
                   category="CarteIdentitateAuto"
                   label="Cartea de identitate a vehiculului (CIV)"
-                  hint="Confirmă VIN-ul și marca."
+                  hint="Citim automat VIN-ul și marca."
                   documents={documents}
                   pfaRegistrationId={state?.pfaRegistrationId}
-                  onExtracted={(fields) => {
-                    const get = (k: string) => fields.find((f) => f.fieldKey === k)?.effectiveValue ?? ''
-                    if (get('vin')) setVin((p) => p || get('vin'))
-                    if (get('make')) setMake((p) => p || get('make'))
-                  }}
                   onUploaded={refresh}
                 />
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                  <TextField label="Nr. înmatriculare" value={plateNumber} onChange={(e) => setPlateNumber(e.target.value)} sx={inputSx} fullWidth />
-                  <TextField label="Serie șasiu (VIN)" value={vin} onChange={(e) => setVin(e.target.value)} sx={inputSx} fullWidth />
-                </Stack>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                  <TextField label="Marcă" value={make} onChange={(e) => setMake(e.target.value)} sx={inputSx} fullWidth />
-                  <TextField label="Model" value={model} onChange={(e) => setModel(e.target.value)} sx={inputSx} fullWidth />
-                  <TextField label="An fabricație" value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, ''))} sx={inputSx} fullWidth />
-                </Stack>
+                {(data?.plateNumber || data?.vin) && (
+                  <Alert severity="success" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+                    Citit din documente: <strong>{[data.plateNumber, data.vin, data.make, data.model].filter(Boolean).join(' · ')}</strong>
+                  </Alert>
+                )}
               </>
             )}
 
@@ -363,6 +397,43 @@ export default function OnboardingVehiclePage() {
           </Paper>
         )}
 
+        {/* Documentele primite de la ARR — numărul și expirarea copiei conforme se citesc automat. */}
+        {copy?.submittedAtUtc && (
+          <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
+            <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 2 }}>
+              Documentele primite de la ARR
+            </Typography>
+            <Stack spacing={2.5}>
+              <DocumentFirstUpload
+                category="CopieConforma"
+                label="Copia conformă"
+                hint="Citim automat numărul și data de expirare."
+                documents={documents}
+                pfaRegistrationId={state?.pfaRegistrationId}
+                onUploaded={refresh}
+              />
+              {uberSets > 0 && (
+                <DocumentFirstUpload
+                  category="EcusonUber"
+                  label="Ecuson Uber"
+                  documents={documents}
+                  pfaRegistrationId={state?.pfaRegistrationId}
+                  onUploaded={refresh}
+                />
+              )}
+              {boltSets > 0 && (
+                <DocumentFirstUpload
+                  category="EcusonBolt"
+                  label="Ecuson Bolt"
+                  documents={documents}
+                  pfaRegistrationId={state?.pfaRegistrationId}
+                  onUploaded={refresh}
+                />
+              )}
+            </Stack>
+          </Paper>
+        )}
+
         {copy?.status === 'Issued' && (
           <Alert severity="success" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
             Copie conformă emisă{copy.copyConformaNumber ? ` (nr. ${copy.copyConformaNumber})` : ''}
@@ -376,10 +447,11 @@ export default function OnboardingVehiclePage() {
           </Button>
           <Button
             variant="contained"
-            onClick={() => navigate('/onboarding')}
+            disabled={busy}
+            onClick={submitAndReturn}
             sx={{ textTransform: 'none', fontWeight: 700, backgroundColor: TOKENS.primary, '&:hover': { backgroundColor: TOKENS.primaryStrong } }}
           >
-            Trimite datele
+            {busy ? 'Se trimite...' : 'Trimite datele'}
           </Button>
         </Stack>
       </Stack>
