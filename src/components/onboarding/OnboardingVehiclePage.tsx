@@ -370,9 +370,16 @@ export default function OnboardingVehiclePage() {
           </Alert>
         )}
 
-        <Stack direction="row">
+        <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'space-between' }}>
           <Button onClick={() => navigate('/onboarding')} sx={{ textTransform: 'none', color: TOKENS.textMuted }}>
-            Înapoi la pași
+            Înapoi
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/onboarding')}
+            sx={{ textTransform: 'none', fontWeight: 700, backgroundColor: TOKENS.primary, '&:hover': { backgroundColor: TOKENS.primaryStrong } }}
+          >
+            Trimite datele
           </Button>
         </Stack>
       </Stack>

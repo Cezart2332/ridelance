@@ -57,6 +57,7 @@ export default function OnboardingConsultoPage() {
         dataSharingConsent: consent,
       })
       setLead(result)
+      navigate('/onboarding')
     } catch (err) {
       setError(getErrorMessage(err))
     } finally {

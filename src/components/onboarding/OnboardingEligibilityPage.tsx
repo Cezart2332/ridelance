@@ -105,6 +105,7 @@ export default function OnboardingEligibilityPage() {
           hasDriverCertificate === 'yes' ? driverCertificateExpiresOn || null : null,
       })
       setResult(profile)
+      navigate('/onboarding')
     } catch (err) {
       setError(getErrorMessage(err))
     } finally {
@@ -314,7 +315,7 @@ export default function OnboardingEligibilityPage() {
               '&:hover': { backgroundColor: TOKENS.primaryStrong },
             }}
           >
-            {saving ? 'Se salvează...' : 'Salvează și verifică'}
+            {saving ? 'Se trimite...' : 'Trimite datele'}
           </Button>
         </Stack>
       </Stack>
