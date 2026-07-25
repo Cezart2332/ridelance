@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom'
 
 import {
   onboardingService,
+  type ExistingAccountAnswer,
   type PlatformAccount,
   type PlatformOnboardingState,
   type PlatformProvider,
@@ -45,7 +46,9 @@ function PlatformCard({
   account: PlatformAccount | undefined
   onSaved: (s: PlatformOnboardingState) => void
 }) {
-  const [hasExisting, setHasExisting] = useState<'yes' | 'no'>(account?.hasExistingAccount ? 'yes' : 'no')
+  const [answer, setAnswer] = useState<ExistingAccountAnswer>(
+    account?.existingAccountAnswer ?? (account?.hasExistingAccount ? 'HasOperatorAccount' : 'None'),
+  )
   const [operatorId, setOperatorId] = useState(account?.operatorAccountId ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -56,8 +59,9 @@ function PlatformCard({
     try {
       const next = await onboardingService.submitPlatformAccount({
         provider,
-        hasExistingAccount: hasExisting === 'yes',
+        hasExistingAccount: answer === 'HasOperatorAccount',
         operatorAccountId: operatorId || null,
+        existingAccountAnswer: answer,
       })
       onSaved(next)
     } catch (err) {
@@ -76,10 +80,12 @@ function PlatformCard({
 
       {error && <Alert severity="error" sx={{ mb: 1.5, borderRadius: `${TOKENS.radius.md}px` }}>{error}</Alert>}
 
-      <Typography sx={{ fontWeight: 700, color: TOKENS.ink, mb: 0.5 }}>Ai deja cont de operator {provider}?</Typography>
-      <RadioGroup row value={hasExisting} onChange={(e) => setHasExisting(e.target.value as 'yes' | 'no')}>
-        <FormControlLabel value="yes" control={<Radio />} label="Da" />
-        <FormControlLabel value="no" control={<Radio />} label="Nu" />
+      <Typography sx={{ fontWeight: 700, color: TOKENS.ink, mb: 0.5 }}>Ai deja cont pe {provider}?</Typography>
+      <RadioGroup value={answer} onChange={(e) => setAnswer(e.target.value as ExistingAccountAnswer)}>
+        <FormControlLabel value="HasOperatorAccount" control={<Radio />} label="Da, am cont de operator/fleet" />
+        <FormControlLabel value="DriverOnly" control={<Radio />} label="Am cont de șofer, dar nu de operator/fleet" />
+        <FormControlLabel value="None" control={<Radio />} label="Nu am cont" />
+        <FormControlLabel value="Unknown" control={<Radio />} label="Nu știu ce tip de cont am" />
       </RadioGroup>
 
       <TextField

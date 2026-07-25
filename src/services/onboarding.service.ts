@@ -160,6 +160,8 @@ export type PlatformOnboardingStatus =
   | 'Active'
   | 'Skipped'
 
+export type ExistingAccountAnswer = 'HasOperatorAccount' | 'None' | 'DriverOnly' | 'Unknown'
+
 export interface PlatformAccount {
   provider: PlatformProvider
   isSelectedByUser: boolean
@@ -167,6 +169,7 @@ export interface PlatformAccount {
   operatorAccountId: string | null
   hasAffiliationContract: boolean
   onboardingStatus: PlatformOnboardingStatus
+  existingAccountAnswer: ExistingAccountAnswer | null
 }
 
 export interface PlatformOnboardingState {
@@ -175,7 +178,7 @@ export interface PlatformOnboardingState {
 }
 
 // --- Pasul 5: vehicul, copie conformă & ecusoane ---
-export type VehicleOwnershipMode = 'Owned' | 'Rented' | 'Leased' | 'AddedLater'
+export type VehicleOwnershipMode = 'Owned' | 'Rented' | 'Leased' | 'Comodat' | 'AddedLater'
 export type VehicleStatus = 'Draft' | 'DocumentsPending' | 'Active'
 export type CopyRequestStatus = 'Draft' | 'DossierGenerated' | 'Submitted' | 'Issued' | 'Rejected'
 export type BadgeStatus = 'Requested' | 'Paid' | 'Issued'
@@ -248,6 +251,7 @@ export const onboardingService = {
     hasExistingAccount: boolean
     operatorAccountId?: string | null
     affiliationContractDocumentId?: string | null
+    existingAccountAnswer?: ExistingAccountAnswer | null
   }): Promise<PlatformOnboardingState> {
     const { data } = await api.post<PlatformOnboardingState>('/onboarding/platforms/account', payload)
     return data

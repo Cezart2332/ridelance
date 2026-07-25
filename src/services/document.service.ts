@@ -141,4 +141,15 @@ export const documentService = {
     const response = await api.post<ExtractedFieldsResponse>(`/documents/${id}/extracted-fields/confirm`, { fields });
     return response.data;
   },
+
+  /** Admin — vede câmpurile extrase ale oricărui document. */
+  getExtractedFieldsAdmin: async (id: string): Promise<ExtractedFieldsResponse> => {
+    const response = await api.get<ExtractedFieldsResponse>(`/admin/documents/${id}/extracted-fields`);
+    return response.data;
+  },
+
+  /** Admin — corectează o valoare extrasă (motiv obligatoriu). */
+  correctExtractedField: async (fieldId: string, value: string | null, changeReason: string): Promise<void> => {
+    await api.put(`/admin/extracted-fields/${fieldId}`, { value, changeReason });
+  },
 };

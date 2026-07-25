@@ -106,6 +106,20 @@ export default function OnboardingArrPage() {
 
         {error && <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>{error}</Alert>}
 
+        <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
+          <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 0.5 }}>
+            Documentele pentru autorizație
+          </Typography>
+          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', mb: 1.5 }}>
+            Încarcă certificatul de înregistrare, atestatul, cazierul, adeverința medicală și dovada
+            de plată ARR, apoi trimite-le la validare. Sunt necesare pentru înrolare.
+          </Typography>
+          <Button variant="outlined" onClick={() => navigate('/onboarding/sections/AutorizatieTransport')}
+            sx={{ textTransform: 'none', fontWeight: 700, borderColor: TOKENS.primary, color: TOKENS.primaryStrong }}>
+            Deschide documentele
+          </Button>
+        </Paper>
+
         {arr && (
           <Chip
             label={`Status: ${STATUS_LABELS[arr.status] ?? arr.status}`}

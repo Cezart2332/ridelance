@@ -7,7 +7,6 @@ import {
   ButtonBase,
   Chip,
   CircularProgress,
-  LinearProgress,
   Paper,
   Stack,
   Typography,
@@ -16,14 +15,9 @@ import { alpha } from '@mui/material/styles'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import {
-  ONBOARDING_SECTIONS,
-  type OnboardingSectionConfig,
-} from '../../constants/documentSections'
-import type { DocumentSummary } from '../../services/document.service'
 import { onboardingService } from '../../services/onboarding.service'
 import OnboardingLayout from './OnboardingLayout'
-import { TOKENS, sectionStatusChipSx, sectionStatusLabel } from './onboardingTheme'
+import { TOKENS } from './onboardingTheme'
 import { useOnboardingState } from './useOnboardingState'
 
 const STEP_STATUS_LABELS: Record<string, string> = {
@@ -33,22 +27,10 @@ const STEP_STATUS_LABELS: Record<string, string> = {
   Completed: 'Finalizat',
 }
 
-function requiredDocsProgress(section: OnboardingSectionConfig, documents: DocumentSummary[]) {
-  const requiredDocs = (section.docs ?? []).filter(
-    (d) => !(section.optionalDocIds ?? []).includes(d.id),
-  )
-  const uploaded = requiredDocs.filter((d) =>
-    documents.some(
-      (doc) => d.categories.includes(doc.category) && doc.status.toLowerCase() !== 'rejected',
-    ),
-  ).length
-  return { uploaded, total: requiredDocs.length }
-}
-
 export default function OnboardingHubPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { state, documents, loading, error, refresh } = useOnboardingState()
+  const { state, loading, error, refresh } = useOnboardingState()
 
   // DOAR PENTRU TESTARE — de șters odată cu onboardingService.skipStep().
   const [skipping, setSkipping] = useState(false)
@@ -136,7 +118,7 @@ export default function OnboardingHubPage() {
             Înrolarea contului tău
           </Typography>
           <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.5 }}>
-            Completează secțiunile pe rând. După fiecare secțiune, echipa RIDElance o verifică
+            Parcurgi cei 6 pași pe rând. După fiecare pas, echipa RIDElance verifică documentele
             și îți deblochează pasul următor. La final activezi abonamentul și primești acces la platformă.
           </Typography>
         </Box>
@@ -166,124 +148,9 @@ export default function OnboardingHubPage() {
           </Alert>
         )}
 
-        <Stack spacing={1.5}>
-          {ONBOARDING_SECTIONS.map((section) => {
-            const sectionState = state?.sections.find((s) => s.key === section.key)
-            const status = sectionState?.status ?? 'Locked'
-            const locked = status === 'Locked'
-            const progress = section.docs ? requiredDocsProgress(section, documents) : null
-            const target =
-              section.key === 'Pfa' ? '/onboarding/pfa' : `/onboarding/sections/${section.key}`
-
-            return (
-              <Paper
-                key={section.key}
-                elevation={0}
-                sx={{
-                  borderRadius: `${TOKENS.radius.lg}px`,
-                  border: `1px solid ${status === 'Rejected' ? alpha('#d32f2f', 0.3) : TOKENS.border}`,
-                  backgroundColor: TOKENS.paper,
-                  overflow: 'hidden',
-                  opacity: locked ? 0.65 : 1,
-                }}
-              >
-                <ButtonBase
-                  disabled={locked}
-                  onClick={() => navigate(target)}
-                  sx={{
-                    width: '100%',
-                    display: 'block',
-                    textAlign: 'left',
-                    p: 2.5,
-                    '&:hover': locked ? {} : { backgroundColor: alpha(TOKENS.primary, 0.02) },
-                  }}
-                >
-                  <Stack direction="row" sx={{ alignItems: 'center', gap: 2 }}>
-                    <Box
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: alpha(TOKENS.primary, locked ? 0.06 : 0.12),
-                        color: locked ? TOKENS.textMuted : TOKENS.primaryStrong,
-                        fontWeight: 800,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {locked ? <LockRoundedIcon sx={{ fontSize: 18 }} /> : section.order}
-                    </Box>
-
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Stack direction="row" sx={{ alignItems: 'center', gap: 1.2, flexWrap: 'wrap' }}>
-                        <Typography sx={{ fontWeight: 750, fontSize: '1rem', color: TOKENS.ink }}>
-                          {section.label}
-                        </Typography>
-                        <Chip
-                          size="small"
-                          variant="outlined"
-                          label={sectionStatusLabel(status)}
-                          sx={{ fontWeight: 700, fontSize: '0.72rem', ...sectionStatusChipSx(status) }}
-                        />
-                      </Stack>
-                      <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.85rem', mt: 0.3 }}>
-                        {section.description}
-                      </Typography>
-
-                      {progress && !locked && (
-                        <Stack direction="row" sx={{ alignItems: 'center', gap: 1.5, mt: 1 }}>
-                          <LinearProgress
-                            variant="determinate"
-                            value={progress.total === 0 ? 0 : (progress.uploaded / progress.total) * 100}
-                            sx={{
-                              flex: 1,
-                              maxWidth: 220,
-                              height: 6,
-                              borderRadius: 3,
-                              backgroundColor: alpha(TOKENS.ink, 0.06),
-                              '& .MuiLinearProgress-bar': { backgroundColor: TOKENS.primary, borderRadius: 3 },
-                            }}
-                          />
-                          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.78rem', fontWeight: 600 }}>
-                            {progress.uploaded}/{progress.total} documente
-                          </Typography>
-                        </Stack>
-                      )}
-
-                      {status === 'Rejected' && sectionState?.note && (
-                        <Alert severity="error" sx={{ mt: 1.2, borderRadius: `${TOKENS.radius.md}px`, py: 0.3 }}>
-                          {sectionState.note}
-                        </Alert>
-                      )}
-                      {status === 'AwaitingValidation' && (
-                        <Typography sx={{ color: '#b54708', fontSize: '0.8rem', fontWeight: 600, mt: 0.8 }}>
-                          Echipa RIDElance verifică această secțiune. Te anunțăm când e validată.
-                        </Typography>
-                      )}
-                    </Box>
-
-                    {!locked && (
-                      <ChevronRightRoundedIcon sx={{ color: TOKENS.textMuted, flexShrink: 0 }} />
-                    )}
-                  </Stack>
-                </ButtonBase>
-              </Paper>
-            )
-          })}
-        </Stack>
-
-        {/* Cei 6 pași — status derivat pe server, cu deblocare secvențială. */}
+        {/* Cei 6 pași — unicul onboarding, status derivat pe server, cu deblocare secvențială. */}
         {state?.steps && state.steps.length > 0 && (
           <Box>
-            <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', color: TOKENS.ink, mt: 1 }}>
-              Pașii onboardingului
-            </Typography>
-            <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.85rem', mt: 0.3, mb: 1.5 }}>
-              Îi parcurgi pe rând. Fiecare pas se deblochează după ce l-ai finalizat pe cel dinainte.
-            </Typography>
-
             <Stack spacing={1.5}>
               {state.steps.map((step) => {
                 const locked = step.status === 'Locked'

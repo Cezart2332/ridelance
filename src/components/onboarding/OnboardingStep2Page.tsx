@@ -26,6 +26,7 @@ import {
   type VatRegistrationKind,
 } from '../../services/onboarding.service'
 import { getErrorMessage } from '../../utils/errorHandler'
+import { DocumentFirstUpload } from './DocumentFirstUpload'
 import OnboardingLayout from './OnboardingLayout'
 import { TOKENS, inputSx } from './onboardingTheme'
 import { useOnboardingState } from './useOnboardingState'
@@ -84,7 +85,7 @@ function Card({ title, subtitle, children }: { title: string; subtitle?: string;
 
 export default function OnboardingStep2Page() {
   const navigate = useNavigate()
-  const { state } = useOnboardingState()
+  const { state, documents, refresh } = useOnboardingState()
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -234,6 +235,20 @@ export default function OnboardingStep2Page() {
               {step2.bank.source === 'OpenBanking' && ' (verificat prin open banking)'}
             </Alert>
           )}
+          <Box sx={{ mb: 2 }}>
+            <DocumentFirstUpload
+              category="ExtrasBancar"
+              label="Extras de cont / confirmare IBAN"
+              hint="Citim automat IBAN-ul din document și îl comparăm cu cel introdus."
+              documents={documents}
+              pfaRegistrationId={state?.pfaRegistrationId}
+              onExtracted={(fields) => {
+                const extractedIban = fields.find((f) => f.fieldKey === 'iban')?.effectiveValue
+                if (extractedIban) setIban((prev) => prev || extractedIban)
+              }}
+              onUploaded={refresh}
+            />
+          </Box>
           <Stack spacing={2}>
             <TextField select label="Bancă" value={bankName} onChange={(e) => setBankName(e.target.value)} sx={inputSx} fullWidth>
               {BANKS.map((b) => (

@@ -24,6 +24,7 @@ import {
   type VehicleState,
 } from '../../services/onboarding.service'
 import { getErrorMessage } from '../../utils/errorHandler'
+import { DocumentFirstUpload } from './DocumentFirstUpload'
 import OnboardingLayout from './OnboardingLayout'
 import { TOKENS, inputSx } from './onboardingTheme'
 import { useOnboardingState } from './useOnboardingState'
@@ -40,7 +41,7 @@ const lei = (bani: number) => (bani / 100).toLocaleString('ro-RO', { minimumFrac
 
 export default function OnboardingVehiclePage() {
   const navigate = useNavigate()
-  const { state } = useOnboardingState()
+  const { state, documents, refresh } = useOnboardingState()
 
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -158,6 +159,27 @@ export default function OnboardingVehiclePage() {
 
         {error && <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>{error}</Alert>}
 
+        {/* Documentele necesare pentru înrolare */}
+        <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
+          <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 0.5 }}>
+            Documentele vehiculului
+          </Typography>
+          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', mb: 1.5 }}>
+            Încarcă documentele mașinii (talon, RCA, contract) și copia conformă & ecusoanele, apoi
+            trimite-le la validare. Sunt necesare pentru înrolare.
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+            <Button variant="outlined" onClick={() => navigate('/onboarding/sections/CopieConforma')}
+              sx={{ textTransform: 'none', fontWeight: 700, borderColor: TOKENS.primary, color: TOKENS.primaryStrong }}>
+              Copie conformă & ecusoane
+            </Button>
+            <Button variant="outlined" onClick={() => navigate('/onboarding/sections/Vehicul')}
+              sx={{ textTransform: 'none', fontWeight: 700, borderColor: TOKENS.primary, color: TOKENS.primaryStrong }}>
+              Documentele mașinii
+            </Button>
+          </Stack>
+        </Paper>
+
         {/* Vehiculul */}
         <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
           <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 1.5 }}>Vehiculul</Typography>
@@ -178,14 +200,43 @@ export default function OnboardingVehiclePage() {
               sx={inputSx}
               fullWidth
             >
-              <MenuItem value="Owned">Am mașină (proprietate)</MenuItem>
-              <MenuItem value="Rented">Închiriez mașina</MenuItem>
-              <MenuItem value="Leased">Mașina e în leasing</MenuItem>
+              <MenuItem value="Owned">Proprietate</MenuItem>
+              <MenuItem value="Rented">Închiriere</MenuItem>
+              <MenuItem value="Leased">Leasing</MenuItem>
+              <MenuItem value="Comodat">Comodat</MenuItem>
               <MenuItem value="AddedLater">Adaug mașina mai târziu</MenuItem>
             </TextField>
 
             {!addLater && (
               <>
+                <DocumentFirstUpload
+                  category="Talon"
+                  label="Talon (certificat de înmatriculare)"
+                  hint="Citim automat nr. de înmatriculare, VIN, marca și modelul."
+                  documents={documents}
+                  pfaRegistrationId={state?.pfaRegistrationId}
+                  onExtracted={(fields) => {
+                    const get = (k: string) => fields.find((f) => f.fieldKey === k)?.effectiveValue ?? ''
+                    if (get('plate_number')) setPlateNumber((p) => p || get('plate_number'))
+                    if (get('vin')) setVin((p) => p || get('vin'))
+                    if (get('make')) setMake((p) => p || get('make'))
+                    if (get('model')) setModel((p) => p || get('model'))
+                  }}
+                  onUploaded={refresh}
+                />
+                <DocumentFirstUpload
+                  category="CarteIdentitateAuto"
+                  label="Cartea de identitate a vehiculului (CIV)"
+                  hint="Confirmă VIN-ul și marca."
+                  documents={documents}
+                  pfaRegistrationId={state?.pfaRegistrationId}
+                  onExtracted={(fields) => {
+                    const get = (k: string) => fields.find((f) => f.fieldKey === k)?.effectiveValue ?? ''
+                    if (get('vin')) setVin((p) => p || get('vin'))
+                    if (get('make')) setMake((p) => p || get('make'))
+                  }}
+                  onUploaded={refresh}
+                />
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                   <TextField label="Nr. înmatriculare" value={plateNumber} onChange={(e) => setPlateNumber(e.target.value)} sx={inputSx} fullWidth />
                   <TextField label="Serie șasiu (VIN)" value={vin} onChange={(e) => setVin(e.target.value)} sx={inputSx} fullWidth />

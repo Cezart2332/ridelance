@@ -17,12 +17,14 @@ import {
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import type { ExtractedField } from '../../services/document.service'
 import {
   onboardingService,
   type EligibilityProfile,
   type EligibilityStatus,
 } from '../../services/onboarding.service'
 import { getErrorMessage } from '../../utils/errorHandler'
+import { DocumentFirstUpload } from './DocumentFirstUpload'
 import OnboardingLayout from './OnboardingLayout'
 import { TOKENS, inputSx } from './onboardingTheme'
 import { useOnboardingState } from './useOnboardingState'
@@ -40,7 +42,7 @@ function statusVisual(status: EligibilityStatus): { color: string; bg: string; l
 
 export default function OnboardingEligibilityPage() {
   const navigate = useNavigate()
-  const { state } = useOnboardingState()
+  const { state, documents, refresh } = useOnboardingState()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -53,6 +55,20 @@ export default function OnboardingEligibilityPage() {
   const [drivingLicenceExpiresOn, setDrivingLicenceExpiresOn] = useState('')
   const [hasDriverCertificate, setHasDriverCertificate] = useState<'yes' | 'no'>('yes')
   const [driverCertificateExpiresOn, setDriverCertificateExpiresOn] = useState('')
+
+  // Precompletează câmpurile din valorile citite de OCR (fără a suprascrie ce a editat userul).
+  const applyExtracted = (fields: ExtractedField[]) => {
+    const val = (key: string) => fields.find((f) => f.fieldKey === key)?.effectiveValue ?? ''
+    const fill = (setter: (u: (prev: string) => string) => void, key: string) => {
+      const v = val(key)
+      if (v) setter((prev) => prev || v)
+    }
+    fill(setDateOfBirth, 'date_of_birth')
+    fill(setCategoryBObtainedOn, 'category_b_obtained_on')
+    fill(setDrivingCategories, 'driving_categories')
+    fill(setDrivingLicenceExpiresOn, 'licence_expires_on')
+    fill(setDriverCertificateExpiresOn, 'atestat_expires_on')
+  }
 
   useEffect(() => {
     let active = true
@@ -116,8 +132,8 @@ export default function OnboardingEligibilityPage() {
             Eligibilitate
           </Typography>
           <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.5 }}>
-            Verificăm câteva condiții de bază: vârsta de minimum 21 de ani, categoria B deținută
-            de cel puțin 2 ani și atestatul de transport alternativ valabil.
+            Încarcă documentele — datele se citesc automat și le confirmi mai jos. Verificăm vârsta
+            de minimum 21 de ani, categoria B de cel puțin 2 ani și atestatul valabil.
           </Typography>
         </Box>
 
@@ -152,7 +168,51 @@ export default function OnboardingEligibilityPage() {
           </Alert>
         )}
 
+        {/* Document-first: întâi documentele, apoi confirmarea datelor citite */}
         <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
+          <Typography sx={{ fontWeight: 750, fontSize: '1.02rem', color: TOKENS.ink, mb: 2 }}>
+            Documentele tale
+          </Typography>
+          <Stack spacing={2.5}>
+            <DocumentFirstUpload
+              category="CarteIdentitate"
+              label="Cartea de identitate"
+              hint="Citim data nașterii pentru verificarea vârstei. Nu stocăm CNP-ul."
+              documents={documents}
+              pfaRegistrationId={state?.pfaRegistrationId}
+              onExtracted={applyExtracted}
+              onUploaded={refresh}
+            />
+            <DocumentFirstUpload
+              category="PermisConducere"
+              label="Permisul de conducere"
+              hint="Citim data obținerii categoriei B și data de expirare."
+              documents={documents}
+              pfaRegistrationId={state?.pfaRegistrationId}
+              onExtracted={applyExtracted}
+              onUploaded={refresh}
+            />
+            {hasDriverCertificate === 'yes' && (
+              <DocumentFirstUpload
+                category="AtestatSofer"
+                label="Atestatul de transport alternativ"
+                hint="Citim data de expirare a atestatului."
+                documents={documents}
+                pfaRegistrationId={state?.pfaRegistrationId}
+                onExtracted={applyExtracted}
+                onUploaded={refresh}
+              />
+            )}
+          </Stack>
+        </Paper>
+
+        <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
+          <Typography sx={{ fontWeight: 750, fontSize: '1.02rem', color: TOKENS.ink, mb: 0.5 }}>
+            Confirmă datele
+          </Typography>
+          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.85rem', mb: 2 }}>
+            Precompletate din documente. Verifică-le și corectează dacă e nevoie.
+          </Typography>
           <Stack spacing={2.5}>
             <TextField
               label="Data nașterii"
@@ -213,6 +273,28 @@ export default function OnboardingEligibilityPage() {
                 sx={inputSx}
                 fullWidth
               />
+            )}
+
+            {hasDriverCertificate === 'no' && (
+              <Alert severity="warning" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+                <Typography sx={{ fontWeight: 700, mb: 0.3 }}>În așteptarea atestatului</Typography>
+                Pentru a lucra legal pe platformele de transport alternativ ai nevoie de atestat
+                profesional. Obține atestatul, apoi revino în RIDElance pentru a continua. Contul și
+                progresul rămân salvate.
+                <Box sx={{ mt: 1 }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="warning"
+                    href="https://www.arr.ro"
+                    target="_blank"
+                    rel="noopener"
+                    sx={{ textTransform: 'none', fontWeight: 700 }}
+                  >
+                    Vezi cum obțin atestatul
+                  </Button>
+                </Box>
+              </Alert>
             )}
           </Stack>
         </Paper>

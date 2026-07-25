@@ -27,6 +27,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { ONBOARDING_SECTIONS } from '../../../../constants/documentSections'
 import { TOKENS } from '../../../../constants/tokens'
+import AdminExtractedFields from './AdminExtractedFields'
 import type { DocumentSummary } from '../../../../services/document.service'
 import {
   onboardingService,
@@ -71,6 +72,87 @@ function sectionStatusColor(status: OnboardingSectionStatus): string {
     case 'InProgress': return TOKENS.primaryStrong
     default: return 'rgba(26,26,46,0.45)'
   }
+}
+
+/** Sub-secțiune de documente care se validează de admin (cheie de secțiune server). */
+interface AdminStepSection {
+  key: string
+  label?: string
+}
+
+/** Cei 6 pași văzuți de admin — oglinda pașilor clientului. Documentele se grupează pe pas;
+ *  validarea rămâne pe secțiunile server care declanșează înrolarea. */
+interface AdminStep {
+  key: string
+  order: number
+  label: string
+  categories: string[]
+  pfa?: boolean
+  sections?: AdminStepSection[]
+  guidedNote?: string
+}
+
+const ADMIN_STEPS: AdminStep[] = [
+  {
+    key: 'eligibility', order: 0, label: 'Eligibilitate',
+    categories: ['Buletin', 'CarteIdentitate', 'PermisConducere', 'AtestatSofer', 'AtestatTransport', 'AdeverintaMedicala'],
+    guidedNote: 'Documentele de eligibilitate (CI, permis, atestat, adeverință). Verificarea automată + de admin se face la nivel de document.',
+  },
+  {
+    key: 'pfa', order: 1, label: 'PFA',
+    categories: ['CertificatInregistrare', 'CertificatConstatator'],
+    pfa: true,
+  },
+  {
+    key: 'fiscal', order: 2, label: 'Fiscal, bancă & semnături',
+    categories: ['ExtrasBancar', 'DecontTvaIntracomunitar', 'DecontTaxaNerezident', 'CertificatTvaIntracomunitar'],
+    guidedNote: 'TVA, cont bancar, cont Oblio și semnături — fluxuri ghidate, avansate din contul clientului.',
+  },
+  {
+    key: 'arr', order: 3, label: 'Autorizație transport (ARR)',
+    categories: ['CazierJudiciar', 'DovadaPlataArr', 'AutorizatieTransportAlternativ', 'DosarAutorizatieArr'],
+    sections: [{ key: 'AutorizatieTransport' }],
+  },
+  {
+    key: 'platforms', order: 4, label: 'Uber & Bolt',
+    categories: [],
+    guidedNote: 'Selecția platformelor și conturile de operator — flux ghidat, avans manual din admin.',
+  },
+  {
+    key: 'vehicle', order: 5, label: 'Vehicul, copie conformă & ecusoane',
+    categories: ['Talon', 'CarteIdentitateAuto', 'ContractVehicul', 'AcordLeasing', 'ITP', 'RCA', 'CopieConforma', 'EcusonUber', 'EcusonBolt', 'DovadaPlataCopieConformaEcusoane', 'AsigurareCalatori', 'DosarCopieConformaEcusoane'],
+    sections: [{ key: 'CopieConforma', label: 'Copie conformă & ecusoane' }, { key: 'Vehicul', label: 'Documentele mașinii' }],
+  },
+]
+
+function pfaSectionStatus(pfaStatus: string): OnboardingSectionStatus {
+  const s = pfaStatus.toLowerCase()
+  if (s === 'approved') return 'Validated'
+  if (s === 'rejected') return 'Rejected'
+  return 'AwaitingValidation'
+}
+
+/** Statusul de afișat pe capul pasului: agregat din secțiunile server (dacă are), altfel din pasul derivat pe server. */
+function aggregateStepStatus(group: AdminStep, state: OnboardingState | null, pfaStatus: string): OnboardingSectionStatus {
+  const statuses: OnboardingSectionStatus[] = []
+  if (group.pfa) statuses.push(pfaSectionStatus(pfaStatus))
+  for (const s of group.sections ?? []) {
+    statuses.push(state?.sections.find((x) => x.key === s.key)?.status ?? 'Locked')
+  }
+
+  if (statuses.length > 0) {
+    if (statuses.includes('Rejected')) return 'Rejected'
+    if (statuses.includes('AwaitingValidation')) return 'AwaitingValidation'
+    if (statuses.every((s) => s === 'Validated')) return 'Validated'
+    if (statuses.includes('InProgress')) return 'InProgress'
+    return 'Locked'
+  }
+
+  const st = state?.steps.find((s) => s.key === group.key)?.status
+  if (st === 'Completed') return 'Validated'
+  if (st === 'AwaitingValidation') return 'AwaitingValidation'
+  if (st === 'Locked') return 'Locked'
+  return 'InProgress'
 }
 
 function docStatusColor(status: string): string {
@@ -157,10 +239,12 @@ export function OnboardingSectionsPanel({
       const next = await onboardingService.getForRegistration(pfaId)
       setState(next)
       setError(null)
-      // Deschide implicit secțiunea aflată „la rând”
-      const current = next.sections.find(
-        (s) => s.status === 'AwaitingValidation' || s.status === 'InProgress' || s.status === 'Rejected',
-      )
+      // Deschide implicit pasul care are o secțiune de validat (sau primul neîncheiat).
+      const current =
+        ADMIN_STEPS.find((g) => {
+          const st = aggregateStepStatus(g, next, pfaStatus)
+          return st === 'AwaitingValidation' || st === 'Rejected'
+        }) ?? ADMIN_STEPS.find((g) => aggregateStepStatus(g, next, pfaStatus) === 'InProgress')
       if (current) {
         setExpanded((prev) => ({ ...prev, [current.key]: true }))
       }
@@ -169,17 +253,17 @@ export function OnboardingSectionsPanel({
     } finally {
       setLoading(false)
     }
-  }, [pfaId])
+  }, [pfaId, pfaStatus])
 
   useEffect(() => {
     setLoading(true)
     void loadState()
   }, [loadState, refreshKey])
 
-  // Documentele care nu aparțin niciunei secțiuni (ex. rapoarte lunare, buletin)
+  // Documentele care nu aparțin niciunui pas (ex. rapoarte lunare, facturi comision)
   const sectionCategories = useMemo(() => {
     const cats = new Set<string>()
-    ONBOARDING_SECTIONS.forEach((s) => s.docs?.forEach((d) => d.categories.forEach((c) => cats.add(c))))
+    ADMIN_STEPS.forEach((s) => s.categories.forEach((c) => cats.add(c)))
     return cats
   }, [])
   const otherDocuments = documents.filter((d) => !sectionCategories.has(d.category))
@@ -215,15 +299,14 @@ export function OnboardingSectionsPanel({
   }
 
   const renderDocRow = (doc: DocumentSummary) => (
+    <Box key={doc.id} sx={{ borderTop: `1px solid ${alpha(TOKENS.ink, 0.05)}` }}>
     <Stack
-      key={doc.id}
       direction="row"
       sx={{
         alignItems: 'center',
         gap: 1.5,
         px: 2,
         py: 1.2,
-        borderTop: `1px solid ${alpha(TOKENS.ink, 0.05)}`,
       }}
     >
       <Box sx={{ width: 30, height: 30, borderRadius: TOKENS.radius.sm, bgcolor: alpha(TOKENS.primary, 0.08), display: 'flex', alignItems: 'center', justifyContent: 'center', color: TOKENS.primaryStrong, flexShrink: 0 }}>
@@ -285,6 +368,8 @@ export function OnboardingSectionsPanel({
         {downloadingId === doc.id ? <CircularProgress size={15} sx={{ color: TOKENS.primary }} /> : <FileDownloadRoundedIcon sx={{ fontSize: 18 }} />}
       </IconButton>
     </Stack>
+    <AdminExtractedFields documentId={doc.id} />
+    </Box>
   )
 
   if (loading) {
@@ -309,23 +394,18 @@ export function OnboardingSectionsPanel({
 
       {error && <Alert severity="warning" sx={{ m: 2 }}>{error}</Alert>}
 
-      {ONBOARDING_SECTIONS.map((section) => {
-        const sectionState = state?.sections.find((s) => s.key === section.key)
-        const status: OnboardingSectionStatus = sectionState?.status ?? 'Locked'
+      {ADMIN_STEPS.map((group) => {
+        const status = aggregateStepStatus(group, state, pfaStatus)
         const color = sectionStatusColor(status)
-        const isPfaSection = section.key === 'Pfa'
-        const sectionDocs = isPfaSection
-          ? []
-          : documents.filter((d) => section.docs?.some((cfg) => cfg.categories.includes(d.category)))
-        const pendingCount = sectionDocs.filter((d) => d.status.toLowerCase() === 'pending').length
-        const isOpen = expanded[section.key] ?? false
-        const canAct = status === 'AwaitingValidation' || status === 'InProgress' || status === 'Rejected'
+        const groupDocs = documents.filter((d) => group.categories.includes(d.category))
+        const pendingCount = groupDocs.filter((d) => d.status.toLowerCase() === 'pending').length
+        const isOpen = expanded[group.key] ?? false
 
         return (
-          <Box key={section.key} sx={{ borderTop: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
+          <Box key={group.key} sx={{ borderTop: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
             <Stack
               direction="row"
-              onClick={() => setExpanded((prev) => ({ ...prev, [section.key]: !isOpen }))}
+              onClick={() => setExpanded((prev) => ({ ...prev, [group.key]: !isOpen }))}
               sx={{
                 alignItems: 'center',
                 gap: 1.5,
@@ -336,18 +416,16 @@ export function OnboardingSectionsPanel({
               }}
             >
               <Box sx={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: alpha(color, 0.12), color, fontWeight: 800, fontSize: '0.8rem', flexShrink: 0 }}>
-                {section.order}
+                {group.order}
               </Box>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="body2" sx={{ fontWeight: 800, color: TOKENS.ink }}>
-                  {section.label}
+                  {group.label}
                 </Typography>
-                {!isPfaSection && (
-                  <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>
-                    {sectionDocs.length} documente
-                    {pendingCount > 0 ? ` · ${pendingCount} de verificat` : ''}
-                  </Typography>
-                )}
+                <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>
+                  {groupDocs.length} documente
+                  {pendingCount > 0 ? ` · ${pendingCount} de verificat` : ''}
+                </Typography>
               </Box>
               <Chip
                 label={sectionStatusLabel(status)}
@@ -360,76 +438,94 @@ export function OnboardingSectionsPanel({
             </Stack>
 
             <Collapse in={isOpen}>
-              {sectionState?.note && status === 'Rejected' && (
-                <Alert severity="error" sx={{ mx: 2.5, mb: 1.5 }}>
-                  Motivul respingerii: {sectionState.note}
-                </Alert>
-              )}
-
-              {isPfaSection ? (
-                <Box sx={{ px: 2.5, pb: 2 }}>
-                  <Typography variant="body2" sx={{ color: TOKENS.textMuted, mb: 1.5 }}>
-                    Secțiunea PFA se validează prin aprobarea dosarului (CUI + certificat de înregistrare).
-                  </Typography>
-                  {pfaStatus.toLowerCase() === 'pending' && (
-                    <Stack direction="row" spacing={1.5}>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        startIcon={<CheckCircleRoundedIcon />}
-                        onClick={onOpenPfaApproveDialog}
-                        sx={{ fontWeight: 700, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: 'none' }}
-                      >
-                        Validează secțiunea (aprobă PFA)
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<CancelRoundedIcon />}
-                        onClick={onOpenPfaRejectDialog}
-                        sx={{ fontWeight: 700, borderColor: '#ef4444', color: '#ef4444', '&:hover': { bgcolor: alpha('#ef4444', 0.06), borderColor: '#dc2626' } }}
-                      >
-                        Respinge
-                      </Button>
-                    </Stack>
-                  )}
-                </Box>
+              {groupDocs.length === 0 ? (
+                <Typography variant="body2" sx={{ color: TOKENS.textMuted, px: 2.5, pb: group.guidedNote ? 1 : 2 }}>
+                  Niciun document încărcat pentru acest pas.
+                </Typography>
               ) : (
-                <>
-                  {sectionDocs.length === 0 ? (
-                    <Typography variant="body2" sx={{ color: TOKENS.textMuted, px: 2.5, pb: 2 }}>
-                      Clientul nu a încărcat încă documente pentru această secțiune.
-                    </Typography>
-                  ) : (
-                    <Box sx={{ pb: 1 }}>{sectionDocs.map(renderDocRow)}</Box>
-                  )}
-
-                  {canAct && (
-                    <Stack direction="row" spacing={1.5} sx={{ px: 2.5, pb: 2, pt: 1 }}>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        disabled={actionBusy || status === 'Rejected'}
-                        startIcon={<CheckCircleRoundedIcon />}
-                        onClick={() => setConfirmValidate(section.key)}
-                        sx={{ fontWeight: 700, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: 'none' }}
-                      >
-                        Validează secțiunea
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        disabled={actionBusy || status === 'Rejected'}
-                        startIcon={<CancelRoundedIcon />}
-                        onClick={() => { setRejectNote(''); setRejectDialog(section.key) }}
-                        sx={{ fontWeight: 700, borderColor: '#ef4444', color: '#ef4444', '&:hover': { bgcolor: alpha('#ef4444', 0.06), borderColor: '#dc2626' } }}
-                      >
-                        Respinge secțiunea
-                      </Button>
-                    </Stack>
-                  )}
-                </>
+                <Box sx={{ pb: 1 }}>{groupDocs.map(renderDocRow)}</Box>
               )}
+
+              {group.guidedNote && (
+                <Typography variant="body2" sx={{ color: TOKENS.textMuted, px: 2.5, pb: 2, fontStyle: 'italic' }}>
+                  {group.guidedNote}
+                </Typography>
+              )}
+
+              {/* Pasul PFA — aprobare/respingere dosar */}
+              {group.pfa && pfaStatus.toLowerCase() === 'pending' && (
+                <Stack direction="row" spacing={1.5} sx={{ px: 2.5, pb: 2, pt: 1 }}>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<CheckCircleRoundedIcon />}
+                    onClick={onOpenPfaApproveDialog}
+                    sx={{ fontWeight: 700, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: 'none' }}
+                  >
+                    Validează PFA (aprobă dosarul)
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<CancelRoundedIcon />}
+                    onClick={onOpenPfaRejectDialog}
+                    sx={{ fontWeight: 700, borderColor: '#ef4444', color: '#ef4444', '&:hover': { bgcolor: alpha('#ef4444', 0.06), borderColor: '#dc2626' } }}
+                  >
+                    Respinge
+                  </Button>
+                </Stack>
+              )}
+
+              {/* Secțiuni de documente care se validează (declanșează înrolarea) */}
+              {group.sections?.map((sec) => {
+                const secState = state?.sections.find((s) => s.key === sec.key)
+                const secStatus: OnboardingSectionStatus = secState?.status ?? 'Locked'
+                const canAct = secStatus === 'AwaitingValidation' || secStatus === 'InProgress' || secStatus === 'Rejected'
+
+                return (
+                  <Box key={sec.key} sx={{ px: 2.5, pb: 2 }}>
+                    {(sec.label || group.sections!.length > 1) && (
+                      <Stack direction="row" sx={{ alignItems: 'center', gap: 1, mb: 1 }}>
+                        <Typography variant="caption" sx={{ fontWeight: 800, color: TOKENS.ink }}>
+                          {sec.label ?? group.label}
+                        </Typography>
+                        <Chip
+                          label={sectionStatusLabel(secStatus)}
+                          size="small"
+                          sx={{ fontSize: '0.62rem', fontWeight: 700, bgcolor: alpha(sectionStatusColor(secStatus), 0.1), color: sectionStatusColor(secStatus) }}
+                        />
+                      </Stack>
+                    )}
+                    {secState?.note && secStatus === 'Rejected' && (
+                      <Alert severity="error" sx={{ mb: 1.5 }}>Motivul respingerii: {secState.note}</Alert>
+                    )}
+                    {canAct && (
+                      <Stack direction="row" spacing={1.5}>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          disabled={actionBusy || secStatus === 'Rejected'}
+                          startIcon={<CheckCircleRoundedIcon />}
+                          onClick={() => setConfirmValidate(sec.key)}
+                          sx={{ fontWeight: 700, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: 'none' }}
+                        >
+                          Validează
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          disabled={actionBusy || secStatus === 'Rejected'}
+                          startIcon={<CancelRoundedIcon />}
+                          onClick={() => { setRejectNote(''); setRejectDialog(sec.key) }}
+                          sx={{ fontWeight: 700, borderColor: '#ef4444', color: '#ef4444', '&:hover': { bgcolor: alpha('#ef4444', 0.06), borderColor: '#dc2626' } }}
+                        >
+                          Respinge
+                        </Button>
+                      </Stack>
+                    )}
+                  </Box>
+                )
+              })}
             </Collapse>
           </Box>
         )
