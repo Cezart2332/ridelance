@@ -331,9 +331,11 @@ function PartnerPanel({ partner }: { partner: Partner }) {
           <Typography sx={{ fontWeight: 850, fontSize: { xs: '1.35rem', md: '1.6rem' }, color: TOKENS.ink }}>
             {partner.name}
           </Typography>
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.4 }}>
-            {partner.tagline}
-          </Typography>
+          {partner.tagline && (
+            <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.4 }}>
+              {partner.tagline}
+            </Typography>
+          )}
         </Box>
         {partner.website && (
           <Button
@@ -366,9 +368,11 @@ function PartnerPanel({ partner }: { partner: Partner }) {
           <BcrPanelContent />
         ) : (
           <Stack spacing={4}>
-            <Typography sx={{ color: TOKENS.ink, fontSize: '1rem', lineHeight: 1.85 }}>
-              {partner.description}
-            </Typography>
+            {partner.description && (
+              <Typography sx={{ color: TOKENS.ink, fontSize: '1rem', lineHeight: 1.85 }}>
+                {partner.description}
+              </Typography>
+            )}
             {partner.slug === 'asigurari-ro' && (
               <Box>
                 <Typography sx={{ fontWeight: 850, fontSize: '1.25rem', color: TOKENS.ink, mb: 2.5 }}>

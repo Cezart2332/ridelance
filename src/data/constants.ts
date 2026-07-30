@@ -98,6 +98,22 @@ export const partnerLogos: { name: string; image: string; href?: string }[] = [
     name: 'BCR',
     image: '/logobcr.jpeg',
   },
+  {
+    name: 'Oblio',
+    image: '/oblio.jpeg',
+  },
+  {
+    name: 'Consulto',
+    image: '/consulto.jpeg',
+  },
+  {
+    name: 'Simplifi',
+    image: '/simplifi.jpeg',
+  },
+  {
+    name: 'Transped',
+    image: '/transped.jpeg',
+  },
 ]
 
 export const homeSec2 = [

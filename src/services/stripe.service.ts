@@ -45,7 +45,6 @@ export interface PlanInfo {
   list: string[]
   footnote?: string
   cta: string
-  priceId: string
   highlighted: boolean
 }
 
@@ -56,7 +55,6 @@ export interface ServiceInfo {
   priceNote?: string
   desc: string
   tagline?: string
-  priceId: string
   cta: string
 }
 
@@ -77,7 +75,6 @@ export const SUBSCRIPTION_PLANS: PlanInfo[] = [
       'Organizare completă pentru activitatea de șofer PFA',
       'Reduceri și beneficii prin partenerii RIDElance',
     ],
-    priceId: import.meta.env.VITE_PRICE_SOLO || '',
     highlighted: false,
   },
   {
@@ -94,7 +91,6 @@ export const SUBSCRIPTION_PLANS: PlanInfo[] = [
       'Contabilitate completă pentru PFA',
       'Reduceri și beneficii prin partenerii RIDElance',
     ],
-    priceId: import.meta.env.VITE_PRICE_START || '',
     highlighted: false,
   },
   {
@@ -111,7 +107,6 @@ export const SUBSCRIPTION_PLANS: PlanInfo[] = [
       'Oferte, campanii și promoții exclusive PRO',
       'Reducere la chiria mașinilor RIDElance',
     ],
-    priceId: import.meta.env.VITE_PRICE_PRO || '',
     highlighted: true,
   },
 ]
@@ -123,7 +118,6 @@ export const ONE_TIME_SERVICES: ServiceInfo[] = [
     price: '450 lei',
     desc: 'Deschizi rapid un PFA printr-un proces simplu și organizat, fără abonament lunar.',
     cta: 'Cumpără serviciul',
-    priceId: import.meta.env.VITE_PRICE_INFIINTARE_PFA || '',
   },
   {
     key: 'sediu_social',
@@ -131,7 +125,6 @@ export const ONE_TIME_SERVICES: ServiceInfo[] = [
     price: '449 lei / an',
     desc: 'O soluție practică pentru cei care au nevoie de sediu social pentru PFA în București / Ilfov.',
     cta: 'Cumpără serviciul',
-    priceId: import.meta.env.VITE_PRICE_SEDIU_SOCIAL || '',
   },
   {
     key: 'start_ride',
@@ -141,7 +134,6 @@ export const ONE_TIME_SERVICES: ServiceInfo[] = [
     desc: 'Începi pe PFA, fără să pierzi timp cu pași neclari. RIDElance te ghidează prin deschiderea PFA-ului și activarea pentru ridesharing, până ești pregătit să lucrezi independent.',
     tagline: 'Proces clar. Pornire corectă. Suport până la activare.',
     cta: 'Alege serviciul',
-    priceId: import.meta.env.VITE_PRICE_START_RIDE || '',
   },
 ]
 
@@ -156,7 +148,6 @@ export const stripeService = {
 
     try {
       const response = await api.post<{clientSecret: string}>('/payments/checkout-session', {
-        priceId: import.meta.env.VITE_PRICE_INFIINTARE_PFA,
         mode: 'payment',
         plan: 'infiintare_pfa',
         successUrl: effectiveSuccessUrl,
@@ -180,31 +171,26 @@ export const stripeService = {
     options?: { isPlanChange?: boolean },
   ): Promise<void> {
     const plan = SUBSCRIPTION_PLANS.find(p => p.key === key)
-    if (!plan?.priceId) return
-    
+    if (!plan) return
+
     const origin = window.location.origin
     const effectiveSuccessUrl = successUrl || `${origin}/app/dashboard?subscribed=1&session_id={{CHECKOUT_SESSION_ID}}&plan=${key}`
     const effectiveCancelUrl = cancelUrl || `${origin}/inregistrare/abonament`
 
-    try {
-      const response = await api.post<{clientSecret: string}>('/payments/checkout-session', {
-        priceId: plan.priceId,
-        mode: 'subscription',
-        plan: key,
-        billingAnchorUnix: null,
-        isPlanChange: options?.isPlanChange ?? false,
-        successUrl: effectiveSuccessUrl,
-        cancelUrl: effectiveCancelUrl
-      })
-      sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
-      sessionStorage.setItem('stripe_cancel_url', effectiveCancelUrl)
-      sessionStorage.setItem('stripe_checkout_title', plan.title)
-      sessionStorage.setItem('stripe_checkout_price', plan.price)
-      sessionStorage.setItem('stripe_checkout_desc', plan.summary)
-      window.location.href = '/checkout'
-    } catch (error) {
-      console.error('Failed to create checkout session', error)
-    }
+    const response = await api.post<{clientSecret: string}>('/payments/checkout-session', {
+      mode: 'subscription',
+      plan: key,
+      billingAnchorUnix: null,
+      isPlanChange: options?.isPlanChange ?? false,
+      successUrl: effectiveSuccessUrl,
+      cancelUrl: effectiveCancelUrl
+    })
+    sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
+    sessionStorage.setItem('stripe_cancel_url', effectiveCancelUrl)
+    sessionStorage.setItem('stripe_checkout_title', plan.title)
+    sessionStorage.setItem('stripe_checkout_price', plan.price)
+    sessionStorage.setItem('stripe_checkout_desc', plan.summary)
+    window.location.href = '/checkout'
   },
 
   async redirectToPublicService(
@@ -237,23 +223,18 @@ export const stripeService = {
 
   async redirectToService(key: ServiceKey): Promise<void> {
     const service = ONE_TIME_SERVICES.find(s => s.key === key)
-    if (!service?.priceId) return
-    
-    try {
-      const response = await api.post<{clientSecret: string}>('/payments/checkout-session', {
-        priceId: service.priceId,
-        mode: 'payment',
-        plan: key
-      })
-      sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
-      sessionStorage.setItem('stripe_cancel_url', '/app/dashboard?section=servicii')
-      sessionStorage.setItem('stripe_checkout_title', service.title)
-      sessionStorage.setItem('stripe_checkout_price', service.price)
-      sessionStorage.setItem('stripe_checkout_desc', service.desc)
-      window.location.href = '/checkout'
-    } catch (error) {
-      console.error('Failed to create checkout session', error)
-    }
+    if (!service) return
+
+    const response = await api.post<{clientSecret: string}>('/payments/checkout-session', {
+      mode: 'payment',
+      plan: key
+    })
+    sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
+    sessionStorage.setItem('stripe_cancel_url', '/app/dashboard?section=servicii')
+    sessionStorage.setItem('stripe_checkout_title', service.title)
+    sessionStorage.setItem('stripe_checkout_price', service.price)
+    sessionStorage.setItem('stripe_checkout_desc', service.desc)
+    window.location.href = '/checkout'
   },
 
   /** Store selected plan in sessionStorage for the registration flow. */

@@ -1,11 +1,15 @@
+import { useState } from 'react'
 import { Box, Chip, Paper, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 
-import { PfaIncomeSummary } from '../../dashboard/sections/PfaIncomeSummary'
-import { PfaTaxSummaryWidget } from '../../dashboard/sections/PfaTaxSummaryWidget'
-import { RevenueCharts } from '../../dashboard/sections/RevenueCharts'
+import {
+  HomeDashboardContent,
+  type StatsTimeframe,
+} from '../../dashboard/sections/HomeDashboardView'
 import { DASHBOARD_TOKENS } from '../../dashboard/dashboardTheme'
-import { type DashboardSummary } from '../../../services/user.service'
+import { type DashboardSummary, type UserProfile } from '../../../services/user.service'
+import { type BoltDashboardDto } from '../../../services/bolt.service'
+import { type UberDashboardDto } from '../../../services/uber.service'
 
 function pfaStatusChip(status: string | null) {
   if (!status) return null
@@ -82,8 +86,9 @@ const mockSummary: DashboardSummary = {
       uploadedAtUtc: new Date().toISOString(),
     },
   ],
-  venitCash: 1000,
-  venitCard: 1000,
+  // Cash + card is the payment split of the platform money, so the two views always match.
+  venitCash: 2100,
+  venitCard: 3900,
   venitBolt: 3000,
   venitUber: 3000,
   taxeEstimate: 1000,
@@ -93,8 +98,8 @@ const mockSummary: DashboardSummary = {
   monthlyStats: {
     year: 2026,
     month: 5,
-    venitCash: 1000,
-    venitCard: 1000,
+    venitCash: 2100,
+    venitCard: 3900,
     venitBolt: 3000,
     venitUber: 3000,
     venitTotal: 6000,
@@ -102,19 +107,19 @@ const mockSummary: DashboardSummary = {
   yearlyStats: {
     year: 2026,
     month: null,
-    venitCash: 3200,
-    venitCard: 3200,
+    venitCash: 7600,
+    venitCard: 14600,
     venitBolt: 11900,
     venitUber: 10300,
     venitTotal: 22200,
   },
   revenueChartYear: 2026,
   monthlyRevenue: [
-    { month: 1, venitTotal: 3500, venitCash: 500, venitCard: 500, venitBolt: 2000, venitUber: 1500 },
-    { month: 2, venitTotal: 4000, venitCash: 600, venitCard: 600, venitBolt: 2200, venitUber: 1800 },
-    { month: 3, venitTotal: 4000, venitCash: 400, venitCard: 400, venitBolt: 2200, venitUber: 1800 },
-    { month: 4, venitTotal: 4700, venitCash: 700, venitCard: 700, venitBolt: 2500, venitUber: 2200 },
-    { month: 5, venitTotal: 6000, venitCash: 1000, venitCard: 1000, venitBolt: 3000, venitUber: 3000 },
+    { month: 1, venitTotal: 3500, venitCash: 1200, venitCard: 2300, venitBolt: 2000, venitUber: 1500 },
+    { month: 2, venitTotal: 4000, venitCash: 1400, venitCard: 2600, venitBolt: 2200, venitUber: 1800 },
+    { month: 3, venitTotal: 4000, venitCash: 1300, venitCard: 2700, venitBolt: 2200, venitUber: 1800 },
+    { month: 4, venitTotal: 4700, venitCash: 1600, venitCard: 3100, venitBolt: 2500, venitUber: 2200 },
+    { month: 5, venitTotal: 6000, venitCash: 2100, venitCard: 3900, venitBolt: 3000, venitUber: 3000 },
   ],
   // YTD auto-computed tax breakdown
   taxYear: 2026,
@@ -129,35 +134,88 @@ const mockSummary: DashboardSummary = {
   ytdExpenses: [],
 }
 
+const mockProfile: UserProfile = {
+  id: 'demo-user',
+  email: 'sofer.demo@ridelance.ro',
+  firstName: 'Andrei',
+  lastName: 'Popescu',
+  phoneNumber: '+40 7xx xxx xxx',
+  role: 'Client',
+  createdAtUtc: new Date(2026, 0, 15).toISOString(),
+}
+
+const mockBolt: BoltDashboardDto = {
+  isConfigured: true,
+  isConnected: true,
+  lastFetchedAtUtc: new Date().toISOString(),
+  errorMessage: null,
+  period: 'month',
+  year: 2026,
+  month: 5,
+  totalOrdersCount: 214,
+  totalNetEarnings: 3000,
+  totalCashEarnings: 1050,
+  totalCardEarnings: 1950,
+  totalBusinessEarnings: 420,
+  totalTips: 85,
+  totalCommissions: 640,
+  totalRideDistanceKm: 1840,
+  totalRideHours: 96,
+  averageNetPerRide: 14,
+  averageNetPerRideHour: 31,
+  series: [],
+  recentRides: [],
+}
+
+const mockUber: UberDashboardDto = {
+  period: 'month',
+  year: 2026,
+  month: 5,
+  stats: {
+    netEarnings: 3000,
+    grossEarnings: 3600,
+    cashCollected: 1050,
+    commission: 600,
+    trips: 168,
+    kilometers: 1520,
+    onlineHours: 110,
+    rideHours: 88,
+  },
+  imports: [
+    {
+      id: 'demo-import-1',
+      year: 2026,
+      month: 5,
+      fileType: 'earnings',
+      fileName: 'castiguri_mai_2026.csv',
+      importedAtUtc: new Date().toISOString(),
+      netEarnings: 3000,
+      grossEarnings: 3600,
+      cashCollected: 1050,
+      commission: 600,
+      trips: 168,
+      kilometers: 1520,
+      onlineHours: 110,
+      rideHours: 88,
+    },
+  ],
+}
+
 export function HomeDashboardView() {
+  const [timeframe, setTimeframe] = useState<StatsTimeframe>('month')
+
   return (
     <Stack spacing={2.5}>
-      <PfaIncomeSummary
-        venitCash={mockSummary.venitCash ?? 0}
-        venitCard={mockSummary.venitCard ?? 0}
-        venitBolt={mockSummary.venitBolt ?? 0}
-        venitUber={mockSummary.venitUber ?? 0}
-        taxeEstimate={mockSummary.taxeEstimate ?? 0}
-        venitTotal={mockSummary.venitTotal ?? 0}
-        incomeYear={mockSummary.incomeYear}
-        incomeMonth={mockSummary.incomeMonth}
+      <HomeDashboardContent
+        summary={mockSummary}
+        profile={mockProfile}
+        boltDashboard={mockBolt}
+        uberDashboard={mockUber}
+        timeframe={timeframe}
+        onTimeframeChange={setTimeframe}
       />
 
-      <PfaTaxSummaryWidget summary={mockSummary} />
-
-      <RevenueCharts
-        year={mockSummary.revenueChartYear ?? new Date().getFullYear()}
-        monthlyRevenue={mockSummary.monthlyRevenue ?? []}
-        venitCash={mockSummary.venitCash ?? 0}
-        venitCard={mockSummary.venitCard ?? 0}
-        venitBolt={mockSummary.venitBolt ?? 0}
-        venitUber={mockSummary.venitUber ?? 0}
-        incomeMonth={mockSummary.incomeMonth}
-        timeframe="month"
-        platform="all"
-      />
-
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 2, maxWidth: 1100, mx: 'auto', width: '100%' }}>
         <Paper
           elevation={0}
           sx={{

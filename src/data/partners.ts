@@ -6,10 +6,10 @@ export interface Partner {
   slug: string
   name: string
   image: string
-  /** Short text shown on the partners list card. */
-  tagline: string
-  /** Full description shown on the partner's own page. */
-  description: string
+  /** Short text shown on the partners list card. Omitted for partners with no copy yet. */
+  tagline?: string
+  /** Full description shown on the partner's own page. Omitted for partners with no copy yet. */
+  description?: string
   website?: string
 }
 
@@ -110,6 +110,26 @@ export const partners: Partner[] = [
     description:
       'MOL România este partener RIDElance și oferă beneficii dedicate comunității noastre. Prin acest parteneriat, șoferii și antreprenorii care fac parte din ecosistemul RIDElance pot beneficia de condiții avantajoase pentru alimentarea cu carburanți (benzină, motorină și GPL), precum și pentru utilizarea serviciilor de spălătorie auto din rețeaua MOL, la nivel național. Scopul acestui parteneriat este de a contribui la reducerea costurilor de operare și de a oferi avantaje reale celor care își desfășoară activitatea în domeniul transportului alternativ.',
     website: 'https://mol.ro',
+  },
+  {
+    slug: 'oblio',
+    name: 'Oblio',
+    image: '/oblio.jpeg',
+  },
+  {
+    slug: 'consulto',
+    name: 'Consulto',
+    image: '/consulto.jpeg',
+  },
+  {
+    slug: 'simplifi',
+    name: 'Simplifi',
+    image: '/simplifi.jpeg',
+  },
+  {
+    slug: 'transped',
+    name: 'Transped',
+    image: '/transped.jpeg',
   },
 ]
 

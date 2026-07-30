@@ -25,6 +25,7 @@ import DiscountRoundedIcon from '@mui/icons-material/DiscountRounded'
 import AttachFileRoundedIcon from '@mui/icons-material/AttachFileRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded'
+import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded'
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
 import LoginRoundedIcon from '@mui/icons-material/LoginRounded'
 import PauseCircleOutlineRoundedIcon from '@mui/icons-material/PauseCircleOutlineRounded'
@@ -41,6 +42,7 @@ import { ServicesAdminView } from '../components/dashboard/sections/admin/Servic
 import { OfficeCalendarAdminView } from '../components/dashboard/sections/admin/OfficeCalendarAdminView'
 import { InsuranceTab } from '../components/dashboard/sections/InsuranceTab'
 import { OblioAdminView } from '../components/dashboard/sections/admin/OblioAdminView'
+import { DiscountsAdminView } from '../components/dashboard/sections/admin/DiscountsAdminView'
 import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminOverviewView'
 import { OnboardingSectionsPanel } from '../components/dashboard/sections/admin/OnboardingSectionsPanel'
@@ -488,6 +490,7 @@ export function AdminDashboard() {
     { id: 'masini', label: 'Mașini Ridesharing', icon: <DirectionsCarFilledRoundedIcon /> },
     { id: 'servicii', label: 'Servicii', icon: <ShoppingCartRoundedIcon /> },
     { id: 'facturare', label: 'Facturare Oblio', icon: <ReceiptLongRoundedIcon /> },
+    { id: 'reduceri', label: 'Coduri reducere', icon: <LocalOfferRoundedIcon /> },
     { id: 'asigurari', label: 'Asigurări', icon: <ShieldRoundedIcon /> },
     { id: 'calendar', label: 'Calendar birou', icon: <EventAvailableRoundedIcon /> },
     { id: 'chat', label: 'Chat Clienți', icon: <ChatRoundedIcon /> },
@@ -1096,6 +1099,7 @@ export function AdminDashboard() {
       case 'masini': return <CarsAdminView />
       case 'servicii': return <ServicesAdminView />
       case 'facturare': return <OblioAdminView />
+      case 'reduceri': return <DiscountsAdminView />
       case 'asigurari': return <InsuranceTab />
       case 'calendar': return <OfficeCalendarAdminView />
       case 'chat': return <AdminChatView pfas={pfas} />

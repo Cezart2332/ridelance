@@ -67,9 +67,11 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
     return [current - 1, current, current + 1];
   }, []);
 
+  // Cash/card are the payment split of the platform money, not extra income — the two views
+  // describe the same amount, so the total is whichever of them is filled in.
   const venitTotal = useMemo(
     () =>
-      income.venitCash + income.venitCard + income.venitBolt + income.venitUber,
+      Math.max(income.venitBolt + income.venitUber, income.venitCash + income.venitCard),
     [income.venitCash, income.venitCard, income.venitBolt, income.venitUber]
   );
 

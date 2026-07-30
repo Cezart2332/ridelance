@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Button, Chip, Paper, Typography } from '@mui/material'
+import { Alert, Box, Button, Chip, Paper, Snackbar, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import { ONE_TIME_SERVICES, stripeService, type ServiceKey } from '../../../services/stripe.service'
@@ -35,14 +35,28 @@ const SERVICE_BADGES: Record<ServiceKey, { label: string; color: string; bg: str
 
 export function ServiciiTab() {
   const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   const handleBuy = (key: ServiceKey) => {
     if (!paymentPolicyAccepted) return
-    stripeService.redirectToService(key)
+    setCheckoutError(null)
+    stripeService.redirectToService(key).catch(() => {
+      setCheckoutError('Nu am putut deschide plata. Încearcă din nou în câteva momente.')
+    })
   }
 
   return (
     <Box sx={{ maxWidth: 860, mx: 'auto', p: { xs: 2, md: 3 } }}>
+      <Snackbar
+        open={checkoutError !== null}
+        autoHideDuration={6000}
+        onClose={() => setCheckoutError(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setCheckoutError(null)} sx={{ width: '100%' }}>
+          {checkoutError}
+        </Alert>
+      </Snackbar>
       <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: T.ink, mb: 1 }}>
         Servicii individuale
       </Typography>

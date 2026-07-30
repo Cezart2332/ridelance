@@ -49,6 +49,7 @@ export default function SubscriptionSelectPage() {
   const nextBilling = getNextMondayBillingDate()
   const isSuspendedAccount = searchParams.get('reason') === 'suspended'
   const [gateChecking, setGateChecking] = useState(true)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   // Abonamentul se alege doar după onboarding complet; cu abonament activ → dashboard.
   useEffect(() => {
@@ -75,8 +76,11 @@ export default function SubscriptionSelectPage() {
 
   const handleContinue = () => {
     if (!selected || !termsAccepted || !paymentPolicyAccepted) return
+    setCheckoutError(null)
     stripeService.activateSubscription(selected, nextBilling)
-    stripeService.redirectToPlan(selected)
+    stripeService.redirectToPlan(selected).catch(() => {
+      setCheckoutError('Nu am putut deschide plata. Încearcă din nou în câteva momente.')
+    })
   }
 
   if (gateChecking) {
@@ -142,6 +146,12 @@ export default function SubscriptionSelectPage() {
           {isSuspendedAccount && (
             <Alert severity="warning" sx={{ maxWidth: 640, width: '100%', borderRadius: TOKENS.radius.lg }}>
               Contul tău este suspendat. Pentru reactivare, alege un abonament sau contactează suportul dacă ai nevoie de ajutor.
+            </Alert>
+          )}
+
+          {checkoutError && (
+            <Alert severity="error" sx={{ maxWidth: 640, width: '100%', borderRadius: TOKENS.radius.lg }}>
+              {checkoutError}
             </Alert>
           )}
 

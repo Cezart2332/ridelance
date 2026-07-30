@@ -60,6 +60,7 @@ export function AbonamenteTab() {
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [planChangeNotice, setPlanChangeNotice] = useState(false)
   const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   useEffect(() => {
     if (searchParams.get('plan_changed') === '1') {
@@ -98,12 +99,17 @@ export function AbonamenteTab() {
   const handleUpgrade = (key: PlanKey) => {
     if (!paymentPolicyAccepted) return
     const origin = window.location.origin
-    void stripeService.redirectToPlan(
-      key,
-      `${origin}/app/dashboard?section=abonamente&plan_changed=1`,
-      `${origin}/app/dashboard?section=abonamente`,
-      { isPlanChange: true },
-    )
+    setCheckoutError(null)
+    stripeService
+      .redirectToPlan(
+        key,
+        `${origin}/app/dashboard?section=abonamente&plan_changed=1`,
+        `${origin}/app/dashboard?section=abonamente`,
+        { isPlanChange: true },
+      )
+      .catch(() => {
+        setCheckoutError('Nu am putut deschide plata. Încearcă din nou în câteva momente.')
+      })
   }
 
   return (
@@ -116,6 +122,17 @@ export function AbonamenteTab() {
       >
         <Alert severity="success" onClose={() => setPlanChangeNotice(false)} sx={{ width: '100%' }}>
           Plata a fost înregistrată. Noul abonament se activează de luni la 15:00; până atunci păstrezi accesul curent.
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={checkoutError !== null}
+        autoHideDuration={6000}
+        onClose={() => setCheckoutError(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setCheckoutError(null)} sx={{ width: '100%' }}>
+          {checkoutError}
         </Alert>
       </Snackbar>
       <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: T.ink, mb: 3 }}>
