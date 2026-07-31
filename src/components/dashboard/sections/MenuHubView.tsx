@@ -226,9 +226,9 @@ export function MenuHubView({ onNavigate, onLogout }: MenuHubViewProps) {
           fontWeight: 750,
           textTransform: 'none',
           borderRadius: DASHBOARD_TOKENS.radius.lg,
-          color: '#e11d48',
-          bgcolor: alpha('#e11d48', 0.05),
-          '&:hover': { bgcolor: alpha('#e11d48', 0.1) },
+          color: DASHBOARD_TOKENS.stateError,
+          bgcolor: alpha(DASHBOARD_TOKENS.stateError, 0.05),
+          '&:hover': { bgcolor: alpha(DASHBOARD_TOKENS.stateError, 0.1) },
         }}
       >
         Deconectare

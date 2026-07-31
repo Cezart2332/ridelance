@@ -247,7 +247,7 @@ export function RecurringDocumentationPanel({
                 sx={{
                   p: 1.5,
                   borderRadius: DASHBOARD_TOKENS.radius.md,
-                  border: `1px solid ${status === 'verified' ? alpha('#2e7d32', 0.2) : DASHBOARD_TOKENS.border}`,
+                  border: `1px solid ${status === 'verified' ? alpha(DASHBOARD_TOKENS.stateActive, 0.22) : DASHBOARD_TOKENS.border}`,
                   bgcolor: DASHBOARD_TOKENS.surface,
                 }}
               >
@@ -370,7 +370,7 @@ export function RecurringDocumentationPanel({
                               size="small"
                               onClick={() => handleStatus(doc.id, 'Verified')}
                               disabled={statusUpdatingId === doc.id}
-                              sx={{ color: '#10b981' }}
+                              sx={{ color: DASHBOARD_TOKENS.stateActive }}
                               title="Aprobă"
                             >
                               <CheckCircleRoundedIcon fontSize="small" />
@@ -379,7 +379,7 @@ export function RecurringDocumentationPanel({
                               size="small"
                               onClick={() => handleStatus(doc.id, 'Rejected')}
                               disabled={statusUpdatingId === doc.id}
-                              sx={{ color: '#ef4444' }}
+                              sx={{ color: DASHBOARD_TOKENS.stateError }}
                               title="Respinge"
                             >
                               <CancelRoundedIcon fontSize="small" />

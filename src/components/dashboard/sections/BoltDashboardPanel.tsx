@@ -3,7 +3,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
   Paper,
   Stack,
@@ -34,6 +33,7 @@ import {
   type BoltDashboardRideDto,
 } from '../../../services/bolt.service';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
+import { StatCard, StatusChip, pillToggleSx } from '../ui';
 
 interface BoltDashboardPanelProps {
   dashboard: BoltDashboardDto | null;
@@ -43,14 +43,6 @@ interface BoltDashboardPanelProps {
   onPeriodChange: (period: BoltDashboardPeriod) => void;
   onOpenBoltIntegration: () => void;
 }
-
-type KpiCardProps = {
-  label: string;
-  value: string;
-  icon: ReactNode;
-  tone: string;
-  helper?: string;
-};
 
 const periodLabels: Record<BoltDashboardPeriod, string> = {
   month: 'Lună',
@@ -98,71 +90,6 @@ function rideTimeLabel(ride: BoltDashboardRideDto) {
   const date = started.toLocaleDateString('ro-RO', { day: '2-digit', month: 'short' });
   const time = started.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
   return `${date}, ${time}`;
-}
-
-function KpiCard({ label, value, icon, tone, helper }: KpiCardProps) {
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: { xs: 2, md: 2.35 },
-        minHeight: 142,
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
-        border: `1px solid ${alpha(tone, 0.22)}`,
-        bgcolor: DASHBOARD_TOKENS.paper,
-        boxShadow: DASHBOARD_TOKENS.shadow.sm,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        transition: 'transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease',
-        '&:hover': {
-          transform: 'translateY(-3px)',
-          boxShadow: DASHBOARD_TOKENS.shadow.md,
-          borderColor: alpha(tone, 0.45),
-        },
-      }}
-    >
-      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1.5 }}>
-        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontWeight: 800, fontSize: '0.82rem' }}>
-          {label}
-        </Typography>
-        <Box
-          sx={{
-            width: 36,
-            height: 36,
-            flexShrink: 0,
-            borderRadius: DASHBOARD_TOKENS.radius.md,
-            color: tone,
-            bgcolor: alpha(tone, 0.11),
-            display: 'grid',
-            placeItems: 'center',
-            '& svg': { fontSize: 21 },
-          }}
-        >
-          {icon}
-        </Box>
-      </Stack>
-      <Box>
-        <Typography
-          sx={{
-            color: DASHBOARD_TOKENS.ink,
-            fontWeight: 900,
-            fontSize: { xs: '1.55rem', sm: '1.8rem' },
-            lineHeight: 1.1,
-            fontVariantNumeric: 'tabular-nums',
-            letterSpacing: 0,
-          }}
-        >
-          {value}
-        </Typography>
-        {helper && (
-          <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 700, fontSize: '0.78rem', mt: 0.8 }}>
-            {helper}
-          </Typography>
-        )}
-      </Box>
-    </Paper>
-  );
 }
 
 function ChartCard({
@@ -302,7 +229,7 @@ export function BoltDashboardPanel({
         sx={{
           p: { xs: 2.5, md: 3 },
           borderRadius: DASHBOARD_TOKENS.radius.xl,
-          border: `1px solid ${alpha('#dc2626', 0.18)}`,
+          border: `1px solid ${alpha(DASHBOARD_TOKENS.stateError, 0.18)}`,
           bgcolor: DASHBOARD_TOKENS.paper,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
@@ -337,15 +264,9 @@ export function BoltDashboardPanel({
               <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 950, fontSize: { xs: '1.35rem', md: '1.65rem' }, lineHeight: 1.15 }}>
                 Bolt
               </Typography>
-              <Chip
+              <StatusChip
                 label={dashboard.isConnected ? 'Conectat' : 'Necesită reconectare'}
-                size="small"
-                sx={{
-                  borderRadius: DASHBOARD_TOKENS.radius.full,
-                  fontWeight: 800,
-                  color: dashboard.isConnected ? '#047857' : '#b45309',
-                  bgcolor: dashboard.isConnected ? alpha('#10b981', 0.12) : alpha('#f59e0b', 0.14),
-                }}
+                tone={dashboard.isConnected ? 'active' : 'neutral'}
               />
             </Stack>
             <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>
@@ -362,15 +283,15 @@ export function BoltDashboardPanel({
                 onClick={onOpenBoltIntegration}
                 sx={{
                   borderRadius: DASHBOARD_TOKENS.radius.md,
-                  borderColor: alpha('#b45309', 0.24),
-                  color: '#92400e',
+                  borderColor: alpha(DASHBOARD_TOKENS.accent, 0.28),
+                  color: DASHBOARD_TOKENS.accent,
                   fontWeight: 900,
                   textTransform: 'none',
-                  bgcolor: alpha('#f59e0b', 0.08),
+                  bgcolor: alpha(DASHBOARD_TOKENS.accent, 0.06),
                   whiteSpace: 'nowrap',
                   '&:hover': {
-                    borderColor: alpha('#b45309', 0.38),
-                    bgcolor: alpha('#f59e0b', 0.13),
+                    borderColor: alpha(DASHBOARD_TOKENS.accent, 0.45),
+                    bgcolor: alpha(DASHBOARD_TOKENS.accent, 0.1),
                   },
                 }}
               >
@@ -382,27 +303,7 @@ export function BoltDashboardPanel({
               value={period}
               onChange={handlePeriodChange}
               size="small"
-              sx={{
-                alignSelf: { xs: 'stretch', md: 'center' },
-                bgcolor: DASHBOARD_TOKENS.paper,
-                borderRadius: DASHBOARD_TOKENS.radius.md,
-                p: 0.4,
-                boxShadow: DASHBOARD_TOKENS.shadow.sm,
-                '& .MuiToggleButtonGroup-grouped': {
-                  flex: { xs: 1, md: 'initial' },
-                  border: 0,
-                  px: { xs: 1.2, sm: 2 },
-                  py: 0.75,
-                  borderRadius: `${DASHBOARD_TOKENS.radius.sm}px !important`,
-                  color: DASHBOARD_TOKENS.textMuted,
-                  fontWeight: 900,
-                  textTransform: 'none',
-                  '&.Mui-selected': {
-                    bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.18),
-                    color: DASHBOARD_TOKENS.ink,
-                  },
-                },
-              }}
+              sx={{ ...pillToggleSx, alignSelf: { xs: 'stretch', md: 'center' } }}
             >
               {visiblePeriods.map((value) => (
                 <ToggleButton key={value} value={value}>
@@ -432,32 +333,29 @@ export function BoltDashboardPanel({
             gap: 1.5,
           }}
         >
-          <KpiCard
+          <StatCard
+            variant="accent"
             label="Încasat net"
             value={formatLei(dashboard.totalNetEarnings)}
             icon={<AccountBalanceWalletRoundedIcon />}
-            tone="#0f9f6e"
             helper={`Cash ${formatLeiDetailed(dashboard.totalCashEarnings)} · card ${formatLeiDetailed(dashboard.totalCardEarnings)}`}
           />
-          <KpiCard
+          <StatCard
             label="Curse"
             value={dashboard.totalOrdersCount.toLocaleString('ro-RO')}
             icon={<LocalTaxiRoundedIcon />}
-            tone={DASHBOARD_TOKENS.primaryStrong}
             helper={dashboard.recentRides.length > 0 ? 'Cele mai recente sunt mai jos' : undefined}
           />
-          <KpiCard
+          <StatCard
             label="Ore în cursă"
             value={formatHours(dashboard.totalRideHours)}
             icon={<AccessTimeRoundedIcon />}
-            tone="#7c3aed"
             helper={dashboard.averageNetPerRideHour > 0 ? `${formatLeiDetailed(dashboard.averageNetPerRideHour)} / oră` : undefined}
           />
-          <KpiCard
+          <StatCard
             label="Km parcurși"
             value={formatKm(dashboard.totalRideDistanceKm)}
             icon={<RouteRoundedIcon />}
-            tone="#ea8a16"
             helper={`Business ${formatLeiDetailed(dashboard.totalBusinessEarnings)} · comision ${formatLeiDetailed(dashboard.totalCommissions)}`}
           />
         </Box>
@@ -519,7 +417,7 @@ export function BoltDashboardPanel({
                       }}
                       formatter={(value: any) => [formatLeiDetailed(Number(value)), 'Încasat net']}
                     />
-                    <Bar dataKey="netEarnings" fill={DASHBOARD_TOKENS.primaryStrong} radius={[5, 5, 0, 0]} maxBarSize={44} />
+                    <Bar dataKey="netEarnings" fill={DASHBOARD_TOKENS.accent} radius={[5, 5, 0, 0]} maxBarSize={44} />
                   </BarChart>
                 </ResponsiveContainer>
               </Box>
@@ -546,7 +444,7 @@ export function BoltDashboardPanel({
                       tick={{ fill: DASHBOARD_TOKENS.textMuted, fontSize: 12, fontWeight: 800 }}
                     />
                     <Tooltip
-                      cursor={{ fill: alpha('#0f9f6e', 0.06) }}
+                      cursor={{ fill: alpha(DASHBOARD_TOKENS.accent, 0.06) }}
                       contentStyle={{
                         border: `1px solid ${DASHBOARD_TOKENS.border}`,
                         borderRadius: DASHBOARD_TOKENS.radius.md,
@@ -554,7 +452,7 @@ export function BoltDashboardPanel({
                       }}
                       formatter={(value: any) => [formatLeiDetailed(Number(value)), 'Valoare']}
                     />
-                    <Bar dataKey="value" fill="#0f9f6e" radius={[0, 5, 5, 0]} maxBarSize={28} />
+                    <Bar dataKey="value" fill={DASHBOARD_TOKENS.accent} radius={[0, 5, 5, 0]} maxBarSize={28} />
                   </BarChart>
                 </ResponsiveContainer>
               </Box>
@@ -591,7 +489,7 @@ export function BoltDashboardPanel({
                   <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
                     {formatHours(ride.rideHours)}
                   </Typography>
-                  <Typography sx={{ color: '#047857', fontWeight: 950, textAlign: { xs: 'left', md: 'right' }, fontVariantNumeric: 'tabular-nums' }}>
+                  <Typography sx={{ color: DASHBOARD_TOKENS.accent, fontWeight: 950, textAlign: { xs: 'left', md: 'right' }, fontVariantNumeric: 'tabular-nums' }}>
                     {formatLeiDetailed(ride.netEarnings)}
                   </Typography>
                 </Box>

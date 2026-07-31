@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -16,6 +16,7 @@ import RouteRoundedIcon from '@mui/icons-material/RouteRounded';
 import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded';
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
+import { StatCard } from '../ui';
 import { uberService, type UberDashboardDto, type UberDashboardPeriod } from '../../../services/uber.service';
 
 interface UberCsvPanelProps {
@@ -32,44 +33,6 @@ function formatLei(value: number) {
 
 function formatNumber(value: number, suffix = '') {
   return `${value.toLocaleString('ro-RO', { maximumFractionDigits: 1 })}${suffix}`;
-}
-
-function StatCard({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 1.8,
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
-        border: `1px solid ${DASHBOARD_TOKENS.border}`,
-        bgcolor: DASHBOARD_TOKENS.paper,
-        minWidth: 0,
-      }}
-    >
-      <Stack direction="row" spacing={1.2} sx={{ alignItems: 'center', mb: 1 }}>
-        <Box
-          sx={{
-            width: 32,
-            height: 32,
-            borderRadius: DASHBOARD_TOKENS.radius.md,
-            display: 'grid',
-            placeItems: 'center',
-            color: DASHBOARD_TOKENS.primaryStrong,
-            bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.12),
-            '& svg': { fontSize: 18 },
-          }}
-        >
-          {icon}
-        </Box>
-        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontWeight: 800, fontSize: '0.78rem' }}>
-          {label}
-        </Typography>
-      </Stack>
-      <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 950, fontSize: '1.2rem', fontVariantNumeric: 'tabular-nums' }}>
-        {value}
-      </Typography>
-    </Paper>
-  );
 }
 
 export function UberCsvPanel({
@@ -182,7 +145,7 @@ export function UberCsvPanel({
           </Box>
         ) : (
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(4, minmax(0, 1fr))' }, gap: 1.5 }}>
-            <StatCard label="Venit net" value={formatLei(stats?.netEarnings ?? 0)} icon={<LocalTaxiRoundedIcon />} />
+            <StatCard variant="accent" label="Venit net" value={formatLei(stats?.netEarnings ?? 0)} icon={<LocalTaxiRoundedIcon />} />
             <StatCard label="Cash încasat" value={formatLei(stats?.cashCollected ?? 0)} icon={<CloudUploadRoundedIcon />} />
             <StatCard label="Comision" value={formatLei(stats?.commission ?? 0)} icon={<CloudUploadRoundedIcon />} />
             <StatCard label="Curse" value={formatNumber(stats?.trips ?? 0)} icon={<LocalTaxiRoundedIcon />} />

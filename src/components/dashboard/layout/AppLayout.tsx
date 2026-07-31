@@ -103,15 +103,23 @@ export default function AppLayout({
           activeSection={activeSection}
           setActiveSection={setActiveSection}
         />
-        <Box 
-          component="main" 
-          sx={{ 
-            p: { xs: 2, md: 3 }, 
+        <Box
+          component="main"
+          sx={{
+            p: { xs: 2, md: 3 },
             pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', md: 3 },
             flexGrow: 1,
+            // Coloană flex cu minHeight:0 ca o secțiune cu height:100% (ex. Acasă)
+            // să se poată încadra exact în ecran, fără să declanșeze scroll.
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 0,
             overflowY: 'auto',
             overflowX: 'hidden',
-            WebkitOverflowScrolling: 'touch'
+            WebkitOverflowScrolling: 'touch',
+            // Într-o coloană care face scroll, copiii nu au voie să se comprime —
+            // altfel paginile lungi s-ar strivi în loc să deruleze.
+            '& > *': { flexShrink: 0 },
           }}
         >
           {children}

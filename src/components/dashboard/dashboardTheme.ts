@@ -12,6 +12,23 @@ export const DASHBOARD_TOKENS = {
   borderHover: 'rgba(0, 0, 0, 0.12)',
   textMuted: 'rgba(26, 26, 46, 0.6)',
   textSubtle: 'rgba(26, 26, 46, 0.4)',
+
+  /**
+   * Rampa albastră — singura codare cromatică pentru date.
+   * O pereche de valori (Bolt/Uber, Numerar/Card) folosește accent + accentSoft.
+   * accentSoft e sub 3:1 pe alb, deci suma se scrie mereu lângă swatch.
+   */
+  accent: '#0E7FA8',
+  accentSoft: '#7FC9E3',
+  accentWash: 'rgba(14, 127, 168, 0.08)',
+
+  /**
+   * Semnale de stare. Nu se folosesc decorativ — doar pe StatusChip
+   * și pe mesajele de eroare. „Ok" e albastru, nu verde.
+   */
+  stateActive: '#0E7FA8',
+  stateNeutral: 'rgba(26, 26, 46, 0.6)',
+  stateError: '#D32F2F',
   radius: {
     xs: 4,
     sm: 8,

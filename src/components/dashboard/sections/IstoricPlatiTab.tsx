@@ -1,26 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Box, Chip, Paper, Typography, CircularProgress } from '@mui/material'
+import { Box, Paper, Typography, CircularProgress } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded'
 import { stripeService, SUBSCRIPTION_PLANS } from '../../../services/stripe.service'
 import { formatRomanianDate } from '../../../utils/billing'
+import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { PageHeader, StatusChip, type StatusTone } from '../ui'
 
-const T = {
-  ink: '#1a1a2e',
-  primary: '#5CCBF5',
-  primaryStrong: '#45B8E2',
-  paper: '#FFFFFF',
-  surface: '#F8F9FC',
-  border: 'rgba(0,0,0,0.06)',
-  textMuted: 'rgba(26,26,46,0.55)',
-  success: '#22c55e',
-  radius: { md: 4, lg: 6, xl: 10, full: 50 },
-  shadow: {
-    sm: '0 1px 3px rgba(0,0,0,0.05)',
-    md: '0 3px 12px rgba(0,0,0,0.07)',
-  },
-}
 
 export interface PaymentItem {
   id: string
@@ -30,12 +17,14 @@ export interface PaymentItem {
   status: 'paid' | 'pending' | 'scheduled' | 'failed' | 'refunded'
 }
 
-const STATUS_CONFIG = {
-  paid: { label: 'Plătit', color: '#16a34a', bg: alpha('#22c55e', 0.1) },
-  pending: { label: 'În procesare', color: '#b45309', bg: alpha('#f59e0b', 0.1) },
-  scheduled: { label: 'Programat', color: '#1d4ed8', bg: alpha('#3b82f6', 0.1) },
-  failed: { label: 'Eșuat', color: '#dc2626', bg: alpha('#ef4444', 0.1) },
-  refunded: { label: 'Rambursat', color: '#4b5563', bg: alpha('#9ca3af', 0.1) },
+const T = DASHBOARD_TOKENS
+
+const STATUS_CONFIG: Record<PaymentItem['status'], { label: string; tone: StatusTone }> = {
+  paid: { label: 'Plătit', tone: 'active' },
+  pending: { label: 'În procesare', tone: 'neutral' },
+  scheduled: { label: 'Programat', tone: 'neutral' },
+  failed: { label: 'Eșuat', tone: 'error' },
+  refunded: { label: 'Rambursat', tone: 'neutral' },
 }
 
 export function IstoricPlatiTab() {
@@ -106,16 +95,9 @@ export function IstoricPlatiTab() {
   }
 
   return (
-    <Box sx={{ maxWidth: 860, mx: 'auto', p: { xs: 2, md: 3 } }}>
+    <Box sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
       <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: T.ink }}>
-            Istoric Plăți
-          </Typography>
-          <Typography sx={{ color: T.textMuted, fontSize: '0.9rem', mt: 0.3 }}>
-            Toate tranzacțiile tale cu RIDElance
-          </Typography>
-        </Box>
+        <PageHeader title="Istoric Plăți" subtitle="Toate tranzacțiile tale cu RIDElance" />
         <Box
           sx={{
             display: 'flex',
@@ -210,17 +192,7 @@ export function IstoricPlatiTab() {
                   <Typography sx={{ fontWeight: 800, color: T.ink, fontSize: '1.05rem' }}>
                     {payment.amount}
                   </Typography>
-                  <Chip
-                    label={statusConf.label}
-                    size="small"
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: '0.72rem',
-                      color: statusConf.color,
-                      backgroundColor: statusConf.bg,
-                      borderRadius: T.radius.full,
-                    }}
-                  />
+                  <StatusChip label={statusConf.label} tone={statusConf.tone} size="sm" />
                 </Box>
               </Paper>
             )

@@ -171,12 +171,12 @@ const VEHICLE_DOCS: MainDocConfig[] = [
 function statusChipSx(status: string) {
   const s = status.toLowerCase()
   if (s === 'approved' || s === 'verified' || s === 'valid') {
-    return { borderColor: alpha('#2e7d32', 0.2), color: '#2e7d32', backgroundColor: alpha('#2e7d32', 0.08) }
+    return { borderColor: alpha(DASHBOARD_TOKENS.stateActive, 0.22), color: DASHBOARD_TOKENS.stateActive, backgroundColor: alpha(DASHBOARD_TOKENS.stateActive, 0.1) }
   }
   if (s === 'pending' || s === 'in verificare') {
-    return { borderColor: alpha('#ed6c02', 0.2), color: '#b54708', backgroundColor: alpha('#ed6c02', 0.1) }
+    return { borderColor: alpha(DASHBOARD_TOKENS.ink, 0.12), color: DASHBOARD_TOKENS.textMuted, backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.06) }
   }
-  return { borderColor: alpha('#d32f2f', 0.2), color: '#b71c1c', backgroundColor: alpha('#d32f2f', 0.08) }
+  return { borderColor: alpha(DASHBOARD_TOKENS.stateError, 0.22), color: DASHBOARD_TOKENS.stateError, backgroundColor: alpha(DASHBOARD_TOKENS.stateError, 0.1) }
 }
 
 function statusLabel(status: string): string {
@@ -214,7 +214,7 @@ function ExpiryBadge({ expiresAtUtc }: { expiresAtUtc?: string | null }) {
           icon={<ErrorRoundedIcon sx={{ fontSize: '14px !important' }} />}
           label="Expirat"
           size="small"
-          sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha('#ef4444', 0.1), color: '#dc2626', border: `1px solid ${alpha('#ef4444', 0.2)}` }}
+          sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha(DASHBOARD_TOKENS.stateError, 0.1), color: DASHBOARD_TOKENS.stateError, border: `1px solid ${alpha(DASHBOARD_TOKENS.stateError, 0.22)}` }}
         />
       </Tooltip>
     )
@@ -226,7 +226,7 @@ function ExpiryBadge({ expiresAtUtc }: { expiresAtUtc?: string | null }) {
           icon={<WarningAmberRoundedIcon sx={{ fontSize: '14px !important' }} />}
           label={`Exp. ${formatted}`}
           size="small"
-          sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha('#ef4444', 0.08), color: '#dc2626', border: `1px solid ${alpha('#ef4444', 0.15)}` }}
+          sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha(DASHBOARD_TOKENS.stateError, 0.1), color: DASHBOARD_TOKENS.stateError, border: `1px solid ${alpha(DASHBOARD_TOKENS.stateError, 0.22)}` }}
         />
       </Tooltip>
     )
@@ -238,7 +238,7 @@ function ExpiryBadge({ expiresAtUtc }: { expiresAtUtc?: string | null }) {
           icon={<WarningAmberRoundedIcon sx={{ fontSize: '14px !important' }} />}
           label={`Exp. ${formatted}`}
           size="small"
-          sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha('#f59e0b', 0.1), color: '#b45309', border: `1px solid ${alpha('#f59e0b', 0.2)}` }}
+          sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha(DASHBOARD_TOKENS.ink, 0.06), color: DASHBOARD_TOKENS.textMuted, border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.12)}` }}
         />
       </Tooltip>
     )
@@ -249,7 +249,7 @@ function ExpiryBadge({ expiresAtUtc }: { expiresAtUtc?: string | null }) {
         icon={<CheckCircleOutlineRoundedIcon sx={{ fontSize: '14px !important' }} />}
         label={`Exp. ${formatted}`}
         size="small"
-        sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha('#10b981', 0.08), color: '#059669', border: `1px solid ${alpha('#10b981', 0.2)}` }}
+        sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha(DASHBOARD_TOKENS.stateActive, 0.1), color: DASHBOARD_TOKENS.stateActive, border: `1px solid ${alpha(DASHBOARD_TOKENS.stateActive, 0.22)}` }}
       />
     </Tooltip>
   )

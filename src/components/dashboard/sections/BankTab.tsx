@@ -34,6 +34,7 @@ import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 
 import { DASHBOARD_TOKENS as T, responsiveTableContainerSx } from '../dashboardTheme'
+import { PageHeader } from '../ui'
 import {
   bankService,
   type BankConnectionDto,
@@ -243,17 +244,11 @@ export function BankTab({ onNavigate }: BankTabProps) {
   }
 
   return (
-    <Stack spacing={2.5}>
-      {/* Header */}
-      <Box>
-        <Typography sx={{ fontSize: { xs: 22, md: 26 }, fontWeight: 800, color: T.ink }}>
-          Banca
-        </Typography>
-        <Typography sx={{ color: T.textMuted, fontSize: 14, mt: 0.5 }}>
-          Conectează-ți contul bancar prin open banking (PSD2) și tranzacțiile ajung automat în
-          platformă — fără extrase de cont încărcate manual.
-        </Typography>
-      </Box>
+    <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
+      <PageHeader
+        title="Banca"
+        subtitle="Conectează-ți contul bancar prin open banking (PSD2) și tranzacțiile ajung automat în platformă — fără extrase de cont încărcate manual."
+      />
 
       {error && <Alert severity="error">{error}</Alert>}
 
@@ -268,8 +263,8 @@ export function BankTab({ onNavigate }: BankTabProps) {
                 borderRadius: `${T.radius.md}px`,
                 display: 'grid',
                 placeItems: 'center',
-                backgroundColor: alpha('#b45309', 0.08),
-                color: '#b45309',
+                backgroundColor: alpha(T.ink, 0.06),
+                color: T.textMuted,
                 flexShrink: 0,
               }}
             >
@@ -318,8 +313,8 @@ export function BankTab({ onNavigate }: BankTabProps) {
           elevation={0}
           sx={{
             ...cardSx,
-            border: `1px solid ${alpha('#dc2626', 0.25)}`,
-            backgroundColor: alpha('#dc2626', 0.03),
+            border: `1px solid ${alpha(T.stateError, 0.25)}`,
+            backgroundColor: alpha(T.stateError, 0.03),
           }}
         >
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' } }}>
@@ -330,8 +325,8 @@ export function BankTab({ onNavigate }: BankTabProps) {
                 borderRadius: `${T.radius.md}px`,
                 display: 'grid',
                 placeItems: 'center',
-                backgroundColor: alpha('#dc2626', 0.08),
-                color: '#dc2626',
+                backgroundColor: alpha(T.stateError, 0.08),
+                color: T.stateError,
                 flexShrink: 0,
               }}
             >
@@ -585,9 +580,9 @@ export function BankTab({ onNavigate }: BankTabProps) {
                         height: 22,
                         fontSize: 11.5,
                         fontWeight: 700,
-                        color: '#059669',
-                        backgroundColor: alpha('#059669', 0.1),
-                        '& .MuiChip-icon': { color: '#059669' },
+                        color: T.stateActive,
+                        backgroundColor: alpha(T.stateActive, 0.1),
+                        '& .MuiChip-icon': { color: T.stateActive },
                       }}
                     />
                   </Stack>
@@ -613,7 +608,7 @@ export function BankTab({ onNavigate }: BankTabProps) {
                       border: `1px solid ${T.border}`,
                       borderRadius: `${T.radius.md}px`,
                       color: T.textMuted,
-                      '&:hover': { color: '#dc2626', borderColor: alpha('#dc2626', 0.3) },
+                      '&:hover': { color: T.stateError, borderColor: alpha(T.stateError, 0.3) },
                     }}
                   >
                     <LinkOffRoundedIcon sx={{ fontSize: 20 }} />
@@ -651,8 +646,8 @@ export function BankTab({ onNavigate }: BankTabProps) {
                       sx={{
                         fontWeight: 700,
                         fontSize: 12,
-                        color: '#059669',
-                        backgroundColor: alpha('#059669', 0.08),
+                        color: T.accent,
+                        backgroundColor: alpha(T.accent, 0.1),
                       }}
                     />
                     <Chip
@@ -661,8 +656,8 @@ export function BankTab({ onNavigate }: BankTabProps) {
                       sx={{
                         fontWeight: 700,
                         fontSize: 12,
-                        color: '#dc2626',
-                        backgroundColor: alpha('#dc2626', 0.07),
+                        color: T.textMuted,
+                        backgroundColor: alpha(T.ink, 0.06),
                       }}
                     />
                   </>
@@ -773,8 +768,8 @@ export function BankTab({ onNavigate }: BankTabProps) {
                               height: 20,
                               fontSize: 11,
                               fontWeight: 600,
-                              color: '#b45309',
-                              backgroundColor: alpha('#b45309', 0.08),
+                              color: T.textMuted,
+                              backgroundColor: alpha(T.ink, 0.06),
                               flexShrink: 0,
                               display: { xs: 'none', sm: 'inline-flex' },
                             }}
@@ -786,7 +781,8 @@ export function BankTab({ onNavigate }: BankTabProps) {
                             fontWeight: 750,
                             fontSize: 14,
                             fontVariantNumeric: 'tabular-nums',
-                            color: isCredit ? '#059669' : '#dc2626',
+                            // Semnul distinge intrarea de ieșire; culoarea rămâne în paletă.
+                            color: isCredit ? T.accent : T.ink,
                           }}
                         >
                           {isCredit ? '+' : ''}

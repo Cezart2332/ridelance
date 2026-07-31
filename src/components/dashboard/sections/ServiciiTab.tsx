@@ -4,22 +4,10 @@ import { alpha } from '@mui/material/styles'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import { ONE_TIME_SERVICES, stripeService, type ServiceKey } from '../../../services/stripe.service'
 import { PaymentPolicyAcceptance } from '../../common/PaymentPolicyAcceptance'
+import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { PageHeader } from '../ui'
 
-const T = {
-  ink: '#1a1a2e',
-  primary: '#5CCBF5',
-  primaryStrong: '#45B8E2',
-  paper: '#FFFFFF',
-  surface: '#F8F9FC',
-  border: 'rgba(0,0,0,0.06)',
-  textMuted: 'rgba(26,26,46,0.55)',
-  radius: { md: 4, lg: 6, xl: 10, full: 50 },
-  shadow: {
-    sm: '0 1px 3px rgba(0,0,0,0.05)',
-    md: '0 3px 12px rgba(0,0,0,0.07)',
-    glow: '0 4px 20px rgba(92,203,245,0.18)',
-  },
-}
+const T = DASHBOARD_TOKENS
 
 const SERVICE_ICONS: Record<ServiceKey, string> = {
   infiintare_pfa: '📋',
@@ -46,7 +34,7 @@ export function ServiciiTab() {
   }
 
   return (
-    <Box sx={{ maxWidth: 860, mx: 'auto', p: { xs: 2, md: 3 } }}>
+    <Box sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
       <Snackbar
         open={checkoutError !== null}
         autoHideDuration={6000}
@@ -57,13 +45,12 @@ export function ServiciiTab() {
           {checkoutError}
         </Alert>
       </Snackbar>
-      <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: T.ink, mb: 1 }}>
-        Servicii individuale
-      </Typography>
-      <Typography sx={{ color: T.textMuted, fontSize: '0.95rem', mb: 3, lineHeight: 1.7 }}>
-        Ai nevoie de un serviciu punctual, fără abonament? Poți achiziționa orice serviciu separat,
-        direct prin platforma noastră.
-      </Typography>
+      <Box sx={{ mb: 3 }}>
+        <PageHeader
+          title="Servicii individuale"
+          subtitle="Ai nevoie de un serviciu punctual, fără abonament? Poți achiziționa orice serviciu separat, direct prin platforma noastră."
+        />
+      </Box>
       <Box sx={{ mb: 3 }}>
         <PaymentPolicyAcceptance
           checked={paymentPolicyAccepted}

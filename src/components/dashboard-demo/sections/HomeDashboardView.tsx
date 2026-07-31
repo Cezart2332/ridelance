@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Chip, Paper, Stack, Typography } from '@mui/material'
+import { Box, Paper, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 
 import {
@@ -7,42 +7,10 @@ import {
   type StatsTimeframe,
 } from '../../dashboard/sections/HomeDashboardView'
 import { DASHBOARD_TOKENS } from '../../dashboard/dashboardTheme'
+import { DocumentStatusChip, PfaStatusChip } from '../../dashboard/ui'
 import { type DashboardSummary, type UserProfile } from '../../../services/user.service'
 import { type BoltDashboardDto } from '../../../services/bolt.service'
 import { type UberDashboardDto } from '../../../services/uber.service'
-
-function pfaStatusChip(status: string | null) {
-  if (!status) return null
-  const map: Record<string, { label: string; color: string; bg: string }> = {
-    Pending:  { label: 'In verificare', color: '#b54708', bg: alpha('#ed6c02', 0.1) },
-    Approved: { label: 'Aprobat',       color: '#2e7d32', bg: alpha('#2e7d32', 0.08) },
-    Rejected: { label: 'Respins',       color: '#b71c1c', bg: alpha('#d32f2f', 0.08) },
-  }
-  const cfg = map[status] ?? { label: status, color: DASHBOARD_TOKENS.textMuted, bg: alpha(DASHBOARD_TOKENS.ink, 0.06) }
-  return (
-    <Chip
-      label={cfg.label}
-      size="small"
-      sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full, color: cfg.color, backgroundColor: cfg.bg }}
-    />
-  )
-}
-
-function docStatusChip(status: string) {
-  const map: Record<string, { label: string; color: string; bg: string }> = {
-    Verified: { label: 'Verificat',     color: '#2e7d32', bg: alpha('#2e7d32', 0.08) },
-    Pending:  { label: 'In verificare', color: '#b54708', bg: alpha('#ed6c02', 0.10) },
-    Rejected: { label: 'Respins',       color: '#b71c1c', bg: alpha('#d32f2f', 0.08) },
-  }
-  const cfg = map[status] ?? { label: status, color: DASHBOARD_TOKENS.textMuted, bg: alpha(DASHBOARD_TOKENS.ink, 0.06) }
-  return (
-    <Chip
-      label={cfg.label}
-      size="small"
-      sx={{ fontWeight: 700, fontSize: '0.72rem', borderRadius: DASHBOARD_TOKENS.radius.full, color: cfg.color, backgroundColor: cfg.bg }}
-    />
-  )
-}
 
 const mockSummary: DashboardSummary = {
   pfaRegistrationId: 'demo-registration-id',
@@ -236,7 +204,7 @@ export function HomeDashboardView() {
           <Stack spacing={1.5}>
             <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>Status</Typography>
-              {pfaStatusChip(mockSummary.pfaStatus)}
+              <PfaStatusChip status={mockSummary.pfaStatus} />
             </Stack>
             {mockSummary.pfaCreatedAtUtc && (
               <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
@@ -287,7 +255,7 @@ export function HomeDashboardView() {
                       {doc.category} · {new Date(doc.uploadedAtUtc).toLocaleDateString('ro-RO')}
                     </Typography>
                   </Box>
-                  {docStatusChip(doc.status)}
+                  <DocumentStatusChip status={doc.status} size="sm" />
                 </Stack>
               </Paper>
             ))}

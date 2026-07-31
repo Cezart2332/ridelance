@@ -390,7 +390,7 @@ export function DeductibleExpensesPanel({
                         size="small"
                         onClick={() => handleStatus(expense, 'Verified')}
                         disabled={statusUpdatingId === expense.documentId}
-                        sx={{ color: '#10b981' }}
+                        sx={{ color: DASHBOARD_TOKENS.stateActive }}
                       >
                         <CheckCircleRoundedIcon fontSize="small" />
                       </IconButton>
@@ -398,7 +398,7 @@ export function DeductibleExpensesPanel({
                         size="small"
                         onClick={() => handleStatus(expense, 'Rejected')}
                         disabled={statusUpdatingId === expense.documentId}
-                        sx={{ color: '#ef4444' }}
+                        sx={{ color: DASHBOARD_TOKENS.stateError }}
                       >
                         <CancelRoundedIcon fontSize="small" />
                       </IconButton>

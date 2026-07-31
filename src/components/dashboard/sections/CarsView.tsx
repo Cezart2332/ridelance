@@ -18,7 +18,8 @@ import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import SortRoundedIcon from '@mui/icons-material/SortRounded';
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';
 
-import { DASHBOARD_TOKENS } from '../dashboardTheme';
+import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { PageHeader } from '../ui';
 import { carsService, type Car } from '../../../services/cars.service';
 import CarCard from './cars/CarCard';
 import { matchesOfferTypeFilter, matchesStatusFilter } from '../../../utils/carLabels';
@@ -93,7 +94,7 @@ export function CarsView() {
   const activeFiltersCount = [city, offerType, engine, transmission, status, platform].filter(f => f !== 'Toate').length;
 
   return (
-    <Box sx={{ pb: 6 }}>
+    <Box sx={{ width: '100%', maxWidth: 1280, mx: 'auto', pb: 6 }}>
       {/* Header & Filter Controls */}
       <Stack spacing={3} sx={{ mb: 4 }}>
         <Box sx={{ 
@@ -103,9 +104,7 @@ export function CarsView() {
           alignItems: 'center', 
           justifyContent: 'space-between'
         }}>
-          <Typography variant="h4" sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.ink }}>
-            Parcul Auto
-          </Typography>
+          <PageHeader title="Parcul Auto" />
           
           <Stack
             direction={{ xs: 'column', sm: 'row' }}

@@ -3,7 +3,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
   Paper,
   Stack,
@@ -35,14 +34,15 @@ import {
   type BoltOrderDto,
 } from '../../../services/bolt.service';
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme';
+import { StatCard, StatusChip, type StatusTone } from '../ui';
 
-const STATUS_CHIP_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  finished: { label: 'Finalizată', color: '#047857', bg: alpha('#10b981', 0.12) },
-  driver_booking: { label: 'Rezervată', color: '#1d4ed8', bg: alpha('#3b82f6', 0.1) },
-  accepted: { label: 'Acceptată', color: '#1d4ed8', bg: alpha('#3b82f6', 0.1) },
-  pickup: { label: 'Preluare', color: '#b45309', bg: alpha('#f59e0b', 0.12) },
-  cancelled: { label: 'Anulată', color: '#dc2626', bg: alpha('#ef4444', 0.1) },
-  no_show: { label: 'Neprezentare', color: '#4b5563', bg: alpha('#9ca3af', 0.1) },
+const STATUS_CHIP_CONFIG: Record<string, { label: string; tone: StatusTone }> = {
+  finished: { label: 'Finalizată', tone: 'active' },
+  driver_booking: { label: 'Rezervată', tone: 'neutral' },
+  accepted: { label: 'Acceptată', tone: 'neutral' },
+  pickup: { label: 'Preluare', tone: 'neutral' },
+  cancelled: { label: 'Anulată', tone: 'error' },
+  no_show: { label: 'Neprezentare', tone: 'neutral' },
 };
 
 function formatLei(value: number) {
@@ -97,54 +97,6 @@ function MobileDetailRow({ label, children }: { label: string; children: ReactNo
         {children}
       </Box>
     </Box>
-  );
-}
-
-function StatCard({
-  title,
-  value,
-  icon,
-  tone,
-}: {
-  title: string;
-  value: string;
-  icon: ReactNode;
-  tone: string;
-}) {
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: { xs: 1.6, sm: 2 },
-        minHeight: 116,
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
-        border: `1px solid ${alpha(tone, 0.2)}`,
-        bgcolor: DASHBOARD_TOKENS.paper,
-        boxShadow: DASHBOARD_TOKENS.shadow.sm,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-      }}
-    >
-      <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'center', minWidth: 0 }}>
-        <Typography sx={{ minWidth: 0, fontSize: '0.78rem', color: DASHBOARD_TOKENS.textMuted, fontWeight: 800 }}>
-          {title}
-        </Typography>
-        <Box sx={{ flexShrink: 0, color: tone, display: 'flex', alignItems: 'center', '& svg': { fontSize: 22 } }}>
-          {icon}
-        </Box>
-      </Stack>
-      <Typography
-        sx={{
-          fontSize: { xs: '1.08rem', sm: '1.32rem' },
-          fontWeight: 900,
-          color: DASHBOARD_TOKENS.ink,
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        {value}
-      </Typography>
-    </Paper>
   );
 }
 
@@ -451,19 +403,13 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
                     : 'Datele nu au fost sincronizate încă.'}
                 </Typography>
               </Box>
-              <Chip
-                icon={<CloudDoneRoundedIcon fontSize="small" />}
-                label="Conectat"
-                size="small"
-                sx={{
-                  alignSelf: { xs: 'flex-start', sm: 'center' },
-                  fontWeight: 800,
-                  borderRadius: DASHBOARD_TOKENS.radius.full,
-                  color: '#047857',
-                  bgcolor: alpha('#10b981', 0.12),
-                  '& .MuiChip-icon': { color: 'inherit' },
-                }}
-              />
+              <Box sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}>
+                <StatusChip
+                  tone="active"
+                  label="Conectat"
+                  icon={<CloudDoneRoundedIcon fontSize="small" />}
+                />
+              </Box>
             </Stack>
 
             {integration.errorMessage && (
@@ -490,28 +436,25 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
             }}
           >
             <StatCard
-              title="Curse luna curentă"
+              label="Curse luna curentă"
               value={(dashboard?.totalOrdersCount ?? 0).toLocaleString('ro-RO')}
               icon={<LocalTaxiRoundedIcon />}
-              tone={DASHBOARD_TOKENS.primaryStrong}
             />
             <StatCard
-              title="Încasat net"
+              label="Încasat net"
               value={formatLei(dashboard?.totalNetEarnings ?? 0)}
               icon={<AccountBalanceWalletRoundedIcon />}
-              tone="#047857"
+              variant="accent"
             />
             <StatCard
-              title="Ore în cursă"
+              label="Ore în cursă"
               value={formatHours(dashboard?.totalRideHours ?? 0)}
               icon={<AccessTimeRoundedIcon />}
-              tone="#7c3aed"
             />
             <StatCard
-              title="Tips + comision"
+              label="Tips + comision"
               value={formatLei(totalTipsAndCommissions)}
               icon={<PercentRoundedIcon />}
-              tone="#b45309"
             />
           </Box>
 
@@ -568,7 +511,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
                     </TableHead>
                     <TableBody>
                       {orders.map((order) => {
-                        const statusCfg = STATUS_CHIP_CONFIG[order.orderStatus.toLowerCase()] || { label: order.orderStatus, color: '#4b5563', bg: alpha('#9ca3af', 0.1) };
+                        const statusCfg = STATUS_CHIP_CONFIG[order.orderStatus.toLowerCase()] || { label: order.orderStatus, tone: 'neutral' as StatusTone };
                         return (
                           <TableRow
                             key={order.id}
@@ -599,21 +542,11 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
                             <TableCell align="right" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
                               {formatHours(getRideHours(order))}
                             </TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 900, color: '#047857', fontVariantNumeric: 'tabular-nums' }}>
+                            <TableCell align="right" sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.accent, fontVariantNumeric: 'tabular-nums' }}>
                               {formatLei(Number(order.netEarnings))}
                             </TableCell>
                             <TableCell>
-                              <Chip
-                                label={statusCfg.label}
-                                size="small"
-                                sx={{
-                                  fontWeight: 800,
-                                  fontSize: '0.7rem',
-                                  color: statusCfg.color,
-                                  bgcolor: statusCfg.bg,
-                                  borderRadius: DASHBOARD_TOKENS.radius.full,
-                                }}
-                              />
+                              <StatusChip label={statusCfg.label} tone={statusCfg.tone} size="sm" />
                             </TableCell>
                           </TableRow>
                         );
@@ -624,7 +557,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
 
                 <Stack spacing={1.5} sx={{ display: { xs: 'flex', md: 'none' }, minWidth: 0 }}>
                   {orders.map((order) => {
-                    const statusCfg = STATUS_CHIP_CONFIG[order.orderStatus.toLowerCase()] || { label: order.orderStatus, color: '#4b5563', bg: alpha('#9ca3af', 0.1) };
+                    const statusCfg = STATUS_CHIP_CONFIG[order.orderStatus.toLowerCase()] || { label: order.orderStatus, tone: 'neutral' as StatusTone };
                     return (
                       <Box
                         key={order.id}
@@ -647,19 +580,9 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
                           >
                             {trimAddress(order.pickupAddress)} → {trimAddress(order.destinationAddress)}
                           </Typography>
-                          <Chip
-                            label={statusCfg.label}
-                            size="small"
-                            sx={{
-                              fontWeight: 800,
-                              fontSize: '0.65rem',
-                              color: statusCfg.color,
-                              bgcolor: statusCfg.bg,
-                              borderRadius: DASHBOARD_TOKENS.radius.full,
-                              flexShrink: 0,
-                              maxWidth: 112,
-                            }}
-                          />
+                          <Box sx={{ flexShrink: 0 }}>
+                            <StatusChip label={statusCfg.label} tone={statusCfg.tone} size="sm" />
+                          </Box>
                         </Stack>
 
                         <Stack spacing={1} sx={{ mb: 1.5 }}>
@@ -705,7 +628,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
                           }}
                         >
                           <Typography sx={{ fontSize: '0.82rem', fontWeight: 800, color: DASHBOARD_TOKENS.textMuted }}>Venit net</Typography>
-                          <Typography sx={{ minWidth: 0, textAlign: 'right', overflowWrap: 'anywhere', fontSize: '1.05rem', fontWeight: 900, color: '#047857', fontVariantNumeric: 'tabular-nums' }}>
+                          <Typography sx={{ minWidth: 0, textAlign: 'right', overflowWrap: 'anywhere', fontSize: '1.05rem', fontWeight: 900, color: DASHBOARD_TOKENS.accent, fontVariantNumeric: 'tabular-nums' }}>
                             {formatLei(Number(order.netEarnings))}
                           </Typography>
                         </Box>

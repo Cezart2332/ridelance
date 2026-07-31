@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Box, Button, Chip, Paper, Typography, CircularProgress, Snackbar, Alert } from '@mui/material'
+import { Box, Button, Paper, Typography, CircularProgress, Snackbar, Alert } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
 import { alpha } from '@mui/material/styles'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
@@ -16,39 +16,18 @@ import {
 } from '../../../services/stripe.service'
 import { getNextMondayBillingDate, formatRomanianDate, isPendingBilling } from '../../../utils/billing'
 import { PaymentPolicyAcceptance } from '../../common/PaymentPolicyAcceptance'
+import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { PageHeader, StatusChip } from '../ui'
 
-const T = {
-  ink: '#1a1a2e',
-  primary: '#5CCBF5',
-  primaryStrong: '#45B8E2',
-  paper: '#FFFFFF',
-  surface: '#F8F9FC',
-  border: 'rgba(0,0,0,0.06)',
-  textMuted: 'rgba(26,26,46,0.55)',
-  success: '#22c55e',
-  radius: { md: 4, lg: 6, xl: 10, full: 50 },
-  shadow: {
-    sm: '0 1px 3px rgba(0,0,0,0.05)',
-    md: '0 2px 8px rgba(0,0,0,0.06)',
-    glow: '0 4px 20px rgba(92,203,245,0.18)',
-  },
-}
+const T = DASHBOARD_TOKENS
 
-function StatusChip({ pending }: { pending: boolean }) {
+function SubscriptionStatusChip({ pending }: { pending: boolean }) {
   return (
-    <Chip
+    <StatusChip
+      outlined
       icon={<CheckCircleOutlineRoundedIcon sx={{ fontSize: '14px !important' }} />}
       label={pending ? 'Programat Luni' : 'Activ'}
-      size="small"
-      sx={{
-        fontWeight: 700,
-        fontSize: '0.75rem',
-        backgroundColor: pending ? alpha('#f59e0b', 0.1) : alpha(T.success, 0.1),
-        color: pending ? '#b45309' : '#16a34a',
-        border: `1px solid ${pending ? alpha('#f59e0b', 0.25) : alpha(T.success, 0.25)}`,
-        '& .MuiChip-icon': { color: pending ? '#b45309' : '#16a34a' },
-        borderRadius: T.radius.full,
-      }}
+      tone={pending ? 'neutral' : 'active'}
     />
   )
 }
@@ -113,7 +92,7 @@ export function AbonamenteTab() {
   }
 
   return (
-    <Box sx={{ maxWidth: 860, mx: 'auto', p: { xs: 2, md: 3 } }}>
+    <Box sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
       <Snackbar
         open={planChangeNotice}
         autoHideDuration={6000}
@@ -135,9 +114,9 @@ export function AbonamenteTab() {
           {checkoutError}
         </Alert>
       </Snackbar>
-      <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: T.ink, mb: 3 }}>
-        Abonamentul meu
-      </Typography>
+      <Box sx={{ mb: 3 }}>
+        <PageHeader title="Abonamentul meu" />
+      </Box>
 
       {/* Current Plan Card */}
       <Paper
@@ -157,7 +136,7 @@ export function AbonamenteTab() {
               <Typography sx={{ fontWeight: 800, fontSize: '1.25rem', color: T.ink }}>
                 {currentPlan.title}
               </Typography>
-              <StatusChip pending={pending} />
+              <SubscriptionStatusChip pending={pending} />
             </Box>
             <Typography sx={{ fontWeight: 800, fontSize: '1.5rem', color: T.primaryStrong }}>
               {currentPlan.price}
@@ -228,14 +207,14 @@ export function AbonamenteTab() {
               mt: 2,
               p: 2,
               borderRadius: T.radius.lg,
-              backgroundColor: alpha('#f59e0b', 0.06),
-              border: `1px solid ${alpha('#f59e0b', 0.15)}`,
+              backgroundColor: alpha(T.ink, 0.03),
+              border: `1px solid ${T.border}`,
               display: 'flex',
               gap: 1.5,
             }}
           >
-            <InfoOutlinedIcon sx={{ color: '#b45309', fontSize: 18, mt: 0.1, flexShrink: 0 }} />
-            <Typography sx={{ color: '#92400e', fontSize: '0.83rem', lineHeight: 1.6 }}>
+            <InfoOutlinedIcon sx={{ color: T.accent, fontSize: 18, mt: 0.1, flexShrink: 0 }} />
+            <Typography sx={{ color: T.textMuted, fontSize: '0.83rem', lineHeight: 1.6 }}>
               {subStatus?.pendingPlan ? (
                 <>
                   Ai deja o modificare de abonament programată pentru <strong>luni la 15:00</strong>:

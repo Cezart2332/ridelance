@@ -150,8 +150,8 @@ export function ExpensesRecurringTab({
                     sx={{
                       borderRadius: DASHBOARD_TOKENS.radius.full,
                       fontWeight: 700,
-                      color: '#2e7d32',
-                      backgroundColor: alpha('#2e7d32', 0.1),
+                      color: DASHBOARD_TOKENS.stateActive,
+                      backgroundColor: alpha(DASHBOARD_TOKENS.stateActive, 0.1),
                     }}
                   />
                 </Stack>

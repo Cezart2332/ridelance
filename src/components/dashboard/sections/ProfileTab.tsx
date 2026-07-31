@@ -169,7 +169,7 @@ export function ProfileTab() {
   const pfaApproved = summary?.pfaStatus?.toLowerCase() === 'approved'
 
   return (
-    <Stack spacing={2.5}>
+    <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
       {/* Hero: identitate + PFA */}
       <Paper
         elevation={0}
@@ -369,8 +369,10 @@ export function ProfileTab() {
                             sx={{
                               fontWeight: 700,
                               borderRadius: DASHBOARD_TOKENS.radius.full,
-                              color: account?.email ? '#2e7d32' : '#ed6c02',
-                              backgroundColor: account?.email ? alpha('#2e7d32', 0.08) : alpha('#ed6c02', 0.1),
+                              color: account?.email ? DASHBOARD_TOKENS.stateActive : DASHBOARD_TOKENS.textMuted,
+                              backgroundColor: account?.email
+                                ? alpha(DASHBOARD_TOKENS.stateActive, 0.1)
+                                : alpha(DASHBOARD_TOKENS.ink, 0.06),
                             }}
                           />
                         </Stack>

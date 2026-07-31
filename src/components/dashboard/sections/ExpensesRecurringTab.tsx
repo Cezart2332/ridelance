@@ -20,7 +20,10 @@ export function ExpensesRecurringTab({
   return (
     <Box
       sx={{
-        maxWidth: viewMode ? 720 : '100%',
+        // Aceeași lățime maximă ca restul secțiunilor, ca panoul să nu stea lipit de stânga.
+        width: '100%',
+        maxWidth: 1280,
+        mx: 'auto',
         display: 'grid',
         gridTemplateColumns: !viewMode ? { xs: '1fr', lg: '1fr 1fr' } : '1fr',
         gap: 2,

@@ -350,8 +350,8 @@ export default function AppSidebar({
           textTransform: 'none',
           fontWeight: 600,
           fontSize: '0.9rem',
-          color: '#f43f5e',
-          '&:hover': { backgroundColor: alpha('#f43f5e', 0.06) },
+          color: DASHBOARD_TOKENS.stateError,
+          '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.stateError, 0.06) },
         }}
       >
         Deconectare

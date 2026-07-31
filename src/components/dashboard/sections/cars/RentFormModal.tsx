@@ -226,13 +226,13 @@ export default function RentFormModal({ open, onClose, car }: RentFormModalProps
                   width: 80, 
                   height: 80, 
                   borderRadius: '50%', 
-                  bgcolor: alpha('#10b981', 0.1), 
+                  bgcolor: alpha(DASHBOARD_TOKENS.accent, 0.1), 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
                   mb: 1
                 }}>
-                  <CheckCircleRoundedIcon sx={{ fontSize: 48, color: '#10b981' }} />
+                  <CheckCircleRoundedIcon sx={{ fontSize: 48, color: DASHBOARD_TOKENS.accent }} />
                 </Box>
                 <Box>
                   <Typography variant="h5" sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink, mb: 1 }}>

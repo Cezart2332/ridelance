@@ -14,6 +14,7 @@ import { alpha } from '@mui/material/styles';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
+import { PageHeader, pillToggleSx } from '../ui';
 import {
   boltService,
   type BoltDashboardDto,
@@ -102,55 +103,25 @@ export function PlatformsView() {
 
   return (
     <>
-      <Stack spacing={2.5}>
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={2}
-          sx={{ alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between' }}
-        >
-          <Box sx={{ minWidth: 0 }}>
-            <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 900, fontSize: { xs: '1.35rem', md: '1.6rem' }, lineHeight: 1.15 }}>
-              Platforme
-            </Typography>
-            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.5, fontSize: '0.9rem' }}>
-              Conectare, import CSV și istoricul detaliat pentru Bolt și Uber.
-            </Typography>
-          </Box>
-
-          <ToggleButtonGroup
-            exclusive
-            value={tab}
-            onChange={(_: MouseEvent<HTMLElement>, v: PlatformTab | null) => {
-              if (v) setTab(v);
-            }}
-            size="small"
-            sx={{
-              alignSelf: { xs: 'stretch', sm: 'center' },
-              bgcolor: DASHBOARD_TOKENS.paper,
-              borderRadius: DASHBOARD_TOKENS.radius.md,
-              p: 0.4,
-              boxShadow: DASHBOARD_TOKENS.shadow.sm,
-              border: `1px solid ${DASHBOARD_TOKENS.border}`,
-              '& .MuiToggleButtonGroup-grouped': {
-                flex: { xs: 1, sm: 'initial' },
-                border: 0,
-                px: { xs: 1.5, sm: 2.5 },
-                py: 0.75,
-                borderRadius: `${DASHBOARD_TOKENS.radius.sm}px !important`,
-                color: DASHBOARD_TOKENS.textMuted,
-                fontWeight: 800,
-                textTransform: 'none',
-                '&.Mui-selected': {
-                  bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.18),
-                  color: DASHBOARD_TOKENS.ink,
-                },
-              },
-            }}
-          >
-            <ToggleButton value="bolt">Bolt</ToggleButton>
-            <ToggleButton value="uber">Uber</ToggleButton>
-          </ToggleButtonGroup>
-        </Stack>
+      <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
+        <PageHeader
+          title="Platforme"
+          subtitle="Conectare, import CSV și istoricul detaliat pentru Bolt și Uber."
+          actions={
+            <ToggleButtonGroup
+              exclusive
+              value={tab}
+              onChange={(_: MouseEvent<HTMLElement>, v: PlatformTab | null) => {
+                if (v) setTab(v);
+              }}
+              size="small"
+              sx={pillToggleSx}
+            >
+              <ToggleButton value="bolt">Bolt</ToggleButton>
+              <ToggleButton value="uber">Uber</ToggleButton>
+            </ToggleButtonGroup>
+          }
+        />
 
         {tab === 'bolt' ? (
           <BoltDashboardPanel

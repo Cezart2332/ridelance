@@ -15,7 +15,6 @@ import {
   Box,
   Button,
   ButtonBase,
-  Chip,
   CircularProgress,
   IconButton,
   LinearProgress,
@@ -28,6 +27,7 @@ import {
 import { alpha } from '@mui/material/styles'
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { StatusChip, type StatusTone } from '../ui'
 import { documentService } from '../../../services/document.service'
 import { getErrorMessage } from '../../../utils/errorHandler'
 import { formatDocumentCategory } from '../../../utils/formatters'
@@ -49,15 +49,16 @@ import {
   type MainDocConfig,
 } from '../../../constants/documentSections'
 
-function statusChipSx(status: string) {
+/**
+ * Starea unui document, în cele trei tonuri ale dashboardului.
+ * Roșu doar pentru ce e efectiv greșit — un document încă neîncărcat e neutru,
+ * altfel prima vizită ar arăta ca un ecran plin de erori.
+ */
+function statusTone(status: string): StatusTone {
   const s = status.toLowerCase()
-  if (s === 'approved' || s === 'verified') {
-    return { borderColor: alpha('#2e7d32', 0.2), color: '#2e7d32', backgroundColor: alpha('#2e7d32', 0.08) }
-  }
-  if (s === 'pending') {
-    return { borderColor: alpha('#ed6c02', 0.2), color: '#b54708', backgroundColor: alpha('#ed6c02', 0.1) }
-  }
-  return { borderColor: alpha('#d32f2f', 0.2), color: '#b71c1c', backgroundColor: alpha('#d32f2f', 0.08) }
+  if (s === 'approved' || s === 'verified') return 'active'
+  if (s === 'rejected' || s === 'expired') return 'error'
+  return 'neutral'
 }
 
 function statusLabel(status: string): string {
@@ -89,70 +90,72 @@ function ExpiryBadge({ expiresAtUtc }: { expiresAtUtc?: string | null }) {
   const expiry = new Date(expiresAtUtc!)
   const formatted = expiry.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
-  if (state === 'expired') {
+  // Expirat sau la mai puțin de o săptămână — singurele stări care merită roșu.
+  if (state === 'expired' || state === 'soon7') {
     return (
-      <Tooltip title={`Expirat la ${formatted}`}>
-        <Chip
-          icon={<ErrorRoundedIcon sx={{ fontSize: '14px !important' }} />}
-          label="Expirat"
-          size="small"
-          sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha('#ef4444', 0.1), color: '#dc2626', border: `1px solid ${alpha('#ef4444', 0.2)}` }}
-        />
-      </Tooltip>
-    )
-  }
-  if (state === 'soon7') {
-    return (
-      <Tooltip title={`Expiră la ${formatted}`}>
-        <Chip
-          icon={<WarningAmberRoundedIcon sx={{ fontSize: '14px !important' }} />}
-          label={`Exp. ${formatted}`}
-          size="small"
-          sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha('#ef4444', 0.08), color: '#dc2626', border: `1px solid ${alpha('#ef4444', 0.15)}` }}
-        />
+      <Tooltip title={state === 'expired' ? `Expirat la ${formatted}` : `Expiră la ${formatted}`}>
+        <span>
+          <StatusChip
+            size="sm"
+            outlined
+            tone="error"
+            icon={<ErrorRoundedIcon sx={{ fontSize: '14px !important' }} />}
+            label={state === 'expired' ? 'Expirat' : `Exp. ${formatted}`}
+          />
+        </span>
       </Tooltip>
     )
   }
   if (state === 'soon30') {
     return (
       <Tooltip title={`Expiră la ${formatted}`}>
-        <Chip
-          icon={<WarningAmberRoundedIcon sx={{ fontSize: '14px !important' }} />}
-          label={`Exp. ${formatted}`}
-          size="small"
-          sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha('#f59e0b', 0.1), color: '#b45309', border: `1px solid ${alpha('#f59e0b', 0.2)}` }}
-        />
+        <span>
+          <StatusChip
+            size="sm"
+            outlined
+            tone="neutral"
+            icon={<WarningAmberRoundedIcon sx={{ fontSize: '14px !important' }} />}
+            label={`Exp. ${formatted}`}
+          />
+        </span>
       </Tooltip>
     )
   }
   return (
     <Tooltip title={`Expiră la ${formatted}`}>
-      <Chip
-        icon={<CheckCircleOutlineRoundedIcon sx={{ fontSize: '14px !important' }} />}
-        label={`Exp. ${formatted}`}
-        size="small"
-        sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, bgcolor: alpha('#10b981', 0.08), color: '#059669', border: `1px solid ${alpha('#10b981', 0.2)}` }}
-      />
+      <span>
+        <StatusChip
+          size="sm"
+          outlined
+          tone="active"
+          icon={<CheckCircleOutlineRoundedIcon sx={{ fontSize: '14px !important' }} />}
+          label={`Exp. ${formatted}`}
+        />
+      </span>
     </Tooltip>
   )
 }
 
-/** Iconița colorată din stânga fiecărui rând, în funcție de starea documentului. */
+/** Iconița din stânga fiecărui rând, în funcție de starea documentului. */
 function rowVisual(doc: DocumentSummary | null) {
+  const neutral = { color: DASHBOARD_TOKENS.textSubtle, bg: alpha(DASHBOARD_TOKENS.ink, 0.05) }
+  const active = { color: DASHBOARD_TOKENS.stateActive, bg: alpha(DASHBOARD_TOKENS.stateActive, 0.1) }
+  const error = { color: DASHBOARD_TOKENS.stateError, bg: alpha(DASHBOARD_TOKENS.stateError, 0.1) }
+
   if (!doc) {
-    return { icon: <UploadFileRoundedIcon sx={{ fontSize: 20 }} />, color: DASHBOARD_TOKENS.textSubtle, bg: alpha(DASHBOARD_TOKENS.ink, 0.05) }
+    return { icon: <UploadFileRoundedIcon sx={{ fontSize: 20 }} />, ...neutral }
   }
   if (getExpiryState(doc.expiresAtUtc) === 'expired') {
-    return { icon: <ErrorRoundedIcon sx={{ fontSize: 20 }} />, color: '#dc2626', bg: alpha('#ef4444', 0.1) }
+    return { icon: <ErrorRoundedIcon sx={{ fontSize: 20 }} />, ...error }
   }
   const s = doc.status.toLowerCase()
   if (s === 'approved' || s === 'verified') {
-    return { icon: <CheckCircleRoundedIcon sx={{ fontSize: 20 }} />, color: '#059669', bg: alpha('#10b981', 0.1) }
+    return { icon: <CheckCircleRoundedIcon sx={{ fontSize: 20 }} />, ...active }
   }
   if (s === 'pending') {
-    return { icon: <HourglassTopRoundedIcon sx={{ fontSize: 20 }} />, color: '#b45309', bg: alpha('#f59e0b', 0.12) }
+    return { icon: <HourglassTopRoundedIcon sx={{ fontSize: 20 }} />, ...neutral }
   }
-  return { icon: <ErrorRoundedIcon sx={{ fontSize: 20 }} />, color: '#dc2626', bg: alpha('#ef4444', 0.1) }
+  return { icon: <ErrorRoundedIcon sx={{ fontSize: 20 }} />, ...error }
 }
 
 const iconActionSx = {
@@ -413,14 +416,10 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
             }}
           >
             {doc && <ExpiryBadge expiresAtUtc={doc.expiresAtUtc} />}
-            <Chip
+            <StatusChip
+              outlined
               label={doc ? (isExpired ? 'De reînnoit' : statusLabel(doc.status)) : 'Lipsă'}
-              size="small"
-              sx={{
-                fontWeight: 700,
-                borderRadius: DASHBOARD_TOKENS.radius.full,
-                ...statusChipSx(isExpired ? 'expired' : doc ? doc.status : 'missing'),
-              }}
+              tone={statusTone(isExpired ? 'expired' : doc ? doc.status : 'missing')}
             />
             {doc && (
               <>
@@ -575,14 +574,10 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
         </Box>
         <Stack direction="row" sx={{ alignItems: 'center', gap: 0.8, flexWrap: 'wrap', flexShrink: 0 }}>
           <ExpiryBadge expiresAtUtc={doc.expiresAtUtc} />
-          <Chip
+          <StatusChip
+            outlined
             label={getExpiryState(doc.expiresAtUtc) === 'expired' ? 'De reînnoit' : statusLabel(doc.status)}
-            size="small"
-            sx={{
-              fontWeight: 700,
-              borderRadius: DASHBOARD_TOKENS.radius.full,
-              ...statusChipSx(getExpiryState(doc.expiresAtUtc) === 'expired' ? 'expired' : doc.status),
-            }}
+            tone={statusTone(getExpiryState(doc.expiresAtUtc) === 'expired' ? 'expired' : doc.status)}
           />
           <Tooltip title="Vizualizează">
             <IconButton size="small" onClick={() => handleOpen(doc.id, doc.originalFileName)} sx={iconActionSx}>
@@ -602,17 +597,17 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
   const activeOtherDocs = activeGroup.otherKind === 'pfa' ? pfaOtherDocs : activeGroup.otherKind === 'vehicle' ? vehicleOtherDocs : []
   const progressPercent = groupStats.total > 0 ? Math.round((groupStats.uploadedTotal / groupStats.total) * 100) : 0
 
-  const summaryChips = [
-    { label: `${groupStats.valid} valide`, color: '#059669', bg: alpha('#10b981', 0.08) },
-    { label: `${groupStats.pending} în aprobare`, color: '#b45309', bg: alpha('#f59e0b', 0.1) },
-    { label: `${groupStats.missing} lipsă`, color: DASHBOARD_TOKENS.textMuted, bg: alpha(DASHBOARD_TOKENS.ink, 0.05) },
+  const summaryChips: { label: string; tone: StatusTone }[] = [
+    { label: `${groupStats.valid} valide`, tone: 'active' },
+    { label: `${groupStats.pending} în aprobare`, tone: 'neutral' },
+    { label: `${groupStats.missing} lipsă`, tone: 'neutral' },
     ...(groupStats.expired > 0
-      ? [{ label: `${groupStats.expired} expirate`, color: '#dc2626', bg: alpha('#ef4444', 0.08) }]
+      ? [{ label: `${groupStats.expired} expirate`, tone: 'error' as StatusTone }]
       : []),
   ]
 
   return (
-    <Stack spacing={2.5}>
+    <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
       {/* Antet: progres general */}
       <Paper
         elevation={0}
@@ -656,12 +651,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
             />
             <Stack direction="row" sx={{ gap: 0.8, mt: 1.2, flexWrap: 'wrap' }}>
               {summaryChips.map((chip) => (
-                <Chip
-                  key={chip.label}
-                  label={chip.label}
-                  size="small"
-                  sx={{ fontWeight: 700, fontSize: '0.7rem', height: 22, color: chip.color, backgroundColor: chip.bg, borderRadius: DASHBOARD_TOKENS.radius.full }}
-                />
+                <StatusChip key={chip.label} label={chip.label} tone={chip.tone} size="sm" />
               ))}
             </Stack>
           </Box>
@@ -706,17 +696,10 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
               <Typography noWrap sx={{ fontWeight: isActive ? 800 : 650, fontSize: '0.88rem', color: 'inherit' }}>
                 {group.label}
               </Typography>
-              <Chip
+              <StatusChip
+                size="sm"
                 label={`${stats?.uploaded ?? 0}/${stats?.total ?? 0}`}
-                size="small"
-                sx={{
-                  height: 20,
-                  fontSize: '0.68rem',
-                  fontWeight: 800,
-                  borderRadius: DASHBOARD_TOKENS.radius.full,
-                  color: stats && stats.uploaded === stats.total ? '#059669' : DASHBOARD_TOKENS.textMuted,
-                  backgroundColor: stats && stats.uploaded === stats.total ? alpha('#10b981', 0.1) : alpha(DASHBOARD_TOKENS.ink, 0.05),
-                }}
+                tone={stats && stats.uploaded === stats.total ? 'active' : 'neutral'}
               />
             </ButtonBase>
           )

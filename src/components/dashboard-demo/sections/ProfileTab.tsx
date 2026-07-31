@@ -92,8 +92,8 @@ export function ProfileTab() {
                   sx={{
                     fontWeight: 700,
                     borderRadius: DASHBOARD_TOKENS.radius.full,
-                    color: '#2e7d32',
-                    backgroundColor: alpha('#2e7d32', 0.1),
+                    color: DASHBOARD_TOKENS.stateActive,
+                    backgroundColor: alpha(DASHBOARD_TOKENS.stateActive, 0.1),
                   }}
                 />
               </Stack>
