@@ -1,20 +1,8 @@
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  FormControlLabel,
-  Paper,
-  Radio,
-  RadioGroup,
-  Stack,
-  Typography,
-} from '@mui/material'
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Alert, Box, Button, FormControlLabel, Radio, RadioGroup, Stack, Typography } from '@mui/material'
+import { useState } from 'react'
 
 import {
   onboardingService,
@@ -22,48 +10,36 @@ import {
   type EligibilityStatus,
 } from '../../services/onboarding.service'
 import { getErrorMessage } from '../../utils/errorHandler'
-import { DocumentFirstUpload } from './DocumentFirstUpload'
-import OnboardingLayout from './OnboardingLayout'
-import { TOKENS } from './onboardingTheme'
-import { useOnboardingState } from './useOnboardingState'
+import { StepDocument } from './StepDocument'
+import { useOnboarding } from './useOnboarding'
+import { stateColors, TOKENS } from './onboardingTheme'
+import { PanelActions, PanelCard, PanelHeading } from './PanelCard'
 
-function statusVisual(status: EligibilityStatus): { color: string; bg: string; label: string } {
+function statusVisual(status: EligibilityStatus) {
   switch (status) {
     case 'Eligible':
-      return { color: '#2e7d32', bg: 'rgba(46,125,50,0.08)', label: 'Eligibil' }
+      return { ...stateColors('success'), label: 'Eligibil' }
     case 'Ineligible':
-      return { color: '#b71c1c', bg: 'rgba(211,47,47,0.08)', label: 'Neeligibil' }
+      return { ...stateColors('danger'), label: 'Neeligibil' }
     default:
-      return { color: '#b54708', bg: 'rgba(237,108,2,0.1)', label: 'De verificat' }
+      return { ...stateColors('pending'), label: 'De verificat' }
   }
 }
 
 export default function OnboardingEligibilityPage() {
-  const navigate = useNavigate()
-  const { state, documents, refresh } = useOnboardingState()
+  // Profilul de eligibilitate vine deja din provider — nu-l mai cerem încă o dată.
+  const { eligibility, refresh } = useOnboarding()
 
-  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<EligibilityProfile | null>(null)
+  const [submitted, setSubmitted] = useState<EligibilityProfile | null>(null)
 
-  const [hasDriverCertificate, setHasDriverCertificate] = useState<'yes' | 'no'>('yes')
+  const result = submitted ?? eligibility
 
-  useEffect(() => {
-    let active = true
-    onboardingService
-      .getEligibility()
-      .then((p) => {
-        if (!active || !p) return
-        setResult(p)
-        setHasDriverCertificate(p.hasDriverCertificate ? 'yes' : 'no')
-      })
-      .catch(() => {})
-      .finally(() => active && setLoading(false))
-    return () => {
-      active = false
-    }
-  }, [])
+  // Răspunsul urmărește serverul până când userul îl atinge — apoi rămâne al lui.
+  const [answer, setAnswer] = useState<'yes' | 'no' | null>(null)
+  const hasDriverCertificate = answer ?? (result?.hasDriverCertificate === false ? 'no' : 'yes')
+  const setHasDriverCertificate = setAnswer
 
   const handleSubmit = async () => {
     setSaving(true)
@@ -78,8 +54,8 @@ export default function OnboardingEligibilityPage() {
         hasDriverCertificate: hasDriverCertificate === 'yes',
         driverCertificateExpiresOn: null,
       })
-      setResult(profile)
-      navigate('/onboarding')
+      setSubmitted(profile)
+      await refresh()
     } catch (err) {
       setError(getErrorMessage(err))
     } finally {
@@ -87,157 +63,130 @@ export default function OnboardingEligibilityPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <OnboardingLayout state={state} activeKey="eligibility">
-        <Stack sx={{ alignItems: 'center', py: 8 }}>
-          <CircularProgress sx={{ color: TOKENS.primary }} />
-        </Stack>
-      </OnboardingLayout>
-    )
-  }
-
   const visual = result ? statusVisual(result.status) : null
 
   return (
-    <OnboardingLayout state={state} activeKey="eligibility">
-      <Stack spacing={3}>
-        <Box>
-          <Typography sx={{ fontWeight: 800, fontSize: '1.35rem', color: TOKENS.ink }}>
-            Eligibilitate
-          </Typography>
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.5 }}>
-            Încarcă documentele și trimite-le. Datele se citesc automat din ele și le verifică
-            echipa RIDElance — tu nu trebuie să completezi nimic. Dacă un document nu e bun,
-            primești email cu motivul și îl reîncarci.
-          </Typography>
-        </Box>
+    <Stack spacing={3}>
+      <PanelHeading
+        title="Eligibilitate"
+        description="Încarcă documentele și trimite-le. Datele se citesc automat din ele și le verifică echipa RIDElance — tu nu trebuie să completezi nimic. Dacă un document nu e bun, primești email cu motivul și îl reîncarci."
+      />
 
-        {error && <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+          {error}
+        </Alert>
+      )}
 
-        {visual && (
-          <Alert
-            icon={
-              result?.status === 'Eligible' ? (
-                <CheckCircleOutlineRoundedIcon />
-              ) : result?.status === 'Ineligible' ? (
-                <ErrorOutlineRoundedIcon />
-              ) : (
-                <InfoOutlinedIcon />
-              )
-            }
-            sx={{
-              borderRadius: `${TOKENS.radius.md}px`,
-              color: visual.color,
-              backgroundColor: visual.bg,
-              '& .MuiAlert-icon': { color: visual.color },
-            }}
-          >
-            <Typography sx={{ fontWeight: 700 }}>{visual.label}</Typography>
-            {result && result.reasons.length > 0 && (
-              <Box component="ul" sx={{ m: '4px 0 0', pl: 2.2 }}>
-                {result.reasons.map((r) => (
-                  <li key={r}>{r}</li>
-                ))}
-              </Box>
-            )}
-          </Alert>
-        )}
-
-        {/* Document-first: userul doar încarcă; datele se citesc pe backend (OCR) */}
-        <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
-          <Typography sx={{ fontWeight: 750, fontSize: '1.02rem', color: TOKENS.ink, mb: 2 }}>
-            Documentele tale
-          </Typography>
-          <Stack spacing={2.5}>
-            <DocumentFirstUpload
-              category="CarteIdentitate"
-              label="Cartea de identitate"
-              hint="Citim data nașterii pentru verificarea vârstei. Nu stocăm CNP-ul."
-              documents={documents}
-              pfaRegistrationId={state?.pfaRegistrationId}
-              onUploaded={refresh}
-            />
-            <DocumentFirstUpload
-              category="PermisConducere"
-              label="Permisul de conducere"
-              hint="Citim data obținerii categoriei B și data de expirare."
-              documents={documents}
-              pfaRegistrationId={state?.pfaRegistrationId}
-              onUploaded={refresh}
-            />
-            {hasDriverCertificate === 'yes' && (
-              <DocumentFirstUpload
-                category="AtestatSofer"
-                label="Atestatul de transport alternativ"
-                hint="Citim data de expirare a atestatului."
-                documents={documents}
-                pfaRegistrationId={state?.pfaRegistrationId}
-                onUploaded={refresh}
-              />
-            )}
-          </Stack>
-        </Paper>
-
-        <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
-          <Stack spacing={2.5}>
-            <Box>
-              <Typography sx={{ fontWeight: 700, color: TOKENS.ink, mb: 0.5 }}>
-                Ai atestat de transport alternativ?
-              </Typography>
-              <RadioGroup
-                row
-                value={hasDriverCertificate}
-                onChange={(e) => setHasDriverCertificate(e.target.value as 'yes' | 'no')}
-              >
-                <FormControlLabel value="yes" control={<Radio />} label="Da" />
-                <FormControlLabel value="no" control={<Radio />} label="Nu" />
-              </RadioGroup>
+      {visual && (
+        <Alert
+          icon={
+            result?.status === 'Eligible' ? (
+              <CheckCircleOutlineRoundedIcon />
+            ) : result?.status === 'Ineligible' ? (
+              <ErrorOutlineRoundedIcon />
+            ) : (
+              <InfoOutlinedIcon />
+            )
+          }
+          sx={{
+            borderRadius: `${TOKENS.radius.md}px`,
+            color: visual.fg,
+            backgroundColor: visual.bg,
+            '& .MuiAlert-icon': { color: visual.fg },
+          }}
+        >
+          <Typography sx={{ fontWeight: 700 }}>{visual.label}</Typography>
+          {result && result.reasons.length > 0 && (
+            <Box component="ul" sx={{ m: '4px 0 0', pl: 2.2 }}>
+              {result.reasons.map((r) => (
+                <li key={r}>{r}</li>
+              ))}
             </Box>
+          )}
+        </Alert>
+      )}
 
-            {hasDriverCertificate === 'no' && (
-              <Alert severity="warning" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
-                <Typography sx={{ fontWeight: 700, mb: 0.3 }}>În așteptarea atestatului</Typography>
-                Pentru a lucra legal pe platformele de transport alternativ ai nevoie de atestat
-                profesional. Obține atestatul, apoi revino în RIDElance pentru a continua. Contul și
-                progresul rămân salvate.
-                <Box sx={{ mt: 1 }}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="warning"
-                    href="https://www.arr.ro"
-                    target="_blank"
-                    rel="noopener"
-                    sx={{ textTransform: 'none', fontWeight: 700 }}
-                  >
-                    Vezi cum obțin atestatul
-                  </Button>
-                </Box>
-              </Alert>
-            )}
-          </Stack>
-        </Paper>
-
-        <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'space-between' }}>
-          <Button onClick={() => navigate('/onboarding')} sx={{ textTransform: 'none', color: TOKENS.textMuted }}>
-            Înapoi
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={saving}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 700,
-              backgroundColor: TOKENS.primary,
-              '&:hover': { backgroundColor: TOKENS.primaryStrong },
-            }}
-          >
-            {saving ? 'Se trimite...' : 'Trimite datele'}
-          </Button>
+      {/* Document-first: userul doar încarcă; datele se citesc pe backend (OCR) */}
+      <PanelCard title="Documentele tale">
+        <Stack spacing={2.5}>
+          <StepDocument
+            step="eligibility"
+            category="CarteIdentitate"
+            label="Cartea de identitate"
+            hint="Citim data nașterii pentru verificarea vârstei. Nu stocăm CNP-ul."
+          />
+          <StepDocument
+            step="eligibility"
+            category="PermisConducere"
+            label="Permisul de conducere"
+            hint="Citim data obținerii categoriei B și data de expirare."
+          />
+          {hasDriverCertificate === 'yes' && (
+            <StepDocument
+              step="eligibility"
+              category="AtestatSofer"
+              label="Atestatul de transport alternativ"
+              hint="Citim data de expirare a atestatului."
+            />
+          )}
         </Stack>
-      </Stack>
-    </OnboardingLayout>
+      </PanelCard>
+
+      <PanelCard>
+        <Stack spacing={2.5}>
+          <Box>
+            <Typography sx={{ fontWeight: 700, color: TOKENS.ink, mb: 0.5 }}>
+              Ai atestat de transport alternativ?
+            </Typography>
+            <RadioGroup
+              row
+              value={hasDriverCertificate}
+              onChange={(e) => setHasDriverCertificate(e.target.value as 'yes' | 'no')}
+            >
+              <FormControlLabel value="yes" control={<Radio />} label="Da" />
+              <FormControlLabel value="no" control={<Radio />} label="Nu" />
+            </RadioGroup>
+          </Box>
+
+          {hasDriverCertificate === 'no' && (
+            <Alert severity="warning" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+              <Typography sx={{ fontWeight: 700, mb: 0.3 }}>În așteptarea atestatului</Typography>
+              Pentru a lucra legal pe platformele de transport alternativ ai nevoie de atestat profesional.
+              Obține atestatul, apoi revino în RIDElance pentru a continua. Contul și progresul rămân salvate.
+              <Box sx={{ mt: 1 }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="warning"
+                  href="https://www.arr.ro"
+                  target="_blank"
+                  rel="noopener"
+                  sx={{ textTransform: 'none', fontWeight: 700 }}
+                >
+                  Vezi cum obțin atestatul
+                </Button>
+              </Box>
+            </Alert>
+          )}
+        </Stack>
+      </PanelCard>
+
+      <PanelActions>
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={saving}
+          sx={{
+            textTransform: 'none',
+            fontWeight: 700,
+            backgroundColor: TOKENS.primary,
+            '&:hover': { backgroundColor: TOKENS.primaryStrong },
+          }}
+        >
+          {saving ? 'Se trimite...' : 'Trimite datele'}
+        </Button>
+      </PanelActions>
+    </Stack>
   )
 }

@@ -4,17 +4,14 @@ import {
   Button,
   Checkbox,
   Chip,
-  CircularProgress,
   FormControlLabel,
-  Paper,
   Radio,
   RadioGroup,
   Stack,
   TextField,
   Typography,
 } from '@mui/material'
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 
 import {
   onboardingService,
@@ -24,9 +21,9 @@ import {
   type PlatformProvider,
 } from '../../services/onboarding.service'
 import { getErrorMessage } from '../../utils/errorHandler'
-import OnboardingLayout from './OnboardingLayout'
 import { TOKENS, inputSx } from './onboardingTheme'
-import { useOnboardingState } from './useOnboardingState'
+import { useOnboarding, useOnboardingResource } from './useOnboarding'
+import { PanelCard, PanelHeading } from './PanelCard'
 
 const STATUS_LABELS: Record<string, string> = {
   NotStarted: 'Neînceput',
@@ -72,18 +69,38 @@ function PlatformCard({
   }
 
   return (
-    <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
-      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-        <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink }}>{provider}</Typography>
-        {account && <Chip size="small" label={STATUS_LABELS[account.onboardingStatus] ?? account.onboardingStatus} sx={{ fontWeight: 700 }} />}
-      </Stack>
+    <PanelCard
+      title={provider}
+      action={
+        account && (
+          <Chip
+            size="small"
+            label={STATUS_LABELS[account.onboardingStatus] ?? account.onboardingStatus}
+            sx={{ fontWeight: 700 }}
+          />
+        )
+      }
+    >
+      {error && (
+        <Alert severity="error" sx={{ mb: 1.5, borderRadius: `${TOKENS.radius.md}px` }}>
+          {error}
+        </Alert>
+      )}
 
-      {error && <Alert severity="error" sx={{ mb: 1.5, borderRadius: `${TOKENS.radius.md}px` }}>{error}</Alert>}
-
-      <Typography sx={{ fontWeight: 700, color: TOKENS.ink, mb: 0.5 }}>Ai deja cont pe {provider}?</Typography>
+      <Typography sx={{ fontWeight: 700, color: TOKENS.ink, mb: 0.5 }}>
+        Ai deja cont pe {provider}?
+      </Typography>
       <RadioGroup value={answer} onChange={(e) => setAnswer(e.target.value as ExistingAccountAnswer)}>
-        <FormControlLabel value="HasOperatorAccount" control={<Radio />} label="Da, am cont de operator/fleet" />
-        <FormControlLabel value="DriverOnly" control={<Radio />} label="Am cont de șofer, dar nu de operator/fleet" />
+        <FormControlLabel
+          value="HasOperatorAccount"
+          control={<Radio />}
+          label="Da, am cont de operator/fleet"
+        />
+        <FormControlLabel
+          value="DriverOnly"
+          control={<Radio />}
+          label="Am cont de șofer, dar nu de operator/fleet"
+        />
         <FormControlLabel value="None" control={<Radio />} label="Nu am cont" />
         <FormControlLabel value="Unknown" control={<Radio />} label="Nu știu ce tip de cont am" />
       </RadioGroup>
@@ -97,39 +114,45 @@ function PlatformCard({
       />
 
       <Box sx={{ mt: 2 }}>
-        <Button variant="contained" onClick={save} disabled={busy}
-          sx={{ textTransform: 'none', fontWeight: 700, backgroundColor: TOKENS.primary, '&:hover': { backgroundColor: TOKENS.primaryStrong } }}>
+        <Button
+          variant="contained"
+          onClick={save}
+          disabled={busy}
+          sx={{
+            textTransform: 'none',
+            fontWeight: 700,
+            backgroundColor: TOKENS.primary,
+            '&:hover': { backgroundColor: TOKENS.primaryStrong },
+          }}
+        >
           {busy ? 'Se salvează...' : 'Salvează'}
         </Button>
       </Box>
-    </Paper>
+    </PanelCard>
   )
 }
 
 export default function OnboardingPlatformsPage() {
-  const navigate = useNavigate()
-  const { state } = useOnboardingState()
+  const { refresh } = useOnboarding()
+  const { data: loaded } = useOnboardingResource('platforms', () => onboardingService.getPlatformOnboarding())
 
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [data, setData] = useState<PlatformOnboardingState | null>(null)
+  const [saved, setSaved] = useState<PlatformOnboardingState | null>(null)
+  const data = saved ?? loaded
 
-  const [uber, setUber] = useState(false)
-  const [bolt, setBolt] = useState(false)
+  // Bifele urmăresc datele de pe server până când userul le atinge — apoi rămân ale lui.
+  const [selection, setSelection] = useState<{ uber: boolean; bolt: boolean } | null>(null)
+  const serverSelection = {
+    uber: data?.platforms.find((p) => p.provider === 'Uber')?.isSelectedByUser ?? false,
+    bolt: data?.platforms.find((p) => p.provider === 'Bolt')?.isSelectedByUser ?? false,
+  }
+  const { uber, bolt } = selection ?? serverSelection
 
   const applyData = (d: PlatformOnboardingState) => {
-    setData(d)
-    setUber(d.platforms.find((p) => p.provider === 'Uber')?.isSelectedByUser ?? false)
-    setBolt(d.platforms.find((p) => p.provider === 'Bolt')?.isSelectedByUser ?? false)
+    setSaved(d)
+    setSelection(null)
+    void refresh()
   }
-
-  useEffect(() => {
-    onboardingService
-      .getPlatformOnboarding()
-      .then(applyData)
-      .catch((err) => setError(getErrorMessage(err)))
-      .finally(() => setLoading(false))
-  }, [])
 
   const saveSelection = async () => {
     setError(null)
@@ -140,63 +163,50 @@ export default function OnboardingPlatformsPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <OnboardingLayout state={state} activeKey="platforms">
-        <Stack sx={{ alignItems: 'center', py: 8 }}>
-          <CircularProgress sx={{ color: TOKENS.primary }} />
-        </Stack>
-      </OnboardingLayout>
-    )
-  }
-
   const uberAccount = data?.platforms.find((p) => p.provider === 'Uber')
   const boltAccount = data?.platforms.find((p) => p.provider === 'Bolt')
 
   return (
-    <OnboardingLayout state={state} activeKey="platforms">
-      <Stack spacing={3}>
-        <Box>
-          <Typography sx={{ fontWeight: 800, fontSize: '1.35rem', color: TOKENS.ink }}>
-            Conturi Uber & Bolt
-          </Typography>
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.5 }}>
-            Alege platformele pe care vrei să lucrezi. Nu-ți cerem parole — doar confirmarea contului de operator.
-          </Typography>
-        </Box>
+    <Stack spacing={3}>
+      <PanelHeading
+        title="Conturi Uber & Bolt"
+        description="Alege platformele pe care vrei să lucrezi. Nu-ți cerem parole — doar confirmarea contului de operator."
+      />
 
-        {error && <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+          {error}
+        </Alert>
+      )}
 
-        <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
-          <Typography sx={{ fontWeight: 700, color: TOKENS.ink, mb: 1 }}>Pe ce platforme vrei să lucrezi?</Typography>
-          <Stack>
-            <FormControlLabel control={<Checkbox checked={uber} onChange={(e) => setUber(e.target.checked)} />} label="Uber" />
-            <FormControlLabel control={<Checkbox checked={bolt} onChange={(e) => setBolt(e.target.checked)} />} label="Bolt" />
-          </Stack>
-          <Box sx={{ mt: 1 }}>
-            <Button variant="outlined" onClick={saveSelection}
-              sx={{ textTransform: 'none', fontWeight: 700, borderColor: TOKENS.primary, color: TOKENS.primaryStrong }}>
-              Salvează selecția
-            </Button>
-          </Box>
-        </Paper>
-
-        {uber && <PlatformCard provider="Uber" account={uberAccount} onSaved={applyData} />}
-        {bolt && <PlatformCard provider="Bolt" account={boltAccount} onSaved={applyData} />}
-
-        <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'space-between' }}>
-          <Button onClick={() => navigate('/onboarding')} sx={{ textTransform: 'none', color: TOKENS.textMuted }}>
-            Înapoi
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => navigate('/onboarding')}
-            sx={{ textTransform: 'none', fontWeight: 700, backgroundColor: TOKENS.primary, '&:hover': { backgroundColor: TOKENS.primaryStrong } }}
-          >
-            Trimite datele
-          </Button>
+      <PanelCard title="Pe ce platforme vrei să lucrezi?">
+        <Stack>
+          <FormControlLabel
+            control={
+              <Checkbox checked={uber} onChange={(e) => setSelection({ uber: e.target.checked, bolt })} />
+            }
+            label="Uber"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox checked={bolt} onChange={(e) => setSelection({ uber, bolt: e.target.checked })} />
+            }
+            label="Bolt"
+          />
         </Stack>
-      </Stack>
-    </OnboardingLayout>
+        <Box sx={{ mt: 1 }}>
+          <Button
+            variant="outlined"
+            onClick={saveSelection}
+            sx={{ fontWeight: 700, borderColor: TOKENS.primary, color: TOKENS.primaryStrong }}
+          >
+            Salvează selecția
+          </Button>
+        </Box>
+      </PanelCard>
+
+      {uber && <PlatformCard provider="Uber" account={uberAccount} onSaved={applyData} />}
+      {bolt && <PlatformCard provider="Bolt" account={boltAccount} onSaved={applyData} />}
+    </Stack>
   )
 }

@@ -5,31 +5,27 @@ import {
   Button,
   Checkbox,
   Chip,
-  CircularProgress,
   Divider,
   FormControlLabel,
   MenuItem,
-  Paper,
   Radio,
   RadioGroup,
   Stack,
   TextField,
   Typography,
 } from '@mui/material'
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 
 import {
   onboardingService,
-  type Step2State,
   type VatAnswer,
   type VatRegistrationKind,
 } from '../../services/onboarding.service'
 import { getErrorMessage } from '../../utils/errorHandler'
-import { DocumentFirstUpload } from './DocumentFirstUpload'
-import OnboardingLayout from './OnboardingLayout'
+import { StepDocument } from './StepDocument'
 import { TOKENS, inputSx } from './onboardingTheme'
-import { useOnboardingState } from './useOnboardingState'
+import { useOnboarding, useOnboardingResource } from './useOnboarding'
+import { PanelCard, PanelHeading } from './PanelCard'
 
 const BANKS = [
   'BCR',
@@ -73,64 +69,53 @@ const emptyOblio: OblioForm = {
   termsAcceptedConsent: false,
 }
 
-function Card({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
-  return (
-    <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
-      <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink }}>{title}</Typography>
-      {subtitle && <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.85rem', mt: 0.3, mb: 1.5 }}>{subtitle}</Typography>}
-      <Box sx={{ mt: subtitle ? 0 : 1.5 }}>{children}</Box>
-    </Paper>
-  )
-}
-
 export default function OnboardingStep2Page() {
-  const navigate = useNavigate()
-  const { state, documents, refresh } = useOnboardingState()
+  const { refresh } = useOnboarding()
+  const { data: step2 } = useOnboardingResource('step2', () => onboardingService.getStep2State())
 
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [step2, setStep2] = useState<Step2State | null>(null)
-
-  // VAT
-  const [vatAnswer, setVatAnswer] = useState<VatAnswer>('Unknown')
-  const [vatKind, setVatKind] = useState<VatRegistrationKind>('None')
   const [savingVat, setSavingVat] = useState(false)
-
-  // Bank
-  const [bankName, setBankName] = useState('')
   const [savingBank, setSavingBank] = useState(false)
-
-  // Oblio
-  const [oblioEmail, setOblioEmail] = useState('')
-  const [oblio, setOblio] = useState<OblioForm>(emptyOblio)
   const [savingOblio, setSavingOblio] = useState(false)
 
-  const reload = async () => {
-    const data = await onboardingService.getStep2State()
-    setStep2(data)
-    if (data.fiscal) {
-      setVatAnswer(data.fiscal.vatAnswer)
-      setVatKind(data.fiscal.vatRegistrationKind)
-    }
-    if (data.bank) setBankName(data.bank.bankName ?? '')
-    if (data.oblio) {
-      setOblioEmail(data.oblio.accountEmail ?? '')
-      setOblio({
-        accountCreationConsent: data.oblio.accountCreationConsent,
-        dataProcessingConsent: data.oblio.dataProcessingConsent,
-        eInvoiceConsent: data.oblio.eInvoiceConsent,
-        autoInvoicingConsent: data.oblio.autoInvoicingConsent,
-        ridelanceManagementConsent: data.oblio.ridelanceManagementConsent,
-        termsAcceptedConsent: data.oblio.termsAcceptedConsent,
-      })
-    }
-  }
+  // Fiecare formular urmărește serverul până când userul îl atinge — apoi rămâne al lui.
+  const [vatForm, setVatForm] = useState<{ answer: VatAnswer; kind: VatRegistrationKind } | null>(null)
+  const vatAnswer = vatForm?.answer ?? step2?.fiscal?.vatAnswer ?? 'Unknown'
+  const vatKind = vatForm?.kind ?? step2?.fiscal?.vatRegistrationKind ?? 'None'
+  const setVatAnswer = (answer: VatAnswer) => setVatForm({ answer, kind: vatKind })
+  const setVatKind = (kind: VatRegistrationKind) => setVatForm({ answer: vatAnswer, kind })
 
-  useEffect(() => {
-    reload()
-      .catch((err) => setError(getErrorMessage(err)))
-      .finally(() => setLoading(false))
-  }, [])
+  const [bankForm, setBankForm] = useState<string | null>(null)
+  const bankName = bankForm ?? step2?.bank?.bankName ?? ''
+  const setBankName = setBankForm
+
+  const [oblioEmailForm, setOblioEmailForm] = useState<string | null>(null)
+  const oblioEmail = oblioEmailForm ?? step2?.oblio?.accountEmail ?? ''
+  const setOblioEmail = setOblioEmailForm
+
+  const [oblioForm, setOblioForm] = useState<OblioForm | null>(null)
+  const oblio: OblioForm =
+    oblioForm ??
+    (step2?.oblio
+      ? {
+          accountCreationConsent: step2.oblio.accountCreationConsent,
+          dataProcessingConsent: step2.oblio.dataProcessingConsent,
+          eInvoiceConsent: step2.oblio.eInvoiceConsent,
+          autoInvoicingConsent: step2.oblio.autoInvoicingConsent,
+          ridelanceManagementConsent: step2.oblio.ridelanceManagementConsent,
+          termsAcceptedConsent: step2.oblio.termsAcceptedConsent,
+        }
+      : emptyOblio)
+  const setOblio = (update: (current: OblioForm) => OblioForm) => setOblioForm(update(oblio))
+
+  /** După fiecare salvare re-citim tot din provider, ca rail-ul să prindă schimbarea de status. */
+  const reload = async () => {
+    setVatForm(null)
+    setBankForm(null)
+    setOblioEmailForm(null)
+    setOblioForm(null)
+    await refresh()
+  }
 
   const saveVat = async () => {
     setSavingVat(true)
@@ -171,155 +156,189 @@ export default function OnboardingStep2Page() {
     }
   }
 
-  if (loading) {
-    return (
-      <OnboardingLayout state={state} activeKey="fiscal">
-        <Stack sx={{ alignItems: 'center', py: 8 }}>
-          <CircularProgress sx={{ color: TOKENS.primary }} />
-        </Stack>
-      </OnboardingLayout>
-    )
-  }
-
   const allOblio = Object.values(oblio).every(Boolean)
 
   return (
-    <OnboardingLayout state={state} activeKey="fiscal">
-      <Stack spacing={3}>
-        <Box>
-          <Typography sx={{ fontWeight: 800, fontSize: '1.35rem', color: TOKENS.ink }}>
-            Fiscal, bancă și semnături
-          </Typography>
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.5 }}>
-            Completează informațiile fiscale, contul bancar și consimțămintele pentru facturare.
-          </Typography>
-        </Box>
+    <Stack spacing={3}>
+      <PanelHeading
+        title="Fiscal, bancă și semnături"
+        description="Completează informațiile fiscale, contul bancar și consimțămintele pentru facturare."
+      />
 
-        {error && <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+          {error}
+        </Alert>
+      )}
 
-        {/* 2.1 TVA */}
-        <Card title="TVA" subtitle="Ești înregistrat în scopuri de TVA?">
-          <RadioGroup value={vatAnswer} onChange={(e) => setVatAnswer(e.target.value as VatAnswer)}>
-            <FormControlLabel value="No" control={<Radio />} label="Nu" />
-            <FormControlLabel value="Yes" control={<Radio />} label="Da" />
-            <FormControlLabel value="DontKnow" control={<Radio />} label="Nu știu" />
-          </RadioGroup>
-          {vatAnswer === 'Yes' && (
-            <TextField
-              select
-              label="Tip înregistrare TVA"
-              value={vatKind}
-              onChange={(e) => setVatKind(e.target.value as VatRegistrationKind)}
-              sx={{ ...inputSx, mt: 1.5 }}
-              fullWidth
-            >
-              <MenuItem value="SpecialArticle317">Cod special (art. 317 — intracomunitar)</MenuItem>
-              <MenuItem value="StandardVat">Plătitor de TVA obișnuit</MenuItem>
-              <MenuItem value="Unknown">Nu sunt sigur</MenuItem>
-            </TextField>
-          )}
-          <Box sx={{ mt: 2 }}>
-            <Button variant="contained" onClick={saveVat} disabled={savingVat}
-              sx={{ textTransform: 'none', fontWeight: 700, backgroundColor: TOKENS.primary, '&:hover': { backgroundColor: TOKENS.primaryStrong } }}>
-              {savingVat ? 'Se salvează...' : 'Salvează'}
-            </Button>
-          </Box>
-        </Card>
-
-        {/* 2.3 Bancă */}
-        <Card title="Cont bancar" subtitle="Contul PFA pe care primești încasările.">
-          {step2?.bank?.ibanMasked && (
-            <Alert severity={step2.bank.status === 'Verified' ? 'success' : 'info'} sx={{ mb: 2, borderRadius: `${TOKENS.radius.md}px` }}>
-              IBAN înregistrat: <strong>{step2.bank.ibanMasked}</strong> · status: {step2.bank.status}
-              {step2.bank.source === 'OpenBanking' && ' (verificat prin open banking)'}
-            </Alert>
-          )}
-          <Box sx={{ mb: 2 }}>
-            <DocumentFirstUpload
-              category="ExtrasBancar"
-              label="Extras de cont / confirmare IBAN"
-              hint="Citim automat IBAN-ul din document. Nu trebuie să-l scrii."
-              documents={documents}
-              pfaRegistrationId={state?.pfaRegistrationId}
-              onUploaded={refresh}
-            />
-          </Box>
-          <Stack spacing={2}>
-            <TextField select label="Bancă" value={bankName} onChange={(e) => setBankName(e.target.value)} sx={inputSx} fullWidth>
-              {BANKS.map((b) => (
-                <MenuItem key={b} value={b}>
-                  {b}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Stack>
-          <Box sx={{ mt: 2 }}>
-            <Button variant="contained" onClick={saveBank} disabled={savingBank}
-              sx={{ textTransform: 'none', fontWeight: 700, backgroundColor: TOKENS.primary, '&:hover': { backgroundColor: TOKENS.primaryStrong } }}>
-              {savingBank ? 'Se salvează...' : 'Salvează contul'}
-            </Button>
-          </Box>
-        </Card>
-
-        {/* 2.4 Oblio */}
-        <Card title="Cont Oblio (facturare)" subtitle="Consimțămintele necesare pentru emiterea automată a facturilor.">
-          <TextField label="Email cont Oblio" type="email" value={oblioEmail} onChange={(e) => setOblioEmail(e.target.value)} sx={{ ...inputSx, mb: 1 }} fullWidth />
-          <Stack>
-            {OBLIO_CONSENTS.map(({ key, label }) => (
-              <FormControlLabel
-                key={key}
-                control={<Checkbox checked={oblio[key]} onChange={(e) => setOblio((o) => ({ ...o, [key]: e.target.checked }))} />}
-                label={<Typography sx={{ fontSize: '0.86rem', color: TOKENS.ink }}>{label}</Typography>}
-              />
-            ))}
-          </Stack>
-          <Box sx={{ mt: 2 }}>
-            <Button variant="contained" onClick={saveOblio} disabled={savingOblio}
-              sx={{ textTransform: 'none', fontWeight: 700, backgroundColor: TOKENS.primary, '&:hover': { backgroundColor: TOKENS.primaryStrong } }}>
-              {savingOblio ? 'Se salvează...' : allOblio ? 'Accept toate' : 'Salvează'}
-            </Button>
-          </Box>
-        </Card>
-
-        {/* 2.2 Semnături (read-only) */}
-        <Card title="Pachet de semnături" subtitle="Împuternicirile și contractele se pregătesc de echipa RIDElance.">
-          {step2?.signature ? (
-            <Stack spacing={1.2}>
-              <Chip
-                icon={step2.signature.status === 'Completed' ? <CheckCircleOutlineRoundedIcon /> : undefined}
-                label={`Status: ${step2.signature.status} · ${step2.signature.provider}`}
-                sx={{ alignSelf: 'flex-start', fontWeight: 700 }}
-              />
-              {step2.signature.documents.length > 0 && <Divider />}
-              {step2.signature.documents.map((d) => (
-                <Stack key={d.type} direction="row" sx={{ justifyContent: 'space-between' }}>
-                  <Typography sx={{ fontSize: '0.88rem', color: TOKENS.ink }}>{d.label ?? d.type}</Typography>
-                  <Typography sx={{ fontSize: '0.82rem', color: d.isSigned ? '#2e7d32' : TOKENS.textMuted, fontWeight: 700 }}>
-                    {d.isSigned ? 'Semnat' : 'În așteptare'}
-                  </Typography>
-                </Stack>
-              ))}
-            </Stack>
-          ) : (
-            <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.88rem' }}>
-              Pachetul de semnături nu a fost încă pregătit. Te anunțăm când e gata de semnat.
-            </Typography>
-          )}
-        </Card>
-
-        <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'space-between' }}>
-          <Button onClick={() => navigate('/onboarding')} sx={{ textTransform: 'none', color: TOKENS.textMuted }}>
-            Înapoi
-          </Button>
+      {/* 2.1 TVA */}
+      <PanelCard title="TVA" subtitle="Ești înregistrat în scopuri de TVA?">
+        <RadioGroup value={vatAnswer} onChange={(e) => setVatAnswer(e.target.value as VatAnswer)}>
+          <FormControlLabel value="No" control={<Radio />} label="Nu" />
+          <FormControlLabel value="Yes" control={<Radio />} label="Da" />
+          <FormControlLabel value="DontKnow" control={<Radio />} label="Nu știu" />
+        </RadioGroup>
+        {vatAnswer === 'Yes' && (
+          <TextField
+            select
+            label="Tip înregistrare TVA"
+            value={vatKind}
+            onChange={(e) => setVatKind(e.target.value as VatRegistrationKind)}
+            sx={{ ...inputSx, mt: 1.5 }}
+            fullWidth
+          >
+            <MenuItem value="SpecialArticle317">Cod special (art. 317 — intracomunitar)</MenuItem>
+            <MenuItem value="StandardVat">Plătitor de TVA obișnuit</MenuItem>
+            <MenuItem value="Unknown">Nu sunt sigur</MenuItem>
+          </TextField>
+        )}
+        <Box sx={{ mt: 2 }}>
           <Button
             variant="contained"
-            onClick={() => navigate('/onboarding')}
-            sx={{ textTransform: 'none', fontWeight: 700, backgroundColor: TOKENS.primary, '&:hover': { backgroundColor: TOKENS.primaryStrong } }}
+            onClick={saveVat}
+            disabled={savingVat}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 700,
+              backgroundColor: TOKENS.primary,
+              '&:hover': { backgroundColor: TOKENS.primaryStrong },
+            }}
           >
-            Trimite datele
+            {savingVat ? 'Se salvează...' : 'Salvează'}
           </Button>
+        </Box>
+      </PanelCard>
+
+      {/* 2.3 Bancă */}
+      <PanelCard title="Cont bancar" subtitle="Contul PFA pe care primești încasările.">
+        {step2?.bank?.ibanMasked && (
+          <Alert
+            severity={step2.bank.status === 'Verified' ? 'success' : 'info'}
+            sx={{ mb: 2, borderRadius: `${TOKENS.radius.md}px` }}
+          >
+            IBAN înregistrat: <strong>{step2.bank.ibanMasked}</strong> · status: {step2.bank.status}
+            {step2.bank.source === 'OpenBanking' && ' (verificat prin open banking)'}
+          </Alert>
+        )}
+        <Box sx={{ mb: 2 }}>
+          <StepDocument
+            step="fiscal"
+            category="ExtrasBancar"
+            label="Extras de cont / confirmare IBAN"
+            hint="Citim automat IBAN-ul din document. Nu trebuie să-l scrii."
+          />
+        </Box>
+        <Stack spacing={2}>
+          <TextField
+            select
+            label="Bancă"
+            value={bankName}
+            onChange={(e) => setBankName(e.target.value)}
+            sx={inputSx}
+            fullWidth
+          >
+            {BANKS.map((b) => (
+              <MenuItem key={b} value={b}>
+                {b}
+              </MenuItem>
+            ))}
+          </TextField>
         </Stack>
-      </Stack>
-    </OnboardingLayout>
+        <Box sx={{ mt: 2 }}>
+          <Button
+            variant="contained"
+            onClick={saveBank}
+            disabled={savingBank}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 700,
+              backgroundColor: TOKENS.primary,
+              '&:hover': { backgroundColor: TOKENS.primaryStrong },
+            }}
+          >
+            {savingBank ? 'Se salvează...' : 'Salvează contul'}
+          </Button>
+        </Box>
+      </PanelCard>
+
+      {/* 2.4 Oblio */}
+      <PanelCard
+        title="Cont Oblio (facturare)"
+        subtitle="Consimțămintele necesare pentru emiterea automată a facturilor."
+      >
+        <TextField
+          label="Email cont Oblio"
+          type="email"
+          value={oblioEmail}
+          onChange={(e) => setOblioEmail(e.target.value)}
+          sx={{ ...inputSx, mb: 1 }}
+          fullWidth
+        />
+        <Stack>
+          {OBLIO_CONSENTS.map(({ key, label }) => (
+            <FormControlLabel
+              key={key}
+              control={
+                <Checkbox
+                  checked={oblio[key]}
+                  onChange={(e) => setOblio((o) => ({ ...o, [key]: e.target.checked }))}
+                />
+              }
+              label={<Typography sx={{ fontSize: '0.86rem', color: TOKENS.ink }}>{label}</Typography>}
+            />
+          ))}
+        </Stack>
+        <Box sx={{ mt: 2 }}>
+          <Button
+            variant="contained"
+            onClick={saveOblio}
+            disabled={savingOblio}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 700,
+              backgroundColor: TOKENS.primary,
+              '&:hover': { backgroundColor: TOKENS.primaryStrong },
+            }}
+          >
+            {savingOblio ? 'Se salvează...' : allOblio ? 'Accept toate' : 'Salvează'}
+          </Button>
+        </Box>
+      </PanelCard>
+
+      {/* 2.2 Semnături (read-only) */}
+      <PanelCard
+        title="Pachet de semnături"
+        subtitle="Împuternicirile și contractele se pregătesc de echipa RIDElance."
+      >
+        {step2?.signature ? (
+          <Stack spacing={1.2}>
+            <Chip
+              icon={step2.signature.status === 'Completed' ? <CheckCircleOutlineRoundedIcon /> : undefined}
+              label={`Status: ${step2.signature.status} · ${step2.signature.provider}`}
+              sx={{ alignSelf: 'flex-start', fontWeight: 700 }}
+            />
+            {step2.signature.documents.length > 0 && <Divider />}
+            {step2.signature.documents.map((d) => (
+              <Stack key={d.type} direction="row" sx={{ justifyContent: 'space-between' }}>
+                <Typography sx={{ fontSize: '0.88rem', color: TOKENS.ink }}>{d.label ?? d.type}</Typography>
+                <Typography
+                  sx={{
+                    fontSize: '0.82rem',
+                    color: d.isSigned ? TOKENS.success : TOKENS.textMuted,
+                    fontWeight: 700,
+                  }}
+                >
+                  {d.isSigned ? 'Semnat' : 'În așteptare'}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
+        ) : (
+          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.88rem' }}>
+            Pachetul de semnături nu a fost încă pregătit. Te anunțăm când e gata de semnat.
+          </Typography>
+        )}
+      </PanelCard>
+    </Stack>
   )
 }

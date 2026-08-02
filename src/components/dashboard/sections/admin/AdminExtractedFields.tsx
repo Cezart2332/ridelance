@@ -19,6 +19,7 @@ const FIELD_LABELS: Record<string, string> = {
   cui: 'CUI',
   legal_name: 'Denumire PFA',
   registry_number: 'Nr. registrul comerțului',
+  caen_codes: 'Coduri CAEN',
   plate_number: 'Nr. înmatriculare',
   vin: 'Serie șasiu (VIN)',
   make: 'Marcă',

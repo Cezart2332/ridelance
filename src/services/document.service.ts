@@ -14,6 +14,11 @@ export interface DocumentSummary {
   aiSummary?: string | null;
   aiDetectedType?: string | null;
   aiExtractedExpiresAtUtc?: string | null;
+  /**
+   * Un câmp citit prin OCR n-a trecut validatorul determinist (ex. CAEN ≠ 4939) sau are
+   * încredere prea mică. Documentul rămâne acceptat — doar că îl verifică un om.
+   */
+  aiRequiresManualReview: boolean;
 }
 
 /** Documentul este încă în coada de prevalidare automată (AI). */
@@ -49,7 +54,18 @@ export interface ExtractedFieldsResponse {
 }
 
 export const documentService = {
-  upload: async (file: File, category: string, pfaRegistrationId?: string, userId?: string, expiresAt?: string) => {
+  /**
+   * @param onProgress Progresul real al uploadului, 0–100. Distinct de prevalidarea automată,
+   *   care începe abia după ce fișierul a ajuns pe server (vezi `isAiPending`).
+   */
+  upload: async (
+    file: File,
+    category: string,
+    pfaRegistrationId?: string,
+    userId?: string,
+    expiresAt?: string,
+    onProgress?: (percent: number) => void,
+  ) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('category', category);
@@ -67,6 +83,13 @@ export const documentService = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      onUploadProgress: onProgress
+        ? (event) => {
+            // `total` lipsește când serverul nu trimite Content-Length pe stream.
+            if (!event.total) return;
+            onProgress(Math.round((event.loaded / event.total) * 100));
+          }
+        : undefined,
     });
     return response.data;
   },

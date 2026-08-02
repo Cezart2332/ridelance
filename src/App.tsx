@@ -31,7 +31,10 @@ const AppLayout = lazyWithRetry(() =>
 const CheckoutPage = lazyWithRetry(() => import('./pages/CheckoutPage'))
 
 // Onboarding (fără acces la panel până la validarea completă)
-const OnboardingHubPage = lazyWithRetry(() => import('./components/onboarding/OnboardingHubPage'))
+const OnboardingShell = lazyWithRetry(() => import('./components/onboarding/OnboardingShell'))
+const OnboardingRedirect = lazyWithRetry(() =>
+  import('./components/onboarding/OnboardingShell').then((m) => ({ default: m.OnboardingRedirect })),
+)
 const OnboardingPfaPage = lazyWithRetry(() => import('./components/onboarding/OnboardingPfaPage'))
 const OnboardingEligibilityPage = lazyWithRetry(() => import('./components/onboarding/OnboardingEligibilityPage'))
 const OnboardingConsultoPage = lazyWithRetry(() => import('./components/onboarding/OnboardingConsultoPage'))
@@ -58,16 +61,20 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/app" element={<RoleRedirect />} />
             <Route path="/app/pending-access" element={<PendingAccessPage />} />
-            <Route path="/onboarding" element={<OnboardingHubPage />} />
-            <Route path="/onboarding/eligibility" element={<OnboardingEligibilityPage />} />
-            <Route path="/onboarding/pfa" element={<OnboardingPfaPage />} />
-            <Route path="/onboarding/pfa/consulto" element={<OnboardingConsultoPage />} />
-            <Route path="/onboarding/step2" element={<OnboardingStep2Page />} />
-            <Route path="/onboarding/arr" element={<OnboardingArrPage />} />
-            <Route path="/onboarding/platforms" element={<OnboardingPlatformsPage />} />
-            <Route path="/onboarding/vehicle" element={<OnboardingVehiclePage />} />
-            {/* Rutele vechi pe secțiuni au dispărut — un singur onboarding, pe cei 6 pași. */}
-            <Route path="/onboarding/sections/*" element={<Navigate to="/onboarding" replace />} />
+            {/* Un singur shell pentru toți cei 6 pași: rail-ul, datele și poll-ul trăiesc aici,
+                deci schimbarea pasului nu remontează nimic. */}
+            <Route path="/onboarding" element={<OnboardingShell />}>
+              <Route index element={<OnboardingRedirect />} />
+              <Route path="eligibility" element={<OnboardingEligibilityPage />} />
+              <Route path="pfa" element={<OnboardingPfaPage />} />
+              <Route path="pfa/consulto" element={<OnboardingConsultoPage />} />
+              <Route path="step2" element={<OnboardingStep2Page />} />
+              <Route path="arr" element={<OnboardingArrPage />} />
+              <Route path="platforms" element={<OnboardingPlatformsPage />} />
+              <Route path="vehicle" element={<OnboardingVehiclePage />} />
+              {/* Rutele vechi pe secțiuni au dispărut — un singur onboarding, pe cei 6 pași. */}
+              <Route path="sections/*" element={<Navigate to="/onboarding" replace />} />
+            </Route>
             <Route path="/app/dashboard/*" element={<DashboardPage />} />
             <Route path="/contabil/*" element={<ContabilDashboard />} />
             <Route path="/admin/*" element={<AdminDashboard />} />

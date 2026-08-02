@@ -72,6 +72,8 @@ interface PfaSummary {
   city: string | null
   county: string | null
   isOwner: boolean
+  /** Completat de OCR din certificatul de înregistrare; adminul îl confirmă la aprobare. */
+  cui: string | null
   documentCount: number
   createdAtUtc: string
   lastActivityAtUtc: string | null
@@ -98,6 +100,7 @@ function normalizePfaSummary(item: any): PfaSummary {
     city: item.city ?? null,
     county: item.county ?? null,
     isOwner: Boolean(item.isOwner),
+    cui: item.cui ?? null,
     documentCount: item.documentCount,
     createdAtUtc: item.createdAtUtc,
     lastActivityAtUtc: item.lastActivityAtUtc,
@@ -302,9 +305,16 @@ export function AdminDashboard() {
     }
   }
 
+  /** Certificatul pe care clientul l-a încărcat singur — adminul nu-l mai cere încă o dată. */
+  const existingCertificate = documents
+    .filter((d) => d.category === 'CertificatInregistrare' && d.status.toLowerCase() !== 'rejected')
+    .sort((a, b) => new Date(b.uploadedAtUtc).getTime() - new Date(a.uploadedAtUtc).getTime())[0]
+
   const handleOpenStatusDialog = (action: 'Approved' | 'Rejected') => {
     setReviewNote('')
-    setCui('')
+    // La „Am PFA" clientul a încărcat certificatul, iar OCR-ul a completat deja CUI-ul: adminul
+    // confirmă, nu retastează. La „Nu am PFA" ambele lipsesc și se completează aici.
+    setCui(selectedPfa?.cui ?? '')
     setCertificatFile(null)
     setStatusError(null)
     setStatusDialog({ open: true, action })
@@ -319,7 +329,7 @@ export function AdminDashboard() {
         setStatusError(cuiValidation);
         return;
       }
-      if (!certificatFile) {
+      if (!certificatFile && !existingCertificate) {
         setStatusError('Certificatul de înregistrare este obligatoriu pentru aprobare.');
         return;
       }
@@ -414,6 +424,7 @@ export function AdminDashboard() {
       city: null,
       county: null,
       isOwner: false,
+      cui: null,
       documentCount: 0,
       createdAtUtc: new Date().toISOString(),
       lastActivityAtUtc: pfa.lastActivityAtUtc,
@@ -781,8 +792,14 @@ export function AdminDashboard() {
                 />
                 <Box>
                   <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 700, mb: 0.5, display: 'block' }} component="p">
-                    CERTIFICAT DE ÎNREGISTRARE *
+                    CERTIFICAT DE ÎNREGISTRARE {existingCertificate ? '' : '*'}
                   </Typography>
+                  {existingCertificate && !certificatFile && (
+                    <Alert severity="success" sx={{ mb: 1, borderRadius: TOKENS.radius.md }}>
+                      Clientul a încărcat deja certificatul ({existingCertificate.originalFileName}). Se
+                      folosește acesta — atașează unul nou doar dacă vrei să-l înlocuiești.
+                    </Alert>
+                  )}
                   <Button
                     component="label"
                     variant="outlined"
@@ -802,7 +819,11 @@ export function AdminDashboard() {
                     }}
                   >
                     <Box sx={{ flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {certificatFile ? certificatFile.name : 'Atașează Certificat de Înregistrare'}
+                      {certificatFile
+                        ? certificatFile.name
+                        : existingCertificate
+                          ? 'Înlocuiește certificatul'
+                          : 'Atașează Certificat de Înregistrare'}
                     </Box>
                     <input
                       type="file"

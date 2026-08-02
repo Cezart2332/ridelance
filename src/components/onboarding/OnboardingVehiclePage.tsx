@@ -1,20 +1,7 @@
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Divider,
-  MenuItem,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Alert, Box, Button, Chip, Divider, MenuItem, Stack, TextField, Typography } from '@mui/material'
+import { useEffect, useRef, useState } from 'react'
 
 import { documentService } from '../../services/document.service'
 import {
@@ -24,10 +11,10 @@ import {
   type VehicleState,
 } from '../../services/onboarding.service'
 import { getErrorMessage } from '../../utils/errorHandler'
-import { DocumentFirstUpload } from './DocumentFirstUpload'
-import OnboardingLayout from './OnboardingLayout'
+import { StepDocument } from './StepDocument'
 import { TOKENS, inputSx } from './onboardingTheme'
-import { useOnboardingState } from './useOnboardingState'
+import { useOnboarding, useOnboardingResource } from './useOnboarding'
+import { PanelCard, PanelHeading } from './PanelCard'
 
 const COPY_STATUS_LABELS: Record<string, string> = {
   Draft: 'Inițiată',
@@ -40,10 +27,9 @@ const COPY_STATUS_LABELS: Record<string, string> = {
 const lei = (bani: number) => (bani / 100).toLocaleString('ro-RO', { minimumFractionDigits: 2 })
 
 export default function OnboardingVehiclePage() {
-  const navigate = useNavigate()
-  const { state, documents, refresh } = useOnboardingState()
+  const { refresh } = useOnboarding()
+  const { data: loaded } = useOnboardingResource('vehicle', () => onboardingService.getVehicleState())
 
-  const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<VehicleState | null>(null)
@@ -64,6 +50,7 @@ export default function OnboardingVehiclePage() {
 
   const apply = (d: VehicleState) => {
     setData(d)
+    void refresh()
     setOwnershipMode(d.ownershipMode)
     setAddLater(d.addLater)
     setPlateNumber(d.plateNumber ?? '')
@@ -76,13 +63,14 @@ export default function OnboardingVehiclePage() {
     setBoltSets(d.badges.find((b) => b.provider === 'Bolt')?.setCount ?? 0)
   }
 
+  // Formularul se semințează o singură dată din starea de pe server; după aceea e al userului.
+  const seeded = useRef(false)
   useEffect(() => {
-    onboardingService
-      .getVehicleState()
-      .then(apply)
-      .catch((err) => setError(getErrorMessage(err)))
-      .finally(() => setLoading(false))
-  }, [])
+    if (seeded.current || !loaded) return
+    seeded.current = true
+    apply(loaded)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded])
 
   const run = async (fn: () => Promise<unknown>) => {
     setBusy(true)
@@ -120,46 +108,12 @@ export default function OnboardingVehiclePage() {
       apply(await onboardingService.submitCopyRequest(years, badges))
     })
 
-  // „Trimite datele" salvează vehiculul (și cererea, dacă există) și întoarce userul în hub.
-  const submitAndReturn = async () => {
-    setBusy(true)
-    setError(null)
-    try {
-      apply(
-        await onboardingService.submitVehicle({
-          ownershipMode,
-          addLater,
-          plateNumber: plateNumber || null,
-          vin: vin || null,
-          make: make || null,
-          model: model || null,
-          firstRegistrationYear: year ? Number(year) : null,
-        }),
-      )
-      navigate('/onboarding')
-    } catch (err) {
-      setError(getErrorMessage(err))
-    } finally {
-      setBusy(false)
-    }
-  }
-
   const generate = () => run(async () => apply(await onboardingService.generateVehicleDossier()))
   const markSubmitted = () =>
     run(async () => {
       await onboardingService.markVehicleSubmitted()
       apply(await onboardingService.getVehicleState())
     })
-
-  if (loading) {
-    return (
-      <OnboardingLayout state={state} activeKey="vehicul">
-        <Stack sx={{ alignItems: 'center', py: 8 }}>
-          <CircularProgress sx={{ color: TOKENS.primary }} />
-        </Stack>
-      </OnboardingLayout>
-    )
-  }
 
   const copy = data?.copyRequest ?? null
   const copyFeePerYear = data?.copyFeePerYearBani ?? 10000
@@ -169,292 +123,313 @@ export default function OnboardingVehiclePage() {
   const badgesTotal = badgeFeePerSet * (uberSets + boltSets)
 
   return (
-    <OnboardingLayout state={state} activeKey="vehicul">
-      <Stack spacing={3}>
-        <Box>
-          <Typography sx={{ fontWeight: 800, fontSize: '1.35rem', color: TOKENS.ink }}>
-            Vehicul, copie conformă și ecusoane
-          </Typography>
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.5 }}>
-            Declară mașina, apoi solicităm copia conformă ({lei(copyFeePerYear)} lei/an) și ecusoanele
-            ({lei(badgeFeePerSet)} lei/set) și generăm dosarul pentru ARR.
-          </Typography>
-        </Box>
+    <Stack spacing={3}>
+      <PanelHeading
+        title="Vehicul, copie conformă și ecusoane"
+        description={`Declară mașina, apoi solicităm copia conformă (${lei(copyFeePerYear)} lei/an) și ecusoanele (${lei(badgeFeePerSet)} lei/set) și generăm dosarul pentru ARR.`}
+      />
 
-        {error && <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+          {error}
+        </Alert>
+      )}
 
-        {/* Documentele necesare pentru înrolare */}
-        <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
-          <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 0.5 }}>
-            Documentele vehiculului
-          </Typography>
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', mb: 2 }}>
-            Încarcă documentele mașinii. Datele se citesc automat din ele, iar echipa RIDElance le
-            verifică — tu nu completezi nimic.
-          </Typography>
-          <Stack spacing={2.5}>
-            <DocumentFirstUpload
-              category="RCA"
-              label="RCA"
-              hint="Citim automat numărul de înmatriculare."
-              documents={documents}
-              pfaRegistrationId={state?.pfaRegistrationId}
-              onUploaded={refresh}
+      {/* Documentele necesare pentru înrolare */}
+      <PanelCard>
+        <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 0.5 }}>
+          Documentele vehiculului
+        </Typography>
+        <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', mb: 2 }}>
+          Încarcă documentele mașinii. Datele se citesc automat din ele, iar echipa RIDElance le verifică — tu
+          nu completezi nimic.
+        </Typography>
+        <Stack spacing={2.5}>
+          <StepDocument
+            step="vehicle"
+            category="RCA"
+            label="RCA"
+            hint="Citim automat numărul de înmatriculare."
+          />
+          <StepDocument
+            step="vehicle"
+            category="AsigurareCalatori"
+            label="Asigurare călători și bagaje"
+            hint="Obligatorie pentru transportul alternativ."
+          />
+          {ownershipMode !== 'Owned' && !addLater && (
+            <StepDocument
+              step="vehicle"
+              category="ContractVehicul"
+              label="Contract de închiriere / comodat / leasing"
+              hint="Documentul care atestă dreptul de folosință asupra mașinii."
             />
-            <DocumentFirstUpload
-              category="AsigurareCalatori"
-              label="Asigurare călători și bagaje"
-              hint="Obligatorie pentru transportul alternativ."
-              documents={documents}
-              pfaRegistrationId={state?.pfaRegistrationId}
-              onUploaded={refresh}
-            />
-            {ownershipMode !== 'Owned' && !addLater && (
-              <DocumentFirstUpload
-                category="ContractVehicul"
-                label="Contract de închiriere / comodat / leasing"
-                hint="Documentul care atestă dreptul de folosință asupra mașinii."
-                documents={documents}
-                pfaRegistrationId={state?.pfaRegistrationId}
-                onUploaded={refresh}
+          )}
+          <StepDocument
+            step="vehicle"
+            category="DovadaPlataCopieConformaEcusoane"
+            label="Dovada plății copie conformă și ecusoane"
+            hint="Ordinul de plată sau chitanța de la ARR."
+          />
+        </Stack>
+      </PanelCard>
+
+      {/* Vehiculul */}
+      <PanelCard>
+        <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 1.5 }}>
+          Vehiculul
+        </Typography>
+        <Stack spacing={2}>
+          <TextField
+            select
+            label="Mod de deținere"
+            value={addLater ? 'AddedLater' : ownershipMode}
+            onChange={(e) => {
+              const v = e.target.value as VehicleOwnershipMode
+              if (v === 'AddedLater') {
+                setAddLater(true)
+              } else {
+                setAddLater(false)
+                setOwnershipMode(v)
+              }
+            }}
+            sx={inputSx}
+            fullWidth
+          >
+            <MenuItem value="Owned">Proprietate</MenuItem>
+            <MenuItem value="Rented">Închiriere</MenuItem>
+            <MenuItem value="Leased">Leasing</MenuItem>
+            <MenuItem value="Comodat">Comodat</MenuItem>
+            <MenuItem value="AddedLater">Adaug mașina mai târziu</MenuItem>
+          </TextField>
+
+          {!addLater && (
+            <>
+              <StepDocument
+                step="vehicle"
+                category="Talon"
+                label="Talon (certificat de înmatriculare)"
+                hint="Citim automat nr. de înmatriculare, VIN, marca și modelul."
+              />
+              <StepDocument
+                step="vehicle"
+                category="CarteIdentitateAuto"
+                label="Cartea de identitate a vehiculului (CIV)"
+                hint="Citim automat VIN-ul și marca."
+              />
+              {(data?.plateNumber || data?.vin) && (
+                <Alert severity="success" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+                  Citit din documente:{' '}
+                  <strong>
+                    {[data.plateNumber, data.vin, data.make, data.model].filter(Boolean).join(' · ')}
+                  </strong>
+                </Alert>
+              )}
+            </>
+          )}
+
+          <Box>
+            <Button
+              variant="outlined"
+              onClick={saveVehicle}
+              disabled={busy}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 700,
+                borderColor: TOKENS.primary,
+                color: TOKENS.primaryStrong,
+              }}
+            >
+              Salvează vehiculul
+            </Button>
+          </Box>
+        </Stack>
+      </PanelCard>
+
+      {/* Copie conformă & ecusoane */}
+      {data?.vehicleId && !addLater && (
+        <PanelCard>
+          <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+            <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink }}>
+              Copie conformă & ecusoane
+            </Typography>
+            {copy && (
+              <Chip
+                size="small"
+                label={COPY_STATUS_LABELS[copy.status] ?? copy.status}
+                sx={{ fontWeight: 700 }}
+                color={copy.status === 'Issued' ? 'success' : 'default'}
               />
             )}
-            <DocumentFirstUpload
-              category="DovadaPlataCopieConformaEcusoane"
-              label="Dovada plății copie conformă și ecusoane"
-              hint="Ordinul de plată sau chitanța de la ARR."
-              documents={documents}
-              pfaRegistrationId={state?.pfaRegistrationId}
-              onUploaded={refresh}
-            />
           </Stack>
-        </Paper>
 
-        {/* Vehiculul */}
-        <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
-          <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 1.5 }}>Vehiculul</Typography>
           <Stack spacing={2}>
             <TextField
               select
-              label="Mod de deținere"
-              value={addLater ? 'AddedLater' : ownershipMode}
-              onChange={(e) => {
-                const v = e.target.value as VehicleOwnershipMode
-                if (v === 'AddedLater') {
-                  setAddLater(true)
-                } else {
-                  setAddLater(false)
-                  setOwnershipMode(v)
-                }
-              }}
+              label="Perioadă copie conformă"
+              value={years}
+              onChange={(e) => setYears(Number(e.target.value))}
               sx={inputSx}
               fullWidth
             >
-              <MenuItem value="Owned">Proprietate</MenuItem>
-              <MenuItem value="Rented">Închiriere</MenuItem>
-              <MenuItem value="Leased">Leasing</MenuItem>
-              <MenuItem value="Comodat">Comodat</MenuItem>
-              <MenuItem value="AddedLater">Adaug mașina mai târziu</MenuItem>
+              {Array.from({ length: maxYears }, (_, i) => i + 1).map((y) => (
+                <MenuItem key={y} value={y}>
+                  {y} an{y > 1 ? 'i' : ''} — {lei(copyFeePerYear * y)} lei
+                </MenuItem>
+              ))}
             </TextField>
 
-            {!addLater && (
-              <>
-                <DocumentFirstUpload
-                  category="Talon"
-                  label="Talon (certificat de înmatriculare)"
-                  hint="Citim automat nr. de înmatriculare, VIN, marca și modelul."
-                  documents={documents}
-                  pfaRegistrationId={state?.pfaRegistrationId}
-                  onUploaded={refresh}
-                />
-                <DocumentFirstUpload
-                  category="CarteIdentitateAuto"
-                  label="Cartea de identitate a vehiculului (CIV)"
-                  hint="Citim automat VIN-ul și marca."
-                  documents={documents}
-                  pfaRegistrationId={state?.pfaRegistrationId}
-                  onUploaded={refresh}
-                />
-                {(data?.plateNumber || data?.vin) && (
-                  <Alert severity="success" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
-                    Citit din documente: <strong>{[data.plateNumber, data.vin, data.make, data.model].filter(Boolean).join(' · ')}</strong>
-                  </Alert>
-                )}
-              </>
-            )}
+            <Typography sx={{ fontWeight: 700, color: TOKENS.ink }}>Ecusoane per platformă</Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                type="number"
+                label="Seturi Uber"
+                value={uberSets}
+                onChange={(e) => setUberSets(Math.max(0, Number(e.target.value)))}
+                sx={inputSx}
+                fullWidth
+                slotProps={{ htmlInput: { min: 0 } }}
+              />
+              <TextField
+                type="number"
+                label="Seturi Bolt"
+                value={boltSets}
+                onChange={(e) => setBoltSets(Math.max(0, Number(e.target.value)))}
+                sx={inputSx}
+                fullWidth
+                slotProps={{ htmlInput: { min: 0 } }}
+              />
+            </Stack>
+
+            <Alert severity="info" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+              Total copie conformă: <b>{lei(copyTotal)} lei</b> · Total ecusoane:{' '}
+              <b>{lei(badgesTotal)} lei</b>
+            </Alert>
 
             <Box>
-              <Button variant="outlined" onClick={saveVehicle} disabled={busy}
-                sx={{ textTransform: 'none', fontWeight: 700, borderColor: TOKENS.primary, color: TOKENS.primaryStrong }}>
-                Salvează vehiculul
+              <Button
+                variant="outlined"
+                onClick={saveCopyRequest}
+                disabled={busy}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  borderColor: TOKENS.primary,
+                  color: TOKENS.primaryStrong,
+                }}
+              >
+                Salvează cererea
               </Button>
             </Box>
           </Stack>
-        </Paper>
+        </PanelCard>
+      )}
 
-        {/* Copie conformă & ecusoane */}
-        {data?.vehicleId && !addLater && (
-          <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
-            <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-              <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink }}>Copie conformă & ecusoane</Typography>
-              {copy && <Chip size="small" label={COPY_STATUS_LABELS[copy.status] ?? copy.status} sx={{ fontWeight: 700 }} color={copy.status === 'Issued' ? 'success' : 'default'} />}
-            </Stack>
-
-            <Stack spacing={2}>
-              <TextField
-                select
-                label="Perioadă copie conformă"
-                value={years}
-                onChange={(e) => setYears(Number(e.target.value))}
-                sx={inputSx}
-                fullWidth
+      {/* Dosarul */}
+      {copy && (
+        <PanelCard>
+          <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 1.5 }}>
+            Dosarul copie conformă & ecusoane
+          </Typography>
+          {copy.hasDossier && copy.dossierDocumentId ? (
+            <Stack spacing={1.5}>
+              <Alert
+                icon={<CheckCircleOutlineRoundedIcon />}
+                severity="success"
+                sx={{ borderRadius: `${TOKENS.radius.md}px` }}
               >
-                {Array.from({ length: maxYears }, (_, i) => i + 1).map((y) => (
-                  <MenuItem key={y} value={y}>{y} an{y > 1 ? 'i' : ''} — {lei(copyFeePerYear * y)} lei</MenuItem>
-                ))}
-              </TextField>
-
-              <Typography sx={{ fontWeight: 700, color: TOKENS.ink }}>Ecusoane per platformă</Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                <TextField
-                  type="number"
-                  label="Seturi Uber"
-                  value={uberSets}
-                  onChange={(e) => setUberSets(Math.max(0, Number(e.target.value)))}
-                  sx={inputSx}
-                  fullWidth
-                  slotProps={{ htmlInput: { min: 0 } }}
-                />
-                <TextField
-                  type="number"
-                  label="Seturi Bolt"
-                  value={boltSets}
-                  onChange={(e) => setBoltSets(Math.max(0, Number(e.target.value)))}
-                  sx={inputSx}
-                  fullWidth
-                  slotProps={{ htmlInput: { min: 0 } }}
-                />
-              </Stack>
-
-              <Alert severity="info" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
-                Total copie conformă: <b>{lei(copyTotal)} lei</b> · Total ecusoane: <b>{lei(badgesTotal)} lei</b>
+                Dosarul a fost generat.
               </Alert>
-
-              <Box>
-                <Button variant="outlined" onClick={saveCopyRequest} disabled={busy}
-                  sx={{ textTransform: 'none', fontWeight: 700, borderColor: TOKENS.primary, color: TOKENS.primaryStrong }}>
-                  Salvează cererea
-                </Button>
-              </Box>
-            </Stack>
-          </Paper>
-        )}
-
-        {/* Dosarul */}
-        {copy && (
-          <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
-            <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 1.5 }}>
-              Dosarul copie conformă & ecusoane
-            </Typography>
-            {copy.hasDossier && copy.dossierDocumentId ? (
-              <Stack spacing={1.5}>
-                <Alert icon={<CheckCircleOutlineRoundedIcon />} severity="success" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
-                  Dosarul a fost generat.
-                </Alert>
-                <Button
-                  startIcon={<DescriptionRoundedIcon />}
-                  onClick={() => documentService.openInNewTab(copy.dossierDocumentId!, 'Dosar_Copie_Conforma.pdf')}
-                  sx={{ textTransform: 'none', fontWeight: 700, color: TOKENS.primaryStrong, alignSelf: 'flex-start' }}
-                >
-                  Vezi dosarul
-                </Button>
-                <Button onClick={generate} disabled={busy} sx={{ textTransform: 'none', color: TOKENS.textMuted, alignSelf: 'flex-start' }}>
-                  Regenerează
-                </Button>
-              </Stack>
-            ) : (
-              <Button variant="contained" onClick={generate} disabled={busy}
-                sx={{ textTransform: 'none', fontWeight: 700, backgroundColor: TOKENS.primary, '&:hover': { backgroundColor: TOKENS.primaryStrong } }}>
-                {busy ? 'Se generează...' : 'Generează dosarul'}
+              <Button
+                startIcon={<DescriptionRoundedIcon />}
+                onClick={() =>
+                  documentService.openInNewTab(copy.dossierDocumentId!, 'Dosar_Copie_Conforma.pdf')
+                }
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  color: TOKENS.primaryStrong,
+                  alignSelf: 'flex-start',
+                }}
+              >
+                Vezi dosarul
               </Button>
-            )}
-
-            {copy.hasDossier && (
-              <>
-                <Divider sx={{ my: 2 }} />
-                {copy.submittedAtUtc ? (
-                  <Typography sx={{ color: '#2e7d32', fontWeight: 700 }}>
-                    Ai marcat dosarul ca depus la ARR.
-                  </Typography>
-                ) : (
-                  <Button variant="contained" onClick={markSubmitted} disabled={busy}
-                    sx={{ textTransform: 'none', fontWeight: 700, backgroundColor: TOKENS.primary, '&:hover': { backgroundColor: TOKENS.primaryStrong } }}>
-                    Am depus dosarul la ARR
-                  </Button>
-                )}
-              </>
-            )}
-          </Paper>
-        )}
-
-        {/* Documentele primite de la ARR — numărul și expirarea copiei conforme se citesc automat. */}
-        {copy?.submittedAtUtc && (
-          <Paper elevation={0} sx={{ p: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}` }}>
-            <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 2 }}>
-              Documentele primite de la ARR
-            </Typography>
-            <Stack spacing={2.5}>
-              <DocumentFirstUpload
-                category="CopieConforma"
-                label="Copia conformă"
-                hint="Citim automat numărul și data de expirare."
-                documents={documents}
-                pfaRegistrationId={state?.pfaRegistrationId}
-                onUploaded={refresh}
-              />
-              {uberSets > 0 && (
-                <DocumentFirstUpload
-                  category="EcusonUber"
-                  label="Ecuson Uber"
-                  documents={documents}
-                  pfaRegistrationId={state?.pfaRegistrationId}
-                  onUploaded={refresh}
-                />
-              )}
-              {boltSets > 0 && (
-                <DocumentFirstUpload
-                  category="EcusonBolt"
-                  label="Ecuson Bolt"
-                  documents={documents}
-                  pfaRegistrationId={state?.pfaRegistrationId}
-                  onUploaded={refresh}
-                />
-              )}
+              <Button
+                onClick={generate}
+                disabled={busy}
+                sx={{ textTransform: 'none', color: TOKENS.textMuted, alignSelf: 'flex-start' }}
+              >
+                Regenerează
+              </Button>
             </Stack>
-          </Paper>
-        )}
+          ) : (
+            <Button
+              variant="contained"
+              onClick={generate}
+              disabled={busy}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 700,
+                backgroundColor: TOKENS.primary,
+                '&:hover': { backgroundColor: TOKENS.primaryStrong },
+              }}
+            >
+              {busy ? 'Se generează...' : 'Generează dosarul'}
+            </Button>
+          )}
 
-        {copy?.status === 'Issued' && (
-          <Alert severity="success" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
-            Copie conformă emisă{copy.copyConformaNumber ? ` (nr. ${copy.copyConformaNumber})` : ''}
-            {copy.expiresOn ? `, valabilă până la ${copy.expiresOn}` : ''}.
-          </Alert>
-        )}
+          {copy.hasDossier && (
+            <>
+              <Divider sx={{ my: 2 }} />
+              {copy.submittedAtUtc ? (
+                <Typography sx={{ color: '#2e7d32', fontWeight: 700 }}>
+                  Ai marcat dosarul ca depus la ARR.
+                </Typography>
+              ) : (
+                <Button
+                  variant="contained"
+                  onClick={markSubmitted}
+                  disabled={busy}
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    backgroundColor: TOKENS.primary,
+                    '&:hover': { backgroundColor: TOKENS.primaryStrong },
+                  }}
+                >
+                  Am depus dosarul la ARR
+                </Button>
+              )}
+            </>
+          )}
+        </PanelCard>
+      )}
 
-        <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'space-between' }}>
-          <Button onClick={() => navigate('/onboarding')} sx={{ textTransform: 'none', color: TOKENS.textMuted }}>
-            Înapoi
-          </Button>
-          <Button
-            variant="contained"
-            disabled={busy}
-            onClick={submitAndReturn}
-            sx={{ textTransform: 'none', fontWeight: 700, backgroundColor: TOKENS.primary, '&:hover': { backgroundColor: TOKENS.primaryStrong } }}
-          >
-            {busy ? 'Se trimite...' : 'Trimite datele'}
-          </Button>
-        </Stack>
-      </Stack>
-    </OnboardingLayout>
+      {/* Documentele primite de la ARR — numărul și expirarea copiei conforme se citesc automat. */}
+      {copy?.submittedAtUtc && (
+        <PanelCard>
+          <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 2 }}>
+            Documentele primite de la ARR
+          </Typography>
+          <Stack spacing={2.5}>
+            <StepDocument
+              step="vehicle"
+              category="CopieConforma"
+              label="Copia conformă"
+              hint="Citim automat numărul și data de expirare."
+            />
+            {uberSets > 0 && <StepDocument step="vehicle" category="EcusonUber" label="Ecuson Uber" />}
+            {boltSets > 0 && <StepDocument step="vehicle" category="EcusonBolt" label="Ecuson Bolt" />}
+          </Stack>
+        </PanelCard>
+      )}
+
+      {copy?.status === 'Issued' && (
+        <Alert severity="success" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+          Copie conformă emisă{copy.copyConformaNumber ? ` (nr. ${copy.copyConformaNumber})` : ''}
+          {copy.expiresOn ? `, valabilă până la ${copy.expiresOn}` : ''}.
+        </Alert>
+      )}
+    </Stack>
   )
 }

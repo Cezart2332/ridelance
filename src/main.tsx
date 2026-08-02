@@ -10,6 +10,9 @@ import { AuthInitializer } from './components/auth/AuthInitializer'
 import { clearChunkReloadFlag } from './utils/lazyWithRetry'
 // @ts-ignore
 import '@fontsource-variable/geist'
+// Display face pentru onboarding (titluri de pas, progres) — body-ul rămâne Geist.
+// @ts-ignore
+import '@fontsource-variable/bricolage-grotesque'
 
 clearChunkReloadFlag()
 
