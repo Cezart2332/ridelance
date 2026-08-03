@@ -1,606 +1,494 @@
-import { useEffect, useState } from 'react';
-import type { MouseEvent, ReactNode } from 'react';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  LinearProgress,
-  Stack,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
-import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
-import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
-import LocalTaxiRoundedIcon from '@mui/icons-material/LocalTaxiRounded';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { useMemo, useState } from 'react'
+import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material'
+import { visuallyHidden } from '@mui/utils'
+import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded'
+import GaugeIcon from '@mui/icons-material/SpeedRounded'
+import PercentRoundedIcon from '@mui/icons-material/PercentRounded'
+import RouteRoundedIcon from '@mui/icons-material/RouteRounded'
+import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded'
+import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded'
+import WalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded'
 
-import { DASHBOARD_TOKENS } from '../dashboardTheme';
+import { HOME_TOKENS } from '../home/tokens'
 import {
-  BreakdownRow,
-  Panel,
-  PfaStatusChip,
-  SplitBar,
-  StatCard,
-  StatusChip,
-  formatLei,
-  formatNumber,
-  pillToggleSx,
-} from '../ui';
-import { boltService, type BoltDashboardDto } from '../../../services/bolt.service';
-import { uberService, type UberDashboardDto } from '../../../services/uber.service';
-import { userService, type DashboardSummary, type UserProfile } from '../../../services/user.service';
-import { MONTH_CHART_LABELS, monthNumberToLabel } from '../../../utils/monthLabels';
-
-/* ── Types ────────────────────────────────────────────────────────────────── */
-
-export type StatsTimeframe = 'month' | 'year';
+  formatCompact,
+  formatDistance,
+  formatHours,
+  formatPeriodLabel,
+  formatRate,
+} from '../home/format'
+import { useDashboardFilters } from '../home/useDashboardFilters'
+import { useDashboardSummary } from '../home/useDashboardData'
+import { exportRidesCsv } from '../home/exportRidesCsv'
+import { FilterBar } from '../home/components/FilterBar'
+import { FadeUpRow } from '../home/components/FadeUpRow'
+import { KpiTile } from '../home/components/KpiTile'
+import { HomeCard } from '../home/components/HomeCard'
+import { TaxReserveCard } from '../home/components/TaxReserveCard'
+import { RealProfitCard } from '../home/components/RealProfitCard'
+import { PlatformBreakdown } from '../home/components/PlatformBreakdown'
+import { NetEarningsChart } from '../home/components/charts/NetEarningsChart'
+import { FeesAndTaxesChart } from '../home/components/charts/FeesAndTaxesChart'
+import { RealProfitTrendChart } from '../home/components/charts/RealProfitTrendChart'
+import { RidesHistoryTable } from '../home/components/RidesHistoryTable'
+import { SourcesPill } from '../home/components/SourcesPill'
+import { isBoltStale, isUberStale } from '../home/sourceFreshness'
+import { CardError, CardSkeleton, TileSkeleton } from '../home/components/states/CardStates'
+import type { PfaDashboardSummary, RidesPage } from '../../../services/pfaDashboard.service'
 
 interface HomeDashboardViewProps {
-  onNavigate?: (sectionId: string) => void;
+  onNavigate?: (sectionId: string) => void
 }
 
-/* ── Building blocks locale acestei pagini ─────────────────────────────────── */
-
-/** O linie de platformă, tappable: iconiță, nume, stare, sumă. */
-function PlatformRow({ icon, name, statusChip, amount, detail, onClick }: {
-  icon: ReactNode;
-  name: string;
-  statusChip?: ReactNode;
-  amount: string;
-  detail: string;
-  onClick?: () => void;
-}) {
-  return (
-    <Stack
-      direction="row"
-      spacing={1.4}
-      onClick={onClick}
-      sx={{
-        alignItems: 'center',
-        p: 1.5,
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
-        border: `1px solid ${DASHBOARD_TOKENS.border}`,
-        bgcolor: DASHBOARD_TOKENS.surface,
-        cursor: onClick ? 'pointer' : 'default',
-        transition: 'border-color 180ms ease, background-color 180ms ease',
-        '&:hover': onClick
-          ? { borderColor: alpha(DASHBOARD_TOKENS.accent, 0.4), bgcolor: alpha(DASHBOARD_TOKENS.accent, 0.04) }
-          : undefined,
-      }}
-    >
-      <Box
-        sx={{
-          width: 36,
-          height: 36,
-          flexShrink: 0,
-          borderRadius: DASHBOARD_TOKENS.radius.md,
-          display: 'grid',
-          placeItems: 'center',
-          color: DASHBOARD_TOKENS.accent,
-          bgcolor: alpha(DASHBOARD_TOKENS.accent, 0.1),
-          '& svg': { fontSize: 20 },
-        }}
-      >
-        {icon}
-      </Box>
-      <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Stack direction="row" spacing={0.8} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '0.9rem' }}>
-            {name}
-          </Typography>
-          {statusChip}
-        </Stack>
-        <Typography noWrap sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.76rem', mt: 0.15 }}>
-          {detail}
-        </Typography>
-      </Box>
-      <Typography
-        sx={{
-          color: DASHBOARD_TOKENS.ink,
-          fontWeight: 900,
-          fontSize: '0.95rem',
-          fontVariantNumeric: 'tabular-nums',
-          flexShrink: 0,
-        }}
-      >
-        {amount}
-      </Typography>
-      {onClick && <ChevronRightRoundedIcon sx={{ color: DASHBOARD_TOKENS.textSubtle, flexShrink: 0, fontSize: 18 }} />}
-    </Stack>
-  );
+const COMPARISON_LABELS: Record<string, string> = {
+  week: 'vs săptămâna anterioară',
+  month: 'vs luna anterioară',
+  prevMonth: 'vs luna precedentă ei',
+  year: 'vs anul anterior',
+  custom: 'vs perioada anterioară echivalentă',
 }
 
-function TaxLine({ label, value, strong }: { label: string; value: number; strong?: boolean }) {
-  return (
-    <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', py: 0.5 }}>
-      <Typography
-        sx={{
-          fontSize: '0.85rem',
-          fontWeight: strong ? 800 : 600,
-          color: strong ? DASHBOARD_TOKENS.ink : DASHBOARD_TOKENS.textMuted,
-        }}
-      >
-        {label}
-      </Typography>
-      <Typography
-        sx={{
-          fontSize: strong ? '1rem' : '0.92rem',
-          fontWeight: strong ? 900 : 800,
-          color: DASHBOARD_TOKENS.ink,
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        {formatLei(value)}
-      </Typography>
-    </Stack>
-  );
-}
-
-/* ── Container: loads the data ─────────────────────────────────────────────── */
-
+/**
+ * „Acasă" — pagina construită pe realitatea financiară a șoferului, nu pe sursele de date:
+ * cât am făcut → ce e al meu / ce nu e al meu → cum a evoluat → de unde a venit → ce am făcut concret.
+ * Modulele de import (CSV Uber, API Bolt) trăiesc în secțiunea Platforme; aici rămâne doar
+ * pastila de stare din antet.
+ */
 export function HomeDashboardView({ onNavigate }: HomeDashboardViewProps) {
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [boltDashboard, setBoltDashboard] = useState<BoltDashboardDto | null>(null);
-  const [uberDashboard, setUberDashboard] = useState<UberDashboardDto | null>(null);
-  const [timeframe, setTimeframe] = useState<StatsTimeframe>('month');
+  const { filters, setPeriod, setCustomRange, setPlatform, setPayment, reset } = useDashboardFilters()
 
-  useEffect(() => {
-    let mounted = true;
+  const query = useMemo(
+    () => ({
+      from: filters.from,
+      to: filters.to,
+      platform: filters.platform,
+      payment: filters.payment,
+    }),
+    [filters.from, filters.to, filters.platform, filters.payment],
+  )
 
-    Promise.allSettled([
-      userService.getDashboardSummary(),
-      userService.getProfile(),
-      boltService.getDashboard('month'),
-      uberService.getDashboard('month'),
-    ]).then(([summaryResult, profileResult, boltResult, uberResult]) => {
-      if (!mounted) return;
-      if (summaryResult.status === 'fulfilled') setSummary(summaryResult.value);
-      if (profileResult.status === 'fulfilled') setProfile(profileResult.value);
-      if (boltResult.status === 'fulfilled') setBoltDashboard(boltResult.value);
-      if (uberResult.status === 'fulfilled') setUberDashboard(uberResult.value);
-    }).finally(() => {
-      if (mounted) setLoading(false);
-    });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const handleTimeframeChange = (next: StatsTimeframe) => {
-    setTimeframe(next);
-    Promise.allSettled([
-      boltService.getDashboard(next),
-      uberService.getDashboard(next),
-    ]).then(([boltResult, uberResult]) => {
-      if (boltResult.status === 'fulfilled') setBoltDashboard(boltResult.value);
-      if (uberResult.status === 'fulfilled') setUberDashboard(uberResult.value);
-    });
-  };
-
-  if (loading) {
-    return (
-      <Stack sx={{ alignItems: 'center', justifyContent: 'center', height: 260 }}>
-        <CircularProgress size={30} sx={{ color: DASHBOARD_TOKENS.accent }} />
-      </Stack>
-    );
-  }
-
-  if (!summary) {
-    return (
-      <Typography sx={{ color: DASHBOARD_TOKENS.textMuted }}>
-        Nu s-au putut încărca datele. Încearcă din nou mai târziu.
-      </Typography>
-    );
-  }
+  const { data, isLoading, isFetching, error, reload } = useDashboardSummary(query)
 
   return (
     <HomeDashboardContent
-      summary={summary}
-      profile={profile}
-      boltDashboard={boltDashboard}
-      uberDashboard={uberDashboard}
-      timeframe={timeframe}
-      onTimeframeChange={handleTimeframeChange}
+      data={data}
+      isLoading={isLoading}
+      isFetching={isFetching}
+      error={error}
+      onRetry={reload}
+      filters={filters}
+      onPeriodChange={setPeriod}
+      onCustomRangeChange={setCustomRange}
+      onPlatformChange={setPlatform}
+      onPaymentChange={setPayment}
+      onReset={reset}
       onNavigate={onNavigate}
+      onExport={() => exportRidesCsv(query)}
     />
-  );
+  )
 }
-
-/* ── Presentation: the screen itself, also used by the public demo ─────────── */
 
 export interface HomeDashboardContentProps {
-  summary: DashboardSummary;
-  profile: UserProfile | null;
-  boltDashboard: BoltDashboardDto | null;
-  uberDashboard: UberDashboardDto | null;
-  timeframe: StatsTimeframe;
-  onTimeframeChange: (timeframe: StatsTimeframe) => void;
-  onNavigate?: (sectionId: string) => void;
+  data: PfaDashboardSummary | null
+  isLoading: boolean
+  isFetching: boolean
+  error: string | null
+  onRetry: () => void
+  filters: ReturnType<typeof useDashboardFilters>['filters']
+  onPeriodChange: ReturnType<typeof useDashboardFilters>['setPeriod']
+  onCustomRangeChange: ReturnType<typeof useDashboardFilters>['setCustomRange']
+  onPlatformChange: ReturnType<typeof useDashboardFilters>['setPlatform']
+  onPaymentChange: ReturnType<typeof useDashboardFilters>['setPayment']
+  onReset: () => void
+  onNavigate?: (sectionId: string) => void
+  onExport?: () => Promise<unknown> | void
+  /** Demo-ul public injectează curse mock în locul apelului autentificat. */
+  ridesOverride?: RidesPage
 }
 
+/**
+ * Ecranul propriu-zis, separat de încărcarea datelor ca să poată fi randat identic
+ * și în demo-ul public, cu date mock.
+ */
 export function HomeDashboardContent({
-  summary,
-  profile,
-  boltDashboard,
-  uberDashboard,
-  timeframe,
-  onTimeframeChange,
+  data,
+  isLoading,
+  isFetching,
+  error,
+  onRetry,
+  filters,
+  onPeriodChange,
+  onCustomRangeChange,
+  onPlatformChange,
+  onPaymentChange,
+  onReset,
   onNavigate,
+  onExport,
+  ridesOverride,
 }: HomeDashboardContentProps) {
-  const theme = useTheme();
-  const isCompact = useMediaQuery(theme.breakpoints.down('sm'));
-  const goToPlatforms = onNavigate ? () => onNavigate('platforms') : undefined;
+  const [staleBannerDismissed, setStaleBannerDismissed] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
-  /* ── Numbers ── */
+  const periodLabel = formatPeriodLabel(filters.from, filters.to)
+  const comparisonLabel = COMPARISON_LABELS[filters.period] ?? COMPARISON_LABELS.custom
+  const goToPlatforms = () => onNavigate?.('platforms')
 
-  const stats = timeframe === 'year' ? summary.yearlyStats : summary.monthlyStats;
-  const venitCash = stats?.venitCash ?? summary.venitCash ?? 0;
-  const venitCard = stats?.venitCard ?? summary.venitCard ?? 0;
-  const venitBolt = stats?.venitBolt ?? summary.venitBolt ?? 0;
-  const venitUber = stats?.venitUber ?? summary.venitUber ?? 0;
+  const sources = data?.sources
+  const noSources = !!sources && !sources.bolt.configured && !sources.uber.connected
+  const showStaleBanner =
+    !!sources && !staleBannerDismissed && (isBoltStale(sources) || isUberStale(sources))
+  const onlyOneSource =
+    !!sources && sources.bolt.configured !== sources.uber.connected && !noSources
 
-  // Cash/card and Bolt/Uber describe the same money, seen two ways — never summed together.
-  const incasat = Math.max(venitCash + venitCard, venitBolt + venitUber);
-  const cashCardTotal = venitCash + venitCard;
-  const platformTotal = venitBolt + venitUber;
-
-  const isYear = timeframe === 'year';
-  const periodLabel = isYear
-    ? `${summary.incomeYear ?? new Date().getFullYear()}`
-    : summary.incomeMonth && summary.incomeYear
-      ? `${monthNumberToLabel(summary.incomeMonth).toLowerCase()} ${summary.incomeYear}`
-      : 'luna curentă';
-
-  const chartYear = summary.revenueChartYear ?? new Date().getFullYear();
-  const byMonth = new Map((summary.monthlyRevenue ?? []).map((p) => [p.month, p]));
-  const chartData = MONTH_CHART_LABELS.map((label, index) => ({
-    name: label,
-    value: byMonth.get(index + 1)?.venitTotal ?? 0,
-  }));
-  const hasChartData = chartData.some((p) => p.value > 0);
-  const hasFiscalData = summary.ytdTotalIncome > 0;
-
-  const shareOf = (value: number, total: number) =>
-    total > 0 ? `${Math.round((value / total) * 100)}%` : null;
-
-  /* ── Next contribution threshold, in one plain sentence ── */
-
-  const minSalary = summary.taxYear >= 2025 ? 4050 : 3300;
-  const profitYtd = summary.taxThresholds?.profit ?? summary.ytdProfit;
-  const casT1 = summary.taxThresholds?.casFirstThreshold ?? minSalary * 12;
-  const casT2 = summary.taxThresholds?.casSecondThreshold ?? minSalary * 24;
-  const cassT1 = summary.taxThresholds?.cassFirstThreshold ?? minSalary * 6;
-
-  const nextThreshold =
-    profitYtd < cassT1
-      ? { target: cassT1, label: 'Următorul prag: CASS', text: `Dacă profitul tău depășește ${formatLei(cassT1)} într-un an, sănătatea (CASS) se calculează ca 10% din profit.` }
-      : profitYtd < casT1
-        ? { target: casT1, label: 'Următorul prag: CAS', text: `Peste ${formatLei(casT1)} profit pe an începi să plătești și pensie (CAS) — ${formatLei(casT1 * 0.25)} pe an.` }
-        : profitYtd < casT2
-          ? { target: casT2, label: 'Următorul prag: CAS', text: `Peste ${formatLei(casT2)} profit pe an, pensia (CAS) crește la ${formatLei(casT2 * 0.25)} pe an.` }
-          : { target: casT2, label: 'Toate pragurile atinse', text: 'Ai depășit ultimul prag — contribuțiile sunt la maximum și nu mai cresc.' };
-
-  const thresholdProgress = nextThreshold.target > 0
-    ? Math.min(100, (profitYtd / nextThreshold.target) * 100)
-    : 100;
-
-  /* ── Platform rows ── */
-
-  const boltConfigured = boltDashboard?.isConfigured ?? false;
-  const boltStatusChip = boltDashboard ? (
-    <StatusChip
-      size="sm"
-      label={boltConfigured ? (boltDashboard.isConnected ? 'Conectat' : 'Reconectează') : 'Neconectat'}
-      tone={boltConfigured && boltDashboard.isConnected ? 'active' : 'neutral'}
-    />
-  ) : undefined;
-
-  const boltDetail = boltConfigured
-    ? `${formatNumber(boltDashboard?.totalOrdersCount ?? 0)} curse`
-    : 'Conectează contul ca să apară automat';
-
-  const lastUberImport = uberDashboard?.imports?.[0];
-  const uberDetail = lastUberImport
-    ? `Import ${new Date(lastUberImport.importedAtUtc).toLocaleDateString('ro-RO')}`
-    : 'Importă raportul CSV ca să apară automat';
-
-  const greeting = profile?.firstName ? `Bună, ${profile.firstName}` : 'Bună';
+  const handleExport = async () => {
+    if (!onExport) return
+    setIsExporting(true)
+    try {
+      await onExport()
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   return (
-    <Stack
-      spacing={2}
-      sx={{
-        width: '100%',
-        maxWidth: 1280,
-        mx: 'auto',
-        // Pe desktop pagina se încadrează exact în ecran; pe telefon curge normal.
-        height: { xs: 'auto', md: '100%' },
-        minHeight: 0,
-      }}
-    >
-      {/* ── Antet: cine ești, ce stare are PFA-ul, ce perioadă privești ── */}
+    <Stack spacing={0} sx={{ width: '100%', maxWidth: 1440, mx: 'auto' }}>
+      {/* ── Antet: unde ești, ce perioadă privești, starea surselor ── */}
       <Stack
         direction="row"
         spacing={2}
-        sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', rowGap: 1.2, flexShrink: 0 }}
+        sx={{
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          rowGap: 1.4,
+          pb: 2,
+        }}
       >
-        <Stack direction="row" spacing={1.4} sx={{ alignItems: 'center', minWidth: 0 }}>
-          <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 900, fontSize: { xs: '1.25rem', md: '1.45rem' }, letterSpacing: -0.4 }}>
-            {greeting}
+        <Box sx={{ minWidth: 0 }}>
+          {/* Titlul paginii e deja în antetul aplicației; aici rămâne doar pentru
+              cititoarele de ecran, ca perioada afișată să aibă un context citibil. */}
+          <Typography
+            component="h1"
+            sx={visuallyHidden}
+          >
+            Acasă — {periodLabel}
           </Typography>
-          <PfaStatusChip status={summary.pfaStatus} />
-        </Stack>
+          <Typography sx={{ fontSize: '1.05rem', fontWeight: 600, color: HOME_TOKENS.text.primary }}>
+            {periodLabel}
+          </Typography>
+        </Box>
 
-        <ToggleButtonGroup
-          exclusive
-          value={timeframe}
-          onChange={(_: MouseEvent<HTMLElement>, v: StatsTimeframe | null) => {
-            if (v) onTimeframeChange(v);
-          }}
-          size="small"
-          sx={pillToggleSx}
-        >
-          <ToggleButton value="month">Luna</ToggleButton>
-          <ToggleButton value="year">Anul</ToggleButton>
-        </ToggleButtonGroup>
+        <Stack direction="row" spacing={1.2} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 1 }}>
+          {sources && <SourcesPill sources={sources} onOpenPlatforms={goToPlatforms} />}
+          <Button
+            variant="outlined"
+            size="small"
+            disabled={isExporting || !data || !onExport}
+            startIcon={<DownloadRoundedIcon sx={{ fontSize: 16 }} />}
+            onClick={handleExport}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              borderRadius: HOME_TOKENS.radius.input,
+              borderColor: HOME_TOKENS.border.strong,
+              color: HOME_TOKENS.text.primary,
+              '&:hover': { borderColor: HOME_TOKENS.text.secondary, bgcolor: HOME_TOKENS.bg.surface2 },
+            }}
+          >
+            {isExporting ? 'Se exportă…' : 'Exportă'}
+          </Button>
+        </Stack>
       </Stack>
 
-      {/* ── Rândul de venituri: total, platforme, mod de încasare ── */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', md: 'repeat(3, minmax(0, 1fr))' },
-          gap: 2,
-          flexShrink: 0,
-        }}
-      >
-        <StatCard
-          variant="accent"
-          size="lg"
-          label={`Venit total · ${periodLabel}`}
-          value={formatLei(incasat)}
-          helper="Înainte de taxe"
-        />
+      <FilterBar
+        filters={filters}
+        onPeriodChange={onPeriodChange}
+        onCustomRangeChange={onCustomRangeChange}
+        onPlatformChange={onPlatformChange}
+        onPaymentChange={onPaymentChange}
+        onReset={onReset}
+      />
 
-        <Panel dense title="Platforme">
-          {platformTotal > 0 ? (
-            <Stack spacing={1.4} sx={{ height: '100%', justifyContent: 'center' }}>
-              <SplitBar first={venitBolt} second={venitUber} />
-              <Stack spacing={1}>
-                <BreakdownRow color={DASHBOARD_TOKENS.accent} label="Bolt" value={venitBolt} share={shareOf(venitBolt, platformTotal)} />
-                <BreakdownRow color={DASHBOARD_TOKENS.accentSoft} label="Uber" value={venitUber} share={shareOf(venitUber, platformTotal)} />
-              </Stack>
-            </Stack>
-          ) : (
-            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.84rem', lineHeight: 1.6 }}>
-              Conectează Bolt sau încarcă raportul Uber ca să vezi cât aduce fiecare platformă.
-            </Typography>
-          )}
-        </Panel>
-
-        <Panel dense title="Cum ai încasat">
-          {cashCardTotal > 0 ? (
-            <Stack spacing={1.4} sx={{ height: '100%', justifyContent: 'center' }}>
-              <SplitBar first={venitCash} second={venitCard} />
-              <Stack spacing={1}>
-                <BreakdownRow color={DASHBOARD_TOKENS.accent} label="Numerar" value={venitCash} share={shareOf(venitCash, cashCardTotal)} />
-                <BreakdownRow color={DASHBOARD_TOKENS.accentSoft} label="Card" value={venitCard} share={shareOf(venitCard, cashCardTotal)} />
-              </Stack>
-            </Stack>
-          ) : (
-            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.84rem', lineHeight: 1.6 }}>
-              Împărțirea pe numerar și card apare imediat ce contul de Bolt e conectat sau ce încarci raportul Uber.
-            </Typography>
-          )}
-        </Panel>
-      </Box>
-
-      {/* ── Rândul principal: graficul umple restul ecranului, lângă panoul contextual ── */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(320px, 380px)' },
-          gap: 2,
-          flexGrow: { xs: 0, md: 1 },
-          minHeight: 0,
-        }}
-      >
-        <Panel fill title={`Încasări lună de lună în ${chartYear}`}>
-          {hasChartData ? (
-            <Box sx={{ width: '100%', flexGrow: 1, minHeight: { xs: 200, md: 180 }, minWidth: 0 }}>
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <BarChart data={chartData} margin={{ top: 8, right: 4, bottom: 0, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={alpha(DASHBOARD_TOKENS.ink, 0.06)} />
-                  <XAxis
-                    dataKey="name"
-                    tickLine={false}
-                    axisLine={false}
-                    /* Twelve labels do not fit on a phone — show every other month there. */
-                    interval={isCompact ? 1 : 0}
-                    tick={{ fill: DASHBOARD_TOKENS.textMuted, fontSize: 11, fontWeight: 600 }}
-                  />
-                  <YAxis
-                    width={46}
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fill: DASHBOARD_TOKENS.textSubtle, fontSize: 11, fontWeight: 600 }}
-                    tickFormatter={(value) => formatNumber(Number(value))}
-                  />
-                  <Tooltip
-                    cursor={{ fill: alpha(DASHBOARD_TOKENS.accent, 0.06) }}
-                    contentStyle={{
-                      border: `1px solid ${DASHBOARD_TOKENS.border}`,
-                      borderRadius: DASHBOARD_TOKENS.radius.md,
-                      boxShadow: DASHBOARD_TOKENS.shadow.sm,
-                    }}
-                    labelStyle={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink }}
-                    formatter={(value) => [formatLei(Number(value ?? 0)), 'Încasat']}
-                  />
-                  {/* Containerul flexibil se remăsoară la fiecare resize; cu animație,
-                      barele ar reporni de la zero și ar rămâne goale. */}
-                  <Bar
-                    dataKey="value"
-                    fill={DASHBOARD_TOKENS.accent}
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={30}
-                    isAnimationActive={false}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          ) : (
-            <Stack sx={{ flexGrow: 1, minHeight: 180, alignItems: 'center', justifyContent: 'center', textAlign: 'center', px: 2 }}>
-              <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>
-                Încă nu ai încasări în {chartYear}.
-              </Typography>
-              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.86rem', mt: 0.6, maxWidth: 340 }}>
-                Graficul se completează singur pe măsură ce apar cursele.
-              </Typography>
-            </Stack>
-          )}
-        </Panel>
-
-        {/* Pe „Luna" — starea platformelor. Taxele sunt anuale, deci nu apar aici. */}
-        {!isYear && (
-          <Panel title="Platformele tale" subtitle="Se completează singur din Bolt și din raportul Uber.">
-            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <Stack spacing={1.2}>
-                <PlatformRow
-                  icon={<BoltRoundedIcon />}
-                  name="Bolt"
-                  statusChip={boltStatusChip}
-                  amount={formatLei(venitBolt)}
-                  detail={boltDetail}
-                  onClick={goToPlatforms}
-                />
-                <PlatformRow
-                  icon={<LocalTaxiRoundedIcon />}
-                  name="Uber"
-                  amount={formatLei(venitUber)}
-                  detail={uberDetail}
-                  onClick={goToPlatforms}
-                />
-              </Stack>
-              <Box sx={{ flexGrow: 1, minHeight: 12 }} />
-              <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.78rem', lineHeight: 1.6 }}>
-                Taxele și pragurile se calculează pe an — le vezi comutând sus pe <b>Anul</b>.
-              </Typography>
-            </Box>
-          </Panel>
-        )}
-
-        {/* Pe „Anul" — taxele estimate și pragul următor. */}
-        {isYear && (
-          <Panel
-            title={`Taxe estimate ${summary.taxYear}`}
-            subtitle="Estimare, nu o sumă finală."
+      <Stack spacing={3} sx={{ pt: 3 }}>
+        {showStaleBanner && (
+          <Alert
+            severity="warning"
+            variant="outlined"
+            onClose={() => setStaleBannerDismissed(true)}
+            sx={{
+              borderRadius: HOME_TOKENS.radius.card,
+              borderColor: HOME_TOKENS.warn[600],
+              bgcolor: HOME_TOKENS.warn[50],
+              fontSize: '0.83rem',
+              '& .MuiAlert-icon': { color: HOME_TOKENS.warn[600] },
+            }}
             action={
-              onNavigate && (
-                <Button
-                  variant="text"
-                  size="small"
-                  endIcon={<ArrowForwardRoundedIcon sx={{ fontSize: 15 }} />}
-                  onClick={() => onNavigate('expenses')}
-                  sx={{
-                    flexShrink: 0,
-                    fontWeight: 800,
-                    fontSize: '0.8rem',
-                    textTransform: 'none',
-                    whiteSpace: 'nowrap',
-                    color: DASHBOARD_TOKENS.accent,
-                    '&:hover': { bgcolor: 'transparent' },
-                  }}
-                >
-                  Cheltuieli
-                </Button>
-              )
+              <Button size="small" onClick={goToPlatforms} sx={{ textTransform: 'none', fontWeight: 700 }}>
+                Deschide Platforme
+              </Button>
             }
           >
-            {hasFiscalData ? (
-              // Dacă ecranul e foarte scund, panoul derulează intern — pagina nu.
-              <Stack spacing={1.4} sx={{ height: '100%', minHeight: 0, overflowY: 'auto' }}>
-                <Box sx={{ flexShrink: 0, '& > *:not(:last-child)': { borderBottom: `1px solid ${DASHBOARD_TOKENS.border}` } }}>
-                  <TaxLine label="Pensie (CAS)" value={summary.ytdCas} />
-                  <TaxLine label="Sănătate (CASS)" value={summary.ytdCass} />
-                  <TaxLine label="Impozit pe venit" value={summary.ytdIncomeTax} />
-                  <TaxLine label="Total taxe" value={summary.ytdTotalTax} strong />
-                  <TaxLine label="Îți rămân după taxe" value={summary.ytdNetIncome} strong />
-                </Box>
+            Datele afișate pot fi în urmă — o sursă nu a mai fost actualizată de ceva vreme.
+          </Alert>
+        )}
 
+        {onlyOneSource && (
+          <Chip
+            label={
+              sources?.bolt.configured
+                ? 'Uber neconectat — datele afișate includ doar Bolt'
+                : 'Bolt neconectat — datele afișate includ doar Uber'
+            }
+            onClick={goToPlatforms}
+            sx={{
+              alignSelf: 'flex-start',
+              bgcolor: HOME_TOKENS.bg.surface2,
+              border: `1px solid ${HOME_TOKENS.border.subtle}`,
+              color: HOME_TOKENS.text.secondary,
+              fontSize: '0.78rem',
+            }}
+          />
+        )}
+
+        {error && !data ? (
+          <HomeCard title="Nu am putut încărca dashboardul">
+            <CardError message={error} onRetry={onRetry} />
+          </HomeCard>
+        ) : noSources ? (
+          <EmptyAccountCard onOpenPlatforms={goToPlatforms} />
+        ) : (
+          <Box sx={{ opacity: isFetching && data ? 0.6 : 1, transition: 'opacity 150ms ease-out' }}>
+            <Stack spacing={3}>
+              {/* ── Rând A: cele șase cifre ── */}
+              <FadeUpRow index={0}>
                 <Box
                   sx={{
-                    mt: 'auto',
-                    flexShrink: 0,
-                    p: 1.5,
-                    borderRadius: DASHBOARD_TOKENS.radius.lg,
-                    bgcolor: DASHBOARD_TOKENS.surface,
-                    border: `1px solid ${DASHBOARD_TOKENS.border}`,
+                    display: 'grid',
+                    gap: 2,
+                    gridTemplateColumns: {
+                      xs: '1fr',
+                      sm: 'repeat(2, minmax(0, 1fr))',
+                      md: 'repeat(3, minmax(0, 1fr))',
+                      xl: 'repeat(6, minmax(0, 1fr))',
+                    },
                   }}
                 >
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    sx={{ justifyContent: 'space-between', alignItems: 'baseline', mb: 1, flexWrap: 'wrap', rowGap: 0.3 }}
-                  >
-                    <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, color: DASHBOARD_TOKENS.ink }}>
-                      {nextThreshold.label}
-                    </Typography>
-                    <Typography noWrap sx={{ fontSize: '0.78rem', fontWeight: 800, color: DASHBOARD_TOKENS.textMuted, fontVariantNumeric: 'tabular-nums' }}>
-                      {formatLei(profitYtd)} / {formatLei(nextThreshold.target)}
-                    </Typography>
-                  </Stack>
-                  <LinearProgress
-                    variant="determinate"
-                    value={thresholdProgress}
-                    sx={{
-                      height: 8,
-                      borderRadius: 999,
-                      bgcolor: alpha(DASHBOARD_TOKENS.accent, 0.12),
-                      '& .MuiLinearProgress-bar': { bgcolor: DASHBOARD_TOKENS.accent, borderRadius: 999 },
-                    }}
-                  />
-                  <Typography
-                    sx={{
-                      color: DASHBOARD_TOKENS.textMuted,
-                      fontSize: '0.76rem',
-                      lineHeight: 1.5,
-                      mt: 1,
-                      // Pe ecrane scunde textul lung ar împinge caseta în afara paginii.
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                    title={nextThreshold.text}
-                  >
-                    {nextThreshold.text}
-                  </Typography>
+                  {isLoading || !data
+                    ? Array.from({ length: 6 }).map((_, index) => <TileSkeleton key={index} />)
+                    : [
+                        <KpiTile
+                          key="net"
+                          icon={WalletRoundedIcon}
+                          label="Încasări nete"
+                          metric={data.kpis.netEarnings}
+                          format={formatCompact}
+                          subtext="după comisioane platforme"
+                          tone="positive"
+                          comparisonLabel={comparisonLabel}
+                        />,
+                        <KpiTile
+                          key="fees"
+                          icon={PercentRoundedIcon}
+                          label="Comision platforme"
+                          metric={data.kpis.platformFees}
+                          format={formatCompact}
+                          subtext="reținut de Bolt și Uber"
+                          tone="negative"
+                          invertDelta
+                          comparisonLabel={comparisonLabel}
+                        />,
+                        <KpiTile
+                          key="hours"
+                          icon={ScheduleRoundedIcon}
+                          label="Ore online"
+                          metric={data.kpis.onlineHours}
+                          format={formatHours}
+                          subtext="timp activ raportat de platforme"
+                          tone="neutral"
+                          comparisonLabel={comparisonLabel}
+                        />,
+                        <KpiTile
+                          key="km"
+                          icon={RouteRoundedIcon}
+                          label="Km în cursă"
+                          metric={data.kpis.rideKm}
+                          format={formatDistance}
+                          subtext="doar km cu pasager"
+                          tone="neutral"
+                          comparisonLabel={comparisonLabel}
+                        />,
+                        <KpiTile
+                          key="perHour"
+                          icon={TrendingUpRoundedIcon}
+                          label="Net / oră"
+                          metric={data.kpis.netPerHour}
+                          format={(value) => formatRate(value, 'h')}
+                          subtext="încasări nete ÷ ore online"
+                          tone="brand"
+                          comparisonLabel={comparisonLabel}
+                        />,
+                        <KpiTile
+                          key="perKm"
+                          icon={GaugeIcon}
+                          label="Net / km"
+                          metric={data.kpis.netPerKm}
+                          format={(value) => formatRate(value, 'km')}
+                          subtext="încasări nete ÷ km în cursă"
+                          tone="brand"
+                          comparisonLabel={comparisonLabel}
+                        />,
+                      ]}
                 </Box>
-              </Stack>
-            ) : (
-              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.88rem', lineHeight: 1.6 }}>
-                Calculăm taxele automat imediat ce apar primele încasări în {summary.taxYear}.
-              </Typography>
-            )}
-          </Panel>
+              </FadeUpRow>
+
+              {/* ── Rând B: ce e al meu, ce nu e al meu ── */}
+              <FadeUpRow index={1}>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 3,
+                    gridTemplateColumns: { xs: '1fr', lg: '5fr 7fr' },
+                  }}
+                >
+                  {isLoading || !data ? (
+                    <>
+                      <CardSkeleton height={380} />
+                      <CardSkeleton height={380} />
+                    </>
+                  ) : (
+                    <>
+                      <TaxReserveCard
+                        reserve={data.taxReserve}
+                        periodLabel={periodLabel}
+                        onOpenExpenses={onNavigate ? () => onNavigate('expenses') : undefined}
+                      />
+                      <RealProfitCard profit={data.realProfit} />
+                    </>
+                  )}
+                </Box>
+              </FadeUpRow>
+
+              {/* ── Rând C: cum a evoluat, de unde a venit ── */}
+              <FadeUpRow index={2}>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 3,
+                    gridTemplateColumns: { xs: '1fr', lg: '8fr 4fr' },
+                  }}
+                >
+                  {isLoading || !data ? (
+                    <>
+                      <CardSkeleton height={340} />
+                      <CardSkeleton height={340} />
+                    </>
+                  ) : (
+                    <>
+                      <NetEarningsChart
+                        points={data.series.netEarnings}
+                        total={data.kpis.netEarnings.value}
+                        granularity={data.period.granularity}
+                        animate={!isFetching}
+                      />
+                      <PlatformBreakdown rows={data.platformSplit} animate={!isFetching} />
+                    </>
+                  )}
+                </Box>
+              </FadeUpRow>
+
+              {/* ── Rând D: unde se duc banii, ce rămâne ── */}
+              <FadeUpRow index={3}>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 3,
+                    gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' },
+                  }}
+                >
+                  {isLoading || !data ? (
+                    <>
+                      <CardSkeleton height={300} />
+                      <CardSkeleton height={300} />
+                    </>
+                  ) : (
+                    <>
+                      <FeesAndTaxesChart
+                        points={data.series.feesAndTaxes}
+                        granularity={data.period.granularity}
+                        animate={!isFetching}
+                      />
+                      <RealProfitTrendChart
+                        points={data.series.realProfit}
+                        granularity={data.period.granularity}
+                        animate={!isFetching}
+                      />
+                    </>
+                  )}
+                </Box>
+              </FadeUpRow>
+
+              {/* ── Rând E: ce am făcut concret ── */}
+              <FadeUpRow index={4}>
+                <RidesHistoryTable
+                  filters={filters}
+                  uberConnected={sources?.uber.connected ?? false}
+                  override={ridesOverride}
+                />
+              </FadeUpRow>
+
+              {data?.uberIsMonthlyAggregate && (
+                <Typography sx={{ fontSize: '0.74rem', color: HOME_TOKENS.text.tertiary }}>
+                  Uber livrează doar totaluri lunare. În grafice, valorile lui sunt repartizate uniform
+                  pe zilele perioadei; totalurile rămân exacte.
+                </Typography>
+              )}
+            </Stack>
+          </Box>
         )}
-      </Box>
+      </Stack>
     </Stack>
-  );
+  )
+}
+
+/** Cont nou, fără nicio sursă conectată: pagina n-are ce afișa, deci nu afișează carduri goale. */
+function EmptyAccountCard({ onOpenPlatforms }: { onOpenPlatforms: () => void }) {
+  return (
+    <HomeCard title="Conectează o sursă ca să vezi datele">
+      <Stack spacing={2} sx={{ py: 3, alignItems: 'center', textAlign: 'center' }}>
+        <Typography sx={{ fontSize: '0.88rem', color: HOME_TOKENS.text.secondary, maxWidth: 420 }}>
+          Conectează contul Bolt sau încarcă un raport Uber. Dashboardul se completează singur, iar taxele
+          estimate apar imediat ce există prima cursă.
+        </Typography>
+        <Stack direction="row" spacing={1.2} sx={{ flexWrap: 'wrap', justifyContent: 'center', rowGap: 1 }}>
+          <Button
+            variant="contained"
+            disableElevation
+            onClick={onOpenPlatforms}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 700,
+              borderRadius: HOME_TOKENS.radius.input,
+              bgcolor: HOME_TOKENS.brand[600],
+            }}
+          >
+            Conectează Bolt
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={onOpenPlatforms}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 700,
+              borderRadius: HOME_TOKENS.radius.input,
+              borderColor: HOME_TOKENS.border.strong,
+              color: HOME_TOKENS.text.primary,
+            }}
+          >
+            Încarcă raport Uber
+          </Button>
+        </Stack>
+      </Stack>
+    </HomeCard>
+  )
 }

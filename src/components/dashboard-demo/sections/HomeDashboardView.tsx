@@ -1,189 +1,279 @@
-import { useState } from 'react'
 import { Box, Paper, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 
-import {
-  HomeDashboardContent,
-  type StatsTimeframe,
-} from '../../dashboard/sections/HomeDashboardView'
+import { HomeDashboardContent } from '../../dashboard/sections/HomeDashboardView'
+import { useDashboardFilters } from '../../dashboard/home/useDashboardFilters'
 import { DASHBOARD_TOKENS } from '../../dashboard/dashboardTheme'
 import { DocumentStatusChip, PfaStatusChip } from '../../dashboard/ui'
-import { type DashboardSummary, type UserProfile } from '../../../services/user.service'
-import { type BoltDashboardDto } from '../../../services/bolt.service'
-import { type UberDashboardDto } from '../../../services/uber.service'
+import type { PfaDashboardSummary, RidesPage } from '../../../services/pfaDashboard.service'
 
-const mockSummary: DashboardSummary = {
-  pfaRegistrationId: 'demo-registration-id',
-  pfaStatus: 'Approved',
-  pfaRegistrationType: 'AmPfa',
-  pfaCui: 'RO12345678',
-  pfaCertificatId: 'demo-cert-id',
-  pfaCreatedAtUtc: new Date(2026, 0, 15).toISOString(),
-  totalDocuments: 8,
-  approvedDocuments: 6,
-  pendingDocuments: 2,
-  rejectedDocuments: 0,
-  unreadNotifications: 0,
-  recentDocuments: [
+/* ── Date de demonstrație ─────────────────────────────────────────────────── */
+
+/**
+ * Demo-ul se așază pe luna curentă, ca filtrul implicit („Luna curentă") și datele
+ * afișate să spună același lucru — altfel previzualizarea pare desincronizată.
+ */
+const today = new Date()
+const DEMO_MONTH = { year: today.getFullYear(), month: today.getMonth() + 1 }
+const DEMO_DAYS_IN_MONTH = new Date(DEMO_MONTH.year, DEMO_MONTH.month, 0).getDate()
+
+const isoDay = (day: number) =>
+  `${DEMO_MONTH.year}-${`${DEMO_MONTH.month}`.padStart(2, '0')}-${`${day}`.padStart(2, '0')}`
+
+/** Încasări plauzibile, cu vârfuri în weekend. */
+const demoDays = Array.from({ length: DEMO_DAYS_IN_MONTH }, (_, index) => {
+  const day = index + 1
+  const date = new Date(DEMO_MONTH.year, DEMO_MONTH.month - 1, day)
+  const isWeekend = date.getDay() === 0 || date.getDay() === 6
+  const bolt = Math.round((isWeekend ? 148 : 96) + Math.sin(day) * 22)
+  const uber = Math.round((isWeekend ? 132 : 84) + Math.cos(day) * 18)
+  return {
+    bucket: isoDay(day),
+    label: `${day}`,
+    bolt,
+    uber,
+    total: bolt + uber,
+    rides: isWeekend ? 12 : 8,
+  }
+})
+
+const demoNetTotal = demoDays.reduce((sum, point) => sum + point.total, 0)
+const demoBoltNet = demoDays.reduce((sum, point) => sum + point.bolt, 0)
+const demoUberNet = demoDays.reduce((sum, point) => sum + point.uber, 0)
+const demoBoltFees = Math.round(demoBoltNet * 0.11)
+const demoUberFees = Math.round(demoUberNet * 0.12)
+const demoFees = demoBoltFees + demoUberFees
+const demoVat = Math.round(demoFees * 0.21)
+const demoNonResident = Math.round(demoBoltFees * 0.02)
+const demoIncomeTax = 420
+const demoCasCass = 552
+const demoTaxTotal = demoVat + demoNonResident + demoIncomeTax + demoCasCass
+const demoExpenses = 3200
+const demoProfit = demoNetTotal - demoExpenses - demoTaxTotal
+
+const mockSummary: PfaDashboardSummary = {
+  period: { from: isoDay(1), to: isoDay(DEMO_DAYS_IN_MONTH), granularity: 'day' },
+  kpis: {
+    netEarnings: { value: demoNetTotal, previous: Math.round(demoNetTotal * 0.92) },
+    platformFees: {
+      value: demoFees,
+      previous: Math.round(demoFees * 1.04),
+      byPlatform: { bolt: demoBoltFees, uber: demoUberFees },
+    },
+    onlineHours: { value: 184, previous: 176.5 },
+    rideKm: { value: 2140, previous: 2010 },
+    netPerHour: { value: demoNetTotal / 184, previous: (demoNetTotal * 0.92) / 176.5 },
+    netPerKm: { value: demoNetTotal / 2140, previous: (demoNetTotal * 0.92) / 2010 },
+  },
+  taxReserve: {
+    scope: 'fiscalMonth',
+    total: demoTaxTotal,
+    components: [
+      {
+        key: 'vatIntracom',
+        label: 'TVA intracomunitar estimat',
+        amount: demoVat,
+        rate: 0.21,
+        basis: demoFees,
+        note: '21% din comisionul reținut de platforme',
+      },
+      {
+        key: 'boltNonResident',
+        label: 'Taxă nerezident Bolt',
+        amount: demoNonResident,
+        rate: 0.02,
+        basis: demoBoltFees,
+        note: '2% din comisionul Bolt',
+      },
+      {
+        key: 'incomeTax',
+        label: 'Impozit pe venit estimat',
+        amount: demoIncomeTax,
+        rate: null,
+        basis: demoNetTotal - demoExpenses,
+        note: 'Cota anuală estimată, alocată perioadei',
+      },
+      {
+        key: 'casCass',
+        label: 'CAS/CASS estimat',
+        amount: demoCasCass,
+        rate: null,
+        basis: demoNetTotal - demoExpenses,
+        note: 'Din pragurile fiscale ale anului',
+      },
+    ],
+    fiscalMonth: {
+      month: `${DEMO_MONTH.year}-${`${DEMO_MONTH.month}`.padStart(2, '0')}`,
+      total: demoTaxTotal,
+    },
+  },
+  realProfit: {
+    netEarnings: demoNetTotal,
+    deductibleExpenses: demoExpenses,
+    estimatedTaxes: demoTaxTotal,
+    value: demoProfit,
+    retentionRatio: demoProfit / demoNetTotal,
+  },
+  platformSplit: [
     {
-      id: 'demo-doc-1',
-      originalFileName: 'ci_sofer_demo.jpg',
-      category: 'Carte de Identitate',
-      status: 'Pending',
-      uploadedAtUtc: new Date().toISOString(),
+      platform: 'bolt',
+      net: demoBoltNet,
+      fees: demoBoltFees,
+      cash: Math.round(demoBoltNet * 0.35),
+      card: Math.round(demoBoltNet * 0.65),
+      rides: 214,
     },
     {
-      id: 'demo-doc-2',
-      originalFileName: 'permis_fata_verso.png',
-      category: 'Permis de Conducere',
-      status: 'Verified',
-      uploadedAtUtc: new Date().toISOString(),
-    },
-    {
-      id: 'demo-doc-3',
-      originalFileName: 'cazier_judiciar_curat.pdf',
-      category: 'Cazier Judiciar',
-      status: 'Verified',
-      uploadedAtUtc: new Date().toISOString(),
-    },
-    {
-      id: 'demo-doc-4',
-      originalFileName: 'Certificat_Inregistrare_PFA.pdf',
-      category: 'Certificat de Înregistrare',
-      status: 'Verified',
-      uploadedAtUtc: new Date().toISOString(),
+      platform: 'uber',
+      net: demoUberNet,
+      fees: demoUberFees,
+      cash: Math.round(demoUberNet * 0.3),
+      card: Math.round(demoUberNet * 0.7),
+      rides: 168,
     },
   ],
-  // Cash + card is the payment split of the platform money, so the two views always match.
-  venitCash: 2100,
-  venitCard: 3900,
-  venitBolt: 3000,
-  venitUber: 3000,
-  taxeEstimate: 1000,
-  venitTotal: 6000,
-  incomeYear: 2026,
-  incomeMonth: 5, // May
-  monthlyStats: {
-    year: 2026,
-    month: 5,
-    venitCash: 2100,
-    venitCard: 3900,
-    venitBolt: 3000,
-    venitUber: 3000,
-    venitTotal: 6000,
+  series: {
+    netEarnings: demoDays,
+    feesAndTaxes: demoDays.map((point) => {
+      const boltFee = Math.round(point.bolt * 0.11)
+      const uberFee = Math.round(point.uber * 0.12)
+      return {
+        bucket: point.bucket,
+        label: point.label,
+        boltFee,
+        uberFee,
+        vatIntracom: Math.round((boltFee + uberFee) * 0.21),
+        boltNonResident: Math.round(boltFee * 0.02),
+      }
+    }),
+    realProfit: demoDays.map((point) => ({
+      bucket: point.bucket,
+      label: point.label,
+      netEarnings: point.total,
+      value: Math.round(point.total * (demoProfit / demoNetTotal)),
+    })),
   },
-  yearlyStats: {
-    year: 2026,
-    month: null,
-    venitCash: 7600,
-    venitCard: 14600,
-    venitBolt: 11900,
-    venitUber: 10300,
-    venitTotal: 22200,
+  sources: {
+    bolt: { configured: true, connected: true, lastSyncAt: new Date().toISOString(), errorMessage: null },
+    uber: {
+      connected: true,
+      lastReportAt: new Date().toISOString(),
+      detectedRange: `${isoDay(1)}/${isoDay(DEMO_DAYS_IN_MONTH)}`,
+    },
   },
-  revenueChartYear: 2026,
-  monthlyRevenue: [
-    { month: 1, venitTotal: 3500, venitCash: 1200, venitCard: 2300, venitBolt: 2000, venitUber: 1500 },
-    { month: 2, venitTotal: 4000, venitCash: 1400, venitCard: 2600, venitBolt: 2200, venitUber: 1800 },
-    { month: 3, venitTotal: 4000, venitCash: 1300, venitCard: 2700, venitBolt: 2200, venitUber: 1800 },
-    { month: 4, venitTotal: 4700, venitCash: 1600, venitCard: 3100, venitBolt: 2500, venitUber: 2200 },
-    { month: 5, venitTotal: 6000, venitCash: 2100, venitCard: 3900, venitBolt: 3000, venitUber: 3000 },
-  ],
-  // YTD auto-computed tax breakdown
-  taxYear: 2026,
-  ytdTotalIncome: 22200,
-  ytdDeductibleExpenses: 0,
-  ytdProfit: 8000,
-  ytdCas: 0,
-  ytdCass: 2430,
-  ytdIncomeTax: 557,
-  ytdTotalTax: 2987,
-  ytdNetIncome: 5013,
-  ytdExpenses: [],
+  uberIsMonthlyAggregate: true,
 }
 
-const mockProfile: UserProfile = {
-  id: 'demo-user',
-  email: 'sofer.demo@ridelance.ro',
-  firstName: 'Andrei',
-  lastName: 'Popescu',
-  phoneNumber: '+40 7xx xxx xxx',
-  role: 'Client',
-  createdAtUtc: new Date(2026, 0, 15).toISOString(),
-}
-
-const mockBolt: BoltDashboardDto = {
-  isConfigured: true,
-  isConnected: true,
-  lastFetchedAtUtc: new Date().toISOString(),
-  errorMessage: null,
-  period: 'month',
-  year: 2026,
-  month: 5,
-  totalOrdersCount: 214,
-  totalNetEarnings: 3000,
-  totalCashEarnings: 1050,
-  totalCardEarnings: 1950,
-  totalBusinessEarnings: 420,
-  totalTips: 85,
-  totalCommissions: 640,
-  totalRideDistanceKm: 1840,
-  totalRideHours: 96,
-  averageNetPerRide: 14,
-  averageNetPerRideHour: 31,
-  series: [],
-  recentRides: [],
-}
-
-const mockUber: UberDashboardDto = {
-  period: 'month',
-  year: 2026,
-  month: 5,
-  stats: {
-    netEarnings: 3000,
-    grossEarnings: 3600,
-    cashCollected: 1050,
-    commission: 600,
-    trips: 168,
-    kilometers: 1520,
-    onlineHours: 110,
-    rideHours: 88,
-  },
-  imports: [
+const mockRides: RidesPage = {
+  page: 1,
+  pageSize: 5,
+  total: 214,
+  uberRidesAvailable: false,
+  items: [
     {
-      id: 'demo-import-1',
-      year: 2026,
-      month: 5,
-      fileType: 'earnings',
-      fileName: 'castiguri_mai_2026.csv',
-      importedAtUtc: new Date().toISOString(),
-      netEarnings: 3000,
-      grossEarnings: 3600,
-      cashCollected: 1050,
-      commission: 600,
-      trips: 168,
-      kilometers: 1520,
-      onlineHours: 110,
-      rideHours: 88,
+      id: 'demo-ride-1',
+      platform: 'bolt',
+      startedAtUtc: `${isoDay(Math.min(28, DEMO_DAYS_IN_MONTH))}T11:32:00Z`,
+      category: 'Comfort',
+      pickup: 'Piața Unirii',
+      dropoff: 'Aeroport Otopeni',
+      distanceKm: 17.4,
+      durationMin: 31,
+      paymentType: 'card',
+      net: 84.5,
+    },
+    {
+      id: 'demo-ride-2',
+      platform: 'bolt',
+      startedAtUtc: `${isoDay(Math.min(28, DEMO_DAYS_IN_MONTH))}T09:04:00Z`,
+      category: 'Economy',
+      pickup: 'Bd. Magheru 12',
+      dropoff: 'Gara de Nord',
+      distanceKm: 4.1,
+      durationMin: 14,
+      paymentType: 'cash',
+      net: 21.9,
+    },
+    {
+      id: 'demo-ride-3',
+      platform: 'bolt',
+      startedAtUtc: `${isoDay(Math.min(27, DEMO_DAYS_IN_MONTH))}T19:41:00Z`,
+      category: 'Comfort',
+      pickup: 'Piața Victoriei',
+      dropoff: 'Băneasa Shopping City',
+      distanceKm: 8.6,
+      durationMin: 22,
+      paymentType: 'card',
+      net: 39.2,
+    },
+    {
+      id: 'demo-ride-4',
+      platform: 'bolt',
+      startedAtUtc: `${isoDay(Math.min(27, DEMO_DAYS_IN_MONTH))}T16:18:00Z`,
+      category: 'Economy',
+      pickup: 'Str. Ion Mihalache 45',
+      dropoff: 'AFI Cotroceni',
+      distanceKm: 6.3,
+      durationMin: 26,
+      paymentType: 'card',
+      net: 28.7,
+    },
+    {
+      id: 'demo-ride-5',
+      platform: 'bolt',
+      startedAtUtc: `${isoDay(Math.min(27, DEMO_DAYS_IN_MONTH))}T08:52:00Z`,
+      category: 'Economy',
+      pickup: 'Titan',
+      dropoff: 'Piața Romană',
+      distanceKm: 9.8,
+      durationMin: 34,
+      paymentType: 'cash',
+      net: 33.4,
     },
   ],
 }
 
+const demoDocuments = [
+  { id: 'demo-doc-1', originalFileName: 'ci_sofer_demo.jpg', category: 'Carte de Identitate', status: 'Pending' },
+  { id: 'demo-doc-2', originalFileName: 'permis_fata_verso.png', category: 'Permis de Conducere', status: 'Verified' },
+  { id: 'demo-doc-3', originalFileName: 'cazier_judiciar_curat.pdf', category: 'Cazier Judiciar', status: 'Verified' },
+  { id: 'demo-doc-4', originalFileName: 'Certificat_Inregistrare_PFA.pdf', category: 'Certificat de Înregistrare', status: 'Verified' },
+]
+
+/**
+ * Previzualizarea publică folosește exact ecranul din aplicație, doar cu date fixe.
+ * Filtrele funcționează vizual; datele rămân aceleași, fiind un demo.
+ */
 export function HomeDashboardView() {
-  const [timeframe, setTimeframe] = useState<StatsTimeframe>('month')
+  const { filters, setPeriod, setCustomRange, setPlatform, setPayment, reset } = useDashboardFilters()
 
   return (
     <Stack spacing={2.5}>
       <HomeDashboardContent
-        summary={mockSummary}
-        profile={mockProfile}
-        boltDashboard={mockBolt}
-        uberDashboard={mockUber}
-        timeframe={timeframe}
-        onTimeframeChange={setTimeframe}
+        data={mockSummary}
+        isLoading={false}
+        isFetching={false}
+        error={null}
+        onRetry={() => {}}
+        filters={filters}
+        onPeriodChange={setPeriod}
+        onCustomRangeChange={setCustomRange}
+        onPlatformChange={setPlatform}
+        onPaymentChange={setPayment}
+        onReset={reset}
+        ridesOverride={mockRides}
       />
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 2, maxWidth: 1100, mx: 'auto', width: '100%' }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+          gap: 2,
+          maxWidth: 1440,
+          mx: 'auto',
+          width: '100%',
+        }}
+      >
         <Paper
           elevation={0}
           sx={{
@@ -203,17 +293,19 @@ export function HomeDashboardView() {
 
           <Stack spacing={1.5}>
             <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>Status</Typography>
-              <PfaStatusChip status={mockSummary.pfaStatus} />
+              <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>
+                Status
+              </Typography>
+              <PfaStatusChip status="Approved" />
             </Stack>
-            {mockSummary.pfaCreatedAtUtc && (
-              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>Data cererii</Typography>
-                <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.ink, fontSize: '0.9rem' }}>
-                  {new Date(mockSummary.pfaCreatedAtUtc).toLocaleDateString('ro-RO')}
-                </Typography>
-              </Stack>
-            )}
+            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>
+                Data cererii
+              </Typography>
+              <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.ink, fontSize: '0.9rem' }}>
+                15.01.2026
+              </Typography>
+            </Stack>
           </Stack>
         </Paper>
 
@@ -235,7 +327,7 @@ export function HomeDashboardView() {
           </Typography>
 
           <Stack spacing={1}>
-            {mockSummary.recentDocuments.map((doc) => (
+            {demoDocuments.map((doc) => (
               <Paper
                 key={doc.id}
                 elevation={0}
@@ -248,11 +340,20 @@ export function HomeDashboardView() {
               >
                 <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
                   <Box sx={{ overflow: 'hidden', minWidth: 0 }}>
-                    <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700, fontSize: '0.88rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <Typography
+                      sx={{
+                        color: DASHBOARD_TOKENS.ink,
+                        fontWeight: 700,
+                        fontSize: '0.88rem',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
                       {doc.originalFileName}
                     </Typography>
                     <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.75rem' }}>
-                      {doc.category} · {new Date(doc.uploadedAtUtc).toLocaleDateString('ro-RO')}
+                      {doc.category}
                     </Typography>
                   </Box>
                   <DocumentStatusChip status={doc.status} size="sm" />
