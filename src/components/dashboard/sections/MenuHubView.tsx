@@ -5,7 +5,6 @@ import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';
-import ElectricCarRoundedIcon from '@mui/icons-material/ElectricCarRounded';
 import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import FolderSpecialRoundedIcon from '@mui/icons-material/FolderSpecialRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
@@ -37,7 +36,6 @@ const MENU_GROUPS: { title: string; items: MenuEntry[] }[] = [
   {
     title: 'Activitatea mea',
     items: [
-      { id: 'platforms', label: 'Platforme', sub: 'Bolt și Uber', icon: <ElectricCarRoundedIcon /> },
       { id: 'banca', label: 'Banca', sub: 'Cont conectat și tranzacții', icon: <AccountBalanceRoundedIcon /> },
       { id: 'expenses', label: 'Cheltuieli', sub: 'Ce poți deduce din taxe', icon: <AccountBalanceWalletRoundedIcon /> },
     ],

@@ -7,33 +7,68 @@ import { isBoltStale, isUberStale } from '../sourceFreshness'
 
 interface SourcesPillProps {
   sources: DashboardSources
-  onOpenPlatforms: () => void
+  onOpenSources: () => void
+}
+
+/** Ziua de azi se scrie „azi", nu 03.08 — altfel pare o dată veche. */
+function relativeDay(iso: string | null): string | null {
+  if (!iso) return null
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return null
+
+  const days = Math.floor(
+    (new Date().setHours(0, 0, 0, 0) - new Date(date).setHours(0, 0, 0, 0)) / 864e5,
+  )
+  if (days <= 0) return 'azi'
+  if (days === 1) return 'ieri'
+  return formatDate(iso)
 }
 
 /**
  * Singurul rest al modulelor de import pe „Acasă": o pastilă de stare care duce în
- * secțiunea Platforme. Verde când ambele surse sunt proaspete, ambră altfel.
+ * taburile Bolt/Uber din Profil. Verde când ambele surse sunt proaspete, ambră altfel.
+ *
+ * Cele două date măsoară lucruri diferite — Bolt se sincronizează automat prin API, iar
+ * Uber depinde de ultimul CSV încărcat manual — așa că fiecare jumătate spune explicit
+ * la ce se referă. Fără eticheta asta, data raportului Uber se citea drept „ultima
+ * sincronizare" a întregului dashboard.
  */
-export function SourcesPill({ sources, onOpenPlatforms }: SourcesPillProps) {
+export function SourcesPill({ sources, onOpenSources }: SourcesPillProps) {
   const stale = isBoltStale(sources) || isUberStale(sources)
   const tone = stale ? HOME_TOKENS.warn : HOME_TOKENS.pos
 
+  const boltSync = relativeDay(sources.bolt.lastSyncAt)
   const boltText = !sources.bolt.configured
     ? 'Bolt neconectat'
-    : isBoltStale(sources)
-      ? 'Bolt nesincronizat'
-      : 'Bolt sincronizat'
+    : !sources.bolt.connected
+      ? 'Bolt deconectat'
+      : boltSync
+        ? `Bolt sincronizat ${boltSync}`
+        : 'Bolt nesincronizat'
 
+  const uberReport = relativeDay(sources.uber.lastReportAt)
   const uberText = !sources.uber.connected
     ? 'Uber fără raport'
-    : `Uber ${sources.uber.lastReportAt ? formatDate(sources.uber.lastReportAt) : ''}`.trim()
+    : uberReport
+      ? `Uber raport ${uberReport}`
+      : 'Uber fără raport'
+
+  const fullTitle = [
+    sources.bolt.lastSyncAt
+      ? `Bolt — ultima sincronizare API: ${new Date(sources.bolt.lastSyncAt).toLocaleString('ro-RO')}`
+      : 'Bolt — nesincronizat',
+    sources.uber.lastReportAt
+      ? `Uber — ultimul raport CSV încărcat: ${formatDate(sources.uber.lastReportAt)}`
+      : 'Uber — niciun raport încărcat',
+  ].join('\n')
 
   return (
     <Box
       component="button"
       type="button"
-      onClick={onOpenPlatforms}
-      aria-label={`Stare surse de date: ${boltText}, ${uberText}. Deschide secțiunea Platforme.`}
+      onClick={onOpenSources}
+      title={fullTitle}
+      aria-label={`Stare surse de date: ${boltText}, ${uberText}. Deschide sursele din Profil.`}
       sx={{
         display: 'inline-flex',
         alignItems: 'center',

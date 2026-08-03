@@ -42,7 +42,25 @@ export const uberService = {
     return response.data;
   },
 
-  importCsv: async (
+  /** Istoricul importurilor unui client — doar pentru operatori (admin/contabil). */
+  getImportsForPfa: async (
+    pfaRegistrationId: string,
+    period: UberDashboardPeriod = 'month',
+    year?: number,
+    month?: number,
+  ): Promise<UberDashboardDto> => {
+    const response = await api.get<UberDashboardDto>(`/uber/imports/${pfaRegistrationId}`, {
+      params: { period, year, month },
+    });
+    return response.data;
+  },
+
+  /**
+   * Rapoartele Uber ajung la birou, nu la șofer, deci importul e o operațiune de
+   * back-office: se face în contul unui client, de un admin sau un contabil.
+   */
+  importCsvForPfa: async (
+    pfaRegistrationId: string,
     files: File[],
     year?: number | null,
     month?: number | null,
@@ -50,7 +68,7 @@ export const uberService = {
     const form = new FormData();
     files.forEach((file) => form.append('files', file));
 
-    const response = await api.post<UberDashboardDto>('/uber/imports', form, {
+    const response = await api.post<UberDashboardDto>(`/uber/imports/${pfaRegistrationId}`, form, {
       params: { year: year || undefined, month: month || undefined },
       headers: { 'Content-Type': 'multipart/form-data' },
     });

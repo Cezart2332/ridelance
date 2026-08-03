@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DocumentsTab } from './sections/DocumentsTab'
 import { ExpensesRecurringTab } from './sections/ExpensesRecurringTab'
 import { HomeDashboardView } from './sections/HomeDashboardView'
-import { ProfileTab } from './sections/ProfileTab'
+import { ProfileSection } from './sections/ProfileSection'
 import { SupportChatTab } from './sections/SupportChatTab'
 import { CarsView } from './sections/CarsView'
 import { AbonamenteTab } from './sections/AbonamenteTab'
@@ -12,7 +12,6 @@ import { ServiciiTab } from './sections/ServiciiTab'
 import { InsuranceTab } from './sections/InsuranceTab'
 import { IstoricPlatiTab } from './sections/IstoricPlatiTab'
 import { MenuHubView } from './sections/MenuHubView'
-import { PlatformsView } from './sections/PlatformsView'
 import { BankTab } from './sections/BankTab'
 
 import AppLayout from './layout/AppLayout'
@@ -33,7 +32,6 @@ import iconWallet from '../../assets/SVG/2- Regular/credit-card.svg'
 
 const mainSectionConfig = [
   { id: 'home', label: 'Acasă', icon: iconHome },
-  { id: 'platforms', label: 'Platforme', icon: 'MUI:ElectricCarRounded' },
   { id: 'banca', label: 'Banca', icon: 'MUI:AccountBalanceRounded' },
   { id: 'profile', label: 'Profil', icon: iconProfile },
   { id: 'documents', label: 'Documente', icon: iconDocs },
@@ -78,8 +76,9 @@ export default function DashboardPage() {
   useEffect(() => {
     const section = searchParams.get('section')
     if (section) {
-      if (section === 'bolt_integration') {
-        setActiveSection('platforms')
+      // Linkuri vechi către secțiunea Platforme, acum doar butonul Bolt din Profil.
+      if (section === 'bolt_integration' || section === 'platforms') {
+        setActiveSection('profile')
         return
       }
       setActiveSection(section)
@@ -133,10 +132,9 @@ export default function DashboardPage() {
 
   const renderSection = () => {
     if (activeSection === 'home') return <HomeDashboardView onNavigate={setActiveSection} />
-    if (activeSection === 'platforms') return <PlatformsView />
     if (activeSection === 'banca') return <BankTab onNavigate={setActiveSection} />
     if (activeSection === 'cars') return <CarsView />
-    if (activeSection === 'profile') return <ProfileTab />
+    if (activeSection === 'profile') return <ProfileSection />
     if (activeSection === 'documents') return <DocumentsTab onNavigate={setActiveSection} />
     if (activeSection === 'support') return <SupportChatTab />
     if (activeSection === 'abonamente') return <AbonamenteTab />

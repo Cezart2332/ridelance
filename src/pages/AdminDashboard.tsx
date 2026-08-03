@@ -46,6 +46,7 @@ import { DiscountsAdminView } from '../components/dashboard/sections/admin/Disco
 import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminOverviewView'
 import { OnboardingSectionsPanel } from '../components/dashboard/sections/admin/OnboardingSectionsPanel'
+import { UberImportAdminPanel } from '../components/dashboard/sections/admin/UberImportAdminPanel'
 import { PfaFiscalSettingsPanel } from '../components/pfa/PfaFiscalSettingsPanel'
 import {
   adminOverviewService,
@@ -693,6 +694,13 @@ export function AdminDashboard() {
             <Button variant="outlined" startIcon={<PlayCircleOutlineRoundedIcon />} onClick={() => openDetailAction('reactivate')}>Reactivează cont</Button>
             <Button variant="outlined" startIcon={<ChatRoundedIcon />} onClick={() => { setSelectedPfa(null); setActiveTab('chat') }}>Chat</Button>
           </Stack>
+        )}
+
+        {!isPending && (
+          <UberImportAdminPanel
+            pfaRegistrationId={pfa.id}
+            clientName={pfa.fullName || pfa.userName || pfa.userEmail}
+          />
         )}
 
         <PfaFiscalSettingsPanel pfaId={pfa.id} editable clientUserId={pfa.userId} />

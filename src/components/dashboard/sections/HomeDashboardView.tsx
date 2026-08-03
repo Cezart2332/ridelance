@@ -131,7 +131,7 @@ export function HomeDashboardContent({
 
   const periodLabel = formatPeriodLabel(filters.from, filters.to)
   const comparisonLabel = COMPARISON_LABELS[filters.period] ?? COMPARISON_LABELS.custom
-  const goToPlatforms = () => onNavigate?.('platforms')
+  const goToSources = () => onNavigate?.('profile')
 
   const sources = data?.sources
   const noSources = !!sources && !sources.bolt.configured && !sources.uber.connected
@@ -179,7 +179,7 @@ export function HomeDashboardContent({
         </Box>
 
         <Stack direction="row" spacing={1.2} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 1 }}>
-          {sources && <SourcesPill sources={sources} onOpenPlatforms={goToPlatforms} />}
+          {sources && <SourcesPill sources={sources} onOpenSources={goToSources} />}
           <Button
             variant="outlined"
             size="small"
@@ -224,8 +224,8 @@ export function HomeDashboardContent({
               '& .MuiAlert-icon': { color: HOME_TOKENS.warn[600] },
             }}
             action={
-              <Button size="small" onClick={goToPlatforms} sx={{ textTransform: 'none', fontWeight: 700 }}>
-                Deschide Platforme
+              <Button size="small" onClick={goToSources} sx={{ textTransform: 'none', fontWeight: 700 }}>
+                Deschide sursele
               </Button>
             }
           >
@@ -240,7 +240,7 @@ export function HomeDashboardContent({
                 ? 'Uber neconectat — datele afișate includ doar Bolt'
                 : 'Bolt neconectat — datele afișate includ doar Uber'
             }
-            onClick={goToPlatforms}
+            onClick={goToSources}
             sx={{
               alignSelf: 'flex-start',
               bgcolor: HOME_TOKENS.bg.surface2,
@@ -256,7 +256,7 @@ export function HomeDashboardContent({
             <CardError message={error} onRetry={onRetry} />
           </HomeCard>
         ) : noSources ? (
-          <EmptyAccountCard onOpenPlatforms={goToPlatforms} />
+          <EmptyAccountCard onConnectBolt={goToSources} onImportUber={goToSources} />
         ) : (
           <Box sx={{ opacity: isFetching && data ? 0.6 : 1, transition: 'opacity 150ms ease-out' }}>
             <Stack spacing={3}>
@@ -452,7 +452,13 @@ export function HomeDashboardContent({
 }
 
 /** Cont nou, fără nicio sursă conectată: pagina n-are ce afișa, deci nu afișează carduri goale. */
-function EmptyAccountCard({ onOpenPlatforms }: { onOpenPlatforms: () => void }) {
+function EmptyAccountCard({
+  onConnectBolt,
+  onImportUber,
+}: {
+  onConnectBolt: () => void
+  onImportUber: () => void
+}) {
   return (
     <HomeCard title="Conectează o sursă ca să vezi datele">
       <Stack spacing={2} sx={{ py: 3, alignItems: 'center', textAlign: 'center' }}>
@@ -464,7 +470,7 @@ function EmptyAccountCard({ onOpenPlatforms }: { onOpenPlatforms: () => void }) 
           <Button
             variant="contained"
             disableElevation
-            onClick={onOpenPlatforms}
+            onClick={onConnectBolt}
             sx={{
               textTransform: 'none',
               fontWeight: 700,
@@ -476,7 +482,7 @@ function EmptyAccountCard({ onOpenPlatforms }: { onOpenPlatforms: () => void }) 
           </Button>
           <Button
             variant="outlined"
-            onClick={onOpenPlatforms}
+            onClick={onImportUber}
             sx={{
               textTransform: 'none',
               fontWeight: 700,
