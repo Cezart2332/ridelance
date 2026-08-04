@@ -61,6 +61,12 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
       hint: 'Citim automat IBAN-ul și îl comparăm cu cel declarat.',
       originStep: 'fiscal',
     },
+    {
+      category: 'CertificatTvaIntracomunitar',
+      label: 'Certificat de TVA intracomunitar sau decizia ANAF',
+      hint: 'Se cere doar dacă ai cod special art. 317.',
+      originStep: 'fiscal',
+    },
   ],
   arr: [
     {

@@ -93,8 +93,15 @@ export interface PartnerLeadPayload {
   dataSharingConsent: boolean
 }
 
-// --- Pasul 2: TVA, semnături, bancă, Oblio ---
+// --- Pasul 2: TVA intracomunitar, semnături, bancă, Oblio ---
+/**
+ * Ce poate întoarce serverul. `Unknown` = încă nu a răspuns, `DontKnow` = valoare istorică
+ * („nu știu”), păstrată doar ca dosarele vechi să se poată citi — nu mai poate fi trimisă.
+ */
 export type VatAnswer = 'Unknown' | 'Yes' | 'No' | 'DontKnow'
+/** Ce se poate declara: doar un răspuns ferm. */
+export type VatDeclaration = 'Yes' | 'No'
+/** Derivat pe server din răspuns — clientul îl citește, nu îl trimite. */
 export type VatRegistrationKind = 'None' | 'SpecialArticle317' | 'StandardVat' | 'Unknown'
 export type BankDeclarationStatus = 'Pending' | 'Verified' | 'Rejected'
 export type OblioIntegrationStatus = 'Pending' | 'Requested' | 'Active'
@@ -370,9 +377,12 @@ export const onboardingService = {
     return data
   },
 
-  /** Pasul 2.1 — răspuns TVA. */
-  async submitVat(vatAnswer: VatAnswer, vatRegistrationKind: VatRegistrationKind): Promise<void> {
-    await api.post('/onboarding/step2/vat', { vatAnswer, vatRegistrationKind })
+  /**
+   * Pasul 2.1 — răspunsul la TVA intracomunitar. Pentru „Yes” serverul cere să existe deja
+   * certificatul/decizia ANAF încărcată și refuză declarația fără dovadă.
+   */
+  async submitVat(vatAnswer: VatDeclaration): Promise<void> {
+    await api.post('/onboarding/step2/vat', { vatAnswer })
   },
 
   /** Pasul 2.3 — declarația contului bancar. */

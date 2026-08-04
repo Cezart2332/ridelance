@@ -43,14 +43,17 @@ function PlatformCard({
   account: PlatformAccount | undefined
   onSaved: (s: PlatformOnboardingState) => void
 }) {
-  const [answer, setAnswer] = useState<ExistingAccountAnswer>(
-    account?.existingAccountAnswer ?? (account?.hasExistingAccount ? 'HasOperatorAccount' : 'None'),
+  // Un dosar vechi salvat cu „nu știu" pornește fără nimic bifat: răspunsul se dă din nou.
+  const saved = account?.existingAccountAnswer
+  const [answer, setAnswer] = useState<ExistingAccountAnswer | ''>(
+    saved && saved !== 'Unknown' ? saved : account?.hasExistingAccount ? 'HasOperatorAccount' : '',
   )
   const [operatorId, setOperatorId] = useState(account?.operatorAccountId ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const save = async () => {
+    if (answer === '') return
     setBusy(true)
     setError(null)
     try {
@@ -102,7 +105,6 @@ function PlatformCard({
           label="Am cont de șofer, dar nu de operator/fleet"
         />
         <FormControlLabel value="None" control={<Radio />} label="Nu am cont" />
-        <FormControlLabel value="Unknown" control={<Radio />} label="Nu știu ce tip de cont am" />
       </RadioGroup>
 
       <TextField
@@ -117,7 +119,7 @@ function PlatformCard({
         <Button
           variant="contained"
           onClick={save}
-          disabled={busy}
+          disabled={busy || answer === ''}
           sx={{
             textTransform: 'none',
             fontWeight: 700,

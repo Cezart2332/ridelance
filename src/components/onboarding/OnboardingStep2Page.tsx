@@ -18,10 +18,10 @@ import { useState } from 'react'
 
 import {
   onboardingService,
-  type VatAnswer,
-  type VatRegistrationKind,
+  type VatDeclaration,
 } from '../../services/onboarding.service'
 import { getErrorMessage } from '../../utils/errorHandler'
+import { BcrAccountDialog } from './BcrAccountDialog'
 import { StepDocument } from './StepDocument'
 import { TOKENS, inputSx } from './onboardingTheme'
 import { useOnboarding, useOnboardingResource } from './useOnboarding'
@@ -70,7 +70,7 @@ const emptyOblio: OblioForm = {
 }
 
 export default function OnboardingStep2Page() {
-  const { refresh } = useOnboarding()
+  const { refresh, documents } = useOnboarding()
   const { data: step2 } = useOnboardingResource('step2', () => onboardingService.getStep2State())
 
   const [error, setError] = useState<string | null>(null)
@@ -79,11 +79,22 @@ export default function OnboardingStep2Page() {
   const [savingOblio, setSavingOblio] = useState(false)
 
   // Fiecare formular urmărește serverul până când userul îl atinge — apoi rămâne al lui.
-  const [vatForm, setVatForm] = useState<{ answer: VatAnswer; kind: VatRegistrationKind } | null>(null)
-  const vatAnswer = vatForm?.answer ?? step2?.fiscal?.vatAnswer ?? 'Unknown'
-  const vatKind = vatForm?.kind ?? step2?.fiscal?.vatRegistrationKind ?? 'None'
-  const setVatAnswer = (answer: VatAnswer) => setVatForm({ answer, kind: vatKind })
-  const setVatKind = (kind: VatRegistrationKind) => setVatForm({ answer: vatAnswer, kind })
+  // `''` = nu s-a răspuns încă; dosarele vechi cu „nu știu" cad tot aici și trebuie răspuns din nou.
+  const [vatForm, setVatForm] = useState<VatDeclaration | null>(null)
+  const serverVat = step2?.fiscal?.vatAnswer
+  const vatAnswer: VatDeclaration | '' =
+    vatForm ?? (serverVat === 'Yes' || serverVat === 'No' ? serverVat : '')
+
+  // Dovada codului special: fără ea, „Da" nu e o declarație pe care serverul o acceptă.
+  const hasVatProof = documents.some(
+    (d) => d.category === 'CertificatTvaIntracomunitar' && d.status.toLowerCase() !== 'rejected',
+  )
+
+  // Contul PFA: „Nu" nu e o dată de salvat, ci ramura în care îl ajutăm să deschidă unul.
+  const [bankAnswer, setBankAnswer] = useState<'Yes' | 'No' | ''>('')
+  const [bcrOpen, setBcrOpen] = useState(false)
+  const hasBankOnServer = Boolean(step2?.bank?.ibanMasked ?? step2?.bank?.bankName)
+  const bankChoice = bankAnswer || (hasBankOnServer ? 'Yes' : '')
 
   const [bankForm, setBankForm] = useState<string | null>(null)
   const bankName = bankForm ?? step2?.bank?.bankName ?? ''
@@ -118,10 +129,11 @@ export default function OnboardingStep2Page() {
   }
 
   const saveVat = async () => {
+    if (vatAnswer === '') return
     setSavingVat(true)
     setError(null)
     try {
-      await onboardingService.submitVat(vatAnswer, vatAnswer === 'Yes' ? vatKind : 'None')
+      await onboardingService.submitVat(vatAnswer)
       await reload()
     } catch (err) {
       setError(getErrorMessage(err))
@@ -171,32 +183,30 @@ export default function OnboardingStep2Page() {
         </Alert>
       )}
 
-      {/* 2.1 TVA */}
-      <PanelCard title="TVA" subtitle="Ești înregistrat în scopuri de TVA?">
-        <RadioGroup value={vatAnswer} onChange={(e) => setVatAnswer(e.target.value as VatAnswer)}>
+      {/* 2.1 TVA intracomunitar */}
+      <PanelCard
+        title="TVA intracomunitar"
+        subtitle="Ai cod special de TVA pentru operațiuni intracomunitare (art. 317)?"
+      >
+        <RadioGroup value={vatAnswer} onChange={(e) => setVatForm(e.target.value as VatDeclaration)}>
           <FormControlLabel value="No" control={<Radio />} label="Nu" />
           <FormControlLabel value="Yes" control={<Radio />} label="Da" />
-          <FormControlLabel value="DontKnow" control={<Radio />} label="Nu știu" />
         </RadioGroup>
         {vatAnswer === 'Yes' && (
-          <TextField
-            select
-            label="Tip înregistrare TVA"
-            value={vatKind}
-            onChange={(e) => setVatKind(e.target.value as VatRegistrationKind)}
-            sx={{ ...inputSx, mt: 1.5 }}
-            fullWidth
-          >
-            <MenuItem value="SpecialArticle317">Cod special (art. 317 — intracomunitar)</MenuItem>
-            <MenuItem value="StandardVat">Plătitor de TVA obișnuit</MenuItem>
-            <MenuItem value="Unknown">Nu sunt sigur</MenuItem>
-          </TextField>
+          <Box sx={{ mt: 1.5 }}>
+            <StepDocument
+              step="fiscal"
+              category="CertificatTvaIntracomunitar"
+              label="Dovada codului de TVA intracomunitar"
+              hint="Încarcă certificatul de înregistrare în scopuri de TVA sau decizia ANAF de atribuire a codului."
+            />
+          </Box>
         )}
         <Box sx={{ mt: 2 }}>
           <Button
             variant="contained"
             onClick={saveVat}
-            disabled={savingVat}
+            disabled={savingVat || vatAnswer === '' || (vatAnswer === 'Yes' && !hasVatProof)}
             sx={{
               textTransform: 'none',
               fontWeight: 700,
@@ -206,11 +216,16 @@ export default function OnboardingStep2Page() {
           >
             {savingVat ? 'Se salvează...' : 'Salvează'}
           </Button>
+          {vatAnswer === 'Yes' && !hasVatProof && (
+            <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.82rem', mt: 1 }}>
+              Încarcă întâi dovada — fără ea nu putem înregistra codul special.
+            </Typography>
+          )}
         </Box>
       </PanelCard>
 
       {/* 2.3 Bancă */}
-      <PanelCard title="Cont bancar" subtitle="Contul PFA pe care primești încasările.">
+      <PanelCard title="Cont bancar" subtitle="Ai deja un cont bancar deschis pe PFA?">
         {step2?.bank?.ibanMasked && (
           <Alert
             severity={step2.bank.status === 'Verified' ? 'success' : 'info'}
@@ -220,46 +235,84 @@ export default function OnboardingStep2Page() {
             {step2.bank.source === 'OpenBanking' && ' (verificat prin open banking)'}
           </Alert>
         )}
-        <Box sx={{ mb: 2 }}>
-          <StepDocument
-            step="fiscal"
-            category="ExtrasBancar"
-            label="Extras de cont / confirmare IBAN"
-            hint="Citim automat IBAN-ul din document. Nu trebuie să-l scrii."
-          />
-        </Box>
-        <Stack spacing={2}>
-          <TextField
-            select
-            label="Bancă"
-            value={bankName}
-            onChange={(e) => setBankName(e.target.value)}
-            sx={inputSx}
-            fullWidth
-          >
-            {BANKS.map((b) => (
-              <MenuItem key={b} value={b}>
-                {b}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Stack>
-        <Box sx={{ mt: 2 }}>
-          <Button
-            variant="contained"
-            onClick={saveBank}
-            disabled={savingBank}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 700,
-              backgroundColor: TOKENS.primary,
-              '&:hover': { backgroundColor: TOKENS.primaryStrong },
-            }}
-          >
-            {savingBank ? 'Se salvează...' : 'Salvează contul'}
-          </Button>
-        </Box>
+
+        <RadioGroup
+          value={bankChoice}
+          onChange={(e) => {
+            const next = e.target.value as 'Yes' | 'No'
+            setBankAnswer(next)
+            if (next === 'No') setBcrOpen(true)
+          }}
+        >
+          <FormControlLabel value="Yes" control={<Radio />} label="Da, am cont pe PFA" />
+          <FormControlLabel value="No" control={<Radio />} label="Nu am încă" />
+        </RadioGroup>
+
+        {bankChoice === 'No' ? (
+          <Stack spacing={1.5} sx={{ mt: 1.5, alignItems: 'flex-start' }}>
+            <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.88rem', lineHeight: 1.65 }}>
+              Îți deschidem drumul: prin parteneriatul RIDElance–BCR poți avea contul activ în aceeași
+              zi. Revino aici cu IBAN-ul și documentul de confirmare după ce contul e deschis.
+            </Typography>
+            <Button
+              variant="contained"
+              onClick={() => setBcrOpen(true)}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 700,
+                backgroundColor: TOKENS.primary,
+                '&:hover': { backgroundColor: TOKENS.primaryStrong },
+              }}
+            >
+              Vezi cum deschizi contul
+            </Button>
+          </Stack>
+        ) : bankChoice === 'Yes' ? (
+          <>
+            <Box sx={{ my: 2 }}>
+              <StepDocument
+                step="fiscal"
+                category="ExtrasBancar"
+                label="Extras de cont / confirmare IBAN"
+                hint="Citim automat IBAN-ul din document. Nu trebuie să-l scrii."
+              />
+            </Box>
+            <Stack spacing={2}>
+              <TextField
+                select
+                label="Bancă"
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                sx={inputSx}
+                fullWidth
+              >
+                {BANKS.map((b) => (
+                  <MenuItem key={b} value={b}>
+                    {b}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Stack>
+            <Box sx={{ mt: 2 }}>
+              <Button
+                variant="contained"
+                onClick={saveBank}
+                disabled={savingBank}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  backgroundColor: TOKENS.primary,
+                  '&:hover': { backgroundColor: TOKENS.primaryStrong },
+                }}
+              >
+                {savingBank ? 'Se salvează...' : 'Salvează contul'}
+              </Button>
+            </Box>
+          </>
+        ) : null}
       </PanelCard>
+
+      <BcrAccountDialog open={bcrOpen} onClose={() => setBcrOpen(false)} />
 
       {/* 2.4 Oblio */}
       <PanelCard
