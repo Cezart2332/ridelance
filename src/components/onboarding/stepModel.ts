@@ -22,41 +22,8 @@ export interface StepView {
   label: string
   path: string
   state: StepViewState
-  /** Motivul afișat sub pas: de ce e blocat sau de ce a fost respins. */
+  /** Motivul afișat sub pas: de ce e blocat sau de ce a fost respins. Singurul text explicativ. */
   reason: string | null
-  why: string
-  eta: string | null
-  optional: boolean
-}
-
-/** Copy-ul fiecărui pas — „de ce ți-l cerem”, cât durează, dacă e obligatoriu. */
-export const STEP_COPY: Record<string, { why: string; eta: string | null; optional?: boolean }> = {
-  eligibility: {
-    why: 'Verificăm din start că îndeplinești condițiile legale, ca să nu plătești nimic degeaba.',
-    eta: '~2 min',
-  },
-  pfa: {
-    why: 'Fără un PFA cu CAEN 4939 nu poți factura cursele. Dacă nu ai unul, îl înființăm noi.',
-    eta: '~5 min',
-  },
-  fiscal: {
-    why: 'Contul bancar și consimțămintele Oblio ne lasă să îți emitem facturile automat.',
-    eta: '~4 min',
-  },
-  arr: {
-    why: 'Autorizația de transport alternativ e obligatorie ca să poți conduce legal pe Uber sau Bolt.',
-    eta: '~6 min',
-  },
-  platforms: {
-    why: 'Legăm conturile tale de operator, ca încasările să ajungă direct la PFA-ul tău.',
-    eta: '~3 min',
-  },
-  vehicle: {
-    why: 'Copia conformă și ecusoanele se emit pe mașina cu care lucrezi.',
-    eta: '~5 min',
-    // Mașina se poate adăuga mai târziu — backendul acceptă `addLater` la submitVehicle.
-    optional: true,
-  },
 }
 
 /** Secțiunile de aprobare (OnboardingSectionApproval) care aparțin fiecărui pas. */
@@ -148,15 +115,11 @@ export function toStepView(
   documents: DocumentSummary[],
   eligibility: EligibilityProfile | null,
 ): StepView {
-  const copy = STEP_COPY[step.key] ?? { why: '', eta: null }
   const base = {
     order: step.order,
     key: step.key,
     label: step.label,
     path: step.path,
-    why: copy.why,
-    eta: copy.eta,
-    optional: copy.optional ?? false,
   }
 
   // Respingerea bate orice altceva, inclusiv blocarea: dacă adminul a întors o decizie,

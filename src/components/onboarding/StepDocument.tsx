@@ -11,13 +11,11 @@ export function StepDocument({
   step,
   category,
   label,
-  hint,
 }: {
   step: string
   category: string
   /** Suprascrie eticheta din catalog, când panoul are un context mai bun. */
   label?: string
-  hint?: string
 }) {
   const { state, documents, refresh } = useOnboarding()
   const requirement = requirementOf(step, category)
@@ -32,7 +30,6 @@ export function StepDocument({
     <DocumentFirstUpload
       category={category}
       label={label ?? requirement?.label ?? category}
-      hint={hint ?? requirement?.hint}
       alsoAccepts={requirement?.alsoAccepts}
       fromStepLabel={fromStep?.label}
       documents={documents}

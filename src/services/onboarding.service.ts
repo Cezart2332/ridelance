@@ -25,6 +25,10 @@ export interface OnboardingState {
   allSectionsValidated: boolean
   /** Proiecția pe 6 pași (status derivat pe server). */
   steps: OnboardingStep[]
+  /** Ramura „Nu am PFA": starea dosarului de înființare. Null pentru „Am PFA". */
+  companyFormationStatus: string | null
+  /** Etapa la care a rămas dosarul: `PersonalData`, `RegisteredOffice` sau `Consent`. */
+  companyFormationStage: string | null
   /** DOAR PENTRU TESTARE — de șters odată cu skipStep(). */
   testSkipEnabled: boolean
 }

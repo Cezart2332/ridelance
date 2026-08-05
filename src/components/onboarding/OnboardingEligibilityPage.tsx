@@ -67,10 +67,7 @@ export default function OnboardingEligibilityPage() {
 
   return (
     <Stack spacing={3}>
-      <PanelHeading
-        title="Eligibilitate"
-        description="Încarcă documentele și trimite-le. Datele se citesc automat din ele și le verifică echipa RIDElance — tu nu trebuie să completezi nimic. Dacă un document nu e bun, primești email cu motivul și îl reîncarci."
-      />
+      <PanelHeading title="Eligibilitate" />
 
       {error && (
         <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
@@ -110,29 +107,12 @@ export default function OnboardingEligibilityPage() {
       {/* Document-first: userul doar încarcă; datele se citesc pe backend (OCR) */}
       <PanelCard title="Documentele tale">
         <Stack spacing={2.5}>
-          <StepDocument
-            step="eligibility"
-            category="CarteIdentitate"
-            label="Cartea de identitate"
-            hint="Citim data nașterii pentru verificarea vârstei. Nu stocăm CNP-ul."
-          />
-          <StepDocument
-            step="eligibility"
-            category="PermisConducere"
-            label="Permisul de conducere"
-            hint="Citim data obținerii categoriei B și data de expirare."
-          />
-          {hasDriverCertificate === 'yes' && (
-            <StepDocument
-              step="eligibility"
-              category="AtestatSofer"
-              label="Atestatul de transport alternativ"
-              hint="Citim data de expirare a atestatului."
-            />
-          )}
+          <StepDocument step="eligibility" category="CarteIdentitate" label="Cartea de identitate" />
+          <StepDocument step="eligibility" category="PermisConducere" label="Permisul de conducere" />
         </Stack>
       </PanelCard>
 
+      {/* Întrebarea stă deasupra documentului pe care îl cere — nu invers. */}
       <PanelCard>
         <Stack spacing={2.5}>
           <Box>
@@ -149,24 +129,33 @@ export default function OnboardingEligibilityPage() {
             </RadioGroup>
           </Box>
 
+          {hasDriverCertificate === 'yes' && (
+            <StepDocument
+              step="eligibility"
+              category="AtestatSofer"
+              label="Atestatul de transport alternativ"
+            />
+          )}
+
+          {/* Fără atestat nu se poate continua — singurul lucru de spus e de unde se obține. */}
           {hasDriverCertificate === 'no' && (
-            <Alert severity="warning" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
-              <Typography sx={{ fontWeight: 700, mb: 0.3 }}>În așteptarea atestatului</Typography>
-              Pentru a lucra legal pe platformele de transport alternativ ai nevoie de atestat profesional.
-              Obține atestatul, apoi revino în RIDElance pentru a continua. Contul și progresul rămân salvate.
-              <Box sx={{ mt: 1 }}>
+            <Alert
+              severity="warning"
+              sx={{ borderRadius: `${TOKENS.radius.md}px` }}
+              action={
                 <Button
                   size="small"
-                  variant="outlined"
                   color="warning"
                   href="https://www.arr.ro"
                   target="_blank"
                   rel="noopener"
-                  sx={{ textTransform: 'none', fontWeight: 700 }}
+                  sx={{ textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}
                 >
-                  Vezi cum obțin atestatul
+                  ARR
                 </Button>
-              </Box>
+              }
+            >
+              Ai nevoie de atestat ca să continui.
             </Alert>
           )}
         </Stack>

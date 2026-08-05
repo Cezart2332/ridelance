@@ -73,10 +73,7 @@ export default function OnboardingArrPage() {
 
   return (
     <Stack spacing={3}>
-      <PanelHeading
-        title="Autorizație de transport alternativ (ARR)"
-        description={`Pregătim dosarul cu documentele tale și îl depui la agenția ARR. Taxa ARR este de ${fee} lei.`}
-      />
+      <PanelHeading title="Autorizație de transport alternativ (ARR)" />
 
       {error && (
         <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
@@ -86,7 +83,7 @@ export default function OnboardingArrPage() {
 
       <PanelCard
         title="Documentele pentru autorizație"
-        subtitle="Încarcă documentele și trimite-le. Datele se citesc automat din ele, iar echipa RIDElance le verifică — tu nu completezi nimic. Dacă un document nu e bun, primești email cu motivul."
+        action={<Chip label={`Taxă ARR ${fee} lei`} size="small" sx={{ fontWeight: 700 }} />}
       >
         <Stack spacing={2.5}>
           {ARR_DOCUMENTS.map((d) => (
@@ -97,7 +94,7 @@ export default function OnboardingArrPage() {
 
       {arr && (
         <Chip
-          label={`Status: ${STATUS_LABELS[arr.status] ?? arr.status}`}
+          label={STATUS_LABELS[arr.status] ?? arr.status}
           sx={{ alignSelf: 'flex-start', fontWeight: 700 }}
           color={arr.status === 'Issued' ? 'success' : 'default'}
         />
@@ -216,11 +213,7 @@ export default function OnboardingArrPage() {
       {/* Autorizația primită de la ARR — datele ei (număr, expirare) se citesc automat. */}
       {arr?.submittedAtUtc && (
         <PanelCard title="Autorizația primită de la ARR">
-          <StepDocument
-            step="arr"
-            category="AutorizatieTransportAlternativ"
-            hint="Încarc-o imediat ce o primești — citim automat numărul și data de expirare."
-          />
+          <StepDocument step="arr" category="AutorizatieTransportAlternativ" />
         </PanelCard>
       )}
 

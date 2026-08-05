@@ -1,5 +1,5 @@
-import { Box, ButtonBase, Chip, Stack, Typography } from '@mui/material'
-import { AnimatePresence, motion } from 'motion/react'
+import { Box, ButtonBase, Stack, Typography } from '@mui/material'
+import { motion } from 'motion/react'
 
 import { useMotionTokens } from '../motion'
 import { displaySx, stateColors, TOKENS } from '../onboardingTheme'
@@ -31,9 +31,8 @@ export function StepRailItem({
   unchecking: boolean
   onSelect: (step: StepView) => void
 }) {
-  const { step: stepTransition, micro, reduced } = useMotionTokens()
+  const { step: stepTransition, reduced } = useMotionTokens()
   const locked = step.state === 'locked'
-  const expanded = active && !locked
 
   return (
     <Box
@@ -108,56 +107,8 @@ export function StepRailItem({
             </Box>
           </Stack>
 
-          <AnimatePresence initial={false}>
-            {expanded && (
-              <Box
-                component={motion.div}
-                key="body"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={micro}
-                sx={{ pl: '44px', pt: 1 }}
-              >
-                <Typography sx={{ fontSize: '0.79rem', color: TOKENS.textMuted, lineHeight: 1.5 }}>
-                  {step.why}
-                </Typography>
-
-                <Stack direction="row" sx={{ gap: 0.7, mt: 1, flexWrap: 'wrap' }}>
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={step.optional ? 'Opțional' : 'Obligatoriu'}
-                    sx={{
-                      height: 20,
-                      fontSize: '0.66rem',
-                      fontWeight: 700,
-                      borderColor: TOKENS.border,
-                      color: TOKENS.textMuted,
-                    }}
-                  />
-                  {step.eta && (
-                    <Chip
-                      size="small"
-                      variant="outlined"
-                      label={step.eta}
-                      sx={{
-                        height: 20,
-                        fontSize: '0.66rem',
-                        fontWeight: 700,
-                        fontVariantNumeric: 'tabular-nums',
-                        borderColor: TOKENS.border,
-                        color: TOKENS.textMuted,
-                      }}
-                    />
-                  )}
-                </Stack>
-              </Box>
-            )}
-          </AnimatePresence>
-
-          {/* Motivul (blocat sau respins) se vede și când pasul e colapsat — altfel driverul
-              n-are cum să afle de ce nu poate merge mai departe. */}
+          {/* Singurul text de sub titlu: motivul pentru care pasul e blocat sau respins.
+              Fără el driverul n-are cum să afle de ce nu poate merge mai departe. */}
           {step.reason && (
             <Typography
               sx={{

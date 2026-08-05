@@ -206,11 +206,11 @@ test.describe('onboarding rail', () => {
     await page.goto('/onboarding/arr', { waitUntil: 'networkidle' })
 
     await expect(page.getByText('certificat.pdf')).toBeVisible()
-    await expect(page.getByText(/Același document ca la pasul .PFA./)).toBeVisible()
+    await expect(page.getByText(/de la .PFA./)).toBeVisible()
 
     // Categoria echivalentă contează: atestatul urcat la eligibilitate satisface cerința de la ARR.
     await expect(page.getByText('atestat.pdf')).toBeVisible()
-    await expect(page.getByText(/Același document ca la pasul .Eligibilitate./)).toBeVisible()
+    await expect(page.getByText(/de la .Eligibilitate./)).toBeVisible()
 
     // Cerințele acoperite nu mai cer upload; cele neacoperite, da.
     await expect(page.getByRole('button', { name: 'Alege fișier' })).toHaveCount(4)

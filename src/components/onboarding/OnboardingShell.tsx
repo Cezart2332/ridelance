@@ -29,7 +29,7 @@ import { firstActionableStep, type StepView } from './stepModel'
 
 const RAIL_WIDTH = 296
 
-/** Pasul căruia îi aparține ruta curentă — `/onboarding/pfa/consulto` ține tot de pasul PFA. */
+/** Pasul căruia îi aparține ruta curentă — `/onboarding/pfa/sediu` ține tot de pasul PFA. */
 function activeKeyFor(pathname: string, steps: StepView[]): string | null {
   const match = steps
     .filter((step) => pathname === step.path || pathname.startsWith(`${step.path}/`))
@@ -267,22 +267,23 @@ function ShellBody() {
               </AnimatePresence>
             )}
 
-            <Typography sx={{ mt: 5, textAlign: 'center', color: TOKENS.textMuted, fontSize: '0.85rem' }}>
-              Ai nevoie de ajutor în timpul înrolării? Scrie-ne la{' '}
+            {/* Singura ancoră de ajutor din tot fluxul — adresa, fără frază în jurul ei. */}
+            <Box sx={{ mt: 5, textAlign: 'center' }}>
               <Box
                 component="a"
                 href="mailto:contact@ridelance.ro"
                 sx={{
                   ...displaySx,
-                  color: TOKENS.primaryStrong,
-                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  color: TOKENS.textMuted,
+                  fontWeight: 600,
                   textDecoration: 'none',
                   '&:hover': { textDecoration: 'underline' },
                 }}
               >
                 contact@ridelance.ro
               </Box>
-            </Typography>
+            </Box>
           </Container>
         </Box>
       </Box>

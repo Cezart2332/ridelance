@@ -4,11 +4,7 @@ import {
   Alert,
   Box,
   Button,
-  Checkbox,
-  FormControlLabel,
-  MenuItem,
   Paper,
-  Select,
   Stack,
   Tab,
   Tabs,
@@ -16,7 +12,7 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { documentService, type DocumentSummary } from '../../services/document.service'
@@ -30,8 +26,17 @@ import { TOKENS, inputSx } from './onboardingTheme'
 import { UploadField } from './UploadField'
 import { useOnboarding } from './useOnboarding'
 
-type Locality = { nume: string }
-type County = { auto: string; nume: string; localitati: Locality[] }
+/** Etapa dosarului de înființare → ruta ei. Necunoscut înseamnă „de la început". */
+function companyFormationPath(stage: string | null): string {
+  switch (stage) {
+    case 'RegisteredOffice':
+      return '/onboarding/pfa/sediu'
+    case 'Consent':
+      return '/onboarding/pfa/consimtamant'
+    default:
+      return '/onboarding/pfa/date-personale'
+  }
+}
 
 function redirectToInfiintarePayment() {
   const origin = window.location.origin
@@ -65,7 +70,6 @@ function PfaDocReupload({
   pfaRegistrationId?: string | null
   onUploaded: () => Promise<unknown>
 }) {
-  const [files, setFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
@@ -75,14 +79,14 @@ function PfaDocReupload({
       ? `respins la verificarea automată: ${doc.aiSummary}`
       : 'respins de echipa RIDElance.'
 
-  const handleUpload = async () => {
-    if (files.length === 0) return
+  /** Documentul pleacă de îndată ce a fost ales — nu mai există un al doilea pas de confirmat. */
+  const handleUpload = async (picked: File[]) => {
+    if (picked.length === 0) return
     setUploading(true)
     setUploadError(null)
     try {
-      const uploadFile = await buildUploadFile(files, label)
+      const uploadFile = await buildUploadFile(picked, label)
       await documentService.upload(uploadFile, doc.category, pfaRegistrationId ?? undefined)
-      setFiles([])
       await onUploaded()
     } catch (err) {
       setUploadError(getErrorMessage(err, 'Nu am putut încărca documentul. Încearcă din nou.'))
@@ -103,29 +107,14 @@ function PfaDocReupload({
       )}
       <UploadField
         label={`Reîncarcă: ${label}`}
-        files={files}
-        onFilesChange={setFiles}
+        onPick={(picked) => void handleUpload(picked)}
         disabled={uploading}
       />
-      <Button
-        variant="contained"
-        disabled={files.length === 0 || uploading}
-        onClick={handleUpload}
-        sx={{
-          alignSelf: 'flex-start',
-          fontWeight: 700,
-          textTransform: 'none',
-          borderRadius: `${TOKENS.radius.md}px`,
-          px: 3,
-          py: 1,
-          color: '#fff',
-          backgroundColor: TOKENS.primary,
-          '&:hover': { backgroundColor: TOKENS.primaryStrong },
-          '&.Mui-disabled': { backgroundColor: alpha(TOKENS.primary, 0.4), color: '#fff' },
-        }}
-      >
-        {uploading ? 'Se încarcă...' : 'Salvează documentul'}
-      </Button>
+      {uploading && (
+        <Typography sx={{ fontSize: '0.82rem', color: TOKENS.textMuted, fontWeight: 600 }}>
+          Se încarcă…
+        </Typography>
+      )}
     </Stack>
   )
 }
@@ -135,18 +124,6 @@ export default function OnboardingPfaPage() {
   const { state, documents, refresh } = useOnboarding()
 
   const [tab, setTab] = useState(0) // 0 = Am PFA, 1 = Nu am PFA
-  const [countiesData, setCountiesData] = useState<County[]>([])
-
-  useEffect(() => {
-    fetch('https://raw.githubusercontent.com/virgil-av/judet-oras-localitati-romania/master/judete.json')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.judete) {
-          setCountiesData(data.judete)
-        }
-      })
-      .catch((err) => console.error('Failed to load counties:', err))
-  }, [])
 
   // Secțiunea PFA e deja validată → shell-ul decide pasul următor.
   useEffect(() => {
@@ -155,35 +132,36 @@ export default function OnboardingPfaPage() {
     }
   }, [state?.pfaStatus, navigate])
 
+  // Ramura „Nu am PFA": după plată, pasul continuă în dosarul de înființare, de unde a rămas.
+  // Cât timp dosarul nu e semnat, nu are ce valida adminul.
+  const formationStatus = state?.companyFormationStatus ?? null
+  const formationStage = state?.companyFormationStage ?? null
+
+  useEffect(() => {
+    if (state?.registrationType !== 'NuAmPfa' || !state.hasPaidInfiintare) return
+    if (formationStatus !== null && formationStatus !== 'Draft' && formationStatus !== 'InfoRequested') return
+
+    navigate(companyFormationPath(formationStage), { replace: true })
+  }, [state?.registrationType, state?.hasPaidInfiintare, formationStatus, formationStage, navigate])
+
   // "Am PFA" form state — CUI-ul nu se mai tastează, se citește din certificat.
   const [amPfaName, setAmPfaName] = useState('')
   const [amPfaPhone, setAmPfaPhone] = useState('')
   const [certificateFiles, setCertificateFiles] = useState<File[]>([])
 
-  // "Nu am PFA" form state
+  // „Nu am PFA": aici se deschide doar dosarul. Adresa sediului, proprietarul și restul
+  // datelor se completează în dosarul de înființare, care e sursa de adevăr.
   const [buletinFiles, setBuletinFiles] = useState<File[]>([])
-  const [durataContract, setDurataContract] = useState('3')
-  const [strada, setStrada] = useState('')
-  const [numar, setNumar] = useState('')
-  const [oras, setOras] = useState('')
-  const [judet, setJudet] = useState('')
-  const [suntProprietar, setSuntProprietar] = useState(false)
   const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [retryAfterReject, setRetryAfterReject] = useState(false)
 
-  const availableCities = useMemo(() => {
-    if (!judet || countiesData.length === 0) return []
-    const selectedCounty = countiesData.find((c) => c.nume === judet)
-    return selectedCounty ? selectedCounty.localitati.map((loc) => loc.nume).sort() : []
-  }, [judet, countiesData])
-
   const handleSubmitNuAmPfa = async () => {
     setError(null)
-    if (buletinFiles.length === 0 || !strada || !numar || !oras || !judet) {
-      setError('Te rugam sa completezi adresa si sa incarci buletinul.')
+    if (buletinFiles.length === 0) {
+      setError('Încarcă buletinul ca să putem deschide dosarul.')
       return
     }
     if (!state?.hasPaidInfiintare && !paymentPolicyAccepted) {
@@ -195,15 +173,8 @@ export default function OnboardingPfaPage() {
       setIsLoading(true)
 
       // 1. Create PFA record
-      const pfaId = await pfaService.create({
-        registrationType: 'NuAmPfa',
-        contractDuration: parseInt(durataContract, 10),
-        street: strada,
-        number: numar,
-        city: oras,
-        county: judet,
-        isOwner: suntProprietar,
-      })
+      // `isOwner` rămâne pe fals: proprietarul imobilului se declară în etapa de sediu.
+      const pfaId = await pfaService.create({ registrationType: 'NuAmPfa', isOwner: false })
 
       // 2. Upload Documents (atestatul de șofer se cere la secțiunea „Autorizație transport”)
       if (buletinFiles.length > 0) {
@@ -214,7 +185,7 @@ export default function OnboardingPfaPage() {
       // 3. Plata înființării (dacă nu e deja achitată), apoi înapoi la hub
       sessionStorage.setItem('pfa_registered', 'NuAmPfa')
       if (state?.hasPaidInfiintare) {
-        navigate('/onboarding', { replace: true })
+        navigate('/onboarding/pfa/date-personale', { replace: true })
       } else {
         redirectToInfiintarePayment()
       }
@@ -283,10 +254,6 @@ export default function OnboardingPfaPage() {
         <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: TOKENS.ink, mb: 1 }}>
           Finalizează plata pentru Înființare PFA
         </Typography>
-        <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mb: 3 }}>
-          Dosarul tău a fost creat. Ca să pornim înființarea PFA-ului, mai e nevoie doar de achitarea
-          serviciului de înființare.
-        </Typography>
         <Button
           variant="contained"
           size="large"
@@ -346,11 +313,6 @@ export default function OnboardingPfaPage() {
         </Box>
         <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: TOKENS.ink, mb: 1 }}>
           Dosarul tău PFA este în validare
-        </Typography>
-        <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', maxWidth: 440, mx: 'auto' }}>
-          {state?.registrationType === 'NuAmPfa'
-            ? 'Echipa RIDElance se ocupă de înființarea PFA-ului tău. Te anunțăm imediat ce este gata și se deblochează pasul următor.'
-            : 'Echipa RIDElance îți verifică datele PFA-ului. Te anunțăm imediat ce dosarul este validat și se deblochează pasul următor.'}
         </Typography>
 
         {certificate && (
@@ -425,9 +387,6 @@ export default function OnboardingPfaPage() {
           >
             Pasul 1: PFA
           </Typography>
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mb: 3, textAlign: 'center' }}>
-            Selecteaza situatia ta actuala pentru a continua
-          </Typography>
 
           {error && (
             <Alert severity="error" sx={{ mb: 3, borderRadius: `${TOKENS.radius.md}px` }}>
@@ -468,40 +427,6 @@ export default function OnboardingPfaPage() {
           {tab === 0 ? (
             /* ── AM PFA ── */
             <Stack spacing={3}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  borderRadius: `${TOKENS.radius.lg}px`,
-                  backgroundColor: alpha(TOKENS.primary, 0.04),
-                  border: `1px solid ${alpha(TOKENS.primary, 0.1)}`,
-                }}
-              >
-                <Typography
-                  sx={{
-                    color: TOKENS.ink,
-                    fontWeight: 650,
-                    fontSize: '0.95rem',
-                    lineHeight: 1.7,
-                    textAlign: 'center',
-                  }}
-                >
-                  Daca ai deja PFA inregistrat, completeaza formularul de mai jos sau contacteaza-ne la:{' '}
-                  <Box
-                    component="a"
-                    href="mailto:contact@ridelance.ro"
-                    sx={{
-                      color: TOKENS.primary,
-                      fontWeight: 700,
-                      textDecoration: 'none',
-                      '&:hover': { textDecoration: 'underline' },
-                    }}
-                  >
-                    contact@ridelance.ro
-                  </Box>
-                </Typography>
-              </Paper>
-
               <Stack spacing={2.5}>
                 <Box>
                   <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
@@ -513,10 +438,6 @@ export default function OnboardingPfaPage() {
                     onFilesChange={setCertificateFiles}
                     disabled={isLoading}
                   />
-                  <Typography sx={{ mt: 0.8, color: TOKENS.textMuted, fontSize: '0.8rem' }}>
-                    Nu-ți mai cerem CUI-ul: îl citim din certificat, împreună cu denumirea PFA-ului și
-                    codurile CAEN.
-                  </Typography>
                 </Box>
                 <Box>
                   <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
@@ -573,163 +494,6 @@ export default function OnboardingPfaPage() {
             /* ── NU AM PFA ── */
             <Stack spacing={2.5}>
               <UploadField label="Buletin" files={buletinFiles} onFilesChange={setBuletinFiles} />
-
-              <Box>
-                <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
-                  Durata Contract de comodat
-                </Typography>
-                <Select
-                  fullWidth
-                  value={durataContract}
-                  onChange={(e) => setDurataContract(e.target.value)}
-                  sx={{
-                    backgroundColor: '#fff',
-                    borderRadius: `${TOKENS.radius.md}px`,
-                    fontWeight: 500,
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: TOKENS.border },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: alpha(TOKENS.ink, 0.18),
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: TOKENS.primary,
-                      borderWidth: 2,
-                    },
-                  }}
-                >
-                  <MenuItem value="1">1 an</MenuItem>
-                  <MenuItem value="2">2 ani</MenuItem>
-                  <MenuItem value="3">
-                    3 ani
-                    <Box
-                      component="span"
-                      sx={{
-                        ml: 1,
-                        px: 1.2,
-                        py: 0.2,
-                        borderRadius: 50,
-                        backgroundColor: alpha(TOKENS.primary, 0.1),
-                        color: TOKENS.primary,
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                      }}
-                    >
-                      Recomandat
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="4">4 ani</MenuItem>
-                  <MenuItem value="5">5 ani</MenuItem>
-                </Select>
-              </Box>
-
-              <Box>
-                <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
-                  Adresa sediu
-                </Typography>
-                <Stack spacing={1.5}>
-                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '2fr 1fr' }, gap: 1.5 }}>
-                    <TextField
-                      fullWidth
-                      placeholder="Strada"
-                      value={strada}
-                      onChange={(e) => setStrada(e.target.value)}
-                      sx={inputSx}
-                    />
-                    <TextField
-                      fullWidth
-                      placeholder="Numar"
-                      value={numar}
-                      onChange={(e) => setNumar(e.target.value)}
-                      sx={inputSx}
-                    />
-                  </Box>
-                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
-                    <Select
-                      fullWidth
-                      displayEmpty
-                      value={oras}
-                      onChange={(e) => setOras(e.target.value)}
-                      disabled={!judet || availableCities.length === 0}
-                      MenuProps={{ sx: { '& .MuiPaper-root': { maxHeight: 250 } } }}
-                      sx={{
-                        backgroundColor: '#fff',
-                        borderRadius: `${TOKENS.radius.md}px`,
-                        fontWeight: 500,
-                        color: oras ? TOKENS.ink : alpha(TOKENS.ink, 0.45),
-                        '& .MuiOutlinedInput-notchedOutline': { borderColor: TOKENS.border },
-                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.18) },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: TOKENS.primary,
-                          borderWidth: 2,
-                        },
-                      }}
-                    >
-                      <MenuItem value="" disabled>
-                        {judet ? 'Oras/Localitate' : 'Selecteaza Judet intai'}
-                      </MenuItem>
-                      {availableCities.map((city, index) => (
-                        <MenuItem key={`${city}-${index}`} value={city}>
-                          {city}
-                        </MenuItem>
-                      ))}
-                    </Select>
-
-                    <Select
-                      fullWidth
-                      displayEmpty
-                      value={judet}
-                      onChange={(e) => {
-                        setJudet(e.target.value)
-                        setOras('') // reset city when county changes
-                      }}
-                      MenuProps={{ sx: { '& .MuiPaper-root': { maxHeight: 250 } } }}
-                      sx={{
-                        backgroundColor: '#fff',
-                        borderRadius: `${TOKENS.radius.md}px`,
-                        fontWeight: 500,
-                        color: judet ? TOKENS.ink : alpha(TOKENS.ink, 0.45),
-                        '& .MuiOutlinedInput-notchedOutline': { borderColor: TOKENS.border },
-                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.18) },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: TOKENS.primary,
-                          borderWidth: 2,
-                        },
-                      }}
-                    >
-                      <MenuItem value="" disabled>
-                        {countiesData.length === 0 ? 'Se incarca...' : 'Judet'}
-                      </MenuItem>
-                      {countiesData.map((c) => (
-                        <MenuItem key={c.auto} value={c.nume}>
-                          {c.nume}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </Box>
-                </Stack>
-              </Box>
-
-              <Box>
-                <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
-                  Proprietar Sediu
-                </Typography>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={suntProprietar}
-                      onChange={(e) => setSuntProprietar(e.target.checked)}
-                      sx={{
-                        color: TOKENS.borderHover,
-                        '&.Mui-checked': { color: TOKENS.primary },
-                      }}
-                    />
-                  }
-                  label={
-                    <Typography sx={{ fontWeight: 600, fontSize: '0.92rem', color: TOKENS.ink }}>
-                      Sunt proprietar
-                    </Typography>
-                  }
-                />
-              </Box>
 
               {!state?.hasPaidInfiintare && (
                 <PaymentPolicyAcceptance

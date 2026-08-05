@@ -18,7 +18,6 @@ export interface DocumentRequirement {
   /** Categorii echivalente — un document din oricare dintre ele satisface cerința. */
   alsoAccepts?: string[]
   label: string
-  hint?: string
   /** Pasul la care documentul se cere prima dată. */
   originStep: string
 }
@@ -28,20 +27,17 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
     {
       category: 'CarteIdentitate',
       label: 'Carte de identitate',
-      hint: 'Citim automat data nașterii.',
       originStep: 'eligibility',
     },
     {
       category: 'PermisConducere',
       label: 'Permis de conducere',
-      hint: 'Citim automat categoriile și data obținerii.',
       originStep: 'eligibility',
     },
     {
       category: 'AtestatSofer',
       label: 'Atestat de transport alternativ',
       alsoAccepts: ['AtestatTransport'],
-      hint: 'Citim automat data de expirare.',
       originStep: 'eligibility',
     },
   ],
@@ -49,7 +45,6 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
     {
       category: 'CertificatInregistrare',
       label: 'Certificat de înregistrare (CAEN 4939)',
-      hint: 'Citim automat CUI-ul, denumirea PFA-ului și codurile CAEN.',
       originStep: 'pfa',
     },
     { category: 'Buletin', label: 'Buletin', originStep: 'pfa' },
@@ -58,13 +53,11 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
     {
       category: 'ExtrasBancar',
       label: 'Extras de cont',
-      hint: 'Citim automat IBAN-ul și îl comparăm cu cel declarat.',
       originStep: 'fiscal',
     },
     {
       category: 'CertificatTvaIntracomunitar',
       label: 'Certificat de TVA intracomunitar sau decizia ANAF',
-      hint: 'Se cere doar dacă ai cod special art. 317.',
       originStep: 'fiscal',
     },
   ],
@@ -72,38 +65,32 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
     {
       category: 'CertificatInregistrare',
       label: 'Certificat de înregistrare (CAEN 4939)',
-      hint: 'Citim automat CUI-ul, denumirea PFA-ului și codurile CAEN.',
       originStep: 'pfa',
     },
     {
       category: 'CertificatConstatator',
       label: 'Certificat constatator (CAEN 4939)',
-      hint: 'Citim automat numărul din registrul comerțului și codurile CAEN.',
       originStep: 'arr',
     },
     {
       category: 'AtestatTransport',
       label: 'Certificat de atestare profesională (atestat)',
       alsoAccepts: ['AtestatSofer'],
-      hint: 'Citim automat data de expirare.',
       originStep: 'eligibility',
     },
     {
       category: 'CazierJudiciar',
       label: 'Cazier judiciar',
-      hint: 'Valabil 6 luni de la eliberare.',
       originStep: 'arr',
     },
     {
       category: 'AdeverintaMedicala',
       label: 'Aviz medical și psihologic',
-      hint: 'Ambele avize, pe titular.',
       originStep: 'arr',
     },
     {
       category: 'DovadaPlataArr',
       label: 'Dovada plății tarifului ARR',
-      hint: 'Ordin de plată sau chitanța de la ARR.',
       originStep: 'arr',
     },
     {
@@ -118,7 +105,6 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
       category: 'Talon',
       label: 'Talon / ITP',
       alsoAccepts: ['ITP'],
-      hint: 'Citim automat seria de șasiu și numărul de înmatriculare.',
       originStep: 'vehicle',
     },
     { category: 'CarteIdentitateAuto', label: 'Carte de identitate auto', originStep: 'vehicle' },

@@ -47,6 +47,7 @@ import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded
 import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminOverviewView'
 import { OnboardingSectionsPanel } from '../components/dashboard/sections/admin/OnboardingSectionsPanel'
 import { UberImportAdminPanel } from '../components/dashboard/sections/admin/UberImportAdminPanel'
+import { CompanyFormationAdminPanel } from '../components/pfa/CompanyFormationAdminPanel'
 import { PfaFiscalSettingsPanel } from '../components/pfa/PfaFiscalSettingsPanel'
 import {
   adminOverviewService,
@@ -702,6 +703,9 @@ export function AdminDashboard() {
             clientName={pfa.fullName || pfa.userName || pfa.userEmail}
           />
         )}
+
+        {/* Se randează singur doar pentru ramura „Nu am PFA" — altfel nu există dosar. */}
+        <CompanyFormationAdminPanel key={pfa.id} pfaId={pfa.id} />
 
         <PfaFiscalSettingsPanel pfaId={pfa.id} editable clientUserId={pfa.userId} />
 

@@ -61,7 +61,7 @@ export function CertificateReadout({ document }: { document: DocumentSummary }) 
     return (
       <Box>
         <Typography sx={{ fontSize: '0.85rem', color: TOKENS.pending, fontWeight: 600, mb: 0.6 }}>
-          Citim certificatul — CUI-ul, denumirea și codurile CAEN apar aici în câteva secunde.
+          Se citește certificatul…
         </Typography>
         <LinearProgress
           sx={{

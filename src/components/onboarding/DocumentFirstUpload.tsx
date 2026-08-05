@@ -15,7 +15,6 @@ import { UploadField } from './UploadField'
 interface DocumentFirstUploadProps {
   category: string
   label: string
-  hint?: string
   /**
    * Categorii echivalente: un document încărcat în oricare dintre ele satisface cerința, exact
    * ca `AcceptedCategories` din `OnboardingSectionCatalog.cs`. Fără ele, un atestat urcat la
@@ -44,7 +43,6 @@ const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
 export function DocumentFirstUpload({
   category,
   label,
-  hint,
   alsoAccepts,
   fromStepLabel,
   documents,
@@ -57,7 +55,6 @@ export function DocumentFirstUpload({
     [documents, accepted],
   )
 
-  const [files, setFiles] = useState<File[]>([])
   const [progress, setProgress] = useState<number | null>(null)
   const [replacing, setReplacing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -74,12 +71,13 @@ export function DocumentFirstUpload({
   // Documentul vine dintr-un pas anterior: îl arătăm bifat, nu îl mai cerem o dată.
   const reused = current !== null && !rejected && fromStepLabel !== undefined
 
-  const upload = async () => {
-    if (files.length === 0) return
+  /** Fișierul ales pleacă imediat: nu există pas de confirmare, deci nici buton de „Încarcă". */
+  const upload = async (picked: File[]) => {
+    if (picked.length === 0) return
     setProgress(0)
     setError(null)
     try {
-      const file = await buildUploadFile(files, label)
+      const file = await buildUploadFile(picked, label)
       if (file.size > MAX_UPLOAD_BYTES) {
         setError('Documentul depășește 10 MB. Încarcă mai puține imagini sau imagini mai mici.')
         return
@@ -92,7 +90,6 @@ export function DocumentFirstUpload({
         undefined,
         setProgress,
       )
-      setFiles([])
       setReplacing(false)
       onUploaded?.()
     } catch (err) {
@@ -159,7 +156,6 @@ export function DocumentFirstUpload({
         {statusChip()}
       </Stack>
 
-      {hint && <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.83rem', mb: 1 }}>{hint}</Typography>}
       {error && (
         <Alert severity="error" sx={{ mb: 1, borderRadius: `${TOKENS.radius.md}px` }}>
           {error}
@@ -168,112 +164,66 @@ export function DocumentFirstUpload({
 
       {rejected && (
         <Alert severity="error" sx={{ mb: 1, borderRadius: `${TOKENS.radius.md}px` }}>
-          {current?.aiSummary ?? 'Documentul a fost respins. Încarcă o variantă corectă mai jos.'}
+          {current?.aiSummary ?? 'Document respins. Încarcă altul.'}
         </Alert>
       )}
 
-      {/* Verificarea automată e o stare separată de upload: fișierul a ajuns, acum se citește. */}
+      {/* Verificarea automată e o stare separată de upload: fișierul a ajuns, acum se citește.
+          Chip-ul „Se verifică" o numește deja — aici rămâne doar bara. */}
       {verifying && (
-        <Box sx={{ mb: 1.2 }}>
-          <Typography sx={{ fontSize: '0.8rem', color: TOKENS.pending, fontWeight: 600, mb: 0.6 }}>
-            Documentul a ajuns. Îl verificăm automat — poți continua între timp.
-          </Typography>
-          <LinearProgress
-            sx={{
-              height: 3,
-              borderRadius: TOKENS.radius.full,
-              backgroundColor: alpha(TOKENS.pendingBase, 0.15),
-              '& .MuiLinearProgress-bar': { backgroundColor: TOKENS.pending },
-            }}
-          />
-        </Box>
+        <LinearProgress
+          sx={{
+            mb: 1.2,
+            height: 3,
+            borderRadius: TOKENS.radius.full,
+            backgroundColor: alpha(TOKENS.pendingBase, 0.15),
+            '& .MuiLinearProgress-bar': { backgroundColor: TOKENS.pending },
+          }}
+        />
       )}
 
       {needsHumanCheck && (
         <Alert severity="warning" sx={{ mb: 1, borderRadius: `${TOKENS.radius.md}px` }}>
-          Am încărcat documentul, dar ceva din el nu se potrivește cu ce așteptam. Îl verifică un coleg — nu
-          trebuie să faci nimic.
+          Îl verificăm manual. Nu trebuie să faci nimic.
         </Alert>
       )}
 
       {current && !replacing && !rejected && (
-        <Box>
-          <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
-            <Typography sx={{ flex: 1, color: TOKENS.textMuted, fontSize: '0.85rem' }} noWrap>
-              {current.originalFileName}
-            </Typography>
-            <Button size="small" onClick={() => setReplacing(true)} sx={{ color: TOKENS.textMuted }}>
-              Înlocuiește
-            </Button>
-          </Stack>
-          {reused && (
-            <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.78rem', mt: 0.2 }}>
-              Același document ca la pasul „{fromStepLabel}" — se încarcă o singură dată.
-            </Typography>
-          )}
-        </Box>
+        <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
+          <Typography sx={{ flex: 1, color: TOKENS.textMuted, fontSize: '0.85rem' }} noWrap>
+            {reused ? `${current.originalFileName} · de la „${fromStepLabel}”` : current.originalFileName}
+          </Typography>
+          <Button size="small" onClick={() => setReplacing(true)} sx={{ color: TOKENS.textMuted }}>
+            Înlocuiește
+          </Button>
+        </Stack>
       )}
 
       {showUpload && (
         <Stack spacing={1.2}>
           <UploadField
-            label={current ? 'Încarcă o versiune nouă' : 'Încarcă documentul'}
-            files={files}
-            onFilesChange={setFiles}
+            label={current ? `Încarcă o versiune nouă: ${label}` : `Încarcă: ${label}`}
+            hideLabel
+            onPick={(picked) => void upload(picked)}
             disabled={uploading}
           />
 
           {uploading && (
-            <Box>
-              <Stack direction="row" sx={{ justifyContent: 'space-between', mb: 0.5 }}>
-                <Typography sx={{ fontSize: '0.78rem', color: TOKENS.textMuted, fontWeight: 600 }}>
-                  Se încarcă…
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: '0.78rem',
-                    color: TOKENS.textMuted,
-                    fontWeight: 700,
-                    fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
-                  {progress}%
-                </Typography>
-              </Stack>
-              <LinearProgress
-                variant="determinate"
-                value={progress ?? 0}
-                sx={{ height: 5, borderRadius: TOKENS.radius.full }}
-              />
-            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={progress ?? 0}
+              sx={{ height: 5, borderRadius: TOKENS.radius.full }}
+            />
           )}
 
-          <Stack direction="row" spacing={1}>
+          {replacing && !uploading && (
             <Button
-              variant="contained"
-              onClick={upload}
-              disabled={files.length === 0 || uploading}
-              sx={{
-                fontWeight: 700,
-                backgroundColor: TOKENS.primary,
-                '&:hover': { backgroundColor: TOKENS.primaryStrong },
-              }}
+              onClick={() => setReplacing(false)}
+              sx={{ alignSelf: 'flex-start', color: TOKENS.textMuted }}
             >
-              {uploading ? 'Se încarcă...' : 'Încarcă'}
+              Renunță
             </Button>
-            {replacing && (
-              <Button
-                disabled={uploading}
-                onClick={() => {
-                  setReplacing(false)
-                  setFiles([])
-                }}
-                sx={{ color: TOKENS.textMuted }}
-              >
-                Renunță
-              </Button>
-            )}
-          </Stack>
+          )}
         </Stack>
       )}
     </Box>

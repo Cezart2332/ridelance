@@ -45,15 +45,17 @@ export function PanelActions({ children }: { children: ReactNode }) {
   )
 }
 
-/** Cardul standard din zona de conținut. Un singur tratament, folosit de toate panourile. */
+/**
+ * Cardul standard din zona de conținut. Un singur tratament, folosit de toate panourile.
+ * Nu are subtitlu: dacă un card are nevoie de o explicație ca să se înțeleagă, titlul lui
+ * e greșit.
+ */
 export function PanelCard({
   title,
-  subtitle,
   action,
   children,
 }: {
   title?: string
-  subtitle?: string
   action?: ReactNode
   children: ReactNode
 }) {
@@ -72,11 +74,6 @@ export function PanelCard({
             <Typography sx={{ ...displaySx, fontWeight: 700, fontSize: '1.02rem', color: TOKENS.ink }}>
               {title}
             </Typography>
-            {subtitle && (
-              <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.85rem', mt: 0.3 }}>
-                {subtitle}
-              </Typography>
-            )}
           </Box>
           {action}
         </Stack>
@@ -87,10 +84,10 @@ export function PanelCard({
 }
 
 /**
- * Antetul unui pas. Primește focus la fiecare schimbare de pas, ca cititorul de ecran să anunțe
- * unde a ajuns userul (spec §10).
+ * Antetul unui pas: titlul, atât. Primește focus la fiecare schimbare de pas, ca cititorul de
+ * ecran să anunțe unde a ajuns userul (spec §10).
  */
-export function PanelHeading({ title, description }: { title: string; description?: string }) {
+export function PanelHeading({ title }: { title: string }) {
   const ref = useRef<HTMLHeadingElement | null>(null)
 
   useEffect(() => {
@@ -113,11 +110,6 @@ export function PanelHeading({ title, description }: { title: string; descriptio
       >
         {title}
       </Typography>
-      {description && (
-        <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.6, lineHeight: 1.6 }}>
-          {description}
-        </Typography>
-      )}
     </Box>
   )
 }

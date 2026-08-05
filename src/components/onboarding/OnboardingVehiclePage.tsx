@@ -124,10 +124,7 @@ export default function OnboardingVehiclePage() {
 
   return (
     <Stack spacing={3}>
-      <PanelHeading
-        title="Vehicul, copie conformă și ecusoane"
-        description={`Declară mașina, apoi solicităm copia conformă (${lei(copyFeePerYear)} lei/an) și ecusoanele (${lei(badgeFeePerSet)} lei/set) și generăm dosarul pentru ARR.`}
-      />
+      <PanelHeading title="Vehicul, copie conformă și ecusoane" />
 
       {error && (
         <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
@@ -135,46 +132,7 @@ export default function OnboardingVehiclePage() {
         </Alert>
       )}
 
-      {/* Documentele necesare pentru înrolare */}
-      <PanelCard>
-        <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 0.5 }}>
-          Documentele vehiculului
-        </Typography>
-        <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', mb: 2 }}>
-          Încarcă documentele mașinii. Datele se citesc automat din ele, iar echipa RIDElance le verifică — tu
-          nu completezi nimic.
-        </Typography>
-        <Stack spacing={2.5}>
-          <StepDocument
-            step="vehicle"
-            category="RCA"
-            label="RCA"
-            hint="Citim automat numărul de înmatriculare."
-          />
-          <StepDocument
-            step="vehicle"
-            category="AsigurareCalatori"
-            label="Asigurare călători și bagaje"
-            hint="Obligatorie pentru transportul alternativ."
-          />
-          {ownershipMode !== 'Owned' && !addLater && (
-            <StepDocument
-              step="vehicle"
-              category="ContractVehicul"
-              label="Contract de închiriere / comodat / leasing"
-              hint="Documentul care atestă dreptul de folosință asupra mașinii."
-            />
-          )}
-          <StepDocument
-            step="vehicle"
-            category="DovadaPlataCopieConformaEcusoane"
-            label="Dovada plății copie conformă și ecusoane"
-            hint="Ordinul de plată sau chitanța de la ARR."
-          />
-        </Stack>
-      </PanelCard>
-
-      {/* Vehiculul */}
+      {/* Vehiculul. Stă înaintea documentelor: modul de deținere decide ce se cere mai jos. */}
       <PanelCard>
         <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 1.5 }}>
           Vehiculul
@@ -205,17 +163,24 @@ export default function OnboardingVehiclePage() {
 
           {!addLater && (
             <>
+              {/* Lipit de selectorul care îl cere: mașina nu e a ta, deci vrem dovada folosinței.
+                  Documentele care se cer oricum vin după el, nu între întrebare și răspuns. */}
+              {ownershipMode !== 'Owned' && (
+                <StepDocument
+                  step="vehicle"
+                  category="ContractVehicul"
+                  label="Contract de închiriere / comodat / leasing"
+                />
+              )}
               <StepDocument
                 step="vehicle"
                 category="Talon"
                 label="Talon (certificat de înmatriculare)"
-                hint="Citim automat nr. de înmatriculare, VIN, marca și modelul."
               />
               <StepDocument
                 step="vehicle"
                 category="CarteIdentitateAuto"
                 label="Cartea de identitate a vehiculului (CIV)"
-                hint="Citim automat VIN-ul și marca."
               />
               {(data?.plateNumber || data?.vin) && (
                 <Alert severity="success" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
@@ -243,6 +208,30 @@ export default function OnboardingVehiclePage() {
               Salvează vehiculul
             </Button>
           </Box>
+        </Stack>
+      </PanelCard>
+
+      {/* Documentele care nu depind de niciun răspuns de mai sus */}
+      <PanelCard>
+        <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 2 }}>
+          Documentele vehiculului
+        </Typography>
+        <Stack spacing={2.5}>
+          <StepDocument
+            step="vehicle"
+            category="RCA"
+            label="RCA"
+          />
+          <StepDocument
+            step="vehicle"
+            category="AsigurareCalatori"
+            label="Asigurare călători și bagaje"
+          />
+          <StepDocument
+            step="vehicle"
+            category="DovadaPlataCopieConformaEcusoane"
+            label="Dovada plății copie conformă și ecusoane"
+          />
         </Stack>
       </PanelCard>
 
@@ -416,7 +405,6 @@ export default function OnboardingVehiclePage() {
               step="vehicle"
               category="CopieConforma"
               label="Copia conformă"
-              hint="Citim automat numărul și data de expirare."
             />
             {uberSets > 0 && <StepDocument step="vehicle" category="EcusonUber" label="Ecuson Uber" />}
             {boltSets > 0 && <StepDocument step="vehicle" category="EcusonBolt" label="Ecuson Bolt" />}

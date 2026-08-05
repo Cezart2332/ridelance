@@ -170,10 +170,7 @@ export default function OnboardingPlatformsPage() {
 
   return (
     <Stack spacing={3}>
-      <PanelHeading
-        title="Conturi Uber & Bolt"
-        description="Alege platformele pe care vrei să lucrezi. Nu-ți cerem parole — doar confirmarea contului de operator."
-      />
+      <PanelHeading title="Conturi Uber & Bolt" />
 
       {error && (
         <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>

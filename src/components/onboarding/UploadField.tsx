@@ -4,6 +4,7 @@ import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded'
 import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded'
 import { Alert, Box, Button, IconButton, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import { visuallyHidden } from '@mui/utils'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 
 import { ACCEPTED_TYPES, validateUploadFiles } from '../../utils/uploadValidation'
@@ -92,24 +93,36 @@ function FilePreview({
  *
  * Validarea (mărime, format, rezoluție, luminozitate) rulează la selecție, nu la trimitere, ca
  * driverul să afle imediat că trebuie să refacă poza.
+ *
+ * Are două moduri, după cine deține fișierul:
+ * - **imediat** (`onPick`): fișierul pleacă spre server de îndată ce a fost ales. Fără listă de
+ *   așteptare, fără buton — părintele arată progresul.
+ * - **amânat** (`files` + `onFilesChange`): fișierul rămâne aici, cu previzualizare, până când
+ *   formularul din jur e trimis (ex. certificatul PFA, care merge împreună cu numele și telefonul).
  */
 export function UploadField({
   label,
   files,
   onFilesChange,
-  placeholder,
+  onPick,
+  hideLabel = false,
   disabled = false,
 }: {
   label: string
-  files: File[]
-  onFilesChange: (files: File[]) => void
-  placeholder?: string
+  files?: File[]
+  onFilesChange?: (files: File[]) => void
+  /** Fișierele valide, imediat ce au fost alese. Prezența lui înseamnă upload automat. */
+  onPick?: (files: File[]) => void
+  /** Eticheta rămâne doar pentru cititoarele de ecran, când deasupra există deja un titlu. */
+  hideLabel?: boolean
   disabled?: boolean
 }) {
   const inputId = useId()
   const cameraRef = useRef<HTMLInputElement | null>(null)
   const [dragging, setDragging] = useState(false)
   const [issues, setIssues] = useState<string[]>([])
+
+  const selected = files ?? []
 
   const handlePick = async (picked: File[]) => {
     if (picked.length === 0) return
@@ -121,23 +134,32 @@ export function UploadField({
     if (usable.length === 0) return
 
     const pickedPdf = usable.find(isPdf)
+    // Un PDF ține loc de document întreg — nu se combină cu altceva.
+    const images = usable.filter((f) => !isPdf(f))
+
+    // Modul imediat nu acumulează: ce s-a ales acum e documentul care pleacă.
+    onPick?.(pickedPdf ? [pickedPdf] : images)
+
     if (pickedPdf) {
-      // Un PDF ține loc de document întreg — nu se combină cu altceva.
-      onFilesChange([pickedPdf])
+      onFilesChange?.([pickedPdf])
       return
     }
     // Imaginile se adaugă la cele deja selectate (un PDF existent e înlocuit).
-    onFilesChange([...files.filter((f) => !isPdf(f)), ...usable])
+    onFilesChange?.([...selected.filter((f) => !isPdf(f)), ...images])
   }
 
-  const hasFiles = files.length > 0
+  const hasFiles = selected.length > 0
 
   return (
     <Box>
       <Typography
         component="label"
         htmlFor={inputId}
-        sx={{ display: 'block', mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}
+        sx={
+          hideLabel
+            ? visuallyHidden
+            : { display: 'block', mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }
+        }
       >
         {label}
       </Typography>
@@ -210,11 +232,6 @@ export function UploadField({
           />
         </Stack>
 
-        {!hasFiles && (
-          <Typography sx={{ mt: 0.8, textAlign: 'center', fontSize: '0.78rem', color: TOKENS.textMuted }}>
-            {placeholder ?? 'Trage fișierul aici, alege-l sau fotografiază-l. PDF, JPG sau PNG, max. 10 MB.'}
-          </Typography>
-        )}
       </Box>
 
       {issues.length > 0 && (
@@ -229,21 +246,16 @@ export function UploadField({
 
       {hasFiles && (
         <Stack spacing={0.8} sx={{ mt: 1 }}>
-          {files.map((file, index) => (
+          {selected.map((file, index) => (
             <FilePreview
               key={`${file.name}-${index}`}
               file={file}
               index={index}
-              total={files.length}
+              total={selected.length}
               disabled={disabled}
-              onRemove={() => onFilesChange(files.filter((_, i) => i !== index))}
+              onRemove={() => onFilesChange?.(selected.filter((_, i) => i !== index))}
             />
           ))}
-          {!isPdf(files[0]) && (
-            <Typography sx={{ fontSize: '0.76rem', color: TOKENS.textMuted, pl: 0.5 }}>
-              Mai ai și versoul? Adaugă-l — le combinăm într-un singur document.
-            </Typography>
-          )}
         </Stack>
       )}
     </Box>

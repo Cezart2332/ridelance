@@ -42,13 +42,17 @@ const BANKS = [
   'Revolut',
 ]
 
+/**
+ * „Sunt de acord cu" se spune o singură dată, deasupra listei — nu de șase ori. Obiectul
+ * fiecărui consimțământ rămâne neschimbat, doar prefixul repetat a dispărut.
+ */
 const OBLIO_CONSENTS: { key: keyof OblioForm; label: string }[] = [
-  { key: 'accountCreationConsent', label: 'Sunt de acord cu crearea unui cont Oblio pe numele meu.' },
-  { key: 'dataProcessingConsent', label: 'Sunt de acord cu prelucrarea datelor pentru facturare.' },
-  { key: 'eInvoiceConsent', label: 'Sunt de acord cu emiterea facturilor electronice (e-Factura).' },
-  { key: 'autoInvoicingConsent', label: 'Sunt de acord cu facturarea automată a curselor.' },
-  { key: 'ridelanceManagementConsent', label: 'Sunt de acord ca RIDElance să administreze contul Oblio.' },
-  { key: 'termsAcceptedConsent', label: 'Am citit și accept termenii și condițiile Oblio.' },
+  { key: 'accountCreationConsent', label: 'crearea unui cont Oblio pe numele meu' },
+  { key: 'dataProcessingConsent', label: 'prelucrarea datelor pentru facturare' },
+  { key: 'eInvoiceConsent', label: 'emiterea facturilor electronice (e-Factura)' },
+  { key: 'autoInvoicingConsent', label: 'facturarea automată a curselor' },
+  { key: 'ridelanceManagementConsent', label: 'administrarea contului Oblio de către RIDElance' },
+  { key: 'termsAcceptedConsent', label: 'termenii și condițiile Oblio' },
 ]
 
 interface OblioForm {
@@ -172,10 +176,7 @@ export default function OnboardingStep2Page() {
 
   return (
     <Stack spacing={3}>
-      <PanelHeading
-        title="Fiscal, bancă și semnături"
-        description="Completează informațiile fiscale, contul bancar și consimțămintele pentru facturare."
-      />
+      <PanelHeading title="Fiscal, bancă și semnături" />
 
       {error && (
         <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
@@ -184,10 +185,7 @@ export default function OnboardingStep2Page() {
       )}
 
       {/* 2.1 TVA intracomunitar */}
-      <PanelCard
-        title="TVA intracomunitar"
-        subtitle="Ai cod special de TVA pentru operațiuni intracomunitare (art. 317)?"
-      >
+      <PanelCard title="Ai cod de TVA intracomunitar (art. 317)?">
         <RadioGroup value={vatAnswer} onChange={(e) => setVatForm(e.target.value as VatDeclaration)}>
           <FormControlLabel value="No" control={<Radio />} label="Nu" />
           <FormControlLabel value="Yes" control={<Radio />} label="Da" />
@@ -197,8 +195,7 @@ export default function OnboardingStep2Page() {
             <StepDocument
               step="fiscal"
               category="CertificatTvaIntracomunitar"
-              label="Dovada codului de TVA intracomunitar"
-              hint="Încarcă certificatul de înregistrare în scopuri de TVA sau decizia ANAF de atribuire a codului."
+              label="Certificatul sau decizia ANAF"
             />
           </Box>
         )}
@@ -216,16 +213,11 @@ export default function OnboardingStep2Page() {
           >
             {savingVat ? 'Se salvează...' : 'Salvează'}
           </Button>
-          {vatAnswer === 'Yes' && !hasVatProof && (
-            <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.82rem', mt: 1 }}>
-              Încarcă întâi dovada — fără ea nu putem înregistra codul special.
-            </Typography>
-          )}
         </Box>
       </PanelCard>
 
       {/* 2.3 Bancă */}
-      <PanelCard title="Cont bancar" subtitle="Ai deja un cont bancar deschis pe PFA?">
+      <PanelCard title="Ai cont bancar pe PFA?">
         {step2?.bank?.ibanMasked && (
           <Alert
             severity={step2.bank.status === 'Verified' ? 'success' : 'info'}
@@ -244,16 +236,12 @@ export default function OnboardingStep2Page() {
             if (next === 'No') setBcrOpen(true)
           }}
         >
-          <FormControlLabel value="Yes" control={<Radio />} label="Da, am cont pe PFA" />
-          <FormControlLabel value="No" control={<Radio />} label="Nu am încă" />
+          <FormControlLabel value="Yes" control={<Radio />} label="Da" />
+          <FormControlLabel value="No" control={<Radio />} label="Nu" />
         </RadioGroup>
 
         {bankChoice === 'No' ? (
-          <Stack spacing={1.5} sx={{ mt: 1.5, alignItems: 'flex-start' }}>
-            <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.88rem', lineHeight: 1.65 }}>
-              Îți deschidem drumul: prin parteneriatul RIDElance–BCR poți avea contul activ în aceeași
-              zi. Revino aici cu IBAN-ul și documentul de confirmare după ce contul e deschis.
-            </Typography>
+          <Box sx={{ mt: 1.5 }}>
             <Button
               variant="contained"
               onClick={() => setBcrOpen(true)}
@@ -264,18 +252,13 @@ export default function OnboardingStep2Page() {
                 '&:hover': { backgroundColor: TOKENS.primaryStrong },
               }}
             >
-              Vezi cum deschizi contul
+              Deschide un cont
             </Button>
-          </Stack>
+          </Box>
         ) : bankChoice === 'Yes' ? (
           <>
             <Box sx={{ my: 2 }}>
-              <StepDocument
-                step="fiscal"
-                category="ExtrasBancar"
-                label="Extras de cont / confirmare IBAN"
-                hint="Citim automat IBAN-ul din document. Nu trebuie să-l scrii."
-              />
+              <StepDocument step="fiscal" category="ExtrasBancar" label="Extras de cont" />
             </Box>
             <Stack spacing={2}>
               <TextField
@@ -315,10 +298,7 @@ export default function OnboardingStep2Page() {
       <BcrAccountDialog open={bcrOpen} onClose={() => setBcrOpen(false)} />
 
       {/* 2.4 Oblio */}
-      <PanelCard
-        title="Cont Oblio (facturare)"
-        subtitle="Consimțămintele necesare pentru emiterea automată a facturilor."
-      >
+      <PanelCard title="Cont Oblio (facturare)">
         <TextField
           label="Email cont Oblio"
           type="email"
@@ -327,6 +307,9 @@ export default function OnboardingStep2Page() {
           sx={{ ...inputSx, mb: 1 }}
           fullWidth
         />
+        <Typography sx={{ mt: 1.5, fontWeight: 700, fontSize: '0.9rem', color: TOKENS.ink }}>
+          Sunt de acord cu:
+        </Typography>
         <Stack>
           {OBLIO_CONSENTS.map(({ key, label }) => (
             <FormControlLabel
@@ -359,10 +342,7 @@ export default function OnboardingStep2Page() {
       </PanelCard>
 
       {/* 2.2 Semnături (read-only) */}
-      <PanelCard
-        title="Pachet de semnături"
-        subtitle="Împuternicirile și contractele se pregătesc de echipa RIDElance."
-      >
+      <PanelCard title="Pachet de semnături">
         {step2?.signature ? (
           <Stack spacing={1.2}>
             <Chip
@@ -387,9 +367,7 @@ export default function OnboardingStep2Page() {
             ))}
           </Stack>
         ) : (
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.88rem' }}>
-            Pachetul de semnături nu a fost încă pregătit. Te anunțăm când e gata de semnat.
-          </Typography>
+          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.88rem' }}>Nepregătit încă.</Typography>
         )}
       </PanelCard>
     </Stack>

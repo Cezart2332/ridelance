@@ -37,7 +37,15 @@ const OnboardingRedirect = lazyWithRetry(() =>
 )
 const OnboardingPfaPage = lazyWithRetry(() => import('./components/onboarding/OnboardingPfaPage'))
 const OnboardingEligibilityPage = lazyWithRetry(() => import('./components/onboarding/OnboardingEligibilityPage'))
-const OnboardingConsultoPage = lazyWithRetry(() => import('./components/onboarding/OnboardingConsultoPage'))
+const CompanyFormationPersonalDataPage = lazyWithRetry(
+  () => import('./components/onboarding/companyFormation/CompanyFormationPersonalDataPage'),
+)
+const CompanyFormationOfficePage = lazyWithRetry(
+  () => import('./components/onboarding/companyFormation/CompanyFormationOfficePage'),
+)
+const CompanyFormationConsentPage = lazyWithRetry(
+  () => import('./components/onboarding/companyFormation/CompanyFormationConsentPage'),
+)
 const OnboardingStep2Page = lazyWithRetry(() => import('./components/onboarding/OnboardingStep2Page'))
 const OnboardingArrPage = lazyWithRetry(() => import('./components/onboarding/OnboardingArrPage'))
 const OnboardingPlatformsPage = lazyWithRetry(() => import('./components/onboarding/OnboardingPlatformsPage'))
@@ -67,7 +75,10 @@ function App() {
               <Route index element={<OnboardingRedirect />} />
               <Route path="eligibility" element={<OnboardingEligibilityPage />} />
               <Route path="pfa" element={<OnboardingPfaPage />} />
-              <Route path="pfa/consulto" element={<OnboardingConsultoPage />} />
+              {/* Ramura „Nu am PFA": dosarul de înființare, pe trei etape. */}
+              <Route path="pfa/date-personale" element={<CompanyFormationPersonalDataPage />} />
+              <Route path="pfa/sediu" element={<CompanyFormationOfficePage />} />
+              <Route path="pfa/consimtamant" element={<CompanyFormationConsentPage />} />
               <Route path="step2" element={<OnboardingStep2Page />} />
               <Route path="arr" element={<OnboardingArrPage />} />
               <Route path="platforms" element={<OnboardingPlatformsPage />} />
