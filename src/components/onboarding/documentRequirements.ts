@@ -47,6 +47,11 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
       label: 'Certificat de înregistrare (CAEN 4939)',
       originStep: 'pfa',
     },
+    {
+      category: 'CertificatConstatator',
+      label: 'Certificat constatator ONRC',
+      originStep: 'pfa',
+    },
   ],
   fiscal: [
     {

@@ -146,10 +146,14 @@ export default function OnboardingPfaPage() {
     navigate(companyFormationPath(formationStage), { replace: true })
   }, [state?.registrationType, state?.hasPaidInfiintare, formationStatus, formationStage, navigate])
 
-  // "Am PFA" form state — CUI-ul nu se mai tastează, se citește din certificat.
+  // „Am PFA": se cer aceleași acte pe care le-am fi primit de la Consulto la înființare.
+  // Nimic nu se tastează — CUI-ul, denumirea, CAEN-ul și sediul le citește OCR-ul din ele.
   const [amPfaName, setAmPfaName] = useState('')
   const [amPfaPhone, setAmPfaPhone] = useState('')
   const [certificateFiles, setCertificateFiles] = useState<File[]>([])
+  const [constatatorFiles, setConstatatorFiles] = useState<File[]>([])
+  const [rezolutieFiles, setRezolutieFiles] = useState<File[]>([])
+  const [alteActeFiles, setAlteActeFiles] = useState<File[]>([])
 
   // „Nu am PFA": aici se deschide doar dosarul. Cartea de identitate e deja încărcată la
   // Eligibilitate, iar restul datelor se completează în dosarul de înființare.
@@ -194,15 +198,17 @@ export default function OnboardingPfaPage() {
       setError('Te rugam sa completezi toate campurile.')
       return
     }
-    if (certificateFiles.length === 0) {
-      setError('Încarcă certificatul de înregistrare — din el citim CUI-ul PFA-ului tău.')
+    if (certificateFiles.length === 0 || constatatorFiles.length === 0) {
+      setError(
+        'Încarcă certificatul de înregistrare și certificatul constatator — pe amândouă le cere ARR.',
+      )
       return
     }
 
     setIsLoading(true)
     try {
-      // Dosarul se creează întâi, ca documentul să aibă de ce să se lege; CUI-ul, denumirea și
-      // codurile CAEN le completează OCR-ul din certificat.
+      // Dosarul se creează întâi, ca documentele să aibă de ce se lega; CUI-ul, denumirea,
+      // codurile CAEN și sediul le completează OCR-ul din certificate.
       const pfaId = await pfaService.create({
         registrationType: 'AmPfa',
         fullName: amPfaName,
@@ -210,8 +216,20 @@ export default function OnboardingPfaPage() {
         isOwner: false, // default
       })
 
-      const certificate = await buildUploadFile(certificateFiles, 'Certificat de inregistrare')
-      await documentService.upload(certificate, 'CertificatInregistrare', pfaId)
+      // Rezoluția și restul actelor sunt opționale: nu blochează fluxul dacă cele două
+      // certificate conțin ce trebuie. Se păstrează pentru arhiva dosarului.
+      const uploads: [File[], string, string][] = [
+        [certificateFiles, 'CertificatInregistrare', 'Certificat de inregistrare'],
+        [constatatorFiles, 'CertificatConstatator', 'Certificat constatator'],
+        [rezolutieFiles, 'RezolutieOnrc', 'Rezolutie ONRC'],
+        [alteActeFiles, 'AlteDocumenteInfiintare', 'Alte documente infiintare'],
+      ]
+
+      for (const [files, category, label] of uploads) {
+        if (files.length === 0) continue
+        const file = await buildUploadFile(files, label)
+        await documentService.upload(file, category, pfaId)
+      }
 
       // Dosarul intră la validarea adminului — userul așteaptă în hub
       sessionStorage.setItem('pfa_registered', 'AmPfa')
@@ -270,10 +288,15 @@ export default function OnboardingPfaPage() {
   // ── Dosar trimis, în validare la admin ──
   if (isPending) {
     const rejectedDocs = rejectedPfaDocs(documents)
-    // Certificatul încărcat la „Am PFA" — arătăm ce am citit din el cât timp dosarul e în validare.
-    const certificate = documents
-      .filter((d) => d.category === 'CertificatInregistrare')
-      .sort((a, b) => new Date(b.uploadedAtUtc).getTime() - new Date(a.uploadedAtUtc).getTime())[0]
+
+    // Ce am citit din actele ONRC încărcate la „Am PFA", cât timp dosarul e în validare.
+    const newestOf = (category: string) =>
+      documents
+        .filter((d) => d.category === category)
+        .sort((a, b) => new Date(b.uploadedAtUtc).getTime() - new Date(a.uploadedAtUtc).getTime())[0]
+
+    const certificate = newestOf('CertificatInregistrare')
+    const constatator = newestOf('CertificatConstatator')
 
     return (
       <Paper
@@ -309,6 +332,16 @@ export default function OnboardingPfaPage() {
         {certificate && (
           <Box sx={{ mt: 3, textAlign: 'left' }}>
             <CertificateReadout document={certificate} />
+          </Box>
+        )}
+
+        {constatator && (
+          <Box sx={{ mt: 2, textAlign: 'left' }}>
+            <CertificateReadout
+              document={constatator}
+              title="Am citit din certificatul constatator"
+              verifyWithAnaf={false}
+            />
           </Box>
         )}
 
@@ -431,6 +464,30 @@ export default function OnboardingPfaPage() {
                   />
                 </Box>
                 <Box>
+                  <UploadField
+                    label="Certificat constatator ONRC"
+                    files={constatatorFiles}
+                    onFilesChange={setConstatatorFiles}
+                    disabled={isLoading}
+                  />
+                </Box>
+                <Box>
+                  <UploadField
+                    label="Rezoluția ONRC (opțional)"
+                    files={rezolutieFiles}
+                    onFilesChange={setRezolutieFiles}
+                    disabled={isLoading}
+                  />
+                </Box>
+                <Box>
+                  <UploadField
+                    label="Alte acte de la înființare (opțional)"
+                    files={alteActeFiles}
+                    onFilesChange={setAlteActeFiles}
+                    disabled={isLoading}
+                  />
+                </Box>
+                <Box>
                   <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
                     Nume complet
                   </Typography>
@@ -518,7 +575,12 @@ export default function OnboardingPfaPage() {
                   },
                 }}
               >
-                {isLoading ? 'Se proceseaza...' : 'Trimite documentele'}
+                {/* Nu se mai trimit documente aici: urmează plata, apoi completarea dosarului. */}
+                {isLoading
+                  ? 'Se proceseaza...'
+                  : state?.hasPaidInfiintare
+                    ? 'Continuă spre completarea dosarului'
+                    : 'Continuă spre plată'}
               </Button>
             </Stack>
           )}

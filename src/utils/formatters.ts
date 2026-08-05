@@ -41,6 +41,12 @@ export function formatDocumentCategory(category: string | null | undefined): str
       return 'Dovada plății copie conformă și ecusoane';
     case 'CopieConforma':
       return 'Copie conformă';
+    case 'RezolutieOnrc':
+      return 'Rezoluție ONRC';
+    case 'AlteDocumenteInfiintare':
+      return 'Alte acte de la înființare';
+    case 'SpecimenSemnatura':
+      return 'Specimen de semnătură';
     case 'Buletin':
       return 'Buletin / CI';
     case 'AtestatSofer':

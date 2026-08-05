@@ -16,7 +16,7 @@ import { useCompanyFormation } from './useCompanyFormation'
 export default function CompanyFormationPersonalDataPage() {
   const navigate = useNavigate()
   const { eligibility } = useOnboarding()
-  const { state, patch, save, saving, error } = useCompanyFormation()
+  const { state, patch, autosave, submit, submitting, error } = useCompanyFormation()
 
   if (!state) return null
 
@@ -26,7 +26,7 @@ export default function CompanyFormationPersonalDataPage() {
   const update = (next: PersoanaFizica) => patch({ ...state, solicitant: next })
 
   const persist = () =>
-    void save(() =>
+    void autosave(() =>
       companyFormationService.savePersonalData({
         nume: solicitant.nume,
         prenume: solicitant.prenume,
@@ -42,7 +42,7 @@ export default function CompanyFormationPersonalDataPage() {
     )
 
   const goNext = async () => {
-    const saved = await save(() =>
+    const saved = await submit(() =>
       companyFormationService.savePersonalData({
         nume: solicitant.nume,
         prenume: solicitant.prenume,
@@ -85,7 +85,7 @@ export default function CompanyFormationPersonalDataPage() {
           onBlur={persist}
           prefilled={prefilled}
           knownBirthDate={eligibility?.dateOfBirth ?? null}
-          disabled={state.isLocked || saving}
+          disabled={state.isLocked}
         />
       </PanelCard>
 
@@ -94,7 +94,7 @@ export default function CompanyFormationPersonalDataPage() {
           variant="contained"
           endIcon={<ArrowForwardRoundedIcon />}
           onClick={() => void goNext()}
-          disabled={saving || state.isLocked || !state.personalDataComplete}
+          disabled={submitting || state.isLocked || !state.personalDataComplete}
           sx={{
             textTransform: 'none',
             fontWeight: 700,

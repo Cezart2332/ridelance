@@ -7,12 +7,30 @@ import {
 import { getErrorMessage } from '../../../utils/errorHandler'
 import { useOnboarding, useOnboardingResource } from '../useOnboarding'
 
+/** Ce ține serverul, nu userul: statusuri și flaguri derivate, niciun câmp de formular. */
+const DERIVED_KEYS = [
+  'id',
+  'pfaRegistrationId',
+  'status',
+  'currentStage',
+  'isLocked',
+  'adminNote',
+  'prefilledFields',
+  'personalDataComplete',
+  'registeredOfficeComplete',
+  'signature',
+] as const
+
 /**
  * Starea dosarului de înființare plus salvarea de draft.
  *
- * Formularul urmărește serverul până când userul îl atinge, apoi rămâne al lui: altfel un
- * răspuns de autosave întors în timpul tastării ar muta cursorul sau ar readuce o valoare
- * pe care userul tocmai o ștergea.
+ * Două căi de salvare, pentru că au cerințe opuse:
+ *
+ * - `autosave` — la ieșirea din câmp. Trebuie să fie invizibil: nu blochează formularul, nu
+ *   reîmprospătează restul onboardingului și nu suprascrie ce tastezi în câmpul următor. Din
+ *   răspuns adoptă doar flagurile derivate de server.
+ * - `submit` — „Continuă"/„Confirmă semnătura". Aici userul așteaptă un rezultat, deci butonul
+ *   se blochează, se adoptă tot răspunsul și se reîmprospătează pașii.
  */
 export function useCompanyFormation() {
   const { refresh } = useOnboarding()
@@ -21,7 +39,7 @@ export function useCompanyFormation() {
   )
 
   const [local, setLocal] = useState<CompanyFormationState | null>(null)
-  const [saving, setSaving] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const state = local ?? loaded
@@ -34,47 +52,78 @@ export function useCompanyFormation() {
   // același proprietar nou, pentru că niciuna n-o vede pe cealaltă.
   const queue = useRef<Promise<unknown>>(Promise.resolve())
 
-  const save = useCallback(
+  const enqueue = useCallback(async (run: () => Promise<CompanyFormationState>) => {
+    const previous = queue.current
+    let release: () => void = () => {}
+    queue.current = new Promise<void>((resolve) => {
+      release = resolve
+    })
+
+    try {
+      await previous.catch(() => {})
+      return await run()
+    } finally {
+      release()
+    }
+  }, [])
+
+  const autosave = useCallback(
     async (run: () => Promise<CompanyFormationState>) => {
       const id = ++requestId.current
-      setSaving(true)
-      setError(null)
-
-      const previous = queue.current
-      let release: () => void = () => {}
-      queue.current = new Promise<void>((resolve) => {
-        release = resolve
-      })
-
       try {
-        await previous.catch(() => {})
-        const next = await run()
+        const next = await enqueue(run)
+        if (id !== requestId.current) return next
+
+        setError(null)
+        // Câmpurile rămân ale userului: din răspuns luăm doar ce nu poate ști pagina.
+        setLocal((current) => {
+          if (!current) return next
+          const merged = { ...current }
+          for (const key of DERIVED_KEYS) {
+            Object.assign(merged, { [key]: next[key] })
+          }
+          return merged
+        })
+        return next
+      } catch (err) {
+        if (id === requestId.current) setError(getErrorMessage(err))
+        return null
+      }
+    },
+    [enqueue],
+  )
+
+  const submit = useCallback(
+    async (run: () => Promise<CompanyFormationState>) => {
+      const id = ++requestId.current
+      setSubmitting(true)
+      setError(null)
+      try {
+        const next = await enqueue(run)
         if (id === requestId.current) {
           setLocal(next)
+          // Doar aici: statusul pasului se poate schimba, deci rail-ul trebuie recalculat.
           void refresh()
         }
         return next
       } catch (err) {
-        if (id === requestId.current) {
-          setError(getErrorMessage(err))
-        }
+        if (id === requestId.current) setError(getErrorMessage(err))
         return null
       } finally {
-        release()
-        if (id === requestId.current) {
-          setSaving(false)
-        }
+        if (id === requestId.current) setSubmitting(false)
       }
     },
-    [refresh],
+    [enqueue, refresh],
   )
 
   return {
     state,
     /** Modificare locală, fără cerere — folosită la fiecare tastă. */
     patch: setLocal,
-    save,
-    saving,
+    autosave,
+    submit,
+    /** Doar acțiunile explicite blochează UI-ul; autosave-ul e tăcut. */
+    submitting,
     error,
     setError,
   }

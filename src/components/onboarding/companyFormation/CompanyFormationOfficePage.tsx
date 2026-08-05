@@ -78,7 +78,7 @@ function feeLabel(monthly: number, yearly: number): string {
 /** Etapa 2 din dosarul de înființare: unde va avea firma sediul social. */
 export default function CompanyFormationOfficePage() {
   const navigate = useNavigate()
-  const { state, patch, save, saving, error } = useCompanyFormation()
+  const { state, patch, autosave, submit, submitting, error } = useCompanyFormation()
   const { data: offices } = useOnboardingResource('consultoOffices', () =>
     companyFormationService.getConsultoOffices(),
   )
@@ -97,7 +97,7 @@ export default function CompanyFormationOfficePage() {
 
   if (!state || !office) return null
 
-  const disabled = state.isLocked || saving
+  const disabled = state.isLocked
 
   const patchOffice = (next: Partial<CompanyFormationOffice>) =>
     patch({ ...state, office: { ...office, ...next } })
@@ -120,7 +120,7 @@ export default function CompanyFormationOfficePage() {
 
   /** Salvează starea dată explicit — bifele trebuie trimise imediat, nu la următorul blur. */
   const persist = (source?: CompanyFormationState) =>
-    void save(() => companyFormationService.saveRegisteredOffice(payload(source ?? state)))
+    void autosave(() => companyFormationService.saveRegisteredOffice(payload(source ?? state)))
 
   const commit = (next: CompanyFormationState) => {
     patch(next)
@@ -153,7 +153,7 @@ export default function CompanyFormationOfficePage() {
     patchOwners(state.owners.map((o, i) => (i === index ? { ...o, persoana } : o)))
 
   const goNext = async () => {
-    const saved = await save(() => companyFormationService.saveRegisteredOffice(payload(state)))
+    const saved = await submit(() => companyFormationService.saveRegisteredOffice(payload(state)))
     if (saved?.registeredOfficeComplete) {
       navigate('/onboarding/pfa/consimtamant')
     }
@@ -372,7 +372,7 @@ export default function CompanyFormationOfficePage() {
           variant="contained"
           endIcon={<ArrowForwardRoundedIcon />}
           onClick={() => void goNext()}
-          disabled={disabled || !state.registeredOfficeComplete}
+          disabled={submitting || disabled || !state.registeredOfficeComplete}
           sx={{
             textTransform: 'none',
             fontWeight: 700,

@@ -37,7 +37,7 @@ function newIdempotencyKey(): string {
 /** Etapa 3: cele cinci declarații, apoi specimenul de semnătură. */
 export default function CompanyFormationConsentPage() {
   const navigate = useNavigate()
-  const { state, save, saving, error } = useCompanyFormation()
+  const { state, submit, submitting, error } = useCompanyFormation()
   const { data: flow } = useOnboardingResource<LegalConsentFlow>('consentFlow', () =>
     companyFormationService.getConsentFlow(),
   )
@@ -110,10 +110,10 @@ export default function CompanyFormationConsentPage() {
     )
   }
 
-  const submit = async () => {
+  const sign = async () => {
     if (!signature) return
 
-    await save(() =>
+    await submit(() =>
       companyFormationService.sign(
         {
           signatureImage: signature.image,
@@ -142,7 +142,7 @@ export default function CompanyFormationConsentPage() {
           <CircularProgress sx={{ color: TOKENS.primary }} />
         </Stack>
       ) : !consentDone ? (
-        <ConsentWizard steps={steps} onComplete={() => setConsentDone(true)} disabled={saving} />
+        <ConsentWizard steps={steps} onComplete={() => setConsentDone(true)} disabled={submitting} />
       ) : (
         <>
           <PanelCard title="Semnătură de consimțământ">
@@ -152,7 +152,7 @@ export default function CompanyFormationConsentPage() {
                 de mai sus și că semnătura aplicată are valoare juridică.
               </Typography>
 
-              <SignaturePad onChange={setSignature} disabled={saving} />
+              <SignaturePad onChange={setSignature} disabled={submitting} />
             </Stack>
           </PanelCard>
 
@@ -176,10 +176,10 @@ export default function CompanyFormationConsentPage() {
 
             <Button
               variant="contained"
-              onClick={() => void submit()}
-              disabled={saving || signature === null}
+              onClick={() => void sign()}
+              disabled={submitting || signature === null}
               startIcon={
-                saving ? <CircularProgress size={16} sx={{ color: alpha('#fff', 0.9) }} /> : undefined
+                submitting ? <CircularProgress size={16} sx={{ color: alpha('#fff', 0.9) }} /> : undefined
               }
               sx={{
                 ...displaySx,

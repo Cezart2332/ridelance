@@ -10,7 +10,13 @@ import { TOKENS } from './onboardingTheme'
 const FIELD_LABELS: Record<string, string> = {
   cui: 'CUI',
   legal_name: 'Denumire',
+  registry_number: 'Nr. Registrul Comerțului',
+  holder_name: 'Titular',
+  professional_office: 'Sediu profesional',
   caen_codes: 'CAEN',
+  authorized_activities: 'Activități autorizate',
+  activity_location: 'Locul activității',
+  work_points: 'Puncte de lucru',
 }
 
 /**
@@ -20,7 +26,16 @@ const FIELD_LABELS: Record<string, string> = {
  * În plus confruntăm CUI-ul citit cu registrul ANAF, ca o citire greșită sau un PFA radiat să se
  * vadă aici, nu abia la aprobare.
  */
-export function CertificateReadout({ document }: { document: DocumentSummary }) {
+export function CertificateReadout({
+  document,
+  title = 'Am citit din certificat',
+  /** Verificarea la ANAF se face o singură dată pe dosar, pe certificatul de înregistrare. */
+  verifyWithAnaf = true,
+}: {
+  document: DocumentSummary
+  title?: string
+  verifyWithAnaf?: boolean
+}) {
   const [fields, setFields] = useState<{ key: string; value: string }[] | null>(null)
   const [company, setCompany] = useState<PfaCompanyInfo | null>(null)
 
@@ -42,6 +57,7 @@ export function CertificateReadout({ document }: { document: DocumentSummary }) 
         setFields(read)
 
         // ANAF e o verificare în plus peste OCR, nu o condiție: dacă pică, nu arătăm nimic.
+        if (!verifyWithAnaf) return
         const cui = read.find((f) => f.key === 'cui')?.value
         if (!cui) return
         const info = await pfaService.getCompanyInfo(cui)
@@ -55,7 +71,7 @@ export function CertificateReadout({ document }: { document: DocumentSummary }) 
     return () => {
       cancelled = true
     }
-  }, [document.id, pending])
+  }, [document.id, pending, verifyWithAnaf])
 
   if (pending) {
     return (
@@ -92,7 +108,7 @@ export function CertificateReadout({ document }: { document: DocumentSummary }) 
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.8 }}>
         <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18, color: TOKENS.success }} />
         <Typography sx={{ fontWeight: 800, fontSize: '0.9rem', color: TOKENS.success }}>
-          Am citit din certificat
+          {title}
         </Typography>
       </Stack>
 
