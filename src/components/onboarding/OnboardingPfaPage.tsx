@@ -46,9 +46,11 @@ function redirectToInfiintarePayment() {
   )
 }
 
-/** Documentele pasului PFA care au fost respinse (AI sau admin) și trebuie reîncărcate. */
+/**
+ * Documentele pasului PFA care au fost respinse (AI sau admin) și trebuie reîncărcate.
+ * Cartea de identitate nu e aici: se încarcă la Eligibilitate și se reia de acolo.
+ */
 const PFA_STEP_CATEGORIES: Record<string, string> = {
-  Buletin: 'Buletin',
   AtestatSofer: 'Atestat șofer',
 }
 
@@ -149,9 +151,8 @@ export default function OnboardingPfaPage() {
   const [amPfaPhone, setAmPfaPhone] = useState('')
   const [certificateFiles, setCertificateFiles] = useState<File[]>([])
 
-  // „Nu am PFA": aici se deschide doar dosarul. Adresa sediului, proprietarul și restul
-  // datelor se completează în dosarul de înființare, care e sursa de adevăr.
-  const [buletinFiles, setBuletinFiles] = useState<File[]>([])
+  // „Nu am PFA": aici se deschide doar dosarul. Cartea de identitate e deja încărcată la
+  // Eligibilitate, iar restul datelor se completează în dosarul de înființare.
   const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
 
   const [isLoading, setIsLoading] = useState(false)
@@ -160,10 +161,6 @@ export default function OnboardingPfaPage() {
 
   const handleSubmitNuAmPfa = async () => {
     setError(null)
-    if (buletinFiles.length === 0) {
-      setError('Încarcă buletinul ca să putem deschide dosarul.')
-      return
-    }
     if (!state?.hasPaidInfiintare && !paymentPolicyAccepted) {
       setError('Te rugam sa accepti Politica de Plati si Abonamente pentru a continua.')
       return
@@ -172,17 +169,11 @@ export default function OnboardingPfaPage() {
     try {
       setIsLoading(true)
 
-      // 1. Create PFA record
-      // `isOwner` rămâne pe fals: proprietarul imobilului se declară în etapa de sediu.
-      const pfaId = await pfaService.create({ registrationType: 'NuAmPfa', isOwner: false })
+      // Dosarul se deschide gol: datele vin din etapele următoare, documentele de la Eligibilitate.
+      // `isOwner` rămâne pe fals — proprietarul imobilului se declară în etapa de sediu.
+      await pfaService.create({ registrationType: 'NuAmPfa', isOwner: false })
 
-      // 2. Upload Documents (atestatul de șofer se cere la secțiunea „Autorizație transport”)
-      if (buletinFiles.length > 0) {
-        const buletin = await buildUploadFile(buletinFiles, 'Buletin')
-        await documentService.upload(buletin, 'Buletin', pfaId)
-      }
-
-      // 3. Plata înființării (dacă nu e deja achitată), apoi înapoi la hub
+      // 2. Plata înființării (dacă nu e deja achitată), apoi înapoi la hub
       sessionStorage.setItem('pfa_registered', 'NuAmPfa')
       if (state?.hasPaidInfiintare) {
         navigate('/onboarding/pfa/date-personale', { replace: true })
@@ -493,8 +484,6 @@ export default function OnboardingPfaPage() {
           ) : (
             /* ── NU AM PFA ── */
             <Stack spacing={2.5}>
-              <UploadField label="Buletin" files={buletinFiles} onFilesChange={setBuletinFiles} />
-
               {!state?.hasPaidInfiintare && (
                 <PaymentPolicyAcceptance
                   checked={paymentPolicyAccepted}

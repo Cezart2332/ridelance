@@ -47,7 +47,6 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
       label: 'Certificat de înregistrare (CAEN 4939)',
       originStep: 'pfa',
     },
-    { category: 'Buletin', label: 'Buletin', originStep: 'pfa' },
   ],
   fiscal: [
     {

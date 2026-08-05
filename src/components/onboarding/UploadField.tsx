@@ -2,12 +2,12 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded'
 import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded'
-import { Alert, Box, Button, IconButton, Stack, Typography } from '@mui/material'
+import { Box, Button, IconButton, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { visuallyHidden } from '@mui/utils'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 
-import { ACCEPTED_TYPES, validateUploadFiles } from '../../utils/uploadValidation'
+import { ACCEPTED_TYPES } from '../../utils/uploadValidation'
 import { TOKENS } from './onboardingTheme'
 
 const isPdf = (f: File) => f.type === 'application/pdf'
@@ -91,8 +91,8 @@ function FilePreview({
  * Acceptă un PDF ori una sau mai multe imagini (față/verso) — imaginile multiple sunt combinate
  * într-un singur PDF la trimitere (vezi utils/imagesToPdf).
  *
- * Validarea (mărime, format, rezoluție, luminozitate) rulează la selecție, nu la trimitere, ca
- * driverul să afle imediat că trebuie să refacă poza.
+ * Calitatea pozei nu se judecă aici: fișierul pleacă la server, iar OCR-ul spune dacă nu se
+ * poate citi.
  *
  * Are două moduri, după cine deține fișierul:
  * - **imediat** (`onPick`): fișierul pleacă spre server de îndată ce a fost ales. Fără listă de
@@ -120,22 +120,15 @@ export function UploadField({
   const inputId = useId()
   const cameraRef = useRef<HTMLInputElement | null>(null)
   const [dragging, setDragging] = useState(false)
-  const [issues, setIssues] = useState<string[]>([])
 
   const selected = files ?? []
 
-  const handlePick = async (picked: File[]) => {
+  const handlePick = (picked: File[]) => {
     if (picked.length === 0) return
 
-    const problems = await validateUploadFiles(picked)
-    setIssues([...new Set(problems.map((p) => p.message))])
-
-    const usable = picked.filter((file) => !problems.some((p) => p.file === file))
-    if (usable.length === 0) return
-
-    const pickedPdf = usable.find(isPdf)
+    const pickedPdf = picked.find(isPdf)
     // Un PDF ține loc de document întreg — nu se combină cu altceva.
-    const images = usable.filter((f) => !isPdf(f))
+    const images = picked.filter((f) => !isPdf(f))
 
     // Modul imediat nu acumulează: ce s-a ales acum e documentul care pleacă.
     onPick?.(pickedPdf ? [pickedPdf] : images)
@@ -175,7 +168,7 @@ export function UploadField({
           if (disabled) return
           e.preventDefault()
           setDragging(false)
-          void handlePick(Array.from(e.dataTransfer.files))
+          handlePick(Array.from(e.dataTransfer.files))
         }}
         sx={{
           borderRadius: `${TOKENS.radius.md}px`,
@@ -204,7 +197,7 @@ export function UploadField({
               accept={ACCEPTED_TYPES.join(',')}
               disabled={disabled}
               onChange={(e) => {
-                void handlePick(Array.from(e.target.files ?? []))
+                handlePick(Array.from(e.target.files ?? []))
                 e.target.value = ''
               }}
             />
@@ -226,23 +219,13 @@ export function UploadField({
             capture="environment"
             disabled={disabled}
             onChange={(e) => {
-              void handlePick(Array.from(e.target.files ?? []))
+              handlePick(Array.from(e.target.files ?? []))
               e.target.value = ''
             }}
           />
         </Stack>
 
       </Box>
-
-      {issues.length > 0 && (
-        <Stack spacing={0.8} sx={{ mt: 1 }}>
-          {issues.map((issue) => (
-            <Alert key={issue} severity="warning" sx={{ borderRadius: `${TOKENS.radius.md}px`, py: 0.2 }}>
-              {issue}
-            </Alert>
-          ))}
-        </Stack>
-      )}
 
       {hasFiles && (
         <Stack spacing={0.8} sx={{ mt: 1 }}>
