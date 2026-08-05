@@ -7,10 +7,10 @@ import {
   FieldGrid,
   MetaBar,
   PageHeader,
-  PageTabs,
   Section,
   SectionSkeleton,
   StatusBadge,
+  usePageTabs,
   type ActionMenuItem,
   type FieldSpec,
   type StatusTone,
@@ -135,7 +135,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
     downloadingId,
   } = props
 
-  const [tab, tabsElement] = PageTabs({ tabs: TABS })
+  const [tab, tabsElement] = usePageTabs({ tabs: TABS })
 
   const isPending = pfa.status.toLowerCase() === 'pending'
   const isSuspended = (detail?.accountStatus ?? pfa.accountStatus).toLowerCase().includes('suspend')

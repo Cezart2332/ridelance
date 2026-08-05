@@ -10,8 +10,13 @@ export interface PageTab {
 /**
  * Sub-view-urile paginii. Fără pilule și fără fundal: tabul activ se distinge prin culoarea
  * textului și indicatorul de 2px, atât.
+ *
+ * E hook, nu componentă, fiindcă apelantul are nevoie și de tabul activ, nu doar de bara de
+ * taburi. Numele contează: cu React Compiler pornit, o funcție `PascalCase` care cheamă hook-uri
+ * e compilată ca o componentă (primește propriul `useMemoCache`), iar apelul ei direct din corpul
+ * altei componente rupe ordinea hook-urilor — exact eroarea React #311.
  */
-export function PageTabs({
+export function usePageTabs({
   tabs,
   paramName = 'tab',
 }: {
