@@ -11,11 +11,14 @@ export function StepDocument({
   step,
   category,
   label,
+  requireBothSides,
 }: {
   step: string
   category: string
   /** Suprascrie eticheta din catalog, când panoul are un context mai bun. */
   label?: string
+  /** Documentul are date pe ambele fețe — se cer două imagini. */
+  requireBothSides?: boolean
 }) {
   const { state, documents, refresh } = useOnboarding()
   const requirement = requirementOf(step, category)
@@ -32,6 +35,7 @@ export function StepDocument({
       label={label ?? requirement?.label ?? category}
       alsoAccepts={requirement?.alsoAccepts}
       fromStepLabel={fromStep?.label}
+      requireBothSides={requireBothSides}
       documents={documents}
       pfaRegistrationId={state?.pfaRegistrationId}
       onUploaded={refresh}

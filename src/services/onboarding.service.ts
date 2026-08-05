@@ -181,6 +181,10 @@ export interface PlatformAccount {
   hasAffiliationContract: boolean
   onboardingStatus: PlatformOnboardingStatus
   existingAccountAnswer: ExistingAccountAnswer | null
+  email: string | null
+  phone: string | null
+  /** Doar dacă există o parolă salvată — valoarea nu părăsește niciodată serverul. */
+  hasPassword: boolean
 }
 
 export interface PlatformOnboardingState {
@@ -263,6 +267,10 @@ export const onboardingService = {
     operatorAccountId?: string | null
     affiliationContractDocumentId?: string | null
     existingAccountAnswer?: ExistingAccountAnswer | null
+    email?: string | null
+    phone?: string | null
+    /** Se trimite doar când userul o completează; gol înseamnă „păstreaz-o pe cea salvată". */
+    password?: string | null
   }): Promise<PlatformOnboardingState> {
     const { data } = await api.post<PlatformOnboardingState>('/onboarding/platforms/account', payload)
     return data

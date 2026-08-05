@@ -2,6 +2,7 @@ import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlin
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import { Alert, Box, Button, Chip, Divider, MenuItem, Stack, TextField, Typography } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { documentService } from '../../services/document.service'
 import {
@@ -22,6 +23,15 @@ const COPY_STATUS_LABELS: Record<string, string> = {
   Submitted: 'Depusă la ARR',
   Issued: 'Copie conformă emisă',
   Rejected: 'Respinsă',
+}
+
+/** Se cere exact contractul pe care l-a declarat, nu o listă din care să aleagă mental. */
+const CONTRACT_LABELS: Record<VehicleOwnershipMode, string> = {
+  Owned: 'Contract',
+  Rented: 'Contract de închiriere',
+  Leased: 'Contract de leasing',
+  Comodat: 'Contract de comodat',
+  AddedLater: 'Contract',
 }
 
 const lei = (bani: number) => (bani / 100).toLocaleString('ro-RO', { minimumFractionDigits: 2 })
@@ -45,8 +55,14 @@ export default function OnboardingVehiclePage() {
 
   // Copie conformă & ecusoane
   const [years, setYears] = useState(1)
-  const [uberSets, setUberSets] = useState(0)
-  const [boltSets, setBoltSets] = useState(0)
+
+  // Ecusoanele nu sunt o cantitate pe care șoferul s-o aleagă: are o mașină, deci are nevoie de
+  // exact un set pe fiecare platformă bifată la pasul „Uber & Bolt".
+  const { data: platforms } = useOnboardingResource('platforms', () =>
+    onboardingService.getPlatformOnboarding(),
+  )
+  const uberSets = platforms?.platforms.find((p) => p.provider === 'Uber')?.isSelectedByUser ? 1 : 0
+  const boltSets = platforms?.platforms.find((p) => p.provider === 'Bolt')?.isSelectedByUser ? 1 : 0
 
   const apply = (d: VehicleState) => {
     setData(d)
@@ -59,8 +75,6 @@ export default function OnboardingVehiclePage() {
     setModel(d.model ?? '')
     setYear(d.firstRegistrationYear ? String(d.firstRegistrationYear) : '')
     setYears(d.copyRequest?.years ?? 1)
-    setUberSets(d.badges.find((b) => b.provider === 'Uber')?.setCount ?? 0)
-    setBoltSets(d.badges.find((b) => b.provider === 'Bolt')?.setCount ?? 0)
   }
 
   // Formularul se semințează o singură dată din starea de pe server; după aceea e al userului.
@@ -169,7 +183,7 @@ export default function OnboardingVehiclePage() {
                 <StepDocument
                   step="vehicle"
                   category="ContractVehicul"
-                  label="Contract de închiriere / comodat / leasing"
+                  label={CONTRACT_LABELS[ownershipMode]}
                 />
               )}
               <StepDocument
@@ -180,7 +194,8 @@ export default function OnboardingVehiclePage() {
               <StepDocument
                 step="vehicle"
                 category="CarteIdentitateAuto"
-                label="Cartea de identitate a vehiculului (CIV)"
+                label="Cartea de identitate a vehiculului (CIV) — față și verso"
+                requireBothSides
               />
               {(data?.plateNumber || data?.vin) && (
                 <Alert severity="success" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
@@ -217,11 +232,20 @@ export default function OnboardingVehiclePage() {
           Documentele vehiculului
         </Typography>
         <Stack spacing={2.5}>
-          <StepDocument
-            step="vehicle"
-            category="RCA"
-            label="RCA"
-          />
+          <Box>
+            <StepDocument step="vehicle" category="RCA" label="RCA" />
+            {/* Discret și doar informativ: nu condiționăm nimic de partener. */}
+            <Typography sx={{ mt: 0.6, fontSize: '0.82rem', color: TOKENS.textMuted }}>
+              N-ai încă RCA?{' '}
+              <Box
+                component={Link}
+                to="/parteneri/asigurari-ro"
+                sx={{ color: TOKENS.primaryStrong, fontWeight: 650, textDecoration: 'none' }}
+              >
+                Vezi oferta partenerului nostru asigurari.ro
+              </Box>
+            </Typography>
+          </Box>
           <StepDocument
             step="vehicle"
             category="AsigurareCalatori"
@@ -268,27 +292,19 @@ export default function OnboardingVehiclePage() {
               ))}
             </TextField>
 
-            <Typography sx={{ fontWeight: 700, color: TOKENS.ink }}>Ecusoane per platformă</Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <TextField
-                type="number"
-                label="Seturi Uber"
-                value={uberSets}
-                onChange={(e) => setUberSets(Math.max(0, Number(e.target.value)))}
-                sx={inputSx}
-                fullWidth
-                slotProps={{ htmlInput: { min: 0 } }}
-              />
-              <TextField
-                type="number"
-                label="Seturi Bolt"
-                value={boltSets}
-                onChange={(e) => setBoltSets(Math.max(0, Number(e.target.value)))}
-                sx={inputSx}
-                fullWidth
-                slotProps={{ htmlInput: { min: 0 } }}
-              />
-            </Stack>
+            <Box>
+              <Typography sx={{ fontWeight: 700, color: TOKENS.ink, mb: 0.5 }}>Ecusoane</Typography>
+              <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem' }}>
+                {uberSets + boltSets === 0
+                  ? 'Alege întâi platformele la pasul „Uber & Bolt”.'
+                  : `Un set pentru fiecare platformă aleasă: ${[
+                      uberSets > 0 ? 'Uber Fleet' : null,
+                      boltSets > 0 ? 'Bolt Fleet' : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' și ')}.`}
+              </Typography>
+            </Box>
 
             <Alert severity="info" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
               Total copie conformă: <b>{lei(copyTotal)} lei</b> · Total ecusoane:{' '}

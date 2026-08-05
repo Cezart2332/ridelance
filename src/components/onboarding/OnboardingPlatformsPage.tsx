@@ -34,6 +34,12 @@ const STATUS_LABELS: Record<string, string> = {
   Skipped: 'Nefolosit',
 }
 
+/** Conturile cerute sunt cele de flotă, nu cele de șofer — numele o spune direct. */
+const FLEET_LABELS: Record<PlatformProvider, string> = {
+  Uber: 'Uber Fleet',
+  Bolt: 'Bolt Fleet',
+}
+
 function PlatformCard({
   provider,
   account,
@@ -49,8 +55,15 @@ function PlatformCard({
     saved && saved !== 'Unknown' ? saved : account?.hasExistingAccount ? 'HasOperatorAccount' : '',
   )
   const [operatorId, setOperatorId] = useState(account?.operatorAccountId ?? '')
+  const [email, setEmail] = useState(account?.email ?? '')
+  const [phone, setPhone] = useState(account?.phone ?? '')
+  const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Are deja cont de flotă: cerem credențialele lui. Nu are: cerem ce vrea să aibă contul pe
+  // care i-l deschidem noi. Câmpurile sunt aceleași, se schimbă doar ce înseamnă.
+  const hasFleetAccount = answer === 'HasOperatorAccount'
 
   const save = async () => {
     if (answer === '') return
@@ -59,10 +72,15 @@ function PlatformCard({
     try {
       const next = await onboardingService.submitPlatformAccount({
         provider,
-        hasExistingAccount: answer === 'HasOperatorAccount',
+        hasExistingAccount: hasFleetAccount,
         operatorAccountId: operatorId || null,
         existingAccountAnswer: answer,
+        email: email || null,
+        phone: phone || null,
+        // Gol înseamnă „păstreaz-o pe cea salvată" — serverul nu ne-o trimite înapoi.
+        password: password || null,
       })
+      setPassword('')
       onSaved(next)
     } catch (err) {
       setError(getErrorMessage(err))
@@ -73,7 +91,7 @@ function PlatformCard({
 
   return (
     <PanelCard
-      title={provider}
+      title={FLEET_LABELS[provider]}
       action={
         account && (
           <Chip
@@ -91,29 +109,68 @@ function PlatformCard({
       )}
 
       <Typography sx={{ fontWeight: 700, color: TOKENS.ink, mb: 0.5 }}>
-        Ai deja cont pe {provider}?
+        Ai deja cont de {FLEET_LABELS[provider]}?
       </Typography>
       <RadioGroup value={answer} onChange={(e) => setAnswer(e.target.value as ExistingAccountAnswer)}>
-        <FormControlLabel
-          value="HasOperatorAccount"
-          control={<Radio />}
-          label="Da, am cont de operator/fleet"
-        />
+        <FormControlLabel value="HasOperatorAccount" control={<Radio />} label="Da, am cont de flotă" />
         <FormControlLabel
           value="DriverOnly"
           control={<Radio />}
-          label="Am cont de șofer, dar nu de operator/fleet"
+          label="Am cont de șofer, dar nu de flotă"
         />
         <FormControlLabel value="None" control={<Radio />} label="Nu am cont" />
       </RadioGroup>
 
-      <TextField
-        label={`ID cont operator ${provider} (opțional)`}
-        value={operatorId}
-        onChange={(e) => setOperatorId(e.target.value)}
-        sx={{ ...inputSx, mt: 1 }}
-        fullWidth
-      />
+      {answer !== '' && (
+        <Stack spacing={2} sx={{ mt: 2 }}>
+          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.88rem' }}>
+            {hasFleetAccount
+              ? `Datele contului tău de ${FLEET_LABELS[provider]}.`
+              : `Datele cu care îți deschidem contul de ${FLEET_LABELS[provider]}.`}
+          </Typography>
+
+          <TextField
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            sx={inputSx}
+            fullWidth
+            autoComplete="email"
+          />
+          <TextField
+            label="Telefon"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            sx={inputSx}
+            fullWidth
+            autoComplete="tel"
+          />
+          <TextField
+            label={hasFleetAccount ? 'Parola contului' : 'Parola dorită'}
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            helperText={
+              account?.hasPassword
+                ? 'O parolă este deja salvată. Completeaz-o doar dacă vrei s-o schimbi.'
+                : undefined
+            }
+            sx={inputSx}
+            fullWidth
+            autoComplete="new-password"
+          />
+
+          <TextField
+            label={`ID cont ${FLEET_LABELS[provider]} (opțional)`}
+            value={operatorId}
+            onChange={(e) => setOperatorId(e.target.value)}
+            sx={inputSx}
+            fullWidth
+          />
+        </Stack>
+      )}
 
       <Box sx={{ mt: 2 }}>
         <Button
@@ -170,7 +227,7 @@ export default function OnboardingPlatformsPage() {
 
   return (
     <Stack spacing={3}>
-      <PanelHeading title="Conturi Uber & Bolt" />
+      <PanelHeading title="Conturi Uber Fleet & Bolt Fleet" />
 
       {error && (
         <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
@@ -184,13 +241,13 @@ export default function OnboardingPlatformsPage() {
             control={
               <Checkbox checked={uber} onChange={(e) => setSelection({ uber: e.target.checked, bolt })} />
             }
-            label="Uber"
+            label="Uber Fleet"
           />
           <FormControlLabel
             control={
               <Checkbox checked={bolt} onChange={(e) => setSelection({ uber, bolt: e.target.checked })} />
             }
-            label="Bolt"
+            label="Bolt Fleet"
           />
         </Stack>
         <Box sx={{ mt: 1 }}>

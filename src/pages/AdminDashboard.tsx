@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   Box, Paper, Stack, TextField, Typography, Card, CardContent,
-  CircularProgress, Alert, Chip, Button, IconButton, Avatar,
+  CircularProgress, Alert, Chip, Button,
   Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Snackbar,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -18,19 +18,13 @@ import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded'
 import SupervisedUserCircleRoundedIcon from '@mui/icons-material/SupervisedUserCircleRounded'
 import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded'
-import DiscountRoundedIcon from '@mui/icons-material/DiscountRounded'
 import AttachFileRoundedIcon from '@mui/icons-material/AttachFileRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded'
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded'
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
-import LoginRoundedIcon from '@mui/icons-material/LoginRounded'
-import PauseCircleOutlineRoundedIcon from '@mui/icons-material/PauseCircleOutlineRounded'
-import PlayCircleOutlineRoundedIcon from '@mui/icons-material/PlayCircleOutlineRounded'
-import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded'
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import { validateRomanianCIF } from '../utils/validation'
@@ -45,10 +39,7 @@ import { OblioAdminView } from '../components/dashboard/sections/admin/OblioAdmi
 import { DiscountsAdminView } from '../components/dashboard/sections/admin/DiscountsAdminView'
 import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminOverviewView'
-import { OnboardingSectionsPanel } from '../components/dashboard/sections/admin/OnboardingSectionsPanel'
-import { UberImportAdminPanel } from '../components/dashboard/sections/admin/UberImportAdminPanel'
-import { CompanyFormationAdminPanel } from '../components/pfa/CompanyFormationAdminPanel'
-import { PfaFiscalSettingsPanel } from '../components/pfa/PfaFiscalSettingsPanel'
+import { PfaDetailView } from './admin/PfaDetailView'
 import {
   adminOverviewService,
   type AdminOverviewPfaCard,
@@ -567,218 +558,57 @@ export function AdminDashboard() {
   // ─── PFA Detail View ────────────────────────────────────────────────────────
   const renderPfaDetail = () => {
     const pfa = selectedPfa!
-    const isPending = pfa.status.toLowerCase() === 'pending'
     const active = pfaDetail
-    const accountStatus = active?.accountStatus ?? pfa.accountStatus
-    const detailSummary = [
-      { label: 'Plan abonament', value: active?.plan ?? pfaPlanLabel(pfa) },
-      { label: 'Status abonament', value: active?.subscriptionStatus ?? subscriptionStatusLabel(pfa.subscriptionStatus) },
-      { label: 'Tip înregistrare', value: active?.registrationType ?? formatRegistrationType(pfa.registrationType) },
-      { label: 'Status lună curentă', value: active?.currentMonthStatus ?? pfaCurrentMonthStatus(pfa) },
-      { label: 'Ultima activitate', value: active?.lastActivityLabel ?? (pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : 'Fără activitate') },
-    ]
 
     return (
-      <Stack spacing={3}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton
-            onClick={() => setSelectedPfa(null)}
-            size="small"
-            sx={{ bgcolor: alpha(TOKENS.paper, 0.9), border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, '&:hover': { bgcolor: alpha(TOKENS.primary, 0.08) } }}
-          >
-            <ArrowBackRoundedIcon fontSize="small" />
-          </IconButton>
-          <Avatar sx={{ bgcolor: alpha(TOKENS.primary, 0.12), color: TOKENS.primaryStrong, fontWeight: 800 }}>
-            {pfa.userName[0]}
-          </Avatar>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h5" sx={{ fontWeight: 800, lineHeight: 1.2 }}>{active?.companyName ?? pfa.userName}</Typography>
-            <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
-              {[active?.email ?? pfa.userEmail, active?.phone ?? pfa.phone].filter(Boolean).join(' · ')}
-            </Typography>
-          </Box>
-          <Chip
-            label={accountStatus || statusLabel(pfa.status)}
-            sx={{ fontWeight: 700, fontSize: '0.75rem', bgcolor: alpha(statusColor(pfa.status), 0.1), color: statusColor(pfa.status), border: `1px solid ${alpha(statusColor(pfa.status), 0.25)}` }}
-          />
-        </Box>
-
-        {pfaDetailLoading && (
-          <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}` }}>
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-              <CircularProgress size={18} sx={{ color: TOKENS.primary }} />
-              <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Se încarcă detaliile extinse...</Typography>
-            </Stack>
-          </Paper>
-        )}
-        {pfaDetailError && <Alert severity="warning">{pfaDetailError}</Alert>}
-
-        {/* Info */}
-        <Paper elevation={0} sx={{ p: 3, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(5, minmax(0, 1fr))' }, gap: 1.5 }}>
-            {detailSummary.map((item) => (
-              <Box key={item.label} sx={{ p: 1.5, borderRadius: TOKENS.radius.md, bgcolor: alpha(TOKENS.surface, 0.72), border: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
-                <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800 }}>
-                  {item.label}
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 850, color: TOKENS.ink, mt: 0.35 }}>
-                  {item.value || '—'}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        </Paper>
-
-        {/* Onboarding pe secțiuni + documente — aprobarea/respingerea PFA se face
-            din secțiunea 1; validarea ultimei secțiuni finalizează automat contul. */}
-        <OnboardingSectionsPanel
-          pfaId={pfa.id}
-          pfaStatus={pfa.status}
+      <>
+        <PfaDetailView
+          pfa={pfa}
+          detail={active}
+          detailLoading={pfaDetailLoading}
+          detailError={pfaDetailError}
           documents={documents}
-          statusUpdatingDocId={statusUpdatingDocId}
-          openingId={openingId}
-          downloadingId={downloadingId}
+          docsLoading={docsLoading}
+          docsError={docsError}
+          meta={{
+            plan: active?.plan ?? pfaPlanLabel(pfa),
+            subscription: active?.subscriptionStatus ?? subscriptionStatusLabel(pfa.subscriptionStatus),
+            registration: active?.registrationType ?? formatRegistrationType(pfa.registrationType),
+            month: active?.currentMonthStatus ?? pfaCurrentMonthStatus(pfa),
+            activity: active?.lastActivityLabel ?? (pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : 'Fără activitate'),
+          }}
+          payments={[
+            ['Plan actual', active?.plan ?? pfaPlanLabel(pfa)],
+            ['Preț', active?.priceBani == null ? '' : formatLei(active.priceBani)],
+            ['Status abonament', active?.subscriptionStatus ?? subscriptionStatusLabel(pfa.subscriptionStatus)],
+            ['Data început', formatDate(active?.subscriptionStartedAtUtc)],
+            ['Următoarea plată', formatDate(active?.nextPaymentAtUtc)],
+            ['Ultima plată', formatDate(active?.lastPaymentAtUtc)],
+            ['Plăți eșuate', String(active?.failedPayments ?? 0)],
+            ['Reducere activă', active?.activeDiscount ?? ''],
+            ['Istoric plăți', active?.customerAgeLabel ?? customerAgeLabel(pfa.createdAtUtc)],
+          ]}
+          accounting={[
+            ['Status lună curentă', active?.currentMonthStatus ?? pfaCurrentMonthStatus(pfa)],
+            ['Ultima lună procesată', active?.lastProcessedMonth ?? ''],
+            ['Documente lunare lipsă', String(active?.missingMonthlyDocuments ?? 0)],
+            ['Documente de verificat', String(active?.documentsToReview ?? pfa.documentCount)],
+          ]}
+          onBack={() => setSelectedPfa(null)}
+          onImpersonate={() => handleImpersonate(pfa.userId, pfa.userName || pfa.fullName || pfa.userEmail)}
+          onOpenAction={openDetailAction}
+          onOpenChat={() => { setSelectedPfa(null); setActiveTab('chat') }}
+          onApprove={() => handleOpenStatusDialog('Approved')}
+          onReject={() => handleOpenStatusDialog('Rejected')}
           onUpdateDocStatus={handleUpdateDocStatus}
           onOpenDocument={handleOpenDocument}
           onDownload={handleDownload}
-          onOpenPfaApproveDialog={() => handleOpenStatusDialog('Approved')}
-          onOpenPfaRejectDialog={() => handleOpenStatusDialog('Rejected')}
           onSnackbar={(message, severity) => setSnackbar({ open: true, message, severity })}
-          refreshKey={onboardingRefreshKey}
+          onboardingRefreshKey={onboardingRefreshKey}
+          statusUpdatingDocId={statusUpdatingDocId}
+          openingId={openingId}
+          downloadingId={downloadingId}
         />
-        {docsLoading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-            <CircularProgress size={24} sx={{ color: TOKENS.primary }} />
-          </Box>
-        )}
-        {docsError && <Alert severity="error">{docsError}</Alert>}
-
-        <Paper elevation={0} sx={{ p: 3, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 850, color: TOKENS.ink, mb: 2 }}>
-            Date completate în formular
-          </Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', md: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
-            {[
-              { label: 'Nume formular', value: pfa.fullName || pfa.userName },
-              { label: 'Telefon', value: pfa.phone || 'Nu este completat' },
-              { label: 'Durată comodat', value: pfa.contractDuration ? `${pfa.contractDuration} ani` : 'Nu se aplică' },
-              { label: 'Adresă', value: [pfa.street, pfa.number].filter(Boolean).join(' ') || 'Nu se aplică' },
-              { label: 'Localitate', value: [pfa.city, pfa.county].filter(Boolean).join(', ') || 'Nu se aplică' },
-              { label: 'Proprietar sediu', value: pfa.isOwner ? 'Da' : 'Nu' },
-            ].map((item) => (
-              <Box key={item.label} sx={{ p: 1.5, borderRadius: TOKENS.radius.md, bgcolor: alpha(TOKENS.surface, 0.72), border: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
-                <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  {item.label}
-                </Typography>
-                <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 700, mt: 0.4 }}>
-                  {item.value}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        </Paper>
-
-        {!isPending && (
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
-            <Button
-              variant="contained"
-              startIcon={<LoginRoundedIcon />}
-              onClick={() => handleImpersonate(pfa.userId, pfa.userName || pfa.fullName || pfa.userEmail)}
-              sx={{ fontWeight: 800, bgcolor: TOKENS.primary, '&:hover': { bgcolor: TOKENS.primaryStrong }, boxShadow: 'none' }}
-            >
-              Autentificare ca utilizator
-            </Button>
-            <Button variant="outlined" startIcon={<TrendingUpRoundedIcon />} onClick={() => openDetailAction('plan')}>Schimbă plan</Button>
-            <Button variant="outlined" startIcon={<DiscountRoundedIcon />} onClick={() => openDetailAction('discount')}>Aplică discount</Button>
-            <Button variant="outlined" startIcon={<PauseCircleOutlineRoundedIcon />} onClick={() => openDetailAction('suspend')}>Suspendă cont</Button>
-            <Button variant="outlined" startIcon={<PlayCircleOutlineRoundedIcon />} onClick={() => openDetailAction('reactivate')}>Reactivează cont</Button>
-            <Button variant="outlined" startIcon={<ChatRoundedIcon />} onClick={() => { setSelectedPfa(null); setActiveTab('chat') }}>Chat</Button>
-          </Stack>
-        )}
-
-        {!isPending && (
-          <UberImportAdminPanel
-            pfaRegistrationId={pfa.id}
-            clientName={pfa.fullName || pfa.userName || pfa.userEmail}
-          />
-        )}
-
-        {/* Se randează singur doar pentru ramura „Nu am PFA" — altfel nu există dosar. */}
-        <CompanyFormationAdminPanel key={pfa.id} pfaId={pfa.id} />
-
-        <PfaFiscalSettingsPanel pfaId={pfa.id} editable clientUserId={pfa.userId} />
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 2 }}>
-          <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 850, color: TOKENS.ink, mb: 2 }}>Abonament & plăți</Typography>
-            <Stack spacing={1.2}>
-              {[
-                ['Plan actual', active?.plan ?? pfaPlanLabel(pfa)],
-                ['Preț', active?.priceBani == null ? '—' : formatLei(active.priceBani)],
-                ['Status abonament', active?.subscriptionStatus ?? subscriptionStatusLabel(pfa.subscriptionStatus)],
-                ['Data început', formatDate(active?.subscriptionStartedAtUtc)],
-                ['Următoarea plată', formatDate(active?.nextPaymentAtUtc)],
-                ['Ultima plată', formatDate(active?.lastPaymentAtUtc)],
-                ['Plăți eșuate', String(active?.failedPayments ?? 0)],
-                ['Reducere activă', active?.activeDiscount || '—'],
-                ['Istoric plăți', active?.customerAgeLabel ?? customerAgeLabel(pfa.createdAtUtc)],
-              ].map(([label, value]) => (
-                <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
-                  <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{label}</Typography>
-                  <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 800, textAlign: 'right' }}>{value}</Typography>
-                </Stack>
-              ))}
-            </Stack>
-          </Paper>
-
-          <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 850, color: TOKENS.ink, mb: 2 }}>Contabilitate</Typography>
-            <Stack spacing={1.2}>
-              {[
-                ['Status lună curentă', active?.currentMonthStatus ?? pfaCurrentMonthStatus(pfa)],
-                ['Ultima lună procesată', active?.lastProcessedMonth || '—'],
-                ['Documente lunare lipsă', String(active?.missingMonthlyDocuments ?? 0)],
-                ['Documente lunare de verificat', String(active?.documentsToReview ?? pfa.documentCount)],
-              ].map(([label, value]) => (
-                <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
-                  <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{label}</Typography>
-                  <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 800, textAlign: 'right' }}>{value}</Typography>
-                </Stack>
-              ))}
-            </Stack>
-          </Paper>
-        </Box>
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 2 }}>
-          <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 850, color: TOKENS.ink, mb: 2 }}>Istoric activitate</Typography>
-            {active?.activityLog?.length ? (
-              <Stack spacing={1.5}>
-                {active.activityLog.slice(0, 8).map((event) => (
-                  <Box key={event.id}>
-                    <Typography variant="body2" sx={{ fontWeight: 800, color: TOKENS.ink }}>{event.description}</Typography>
-                    <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>
-                      {event.performedBy} · {formatDate(event.createdAtUtc)}
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
-            ) : (
-              <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Nu există activitate înregistrată.</Typography>
-            )}
-          </Paper>
-
-          <Paper elevation={0} sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm }}>
-            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 850, color: TOKENS.ink }}>Note interne</Typography>
-              <Button size="small" onClick={() => openDetailAction('note')}>Editează</Button>
-            </Stack>
-            <Typography variant="body2" sx={{ color: active?.internalNote ? TOKENS.ink : TOKENS.textMuted, whiteSpace: 'pre-wrap' }}>
-              {active?.internalNote || 'Nu există note interne pentru acest client.'}
-            </Typography>
-          </Paper>
-        </Box>
 
         {/* Status update confirm dialog */}
         <Dialog open={statusDialog.open} onClose={() => setStatusDialog({ open: false, action: null })} maxWidth="xs" fullWidth>
@@ -938,7 +768,7 @@ export function AdminDashboard() {
             </Button>
           </DialogActions>
         </Dialog>
-      </Stack>
+      </>
     )
   }
 

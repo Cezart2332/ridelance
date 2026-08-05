@@ -2,7 +2,7 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded'
 import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded'
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material'
+import { Box, Button, IconButton, Stack, Typography, useMediaQuery } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { visuallyHidden } from '@mui/utils'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
@@ -119,6 +119,12 @@ export function UploadField({
 }) {
   const inputId = useId()
   const cameraRef = useRef<HTMLInputElement | null>(null)
+  // Punctul grosier („deget", nu mouse") separă telefonul de desktop mai bine decât lățimea:
+  // o fereastră îngustă pe laptop tot n-are cameră de fotografiat buletinul.
+  // Ambele apeluri sunt necondiționate — `||` ar sări peste al doilea hook.
+  const coarsePointer = useMediaQuery('(pointer: coarse)')
+  const narrowScreen = useMediaQuery('(max-width: 600px)')
+  const hasCamera = coarsePointer || narrowScreen
   const [dragging, setDragging] = useState(false)
 
   const selected = files ?? []
@@ -203,26 +209,33 @@ export function UploadField({
             />
           </Button>
 
-          <Button
-            onClick={() => cameraRef.current?.click()}
-            disabled={disabled}
-            startIcon={<PhotoCameraRoundedIcon sx={{ fontSize: 18 }} />}
-            sx={{ flex: 1, fontWeight: 650, color: TOKENS.ink, justifyContent: 'center' }}
-          >
-            Fă poză
-          </Button>
-          <input
-            ref={cameraRef}
-            type="file"
-            hidden
-            accept="image/*"
-            capture="environment"
-            disabled={disabled}
-            onChange={(e) => {
-              handlePick(Array.from(e.target.files ?? []))
-              e.target.value = ''
-            }}
-          />
+          {/* „Fă poză" are sens doar unde există o cameră de fotografiat un act. Pe desktop
+              `capture` e ignorat de browser și butonul deschide același selector de fișiere,
+              deci nu ar face decât să dubleze butonul de alături. */}
+          {hasCamera && (
+            <>
+              <Button
+                onClick={() => cameraRef.current?.click()}
+                disabled={disabled}
+                startIcon={<PhotoCameraRoundedIcon sx={{ fontSize: 18 }} />}
+                sx={{ flex: 1, fontWeight: 650, color: TOKENS.ink, justifyContent: 'center' }}
+              >
+                Fă poză
+              </Button>
+              <input
+                ref={cameraRef}
+                type="file"
+                hidden
+                accept="image/*"
+                capture="environment"
+                disabled={disabled}
+                onChange={(e) => {
+                  handlePick(Array.from(e.target.files ?? []))
+                  e.target.value = ''
+                }}
+              />
+            </>
+          )}
         </Stack>
 
       </Box>

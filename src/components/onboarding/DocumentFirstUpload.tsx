@@ -23,6 +23,11 @@ interface DocumentFirstUploadProps {
   alsoAccepts?: string[]
   /** Numele pasului anterior de unde provine documentul, dacă nu e pasul curent. */
   fromStepLabel?: string
+  /**
+   * Documentul are informații pe ambele fețe (CIV): cerem două imagini, care se combină într-un
+   * singur PDF. Un PDF încărcat direct se acceptă ca atare — nu-i putem număra paginile aici.
+   */
+  requireBothSides?: boolean
   documents: DocumentSummary[]
   pfaRegistrationId?: string | null
   /** Reîncarcă starea de onboarding după upload. */
@@ -45,6 +50,7 @@ export function DocumentFirstUpload({
   label,
   alsoAccepts,
   fromStepLabel,
+  requireBothSides = false,
   documents,
   pfaRegistrationId,
   onUploaded,
@@ -74,6 +80,12 @@ export function DocumentFirstUpload({
   /** Fișierul ales pleacă imediat: nu există pas de confirmare, deci nici buton de „Încarcă". */
   const upload = async (picked: File[]) => {
     if (picked.length === 0) return
+
+    if (requireBothSides && picked.length < 2 && !picked.some((f) => f.type === 'application/pdf')) {
+      setError('Încarcă ambele fețe: alege două poze deodată (față și verso) sau un PDF cu ambele.')
+      return
+    }
+
     setProgress(0)
     setError(null)
     try {
