@@ -206,23 +206,6 @@ export function PfaDetailView(props: PfaDetailViewProps) {
             },
       ]
 
-  const documentActions = (doc: DocumentSummary): ActionMenuItem[] => [
-    { key: 'open', label: 'Deschide', onClick: () => onOpenDocument(doc) },
-    { key: 'download', label: 'Descarcă', onClick: () => onDownload(doc) },
-    {
-      key: 'approve',
-      label: 'Aprobă',
-      onClick: () => onUpdateDocStatus(doc.id, 'Verified'),
-      dividerBefore: true,
-    },
-    {
-      key: 'reject',
-      label: 'Respinge',
-      onClick: () => onUpdateDocStatus(doc.id, 'Rejected'),
-      destructive: true,
-    },
-  ]
-
   return (
     <ThemeProvider theme={adminTheme}>
       <Box sx={{ bgcolor: 'background.default', color: 'text.primary' }}>
@@ -309,16 +292,29 @@ export function PfaDetailView(props: PfaDetailViewProps) {
                     </Box>
                   ) : (
                     <List disablePadding>
-                      {documents.map((doc) => (
-                        <DocumentRow
-                          key={doc.id}
-                          name={doc.originalFileName}
-                          meta={`${formatDocumentCategory(doc.category)} · ${formatBytes(doc.fileSize)} · ${formatDay(doc.uploadedAtUtc)}`}
-                          statusLabel={doc.status}
-                          statusTone={DOC_TONES[doc.status.toLowerCase()] ?? 'neutral'}
-                          actions={documentActions(doc)}
-                        />
-                      ))}
+                      {documents.map((doc) => {
+                        const isPendingDoc = doc.status.toLowerCase() === 'pending'
+                        return (
+                          <DocumentRow
+                            key={doc.id}
+                            name={doc.originalFileName}
+                            meta={`${formatDocumentCategory(doc.category)} · ${formatBytes(doc.fileSize)} · ${formatDay(doc.uploadedAtUtc)}`}
+                            statusLabel={doc.status}
+                            statusTone={DOC_TONES[doc.status.toLowerCase()] ?? 'neutral'}
+                            onApprove={
+                              isPendingDoc ? () => onUpdateDocStatus(doc.id, 'Verified') : undefined
+                            }
+                            onReject={
+                              isPendingDoc ? () => onUpdateDocStatus(doc.id, 'Rejected') : undefined
+                            }
+                            onOpen={() => onOpenDocument(doc)}
+                            onDownload={() => onDownload(doc)}
+                            updatingStatus={statusUpdatingDocId === doc.id}
+                            opening={openingId === doc.id}
+                            downloading={downloadingId === doc.id}
+                          />
+                        )
+                      })}
                     </List>
                   )}
                 </Section>

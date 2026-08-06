@@ -5,6 +5,7 @@ import { Provider } from 'react-redux'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { TOKENS } from './constants/tokens'
+import { fontStack } from './theme/fontStack'
 import { store } from './store/store'
 import { AuthInitializer } from './components/auth/AuthInitializer'
 import { clearChunkReloadFlag } from './utils/lazyWithRetry'
@@ -41,20 +42,6 @@ if ('serviceWorker' in navigator) {
       .catch(() => {})
   })
 }
-
-const fontStack = [
-  '"Geist Variable"',
-  '"Geist"',
-  '"SF Compact Display"',
-  '"SF Pro Display"',
-  '"SF Compact Text"',
-  '"SF Pro Text"',
-  '"SF Pro"',
-  '-apple-system',
-  'BlinkMacSystemFont',
-  '"Segoe UI"',
-  'sans-serif',
-].join(', ')
 
 const theme = createTheme({
   palette: {
