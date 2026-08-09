@@ -6,13 +6,19 @@ import { formatAxisNumber, formatCurrency, formatDate } from '../../format'
 import type { FeesAndTaxesPoint } from '../../../../../services/pfaDashboard.service'
 import { HomeCard } from '../HomeCard'
 import { ChartDataTable, ChartLegend, ChartTooltip } from './chartSetup'
-import { axisProps, gridProps } from './chartTheme'
+import { axisProps, CHART, gridProps } from './chartTheme'
 
+/**
+ * Comisioanele în rampa accentului, taxele în ambru. Așa graficul spune vizual singurul
+ * lucru care contează aici: **albastru = ce rețin platformele, ambru = ce reține statul.**
+ * Culorile de brand ale platformelor n-au ce căuta pe stiva asta — ar sugera că verdele și
+ * negrul sunt categorii de acelaşi rang cu TVA-ul.
+ */
 const SERIES = [
-  { key: 'boltFee', label: 'Comision Bolt', color: HOME_TOKENS.platform.bolt },
-  { key: 'uberFee', label: 'Comision Uber', color: HOME_TOKENS.platform.uber },
-  { key: 'vatIntracom', label: 'TVA intracomunitar', color: HOME_TOKENS.warn[600] },
-  { key: 'boltNonResident', label: 'Taxă nerezident', color: '#D9A441' },
+  { key: 'boltFee', label: 'Comision Bolt', color: CHART[1] },
+  { key: 'uberFee', label: 'Comision Uber', color: CHART[2] },
+  { key: 'vatIntracom', label: 'TVA intracomunitar', color: CHART[6] },
+  { key: 'boltNonResident', label: 'Taxă nerezident', color: HOME_TOKENS.warn[400] },
 ] as const
 
 interface FeesAndTaxesChartProps {

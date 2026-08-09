@@ -1,6 +1,4 @@
 import { Stack, Typography } from '@mui/material'
-import ArrowUpwardRoundedIcon from '@mui/icons-material/ArrowUpwardRounded'
-import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded'
 
 import { HOME_TOKENS, tabularNums } from '../tokens'
 import { formatPercent } from '../format'
@@ -15,8 +13,11 @@ interface DeltaBadgeProps {
 
 /**
  * Delta față de perioada anterioară echivalentă. Dacă nu există date de comparat
- * sau perioada anterioară e zero, badge-ul nu se randează — „0%" ar minți.
- * Direcția e purtată și de săgeată, nu doar de culoare.
+ * sau perioada anterioară e zero, nu se randează nimic — „0%" ar minți.
+ *
+ * Fără pill colorat plin (spec §5.4): patru pastile pline într-un rând de șase carduri
+ * aglomerau colțurile și concurau cu cifrele. Rămân triunghiul și procentul, colorate.
+ * Direcția e purtată și de formă, nu doar de culoare.
  */
 export function DeltaBadge({ value, previous, invert, comparisonLabel }: DeltaBadgeProps) {
   if (previous === null || previous === 0) return null
@@ -26,32 +27,22 @@ export function DeltaBadge({ value, previous, invert, comparisonLabel }: DeltaBa
 
   const isUp = ratio > 0
   const isGood = invert ? !isUp : isUp
-  const Icon = isUp ? ArrowUpwardRoundedIcon : ArrowDownwardRoundedIcon
+  const color = isGood ? HOME_TOKENS.pos[600] : HOME_TOKENS.neg[600]
 
   return (
     <Stack
       direction="row"
-      spacing={0.3}
+      spacing={0.4}
       title={comparisonLabel}
       aria-label={`${isUp ? 'În creștere' : 'În scădere'} cu ${formatPercent(Math.abs(ratio), 1)} ${comparisonLabel}`}
-      sx={{
-        alignItems: 'center',
-        flexShrink: 0,
-        px: 0.8,
-        py: 0.25,
-        borderRadius: HOME_TOKENS.radius.pill,
-        bgcolor: isGood ? HOME_TOKENS.pos[50] : HOME_TOKENS.neg[50],
-      }}
+      sx={{ alignItems: 'center', flexShrink: 0 }}
     >
-      <Icon aria-hidden sx={{ fontSize: 13, color: isGood ? HOME_TOKENS.pos[600] : HOME_TOKENS.neg[600] }} />
+      <Typography aria-hidden component="span" sx={{ fontSize: 8, lineHeight: 1, color }}>
+        {isUp ? '▲' : '▼'}
+      </Typography>
       <Typography
         component="span"
-        sx={{
-          ...tabularNums,
-          fontSize: '0.72rem',
-          fontWeight: 700,
-          color: isGood ? HOME_TOKENS.pos[600] : HOME_TOKENS.neg[600],
-        }}
+        sx={{ ...tabularNums, fontSize: 12, lineHeight: 1.4, fontWeight: 600, color }}
       >
         {formatPercent(Math.abs(ratio), 1)}
       </Typography>

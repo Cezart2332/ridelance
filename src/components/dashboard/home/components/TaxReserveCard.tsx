@@ -4,14 +4,21 @@ import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import { HOME_TOKENS, tabularNums } from '../tokens'
 import { formatCurrency, formatFiscalMonth, formatPercent } from '../format'
 import type { TaxReserve } from '../../../../services/pfaDashboard.service'
+import { TAX_RAMP } from './charts/chartTheme'
+import { Amount } from './Amount'
 import { HomeCard } from './HomeCard'
 
-/** Culori discrete pentru cele patru componente — legenda e chiar tabelul de dedesubt. */
+/**
+ * Toate cele patru componente sunt obligații către stat, deci aceeași familie cromatică:
+ * se disting prin luminozitate, nu prin hue. Înainte, impozitul și contribuțiile erau
+ * albastre, ceea ce le scotea din categoria „fiscalitate" exact în cardul despre fiscalitate.
+ * Legenda e chiar tabelul de dedesubt.
+ */
 const COMPONENT_COLORS: Record<string, string> = {
-  vatIntracom: HOME_TOKENS.warn[600],
-  boltNonResident: '#D9A441',
-  incomeTax: HOME_TOKENS.brand[600],
-  casCass: HOME_TOKENS.brand[500],
+  vatIntracom: TAX_RAMP[0],
+  boltNonResident: TAX_RAMP[1],
+  incomeTax: TAX_RAMP[2],
+  casCass: TAX_RAMP[3],
 }
 
 interface TaxReserveCardProps {
@@ -35,12 +42,8 @@ export function TaxReserveCard({ reserve, periodLabel, onOpenExpenses }: TaxRese
       hint="Estimare pe perioada selectată: TVA intracomunitar și taxa de nerezident se calculează din comisioanele platformelor, iar impozitul și contribuțiile din cota anuală estimată, alocată perioadei."
       accent={HOME_TOKENS.warn[600]}
     >
-      <Typography
-        sx={{ ...tabularNums, fontSize: '1.9rem', fontWeight: 600, color: HOME_TOKENS.text.primary, lineHeight: 1.15 }}
-      >
-        {formatCurrency(total)}
-      </Typography>
-      <Typography sx={{ fontSize: '0.78rem', color: HOME_TOKENS.text.tertiary, mt: 0.3 }}>
+      <Amount value={total} unit="lei" size="hero" />
+      <Typography sx={{ fontSize: 12, color: HOME_TOKENS.text.tertiary, mt: 0.3 }}>
         recomandare rezervă taxe — {periodLabel}
       </Typography>
 
@@ -134,11 +137,13 @@ export function TaxReserveCard({ reserve, periodLabel, onOpenExpenses }: TaxRese
                 </Typography>
               </Tooltip>
             </Stack>
-            <Typography
-              sx={{ ...tabularNums, fontSize: '0.86rem', fontWeight: 500, color: HOME_TOKENS.text.primary, flexShrink: 0 }}
-            >
-              {formatCurrency(component.amount)}
-            </Typography>
+            <Amount
+              value={component.amount}
+              unit="lei"
+              size="row"
+              weight={500}
+              sx={{ flexShrink: 0 }}
+            />
           </Stack>
         ))}
       </Stack>

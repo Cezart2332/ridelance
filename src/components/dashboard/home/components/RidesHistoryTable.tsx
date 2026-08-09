@@ -19,7 +19,8 @@ import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 
 import { HOME_TOKENS, tabularNums } from '../tokens'
-import { EMPTY_FIELD, formatCurrency, formatDate, formatDistance, formatDuration, formatTime } from '../format'
+import { EMPTY_FIELD, formatDate, formatDistance, formatDuration, formatTime } from '../format'
+import { Amount } from './Amount'
 import type { RidesPage, RideRow } from '../../../../services/pfaDashboard.service'
 import type { DashboardFilters } from '../useDashboardFilters'
 import { useRidesHistory } from '../useDashboardData'
@@ -304,7 +305,7 @@ function RideTable({ items, sortField, sortDescending, onToggleSort }: RideTable
             <Box component="th" scope="col" sx={headCellSx}>
               Plată
             </Box>
-            {sortableHeader('net', 'Net', 'right')}
+            {sortableHeader('net', 'Net (lei)', 'right')}
           </Box>
         </Box>
         <Box component="tbody">
@@ -343,9 +344,9 @@ function RideTable({ items, sortField, sortDescending, onToggleSort }: RideTable
               </Box>
               <Box
                 component="td"
-                sx={{ ...bodyCellSx, ...tabularNums, textAlign: 'right', fontWeight: 500, whiteSpace: 'nowrap' }}
+                sx={{ ...bodyCellSx, textAlign: 'right', whiteSpace: 'nowrap' }}
               >
-                {formatCurrency(ride.net)}
+                <Amount value={ride.net} size="row" weight={500} />
               </Box>
             </Box>
           ))}
@@ -390,17 +391,7 @@ function RideCardList({ items }: { items: RideRow[] }) {
               <PaymentBadge payment={ride.paymentType} />
             </Stack>
           </Box>
-          <Typography
-            sx={{
-              ...tabularNums,
-              flexShrink: 0,
-              fontSize: '1rem',
-              fontWeight: 600,
-              color: HOME_TOKENS.text.primary,
-            }}
-          >
-            {formatCurrency(ride.net)}
-          </Typography>
+          <Amount value={ride.net} unit="lei" size="card" sx={{ flexShrink: 0 }} />
         </Stack>
       ))}
     </Stack>

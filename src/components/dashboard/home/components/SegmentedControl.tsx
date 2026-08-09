@@ -59,8 +59,8 @@ export function SegmentedControl<T extends string>({
           maxWidth: '100%',
           gap: '2px',
           p: '3px',
-          borderRadius: HOME_TOKENS.radius.pill,
-          bgcolor: HOME_TOKENS.bg.surface2,
+          borderRadius: '10px',
+          bgcolor: HOME_TOKENS.bg.surface,
           border: `1px solid ${HOME_TOKENS.border.subtle}`,
         }}
       >
@@ -79,14 +79,20 @@ export function SegmentedControl<T extends string>({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 0.7,
-                px: 1.6,
-                py: 0.7,
+                // §3.1: 6px 14px, colț de 8px — o pastilă, nu un buton de bară.
+                px: '14px',
+                py: '6px',
                 border: 'none',
                 cursor: 'pointer',
-                borderRadius: HOME_TOKENS.radius.pill,
-                bgcolor: selected ? HOME_TOKENS.bg.surface : 'transparent',
-                boxShadow: selected ? HOME_TOKENS.shadow.card : 'none',
+                borderRadius: '8px',
+                // Selecția se citește ca o suprafață ridicată, nu ca un fundal albastru plin:
+                // trei grupuri de filtre pline de accent ar concura cu datele de dedesubt.
+                bgcolor: selected ? HOME_TOKENS.bg.app : 'transparent',
+                boxShadow: selected ? HOME_TOKENS.shadow.raised : 'none',
                 transition: 'background-color 180ms ease-out, color 180ms ease-out',
+                '&:hover': selected
+                  ? undefined
+                  : { '& .MuiTypography-root': { color: HOME_TOKENS.text.primary } },
                 '&:focus-visible': {
                   outline: `2px solid ${HOME_TOKENS.brand[600]}`,
                   outlineOffset: 2,
@@ -103,10 +109,12 @@ export function SegmentedControl<T extends string>({
               <Typography
                 component="span"
                 sx={{
-                  fontSize: '0.8rem',
-                  fontWeight: selected ? 700 : 500,
+                  fontSize: '0.81rem',
+                  fontWeight: selected ? 600 : 500,
                   whiteSpace: 'nowrap',
                   color: selected ? HOME_TOKENS.text.primary : HOME_TOKENS.text.secondary,
+                  transition: 'color 180ms ease-out',
+                  '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
                 }}
               >
                 {option.label}

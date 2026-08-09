@@ -3,13 +3,20 @@ import { alpha } from '@mui/material/styles'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 
 /**
- * Tokenii paginii „Acasă" (spec §1), exprimați ca obiect TS pentru că aplicația
- * stilizează prin `sx`, nu prin Tailwind. Accentul brand rămâne cel al aplicației;
- * verdele/ambra/roșul apar exclusiv cu sens semantic — profit / rezervă / cost.
+ * Tokenii paginii „Acasă", exprimați ca obiect TS pentru că aplicația stilizează prin `sx`,
+ * nu prin Tailwind. Accentul brand rămâne cel al aplicației; verdele/ambra/roșul apar
+ * exclusiv cu sens semantic — profit / rezervă / cost.
+ *
+ * Regula cromatică (spec §5.1), fără excepții:
+ *   1. accentul  = metrica principală, brand, elemente interactive
+ *   2. verde/roșu = doar semantic (creștere/scădere, încasare/cheltuială)
+ *   3. ambru      = doar fiscalitate și avertismente
  */
 export const HOME_TOKENS = {
   bg: {
-    app: '#F5F6F8',
+    // Fundalul REAL al zonei de conținut, setat de AppLayout pe containerul rădăcină.
+    // Bara sticky trebuie să-l folosească opac, altfel conținutul se vede prin ea.
+    app: DASHBOARD_TOKENS.surface,
     surface: '#FFFFFF',
     surface2: '#FAFBFC',
   },
@@ -28,27 +35,51 @@ export const HOME_TOKENS = {
     50: alpha(DASHBOARD_TOKENS.accent, 0.08),
   },
   pos: { 600: '#067647', 50: '#ECFDF3' },
-  warn: { 600: '#B54708', 50: '#FFFAEB' },
+  /**
+   * Rampa ambru e singura familie cu patru trepte: cele patru componente ale rezervei
+   * de taxe sunt toate obligații fiscale, deci se disting prin luminozitate, nu prin hue.
+   */
+  warn: { 600: '#B54708', 500: '#D08128', 400: '#E5AC63', 200: '#F3D6A8', 50: '#FFFAEB' },
   neg: { 600: '#B42318', 50: '#FEF3F2' },
   platform: {
     bolt: '#34D186',
     uber: '#111827',
   },
   radius: {
-    card: '16px',
+    card: '14px',
     tile: '14px',
     input: '10px',
     pill: '999px',
   },
+  /**
+   * Umbra e dublă și foarte subtilă: un strat de 1px care definește muchia și unul difuz
+   * care ridică suprafața. O singură umbră mare arată bălos, niciuna arată plat.
+   */
   shadow: {
-    card: '0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06)',
-    hover: '0 4px 8px rgba(16,24,40,.06), 0 12px 24px rgba(16,24,40,.08)',
+    card: '0 1px 2px rgba(15,23,42,.04), 0 2px 6px rgba(15,23,42,.04)',
+    hover: '0 1px 2px rgba(15,23,42,.05), 0 8px 20px rgba(15,23,42,.07)',
+    /** Muchia de jos a barei sticky, o dată ce s-a condensat. */
+    bar: '0 1px 3px rgba(16,24,40,.06)',
+    /** Segmentul selectat dintr-un segmented control — „pastilă ridicată". */
+    raised: '0 1px 2px rgba(16,24,40,.06)',
   },
 } as const
 
+/**
+ * Pragul de la care blocul de cifre stă *lângă* graficul mare, nu deasupra lui.
+ *
+ * Nu e un breakpoint MUI fiindcă niciunul nu cade unde trebuie: sidebar-ul mănâncă 280px, deci
+ * la `lg` (1200) coloana de span 7 ar avea ~500px, adică trei tile-uri de ~155px — prea înguste
+ * pentru „2.140,0 km" la 30px. De la 1400 în sus sunt ~200px fiecare și încape.
+ *
+ * Îl folosesc și grila, și tile-ul: doar sub layout-ul ăsta eticheta unui KPI are nevoie de
+ * două rânduri.
+ */
+export const SPLIT_ROW = '@media (min-width:1400px)'
+
 export type HomeTone = 'brand' | 'positive' | 'warning' | 'negative' | 'neutral'
 
-/** Perechea fundal/prim-plan a unui ton semantic — folosită de icon-box și badge-uri. */
+/** Perechea fundal/prim-plan a unui ton semantic — folosită de badge-uri și stări. */
 export function toneColors(tone: HomeTone): { fg: string; bg: string } {
   switch (tone) {
     case 'positive':
@@ -64,11 +95,18 @@ export function toneColors(tone: HomeTone): { fg: string; bg: string } {
   }
 }
 
-/** Cifrele monetare nu au voie să „danseze" între rânduri. */
-export const tabularNums = { fontVariantNumeric: 'tabular-nums' } as const
+/**
+ * Cifrele monetare nu au voie să „danseze" între rânduri. `lining-nums` le ține pe aceeași
+ * linie de bază, `tabular-nums` le dă tuturor aceeași lățime — fără el, „3.625" și „1.172"
+ * ocupă spații diferite și coloana pare strâmbă.
+ */
+export const tabularNums = {
+  fontVariantNumeric: 'tabular-nums lining-nums',
+  fontFeatureSettings: "'tnum' 1, 'lnum' 1",
+} as const
 
 /**
- * Motion-ul din §7 e discret și dispare complet la `prefers-reduced-motion`.
+ * Motion-ul e discret și dispare complet la `prefers-reduced-motion`.
  * Media query-ul e evaluat în CSS, nu în JS, ca să nu depindă de un re-render.
  */
 export const reducedMotionSafe = (styles: Record<string, unknown>) => ({

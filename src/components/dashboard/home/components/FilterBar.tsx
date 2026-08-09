@@ -59,9 +59,13 @@ const dateFieldSx = {
 } as const
 
 /**
- * Bara de filtre (spec §2). Pe desktop stă lipită sub antet; pe ecrane înguste cele trei
- * segmented control-uri nu încap pe un rând, așa că se mută într-un bottom-sheet deschis
- * de butonul „Filtre" — mai bine decât un scroll orizontal ascuns.
+ * Bara de filtre (spec §3). E pur layout: fundalul, muchia și comportamentul sticky
+ * aparțin lui `DashboardHeader`, care face fix **întreg** blocul de antet. Dacă ar fi
+ * sticky doar rândul ăsta, perioada ar rămâne deasupra și ar dispărea la scroll.
+ *
+ * Pe ecrane înguste cele trei segmented control-uri nu încap pe un rând, așa că se mută
+ * într-un bottom-sheet deschis de butonul „Filtre" — mai bine decât un scroll orizontal
+ * ascuns.
  */
 export function FilterBar({
   filters,
@@ -121,20 +125,7 @@ export function FilterBar({
   )
 
   return (
-    <Box
-      sx={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 30,
-        // Bara acoperă lățimea completă a zonei de conținut, dincolo de padding-ul paginii.
-        mx: { xs: -2, md: -3 },
-        px: { xs: 2, md: 3 },
-        py: 1.4,
-        bgcolor: 'rgba(255,255,255,0.82)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: `1px solid ${HOME_TOKENS.border.subtle}`,
-      }}
-    >
+    <Box>
       {isCompact ? (
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
           <Button
@@ -158,10 +149,11 @@ export function FilterBar({
       ) : (
         <Stack
           direction="row"
-          spacing={2}
+          spacing={1.5}
           sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', rowGap: 1.2 }}
         >
-          <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 1.2 }}>
+          {/* `gap: 12px` între cele trei grupuri — §3.1. */}
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 1.2 }}>
             <SegmentedControl
               label="Perioadă"
               value={filters.period}

@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from '@mui/material'
+import { Box, Stack, Tooltip, Typography } from '@mui/material'
 
 import { HOME_TOKENS } from '../tokens'
 import { formatDate } from '../format'
@@ -24,77 +24,99 @@ function relativeDay(iso: string | null): string | null {
   return formatDate(iso)
 }
 
+/** „15.07" — doar ziua și luna încap pe o pastilă; anul îl dă tooltipul. */
+function shortDate(iso: string | null): string | null {
+  if (!iso) return null
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit' })
+}
+
 /**
- * Singurul rest al modulelor de import pe „Acasă": o pastilă de stare care duce în
- * taburile Bolt/Uber din Profil. Verde când ambele surse sunt proaspete, ambră altfel.
+ * Starea surselor de date (spec §2.3), într-o singură pastilă discretă.
  *
- * Cele două date măsoară lucruri diferite — Bolt se sincronizează automat prin API, iar
- * Uber depinde de ultimul CSV încărcat manual — așa că fiecare jumătate spune explicit
- * la ce se referă. Fără eticheta asta, data raportului Uber se citea drept „ultima
- * sincronizare" a întregului dashboard.
+ * Era o pastilă lată colorată integral, cu două propoziții înghesuite — greutate vizuală de
+ * alertă pentru o informație de rutină. Acum culoarea e strânsă într-un punct de 6px, iar
+ * eticheta spune un singur lucru: totul e la zi, sau care sursă a rămas în urmă.
+ *
+ * Cele două date măsoară lucruri diferite — Bolt se sincronizează automat prin API, iar Uber
+ * depinde de ultimul CSV încărcat manual — așa că detaliul complet, cu ambele, stă în
+ * tooltip. Ăsta e și motivul pentru care înlocuiește bannerul galben: aceeași informație,
+ * fără să împingă KPI-urile sub fold.
  */
 export function SourcesPill({ sources, onOpenSources }: SourcesPillProps) {
-  const stale = isBoltStale(sources) || isUberStale(sources)
-  const tone = stale ? HOME_TOKENS.warn : HOME_TOKENS.pos
+  const boltStale = isBoltStale(sources)
+  const uberStale = isUberStale(sources)
+  const stale = boltStale || uberStale
+  const dotColor = stale ? HOME_TOKENS.warn[600] : HOME_TOKENS.pos[600]
 
-  const boltSync = relativeDay(sources.bolt.lastSyncAt)
-  const boltText = !sources.bolt.configured
-    ? 'Bolt neconectat'
-    : !sources.bolt.connected
-      ? 'Bolt deconectat'
-      : boltSync
-        ? `Bolt sincronizat ${boltSync}`
-        : 'Bolt nesincronizat'
+  // Eticheta numește sursa problematică, fiindcă altfel utilizatorul nu știe unde să intre.
+  const label = boltStale
+    ? `Bolt: ${shortDate(sources.bolt.lastSyncAt) ?? 'nesincronizat'}`
+    : uberStale
+      ? `Uber: ${shortDate(sources.uber.lastReportAt) ?? 'fără raport'}`
+      : `Sincronizat ${relativeDay(sources.bolt.lastSyncAt ?? sources.uber.lastReportAt) ?? 'recent'}`
 
-  const uberReport = relativeDay(sources.uber.lastReportAt)
-  const uberText = !sources.uber.connected
-    ? 'Uber fără raport'
-    : uberReport
-      ? `Uber raport ${uberReport}`
-      : 'Uber fără raport'
-
-  const fullTitle = [
-    sources.bolt.lastSyncAt
-      ? `Bolt — ultima sincronizare API: ${new Date(sources.bolt.lastSyncAt).toLocaleString('ro-RO')}`
-      : 'Bolt — nesincronizat',
-    sources.uber.lastReportAt
-      ? `Uber — ultimul raport CSV încărcat: ${formatDate(sources.uber.lastReportAt)}`
-      : 'Uber — niciun raport încărcat',
+  const detail = [
+    sources.bolt.configured
+      ? sources.bolt.lastSyncAt
+        ? `Bolt — ultima sincronizare API: ${new Date(sources.bolt.lastSyncAt).toLocaleString('ro-RO')}`
+        : 'Bolt — nesincronizat'
+      : 'Bolt — neconectat',
+    sources.uber.connected
+      ? sources.uber.lastReportAt
+        ? `Uber — ultimul raport CSV încărcat: ${formatDate(sources.uber.lastReportAt)}`
+        : 'Uber — niciun raport încărcat'
+      : 'Uber — neconectat',
   ].join('\n')
 
   return (
-    <Box
-      component="button"
-      type="button"
-      onClick={onOpenSources}
-      title={fullTitle}
-      aria-label={`Stare surse de date: ${boltText}, ${uberText}. Deschide sursele din Profil.`}
-      sx={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 0.8,
-        px: 1.3,
-        py: 0.6,
-        cursor: 'pointer',
-        borderRadius: HOME_TOKENS.radius.pill,
-        border: `1px solid ${HOME_TOKENS.border.subtle}`,
-        bgcolor: tone[50],
-        transition: 'box-shadow 180ms ease-out',
-        '&:hover': { boxShadow: HOME_TOKENS.shadow.card },
-        '&:focus-visible': { outline: `2px solid ${HOME_TOKENS.brand[600]}`, outlineOffset: 2 },
-        '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-      }}
+    <Tooltip
+      enterTouchDelay={0}
+      title={<Box sx={{ whiteSpace: 'pre-line', fontSize: '0.75rem' }}>{detail}</Box>}
     >
-      <Box aria-hidden sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: tone[600], flexShrink: 0 }} />
-      <Stack direction="row" spacing={0.6} sx={{ alignItems: 'center' }}>
-        <Typography sx={{ fontSize: '0.76rem', fontWeight: 600, color: tone[600], whiteSpace: 'nowrap' }}>
-          {boltText}
-        </Typography>
-        <Typography sx={{ fontSize: '0.76rem', color: HOME_TOKENS.text.tertiary }}>•</Typography>
-        <Typography sx={{ fontSize: '0.76rem', fontWeight: 600, color: tone[600], whiteSpace: 'nowrap' }}>
-          {uberText}
-        </Typography>
-      </Stack>
-    </Box>
+      <Box
+        component="button"
+        type="button"
+        onClick={onOpenSources}
+        aria-label={`Stare surse de date. ${detail.replace(/\n/g, '. ')}. Deschide sursele din Profil.`}
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 0.8,
+          px: 1.2,
+          py: 0.5,
+          flexShrink: 0,
+          cursor: 'pointer',
+          borderRadius: HOME_TOKENS.radius.pill,
+          border: `1px solid ${HOME_TOKENS.border.subtle}`,
+          bgcolor: HOME_TOKENS.bg.surface,
+          transition: 'box-shadow 160ms ease-out, border-color 160ms ease-out',
+          '&:hover': {
+            boxShadow: HOME_TOKENS.shadow.raised,
+            borderColor: HOME_TOKENS.border.strong,
+          },
+          '&:focus-visible': { outline: `2px solid ${HOME_TOKENS.brand[600]}`, outlineOffset: 2 },
+          '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+        }}
+      >
+        <Box
+          aria-hidden
+          sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: dotColor, flexShrink: 0 }}
+        />
+        <Stack direction="row" spacing={0.6} sx={{ alignItems: 'center' }}>
+          <Typography
+            sx={{
+              fontSize: 12,
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+              color: HOME_TOKENS.text.secondary,
+            }}
+          >
+            {label}
+          </Typography>
+        </Stack>
+      </Box>
+    </Tooltip>
   )
 }

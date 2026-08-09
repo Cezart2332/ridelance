@@ -18,13 +18,20 @@ export interface HomeCardProps {
   children: ReactNode
 }
 
-/** Cardul alb standard al paginii „Acasă": border subtil + shadow soft, fără culoare de fundal. */
+/**
+ * Cardul alb standard al paginii „Acasă" (spec §6.1): border subtil + umbră dublă,
+ * fără culoare de fundal.
+ *
+ * Umbra e formată din două straturi — unul de 1px care definește muchia și unul difuz care
+ * ridică suprafața. Una singură, mare, arată bălos; niciuna arată plat. Ăsta e detaliul
+ * care lipsea.
+ */
 export function HomeCard({ title, hint, subtitle, action, accent, fill, children }: HomeCardProps) {
   return (
     <Paper
       elevation={0}
       sx={{
-        p: { xs: 2, md: 2.5 },
+        p: '20px',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -35,16 +42,22 @@ export function HomeCard({ title, hint, subtitle, action, accent, fill, children
         borderLeft: accent ? `3px solid ${accent}` : `1px solid ${HOME_TOKENS.border.subtle}`,
         bgcolor: HOME_TOKENS.bg.surface,
         boxShadow: HOME_TOKENS.shadow.card,
+        // Fără `translateY` la hover — e un dashboard, nu o pagină de prezentare.
+        transition: 'box-shadow 160ms ease-out',
+        '&:hover': { boxShadow: HOME_TOKENS.shadow.hover },
+        '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
       }}
     >
       <Stack
         direction="row"
         spacing={1.5}
-        sx={{ alignItems: 'flex-start', justifyContent: 'space-between', mb: 1.6, flexShrink: 0 }}
+        sx={{ alignItems: 'flex-start', justifyContent: 'space-between', mb: 2, flexShrink: 0 }}
       >
         <Box sx={{ minWidth: 0 }}>
           <Stack direction="row" spacing={0.6} sx={{ alignItems: 'center' }}>
-            <Typography sx={{ fontSize: '1rem', fontWeight: 600, color: HOME_TOKENS.text.primary }}>
+            <Typography
+              sx={{ fontSize: 15, lineHeight: 1.4, fontWeight: 600, color: HOME_TOKENS.text.primary }}
+            >
               {title}
             </Typography>
             {hint && (

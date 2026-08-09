@@ -1,8 +1,10 @@
 import { Box, Stack, Typography } from '@mui/material'
 
-import { HOME_TOKENS, tabularNums } from '../tokens'
-import { formatCurrency, formatPercent } from '../format'
+import { HOME_TOKENS } from '../tokens'
+import { formatPercent } from '../format'
 import type { RealProfit } from '../../../../services/pfaDashboard.service'
+import { CHART } from './charts/chartTheme'
+import { Amount } from './Amount'
 import { HomeCard } from './HomeCard'
 
 interface RealProfitCardProps {
@@ -25,10 +27,10 @@ export function RealProfitCard({ profit }: RealProfitCardProps) {
   const isNegative = profit.value < 0
 
   const rows: WaterfallRow[] = [
-    { label: 'Încasări nete', amount: profit.netEarnings, color: HOME_TOKENS.pos[600] },
-    { label: 'Cheltuieli deductibile', amount: -profit.deductibleExpenses, color: HOME_TOKENS.neg[600] },
-    { label: 'Taxe estimate', amount: -profit.estimatedTaxes, color: HOME_TOKENS.warn[600] },
-    { label: 'Profit real estimat', amount: profit.value, color: HOME_TOKENS.brand[600], isResult: true },
+    { label: 'Încasări nete', amount: profit.netEarnings, color: CHART[1] },
+    { label: 'Cheltuieli deductibile', amount: -profit.deductibleExpenses, color: CHART[7] },
+    { label: 'Taxe estimate', amount: -profit.estimatedTaxes, color: CHART[6] },
+    { label: 'Profit real estimat', amount: profit.value, color: CHART[1], isResult: true },
   ]
 
   const scale = Math.max(...rows.map((row) => Math.abs(row.amount)), 1)
@@ -57,18 +59,13 @@ export function RealProfitCard({ profit }: RealProfitCardProps) {
         ) : undefined
       }
     >
-      <Typography
-        sx={{
-          ...tabularNums,
-          fontSize: '1.9rem',
-          fontWeight: 600,
-          lineHeight: 1.15,
-          color: isNegative ? HOME_TOKENS.neg[600] : HOME_TOKENS.text.primary,
-        }}
-      >
-        {formatCurrency(profit.value)}
-      </Typography>
-      <Typography sx={{ fontSize: '0.78rem', color: HOME_TOKENS.text.tertiary, mt: 0.3 }}>
+      <Amount
+        value={profit.value}
+        unit="lei"
+        size="hero"
+        color={isNegative ? HOME_TOKENS.neg[600] : HOME_TOKENS.text.primary}
+      />
+      <Typography sx={{ fontSize: 12, color: HOME_TOKENS.text.tertiary, mt: 0.3 }}>
         încasări nete − cheltuieli deductibile − taxe estimate
       </Typography>
 
@@ -102,18 +99,14 @@ export function RealProfitCard({ profit }: RealProfitCardProps) {
               >
                 {row.label}
               </Typography>
-              <Typography
-                sx={{
-                  ...tabularNums,
-                  flexShrink: 0,
-                  fontSize: row.isResult ? '0.95rem' : '0.88rem',
-                  fontWeight: row.isResult ? 600 : 500,
-                  color: row.amount < 0 ? HOME_TOKENS.neg[600] : HOME_TOKENS.text.primary,
-                }}
-              >
-                {row.amount < 0 ? '−' : ''}
-                {formatCurrency(Math.abs(row.amount))}
-              </Typography>
+              <Amount
+                value={row.amount}
+                unit="lei"
+                size="row"
+                weight={row.isResult ? 600 : 500}
+                color={row.amount < 0 ? HOME_TOKENS.neg[600] : HOME_TOKENS.text.primary}
+                sx={{ flexShrink: 0 }}
+              />
             </Stack>
             <Box
               aria-hidden

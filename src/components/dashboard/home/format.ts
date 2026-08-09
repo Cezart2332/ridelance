@@ -102,6 +102,20 @@ export function formatPeriodLabel(from: string, to: string): string {
   return `${start.getDate()} ${month(start)} ${start.getFullYear()} – ${end.getDate()} ${month(end)} ${end.getFullYear()}`
 }
 
+/**
+ * „7 zile" — contextul care umple linia de sub perioadă (spec §2.1). Intervalul e inclusiv
+ * la ambele capete: 3–9 august înseamnă 7 zile, nu 6.
+ */
+export function formatDayCount(from: string, to: string): string {
+  const start = new Date(`${from}T00:00:00`)
+  const end = new Date(`${to}T00:00:00`)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return ''
+
+  const days = Math.round((end.getTime() - start.getTime()) / 864e5) + 1
+  if (days < 1) return ''
+  return days === 1 ? '1 zi' : `${days} zile`
+}
+
 /** „iunie 2026" dintr-un „2026-06". */
 export function formatFiscalMonth(month: string): string {
   const [year, monthNumber] = month.split('-').map(Number)

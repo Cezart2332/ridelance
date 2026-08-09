@@ -16,7 +16,7 @@ import { formatAxisNumber, formatCurrency, formatDate } from '../../format'
 import type { RealProfitPoint } from '../../../../../services/pfaDashboard.service'
 import { HomeCard } from '../HomeCard'
 import { ChartDataTable, ChartLegend, ChartTooltip } from './chartSetup'
-import { axisProps, gridProps } from './chartTheme'
+import { axisProps, CHART, gridProps } from './chartTheme'
 
 interface RealProfitTrendChartProps {
   points: RealProfitPoint[]
@@ -25,8 +25,11 @@ interface RealProfitTrendChartProps {
 }
 
 /**
- * „Evoluție profit real estimat". Banda gri din spate sunt încasările nete: distanța
- * dintre ea și linie e exact mesajul întregii pagini.
+ * „Evoluție profit real estimat". Banda din spate sunt încasările nete: distanța dintre ea
+ * și linie e exact mesajul întregii pagini.
+ *
+ * Banda e treapta deschisă din rampa accentului, nu gri: griul se citea ca „serie
+ * dezactivată", când de fapt e termenul de comparație al întregului card.
  */
 export function RealProfitTrendChart({ points, granularity, animate }: RealProfitTrendChartProps) {
   const hasNegative = points.some((point) => point.value < 0)
@@ -35,8 +38,8 @@ export function RealProfitTrendChart({ points, granularity, animate }: RealProfi
     <HomeCard title="Evoluție profit real estimat" fill>
       <ChartLegend
         items={[
-          { label: 'Profit real estimat', color: HOME_TOKENS.brand[600] },
-          { label: 'Încasări nete', color: HOME_TOKENS.border.strong },
+          { label: 'Profit real estimat', color: CHART[1] },
+          { label: 'Încasări nete', color: CHART[3] },
         ]}
       />
 
@@ -68,13 +71,13 @@ export function RealProfitTrendChart({ points, granularity, animate }: RealProfi
                       {
                         name: 'Profit real estimat',
                         value: point.value,
-                        color: HOME_TOKENS.brand[600],
+                        color: CHART[1],
                         dataKey: 'value',
                       },
                       {
                         name: 'Încasări nete',
                         value: point.netEarnings,
-                        color: HOME_TOKENS.border.strong,
+                        color: CHART[3],
                         dataKey: 'netEarnings',
                       },
                     ]}
@@ -87,7 +90,8 @@ export function RealProfitTrendChart({ points, granularity, animate }: RealProfi
               dataKey="netEarnings"
               name="Încasări nete"
               stroke="none"
-              fill={HOME_TOKENS.border.subtle}
+              fill={CHART[3]}
+              fillOpacity={0.55}
               isAnimationActive={animate}
             />
             {hasNegative && <ReferenceLine y={0} stroke={HOME_TOKENS.border.strong} strokeDasharray="4 4" />}
@@ -95,7 +99,7 @@ export function RealProfitTrendChart({ points, granularity, animate }: RealProfi
               type="monotone"
               dataKey="value"
               name="Profit real estimat"
-              stroke={HOME_TOKENS.brand[600]}
+              stroke={CHART[1]}
               strokeWidth={2}
               dot={false}
               activeDot={{ r: 4, strokeWidth: 0 }}

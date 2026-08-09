@@ -7,7 +7,7 @@ import { formatAxisNumber, formatCurrency, formatDate } from '../../format'
 import type { NetEarningsPoint } from '../../../../../services/pfaDashboard.service'
 import { HomeCard } from '../HomeCard'
 import { ChartDataTable, ChartTooltip } from './chartSetup'
-import { axisProps, gridProps } from './chartTheme'
+import { areaGradient, axisProps, CHART, gridProps, PLATFORM_COLOR } from './chartTheme'
 
 interface NetEarningsChartProps {
   points: NetEarningsPoint[]
@@ -67,8 +67,8 @@ export function NetEarningsChart({ points, total, granularity, animate }: NetEar
           <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="netEarningsFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={HOME_TOKENS.brand[600]} stopOpacity={0.22} />
-                <stop offset="100%" stopColor={HOME_TOKENS.brand[600]} stopOpacity={0} />
+                <stop offset="0%" stopColor={areaGradient(CHART[1]).from} />
+                <stop offset="100%" stopColor={areaGradient(CHART[1]).to} />
               </linearGradient>
             </defs>
             <CartesianGrid {...gridProps} />
@@ -91,13 +91,13 @@ export function NetEarningsChart({ points, total, granularity, animate }: NetEar
                     entries={
                       split
                         ? [
-                            { name: 'Bolt', value: point.bolt, color: HOME_TOKENS.platform.bolt, dataKey: 'bolt' },
-                            { name: 'Uber', value: point.uber, color: HOME_TOKENS.platform.uber, dataKey: 'uber' },
+                            { name: 'Bolt', value: point.bolt, color: PLATFORM_COLOR.bolt, dataKey: 'bolt' },
+                            { name: 'Uber', value: point.uber, color: PLATFORM_COLOR.uber, dataKey: 'uber' },
                           ]
                         : [
-                            { name: 'Net total', value: point.total, color: HOME_TOKENS.brand[600], dataKey: 'total' },
-                            { name: 'Bolt', value: point.bolt, color: HOME_TOKENS.platform.bolt, dataKey: 'bolt' },
-                            { name: 'Uber', value: point.uber, color: HOME_TOKENS.platform.uber, dataKey: 'uber' },
+                            { name: 'Net total', value: point.total, color: CHART[1], dataKey: 'total' },
+                            { name: 'Bolt', value: point.bolt, color: PLATFORM_COLOR.bolt, dataKey: 'bolt' },
+                            { name: 'Uber', value: point.uber, color: PLATFORM_COLOR.uber, dataKey: 'uber' },
                           ]
                     }
                     footer={point.rides > 0 ? `${point.rides} curse` : undefined}
@@ -111,9 +111,9 @@ export function NetEarningsChart({ points, total, granularity, animate }: NetEar
                   type="monotone"
                   dataKey="bolt"
                   name="Bolt"
-                  stroke={HOME_TOKENS.platform.bolt}
+                  stroke={PLATFORM_COLOR.bolt}
                   strokeWidth={2}
-                  fill={HOME_TOKENS.platform.bolt}
+                  fill={PLATFORM_COLOR.bolt}
                   fillOpacity={0.14}
                   dot={false}
                   isAnimationActive={animate}
@@ -122,9 +122,9 @@ export function NetEarningsChart({ points, total, granularity, animate }: NetEar
                   type="monotone"
                   dataKey="uber"
                   name="Uber"
-                  stroke={HOME_TOKENS.platform.uber}
+                  stroke={PLATFORM_COLOR.uber}
                   strokeWidth={2}
-                  fill={HOME_TOKENS.platform.uber}
+                  fill={PLATFORM_COLOR.uber}
                   fillOpacity={0.1}
                   dot={false}
                   isAnimationActive={animate}
@@ -135,7 +135,7 @@ export function NetEarningsChart({ points, total, granularity, animate }: NetEar
                 type="monotone"
                 dataKey="total"
                 name="Net total"
-                stroke={HOME_TOKENS.brand[600]}
+                stroke={CHART[1]}
                 strokeWidth={2}
                 fill="url(#netEarningsFill)"
                 dot={false}
