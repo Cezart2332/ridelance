@@ -1,0 +1,2 @@
+{"type":"receive","time":1786284779655.4128,"opcode":1,"data":"{\"type\":\"connected\"}"}
+{"type":"send","time":1786284781316.6248,"opcode":1,"data":"{\"type\":\"custom\",\"event\":\"vite:forward-console\",\"data\":{\"type\":\"log\",\"data\":{\"level\":\"error\",\"message\":\"SW registration failed: SecurityError: Failed to register a ServiceWorker for scope ('http://127.0.0.1:5173/') with script ('http://127.0.0.1:5173/sw.js'): The script has an unsupported MIME type ('text/html').\"}}}"}

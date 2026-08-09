@@ -13,12 +13,15 @@ interface OnboardingTopBarProps {
   percent: number
   canGoBack: boolean
   onBack: () => void
-  onSaveAndExit: () => void
   onLogout: () => void
 }
 
 /**
- * Bara de sus: unde ești, cât mai ai, și cele două ieșiri (înapoi un ecran, sau salvează și pleacă).
+ * Bara de sus: unde ești, cât mai ai, și cele două ieșiri (înapoi un ecran, sau afară din cont).
+ *
+ * Nu există buton de „salvează": fiecare răspuns și fiecare document pleacă la server în clipa în
+ * care e dat, deci nu se poate pierde nimic închizând pagina. Un buton care nu face nimic în plus
+ * doar sugerează că fără el ai fi pierdut ceva.
  *
  * Progresul se măsoară pe micro-pași, nu pe pașii mari. Pe pași mari inelul ar sta blocat minute
  * întregi și userul ar crede că nu avansează.
@@ -29,7 +32,6 @@ export function OnboardingTopBar({
   percent,
   canGoBack,
   onBack,
-  onSaveAndExit,
   onLogout,
 }: OnboardingTopBarProps) {
   return (
@@ -60,19 +62,6 @@ export function OnboardingTopBar({
       <StepProgressRing position={position} total={total} percent={percent} />
 
       <Stack direction="row" sx={{ alignItems: 'center', gap: 1, flex: 1, justifyContent: 'flex-end' }}>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={onSaveAndExit}
-          sx={{
-            display: { xs: 'none', md: 'inline-flex' },
-            color: TOKENS.ink,
-            borderColor: TOKENS.borderHover,
-            flexShrink: 0,
-          }}
-        >
-          Salvează și continuă mai târziu
-        </Button>
         <Button
           onClick={onLogout}
           startIcon={<LogoutRoundedIcon sx={{ fontSize: 17 }} />}

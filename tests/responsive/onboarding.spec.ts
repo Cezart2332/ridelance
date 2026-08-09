@@ -317,6 +317,6 @@ test.describe('pasul 1 pe micro-pași', () => {
 
     // Nu e o fundătură: rail-ul rămâne întreg și se poate reveni.
     await expect(page.getByRole('button', { name: 'Înapoi la pasul anterior' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Contactează suportul' }).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Suport' }).first()).toBeVisible()
   })
 })

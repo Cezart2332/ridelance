@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material'
+import { Box, Button, Chip, Stack, Typography } from '@mui/material'
 
 import { HOME_TOKENS, SPLIT_ROW } from '../home/tokens'
 import { formatPeriodLabel } from '../home/format'
@@ -17,7 +17,6 @@ import { NetEarningsChart } from '../home/components/charts/NetEarningsChart'
 import { FeesAndTaxesChart } from '../home/components/charts/FeesAndTaxesChart'
 import { RealProfitTrendChart } from '../home/components/charts/RealProfitTrendChart'
 import { RidesHistoryTable } from '../home/components/RidesHistoryTable'
-import { isSeverelyStale } from '../home/sourceFreshness'
 import { CardError, CardSkeleton, TileSkeleton } from '../home/components/states/CardStates'
 import type { PfaDashboardSummary, RidesPage } from '../../../services/pfaDashboard.service'
 
@@ -117,9 +116,6 @@ export function HomeDashboardContent({
 
   const sources = data?.sources
   const noSources = !!sources && !sources.bolt.configured && !sources.uber.connected
-  // Vechimea obișnuită e semnalată de punctul ambru din pastila de surse. Aici escaladăm
-  // doar cazul în care cifrele de pe ecran descriu, practic, altă perioadă.
-  const showStaleAlert = !!sources && isSeverelyStale(sources)
   const onlyOneSource =
     !!sources && sources.bolt.configured !== sources.uber.connected && !noSources
 
@@ -265,37 +261,6 @@ export function HomeDashboardContent({
                   </Box>
                 </Box>
               </FadeUpRow>
-
-              {/* Alerta de date vechi stă peste blocul de cifre, nu peste toată grila:
-                  full-width, împingea KPI-urile sub fold pentru un avertisment de rutină. */}
-              {showStaleAlert && (
-                <Alert
-                  severity="warning"
-                  variant="standard"
-                  icon={false}
-                  sx={{
-                    maxWidth: { lg: '58%' },
-                    py: 0.5,
-                    borderRadius: HOME_TOKENS.radius.card,
-                    border: `1px solid ${HOME_TOKENS.warn[200]}`,
-                    bgcolor: HOME_TOKENS.warn[50],
-                    color: HOME_TOKENS.text.primary,
-                    fontSize: 13,
-                  }}
-                  action={
-                    <Button
-                      size="small"
-                      onClick={goToSources}
-                      sx={{ textTransform: 'none', fontWeight: 600, fontSize: 13 }}
-                    >
-                      Deschide sursele
-                    </Button>
-                  }
-                >
-                  O sursă nu a mai fost actualizată de peste o săptămână — cifrele de mai sus
-                  pot descrie o perioadă mai scurtă decât cea selectată.
-                </Alert>
-              )}
 
               {/* ── Ce e al meu, ce nu e al meu ── */}
               <FadeUpRow index={1}>

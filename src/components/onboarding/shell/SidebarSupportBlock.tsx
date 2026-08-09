@@ -39,7 +39,7 @@ export function SidebarSupportBlock() {
           '&:hover': { backgroundColor: TOKENS.primarySoft },
         }}
       >
-        Contactează suportul
+        Suport
       </Button>
 
       <Menu

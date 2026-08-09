@@ -42,7 +42,7 @@ export function BlockedStateCard({
             Înapoi la pasul anterior
           </Button>
           <Button variant="contained" onClick={onContactSupport}>
-            Contactează suportul
+            Suport
           </Button>
         </Stack>
       }

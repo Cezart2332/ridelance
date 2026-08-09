@@ -1,8 +1,8 @@
-import { Box, Divider, Stack, Typography } from '@mui/material'
+import { Box, Stack, Typography } from '@mui/material'
 import { visuallyHidden } from '@mui/utils'
 
 import { HOME_TOKENS } from '../tokens'
-import { formatDayCount, formatPeriodLabel } from '../format'
+import { formatPeriodLabel } from '../format'
 import { useCondensedHeader } from '../useCondensedHeader'
 import type { DashboardFilters, PeriodPreset } from '../useDashboardFilters'
 import type {
@@ -12,6 +12,15 @@ import type {
 } from '../../../../services/pfaDashboard.service'
 import { FilterBar } from './FilterBar'
 import { SourcesPill } from './SourcesPill'
+
+/**
+ * Padding-ul de sus al zonei de conținut (`<main>` din AppLayout), în px per breakpoint.
+ *
+ * Offsetul unui element `sticky` se măsoară față de **padding box**-ul containerului de scroll,
+ * nu față de marginea lui. Cu `top: 0`, bara se oprea la 24px sub antetul aplicației și prin fâșia
+ * aceea se vedea conținutul derulând. Un `top` negativ egal cu padding-ul o lipește de antet.
+ */
+const MAIN_PADDING_TOP = { xs: -16, md: -24 }
 
 interface DashboardHeaderProps {
   filters: DashboardFilters
@@ -25,15 +34,14 @@ interface DashboardHeaderProps {
 }
 
 /**
- * Antetul paginii „Acasă" (spec §2): perioada, starea surselor și filtrele, într-un
- * **singur** container sticky.
+ * Antetul paginii „Acasă" (spec §2): filtrele, lipite sub bara aplicației.
  *
- * Titlul „Dashboard PFA" nu apare aici — îl randează deja `AppHeader`, bara aplicației,
- * pentru toate secțiunile. Ce lipsea la scroll era perioada, iar asta se rezolvă mutând-o
- * *în* blocul care rămâne fix, nu deasupra lui.
+ * Nu conține nici titlu, nici perioada scrisă mare. Titlul „Dashboard PFA" e deja în `AppHeader`,
+ * iar perioada e scrisă pe pastila „Luna curentă" din filtre — repetată alături, nu adăuga nimic
+ * și mai și rupea bara în două rânduri, cu un gol între ele.
  *
- * Fundalul e **opac**, nu `rgba(...)` cu `backdrop-filter`. Blur peste un fundal
- * semi-transparent nu ascunde conținutul, doar îl face neclar — exact defectul reclamat.
+ * Fundalul e **opac**, nu `rgba(...)` cu `backdrop-filter`. Blur peste un fundal semi-transparent
+ * nu ascunde conținutul, doar îl încețoșează — exact defectul reclamat.
  */
 export function DashboardHeader({
   filters,
@@ -47,23 +55,23 @@ export function DashboardHeader({
 }: DashboardHeaderProps) {
   const { sentinelRef, condensed } = useCondensedHeader()
 
-  const periodLabel = formatPeriodLabel(filters.from, filters.to)
-  const dayCount = formatDayCount(filters.from, filters.to)
-
   return (
     <>
-      {/* Santinela marchează pragul de 8px din spec. `mb` negativ o scoate din flux,
-          ca prezența ei să nu împingă antetul mai jos. */}
+      {/* Santinela marchează pragul de 8px. `mb` negativ o scoate din flux, ca prezența ei să nu
+          împingă antetul mai jos. */}
       <Box ref={sentinelRef} aria-hidden sx={{ height: 8, mb: '-8px' }} />
 
       <Box
         sx={{
           position: 'sticky',
-          top: 0,
+          top: MAIN_PADDING_TOP,
           zIndex: 20,
-          // Bara acoperă lățimea completă a zonei de conținut, dincolo de padding-ul paginii.
+          // Bara acoperă lățimea completă a zonei de conținut, dincolo de padding-ul paginii, și
+          // se întinde în sus peste padding-ul lui `<main>`, ca să nu rămână nicio fâșie liberă.
           mx: { xs: -2, md: -3 },
           px: { xs: 2, md: 3 },
+          pt: { xs: 2, md: 3 },
+          pb: 1.5,
           bgcolor: HOME_TOKENS.bg.app,
           borderBottom: `1px solid ${condensed ? HOME_TOKENS.border.subtle : 'transparent'}`,
           boxShadow: condensed ? HOME_TOKENS.shadow.bar : 'none',
@@ -71,63 +79,29 @@ export function DashboardHeader({
           '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
         }}
       >
+        {/* Perioada rămâne singurul context al cifrelor pentru cititoarele de ecran. */}
+        <Typography component="h1" sx={visuallyHidden}>
+          Dashboard PFA — {formatPeriodLabel(filters.from, filters.to)}
+        </Typography>
+
         <Stack
           direction="row"
-          spacing={2}
-          sx={{
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            rowGap: 1,
-            pt: condensed ? 1 : 2,
-            pb: condensed ? 0.5 : 1,
-            transition: 'padding 180ms ease-out',
-            '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-          }}
+          spacing={1.5}
+          sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', rowGap: 1 }}
         >
-          <Box sx={{ minWidth: 0 }}>
-            <Typography component="h1" sx={visuallyHidden}>
-              Dashboard PFA — {periodLabel}
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: condensed ? '0.88rem' : '1.05rem',
-                fontWeight: 600,
-                lineHeight: 1.3,
-                letterSpacing: '-0.01em',
-                color: HOME_TOKENS.text.primary,
-                transition: 'font-size 180ms ease-out',
-                '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-              }}
-            >
-              {periodLabel}
-              {dayCount && (
-                <Box
-                  component="span"
-                  sx={{ ml: 0.75, fontWeight: 400, color: HOME_TOKENS.text.secondary }}
-                >
-                  · {dayCount}
-                </Box>
-              )}
-            </Typography>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <FilterBar
+              filters={filters}
+              onPeriodChange={onPeriodChange}
+              onCustomRangeChange={onCustomRangeChange}
+              onPlatformChange={onPlatformChange}
+              onPaymentChange={onPaymentChange}
+              onReset={onReset}
+            />
           </Box>
 
           {sources && <SourcesPill sources={sources} onOpenSources={onOpenSources} />}
         </Stack>
-
-        {/* Când bara s-a condensat, muchia ei de jos separă deja antetul de conținut. */}
-        {!condensed && <Divider sx={{ borderColor: HOME_TOKENS.border.subtle }} />}
-
-        <Box sx={{ py: 1.25 }}>
-          <FilterBar
-            filters={filters}
-            onPeriodChange={onPeriodChange}
-            onCustomRangeChange={onCustomRangeChange}
-            onPlatformChange={onPlatformChange}
-            onPaymentChange={onPaymentChange}
-            onReset={onReset}
-          />
-        </Box>
       </Box>
     </>
   )

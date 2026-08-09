@@ -1,6 +1,4 @@
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
-import CreditCardRoundedIcon from '@mui/icons-material/CreditCardRounded'
-import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
 import {
   Alert,
   Box,
@@ -31,7 +29,6 @@ import { OnboardingProvider } from './OnboardingProvider'
 import { displaySx, TOKENS } from './onboardingTheme'
 import { MobileStepBar, MOBILE_BAR_HEIGHT } from './rail/MobileStepBar'
 import { StepRail } from './rail/StepRail'
-import { LockedNavItem } from './shell/LockedNavItem'
 import { SidebarSupportBlock } from './shell/SidebarSupportBlock'
 import { OnboardingTopBar, TOPBAR_HEIGHT } from './shell/OnboardingTopBar'
 import { StepProgressRing } from './shell/StepProgressRing'
@@ -39,7 +36,6 @@ import { firstActionableStep, type StepView } from './stepModel'
 import { OnboardingSupportContext, type OnboardingSupportValue } from './supportContext'
 import { useMicroSteps } from './useMicroSteps'
 import { useOnboarding } from './useOnboarding'
-import { useOnboardingGate } from './useOnboardingGate'
 
 const RAIL_WIDTH = 280
 
@@ -161,31 +157,6 @@ function SidebarBrand() {
   )
 }
 
-/** Serviciile care se deschid după înrolare. Pur vizuale cât timp lacătul e pus. */
-function SidebarLockedNav({ onBlocked }: { onBlocked: () => void }) {
-  const { unlocked } = useOnboardingGate()
-  const navigate = useNavigate()
-
-  return (
-    <Stack spacing={0.25}>
-      <LockedNavItem
-        icon={CreditCardRoundedIcon}
-        label="Abonamente"
-        unlocked={unlocked}
-        onOpen={() => navigate('/inregistrare/abonament')}
-        onBlockedClick={onBlocked}
-      />
-      <LockedNavItem
-        icon={ShieldRoundedIcon}
-        label="Asigurări"
-        unlocked={unlocked}
-        onOpen={() => navigate('/app/asigurari')}
-        onBlockedClick={onBlocked}
-      />
-    </Stack>
-  )
-}
-
 /**
  * Corpul shell-ului. Are nevoie de micro-pași (topbar, rail-ul din dreapta, sub-pașii din stânga),
  * deci stă sub `MicroStepProvider` — de asta e separat de `OnboardingShell`.
@@ -204,8 +175,6 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
     useOnboarding()
   const micro = useMicroSteps()
 
-  const [lockedNotice, setLockedNotice] = useState(false)
-  const [savedNotice, setSavedNotice] = useState(false)
 
   // Întoarcerea din Stripe după plata înființării PFA: webhookul poate întârzia,
   // așa că facem poll până apare plata (max 30s).
@@ -251,16 +220,6 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
   const handleLogout = () => {
     authService.logout()
     navigate('/auth')
-  }
-
-  /**
-   * „Salvează și continuă mai târziu": nu are ce salva în plus — fiecare răspuns și fiecare
-   * document pleacă la server în momentul în care se produc. Confirmăm asta explicit, altfel
-   * butonul pare că face ceva ce nu face.
-   */
-  const handleSaveAndExit = () => {
-    setSavedNotice(true)
-    window.setTimeout(() => navigate('/app'), 900)
   }
 
   const goToStep = (target: StepView) => {
@@ -318,7 +277,6 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
               percent={micro.percent}
               canGoBack={micro.canGoBack}
               onBack={micro.back}
-              onSaveAndExit={handleSaveAndExit}
               onLogout={handleLogout}
             />
           </Box>
@@ -355,7 +313,6 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
               <Stack spacing={0.5} sx={{ px: 2, pt: 1, pb: 2, backgroundColor: TOKENS.paper }}>
                 <Divider sx={{ mb: 1 }} />
                 <SidebarSupportBlock />
-                <SidebarLockedNav onBlocked={() => setLockedNotice(true)} />
               </Stack>
             </Stack>
             <Box sx={{ width: RAIL_WIDTH, flexShrink: 0 }} />
@@ -424,26 +381,6 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
             ? `Pasul „${rejectionAlert.labels[0]}” a fost redeschis — au apărut observații.`
             : `${rejectionAlert?.labels.length} pași au fost redeschiși — au apărut observații.`}
         </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={lockedNotice}
-        autoHideDuration={5000}
-        onClose={() => setLockedNotice(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="info" onClose={() => setLockedNotice(false)}>
-          Poți alege un abonament sau o asigurare după ce finalizezi toți cei 6 pași.
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={savedNotice}
-        autoHideDuration={4000}
-        onClose={() => setSavedNotice(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="success">Progresul a fost salvat. Poți reveni oricând.</Alert>
       </Snackbar>
     </Box>
   )
