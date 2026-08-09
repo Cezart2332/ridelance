@@ -20,7 +20,8 @@ export const TOKENS = {
   borderHover: GLOBAL.borderHover,
   textMuted: 'rgba(26, 26, 46, 0.55)',
   textSubtle: GLOBAL.textSubtle,
-  radius: GLOBAL.radius,
+  /** `button: 10` e singurul radius pe care specul îl cere și care nu există în scara globală. */
+  radius: { ...GLOBAL.radius, button: 10 },
   shadow: GLOBAL.shadow,
   easing: GLOBAL.easing,
   duration: GLOBAL.duration,
@@ -31,6 +32,15 @@ export const TOKENS = {
   pendingBase: '#ed6c02',
   danger: '#b71c1c',
   dangerBase: '#d32f2f',
+
+  /**
+   * Tintele accentului, echivalentul scării `primary.50/100/200` din spec. Sunt derivate din
+   * accentul platformei, nu din albastrul din spec: onboardingul trebuie să arate RIDElance.
+   * Translucide, ca să se așeze și peste `surface`, nu doar peste alb.
+   */
+  primarySoft: alpha(GLOBAL.primary, 0.1),
+  primaryTint: alpha(GLOBAL.primary, 0.22),
+  primaryEdge: alpha(GLOBAL.primary, 0.45),
 }
 
 /** Perechea display + body. Cifrele sunt tabulare peste tot unde se numără sau se măsoară. */

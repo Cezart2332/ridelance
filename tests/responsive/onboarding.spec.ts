@@ -105,7 +105,31 @@ const uploadedDoc = (category: string, fileName: string) => ({
   aiRequiresManualReview: false,
 })
 
-async function stubBackend(page: Page, documents: unknown[] = []) {
+/** Aceeași listă, dar cu pasul 1 încă în lucru — punctul de plecare al micro-pașilor. */
+const eligibilityInProgress = steps.map((step) =>
+  step.key === 'eligibility' ? { ...step, status: 'InProgress' } : step,
+)
+
+/** Profilul de eligibilitate, exact cum îl întoarce `GET /onboarding/eligibility`. */
+const eligibilityProfile = (overrides: Record<string, unknown> = {}) => ({
+  id: 'e1',
+  dateOfBirth: '1990-01-01',
+  idSeriesMask: null,
+  categoryBObtainedOn: '2015-01-01',
+  drivingCategories: 'B',
+  drivingLicenceExpiresOn: '2030-01-01',
+  hasDriverCertificate: false,
+  driverCertificateExpiresOn: null,
+  status: 'NeedsReview',
+  reasons: [],
+  ...overrides,
+})
+
+async function stubBackend(
+  page: Page,
+  documents: unknown[] = [],
+  overrides: { state?: unknown; eligibility?: unknown } = {},
+) {
   /**
    * Cererile pleacă de pe originea Vite către `localhost:5000`, deci sunt cross-origin și
    * credențializate (`withCredentials: true`). Browserul respinge un `Allow-Origin: *` combinat cu
@@ -138,9 +162,9 @@ async function stubBackend(page: Page, documents: unknown[] = []) {
     `${API}/users/refresh-token`,
     reply({ accessToken: 'test-token', role: 'Client', userId: 'u1' }),
   )
-  await page.route(`${API}/onboarding/state`, reply(onboardingState))
+  await page.route(`${API}/onboarding/state`, reply(overrides.state ?? onboardingState))
   await page.route(`${API}/documents**`, reply(documents))
-  await page.route(`${API}/onboarding/eligibility`, reply(null))
+  await page.route(`${API}/onboarding/eligibility`, reply(overrides.eligibility ?? null))
 }
 
 test.describe('onboarding rail', () => {
@@ -214,5 +238,85 @@ test.describe('onboarding rail', () => {
 
     // Cerințele acoperite nu mai cer upload; cele neacoperite, da.
     await expect(page.getByRole('button', { name: 'Alege fișier' })).toHaveCount(4)
+  })
+})
+
+test.describe('pasul 1 pe micro-pași', () => {
+  const stubEligibility = (page: Page, documents: unknown[] = [], eligibility: unknown = null) =>
+    stubBackend(page, documents, {
+      state: { ...onboardingState, steps: eligibilityInProgress },
+      eligibility,
+    })
+
+  test('un singur ecran pe rând, iar contorul avansează', async ({ page }) => {
+    await stubEligibility(page)
+    await page.goto('/onboarding/eligibility', { waitUntil: 'networkidle' })
+
+    // Primul ecran e o întrebare — și doar întrebarea. Nicio zonă de upload alături.
+    await expect(page.getByRole('heading', { name: 'Ai împlinit 21 de ani?' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Alege fișier' })).toHaveCount(0)
+    await expect(page.getByText(/Pasul 1 din \d+/).first()).toBeVisible()
+
+    // Un singur card pe ecran: un singur titlu de nivel 1.
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
+
+    await page.getByRole('radio', { name: /Da, am minimum 21 de ani/ }).click()
+    await page.getByRole('button', { name: /Continuă/ }).click()
+
+    // Ecranul următor e uploadul aferent — și doar el.
+    await expect(page.getByRole('heading', { name: 'Încarcă cartea de identitate' })).toBeVisible()
+    await expect(page.getByRole('radio')).toHaveCount(0)
+    await expect(page.getByText(/Pasul 2 din \d+/).first()).toBeVisible()
+  })
+
+  test('micro-pasul curent trăiește în URL, deci refresh-ul revine pe același ecran', async ({ page }) => {
+    await stubEligibility(page)
+    await page.goto('/onboarding/eligibility?pas=license', { waitUntil: 'networkidle' })
+
+    await expect(
+      page.getByRole('heading', { name: 'Ai permis categoria B de minimum 2 ani?' }),
+    ).toBeVisible()
+
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(
+      page.getByRole('heading', { name: 'Ai permis categoria B de minimum 2 ani?' }),
+    ).toBeVisible()
+  })
+
+  test('documentele deja încărcate sar peste ecranele lor', async ({ page }) => {
+    // CI și permisul există deja: fluxul trebuie să aterizeze direct pe întrebarea de atestat.
+    await stubEligibility(
+      page,
+      [uploadedDoc('CarteIdentitate', 'ci.pdf'), uploadedDoc('PermisConducere', 'permis.pdf')],
+      eligibilityProfile(),
+    )
+    await page.goto('/onboarding/eligibility', { waitUntil: 'networkidle' })
+
+    await expect(
+      page.getByRole('heading', { name: 'Ai atestat de transport alternativ?' }),
+    ).toBeVisible()
+  })
+
+  test('„Nu încă" la atestat duce la ecranul de blocaj, cu motivul de la server', async ({ page }) => {
+    const reason = 'Atestatul de transport alternativ este obligatoriu.'
+    await stubEligibility(
+      page,
+      [uploadedDoc('CarteIdentitate', 'ci.pdf'), uploadedDoc('PermisConducere', 'permis.pdf')],
+      eligibilityProfile({ status: 'Ineligible', reasons: [reason] }),
+    )
+    await page.goto('/onboarding/eligibility?pas=attestation', { waitUntil: 'networkidle' })
+
+    await page.getByRole('radio', { name: /Nu încă/ }).click()
+    await page.getByRole('button', { name: /Continuă/ }).click()
+
+    await expect(
+      page.getByRole('heading', { name: /nu îndeplinești condițiile de eligibilitate/i }),
+    ).toBeVisible()
+    // Motivul apare și în rail (pasul e „Respins"), deci îl căutăm în lista cardului.
+    await expect(page.getByRole('list', { name: 'Condiții neîndeplinite' })).toContainText(reason)
+
+    // Nu e o fundătură: rail-ul rămâne întreg și se poate reveni.
+    await expect(page.getByRole('button', { name: 'Înapoi la pasul anterior' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Contactează suportul' }).first()).toBeVisible()
   })
 })

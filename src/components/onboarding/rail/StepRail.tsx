@@ -1,10 +1,12 @@
 import { Box, Stack } from '@mui/material'
 import { motion } from 'motion/react'
 
+import type { MicroStepView } from '../microStepTypes'
 import { useMotionTokens } from '../motion'
 import { completedCount, type StepView } from '../stepModel'
 import { RailProgress } from './RailProgress'
 import { StepRailItem } from './StepRailItem'
+import { StepRailSubSteps } from './StepRailSubSteps'
 
 /**
  * Rail-ul de checklist: toți pașii vizibili simultan, progresul sus, pasul activ expandat.
@@ -15,11 +17,16 @@ export function StepRail({
   activeKey,
   uncheckingKeys,
   onSelect,
+  subSteps = [],
+  onSelectSubStep,
 }: {
   steps: StepView[]
   activeKey: string | null
   uncheckingKeys: string[]
   onSelect: (step: StepView) => void
+  /** Micro-pașii pasului activ. Apar doar sub el, niciodată sub ceilalți. */
+  subSteps?: MicroStepView[]
+  onSelectSubStep?: (id: string) => void
 }) {
   const { reduced, step: stepTransition } = useMotionTokens()
 
@@ -40,7 +47,11 @@ export function StepRail({
             active={step.key === activeKey}
             unchecking={uncheckingKeys.includes(step.key)}
             onSelect={onSelect}
-          />
+          >
+            {step.key === activeKey && subSteps.length > 0 && (
+              <StepRailSubSteps steps={subSteps} onSelect={onSelectSubStep} />
+            )}
+          </StepRailItem>
         ))}
       </Box>
     </Stack>

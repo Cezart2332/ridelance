@@ -32,6 +32,12 @@ interface DocumentFirstUploadProps {
   pfaRegistrationId?: string | null
   /** Reîncarcă starea de onboarding după upload. */
   onUploaded?: () => void
+  /** Documentul e singurul lucru de pe ecran: zonă de upload mare, cu instrucțiune. */
+  spacious?: boolean
+  /** Ce trebuie să se vadă în document. Apare în zona de upload, doar în modul `spacious`. */
+  hint?: string
+  /** Titlul e deja pe card (micro-pas de upload) — nu-l repetăm deasupra zonei de upload. */
+  hideLabel?: boolean
 }
 
 const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
@@ -54,6 +60,9 @@ export function DocumentFirstUpload({
   documents,
   pfaRegistrationId,
   onUploaded,
+  spacious = false,
+  hint,
+  hideLabel = false,
 }: DocumentFirstUploadProps) {
   const accepted = useMemo(() => [category, ...(alsoAccepts ?? [])], [category, alsoAccepts])
   const current = useMemo(
@@ -164,7 +173,9 @@ export function DocumentFirstUpload({
       }}
     >
       <Stack direction="row" sx={{ alignItems: 'center', gap: 1, mb: 0.8, flexWrap: 'wrap' }}>
-        <Typography sx={{ fontWeight: 700, color: TOKENS.ink, fontSize: '0.95rem' }}>{label}</Typography>
+        {!hideLabel && (
+          <Typography sx={{ fontWeight: 700, color: TOKENS.ink, fontSize: '0.95rem' }}>{label}</Typography>
+        )}
         {statusChip()}
       </Stack>
 
@@ -216,6 +227,8 @@ export function DocumentFirstUpload({
           <UploadField
             label={current ? `Încarcă o versiune nouă: ${label}` : `Încarcă: ${label}`}
             hideLabel
+            spacious={spacious}
+            hint={hint}
             onPick={(picked) => void upload(picked)}
             disabled={uploading}
           />

@@ -1,5 +1,6 @@
 import { Box, ButtonBase, Stack, Typography } from '@mui/material'
 import { motion } from 'motion/react'
+import type { ReactNode } from 'react'
 
 import { useMotionTokens } from '../motion'
 import { displaySx, stateColors, TOKENS } from '../onboardingTheme'
@@ -25,11 +26,14 @@ export function StepRailItem({
   active,
   unchecking,
   onSelect,
+  children,
 }: {
   step: StepView
   active: boolean
   unchecking: boolean
   onSelect: (step: StepView) => void
+  /** Sub-pașii pasului activ. Stau în afara `ButtonBase` — un buton nu poate conține butoane. */
+  children?: ReactNode
 }) {
   const { step: stepTransition, reduced } = useMotionTokens()
   const locked = step.state === 'locked'
@@ -124,6 +128,8 @@ export function StepRailItem({
             </Typography>
           )}
         </ButtonBase>
+
+        {children}
       </Box>
     </Box>
   )

@@ -107,6 +107,8 @@ export function UploadField({
   onPick,
   hideLabel = false,
   disabled = false,
+  spacious = false,
+  hint,
 }: {
   label: string
   files?: File[]
@@ -116,6 +118,13 @@ export function UploadField({
   /** Eticheta rămâne doar pentru cititoarele de ecran, când deasupra există deja un titlu. */
   hideLabel?: boolean
   disabled?: boolean
+  /**
+   * Zona de upload e singurul lucru de pe ecran (un micro-pas de document): primește iconiță,
+   * instrucțiune și spațiu. În listele cu mai multe documente rămâne varianta compactă.
+   */
+  spacious?: boolean
+  /** Ce trebuie să se vadă în document — apare doar în modul `spacious`. */
+  hint?: string
 }) {
   const inputId = useId()
   const cameraRef = useRef<HTMLInputElement | null>(null)
@@ -177,14 +186,29 @@ export function UploadField({
           handlePick(Array.from(e.dataTransfer.files))
         }}
         sx={{
-          borderRadius: `${TOKENS.radius.md}px`,
+          borderRadius: `${spacious ? TOKENS.radius.lg : TOKENS.radius.md}px`,
           border: `1.5px dashed ${dragging || hasFiles ? TOKENS.primary : TOKENS.borderHover}`,
           backgroundColor: dragging ? alpha(TOKENS.primary, 0.06) : TOKENS.paper,
           transition: `border-color ${TOKENS.duration}, background-color ${TOKENS.duration}`,
           opacity: disabled ? 0.6 : 1,
-          p: 1.5,
+          p: spacious ? { xs: 3, sm: 5 } : 1.5,
+          '&:hover': spacious && !disabled ? { borderColor: TOKENS.primary } : undefined,
         }}
       >
+        {spacious && (
+          <Stack spacing={1} sx={{ alignItems: 'center', textAlign: 'center', mb: 2.5 }}>
+            <UploadFileRoundedIcon sx={{ fontSize: 32, color: TOKENS.primary }} />
+            {hint && (
+              <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 600 }}>
+                {hint}
+              </Typography>
+            )}
+            <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>
+              Trage fișierul aici sau alege-l din calculator. JPG, PNG sau PDF, maximum 10 MB.
+            </Typography>
+          </Stack>
+        )}
+
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: 'stretch' }}>
           {/* Butonul de fișiere e un <label> peste un input real — rămâne accesibil din tastatură. */}
           <Button
