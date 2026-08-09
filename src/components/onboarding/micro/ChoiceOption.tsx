@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material'
+import { Box, Stack, Typography } from '@mui/material'
 import type { KeyboardEvent } from 'react'
 
 import type { ChoiceDef } from '../microStepTypes'
@@ -11,6 +11,7 @@ interface ChoiceOptionProps {
   onSelect: () => void
 }
 
+/** O opțiune: textul răspunsului și indicatorul. Un rând, nimic de citit pe deasupra. */
 export function ChoiceOption({ choice, selected, tabIndex, onSelect }: ChoiceOptionProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== ' ' && event.key !== 'Enter') return
@@ -19,16 +20,20 @@ export function ChoiceOption({ choice, selected, tabIndex, onSelect }: ChoiceOpt
   }
 
   return (
-    <Box
+    <Stack
+      direction="row"
       role="radio"
       aria-checked={selected}
       tabIndex={tabIndex}
       onClick={onSelect}
       onKeyDown={handleKeyDown}
       sx={{
-        position: 'relative',
-        p: 2.5,
-        pr: 5.5,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 2,
+        minHeight: 60,
+        px: 2.5,
+        py: 2,
         cursor: 'pointer',
         borderRadius: `${TOKENS.radius.lg}px`,
         border: `1.5px solid ${selected ? TOKENS.primary : TOKENS.border}`,
@@ -39,31 +44,20 @@ export function ChoiceOption({ choice, selected, tabIndex, onSelect }: ChoiceOpt
           backgroundColor: selected ? TOKENS.primarySoft : 'rgba(92, 203, 245, 0.04)',
         },
         '&:active': { transform: 'scale(0.99)' },
-        '&:focus-visible': {
-          outline: `2px solid ${TOKENS.primary}`,
-          outlineOffset: 2,
-        },
+        '&:focus-visible': { outline: `2px solid ${TOKENS.primary}`, outlineOffset: 2 },
       }}
     >
       <Typography variant="subtitle2" sx={{ color: TOKENS.ink }}>
         {choice.title}
       </Typography>
 
-      {choice.subtitle && (
-        <Typography variant="caption" component="p" sx={{ color: TOKENS.textMuted, mt: 0.5 }}>
-          {choice.subtitle}
-        </Typography>
-      )}
-
       {/* Indicatorul e decorativ: starea reală o comunică `aria-checked` pe container. */}
       <Box
         aria-hidden
         sx={{
-          position: 'absolute',
-          top: 20,
-          right: 20,
           width: 20,
           height: 20,
+          flexShrink: 0,
           borderRadius: '50%',
           border: `1.5px solid ${selected ? TOKENS.primary : TOKENS.borderHover}`,
           display: 'grid',
@@ -75,6 +69,6 @@ export function ChoiceOption({ choice, selected, tabIndex, onSelect }: ChoiceOpt
           <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: TOKENS.primary }} />
         )}
       </Box>
-    </Box>
+    </Stack>
   )
 }

@@ -36,7 +36,6 @@ export function BlockedStateCard({
       icon="shield"
       tone="danger"
       title="Momentan nu îndeplinești condițiile de eligibilitate"
-      subtitle="Verifică mai jos ce lipsește. Poți relua procesul oricând, de unde ai rămas."
       footer={
         <Stack direction={{ xs: 'column-reverse', sm: 'row' }} spacing={1.5} sx={{ justifyContent: 'flex-end' }}>
           <Button onClick={onBack} sx={{ color: TOKENS.textMuted }}>
@@ -86,12 +85,8 @@ export function BlockedStateCard({
               border: `1px solid ${TOKENS.border}`,
             }}
           >
-            <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 600, mb: 0.5 }}>
-              Cum obții atestatul
-            </Typography>
-            <Typography variant="caption" component="p" sx={{ color: TOKENS.textMuted, mb: 1.5 }}>
-              Se eliberează de Autoritatea Rutieră Română, după un curs și un examen. Revino aici cu
-              documentul și continui de unde ai rămas.
+            <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 600, mb: 1 }}>
+              Atestatul se eliberează de Autoritatea Rutieră Română.
             </Typography>
             <Button
               size="small"

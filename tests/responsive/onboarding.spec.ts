@@ -260,7 +260,7 @@ test.describe('pasul 1 pe micro-pași', () => {
     // Un singur card pe ecran: un singur titlu de nivel 1.
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
 
-    await page.getByRole('radio', { name: /Da, am minimum 21 de ani/ }).click()
+    await page.getByRole('radio', { name: 'Da' }).click()
     await page.getByRole('button', { name: /Continuă/ }).click()
 
     // Ecranul următor e uploadul aferent — și doar el.
@@ -297,7 +297,7 @@ test.describe('pasul 1 pe micro-pași', () => {
     ).toBeVisible()
   })
 
-  test('„Nu încă" la atestat duce la ecranul de blocaj, cu motivul de la server', async ({ page }) => {
+  test('„Nu" la atestat duce la ecranul de blocaj, cu motivul de la server', async ({ page }) => {
     const reason = 'Atestatul de transport alternativ este obligatoriu.'
     await stubEligibility(
       page,
@@ -306,7 +306,7 @@ test.describe('pasul 1 pe micro-pași', () => {
     )
     await page.goto('/onboarding/eligibility?pas=attestation', { waitUntil: 'networkidle' })
 
-    await page.getByRole('radio', { name: /Nu încă/ }).click()
+    await page.getByRole('radio', { name: 'Nu' }).click()
     await page.getByRole('button', { name: /Continuă/ }).click()
 
     await expect(

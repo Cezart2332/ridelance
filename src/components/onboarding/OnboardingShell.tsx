@@ -1,17 +1,12 @@
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import CreditCardRoundedIcon from '@mui/icons-material/CreditCardRounded'
-import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Alert,
   Box,
   Button,
   CircularProgress,
   Divider,
-  LinearProgress,
   Snackbar,
   Stack,
   ThemeProvider,
@@ -33,13 +28,13 @@ import { MicroStepProvider } from './MicroStepProvider'
 import { useMotionTokens } from './motion'
 import { onboardingMuiTheme } from './onboardingMuiTheme'
 import { OnboardingProvider } from './OnboardingProvider'
-import { displaySx, tabularSx, TOKENS } from './onboardingTheme'
+import { displaySx, TOKENS } from './onboardingTheme'
 import { MobileStepBar, MOBILE_BAR_HEIGHT } from './rail/MobileStepBar'
 import { StepRail } from './rail/StepRail'
 import { LockedNavItem } from './shell/LockedNavItem'
 import { SidebarSupportBlock } from './shell/SidebarSupportBlock'
-import { StepContextPanel } from './shell/StepContextPanel'
 import { OnboardingTopBar, TOPBAR_HEIGHT } from './shell/OnboardingTopBar'
+import { StepProgressRing } from './shell/StepProgressRing'
 import { firstActionableStep, type StepView } from './stepModel'
 import { OnboardingSupportContext, type OnboardingSupportValue } from './supportContext'
 import { useMicroSteps } from './useMicroSteps'
@@ -47,8 +42,6 @@ import { useOnboarding } from './useOnboarding'
 import { useOnboardingGate } from './useOnboardingGate'
 
 const RAIL_WIDTH = 280
-const CONTEXT_WIDTH = 300
-const CONTEXT_WIDTH_NARROW = 260
 
 /** Pasul căruia îi aparține ruta curentă — `/onboarding/pfa/sediu` ține tot de pasul PFA. */
 function activeKeyFor(pathname: string, steps: StepView[]): string | null {
@@ -133,6 +126,7 @@ function MobileMicroBar({
       direction="row"
       sx={{
         alignItems: 'center',
+        justifyContent: 'space-between',
         gap: 1.5,
         px: 2,
         py: 1,
@@ -150,22 +144,7 @@ function MobileMicroBar({
         Înapoi
       </Button>
 
-      <Stack sx={{ flex: 1, minWidth: 0, gap: 0.4 }}>
-        <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <Typography variant="caption" sx={{ ...tabularSx, color: TOKENS.textMuted }}>
-            Pasul {position} din {total}
-          </Typography>
-          <Typography variant="caption" sx={{ ...tabularSx, color: TOKENS.textMuted }}>
-            {percent}%
-          </Typography>
-        </Stack>
-        <LinearProgress
-          variant="determinate"
-          value={percent}
-          aria-label="Progresul înrolării"
-          sx={{ height: 4 }}
-        />
-      </Stack>
+      <StepProgressRing position={position} total={total} percent={percent} size={34} />
     </Stack>
   )
 }
@@ -218,20 +197,15 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
   const { step: stepMotion } = useMotionTokens()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // 900px: sub el rail-ul stâng devine bara mobilă. 1200px: sub el rail-ul drept se pliază în
-  // acordeonul de deasupra cardului, ca să nu strivim coloana centrală.
+  // Sub 900px rail-ul stâng devine bara mobilă.
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-  const showContextRail = useMediaQuery('(min-width:1200px)')
-  const narrowContextRail = useMediaQuery('(max-width:1439px)')
 
-  const { state, documents, steps, loading, error, refresh, rejectionAlert, dismissRejectionAlert } =
+  const { state, steps, loading, error, refresh, rejectionAlert, dismissRejectionAlert } =
     useOnboarding()
   const micro = useMicroSteps()
 
   const [lockedNotice, setLockedNotice] = useState(false)
   const [savedNotice, setSavedNotice] = useState(false)
-
-  const activeStep = useMemo(() => steps.find((s) => s.key === activeKey) ?? null, [steps, activeKey])
 
   // Întoarcerea din Stripe după plata înființării PFA: webhookul poate întârzia,
   // așa că facem poll până apare plata (max 30s).
@@ -312,15 +286,6 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
       onSelect={goToStep}
       subSteps={micro.steps}
       onSelectSubStep={micro.goTo}
-    />
-  )
-
-  const contextPanel = (
-    <StepContextPanel
-      step={activeStep}
-      microSteps={micro.steps}
-      current={micro.current}
-      documents={documents}
     />
   )
 
@@ -406,29 +371,6 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
             </Alert>
           )}
 
-          {/* Sub 1200px rail-ul din dreapta nu încape: conținutul lui se pliază deasupra cardului. */}
-          {!showContextRail && activeStep && (
-            <Accordion
-              disableGutters
-              elevation={0}
-              sx={{
-                maxWidth: 720,
-                mx: 'auto',
-                mb: 2,
-                border: `1px solid ${TOKENS.border}`,
-                borderRadius: `${TOKENS.radius.lg}px`,
-                '&::before': { display: 'none' },
-              }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: TOKENS.ink }}>
-                  Detalii despre pasul curent
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>{contextPanel}</AccordionDetails>
-            </Accordion>
-          )}
-
           {loading ? (
             <Stack spacing={2} sx={{ alignItems: 'center', py: 8 }}>
               <CircularProgress sx={{ color: TOKENS.primary }} />
@@ -449,31 +391,6 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
             </AnimatePresence>
           )}
         </Box>
-
-        {showContextRail && (
-          <>
-            <Box
-              component="aside"
-              aria-label="Context pentru pasul curent"
-              sx={{
-                position: 'fixed',
-                top: TOPBAR_HEIGHT,
-                bottom: 0,
-                right: 0,
-                width: narrowContextRail ? CONTEXT_WIDTH_NARROW : CONTEXT_WIDTH,
-                overflowY: 'auto',
-                borderLeft: `1px solid ${TOKENS.border}`,
-                backgroundColor: TOKENS.paper,
-                p: 3,
-              }}
-            >
-              {contextPanel}
-            </Box>
-            <Box
-              sx={{ width: narrowContextRail ? CONTEXT_WIDTH_NARROW : CONTEXT_WIDTH, flexShrink: 0 }}
-            />
-          </>
-        )}
       </Box>
 
       {/* Pe mobil, ajutorul nu are unde sta în rail — rămâne ancorat sub conținut. */}

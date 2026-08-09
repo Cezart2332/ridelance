@@ -76,27 +76,14 @@ export function OnboardingRunner() {
   const footer = (): ReactNode => {
     switch (def.kind) {
       case 'question':
-        return (
-          <CardFooter
-            disabled={submitting || value === undefined}
-            hint={def.submit ? 'Răspunsul se salvează când continui.' : undefined}
-            onContinue={() => void advance()}
-          />
-        )
+        return <CardFooter disabled={submitting || value === undefined} onContinue={() => void advance()} />
       case 'upload':
-        return (
-          <CardFooter
-            disabled={submitting || !current.done}
-            hint="Verificarea automată rulează în fundal — nu trebuie să o aștepți."
-            onContinue={() => void advance()}
-          />
-        )
+        return <CardFooter disabled={submitting || !current.done} onContinue={() => void advance()} />
       case 'summary':
         return (
           <CardFooter
             disabled={submitting}
             label="Continuă către pasul următor"
-            hint="Poți reveni la oricare dintre răspunsuri."
             onContinue={() => void advance()}
           />
         )
@@ -134,7 +121,6 @@ export function OnboardingRunner() {
                 icon={def.icon}
                 tone={def.kind === 'summary' ? 'success' : 'accent'}
                 title={def.title}
-                subtitle={def.subtitle}
                 footer={footer()}
               >
                 {body()}

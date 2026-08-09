@@ -1,37 +1,28 @@
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
-import { Button, Stack, Typography } from '@mui/material'
-
-import { TOKENS } from '../onboardingTheme'
+import { Button, Stack } from '@mui/material'
 
 interface CardFooterProps {
-  /** Text discret în stânga — de ce se poate continua, sau ce urmează. */
-  hint?: string
   label?: string
   disabled?: boolean
   onContinue: () => void
 }
 
 /**
- * Footerul cardului. Butonul de „Înapoi" stă în topbar, nu aici: dublat în două locuri, niciunul
- * nu mai e evident.
+ * Footerul cardului: un singur buton, la dreapta.
+ *
+ * „Înapoi" stă în topbar — dublat în două locuri, niciunul nu mai e evident. Fără text ajutător
+ * lângă buton: dacă butonul e activ se poate continua, dacă nu, ecranul arată deja ce lipsește.
  */
-export function CardFooter({ hint, label = 'Continuă', disabled, onContinue }: CardFooterProps) {
+export function CardFooter({ label = 'Continuă', disabled, onContinue }: CardFooterProps) {
   return (
-    <Stack
-      direction={{ xs: 'column-reverse', sm: 'row' }}
-      sx={{ alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}
-    >
-      <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>
-        {hint ?? 'Poți reveni oricând la pasul anterior.'}
-      </Typography>
-
+    <Stack direction="row" sx={{ justifyContent: 'flex-end' }}>
       <Button
         variant="contained"
         size="large"
         disabled={disabled}
         onClick={onContinue}
         endIcon={<ArrowForwardRoundedIcon />}
-        sx={{ flexShrink: 0 }}
+        sx={{ width: { xs: '100%', sm: 'auto' } }}
       >
         {label}
       </Button>

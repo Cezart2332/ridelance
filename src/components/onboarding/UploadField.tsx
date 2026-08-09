@@ -204,7 +204,7 @@ export function UploadField({
               </Typography>
             )}
             <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>
-              Trage fișierul aici sau alege-l din calculator. JPG, PNG sau PDF, maximum 10 MB.
+              JPG, PNG sau PDF · maximum 10 MB
             </Typography>
           </Stack>
         )}

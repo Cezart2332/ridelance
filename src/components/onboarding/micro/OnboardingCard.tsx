@@ -9,7 +9,6 @@ interface OnboardingCardProps {
   eyebrow: string
   icon: MicroStepIcon
   title: string
-  subtitle?: string
   /** Tonul iconiței: `danger` pentru ecranul de blocaj, `success` pentru rezumatul închis. */
   tone?: 'accent' | 'danger' | 'success'
   children: ReactNode
@@ -23,18 +22,12 @@ const TONE = {
 } as const
 
 /**
- * Cardul central. Un singur lucru pe ecran: o iconiță, o întrebare, un subtitlu, conținutul și
- * footerul. Ierarhia o fac spacing-ul și greutățile, nu culorile — de asta e un singur accent.
+ * Cardul central. Un singur lucru pe ecran: o iconiță, o întrebare, conținutul și footerul.
+ * Ierarhia o fac spacing-ul și greutățile, nu culorile — de asta e un singur accent.
+ *
+ * Nu are subtitlu. Un rând gri sub întrebare nu spune nimic ce întrebarea nu spune deja.
  */
-export function OnboardingCard({
-  eyebrow,
-  icon,
-  title,
-  subtitle,
-  tone = 'accent',
-  children,
-  footer,
-}: OnboardingCardProps) {
+export function OnboardingCard({ eyebrow, icon, title, tone = 'accent', children, footer }: OnboardingCardProps) {
   const Icon = ICON_MAP[icon]
   const colors = TONE[tone]
 
@@ -42,6 +35,9 @@ export function OnboardingCard({
     <Paper
       elevation={1}
       sx={{
+        // `width: 100%` explicit: `mx: auto` într-un container flex pe coloană anulează `stretch`,
+        // deci fără el cardul s-ar strânge pe lățimea conținutului și ar sări de la un pas la altul.
+        width: '100%',
         maxWidth: 720,
         mx: 'auto',
         borderRadius: `${TOKENS.radius.xl}px`,
@@ -72,12 +68,6 @@ export function OnboardingCard({
       <Typography variant="h5" component="h1" sx={{ ...displaySx, color: TOKENS.ink }}>
         {title}
       </Typography>
-
-      {subtitle && (
-        <Typography variant="body2" sx={{ color: TOKENS.textMuted, mt: 1 }}>
-          {subtitle}
-        </Typography>
-      )}
 
       <Stack sx={{ mt: 4 }}>{children}</Stack>
 

@@ -15,10 +15,13 @@ import type { EligibilityProfile, OnboardingState } from '../../services/onboard
 
 export type MicroStepKind = 'question' | 'upload' | 'summary'
 
+/**
+ * O opțiune de răspuns. Doar textul răspunsului — o întrebare de Da/Nu nu are nevoie de o
+ * propoziție care să explice ce înseamnă „Da".
+ */
 export interface ChoiceDef {
   value: string
   title: string
-  subtitle?: string
 }
 
 /**
@@ -41,11 +44,11 @@ export interface MicroStepDef {
   /** Supratitlul cardului, ex. `ELIGIBILITATE`. */
   eyebrow: string
   icon: MicroStepIcon
+  /**
+   * Singurul text al ecranului. Întrebarea sau instrucțiunea, atât — fără subtitlu explicativ:
+   * o frază gri sub titlu nu adaugă nimic, doar face ecranul să pară aglomerat.
+   */
   title: string
-  subtitle?: string
-  /** „De ce cerem asta?" — apare în rail-ul din dreapta. */
-  helpText?: string
-  estimatedMinutes?: number
   /** Eticheta scurtă din checklist: `Vârstă`, `Permis`, `Atestat`. */
   railLabel: string
 

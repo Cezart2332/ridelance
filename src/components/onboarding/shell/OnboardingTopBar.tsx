@@ -1,8 +1,9 @@
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded'
-import { Box, Button, LinearProgress, Stack, Typography } from '@mui/material'
+import { Box, Button, Stack } from '@mui/material'
 
-import { tabularSx, TOKENS } from '../onboardingTheme'
+import { TOKENS } from '../onboardingTheme'
+import { StepProgressRing } from './StepProgressRing'
 
 export const TOPBAR_HEIGHT = 64
 
@@ -19,8 +20,8 @@ interface OnboardingTopBarProps {
 /**
  * Bara de sus: unde ești, cât mai ai, și cele două ieșiri (înapoi un ecran, sau salvează și pleacă).
  *
- * Procentul se calculează pe micro-pași, nu pe pașii mari. Pe pași mari bara ar sta blocată
- * minute întregi și userul ar crede că nu avansează.
+ * Progresul se măsoară pe micro-pași, nu pe pașii mari. Pe pași mari inelul ar sta blocat minute
+ * întregi și userul ar crede că nu avansează.
  */
 export function OnboardingTopBar({
   position,
@@ -45,34 +46,18 @@ export function OnboardingTopBar({
       }}
     >
       {/* Logoul stă în capul rail-ului, nu aici — o dată pe ecran e de ajuns. */}
-      <Stack direction="row" sx={{ alignItems: 'center', gap: 1.5, flex: 1, minWidth: 0 }}>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
         <Button
           onClick={onBack}
           disabled={!canGoBack}
           startIcon={<ArrowBackRoundedIcon sx={{ fontSize: 18 }} />}
-          sx={{ color: TOKENS.textMuted, flexShrink: 0 }}
+          sx={{ color: TOKENS.textMuted }}
         >
           Înapoi
         </Button>
-      </Stack>
+      </Box>
 
-      {/* Progresul e centrat pentru că e singurul lucru pe care userul îl caută din priviri. */}
-      <Stack sx={{ width: { xs: 140, sm: 240, md: 320 }, flexShrink: 0, gap: 0.5 }}>
-        <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <Typography variant="caption" sx={{ ...tabularSx, color: TOKENS.textMuted }}>
-            Pasul {position} din {total}
-          </Typography>
-          <Typography variant="caption" sx={{ ...tabularSx, color: TOKENS.textMuted }}>
-            {percent}%
-          </Typography>
-        </Stack>
-        <LinearProgress
-          variant="determinate"
-          value={percent}
-          aria-label="Progresul înrolării"
-          sx={{ height: 4 }}
-        />
-      </Stack>
+      <StepProgressRing position={position} total={total} percent={percent} />
 
       <Stack direction="row" sx={{ alignItems: 'center', gap: 1, flex: 1, justifyContent: 'flex-end' }}>
         <Button

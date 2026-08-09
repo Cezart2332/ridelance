@@ -1,6 +1,6 @@
 import AutorenewRoundedIcon from '@mui/icons-material/AutorenewRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
-import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material'
+import { Box, Button, Chip, Stack, Typography } from '@mui/material'
 
 import { isAiPending, type DocumentSummary } from '../../../services/document.service'
 import type { MicroStepView } from '../microStepTypes'
@@ -20,8 +20,8 @@ interface StepSummaryProps {
 /**
  * Rezumatul pasului: ce a răspuns și ce a încărcat, cu posibilitatea de a schimba orice.
  *
- * Documentele încă în verificare NU blochează: le arătăm ca atare și spunem clar că se poate
- * continua. Dacă unul pică după ce a avansat, pasul se redeschide singur în rail.
+ * Documentele încă în verificare NU blochează — chip-ul „Se verifică" o spune, butonul rămâne
+ * activ. Dacă unul pică după ce a avansat, pasul se redeschide singur în rail.
  */
 export function StepSummary({ steps, answers, documents, onEdit }: StepSummaryProps) {
   const docFor = (categories: string[]): DocumentSummary | null =>
@@ -50,17 +50,8 @@ export function StepSummary({ steps, answers, documents, onEdit }: StepSummaryPr
     }
   })
 
-  const verifying = rows.some((r) => r.pending)
-
   return (
     <Stack spacing={2.5}>
-      {verifying && (
-        <Alert severity="info" icon={<AutorenewRoundedIcon />}>
-          Verificăm automat documentele. Nu trebuie să aștepți — poți trece la pasul următor, iar
-          dacă apare o problemă îți spunem.
-        </Alert>
-      )}
-
       <Box component="dl" sx={{ m: 0, display: 'grid', gap: 0 }}>
         {rows.map((row, index) => (
           <Stack
