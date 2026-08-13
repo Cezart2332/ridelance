@@ -81,6 +81,7 @@ export default function OnboardingStep2Page() {
   const [savingVat, setSavingVat] = useState(false)
   const [savingBank, setSavingBank] = useState(false)
   const [savingOblio, setSavingOblio] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   // Fiecare formular urmărește serverul până când userul îl atinge — apoi rămâne al lui.
   // `''` = nu s-a răspuns încă; dosarele vechi cu „nu știu" cad tot aici și trebuie răspuns din nou.
@@ -173,6 +174,24 @@ export default function OnboardingStep2Page() {
   }
 
   const allOblio = Object.values(oblio).every(Boolean)
+
+  // Pasul e la admin: trimis spre verificare și încă nefinalizat. Cât timp e aici, șoferul nu
+  // are nicio acțiune — de asta ecranul spune ce urmează, în loc să arate un buton inert.
+  const awaitingAdmin =
+    step2?.signature?.submittedForReviewAtUtc != null && step2.signature.status !== 'Completed'
+
+  const submitForReview = async () => {
+    setSubmitting(true)
+    setError(null)
+    try {
+      await onboardingService.submitFiscalForReview()
+      await reload()
+    } catch (err) {
+      setError(getErrorMessage(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <Stack spacing={3}>
@@ -341,15 +360,59 @@ export default function OnboardingStep2Page() {
         </Box>
       </PanelCard>
 
-      {/* 2.2 Semnături (read-only) */}
+      {/* 2.2 Semnături — pachetul îl alocăm noi, deci pasul se închide din admin (RL-02). */}
       <PanelCard title="Pachet de semnături">
-        {step2?.signature ? (
+        {step2?.signature?.rejectionReason && (
+          <Alert severity="warning" sx={{ mb: 2, borderRadius: `${TOKENS.radius.md}px` }}>
+            {step2.signature.rejectionReason}
+          </Alert>
+        )}
+
+        {awaitingAdmin ? (
+          <Stack spacing={1.2}>
+            <Typography sx={{ fontWeight: 700, color: TOKENS.ink }}>Dosarul e la noi.</Typography>
+            <Typography sx={{ fontSize: '0.88rem', color: TOKENS.textMuted }}>
+              Pregătim împuternicirile și contractele pe care le semnezi o singură dată, apoi
+              deblocăm pasul următor. Durează de obicei 1–2 zile lucrătoare. Nu mai ai nimic de
+              făcut aici — te anunțăm pe email și în aplicație când e gata.
+            </Typography>
+            <Typography sx={{ fontSize: '0.82rem', color: TOKENS.textMuted }}>
+              Ai o întrebare între timp? Scrie-ne din butonul „Suport”.
+            </Typography>
+          </Stack>
+        ) : step2?.canSubmitForReview ? (
+          <Stack spacing={1.5}>
+            <Typography sx={{ fontSize: '0.88rem', color: TOKENS.textMuted }}>
+              Ți-ai completat partea. Trimite dosarul ca să pregătim pachetul de semnături.
+            </Typography>
+            <Button
+              variant="contained"
+              onClick={submitForReview}
+              disabled={submitting}
+              sx={{
+                alignSelf: 'flex-start',
+                textTransform: 'none',
+                fontWeight: 700,
+                backgroundColor: TOKENS.primary,
+                '&:hover': { backgroundColor: TOKENS.primaryStrong },
+              }}
+            >
+              {submitting ? 'Se trimite...' : 'Trimite pentru verificare'}
+            </Button>
+          </Stack>
+        ) : step2?.signature ? (
           <Stack spacing={1.2}>
             <Chip
               icon={step2.signature.status === 'Completed' ? <CheckCircleOutlineRoundedIcon /> : undefined}
               label={`Status: ${step2.signature.status} · ${step2.signature.provider}`}
               sx={{ alignSelf: 'flex-start', fontWeight: 700 }}
             />
+            {step2.signature.packageName && (
+              <Typography sx={{ fontSize: '0.88rem', color: TOKENS.ink }}>
+                Pachet: {step2.signature.packageName}
+                {step2.signature.signatureCount !== null && ` · ${step2.signature.signatureCount} semnături`}
+              </Typography>
+            )}
             {step2.signature.documents.length > 0 && <Divider />}
             {step2.signature.documents.map((d) => (
               <Stack key={d.type} direction="row" sx={{ justifyContent: 'space-between' }}>
@@ -367,7 +430,9 @@ export default function OnboardingStep2Page() {
             ))}
           </Stack>
         ) : (
-          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.88rem' }}>Nepregătit încă.</Typography>
+          <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.88rem' }}>
+            Completează întâi TVA-ul, contul bancar și consimțămintele Oblio de mai sus.
+          </Typography>
         )}
       </PanelCard>
     </Stack>

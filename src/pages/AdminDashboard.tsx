@@ -68,6 +68,8 @@ interface PfaSummary {
   /** Completat de OCR din certificatul de înregistrare; adminul îl confirmă la aprobare. */
   cui: string | null
   documentCount: number
+  /** Dosarul așteaptă o acțiune de admin (dosar PFA, secțiune sau pachet de semnături). */
+  awaitingAdminAction: boolean
   createdAtUtc: string
   lastActivityAtUtc: string | null
 }
@@ -95,6 +97,7 @@ function normalizePfaSummary(item: any): PfaSummary {
     isOwner: Boolean(item.isOwner),
     cui: item.cui ?? null,
     documentCount: item.documentCount,
+    awaitingAdminAction: Boolean(item.awaitingAdminAction),
     createdAtUtc: item.createdAtUtc,
     lastActivityAtUtc: item.lastActivityAtUtc,
   }
@@ -166,6 +169,7 @@ export function AdminDashboard() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [search, setSearch] = useState('')
+  const [onlyAwaitingAdmin, setOnlyAwaitingAdmin] = useState(false)
 
   // PFA list
   const [pfas, setPfas] = useState<PfaSummary[]>([])
@@ -419,6 +423,8 @@ export function AdminDashboard() {
       isOwner: false,
       cui: null,
       documentCount: 0,
+      // Cardul din overview nu poartă semnalul; oricum se citește doar de filtrul din listă.
+      awaitingAdminAction: false,
       createdAtUtc: new Date().toISOString(),
       lastActivityAtUtc: pfa.lastActivityAtUtc,
     })
@@ -506,11 +512,17 @@ export function AdminDashboard() {
     (p) => p.userName.toLowerCase().includes(search.toLowerCase()) || p.userEmail.toLowerCase().includes(search.toLowerCase())
   )
 
-  const displayPfas = filteredPfas.filter(p =>
-    activeTab === 'pfa_inrolate'
-      ? p.status.toLowerCase() === 'approved'
-      : p.status.toLowerCase() !== 'approved'
-  )
+  const displayPfas = filteredPfas
+    .filter(p =>
+      activeTab === 'pfa_inrolate'
+        ? p.status.toLowerCase() === 'approved'
+        : p.status.toLowerCase() !== 'approved'
+    )
+    // Filtrul rapid din spec: dosarele la care mingea e la noi, nu la client.
+    .filter(p => !onlyAwaitingAdmin || p.awaitingAdminAction)
+
+  // Contorul se calculează înainte de filtru, altfel ar arăta mereu numărul afișat.
+  const awaitingAdminCount = filteredPfas.filter(p => p.awaitingAdminAction).length
 
   const customerAgeLabel = (createdAtUtc: string) => {
     const weeks = Math.max(0, Math.floor((Date.now() - new Date(createdAtUtc).getTime()) / (7 * 24 * 60 * 60 * 1000)))
@@ -775,9 +787,23 @@ export function AdminDashboard() {
   // ─── PFA List ────────────────────────────────────────────────────────────────
   const renderPfaList = () => (
     <Stack spacing={3}>
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <SearchRoundedIcon sx={{ color: TOKENS.textSubtle, mr: 1, fontSize: 20 }} />
-        <TextField variant="outlined" size="small" placeholder="Caută PFA..." value={search} onChange={(e) => setSearch(e.target.value)} sx={{ width: { xs: '100%', sm: 300 }, maxWidth: '100%', ...inputSx }} />
+      <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <SearchRoundedIcon sx={{ color: TOKENS.textSubtle, mr: 1, fontSize: 20 }} />
+          <TextField variant="outlined" size="small" placeholder="Caută PFA..." value={search} onChange={(e) => setSearch(e.target.value)} sx={{ width: { xs: '100%', sm: 300 }, maxWidth: '100%', ...inputSx }} />
+        </Box>
+        <Chip
+          label={`Așteaptă acțiune admin${awaitingAdminCount > 0 ? ` (${awaitingAdminCount})` : ''}`}
+          onClick={() => setOnlyAwaitingAdmin((v) => !v)}
+          variant={onlyAwaitingAdmin ? 'filled' : 'outlined'}
+          sx={{
+            fontWeight: 700,
+            cursor: 'pointer',
+            ...(onlyAwaitingAdmin
+              ? { bgcolor: TOKENS.primary, color: '#fff', '&:hover': { bgcolor: TOKENS.primaryStrong } }
+              : { borderColor: alpha(TOKENS.ink, 0.15), color: TOKENS.textMuted }),
+          }}
+        />
       </Box>
 
       {pfasLoading && <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress size={32} sx={{ color: TOKENS.primary }} /></Box>}

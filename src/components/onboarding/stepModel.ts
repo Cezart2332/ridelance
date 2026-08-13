@@ -9,12 +9,25 @@ import type {
 import { categoriesOfStep } from './documentRequirements'
 
 /**
- * Starea de pas pe care o afișează rail-ul. Serverul emite doar patru valori
- * (Locked / InProgress / AwaitingValidation / Completed) — restul se derivă aici, din date
- * care există deja în payload: secțiunile de documente, documentele userului și profilul de
- * eligibilitate. Nicio cerere nouă, niciun câmp nou pe backend.
+ * Starea de pas pe care o afișează rail-ul. Vine ACUM întreagă de la server (`step.state`):
+ * deblocarea, „în lucru” vs „de început” și respingerea se decid în `OnboardingStepCatalog`,
+ * nu aici. Înainte se derivau local, ceea ce însemna că frontendul putea arăta un pas deschis
+ * pe care backendul îl refuza la scriere.
+ *
+ * Singurul lucru care rămâne derivat aici e prevalidarea AI a documentelor: statusul de pas
+ * nu o cunoaște, fiindcă documentele nu fac parte din payload-ul de stare.
  */
 export type StepViewState = 'locked' | 'todo' | 'in_progress' | 'pending_review' | 'approved' | 'rejected'
+
+/** Vocabularul serverului (spec v3) → vocabularul rail-ului. */
+const SERVER_STATE: Record<string, StepViewState> = {
+  locked: 'locked',
+  available: 'todo',
+  in_progress: 'in_progress',
+  pending_admin: 'pending_review',
+  completed: 'approved',
+  rejected: 'rejected',
+}
 
 export interface StepView {
   order: number
@@ -88,22 +101,6 @@ function rejectionOf(
   return null
 }
 
-/** Pasul a fost atins de user — face diferența între „neînceput” și „în lucru”. */
-function hasStarted(
-  step: OnboardingStep,
-  state: OnboardingState | null,
-  documents: DocumentSummary[],
-  eligibility: EligibilityProfile | null,
-): boolean {
-  if (step.key === 'eligibility') {
-    return eligibility !== null
-  }
-  if (sectionsOf(state, step.key).some((s) => s.submittedAtUtc !== null)) {
-    return true
-  }
-  return newestPerCategory(documents, categoriesOfStep(step.key)).length > 0
-}
-
 /** Documentele pasului au ajuns și sunt în prevalidarea automată (Gemini). */
 function isAwaitingAi(step: OnboardingStep, documents: DocumentSummary[]): boolean {
   return newestPerCategory(documents, categoriesOfStep(step.key)).some(isAiPending)
@@ -122,30 +119,29 @@ export function toStepView(
     path: step.path,
   }
 
-  // Respingerea bate orice altceva, inclusiv blocarea: dacă adminul a întors o decizie,
-  // pasul trebuie să se redeschidă și să spună de ce.
-  const rejection = rejectionOf(step, state, documents, eligibility)
-  if (rejection) {
-    return { ...base, state: 'rejected', reason: rejection }
+  const serverState = SERVER_STATE[step.state] ?? 'locked'
+
+  if (serverState === 'rejected') {
+    // Serverul spune CĂ e respins; textul motivului îl compunem tot aici, până când
+    // checklistul din payload îl aduce cu el.
+    return {
+      ...base,
+      state: 'rejected',
+      reason: rejectionOf(step, state, documents, eligibility) ?? 'Documentele au fost respinse. Reîncarcă-le mai jos.',
+    }
   }
 
-  if (step.status === 'Completed') {
-    return { ...base, state: 'approved', reason: null }
-  }
-
-  if (step.status === 'Locked') {
+  if (serverState === 'locked') {
     return { ...base, state: 'locked', reason: step.blockReason }
   }
 
-  if (step.status === 'AwaitingValidation' || isAwaitingAi(step, documents)) {
+  // Prevalidarea AI e singurul semnal pe care statusul de pas nu-l poate cunoaște:
+  // documentele nu fac parte din payload-ul de stare.
+  if (serverState !== 'approved' && isAwaitingAi(step, documents)) {
     return { ...base, state: 'pending_review', reason: null }
   }
 
-  return {
-    ...base,
-    state: hasStarted(step, state, documents, eligibility) ? 'in_progress' : 'todo',
-    reason: null,
-  }
+  return { ...base, state: serverState, reason: null }
 }
 
 export function buildStepViews(
@@ -157,12 +153,13 @@ export function buildStepViews(
 }
 
 /**
- * Pasul pe care îl deschidem la revenire: întâi orice pas respins (spec — „dacă a fost respins
- * ceva cât a lipsit, deschide direct pasul respins”), altfel primul pas la care se poate lucra.
+ * Pasul pe care îl deschidem la revenire. Fluxul fiind liniar, serverul îl numește direct în
+ * `currentStep` — îl folosim pe ăla când există, ca frontendul să nu ajungă la altă concluzie
+ * decât poarta care oricum respinge scrierile.
  */
-export function firstActionableStep(steps: StepView[]): StepView | null {
+export function firstActionableStep(steps: StepView[], currentStepKey?: string | null): StepView | null {
   return (
-    steps.find((s) => s.state === 'rejected') ??
+    (currentStepKey ? steps.find((s) => s.key === currentStepKey) : undefined) ??
     steps.find((s) => s.state !== 'approved' && s.state !== 'locked') ??
     steps[steps.length - 1] ??
     null

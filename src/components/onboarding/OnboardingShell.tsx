@@ -47,12 +47,12 @@ function activeKeyFor(pathname: string, steps: StepView[]): string | null {
   return match?.key ?? null
 }
 
-/** Ruta index: trimite driverul unde a rămas — sau direct la ce i-a fost respins. */
+/** Ruta index: trimite driverul unde a rămas — pasul pe care serverul îl declară activ. */
 export function OnboardingRedirect() {
-  const { steps, loading } = useOnboarding()
+  const { steps, state, loading } = useOnboarding()
 
   if (loading) return null
-  const target = firstActionableStep(steps)
+  const target = firstActionableStep(steps, state?.currentStep)
   return <Navigate to={target?.path ?? '/onboarding/eligibility'} replace />
 }
 
@@ -217,6 +217,29 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
     }
   }, [state?.allSectionsValidated, navigate])
 
+  // URL direct pe un pas blocat: backendul ar refuza oricum orice scriere de acolo, deci nu-l
+  // lăsăm să deschidă un ecran care arată funcțional. Redirect la pasul activ, cu explicație.
+  //
+  // Motivul călătorește prin location state, nu prin `useState`: altfel ar trebui setat dintr-un
+  // effect (cascading render) și s-ar pierde exact la navigarea care îl produce.
+  const lockedNotice = (location.state as { blockedStep?: string } | null)?.blockedStep ?? null
+
+  useEffect(() => {
+    if (loading || !activeKey) return
+    const active = steps.find((s) => s.key === activeKey)
+    if (!active || active.state !== 'locked') return
+
+    const target = firstActionableStep(steps, state?.currentStep)
+    if (!target || target.key === activeKey) return
+
+    navigate(target.path, {
+      replace: true,
+      state: { blockedStep: active.reason ?? `Pasul „${active.label}” nu este încă deblocat.` },
+    })
+  }, [loading, activeKey, steps, state?.currentStep, navigate])
+
+  const dismissLockedNotice = () => navigate(location.pathname, { replace: true, state: null })
+
   const handleLogout = () => {
     authService.logout()
     navigate('/auth')
@@ -380,6 +403,17 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
           {rejectionAlert?.labels.length === 1
             ? `Pasul „${rejectionAlert.labels[0]}” a fost redeschis — au apărut observații.`
             : `${rejectionAlert?.labels.length} pași au fost redeschiși — au apărut observații.`}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={lockedNotice !== null}
+        autoHideDuration={6000}
+        onClose={dismissLockedNotice}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="info" onClose={dismissLockedNotice}>
+          {lockedNotice}
         </Alert>
       </Snackbar>
     </Box>

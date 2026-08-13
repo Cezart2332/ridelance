@@ -89,17 +89,31 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
     setSearchParams(next, { replace: true })
   }, [current, requested, searchParams, setSearchParams])
 
-  /** Ieșirea din pasul mare: primul pas următor la care se poate lucra. */
+  /**
+   * Ieșirea din pasul mare. Înainte, mersul înainte căuta primul pas nelocked — o a doua părere
+   * despre deblocare, care putea să nu coincidă cu a serverului. Acum sursa e `currentStep`:
+   * exact pasul pe care backendul acceptă scrieri.
+   */
   const leave = useCallback(
     (direction: 1 | -1) => {
       const order = steps.findIndex((s) => s.key === activeKey)
       if (order < 0) return
-      const candidates: StepView[] =
-        direction === 1 ? steps.slice(order + 1) : steps.slice(0, order).reverse()
-      const target = candidates.find((s) => s.state !== 'locked')
-      if (target) navigate(target.path)
+
+      if (direction === 1) {
+        const target =
+          steps.find((s) => s.key === state?.currentStep) ??
+          steps.slice(order + 1).find((s) => s.state !== 'locked')
+        if (target && target.key !== activeKey) navigate(target.path)
+        return
+      }
+
+      const previous: StepView | undefined = steps
+        .slice(0, order)
+        .reverse()
+        .find((s) => s.state !== 'locked')
+      if (previous) navigate(previous.path)
     },
-    [steps, activeKey, navigate],
+    [steps, activeKey, state?.currentStep, navigate],
   )
 
   const next = useCallback(() => {

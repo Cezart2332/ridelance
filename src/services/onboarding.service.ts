@@ -25,6 +25,11 @@ export interface OnboardingState {
   allSectionsValidated: boolean
   /** Proiecția pe 6 pași (status derivat pe server). */
   steps: OnboardingStep[]
+  /**
+   * Cheia pasului activ — singurul pe care serverul acceptă scrieri. Null când onboardingul e
+   * complet. Frontendul nu mai calculează asta singur.
+   */
+  currentStep: string | null
   /** Ramura „Nu am PFA": starea dosarului de înființare. Null pentru „Am PFA". */
   companyFormationStatus: string | null
   /** Etapa la care a rămas dosarul: `PersonalData`, `RegisteredOffice` sau `Consent`. */
@@ -35,6 +40,19 @@ export interface OnboardingState {
 
 export type OnboardingStepStatus = 'Locked' | 'InProgress' | 'AwaitingValidation' | 'Completed'
 
+/**
+ * Vocabularul din specul v3, emis de server alături de `status`. Mai fin: separă „pasul e al tău
+ * dar n-ai început” de „ești în mijlocul lui” și aduce respingerea de pe client pe server.
+ * `status` rămâne pentru consumatorii care nu au migrat încă.
+ */
+export type OnboardingStepState =
+  | 'locked'
+  | 'available'
+  | 'in_progress'
+  | 'pending_admin'
+  | 'completed'
+  | 'rejected'
+
 export interface OnboardingStep {
   order: number
   key: string
@@ -42,6 +60,9 @@ export interface OnboardingStep {
   status: OnboardingStepStatus
   blockReason: string | null
   path: string
+  state: OnboardingStepState
+  /** Cine face tranziția finală a pasului. Un pas `admin` nu poate fi închis de șofer. */
+  ownedBy: 'user' | 'admin'
 }
 
 export type EligibilityStatus = 'Pending' | 'Eligible' | 'Ineligible' | 'NeedsReview'
@@ -137,7 +158,16 @@ export interface Step2State {
     provider: 'EasyStreamTransSped' | 'Manual'
     status: SignaturePacketStatus
     documents: { type: string; label: string | null; isSigned: boolean }[]
+    /** Setat când șoferul a trimis pasul spre admin — de aici nu mai are ce face. */
+    submittedForReviewAtUtc: string | null
+    packageName: string | null
+    signatureCount: number | null
+    expiresAtUtc: string | null
+    /** Motivul respingerii, scris de admin pentru client. */
+    rejectionReason: string | null
   } | null
+  /** Partea șoferului e completă și pasul nu e deja la admin. */
+  canSubmitForReview: boolean
 }
 
 // --- Pasul 3: autorizația ARR ---
@@ -430,6 +460,31 @@ export const onboardingService = {
   /** Admin — avansează integrarea Oblio. */
   async advanceOblioIntegration(pfaId: string, integrationStatus: OblioIntegrationStatus, adminNote?: string): Promise<void> {
     await api.put(`/pfa-registrations/${pfaId}/step2/oblio`, { integrationStatus, adminNote })
+  },
+
+  /** Pasul fiscal — șoferul își declară partea terminată; pasul trece la admin (RL-02). */
+  async submitFiscalForReview(): Promise<void> {
+    await api.post('/onboarding/step2/submit-for-review')
+  },
+
+  /** Admin — alocă pachetul de semnături și închide pasul fiscal. */
+  async completeSignaturePacket(
+    pfaId: string,
+    payload: {
+      provider: 'EasyStreamTransSped' | 'Manual'
+      packageName?: string | null
+      signatureCount?: number | null
+      expiresAtUtc?: string | null
+      providerReference?: string | null
+      adminNote?: string | null
+    },
+  ): Promise<void> {
+    await api.post(`/admin/onboarding/${pfaId}/steps/signatures/complete`, payload)
+  },
+
+  /** Admin — întoarce pasul fiscal la șofer, cu motiv. */
+  async rejectSignaturePacket(pfaId: string, reason: string, adminNote?: string | null): Promise<void> {
+    await api.post(`/admin/onboarding/${pfaId}/steps/signatures/reject`, { reason, adminNote })
   },
 
   /** Admin — creează/avansează pachetul de semnături. */

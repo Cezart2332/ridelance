@@ -106,7 +106,7 @@ const ADMIN_STEPS: AdminStep[] = [
   {
     key: 'fiscal', order: 2, label: 'Fiscal, bancă & semnături',
     categories: ['ExtrasBancar', 'DecontTvaIntracomunitar', 'DecontTaxaNerezident', 'CertificatTvaIntracomunitar'],
-    guidedNote: 'TVA, cont bancar, cont Oblio și semnături — fluxuri ghidate, avansate din contul clientului.',
+    guidedNote: 'TVA, cont bancar și cont Oblio le completează clientul. Pachetul de semnături îl aloci tu, mai jos — pasul nu se închide fără asta.',
   },
   {
     key: 'arr', order: 3, label: 'Autorizație transport (ARR)',
@@ -167,6 +167,193 @@ function docStatusLabel(status: string): string {
   if (s === 'verified' || s === 'approved') return 'Verificat'
   if (s === 'pending') return 'În verificare'
   return 'Respins'
+}
+
+/**
+ * RL-02 — pasul fiscal nu poate fi închis de client: pachetul de împuterniciri îl alocăm noi.
+ * Blocul ăsta e singurul loc din care pasul se finalizează sau se întoarce la client.
+ */
+function SignaturePacketReview({
+  pfaId,
+  stepState,
+  busy,
+  onDone,
+  onSnackbar,
+}: {
+  pfaId: string
+  stepState: string | undefined
+  busy: boolean
+  onDone: () => Promise<void>
+  onSnackbar: (message: string, severity: 'success' | 'error') => void
+}) {
+  const [packageName, setPackageName] = useState('')
+  const [signatureCount, setSignatureCount] = useState('')
+  const [expiresAt, setExpiresAt] = useState('')
+  const [adminNote, setAdminNote] = useState('')
+  const [rejectOpen, setRejectOpen] = useState(false)
+  const [reason, setReason] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const complete = async () => {
+    setSaving(true)
+    try {
+      await onboardingService.completeSignaturePacket(pfaId, {
+        provider: 'EasyStreamTransSped',
+        packageName: packageName.trim() || null,
+        signatureCount: signatureCount ? Number(signatureCount) : null,
+        expiresAtUtc: expiresAt ? new Date(expiresAt).toISOString() : null,
+        adminNote: adminNote.trim() || null,
+      })
+      onSnackbar('Pachetul a fost alocat. Pasul următor al clientului este deblocat.', 'success')
+      await onDone()
+    } catch {
+      onSnackbar('Nu am putut finaliza pasul. Încearcă din nou.', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const reject = async () => {
+    if (!reason.trim()) return
+    setSaving(true)
+    try {
+      await onboardingService.rejectSignaturePacket(pfaId, reason.trim(), adminNote.trim() || null)
+      onSnackbar('Pasul a fost întors clientului, cu motivul specificat.', 'success')
+      setRejectOpen(false)
+      setReason('')
+      await onDone()
+    } catch {
+      onSnackbar('Nu am putut respinge pasul. Încearcă din nou.', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (stepState === 'completed') {
+    return (
+      <Box sx={{ px: 2.5, pb: 2 }}>
+        <Alert severity="success">Pachetul de semnături a fost alocat, pasul e finalizat.</Alert>
+      </Box>
+    )
+  }
+
+  const disabled = busy || saving
+
+  return (
+    <Box sx={{ px: 2.5, pb: 2 }}>
+      <Stack direction="row" sx={{ alignItems: 'center', gap: 1, mb: 1 }}>
+        <Typography variant="caption" sx={{ fontWeight: 800, color: TOKENS.ink }}>
+          Pachet de semnături
+        </Typography>
+        <Chip
+          label={stepState === 'pending_admin' ? 'Așteaptă acțiunea ta' : 'La client'}
+          size="small"
+          sx={{
+            fontSize: '0.62rem',
+            fontWeight: 700,
+            bgcolor: alpha(stepState === 'pending_admin' ? '#f59e0b' : TOKENS.textMuted, 0.1),
+            color: stepState === 'pending_admin' ? '#f59e0b' : TOKENS.textMuted,
+          }}
+        />
+      </Stack>
+
+      {stepState === 'rejected' && (
+        <Alert severity="warning" sx={{ mb: 1.5 }}>
+          Pasul e la client, cu observațiile trimise. Îl poți finaliza oricum, dacă s-a rezolvat pe alt canal.
+        </Alert>
+      )}
+
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 1.5 }}>
+        <TextField
+          size="small"
+          label="Pachet alocat"
+          value={packageName}
+          onChange={(e) => setPackageName(e.target.value)}
+          fullWidth
+        />
+        <TextField
+          size="small"
+          label="Nr. semnături"
+          type="number"
+          value={signatureCount}
+          onChange={(e) => setSignatureCount(e.target.value)}
+          sx={{ minWidth: 140 }}
+        />
+        <TextField
+          size="small"
+          label="Expiră la"
+          type="date"
+          value={expiresAt}
+          onChange={(e) => setExpiresAt(e.target.value)}
+          slotProps={{ inputLabel: { shrink: true } }}
+          sx={{ minWidth: 170 }}
+        />
+      </Stack>
+
+      <TextField
+        size="small"
+        label="Note interne (nu se văd de client)"
+        value={adminNote}
+        onChange={(e) => setAdminNote(e.target.value)}
+        fullWidth
+        multiline
+        minRows={2}
+        sx={{ mb: 1.5 }}
+      />
+
+      <Stack direction="row" spacing={1.5}>
+        <Button
+          size="small"
+          variant="contained"
+          startIcon={<CheckCircleRoundedIcon />}
+          onClick={complete}
+          disabled={disabled}
+          sx={{ fontWeight: 700, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: 'none' }}
+        >
+          Finalizează pasul
+        </Button>
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<CancelRoundedIcon />}
+          onClick={() => setRejectOpen(true)}
+          disabled={disabled}
+          sx={{
+            fontWeight: 700,
+            borderColor: '#ef4444',
+            color: '#ef4444',
+            '&:hover': { bgcolor: alpha('#ef4444', 0.06), borderColor: '#dc2626' },
+          }}
+        >
+          Respinge
+        </Button>
+      </Stack>
+
+      <Dialog open={rejectOpen} onClose={() => setRejectOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontWeight: 800 }}>Întoarce pasul la client</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: TOKENS.textMuted, mb: 2 }}>
+            Motivul se afișează clientului pe pasul fiscal, deci scrie-l ca instrucțiune.
+          </Typography>
+          <TextField
+            label="Motivul respingerii"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            fullWidth
+            multiline
+            minRows={3}
+            autoFocus
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRejectOpen(false)}>Anulează</Button>
+          <Button onClick={reject} disabled={!reason.trim() || saving} color="error" variant="contained">
+            Respinge
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  )
 }
 
 /** Chip cu verdictul prevalidării AI + tooltip cu detaliile extrase. */
@@ -474,6 +661,17 @@ export function OnboardingSectionsPanel({
                     Respinge
                   </Button>
                 </Stack>
+              )}
+
+              {/* Pasul fiscal — alocarea pachetului de semnături (RL-02) */}
+              {group.key === 'fiscal' && (
+                <SignaturePacketReview
+                  pfaId={pfaId}
+                  stepState={state?.steps.find((s) => s.key === 'fiscal')?.state}
+                  busy={actionBusy}
+                  onDone={loadState}
+                  onSnackbar={onSnackbar}
+                />
               )}
 
               {/* Secțiuni de documente care se validează (declanșează înrolarea) */}
