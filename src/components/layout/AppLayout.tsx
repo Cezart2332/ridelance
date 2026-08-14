@@ -36,6 +36,7 @@ const PaymentPolicyPage = lazyWithRetry(() =>
   import('../../pages/PaymentPolicyPage').then((m) => ({ default: m.PaymentPolicyPage })),
 )
 const CarsPage = lazyWithRetry(() => import('../../pages/CarsPage').then((m) => ({ default: m.CarsPage })))
+const VehicleDetailPage = lazyWithRetry(() => import('../../pages/VehicleDetailPage'))
 
 export function AppLayout() {
   const location = useLocation()
@@ -405,6 +406,7 @@ export function AppLayout() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/masini" element={<CarsPage />} />
+            <Route path="/masini/:slug" element={<VehicleDetailPage />} />
             <Route path="/intrebari-frecvente" element={<FaqPage />} />
             <Route path="/servicii" element={<ServicesPage />} />
             <Route path="/despre-ridelance" element={<AboutPage />} />

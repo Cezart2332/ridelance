@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Box, 
   Typography, 
@@ -41,10 +42,9 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
   const images = car.images.length > 0 ? car.images : [{ id: 'placeholder', imageUrl: '' }];
   const { swipeHandlers, goNext, goPrev } = useSwipeGallery(images.length, setActiveImageIndex);
 
-  useEffect(() => {
-    if (!car.id) return;
-    carsService.trackView(car.id).catch(() => {});
-  }, [car.id]);
+  // Vizualizarea se numără DOAR pe pagina de detaliu (spec §18). Aici, un scroll prin listă ar
+  // însemna zece „vizualizări” pentru mașini pe care nu le-a deschis nimeni.
+  const detailPath = `/masini/${car.slug}`;
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -85,11 +85,13 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
         {...(images.length > 1 ? swipeHandlers : {})}
       >
         {images[activeImageIndex]?.imageUrl ? (
-          <img 
-            src={getCarImageUrl(images[activeImageIndex].imageUrl)} 
-            alt={`${car.brand} ${car.model}`}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
+          <Link to={detailPath} aria-label={`Vezi detalii pentru ${car.brand} ${car.model}`}>
+            <img
+              src={getCarImageUrl(images[activeImageIndex].imageUrl)}
+              alt={`${car.brand} ${car.model}`}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </Link>
         ) : (
           <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: alpha(DASHBOARD_TOKENS.ink, 0.05) }}>
              <Box sx={{ textAlign: 'center', opacity: 0.2 }}>
@@ -206,7 +208,19 @@ export default function CarCard({ car, onRentClick }: CarCardProps) {
                 border: `1px solid ${alpha(DASHBOARD_TOKENS.primary, 0.2)}`,
               }}
             />
-            <Typography variant="h6" sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink, lineHeight: 1.2 }}>
+            <Typography
+              variant="h6"
+              component={Link}
+              to={detailPath}
+              sx={{
+                display: 'block',
+                fontWeight: 800,
+                color: DASHBOARD_TOKENS.ink,
+                lineHeight: 1.2,
+                textDecoration: 'none',
+                '&:hover': { textDecoration: 'underline' },
+              }}
+            >
               {car.brand} {car.model}, {car.year}
             </Typography>
             {car.description && (

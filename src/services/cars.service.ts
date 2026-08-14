@@ -16,12 +16,18 @@ export interface CarImage {
 
 export interface CarStats {
   views: number;
+  /** Vizitatori distincți, după hash. Un refresh nu îl mișcă. */
+  uniqueViews: number;
+  /** Numărat din `car_views`, nu dintr-un contor — de aceea poate scădea. */
+  viewsLast7Days: number;
   clicks: number;
   forms: number;
 }
 
 export interface Car {
   id: string;
+  /** Identitatea din URL-ul public: `dacia-logan-2022-4f3a`. */
+  slug: string;
   brand: string;
   model: string;
   year: number;
@@ -49,6 +55,9 @@ export interface Car {
   stats: CarStats;
 }
 
+/** `Request` = vrea mașina acum, `Waitlist` = vrea să fie anunțat când se eliberează. */
+export type CarLeadIntent = 'Request' | 'Waitlist';
+
 export interface CarLead {
   id: string;
   carId: string;
@@ -58,6 +67,11 @@ export interface CarLead {
   userPhone: string;
   city: string;
   interestType: string;
+  intent: CarLeadIntent;
+  preferredStartDate?: string | null;
+  weeks?: number | null;
+  hasPlatformAccount?: boolean | null;
+  message?: string | null;
   status: string;
   adminNote?: string;
   createdAtUtc: string;
@@ -93,6 +107,12 @@ const carsService = {
 
   async getById(id: string): Promise<Car> {
     const res = await api.get<Car>(`/cars/${id}`);
+    return res.data;
+  },
+
+  /** Pagina de detaliu, deschisă din URL. */
+  async getBySlug(slug: string): Promise<Car> {
+    const res = await api.get<Car>(`/cars/by-slug/${encodeURIComponent(slug)}`);
     return res.data;
   },
 
@@ -169,6 +189,12 @@ const carsService = {
     userPhone: string;
     city: string;
     interestType: string;
+    consentAccepted: boolean;
+    intent?: CarLeadIntent;
+    preferredStartDate?: string | null;
+    weeks?: number | null;
+    hasPlatformAccount?: boolean | null;
+    message?: string | null;
   }): Promise<string> {
     const res = await api.post<{ leadId: string }>(`/cars/${carId}/leads`, data);
     return res.data.leadId;
@@ -186,9 +212,21 @@ const carsService = {
     await api.patch(`/cars/leads/${leadId}/status`, { status, adminNote });
   },
 
-  /** Record a listing impression (public, fire-and-forget). */
-  trackView(carId: string): Promise<void> {
-    return api.post(`/cars/${carId}/analytics/view`).then(() => undefined);
+  /**
+   * O vizualizare a paginii de detaliu (spec §18) — niciodată din listă sau din carusel.
+   *
+   * `fetch` cu `keepalive`, nu axios: cererea pleacă la 2 secunde după intrarea pe pagină, iar
+   * dacă utilizatorul navighează imediat, XHR-ul ar fi anulat exact în cazul care contează.
+   * Serverul deduplică oricum pe 30 de minute, deci un apel în plus nu strică nimic.
+   */
+  trackView(carId: string, source = 'vdp'): Promise<void> {
+    return fetch(`${BASE_URL}/cars/${carId}/analytics/view`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source }),
+      keepalive: true,
+      credentials: 'include',
+    }).then(() => undefined);
   },
 
   /** Record rent / CTA click (public, fire-and-forget). */

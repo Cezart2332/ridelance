@@ -164,10 +164,11 @@ export function CarCarousel() {
                     </Box>
                   </Stack>
 
-                  <Button 
-                    variant="contained" 
+                  <Button
+                    variant="contained"
                     fullWidth
-                    onClick={() => navigate('/masini')}
+                    // Cardul știe despre ce mașină e vorba; lista nu mai are ce adăuga.
+                    onClick={() => navigate(`/masini/${car.slug}`)}
                     sx={{ 
                       py: 1.5, 
                       mt: 'auto',

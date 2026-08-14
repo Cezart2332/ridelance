@@ -1,7 +1,7 @@
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import HourglassTopRoundedIcon from '@mui/icons-material/HourglassTopRounded'
-import { Box, Skeleton, Stack, Typography } from '@mui/material'
+import { Box, ButtonBase, Skeleton, Stack, Typography } from '@mui/material'
 import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
 
@@ -11,29 +11,62 @@ import { useAutosaveSnapshot } from '../autosaveStore'
 import { useMotionTokens } from '../motion'
 import { SHELL } from '../shellTokens'
 import type { StepView } from '../stepModel'
+import { useMicroSteps } from '../useMicroSteps'
 
 /**
- * Rail-ul dreapta: ce mai lipsește din pasul curent.
+ * Rail-ul dreapta: pasul curent, desfăcut în ecranele lui.
  *
- * Derivat **exclusiv** din răspunsul serverului (`step.checklist`). Nu recalculează nimic: dacă
- * inelul ar număra altfel decât lista de sub el, unul din ele ar fi greșit — și n-ai ști care.
+ * Sursa e parcursul real al utilizatorului (`useMicroSteps().steps`) — adică exact ramura pe care
+ * merge el, după ce `visibleWhen` a tăiat restul. O listă statică de documente n-ar fi putut spune
+ * asta: cine lucrează doar pe Uber nu are ce vedea la Bolt.
+ *
+ * Pentru ecranele de upload, verdictul vine tot de la server (`step.checklist`) — „încărcat" nu e
+ * același lucru cu „acceptat", iar motivul respingerii îl știe doar backendul.
  *
  * Un singur card. Fără sub-card pentru inel (un card în card nu separă nimic de nimic) și fără
  * bloc de „datele tale sunt protejate": nu e o informație pe care o caută cineva în mijlocul unui
  * upload, iar repetată pe fiecare ecran devine zgomot. Politica de date își are locul ei.
  */
-const ITEM_STATE: Record<
-  OnboardingChecklistItem['state'],
-  { label: string; icon: ReactNode | null; color: string }
-> = {
-  missing: { label: 'Lipsește', icon: null, color: SHELL.text.tertiary },
-  uploaded: { label: 'Încărcat', icon: <CheckRoundedIcon sx={{ fontSize: 13 }} />, color: SHELL.pos },
-  verifying: {
-    label: 'În verificare',
-    icon: <HourglassTopRoundedIcon sx={{ fontSize: 12 }} />,
-    color: SHELL.warn,
-  },
-  rejected: { label: 'Respins', icon: <CloseRoundedIcon sx={{ fontSize: 13 }} />, color: SHELL.neg },
+
+/** Starea unui rând din listă: parcursul (done/current/todo) sau verdictul serverului. */
+type ItemState = 'done' | 'current' | 'todo' | 'verifying' | 'rejected'
+
+interface RailItem {
+  key: string
+  label: string
+  state: ItemState
+  note?: string | null
+  /** Doar ecranele deja parcurse sunt clicabile — înainte nu se sare. */
+  goTo?: () => void
+}
+
+const ITEM_STATE: Record<ItemState, { label: string | null; icon: ReactNode | null; color: string }> =
+  {
+    done: {
+      label: null,
+      icon: <CheckRoundedIcon sx={{ fontSize: 13 }} />,
+      color: SHELL.pos,
+    },
+    current: { label: 'Acum', icon: null, color: SHELL.brand },
+    todo: { label: null, icon: null, color: SHELL.text.tertiary },
+    verifying: {
+      label: 'În verificare',
+      icon: <HourglassTopRoundedIcon sx={{ fontSize: 12 }} />,
+      color: SHELL.warn,
+    },
+    rejected: {
+      label: 'Respins',
+      icon: <CloseRoundedIcon sx={{ fontSize: 13 }} />,
+      color: SHELL.neg,
+    },
+  }
+
+/** Verdictul serverului pentru un document, dacă pasul are checklist. */
+const SERVER_STATE: Record<OnboardingChecklistItem['state'], ItemState> = {
+  missing: 'todo',
+  uploaded: 'done',
+  verifying: 'verifying',
+  rejected: 'rejected',
 }
 
 function Card({ children }: { children: ReactNode }) {
@@ -83,33 +116,65 @@ export function RightRail({ step, loading }: { step: StepView | null; loading: b
   )
 }
 
-function ChecklistCard({ step }: { step: StepView | null }) {
-  const items = step?.checklist ?? []
+/**
+ * Ecranele pasului curent, în ordinea în care le parcurge chiar acest utilizator. Verdictul de
+ * document, când există, bate starea derivată din parcurs: un upload făcut și respins nu e „gata".
+ */
+function useRailItems(step: StepView | null): RailItem[] {
+  const micro = useMicroSteps()
+  const checklist = step?.checklist ?? []
 
-  if (step === null) {
+  if (micro.steps.length === 0) {
+    // Pas nemigrat (sau shell fără config): rămâne lista de documente a serverului.
+    return checklist.map((item) => ({
+      key: item.key,
+      label: item.label,
+      state: SERVER_STATE[item.state],
+      note: item.note,
+    }))
+  }
+
+  const currentIndex = micro.current?.index ?? 0
+
+  return micro.steps.map((view) => {
+    const category = view.def.document?.category
+    const verdict = category ? checklist.find((item) => item.key === category) : undefined
+
+    // Documentul are verdict propriu doar după ce a fost încărcat; „missing" n-ar spune nimic în
+    // plus față de poziția în parcurs.
+    const state: ItemState =
+      verdict && verdict.state !== 'missing'
+        ? SERVER_STATE[verdict.state]
+        : view.done
+          ? 'done'
+          : view.current
+            ? 'current'
+            : 'todo'
+
+    return {
+      key: view.def.id,
+      label: view.def.railLabel,
+      state,
+      note: verdict?.note,
+      goTo:
+        view.index <= currentIndex || view.done ? () => micro.goTo(view.def.id) : undefined,
+    }
+  })
+}
+
+function ChecklistCard({ step }: { step: StepView | null }) {
+  const items = useRailItems(step)
+
+  if (step === null || items.length === 0) {
     return null
   }
 
-  // Un pas fără documente obligatorii (eligibilitate, fiscal) n-are checklist — și nu inventăm unul.
-  if (items.length === 0) {
-    return (
-      <Card>
-        <Typography sx={{ fontSize: 14, fontWeight: 600, color: SHELL.text.primary }}>
-          Progres
-        </Typography>
-        <Typography sx={{ fontSize: 13, color: SHELL.text.secondary, mt: 0.5 }}>
-          Pasul „{step.label}” nu cere documente. Răspunde la întrebările din stânga.
-        </Typography>
-      </Card>
-    )
-  }
-
-  const done = items.filter((i) => i.state === 'uploaded').length
+  const done = items.filter((i) => i.state === 'done').length
 
   return (
     <Card>
       <Typography sx={{ fontSize: 14, fontWeight: 600, color: SHELL.text.primary }}>
-        Ce mai lipsește
+        Ce ai de făcut aici
       </Typography>
 
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mt: 1.5, mb: 2 }}>
@@ -126,48 +191,97 @@ function ChecklistCard({ step }: { step: StepView | null }) {
         </Box>
       </Stack>
 
-      <Stack spacing={1.25}>
-        {items.map((item) => {
-          const tone = ITEM_STATE[item.state]
-          return (
-            <Stack key={item.key} direction="row" spacing={1.25} sx={{ alignItems: 'flex-start' }}>
-              {/* Bulină de stare, nu index: numerotarea aparține pașilor din rail-ul stâng. */}
-              <Box
-                sx={{
-                  width: 18,
-                  height: 18,
-                  mt: '1px',
-                  flexShrink: 0,
-                  borderRadius: '50%',
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: '#FFFFFF',
-                  backgroundColor: tone.icon ? tone.color : 'transparent',
-                  border: tone.icon ? 'none' : `1px dashed ${SHELL.border.strong}`,
-                }}
-              >
-                {tone.icon}
-              </Box>
-
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography sx={{ fontSize: 13, color: SHELL.text.primary, lineHeight: 1.4 }}>
-                  {item.label}
-                </Typography>
-                <Typography sx={{ fontSize: 12, color: tone.color, fontWeight: 500 }}>
-                  {tone.label}
-                </Typography>
-                {/* Motivul respingerii stă pe rând, nu într-un tooltip. */}
-                {item.note && (
-                  <Typography sx={{ fontSize: 12, color: SHELL.text.secondary, mt: 0.25 }}>
-                    {item.note}
-                  </Typography>
-                )}
-              </Box>
-            </Stack>
-          )
-        })}
+      <Stack spacing={0.25}>
+        {items.map((item) => (
+          <ItemRow key={item.key} item={item} />
+        ))}
       </Stack>
     </Card>
+  )
+}
+
+function ItemRow({ item }: { item: RailItem }) {
+  const tone = ITEM_STATE[item.state]
+  const isCurrent = item.state === 'current'
+
+  const body = (
+    <Stack
+      direction="row"
+      spacing={1.25}
+      sx={{
+        alignItems: 'flex-start',
+        width: '100%',
+        px: 1,
+        py: 0.75,
+        borderRadius: SHELL.radius.input,
+        backgroundColor: isCurrent ? SHELL.brandSoft : 'transparent',
+      }}
+    >
+      {/* Bulină de stare, nu index: numerotarea aparține pașilor mari din rail-ul stâng. */}
+      <Box
+        sx={{
+          width: 18,
+          height: 18,
+          mt: '1px',
+          flexShrink: 0,
+          borderRadius: '50%',
+          display: 'grid',
+          placeItems: 'center',
+          color: '#FFFFFF',
+          backgroundColor: tone.icon ? tone.color : 'transparent',
+          border: tone.icon
+            ? 'none'
+            : `${isCurrent ? 2 : 1}px ${isCurrent ? 'solid' : 'dashed'} ${
+                isCurrent ? SHELL.brand : SHELL.border.strong
+              }`,
+        }}
+      >
+        {tone.icon}
+      </Box>
+
+      <Box sx={{ minWidth: 0, flex: 1, textAlign: 'left' }}>
+        <Typography
+          sx={{
+            fontSize: 13,
+            lineHeight: 1.4,
+            fontWeight: isCurrent ? 600 : 400,
+            color: item.state === 'todo' ? SHELL.text.secondary : SHELL.text.primary,
+          }}
+        >
+          {item.label}
+        </Typography>
+        {/* „Gata" și „urmează" se citesc din bulină; scriem doar ce nu se vede din ea. */}
+        {tone.label && (
+          <Typography sx={{ fontSize: 12, color: tone.color, fontWeight: 500 }}>
+            {tone.label}
+          </Typography>
+        )}
+        {/* Motivul respingerii stă pe rând, nu într-un tooltip. */}
+        {item.note && (
+          <Typography sx={{ fontSize: 12, color: SHELL.text.secondary, mt: 0.25 }}>
+            {item.note}
+          </Typography>
+        )}
+      </Box>
+    </Stack>
+  )
+
+  if (!item.goTo) return body
+
+  return (
+    <ButtonBase
+      onClick={item.goTo}
+      aria-current={isCurrent ? 'step' : undefined}
+      sx={{
+        display: 'block',
+        width: '100%',
+        borderRadius: SHELL.radius.input,
+        textAlign: 'left',
+        '&:hover': { backgroundColor: isCurrent ? 'transparent' : SHELL.bg.surface2 },
+      }}
+    >
+      {body}
+    </ButtonBase>
   )
 }
 

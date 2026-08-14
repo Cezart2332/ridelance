@@ -852,7 +852,29 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{lead.carName}</Typography>
+                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{lead.carName}</Typography>
+                          {/* Lista de așteptare e altă discuție decât o cerere obișnuită. */}
+                          {lead.intent === 'Waitlist' && (
+                            <Chip label="Listă de așteptare" size="small"
+                              sx={{ height: 20, fontSize: '0.62rem', fontWeight: 800, bgcolor: alpha('#f59e0b', 0.12), color: '#B54708' }} />
+                          )}
+                        </Stack>
+                        <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle, display: 'block' }}>
+                          {[
+                            lead.weeks ? `${lead.weeks} săpt.` : null,
+                            lead.preferredStartDate
+                              ? `de la ${new Date(lead.preferredStartDate).toLocaleDateString('ro-RO')}`
+                              : null,
+                            lead.hasPlatformAccount === true ? 'are cont pe platforme' : null,
+                            lead.hasPlatformAccount === false ? 'fără cont pe platforme' : null,
+                          ].filter(Boolean).join(' • ')}
+                        </Typography>
+                        {lead.message && (
+                          <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.ink, display: 'block', mt: 0.5, fontStyle: 'italic' }}>
+                            „{lead.message}”
+                          </Typography>
+                        )}
                       </TableCell>
                       <TableCell><Typography variant="caption">{new Date(lead.createdAtUtc).toLocaleDateString('ro-RO')}</Typography></TableCell>
                       <TableCell>
