@@ -27,12 +27,14 @@ import { useMotionTokens } from './motion'
 import { onboardingMuiTheme } from './onboardingMuiTheme'
 import { OnboardingProvider } from './OnboardingProvider'
 import { displaySx, TOKENS } from './onboardingTheme'
+import { SHELL, SHELL_LAYOUT } from './shellTokens'
 import { MobileStepBar, MOBILE_BAR_HEIGHT } from './rail/MobileStepBar'
+import { RightRail } from './rail/RightRail'
 import { StepRail } from './rail/StepRail'
 import { SidebarSupportBlock } from './shell/SidebarSupportBlock'
-import { OnboardingTopBar, TOPBAR_HEIGHT } from './shell/OnboardingTopBar'
+import { OnboardingTopBar } from './shell/OnboardingTopBar'
 import { StepProgressRing } from './shell/StepProgressRing'
-import { firstActionableStep, type StepView } from './stepModel'
+import { firstActionableStep, stepEstimate, type StepView } from './stepModel'
 import { OnboardingSupportContext, type OnboardingSupportValue } from './supportContext'
 import { useMicroSteps } from './useMicroSteps'
 import { useOnboarding } from './useOnboarding'
@@ -77,26 +79,38 @@ function TestSkipBanner() {
     }
   }
 
+  // Bandă îngustă, de tip debug — nu card, nu iconiță mare. Trebuie să fie evident că nu e
+  // parte din produs, altfel arată ca o funcție pe care userul crede că o are.
   return (
-    <Alert
-      severity="warning"
-      sx={{ alignItems: 'center', mb: 2, maxWidth: 720, mx: 'auto' }}
-      action={
-        <Button
-          size="small"
-          color="warning"
-          variant="outlined"
-          disabled={skipping}
-          onClick={handleSkip}
-          sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}
-        >
-          {skipping ? 'Se sare...' : 'Sari peste pasul curent'}
-        </Button>
-      }
+    <Box
+      role="status"
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1.5,
+        px: 2,
+        py: 0.75,
+        backgroundColor: SHELL.warnSoft,
+        borderBottom: `1px solid ${SHELL.warn}`,
+        fontSize: 12,
+        color: SHELL.warn,
+      }}
     >
-      Mod de testare activ — poți sări peste pași fără documente și fără validare.
-      {skipError ? ` ${skipError}` : ''}
-    </Alert>
+      <Box component="span" sx={{ fontWeight: 700 }}>
+        MOD DE TESTARE
+      </Box>
+      <Box component="span" sx={{ flex: 1, minWidth: 0 }}>
+        Pașii se pot sări fără documente și fără validare.{skipError ? ` ${skipError}` : ''}
+      </Box>
+      <Button
+        size="small"
+        disabled={skipping}
+        onClick={handleSkip}
+        sx={{ color: SHELL.warn, fontWeight: 700, textTransform: 'none', minWidth: 0, p: 0 }}
+      >
+        {skipping ? 'Se sare…' : 'Sari peste pas'}
+      </Button>
+    </Box>
   )
 }
 
@@ -170,6 +184,8 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
 
   // Sub 900px rail-ul stâng devine bara mobilă.
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+  // Sub 1200px rail-ul dreapta nu mai are loc lateral: coboară sub conținut, ca secțiune normală.
+  const showRightRail = useMediaQuery('(min-width:1200px)')
 
   const { state, steps, loading, error, refresh, rejectionAlert, dismissRejectionAlert } =
     useOnboarding()
@@ -260,6 +276,8 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
     )
   }
 
+  const currentStepView = steps.find((s) => s.key === activeKey) ?? null
+
   const rail = (
     <StepRail
       steps={steps}
@@ -268,6 +286,7 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
       onSelect={goToStep}
       subSteps={micro.steps}
       onSelectSubStep={micro.goTo}
+      estimate={stepEstimate(currentStepView)}
     />
   )
 
@@ -295,15 +314,16 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
         <>
           <Box sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 3 }}>
             <OnboardingTopBar
-              position={micro.position}
-              total={micro.total}
-              percent={micro.percent}
+              stepPosition={Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)}
+              stepTotal={Math.max(steps.length, 1)}
+              stepLabel={steps.find((s) => s.key === activeKey)?.label ?? null}
               canGoBack={micro.canGoBack}
               onBack={micro.back}
               onLogout={handleLogout}
             />
+            <TestSkipBanner />
           </Box>
-          <Box sx={{ height: TOPBAR_HEIGHT }} />
+          <Box sx={{ height: SHELL_LAYOUT.topbarHeight }} />
         </>
       )}
 
@@ -316,7 +336,7 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
               aria-label="Pașii înrolării"
               sx={{
                 position: 'fixed',
-                top: TOPBAR_HEIGHT,
+                top: SHELL_LAYOUT.topbarHeight,
                 bottom: 0,
                 left: 0,
                 width: RAIL_WIDTH,
@@ -342,9 +362,18 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
           </>
         )}
 
-        <Box sx={{ flex: 1, minWidth: 0, px: { xs: 2, md: 4 }, py: { xs: 2.5, md: 6 } }}>
-          <TestSkipBanner />
-
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            px: { xs: 2, md: 4 },
+            py: { xs: 2.5, md: 6 },
+            // Cardul central își păstrează lățimea: diferența pentru rail-ul dreapta se absoarbe
+            // din gutter-ele exterioare, nu din conținut.
+            maxWidth: SHELL_LAYOUT.contentMaxWidth + 128,
+            mx: 'auto',
+          }}
+        >
           {error && (
             <Alert severity="error" sx={{ mb: 2, maxWidth: 720, mx: 'auto' }}>
               {error}
@@ -370,7 +399,43 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
               </motion.div>
             </AnimatePresence>
           )}
+
+          {!showRightRail && (
+            <Box sx={{ mt: 4 }}>
+              <RightRail step={currentStepView} loading={loading} />
+            </Box>
+          )}
         </Box>
+
+        {showRightRail && (
+          <>
+            {/* Fix + spacer, ca și rail-ul stâng: `sticky` e rupt de overflow-x: hidden pe #root. */}
+            <Box
+              component="aside"
+              aria-label="Progresul pasului curent"
+              sx={{
+                position: 'fixed',
+                top: SHELL_LAYOUT.topbarHeight,
+                bottom: 0,
+                right: 0,
+                width: { md: SHELL_LAYOUT.rightRailNarrow, xl: SHELL_LAYOUT.rightRail },
+                overflowY: 'auto',
+                borderLeft: `1px solid ${SHELL.border.subtle}`,
+                backgroundColor: SHELL.bg.app,
+                px: 2,
+                py: 2.5,
+              }}
+            >
+              <RightRail step={currentStepView} loading={loading} />
+            </Box>
+            <Box
+              sx={{
+                width: { md: SHELL_LAYOUT.rightRailNarrow, xl: SHELL_LAYOUT.rightRail },
+                flexShrink: 0,
+              }}
+            />
+          </>
+        )}
       </Box>
 
       {/* Pe mobil, ajutorul nu are unde sta în rail — rămâne ancorat sub conținut. */}

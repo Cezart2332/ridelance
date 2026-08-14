@@ -21,6 +21,8 @@ import {
   type VatDeclaration,
 } from '../../services/onboarding.service'
 import { getErrorMessage } from '../../utils/errorHandler'
+import { useAutosave } from '../../hooks/useAutosave'
+import { usePublishAutosave } from './autosaveStore'
 import { BcrAccountDialog } from './BcrAccountDialog'
 import { StepDocument } from './StepDocument'
 import { TOKENS, inputSx } from './onboardingTheme'
@@ -78,10 +80,22 @@ export default function OnboardingStep2Page() {
   const { data: step2 } = useOnboardingResource('step2', () => onboardingService.getStep2State())
 
   const [error, setError] = useState<string | null>(null)
-  const [savingVat, setSavingVat] = useState(false)
-  const [savingBank, setSavingBank] = useState(false)
-  const [savingOblio, setSavingOblio] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+
+  // RL-06 — nu mai există buton „Salvează". Fiecare zonă are propriul autosave, fiindcă fiecare
+  // scrie pe alt endpoint; indicatorul de sus arată starea celei mai recente scrieri.
+  const vatSave = useAutosave<VatDeclaration>({
+    save: (answer) => onboardingService.submitVat(answer),
+    storageKey: 'onboarding.step2.vat',
+  })
+  const bankSave = useAutosave<{ bankName: string | null }>({
+    save: (payload) => onboardingService.submitBankDeclaration(payload),
+    storageKey: 'onboarding.step2.bank',
+  })
+  const oblioSave = useAutosave<{ accountEmail: string | null } & OblioForm>({
+    save: (payload) => onboardingService.acceptOblioConsents(payload),
+    storageKey: 'onboarding.step2.oblio',
+  })
 
   // Fiecare formular urmărește serverul până când userul îl atinge — apoi rămâne al lui.
   // `''` = nu s-a răspuns încă; dosarele vechi cu „nu știu" cad tot aici și trebuie răspuns din nou.
@@ -133,35 +147,33 @@ export default function OnboardingStep2Page() {
     await refresh()
   }
 
-  const saveVat = async () => {
-    if (vatAnswer === '') return
-    setSavingVat(true)
-    setError(null)
-    try {
-      await onboardingService.submitVat(vatAnswer)
-      await reload()
-    } catch (err) {
-      setError(getErrorMessage(err))
-    } finally {
-      setSavingVat(false)
-    }
+  const answerVat = (next: VatDeclaration) => {
+    setVatForm(next)
+    // „Da" fără dovadă e respins de server; nu trimitem până nu apare documentul.
+    if (next === 'No' || hasVatProof) vatSave.schedule(next)
   }
 
-  const saveBank = async () => {
-    setSavingBank(true)
-    setError(null)
-    try {
-      await onboardingService.submitBankDeclaration({ bankName: bankName || null })
-      await reload()
-    } catch (err) {
-      setError(getErrorMessage(err))
-    } finally {
-      setSavingBank(false)
-    }
-  }
+  // Cele trei zone scriu pe endpointuri diferite, dar userul vede o singură stare de salvare:
+  // cea mai „urgentă" dintre ele.
+  const save =
+    [vatSave, bankSave, oblioSave].find((s) => s.status === 'error') ??
+    [vatSave, bankSave, oblioSave].find((s) => s.status === 'saving') ??
+    [vatSave, bankSave, oblioSave]
+      .filter((s) => s.savedAt !== null)
+      .sort((a, b) => (b.savedAt?.getTime() ?? 0) - (a.savedAt?.getTime() ?? 0))[0] ??
+    vatSave
 
-  const saveOblio = async () => {
-    setSavingOblio(true)
+  // Indicatorul trăiește în rail-ul dreapta, nu lângă titlu (spec §1.4).
+  usePublishAutosave(save)
+
+  const allOblio = Object.values(oblio).every(Boolean)
+  const oblioConnected = step2?.oblio?.allConsentsAccepted === true
+
+  // Un singur buton de acțiune în zona Oblio. Apelul e idempotent pe server, deci un dublu-click
+  // nu creează două conturi.
+  const [connectingOblio, setConnectingOblio] = useState(false)
+  const connectOblio = async () => {
+    setConnectingOblio(true)
     setError(null)
     try {
       await onboardingService.acceptOblioConsents({ accountEmail: oblioEmail || null, ...oblio })
@@ -169,11 +181,9 @@ export default function OnboardingStep2Page() {
     } catch (err) {
       setError(getErrorMessage(err))
     } finally {
-      setSavingOblio(false)
+      setConnectingOblio(false)
     }
   }
-
-  const allOblio = Object.values(oblio).every(Boolean)
 
   // Pasul e la admin: trimis spre verificare și încă nefinalizat. Cât timp e aici, șoferul nu
   // are nicio acțiune — de asta ecranul spune ce urmează, în loc să arate un buton inert.
@@ -195,7 +205,10 @@ export default function OnboardingStep2Page() {
 
   return (
     <Stack spacing={3}>
-      <PanelHeading title="Fiscal, bancă și semnături" />
+      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+        <PanelHeading title="Fiscal, bancă și semnături" />
+        {/* Mută-se în rail-ul dreapta la redesign; până atunci stă discret lângă titlu. */}
+      </Stack>
 
       {error && (
         <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
@@ -205,7 +218,7 @@ export default function OnboardingStep2Page() {
 
       {/* 2.1 TVA intracomunitar */}
       <PanelCard title="Ai cod de TVA intracomunitar (art. 317)?">
-        <RadioGroup value={vatAnswer} onChange={(e) => setVatForm(e.target.value as VatDeclaration)}>
+        <RadioGroup value={vatAnswer} onChange={(e) => answerVat(e.target.value as VatDeclaration)}>
           <FormControlLabel value="No" control={<Radio />} label="Nu" />
           <FormControlLabel value="Yes" control={<Radio />} label="Da" />
         </RadioGroup>
@@ -218,21 +231,11 @@ export default function OnboardingStep2Page() {
             />
           </Box>
         )}
-        <Box sx={{ mt: 2 }}>
-          <Button
-            variant="contained"
-            onClick={saveVat}
-            disabled={savingVat || vatAnswer === '' || (vatAnswer === 'Yes' && !hasVatProof)}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 700,
-              backgroundColor: TOKENS.primary,
-              '&:hover': { backgroundColor: TOKENS.primaryStrong },
-            }}
-          >
-            {savingVat ? 'Se salvează...' : 'Salvează'}
-          </Button>
-        </Box>
+        {vatAnswer === 'Yes' && !hasVatProof && (
+          <Typography sx={{ mt: 1.5, fontSize: '0.82rem', color: TOKENS.textMuted }}>
+            Încarcă certificatul ca să înregistrăm răspunsul.
+          </Typography>
+        )}
       </PanelCard>
 
       {/* 2.3 Bancă */}
@@ -284,7 +287,10 @@ export default function OnboardingStep2Page() {
                 select
                 label="Bancă"
                 value={bankName}
-                onChange={(e) => setBankName(e.target.value)}
+                onChange={(e) => {
+                  setBankName(e.target.value)
+                  bankSave.schedule({ bankName: e.target.value || null })
+                }}
                 sx={inputSx}
                 fullWidth
               >
@@ -295,21 +301,6 @@ export default function OnboardingStep2Page() {
                 ))}
               </TextField>
             </Stack>
-            <Box sx={{ mt: 2 }}>
-              <Button
-                variant="contained"
-                onClick={saveBank}
-                disabled={savingBank}
-                sx={{
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  backgroundColor: TOKENS.primary,
-                  '&:hover': { backgroundColor: TOKENS.primaryStrong },
-                }}
-              >
-                {savingBank ? 'Se salvează...' : 'Salvează contul'}
-              </Button>
-            </Box>
           </>
         ) : null}
       </PanelCard>
@@ -318,11 +309,21 @@ export default function OnboardingStep2Page() {
 
       {/* 2.4 Oblio */}
       <PanelCard title="Cont Oblio (facturare)">
+        {/* RL-06 — ce e Oblio și ce se întâmplă la click, înainte de singurul buton din zonă. */}
+        <Typography sx={{ fontSize: '0.88rem', color: TOKENS.textMuted, mb: 2, lineHeight: 1.6 }}>
+          Oblio e programul de facturare prin care îți emitem automat facturile pentru curse și
+          le trimitem în e-Factura. Când apeși „Conectează Oblio", îți creăm contul pe emailul de
+          mai jos și îl administrăm noi. Primul an e inclus în abonament; după, costul e al
+          Oblio, comunicat înainte de reînnoire. Trimitem doar datele PFA-ului tău: denumire,
+          CUI, sediu și contul bancar declarat.
+        </Typography>
+
         <TextField
           label="Email cont Oblio"
           type="email"
           value={oblioEmail}
           onChange={(e) => setOblioEmail(e.target.value)}
+          onBlur={() => oblioSave.schedule({ accountEmail: oblioEmail || null, ...oblio })}
           sx={{ ...inputSx, mb: 1 }}
           fullWidth
         />
@@ -336,7 +337,11 @@ export default function OnboardingStep2Page() {
               control={
                 <Checkbox
                   checked={oblio[key]}
-                  onChange={(e) => setOblio((o) => ({ ...o, [key]: e.target.checked }))}
+                  onChange={(e) => {
+                    const next = { ...oblio, [key]: e.target.checked }
+                    setOblio(() => next)
+                    oblioSave.schedule({ accountEmail: oblioEmail || null, ...next })
+                  }}
                 />
               }
               label={<Typography sx={{ fontSize: '0.86rem', color: TOKENS.ink }}>{label}</Typography>}
@@ -344,19 +349,34 @@ export default function OnboardingStep2Page() {
           ))}
         </Stack>
         <Box sx={{ mt: 2 }}>
-          <Button
-            variant="contained"
-            onClick={saveOblio}
-            disabled={savingOblio}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 700,
-              backgroundColor: TOKENS.primary,
-              '&:hover': { backgroundColor: TOKENS.primaryStrong },
-            }}
-          >
-            {savingOblio ? 'Se salvează...' : allOblio ? 'Accept toate' : 'Salvează'}
-          </Button>
+          {oblioConnected ? (
+            // Odată conectat, butonul devine stare: nu mai e nimic de apăsat.
+            <Chip
+              icon={<CheckCircleOutlineRoundedIcon />}
+              label="Conectat la Oblio"
+              sx={{ fontWeight: 700, color: TOKENS.success, borderColor: TOKENS.success }}
+              variant="outlined"
+            />
+          ) : (
+            <Button
+              variant="contained"
+              onClick={connectOblio}
+              disabled={!allOblio || connectingOblio}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 700,
+                backgroundColor: TOKENS.primary,
+                '&:hover': { backgroundColor: TOKENS.primaryStrong },
+              }}
+            >
+              {connectingOblio ? 'Se conectează...' : 'Conectează Oblio'}
+            </Button>
+          )}
+          {!allOblio && !oblioConnected && (
+            <Typography sx={{ mt: 1, fontSize: '0.82rem', color: TOKENS.textMuted }}>
+              Bifează toate acordurile de mai sus ca să putem crea contul.
+            </Typography>
+          )}
         </Box>
       </PanelCard>
 

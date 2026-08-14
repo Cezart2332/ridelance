@@ -262,8 +262,6 @@ export default function CompanyFormationOfficePage() {
                 value={office.adresa}
                 onChange={(adresa) => patchOffice({ adresa })}
                 onBlur={() => persist()}
-                prefix="SEDIU"
-                prefilled={new Set()}
                 disabled={disabled || mirrors}
               />
             </Stack>

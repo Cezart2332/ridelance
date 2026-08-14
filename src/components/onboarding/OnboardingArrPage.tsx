@@ -1,6 +1,6 @@
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
-import { Alert, Box, Button, Chip, Divider, MenuItem, Stack, TextField, Typography } from '@mui/material'
+import { Alert, Button, Chip, Divider, MenuItem, Stack, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
 
 import { documentService } from '../../services/document.service'
@@ -10,6 +10,8 @@ import { requirementsOf } from './documentRequirements'
 import { StepDocument } from './StepDocument'
 import { TOKENS, inputSx } from './onboardingTheme'
 import { useOnboarding, useOnboardingResource } from './useOnboarding'
+import { useAutosave } from '../../hooks/useAutosave'
+import { usePublishAutosave } from './autosaveStore'
 import { PanelCard, PanelHeading } from './PanelCard'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -60,14 +62,20 @@ export default function OnboardingArrPage() {
     }
   }
 
-  const saveRequest = () =>
-    run(async () => applyArr(await onboardingService.submitArrRequest(agencyName || null, method)))
+  // RL-06 — cererea se salvează singură: agenția la ieșirea din câmp, metoda la schimbare.
+  const requestSave = useAutosave<{ agencyName: string | null; method: ArrSubmissionMethod }>({
+    save: async (payload) =>
+      applyArr(await onboardingService.submitArrRequest(payload.agencyName, payload.method)),
+    storageKey: 'onboarding.arr.request',
+  })
   const generate = () => run(async () => applyArr(await onboardingService.generateArrDossier()))
   const markSubmitted = () =>
     run(async () => {
       await onboardingService.markArrSubmitted()
       applyArr(await onboardingService.getArrState())
     })
+
+  usePublishAutosave(requestSave)
 
   const fee = ((arr?.feeSnapshotBani ?? 30000) / 100).toLocaleString('ro-RO', { minimumFractionDigits: 2 })
 
@@ -106,6 +114,7 @@ export default function OnboardingArrPage() {
             label="Agenție ARR (județ)"
             value={agencyName}
             onChange={(e) => setAgencyName(e.target.value)}
+            onBlur={() => requestSave.schedule({ agencyName: agencyName || null, method })}
             sx={inputSx}
             fullWidth
           />
@@ -113,28 +122,17 @@ export default function OnboardingArrPage() {
             select
             label="Metodă de depunere"
             value={method}
-            onChange={(e) => setMethod(e.target.value as ArrSubmissionMethod)}
+            onChange={(e) => {
+              const next = e.target.value as ArrSubmissionMethod
+              setMethod(next)
+              requestSave.schedule({ agencyName: agencyName || null, method: next })
+            }}
             sx={inputSx}
             fullWidth
           >
             <MenuItem value="InPersonByClient">Depun personal la ARR</MenuItem>
             <MenuItem value="OnlineByRidelance">Depunere online prin RIDElance</MenuItem>
           </TextField>
-          <Box>
-            <Button
-              variant="outlined"
-              onClick={saveRequest}
-              disabled={busy}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 700,
-                borderColor: TOKENS.primary,
-                color: TOKENS.primaryStrong,
-              }}
-            >
-              Salvează cererea
-            </Button>
-          </Box>
         </Stack>
       </PanelCard>
 

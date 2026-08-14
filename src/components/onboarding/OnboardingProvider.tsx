@@ -50,7 +50,11 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         onboardingService.getEligibility().catch(() => null),
       ])
       setState(nextState)
-      setDocuments(nextDocuments)
+      // RL-07 — punctul unic de filtrare pentru tot onboardingul. Documentele pe care le producem
+      // noi (dosare generate, acte moștenite) rămân în backend și intră în dosarul depus, dar nu
+      // au ce căuta în lista șoferului. Filtrând aici, și progresul se numără pe ce se vede.
+      // Adminul citește documentele pe alt drum, deci le vede în continuare pe toate.
+      setDocuments(nextDocuments.filter((d) => d.isUserFacing))
       setEligibility(nextEligibility)
       setError(null)
 

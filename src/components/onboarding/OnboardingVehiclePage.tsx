@@ -15,6 +15,8 @@ import { getErrorMessage } from '../../utils/errorHandler'
 import { StepDocument } from './StepDocument'
 import { TOKENS, inputSx } from './onboardingTheme'
 import { useOnboarding, useOnboardingResource } from './useOnboarding'
+import { useAutosave } from '../../hooks/useAutosave'
+import { usePublishAutosave } from './autosaveStore'
 import { PanelCard, PanelHeading } from './PanelCard'
 
 const COPY_STATUS_LABELS: Record<string, string> = {
@@ -98,29 +100,37 @@ export default function OnboardingVehiclePage() {
     }
   }
 
-  const saveVehicle = () =>
-    run(async () =>
-      apply(
-        await onboardingService.submitVehicle({
-          ownershipMode,
-          addLater,
-          plateNumber: plateNumber || null,
-          vin: vin || null,
-          make: make || null,
-          model: model || null,
-          firstRegistrationYear: year ? Number(year) : null,
-        }),
-      ),
-    )
+  // RL-06 — vehiculul se salvează singur. `onBlur` pe containerul cardului prinde toate câmpurile
+  // de text dintr-o dată (evenimentul urcă în React), iar controalele fără blur cheamă explicit.
+  const vehicleSave = useAutosave<Parameters<typeof onboardingService.submitVehicle>[0]>({
+    save: async (payload) => apply(await onboardingService.submitVehicle(payload)),
+    storageKey: 'onboarding.vehicle.details',
+  })
 
-  const saveCopyRequest = () =>
-    run(async () => {
-      const badges: { provider: PlatformProvider; setCount: number }[] = [
-        { provider: 'Uber', setCount: uberSets },
-        { provider: 'Bolt', setCount: boltSets },
-      ]
-      apply(await onboardingService.submitCopyRequest(years, badges))
+  const scheduleVehicle = (overrides?: Partial<{ ownershipMode: VehicleOwnershipMode; addLater: boolean }>) =>
+    vehicleSave.schedule({
+      ownershipMode: overrides?.ownershipMode ?? ownershipMode,
+      addLater: overrides?.addLater ?? addLater,
+      plateNumber: plateNumber || null,
+      vin: vin || null,
+      make: make || null,
+      model: model || null,
+      firstRegistrationYear: year ? Number(year) : null,
     })
+
+  const copySave = useAutosave<{ years: number; uberSets: number; boltSets: number }>({
+    save: async ({ years: y, uberSets: u, boltSets: b }) => {
+      const badges: { provider: PlatformProvider; setCount: number }[] = [
+        { provider: 'Uber', setCount: u },
+        { provider: 'Bolt', setCount: b },
+      ]
+      apply(await onboardingService.submitCopyRequest(y, badges))
+    },
+    storageKey: 'onboarding.vehicle.copyRequest',
+  })
+
+  // Două zone, un singur indicator: cea care are ceva de spus acum.
+  usePublishAutosave(vehicleSave.status === 'idle' ? copySave : vehicleSave)
 
   const generate = () => run(async () => apply(await onboardingService.generateVehicleDossier()))
   const markSubmitted = () =>
@@ -151,7 +161,8 @@ export default function OnboardingVehiclePage() {
         <Typography sx={{ fontWeight: 750, fontSize: '1.05rem', color: TOKENS.ink, mb: 1.5 }}>
           Vehiculul
         </Typography>
-        <Stack spacing={2}>
+        {/* onBlur urcă în React: un singur handler acoperă toate câmpurile de text din card. */}
+        <Stack spacing={2} onBlur={() => scheduleVehicle()}>
           <TextField
             select
             label="Mod de deținere"
@@ -160,9 +171,11 @@ export default function OnboardingVehiclePage() {
               const v = e.target.value as VehicleOwnershipMode
               if (v === 'AddedLater') {
                 setAddLater(true)
+                scheduleVehicle({ addLater: true })
               } else {
                 setAddLater(false)
                 setOwnershipMode(v)
+                scheduleVehicle({ addLater: false, ownershipMode: v })
               }
             }}
             sx={inputSx}
@@ -208,21 +221,6 @@ export default function OnboardingVehiclePage() {
             </>
           )}
 
-          <Box>
-            <Button
-              variant="outlined"
-              onClick={saveVehicle}
-              disabled={busy}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 700,
-                borderColor: TOKENS.primary,
-                color: TOKENS.primaryStrong,
-              }}
-            >
-              Salvează vehiculul
-            </Button>
-          </Box>
         </Stack>
       </PanelCard>
 
@@ -281,7 +279,11 @@ export default function OnboardingVehiclePage() {
               select
               label="Perioadă copie conformă"
               value={years}
-              onChange={(e) => setYears(Number(e.target.value))}
+              onChange={(e) => {
+                const next = Number(e.target.value)
+                setYears(next)
+                copySave.schedule({ years: next, uberSets, boltSets })
+              }}
               sx={inputSx}
               fullWidth
             >
@@ -311,21 +313,6 @@ export default function OnboardingVehiclePage() {
               <b>{lei(badgesTotal)} lei</b>
             </Alert>
 
-            <Box>
-              <Button
-                variant="outlined"
-                onClick={saveCopyRequest}
-                disabled={busy}
-                sx={{
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  borderColor: TOKENS.primary,
-                  color: TOKENS.primaryStrong,
-                }}
-              >
-                Salvează cererea
-              </Button>
-            </Box>
           </Stack>
         </PanelCard>
       )}

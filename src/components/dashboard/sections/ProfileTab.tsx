@@ -26,6 +26,7 @@ import PersonRoundedIcon from '@mui/icons-material/PersonRounded'
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded'
 import DirectionsCarRoundedIcon from '@mui/icons-material/DirectionsCarRounded'
 import { formatRole } from '../../../utils/roleLabels'
+import { displayName } from '../../../utils/displayName'
 
 type DriverAccountDraft = { email: string; phone: string; fullName: string }
 type DriverDrafts = Record<'Uber' | 'Bolt', DriverAccountDraft>
@@ -190,7 +191,7 @@ export function ProfileTab() {
             />
             <Box sx={{ minWidth: 0 }}>
               <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 850, fontSize: '1.25rem', lineHeight: 1.3 }}>
-                {profile ? `${profile.firstName} ${profile.lastName}` : 'Cont RIDElance'}
+                {displayName(profile)}
               </Typography>
               <Typography noWrap sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem', mt: 0.3 }}>
                 {profile?.email}

@@ -30,17 +30,17 @@ export const authService = {
     return response.data
   },
 
+  /**
+   * RL-05 — contul se creează doar cu email și parolă. Numele vine din buletin, la pasul de
+   * eligibilitate; până atunci afișarea trece prin `displayName()`.
+   */
   register: async (
     email: string,
-    firstName: string,
-    lastName: string,
     password: string,
     role: string = 'Client'
   ): Promise<string> => {
     const response = await authAxios.post<string>('/users/register', {
       email,
-      firstName,
-      lastName,
       password,
       role,
     })

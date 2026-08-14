@@ -356,6 +356,14 @@ function SignaturePacketReview({
   )
 }
 
+/** Originea documentului, pentru rândurile pe care clientul nu le vede (RL-07). */
+const ORIGIN_LABELS: Record<DocumentSummary['origin'], string> = {
+  UserUpload: 'Încărcat de client',
+  Prefilled: 'Precompletat',
+  Inherited: 'Moștenit',
+  SystemGenerated: 'Generat de sistem',
+}
+
 /** Chip cu verdictul prevalidării AI + tooltip cu detaliile extrase. */
 function AiVerdictChip({ doc }: { doc: DocumentSummary }) {
   const config: Record<string, { label: string; color: string }> = {
@@ -506,6 +514,8 @@ export function OnboardingSectionsPanel({
         <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>
           {formatDocumentCategory(doc.category)}
           {doc.expiresAtUtc ? ` · Expiră ${new Date(doc.expiresAtUtc).toLocaleDateString('ro-RO')}` : ''}
+          {/* RL-07 — clientul nu vede tot ce e în dosar; adminul trebuie să știe care sunt alea. */}
+          {!doc.isUserFacing && ` · ${ORIGIN_LABELS[doc.origin]} · ascuns clientului`}
         </Typography>
       </Box>
       <AiVerdictChip doc={doc} />

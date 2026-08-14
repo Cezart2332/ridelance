@@ -160,7 +160,10 @@ export const stripeService = {
       sessionStorage.setItem('stripe_checkout_desc', 'Serviciu de înființare PFA complet de către echipa RIDElance.')
       window.location.href = '/checkout'
     } catch (error) {
+      // Refuzul se propagă: de la RL-03 încoace serverul răspunde 422 cu ce mai lipsește din
+      // dosar, iar mesajul ăla trebuie să ajungă pe ecran, nu doar în consolă.
       console.error('Failed to create checkout session', error)
+      throw error
     }
   },
 

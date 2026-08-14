@@ -22,6 +22,7 @@ import { getErrorMessage } from '../../utils/errorHandler'
 import { buildUploadFile } from '../../utils/imagesToPdf'
 import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
 import { CertificateReadout } from './CertificateReadout'
+import { CompanyFormationSummary } from './companyFormation/CompanyFormationSummary'
 import { TOKENS, inputSx } from './onboardingTheme'
 import { UploadField } from './UploadField'
 import { useOnboarding } from './useOnboarding'
@@ -38,9 +39,9 @@ function companyFormationPath(stage: string | null): string {
   }
 }
 
-function redirectToInfiintarePayment() {
+function redirectToInfiintarePayment(): Promise<void> {
   const origin = window.location.origin
-  stripeService.redirectToInfiintarePfa(
+  return stripeService.redirectToInfiintarePfa(
     `${origin}/onboarding?pfa_setup_paid=1&session_id={{CHECKOUT_SESSION_ID}}`,
     `${origin}/onboarding/pfa`,
   )
@@ -139,12 +140,14 @@ export default function OnboardingPfaPage() {
   const formationStatus = state?.companyFormationStatus ?? null
   const formationStage = state?.companyFormationStage ?? null
 
+  // RL-03: completarea vine ÎNAINTEA plății. Cât timp dosarul nu e semnat, pasul continuă în
+  // wizardul de înființare, de unde a rămas — nu mai trece pe la Stripe.
   useEffect(() => {
-    if (state?.registrationType !== 'NuAmPfa' || !state.hasPaidInfiintare) return
+    if (state?.registrationType !== 'NuAmPfa') return
     if (formationStatus !== null && formationStatus !== 'Draft' && formationStatus !== 'InfoRequested') return
 
     navigate(companyFormationPath(formationStage), { replace: true })
-  }, [state?.registrationType, state?.hasPaidInfiintare, formationStatus, formationStage, navigate])
+  }, [state?.registrationType, formationStatus, formationStage, navigate])
 
   // „Am PFA": se cer aceleași acte pe care le-am fi primit de la Consulto la înființare.
   // Nimic nu se tastează — CUI-ul, denumirea, CAEN-ul și sediul le citește OCR-ul din ele.
@@ -177,13 +180,9 @@ export default function OnboardingPfaPage() {
       // `isOwner` rămâne pe fals — proprietarul imobilului se declară în etapa de sediu.
       await pfaService.create({ registrationType: 'NuAmPfa', isOwner: false })
 
-      // 2. Plata înființării (dacă nu e deja achitată), apoi înapoi la hub
+      // RL-03: se completează întâi dosarul. Plata apare la final, pe ecranul de rezumat.
       sessionStorage.setItem('pfa_registered', 'NuAmPfa')
-      if (state?.hasPaidInfiintare) {
-        navigate('/onboarding/pfa/date-personale', { replace: true })
-      } else {
-        redirectToInfiintarePayment()
-      }
+      navigate('/onboarding/pfa/date-personale', { replace: true })
     } catch (err) {
       console.error(err)
       setError(getErrorMessage(err, 'A aparut o eroare la inregistrare. Te rugam sa incerci din nou.'))
@@ -244,44 +243,32 @@ export default function OnboardingPfaPage() {
 
   const isPending = state?.pfaStatus === 'Pending'
   const isRejected = state?.pfaStatus === 'Rejected'
-  const needsPayment = isPending && state?.registrationType === 'NuAmPfa' && !state.hasPaidInfiintare
 
-  // ── Dosar trimis, plata înființării încă neconfirmată ──
-  if (needsPayment) {
+  // ── RL-03: dosarul e completat și semnat, urmează plata ──
+  // Poarta e `canPay`, calculat pe server. Frontendul nu decide singur dacă se poate plăti:
+  // aceeași condiție respinge și crearea sesiunii Stripe, cu 422.
+  if (state?.canPay) {
+    const startPayment = async () => {
+      setError(null)
+      setIsLoading(true)
+      try {
+        await redirectToInfiintarePayment()
+      } catch (err) {
+        // 422 = dosarul nu poate fi depus încă. Mesajul serverului spune exact ce lipsește.
+        setError(getErrorMessage(err, 'Nu am putut deschide plata. Încearcă din nou.'))
+        setIsLoading(false)
+      }
+    }
+
     return (
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 3, sm: 5 },
-          borderRadius: `${TOKENS.radius.xl}px`,
-          border: `1px solid ${TOKENS.border}`,
-          boxShadow: TOKENS.shadow.md,
-          backgroundColor: TOKENS.paper,
-          textAlign: 'center',
-        }}
-      >
-        <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: TOKENS.ink, mb: 1 }}>
-          Finalizează plata pentru Înființare PFA
-        </Typography>
-        <Button
-          variant="contained"
-          size="large"
-          endIcon={<ArrowForwardRoundedIcon />}
-          onClick={redirectToInfiintarePayment}
-          sx={{
-            py: 1.3,
-            px: 4,
-            fontWeight: 700,
-            borderRadius: `${TOKENS.radius.md}px`,
-            color: '#fff',
-            backgroundColor: TOKENS.primary,
-            boxShadow: TOKENS.shadow.glow,
-            '&:hover': { backgroundColor: TOKENS.primaryStrong },
-          }}
-        >
-          Plătește înființarea
-        </Button>
-      </Paper>
+      <Stack spacing={2}>
+        {error && (
+          <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+            {error}
+          </Alert>
+        )}
+        <CompanyFormationSummary state={state} onPay={startPayment} paying={isLoading} />
+      </Stack>
     )
   }
 

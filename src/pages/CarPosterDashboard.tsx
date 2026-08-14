@@ -9,6 +9,7 @@ import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFil
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
 import { InsuranceTab } from '../components/dashboard/sections/InsuranceTab'
 import { ROLE_LABELS } from '../utils/roleLabels'
+import { displayName } from '../utils/displayName'
 
 export function CarPosterDashboard() {
   const navigate = useNavigate()
@@ -24,7 +25,7 @@ export function CarPosterDashboard() {
     navigate('/auth', { replace: true })
   }
 
-  const userName = profile ? `${profile.firstName} ${profile.lastName}` : '...'
+  const userName = profile ? displayName(profile) : '...'
 
   return (
     <DashboardLayout

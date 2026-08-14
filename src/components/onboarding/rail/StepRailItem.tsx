@@ -1,25 +1,28 @@
-import { Box, ButtonBase, Stack, Typography } from '@mui/material'
+import { Box, ButtonBase, Stack, Tooltip, Typography } from '@mui/material'
 import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
 
 import { useMotionTokens } from '../motion'
-import { displaySx, stateColors, TOKENS } from '../onboardingTheme'
+import { SHELL } from '../shellTokens'
 import { stepStateLabel, type StepView } from '../stepModel'
 import { StepStatusIcon } from './StepStatusIcon'
 
-const TONE_BORDER: Record<StepView['state'], string> = {
-  locked: TOKENS.border,
-  todo: TOKENS.border,
-  in_progress: TOKENS.primary,
-  pending_review: stateColors('pending').border,
-  approved: TOKENS.border,
-  rejected: stateColors('danger').border,
+const STATE_COLOR: Record<StepView['state'], string> = {
+  locked: SHELL.text.tertiary,
+  todo: SHELL.text.secondary,
+  in_progress: SHELL.brand,
+  pending_review: SHELL.warn,
+  approved: SHELL.pos,
+  rejected: SHELL.neg,
 }
 
 /**
- * Un pas din rail. Doar pasul activ e expandat — restul rămân o linie, ca să încapă toți șase
- * pe ecran fără scroll. Blocatele nu sunt clicabile, dar rămân vizibile: driverul trebuie să
- * vadă cât a mai rămas, nu doar unde e.
+ * Un pas din rail — un RÂND, nu un card.
+ *
+ * Înainte toți cei șase pași erau carduri cu border și fundal, deci un ecran cu cinci pași
+ * blocați era cinci suprafețe mari pe care nu poți da click. Acum singura suprafață din rail e
+ * pasul curent: restul sunt rânduri, iar cele blocate se comprimă și ies din tab order — nu au
+ * ce face acolo cineva care navighează cu tastatura.
  */
 export function StepRailItem({
   step,
@@ -38,6 +41,84 @@ export function StepRailItem({
   const { step: stepTransition, reduced } = useMotionTokens()
   const locked = step.state === 'locked'
 
+  const row = (
+    <Box
+      component={motion.div}
+      layout={reduced ? false : true}
+      transition={stepTransition}
+      // Shake scurt când un pas validat e întors pe respins — schimbarea nu trebuie să fie silențioasă.
+      animate={unchecking && !reduced ? { x: [0, -5, 5, -3, 3, 0] } : { x: 0 }}
+      sx={{
+        borderRadius: SHELL.radius.card,
+        // Doar pasul curent e o suprafață. Restul sunt rânduri pe fundalul rail-ului.
+        border: active ? `1px solid ${SHELL.brand}` : '1px solid transparent',
+        backgroundColor: active ? SHELL.brandSoft : 'transparent',
+        opacity: locked ? 0.55 : 1,
+        overflow: 'hidden',
+      }}
+    >
+      <ButtonBase
+        disabled={locked}
+        // Un pas blocat nu e o destinație: scos din tab order, dar rămâne vizibil ca reper.
+        tabIndex={locked ? -1 : 0}
+        onClick={() => onSelect(step)}
+        sx={{
+          width: '100%',
+          display: 'block',
+          textAlign: 'left',
+          px: 1.25,
+          // Rândurile blocate se comprimă: ocupă cât informația lor, nu cât una activă.
+          py: locked ? 0.75 : 1.1,
+          cursor: locked ? 'not-allowed' : 'pointer',
+          '&.Mui-disabled': { pointerEvents: 'auto', cursor: 'not-allowed' },
+          '&:hover': locked ? {} : { backgroundColor: SHELL.bg.surface2 },
+        }}
+      >
+        <Stack direction="row" sx={{ alignItems: 'center', gap: 1.25 }}>
+          <StepStatusIcon state={step.state} order={step.order} unchecking={unchecking} size={26} />
+
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              sx={{
+                fontWeight: active ? 700 : 500,
+                fontSize: 14,
+                color: SHELL.text.primary,
+                lineHeight: 1.3,
+              }}
+            >
+              {step.label}
+            </Typography>
+            {/* Statusul se scrie doar când spune ceva în plus față de iconiță. */}
+            {!locked && step.state !== 'todo' && (
+              <Typography sx={{ fontSize: 12, fontWeight: 600, color: STATE_COLOR[step.state] }}>
+                {stepStateLabel(step.state)}
+              </Typography>
+            )}
+          </Box>
+        </Stack>
+
+        {/* Motivul respingerii rămâne pe rând: e o instrucțiune, nu o notă de subsol.
+            Motivul blocării a devenit tooltip — se repeta identic pe fiecare pas blocat. */}
+        {step.reason && step.state === 'rejected' && (
+          <Typography
+            sx={{
+              pl: '38px',
+              pt: 0.6,
+              fontSize: 12,
+              lineHeight: 1.45,
+              color: SHELL.neg,
+              fontWeight: 600,
+            }}
+          >
+            {step.reason}
+          </Typography>
+        )}
+      </ButtonBase>
+
+      {children}
+    </Box>
+  )
+
   return (
     <Box
       component={motion.li}
@@ -46,91 +127,14 @@ export function StepRailItem({
       aria-current={active ? 'step' : undefined}
       sx={{ listStyle: 'none' }}
     >
-      <Box
-        component={motion.div}
-        layout={reduced ? false : true}
-        transition={stepTransition}
-        // Shake scurt când un pas validat e întors pe respins — schimbarea nu trebuie să fie silențioasă.
-        animate={unchecking && !reduced ? { x: [0, -5, 5, -3, 3, 0] } : { x: 0 }}
-        sx={{
-          borderRadius: `${TOKENS.radius.lg}px`,
-          border: `1px solid ${TONE_BORDER[step.state]}`,
-          backgroundColor: active ? TOKENS.paper : 'transparent',
-          boxShadow: active ? TOKENS.shadow.sm : 'none',
-          opacity: locked ? 0.4 : 1,
-          overflow: 'hidden',
-        }}
-      >
-        <ButtonBase
-          disabled={locked}
-          onClick={() => onSelect(step)}
-          sx={{
-            width: '100%',
-            display: 'block',
-            textAlign: 'left',
-            px: 1.5,
-            py: 1.35,
-            cursor: locked ? 'not-allowed' : 'pointer',
-            '&.Mui-disabled': { pointerEvents: 'auto', cursor: 'not-allowed' },
-            '&:hover': locked ? {} : { backgroundColor: 'rgba(26, 26, 46, 0.02)' },
-          }}
-        >
-          <Stack direction="row" sx={{ alignItems: 'center', gap: 1.4 }}>
-            <StepStatusIcon state={step.state} order={step.order} unchecking={unchecking} />
-
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography
-                sx={{
-                  ...displaySx,
-                  fontWeight: active ? 700 : 600,
-                  fontSize: '0.9rem',
-                  color: TOKENS.ink,
-                  lineHeight: 1.25,
-                }}
-              >
-                {step.label}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: '0.74rem',
-                  fontWeight: 600,
-                  color: stateColors(
-                    step.state === 'approved'
-                      ? 'success'
-                      : step.state === 'pending_review'
-                        ? 'pending'
-                        : step.state === 'rejected'
-                          ? 'danger'
-                          : 'neutral',
-                  ).fg,
-                  mt: 0.1,
-                }}
-              >
-                {stepStateLabel(step.state)}
-              </Typography>
-            </Box>
-          </Stack>
-
-          {/* Singurul text de sub titlu: motivul pentru care pasul e blocat sau respins.
-              Fără el driverul n-are cum să afle de ce nu poate merge mai departe. */}
-          {step.reason && (
-            <Typography
-              sx={{
-                pl: '44px',
-                pt: 0.8,
-                fontSize: '0.76rem',
-                lineHeight: 1.45,
-                color: step.state === 'rejected' ? TOKENS.danger : TOKENS.textMuted,
-                fontWeight: step.state === 'rejected' ? 600 : 500,
-              }}
-            >
-              {step.reason}
-            </Typography>
-          )}
-        </ButtonBase>
-
-        {children}
-      </Box>
+      {locked && step.reason ? (
+        <Tooltip title={step.reason} placement="right">
+          {/* Tooltip are nevoie de un element care primește evenimente; butonul e disabled. */}
+          <Box>{row}</Box>
+        </Tooltip>
+      ) : (
+        row
+      )}
     </Box>
   )
 }

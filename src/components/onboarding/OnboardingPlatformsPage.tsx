@@ -1,7 +1,5 @@
 import {
-  Alert,
   Box,
-  Button,
   Checkbox,
   Chip,
   FormControlLabel,
@@ -20,9 +18,10 @@ import {
   type PlatformOnboardingState,
   type PlatformProvider,
 } from '../../services/onboarding.service'
-import { getErrorMessage } from '../../utils/errorHandler'
 import { TOKENS, inputSx } from './onboardingTheme'
 import { useOnboarding, useOnboardingResource } from './useOnboarding'
+import { useAutosave } from '../../hooks/useAutosave'
+import { usePublishAutosave } from './autosaveStore'
 import { PanelCard, PanelHeading } from './PanelCard'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -58,18 +57,16 @@ function PlatformCard({
   const [email, setEmail] = useState(account?.email ?? '')
   const [phone, setPhone] = useState(account?.phone ?? '')
   const [password, setPassword] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   // Are deja cont de flotă: cerem credențialele lui. Nu are: cerem ce vrea să aibă contul pe
   // care i-l deschidem noi. Câmpurile sunt aceleași, se schimbă doar ce înseamnă.
   const hasFleetAccount = answer === 'HasOperatorAccount'
 
-  const save = async () => {
-    if (answer === '') return
-    setBusy(true)
-    setError(null)
-    try {
+  // RL-06 — contul se salvează singur, la ieșirea din câmp. Parola se golește doar după
+  // confirmarea serverului, ca o cerere eșuată să nu o piardă.
+  const accountSave = useAutosave<void>({
+    save: async () => {
+      if (answer === '') return
       const next = await onboardingService.submitPlatformAccount({
         provider,
         hasExistingAccount: hasFleetAccount,
@@ -82,12 +79,8 @@ function PlatformCard({
       })
       setPassword('')
       onSaved(next)
-    } catch (err) {
-      setError(getErrorMessage(err))
-    } finally {
-      setBusy(false)
-    }
-  }
+    },
+  })
 
   return (
     <PanelCard
@@ -102,16 +95,17 @@ function PlatformCard({
         )
       }
     >
-      {error && (
-        <Alert severity="error" sx={{ mb: 1.5, borderRadius: `${TOKENS.radius.md}px` }}>
-          {error}
-        </Alert>
-      )}
 
       <Typography sx={{ fontWeight: 700, color: TOKENS.ink, mb: 0.5 }}>
         Ai deja cont de {FLEET_LABELS[provider]}?
       </Typography>
-      <RadioGroup value={answer} onChange={(e) => setAnswer(e.target.value as ExistingAccountAnswer)}>
+      <RadioGroup
+        value={answer}
+        onChange={(e) => {
+          setAnswer(e.target.value as ExistingAccountAnswer)
+          accountSave.schedule()
+        }}
+      >
         <FormControlLabel value="HasOperatorAccount" control={<Radio />} label="Da, am cont de flotă" />
         <FormControlLabel
           value="DriverOnly"
@@ -121,8 +115,9 @@ function PlatformCard({
         <FormControlLabel value="None" control={<Radio />} label="Nu am cont" />
       </RadioGroup>
 
+      {/* onBlur urcă în React: un handler pentru toate câmpurile de text ale cardului. */}
       {answer !== '' && (
-        <Stack spacing={2} sx={{ mt: 2 }}>
+        <Stack spacing={2} sx={{ mt: 2 }} onBlur={() => accountSave.schedule()}>
           <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.88rem' }}>
             {hasFleetAccount
               ? `Datele contului tău de ${FLEET_LABELS[provider]}.`
@@ -173,19 +168,6 @@ function PlatformCard({
       )}
 
       <Box sx={{ mt: 2 }}>
-        <Button
-          variant="contained"
-          onClick={save}
-          disabled={busy || answer === ''}
-          sx={{
-            textTransform: 'none',
-            fontWeight: 700,
-            backgroundColor: TOKENS.primary,
-            '&:hover': { backgroundColor: TOKENS.primaryStrong },
-          }}
-        >
-          {busy ? 'Se salvează...' : 'Salvează'}
-        </Button>
       </Box>
     </PanelCard>
   )
@@ -195,7 +177,6 @@ export default function OnboardingPlatformsPage() {
   const { refresh } = useOnboarding()
   const { data: loaded } = useOnboardingResource('platforms', () => onboardingService.getPlatformOnboarding())
 
-  const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState<PlatformOnboardingState | null>(null)
   const data = saved ?? loaded
 
@@ -213,13 +194,16 @@ export default function OnboardingPlatformsPage() {
     void refresh()
   }
 
-  const saveSelection = async () => {
-    setError(null)
-    try {
-      applyData(await onboardingService.selectPlatforms(uber, bolt))
-    } catch (err) {
-      setError(getErrorMessage(err))
-    }
+  const selectionSave = useAutosave<{ uber: boolean; bolt: boolean }>({
+    save: async ({ uber: u, bolt: b }) => applyData(await onboardingService.selectPlatforms(u, b)),
+    storageKey: 'onboarding.platforms.selection',
+  })
+
+  usePublishAutosave(selectionSave)
+
+  const toggle = (next: { uber: boolean; bolt: boolean }) => {
+    setSelection(next)
+    selectionSave.schedule(next)
   }
 
   const uberAccount = data?.platforms.find((p) => p.provider === 'Uber')
@@ -229,36 +213,21 @@ export default function OnboardingPlatformsPage() {
     <Stack spacing={3}>
       <PanelHeading title="Conturi Uber Fleet & Bolt Fleet" />
 
-      {error && (
-        <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
-          {error}
-        </Alert>
-      )}
-
       <PanelCard title="Pe ce platforme vrei să lucrezi?">
         <Stack>
           <FormControlLabel
             control={
-              <Checkbox checked={uber} onChange={(e) => setSelection({ uber: e.target.checked, bolt })} />
+              <Checkbox checked={uber} onChange={(e) => toggle({ uber: e.target.checked, bolt })} />
             }
             label="Uber Fleet"
           />
           <FormControlLabel
             control={
-              <Checkbox checked={bolt} onChange={(e) => setSelection({ uber, bolt: e.target.checked })} />
+              <Checkbox checked={bolt} onChange={(e) => toggle({ uber, bolt: e.target.checked })} />
             }
             label="Bolt Fleet"
           />
         </Stack>
-        <Box sx={{ mt: 1 }}>
-          <Button
-            variant="outlined"
-            onClick={saveSelection}
-            sx={{ fontWeight: 700, borderColor: TOKENS.primary, color: TOKENS.primaryStrong }}
-          >
-            Salvează selecția
-          </Button>
-        </Box>
       </PanelCard>
 
       {uber && <PlatformCard provider="Uber" account={uberAccount} onSaved={applyData} />}

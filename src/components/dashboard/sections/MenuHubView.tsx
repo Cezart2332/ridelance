@@ -15,6 +15,7 @@ import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRou
 
 import { userService, type UserProfile } from '../../../services/user.service';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
+import { displayName, initials as accountInitials } from '../../../utils/displayName';
 
 interface MenuHubViewProps {
   onNavigate: (sectionId: string) => void;
@@ -131,8 +132,9 @@ export function MenuHubView({ onNavigate, onLogout }: MenuHubViewProps) {
     );
   }
 
-  const initials = profile ? `${profile.firstName[0] || ''}${profile.lastName[0] || ''}`.toUpperCase() : 'U';
-  const fullName = profile ? `${profile.firstName} ${profile.lastName}` : 'Contul meu';
+  // Contul poate exista fără nume (RL-05) — helperul decide ce se afișează în locul lui.
+  const initials = accountInitials(profile);
+  const fullName = displayName(profile);
 
   return (
     <Stack spacing={3} sx={{ maxWidth: 620, mx: 'auto', width: '100%' }}>

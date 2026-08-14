@@ -19,6 +19,7 @@ export function StepRail({
   onSelect,
   subSteps = [],
   onSelectSubStep,
+  estimate,
 }: {
   steps: StepView[]
   activeKey: string | null
@@ -27,12 +28,19 @@ export function StepRail({
   /** Micro-pașii pasului activ. Apar doar sub el, niciodată sub ceilalți. */
   subSteps?: MicroStepView[]
   onSelectSubStep?: (id: string) => void
+  /** Timp estimat pentru pasul curent, afișat sub bară. */
+  estimate?: string | null
 }) {
   const { reduced, step: stepTransition } = useMotionTokens()
 
   return (
     <Stack spacing={2}>
-      <RailProgress done={completedCount(steps)} total={steps.length} />
+      <RailProgress
+        done={completedCount(steps)}
+        total={steps.length}
+        position={Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)}
+        estimate={estimate}
+      />
 
       <Box
         component={motion.ol}

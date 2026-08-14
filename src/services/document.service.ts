@@ -19,6 +19,13 @@ export interface DocumentSummary {
    * încredere prea mică. Documentul rămâne acceptat — doar că îl verifică un om.
    */
   aiRequiresManualReview: boolean;
+  /** `UserUpload` | `Prefilled` | `Inherited` | `SystemGenerated`. */
+  origin: 'UserUpload' | 'Prefilled' | 'Inherited' | 'SystemGenerated';
+  /**
+   * Se arată în onboarding. Calculat pe server (RL-07): frontendul filtrează exclusiv după el,
+   * fără reguli proprii — altfel două ecrane ar ascunde lucruri diferite.
+   */
+  isUserFacing: boolean;
 }
 
 /** Documentul este încă în coada de prevalidare automată (AI). */

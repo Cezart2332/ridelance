@@ -31,6 +31,7 @@ import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsAct
 
 import { ProfessionalChatBox } from '../components/dashboard/sections/ProfessionalChatBox'
 import { ContabilClientWorkspace, type ContabilClientInfo } from '../components/contabil/ContabilClientWorkspace'
+import { displayName } from '../utils/displayName'
 
 interface ClientSummary {
   id: string
@@ -623,7 +624,7 @@ export function ContabilDashboard() {
     </Stack>
   )
 
-  const userName = profile ? `${profile.firstName} ${profile.lastName}` : '...'
+  const userName = profile ? displayName(profile) : '...'
 
   return (
     <DashboardLayout

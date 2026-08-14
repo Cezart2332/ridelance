@@ -2,10 +2,25 @@ import { Box, Stack, Typography } from '@mui/material'
 import { motion } from 'motion/react'
 
 import { useMotionTokens } from '../motion'
-import { displaySx, tabularSx, TOKENS } from '../onboardingTheme'
+import { SHELL } from '../shellTokens'
 
-/** Bara de progres din capul rail-ului: „3 din 6”, cu cifre tabulare ca să nu salte. */
-export function RailProgress({ done, total }: { done: number; total: number }) {
+/**
+ * Cardul de progres general din capul rail-ului: „Pasul 3 din 6", bară, procent și timpul estimat
+ * pentru pasul curent. Cifrele sunt tabulare ca să nu salte la fiecare actualizare.
+ */
+export function RailProgress({
+  done,
+  total,
+  position,
+  estimate,
+}: {
+  done: number
+  total: number
+  /** Pasul curent, 1-based. Singurul contor din interfață — topbarul îl repetă, nu îl contrazice. */
+  position: number
+  /** Timp estimat pentru pasul curent, ex. „~5 minute". */
+  estimate?: string | null
+}) {
   const { step } = useMotionTokens()
   const ratio = total > 0 ? done / total : 0
 
@@ -14,18 +29,17 @@ export function RailProgress({ done, total }: { done: number; total: number }) {
       <Stack direction="row" sx={{ alignItems: 'baseline', justifyContent: 'space-between', mb: 1 }}>
         <Typography
           sx={{
-            ...displaySx,
-            fontWeight: 700,
-            fontSize: '0.8rem',
-            color: TOKENS.textMuted,
+            fontWeight: 600,
+            fontSize: 12,
+            color: SHELL.text.secondary,
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
           }}
         >
           Înrolare
         </Typography>
-        <Typography sx={{ ...tabularSx, fontWeight: 700, fontSize: '0.82rem', color: TOKENS.ink }}>
-          {done} din {total}
+        <Typography sx={{ ...SHELL.tabular, fontWeight: 600, fontSize: 13, color: SHELL.text.primary }}>
+          Pasul {position} din {total}
         </Typography>
       </Stack>
 
@@ -37,8 +51,8 @@ export function RailProgress({ done, total }: { done: number; total: number }) {
         aria-label={`${done} din ${total} pași finalizați`}
         sx={{
           height: 4,
-          borderRadius: TOKENS.radius.full,
-          backgroundColor: 'rgba(26, 26, 46, 0.08)',
+          borderRadius: SHELL.radius.pill,
+          backgroundColor: SHELL.border.subtle,
           overflow: 'hidden',
         }}
       >
@@ -52,11 +66,20 @@ export function RailProgress({ done, total }: { done: number; total: number }) {
             height: '100%',
             width: '100%',
             transformOrigin: 'left center',
-            borderRadius: TOKENS.radius.full,
-            backgroundColor: TOKENS.success,
+            borderRadius: SHELL.radius.pill,
+            backgroundColor: SHELL.brand,
           }}
         />
       </Box>
+
+      <Stack direction="row" sx={{ justifyContent: 'space-between', mt: 0.75 }}>
+        <Typography sx={{ ...SHELL.tabular, fontSize: 12, color: SHELL.text.secondary }}>
+          {total > 0 ? Math.round((done / total) * 100) : 0}%
+        </Typography>
+        {estimate && (
+          <Typography sx={{ fontSize: 12, color: SHELL.text.tertiary }}>{estimate}</Typography>
+        )}
+      </Stack>
     </Box>
   )
 }

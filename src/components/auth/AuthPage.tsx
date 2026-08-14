@@ -68,8 +68,6 @@ export default function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
   const [registerRole, setRegisterRole] = useState<'Client' | 'CarPoster'>('Client')
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -96,7 +94,8 @@ export default function AuthPage() {
 
   const handleRegister = async () => {
     setError(null)
-    if (!email || !password || !firstName || !lastName) {
+    // RL-05: contul cere doar ce e strict necesar. Numele vine mai târziu, din buletin.
+    if (!email || !password) {
       setError('Te rugam sa completezi toate campurile.')
       return
     }
@@ -111,7 +110,7 @@ export default function AuthPage() {
 
     setIsLoading(true)
     try {
-      await authService.register(email, firstName, lastName, password, registerRole)
+      await authService.register(email, password, registerRole)
       await authService.login(email, password)
       navigate(registerRole === 'CarPoster' ? '/poster' : '/app')
     } catch (err: any) {
@@ -264,33 +263,7 @@ export default function AuthPage() {
             ) : (
               /* ── REGISTER ── */
               <Stack spacing={2.5}>
-                <Stack direction="row" spacing={2}>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
-                      Nume
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      placeholder="Popescu"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      sx={inputSx}
-                    />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
-                      Prenume
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      placeholder="Ion"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      sx={inputSx}
-                    />
-                  </Box>
-                </Stack>
-
+                {/* Numele nu se cere aici: îl citim din buletin la pasul de eligibilitate. */}
                 <Box>
                   <Typography sx={{ mb: 0.8, fontWeight: 650, fontSize: '0.9rem', color: TOKENS.ink }}>
                     Email

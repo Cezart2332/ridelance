@@ -30,6 +30,9 @@ export interface OnboardingState {
    * complet. Frontendul nu mai calculează asta singur.
    */
   currentStep: string | null
+  /** Dosarul de înființare e semnat, deci poate fi depus — abia acum se poate plăti (RL-03). */
+  canPay: boolean
+  paymentStatus: 'NOT_REQUIRED' | 'PENDING' | 'PAID' | 'FAILED'
   /** Ramura „Nu am PFA": starea dosarului de înființare. Null pentru „Am PFA". */
   companyFormationStatus: string | null
   /** Etapa la care a rămas dosarul: `PersonalData`, `RegisteredOffice` sau `Consent`. */
@@ -53,6 +56,15 @@ export type OnboardingStepState =
   | 'completed'
   | 'rejected'
 
+/** Un item din checklistul pasului curent, compus pe server (rail-ul dreapta). */
+export interface OnboardingChecklistItem {
+  key: string
+  label: string
+  state: 'missing' | 'uploaded' | 'verifying' | 'rejected'
+  /** Motivul respingerii, afișat pe rând — nu într-un tooltip. */
+  note: string | null
+}
+
 export interface OnboardingStep {
   order: number
   key: string
@@ -63,6 +75,8 @@ export interface OnboardingStep {
   state: OnboardingStepState
   /** Cine face tranziția finală a pasului. Un pas `admin` nu poate fi închis de șofer. */
   ownedBy: 'user' | 'admin'
+  /** Ce mai lipsește. Populat doar pe pasul curent; `null` în rest. */
+  checklist: OnboardingChecklistItem[] | null
 }
 
 export type EligibilityStatus = 'Pending' | 'Eligible' | 'Ineligible' | 'NeedsReview'

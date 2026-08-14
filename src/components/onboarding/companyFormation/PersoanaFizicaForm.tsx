@@ -3,7 +3,7 @@ import { Alert, Box, MenuItem, Stack, TextField, Typography } from '@mui/materia
 import type { PersoanaFizica, TipActIdentitate } from '../../../services/companyFormation.service'
 import { TOKENS, inputSx } from '../onboardingTheme'
 import { AdresaForm } from './AdresaForm'
-import { PrefilledAdornment } from './PrefilledAdornment'
+import { PrefilledNotice } from './PrefilledNotice'
 import { cnpBirthDate, cnpSex, isValidCnp } from './cnp'
 
 const TIP_ACT_LABELS: Record<TipActIdentitate, string> = {
@@ -44,8 +44,6 @@ export function PersoanaFizicaForm({
   const text = (field: keyof PersoanaFizica, next: string) =>
     set(field, (next === '' ? null : next) as PersoanaFizica[typeof field])
 
-  const isPrefilled = (key: string) => prefilled.has(key)
-
   const cnp = value.cnp ?? ''
   const cnpComplete = cnp.length === 13
   const cnpInvalid = cnpComplete && !isValidCnp(cnp)
@@ -62,6 +60,7 @@ export function PersoanaFizicaForm({
 
   return (
     <Stack spacing={2}>
+      <PrefilledNotice show={prefilled.size > 0} />
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
         <TextField
           label="Nume"
@@ -72,7 +71,6 @@ export function PersoanaFizicaForm({
           autoComplete="family-name"
           sx={inputSx}
           fullWidth
-          slotProps={{ input: { endAdornment: isPrefilled('NUME') ? <PrefilledAdornment /> : undefined } }}
         />
         <TextField
           label="Prenume"
@@ -83,7 +81,6 @@ export function PersoanaFizicaForm({
           autoComplete="given-name"
           sx={inputSx}
           fullWidth
-          slotProps={{ input: { endAdornment: isPrefilled('PRENUME') ? <PrefilledAdornment /> : undefined } }}
         />
       </Box>
 
@@ -99,7 +96,6 @@ export function PersoanaFizicaForm({
         fullWidth
         slotProps={{
           htmlInput: { inputMode: 'numeric', maxLength: 13 },
-          input: { endAdornment: isPrefilled('CNP') ? <PrefilledAdornment /> : undefined },
         }}
       />
 
@@ -136,7 +132,6 @@ export function PersoanaFizicaForm({
           sx={inputSx}
           fullWidth
           slotProps={{
-            input: { endAdornment: isPrefilled('SERIE_ACT') ? <PrefilledAdornment /> : undefined },
           }}
         />
         <TextField
@@ -148,7 +143,6 @@ export function PersoanaFizicaForm({
           sx={inputSx}
           fullWidth
           slotProps={{
-            input: { endAdornment: isPrefilled('NUMAR_ACT') ? <PrefilledAdornment /> : undefined },
           }}
         />
       </Box>
@@ -161,11 +155,6 @@ export function PersoanaFizicaForm({
         disabled={disabled}
         sx={inputSx}
         fullWidth
-        slotProps={{
-          input: {
-            endAdornment: isPrefilled('AUTORITATE_EMITENTA') ? <PrefilledAdornment /> : undefined,
-          },
-        }}
       />
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
@@ -199,8 +188,6 @@ export function PersoanaFizicaForm({
           value={value.domiciliu}
           onChange={(next) => set('domiciliu', next)}
           onBlur={onBlur}
-          prefix="DOMICILIU"
-          prefilled={prefilled}
           disabled={disabled}
         />
       </Box>

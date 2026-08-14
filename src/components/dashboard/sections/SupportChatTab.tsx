@@ -16,6 +16,7 @@ import { AccountantChatTab } from './AccountantChatTab'
 import { getBucharestBusinessHoursStatus } from '../../../utils/businessHours'
 import { OfficeBookingCalendar } from '../../office/OfficeBookingCalendar'
 import { userService, type UserProfile } from '../../../services/user.service'
+import { displayName } from '../../../utils/displayName'
 
 export function SupportChatTab() {
   const [activeChat, setActiveChat] = useState<'support' | 'accountant'>('support')
@@ -316,7 +317,7 @@ export function SupportChatTab() {
         </Typography>
         <OfficeBookingCalendar
           compact
-          defaultName={profile ? `${profile.firstName} ${profile.lastName}` : ''}
+          defaultName={profile ? displayName(profile) : ''}
           defaultEmail={profile?.email ?? ''}
           defaultPhone={profile?.phoneNumber ?? ''}
           key={profile ? 'with-profile' : 'no-profile'}

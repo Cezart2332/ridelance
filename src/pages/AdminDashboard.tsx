@@ -40,6 +40,7 @@ import { DiscountsAdminView } from '../components/dashboard/sections/admin/Disco
 import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminOverviewView'
 import { PfaDetailView } from './admin/PfaDetailView'
+import { displayName } from '../utils/displayName'
 import {
   adminOverviewService,
   type AdminOverviewPfaCard,
@@ -998,7 +999,7 @@ export function AdminDashboard() {
     }
   }
 
-  const userName = profile ? `${profile.firstName} ${profile.lastName}` : '...'
+  const userName = profile ? displayName(profile) : '...'
 
   return (
     <DashboardLayout

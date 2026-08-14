@@ -2,6 +2,7 @@ import type { DocumentSummary } from '../../services/document.service'
 import { isAiPending } from '../../services/document.service'
 import type {
   EligibilityProfile,
+  OnboardingChecklistItem,
   OnboardingSectionState,
   OnboardingState,
   OnboardingStep,
@@ -37,6 +38,8 @@ export interface StepView {
   state: StepViewState
   /** Motivul afișat sub pas: de ce e blocat sau de ce a fost respins. Singurul text explicativ. */
   reason: string | null
+  /** Ce mai lipsește din pas, compus pe server. Populat doar pe pasul curent. */
+  checklist: OnboardingChecklistItem[] | null
 }
 
 /** Secțiunile de aprobare (OnboardingSectionApproval) care aparțin fiecărui pas. */
@@ -117,6 +120,7 @@ export function toStepView(
     key: step.key,
     label: step.label,
     path: step.path,
+    checklist: step.checklist,
   }
 
   const serverState = SERVER_STATE[step.state] ?? 'locked'
@@ -169,6 +173,29 @@ export function firstActionableStep(steps: StepView[], currentStepKey?: string |
 export const isStepReachable = (step: StepView) => step.state !== 'locked'
 
 export const completedCount = (steps: StepView[]) => steps.filter((s) => s.state === 'approved').length
+
+/**
+ * Timp estimat pentru fiecare pas, afișat în cardul de progres din rail.
+ *
+ * Sunt estimări de completare, nu de procesare: cât îi ia șoferului să răspundă și să încarce,
+ * nu cât așteaptă după noi sau după ARR. Altfel cifra ar fi o promisiune pe care n-o controlăm.
+ */
+const STEP_ESTIMATES: Record<string, string> = {
+  eligibility: '~5 minute',
+  pfa: '~10 minute',
+  fiscal: '~5 minute',
+  arr: '~10 minute',
+  platforms: '~5 minute',
+  vehicle: '~10 minute',
+}
+
+/** Estimarea pasului curent, sau `null` dacă nu mai e nimic de completat acolo. */
+export function stepEstimate(step: StepView | null): string | null {
+  if (step === null || step.state === 'approved' || step.state === 'pending_review') {
+    return null
+  }
+  return STEP_ESTIMATES[step.key] ?? null
+}
 
 /** Eticheta de status — stările nu se comunică doar prin culoare (spec §10). */
 export function stepStateLabel(state: StepViewState): string {
