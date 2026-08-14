@@ -281,10 +281,7 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
     <StepRail
       steps={steps}
       activeKey={activeKey}
-      uncheckingKeys={rejectionAlert?.keys ?? []}
       onSelect={goToStep}
-      subSteps={micro.steps}
-      onSelectSubStep={micro.goTo}
       estimate={stepEstimate(currentStepView)}
     />
   )
@@ -296,7 +293,6 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
           <MobileStepBar
             steps={steps}
             activeKey={activeKey}
-            uncheckingKeys={rejectionAlert?.keys ?? []}
             onSelect={goToStep}
           />
           {/* Spacer pentru bara fixed — sticky nu funcționează (overflow-x: hidden pe #root). */}

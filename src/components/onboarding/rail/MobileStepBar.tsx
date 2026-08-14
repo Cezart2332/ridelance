@@ -21,12 +21,10 @@ export const MOBILE_BAR_HEIGHT = 56
 export function MobileStepBar({
   steps,
   activeKey,
-  uncheckingKeys,
   onSelect,
 }: {
   steps: StepView[]
   activeKey: string | null
-  uncheckingKeys: string[]
   onSelect: (step: StepView) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -132,7 +130,6 @@ export function MobileStepBar({
               key={step.key}
               step={step}
               active={step.key === activeKey}
-              unchecking={uncheckingKeys.includes(step.key)}
               onSelect={handleSelect}
             />
           ))}
