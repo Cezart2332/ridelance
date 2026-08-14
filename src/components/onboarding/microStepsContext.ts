@@ -13,6 +13,11 @@ export interface MicroStepsValue {
   next: () => void
   back: () => void
   canGoBack: boolean
+  /**
+   * Mai există unde merge după ultimul ecran al pasului? Fals când serverul spune că pasul curent
+   * e tot ăsta — adică e la admin. Un „Continuă” în situația aia n-ar face nimic.
+   */
+  canGoForward: boolean
   /** Contor global, peste tot onboardingul: „Pasul {position} din {total}". */
   position: number
   total: number

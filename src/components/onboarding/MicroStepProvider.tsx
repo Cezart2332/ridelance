@@ -98,16 +98,26 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
    * despre deblocare, care putea să nu coincidă cu a serverului. Acum sursa e `currentStep`:
    * exact pasul pe care backendul acceptă scrieri.
    */
+  const forwardTarget = useMemo(() => {
+    const order = steps.findIndex((s) => s.key === activeKey)
+    if (order < 0) return null
+
+    const target =
+      steps.find((s) => s.key === state?.currentStep) ??
+      steps.slice(order + 1).find((s) => s.state !== 'locked')
+
+    // Serverul poate spune că pasul curent e tot ăsta — cazul „e la admin". Atunci nu există
+    // ieșire înainte, iar consumatorii trebuie să afle asta ÎNAINTE să arate un buton.
+    return target && target.key !== activeKey ? target : null
+  }, [steps, activeKey, state?.currentStep])
+
   const leave = useCallback(
     (direction: 1 | -1) => {
       const order = steps.findIndex((s) => s.key === activeKey)
       if (order < 0) return
 
       if (direction === 1) {
-        const target =
-          steps.find((s) => s.key === state?.currentStep) ??
-          steps.slice(order + 1).find((s) => s.state !== 'locked')
-        if (target && target.key !== activeKey) navigate(target.path)
+        if (forwardTarget) navigate(forwardTarget.path)
         return
       }
 
@@ -117,7 +127,7 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
         .find((s) => s.state !== 'locked')
       if (previous) navigate(previous.path)
     },
-    [steps, activeKey, state?.currentStep, navigate],
+    [steps, activeKey, forwardTarget, navigate],
   )
 
   const next = useCallback(() => {
@@ -167,11 +177,12 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
       next,
       back,
       canGoBack,
+      canGoForward: forwardTarget !== null,
       position,
       total,
       percent: Math.round((position / total) * 100),
     }),
-    [views, current, answers, answer, goTo, next, back, canGoBack, position, total],
+    [views, current, answers, answer, goTo, next, back, canGoBack, forwardTarget, position, total],
   )
 
   return <MicroStepsContext.Provider value={value}>{children}</MicroStepsContext.Provider>

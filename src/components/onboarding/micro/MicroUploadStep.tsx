@@ -10,7 +10,14 @@ import { useOnboarding } from '../useOnboarding'
  *
  * Ce adaugă micro-pasul e doar contextul: un singur document, zonă de upload mare, hint propriu.
  */
-export function MicroUploadStep({ def }: { def: MicroStepDef }) {
+export function MicroUploadStep({
+  def,
+  onUploaded,
+}: {
+  def: MicroStepDef
+  /** S-a terminat o încărcare. Runnerul îl folosește ca să treacă singur mai departe. */
+  onUploaded?: () => void
+}) {
   const { state, documents, refresh } = useOnboarding()
   const document = def.document
   if (!document) return null
@@ -32,7 +39,10 @@ export function MicroUploadStep({ def }: { def: MicroStepDef }) {
       requireBothSides={document.requireBothSides}
       documents={documents}
       pfaRegistrationId={state?.pfaRegistrationId}
-      onUploaded={refresh}
+      onUploaded={() => {
+        onUploaded?.()
+        void refresh()
+      }}
       spacious
       hint={document.hint}
       hideLabel

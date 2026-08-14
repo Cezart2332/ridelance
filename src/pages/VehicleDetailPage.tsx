@@ -186,7 +186,6 @@ export default function VehicleDetailPage() {
               <VehicleSection
                 id="descriere"
                 title="Despre mașină"
-                info="Textul e scris de cel care a publicat anunțul. Detaliile care contează pentru contract se confirmă la telefon."
               >
                 <VehicleDescription text={car.description} />
               </VehicleSection>
@@ -195,7 +194,6 @@ export default function VehicleDetailPage() {
             <VehicleSection
               id="dotari"
               title="Dotări și detalii"
-              info="Lista vine din datele anunțului. Dacă îți lipsește o informație, întreab-o în formular — ajunge direct la noi."
             >
               <VehicleFeatureList car={car} />
             </VehicleSection>
@@ -204,7 +202,6 @@ export default function VehicleDetailPage() {
               <VehicleSection
                 id="platforme"
                 title="Platforme acceptate"
-                info="Categoriile arată pentru ce e eligibil vehiculul. Contul de platformă rămâne pe numele tău."
               >
                 <VehiclePlatformBadges car={car} />
               </VehicleSection>

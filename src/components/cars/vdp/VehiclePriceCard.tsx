@@ -1,9 +1,7 @@
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded'
-import CreditCardOffOutlinedIcon from '@mui/icons-material/CreditCardOffOutlined'
 import FacebookRoundedIcon from '@mui/icons-material/FacebookRounded'
 import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined'
-import SupportAgentOutlinedIcon from '@mui/icons-material/SupportAgentOutlined'
 import WhatsAppIcon from '@mui/icons-material/WhatsApp'
 import { Box, Button, IconButton, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -111,31 +109,22 @@ export function VehiclePriceCard({ car, waitlist, onRequest, elevated = true }: 
         {waitlist ? 'Anunță-mă când e liberă' : 'Solicită mașina'}
       </Button>
 
-      <CardDivider />
-
-      {/* ── Blocuri informative ── */}
-      <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, color: TOKENS.ink, mb: 1.5 }}>
-        Ce urmează
-      </Typography>
-      <Stack spacing={2}>
-        <InfoRow
-          icon={<CreditCardOffOutlinedIcon sx={{ fontSize: 24 }} />}
-          title="Fără plată online"
-          detail="Nu se cere card și nu se rețin bani pe pagina asta."
-        />
-        <InfoRow
-          icon={<SupportAgentOutlinedIcon sx={{ fontSize: 24 }} />}
-          title="Te contactăm în 24h"
-          detail="În maximum 24 de ore lucrătoare, pentru detalii și programare."
-        />
-        {car.garantie != null && car.garantie > 0 && (
-          <InfoRow
-            icon={<SavingsOutlinedIcon sx={{ fontSize: 24 }} />}
-            title="Garanție restituibilă"
-            detail="Se returnează la predarea mașinii."
-          />
-        )}
-      </Stack>
+      {car.garantie != null && car.garantie > 0 && (
+        <>
+          <CardDivider />
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+            <SavingsOutlinedIcon sx={{ fontSize: 24, color: TOKENS.textSubtle, mt: '1px' }} />
+            <Box sx={{ minWidth: 0 }}>
+              <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: TOKENS.ink }}>
+                Garanție restituibilă
+              </Typography>
+              <Typography sx={{ fontSize: '0.8rem', color: TOKENS.textMuted, lineHeight: 1.5 }}>
+                Se returnează la predarea mașinii.
+              </Typography>
+            </Box>
+          </Stack>
+        </>
+      )}
 
       <CardDivider />
 
@@ -152,22 +141,6 @@ export function VehiclePriceCard({ car, waitlist, onRequest, elevated = true }: 
 /** Liniile interne merg de la o margine la alta a cardului, peste padding-ul lui. */
 function CardDivider() {
   return <Box sx={{ my: 2.5, mx: -2, height: '1px', backgroundColor: TOKENS.border }} />
-}
-
-function InfoRow({ icon, title, detail }: { icon: ReactNode; title: string; detail: string }) {
-  return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
-      <Box sx={{ display: 'flex', color: TOKENS.textSubtle, mt: '1px' }}>{icon}</Box>
-      <Box sx={{ minWidth: 0 }}>
-        <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: TOKENS.ink }}>
-          {title}
-        </Typography>
-        <Typography sx={{ fontSize: '0.8rem', color: TOKENS.textMuted, lineHeight: 1.5 }}>
-          {detail}
-        </Typography>
-      </Box>
-    </Stack>
-  )
 }
 
 /** Trei butoane rotunde: linkul anunțului, atât. Fără favorite — nu există unde să fie salvate. */

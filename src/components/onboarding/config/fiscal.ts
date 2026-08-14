@@ -27,11 +27,6 @@ const field = (c: MicroStepContext, stepId: string, key: string): string => {
   return typeof value === 'string' ? value.trim() : ''
 }
 
-const selected = (c: MicroStepContext, stepId: string): string[] => {
-  const value = c.answers[stepId]
-  return Array.isArray(value) ? value : []
-}
-
 const EYEBROW = 'FISCAL'
 
 const BANKS = [
@@ -194,46 +189,33 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     isDone: (c) => Boolean(step2Of(c)?.oblio?.accountEmail) || field(c, 'oblio_email', 'email') !== '',
   },
   {
-    id: 'oblio_consimtaminte',
-    macroStep: 'fiscal',
-    kind: 'multi',
-    eyebrow: EYEBROW,
-    icon: 'shield',
-    railLabel: 'Acorduri Oblio',
-    title: 'Confirmă acordurile pentru facturare',
-    choices: OBLIO_CONSENTS,
-    // Toate șase: contul nu se poate crea cu jumătate din acorduri.
-    minSelected: OBLIO_CONSENTS.length,
-    isDone: (c) =>
-      step2Of(c)?.oblio?.allConsentsAccepted === true ||
-      selected(c, 'oblio_consimtaminte').length === OBLIO_CONSENTS.length,
-  },
-  {
     id: 'oblio_conectare',
     macroStep: 'fiscal',
     kind: 'action',
     eyebrow: EYEBROW,
-    icon: 'checkCircle',
+    icon: 'shield',
     railLabel: 'Conectare Oblio',
     title: 'Conectează contul de facturare',
+    // Un text, un buton. Cele șase acorduri erau șase bife pe care nimeni nu le citea separat, iar
+    // contul oricum nu se poate crea cu jumătate din ele — deci alegerea reală era una singură.
     lines: () => [
       'Oblio e programul prin care îți emitem automat facturile pentru curse și le trimitem în e-Factura.',
-      'La apăsare îți creăm contul și îl administrăm noi. Primul an e inclus în abonament; după, costul e al Oblio, comunicat înainte de reînnoire.',
+      `Apăsând „Accept tot" confirmi, în bloc: ${OBLIO_CONSENTS.map((c) => c.title.toLowerCase()).join('; ')}.`,
+      'Contul îl creăm și îl administrăm noi. Primul an e inclus în abonament; după, costul e al Oblio, comunicat înainte de reînnoire.',
       'Trimitem doar datele PFA-ului tău: denumire, CUI, sediu și contul bancar declarat.',
     ],
     action: {
-      label: 'Conectează Oblio',
+      label: 'Accept tot',
       busyLabel: 'Se conectează...',
       run: async (c) => {
-        const consents = selected(c, 'oblio_consimtaminte')
         await onboardingService.acceptOblioConsents({
           accountEmail: field(c, 'oblio_email', 'email') || step2Of(c)?.oblio?.accountEmail || null,
-          accountCreationConsent: consents.includes('accountCreationConsent'),
-          dataProcessingConsent: consents.includes('dataProcessingConsent'),
-          eInvoiceConsent: consents.includes('eInvoiceConsent'),
-          autoInvoicingConsent: consents.includes('autoInvoicingConsent'),
-          ridelanceManagementConsent: consents.includes('ridelanceManagementConsent'),
-          termsAcceptedConsent: consents.includes('termsAcceptedConsent'),
+          accountCreationConsent: true,
+          dataProcessingConsent: true,
+          eInvoiceConsent: true,
+          autoInvoicingConsent: true,
+          ridelanceManagementConsent: true,
+          termsAcceptedConsent: true,
         })
       },
     },
