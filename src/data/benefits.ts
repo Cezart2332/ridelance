@@ -1,4 +1,3 @@
-import ace from '../assets/partners/ace.png'
 import asigurari from '../assets/partners/asigurari.png'
 import consulto from '../assets/partners/consulto.png'
 import mol from '../assets/partners/mol.png'
@@ -186,18 +185,6 @@ export const partnerBenefits: PartnerBenefit[] = [
         badge: 'RIDElance + Simplifi',
         title: 'Tot fluxul într-un singur loc',
         text: 'Pentru procuri, documente fiscale, dosare și orice altceva trebuie semnat calificat.',
-      },
-    ],
-  },
-  {
-    slug: 'ace',
-    name: 'ACE',
-    image: ace,
-    tagline: 'Partener RIDElance.',
-    blocks: [
-      {
-        title: 'Detaliile vin în curând',
-        text: 'Colaborarea e activă, dar beneficiile concrete încă se așază. Le găsești aici imediat ce sunt confirmate.',
       },
     ],
   },
