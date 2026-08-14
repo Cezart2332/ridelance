@@ -1,10 +1,10 @@
 import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import HeadsetMicRoundedIcon from '@mui/icons-material/HeadsetMicRounded'
 import MailOutlineRoundedIcon from '@mui/icons-material/MailOutlineRounded'
-import { Button, ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material'
+import { Box, Button, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from '@mui/material'
 import { useState } from 'react'
 
-import { TOKENS } from '../onboardingTheme'
+import { SHELL } from '../shellTokens'
 import { useOnboardingSupport } from '../supportContext'
 
 /**
@@ -24,23 +24,42 @@ export function SidebarSupportBlock() {
 
   return (
     <>
-      <Button
-        onClick={(event) => setAnchor(event.currentTarget)}
-        startIcon={<HeadsetMicRoundedIcon sx={{ fontSize: 19 }} />}
-        aria-haspopup="menu"
-        aria-expanded={anchor !== null}
+      <Box
         sx={{
-          width: '100%',
-          justifyContent: 'flex-start',
-          px: 1.5,
-          height: 40,
-          color: TOKENS.ink,
-          fontWeight: 500,
-          '&:hover': { backgroundColor: TOKENS.primarySoft },
+          p: 1.75,
+          borderRadius: SHELL.radius.card,
+          border: `1px solid ${SHELL.border.subtle}`,
+          backgroundColor: SHELL.bg.surface2,
         }}
       >
-        Suport
-      </Button>
+        <Typography sx={{ fontSize: 13, fontWeight: 600, color: SHELL.text.primary }}>
+          Ai nevoie de ajutor?
+        </Typography>
+        <Typography sx={{ fontSize: 12, color: SHELL.text.secondary, mt: 0.25, mb: 1.25 }}>
+          Spune-ne ce document nu găsești.
+        </Typography>
+
+        <Button
+          onClick={(event) => setAnchor(event.currentTarget)}
+          startIcon={<HeadsetMicRoundedIcon sx={{ fontSize: 17 }} />}
+          aria-haspopup="menu"
+          aria-expanded={anchor !== null}
+          variant="contained"
+          disableElevation
+          sx={{
+            width: '100%',
+            height: 36,
+            textTransform: 'none',
+            fontSize: 13,
+            fontWeight: 600,
+            borderRadius: SHELL.radius.input,
+            backgroundColor: SHELL.text.primary,
+            '&:hover': { backgroundColor: SHELL.text.primary, opacity: 0.9 },
+          }}
+        >
+          Contactează suportul
+        </Button>
+      </Box>
 
       <Menu
         anchorEl={anchor}
@@ -52,7 +71,7 @@ export function SidebarSupportBlock() {
       >
         <MenuItem onClick={pick(openEmail)} sx={{ py: 1.25 }}>
           <ListItemIcon>
-            <MailOutlineRoundedIcon sx={{ fontSize: 19, color: TOKENS.textMuted }} />
+            <MailOutlineRoundedIcon sx={{ fontSize: 19, color: SHELL.text.secondary }} />
           </ListItemIcon>
           <ListItemText
             primary="Trimite un email"
@@ -66,7 +85,7 @@ export function SidebarSupportBlock() {
 
         <MenuItem onClick={pick(openBooking)} sx={{ py: 1.25 }}>
           <ListItemIcon>
-            <EventAvailableRoundedIcon sx={{ fontSize: 19, color: TOKENS.textMuted }} />
+            <EventAvailableRoundedIcon sx={{ fontSize: 19, color: SHELL.text.secondary }} />
           </ListItemIcon>
           <ListItemText
             primary="Programează o vizită la birou"

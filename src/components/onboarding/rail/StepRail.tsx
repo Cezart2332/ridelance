@@ -39,6 +39,7 @@ export function StepRail({
         done={completedCount(steps)}
         total={steps.length}
         position={Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)}
+        stepLabel={steps.find((s) => s.key === activeKey)?.label ?? null}
         estimate={estimate}
       />
 

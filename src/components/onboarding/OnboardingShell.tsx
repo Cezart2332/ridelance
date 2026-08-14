@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Divider,
   Snackbar,
   Stack,
   ThemeProvider,
@@ -291,7 +290,7 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
   )
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: TOKENS.surface }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: SHELL.bg.app }}>
       {isMobile ? (
         <>
           <MobileStepBar
@@ -340,8 +339,8 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
                 bottom: 0,
                 left: 0,
                 width: RAIL_WIDTH,
-                borderRight: `1px solid ${TOKENS.border}`,
-                backgroundColor: TOKENS.paper,
+                borderRight: `1px solid ${SHELL.border.subtle}`,
+                backgroundColor: SHELL.bg.surface,
                 pt: 2.5,
               }}
             >
@@ -353,10 +352,10 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
                   ce caută cineva blocat la un pas lung. */}
               <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: 2, py: 1 }}>{rail}</Box>
 
-              <Stack spacing={0.5} sx={{ px: 2, pt: 1, pb: 2, backgroundColor: TOKENS.paper }}>
-                <Divider sx={{ mb: 1 }} />
+              {/* Fără divider: cardul de ajutor se separă singur de listă. */}
+              <Box sx={{ px: 2, pt: 1, pb: 2, backgroundColor: SHELL.bg.surface }}>
                 <SidebarSupportBlock />
-              </Stack>
+              </Box>
             </Stack>
             <Box sx={{ width: RAIL_WIDTH, flexShrink: 0 }} />
           </>

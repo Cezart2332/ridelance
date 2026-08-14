@@ -1,10 +1,9 @@
-import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
 import { Box, ButtonBase, Collapse, Stack, Typography } from '@mui/material'
 
 import type { MicroStepView } from '../microStepTypes'
 import { useMotionTokens } from '../motion'
-import { TOKENS } from '../onboardingTheme'
+import { SHELL } from '../shellTokens'
 
 /**
  * Sub-pașii pasului activ. Apar doar sub el — o listă completă de micro-pași pentru toți cei șase
@@ -26,7 +25,7 @@ export function StepRailSubSteps({
     <Collapse in appear={!reduced} timeout={reduced ? 0 : 200}>
       <Stack
         component="ul"
-        sx={{ listStyle: 'none', m: 0, pl: '36px', pr: 1.5, pb: 1.25, gap: 0.25 }}
+        sx={{ listStyle: 'none', m: 0, pl: '34px', pr: 1.25, pb: 1.25, gap: 0.25 }}
       >
         {steps.map((view) => {
           // Un micro-pas la care nu s-a ajuns încă nu e o destinație — n-are ce arăta.
@@ -43,16 +42,16 @@ export function StepRailSubSteps({
                   gap: 1,
                   py: 0.5,
                   px: 0.75,
-                  borderRadius: `${TOKENS.radius.sm}px`,
+                  borderRadius: SHELL.radius.input,
                   textAlign: 'left',
                   cursor: reachable ? 'pointer' : 'default',
                   '&.Mui-disabled': { pointerEvents: 'none' },
-                  '&:hover': reachable ? { backgroundColor: 'rgba(26, 26, 46, 0.03)' } : {},
-                  '&:focus-visible': { outline: `2px solid ${TOKENS.primary}`, outlineOffset: 1 },
+                  '&:hover': reachable ? { backgroundColor: SHELL.bg.surface2 } : {},
+                  '&:focus-visible': { outline: `2px solid ${SHELL.brand}`, outlineOffset: 1 },
                 }}
               >
                 {view.done ? (
-                  <CheckRoundedIcon sx={{ fontSize: 14, color: TOKENS.success, flexShrink: 0 }} />
+                  <CheckRoundedIcon sx={{ fontSize: 14, color: SHELL.pos, flexShrink: 0 }} />
                 ) : (
                   <Box
                     aria-hidden
@@ -63,7 +62,7 @@ export function StepRailSubSteps({
                       mr: '4px',
                       borderRadius: '50%',
                       flexShrink: 0,
-                      backgroundColor: view.current ? TOKENS.primary : TOKENS.borderHover,
+                      backgroundColor: view.current ? SHELL.brand : SHELL.border.strong,
                     }}
                   />
                 )}
@@ -72,17 +71,13 @@ export function StepRailSubSteps({
                   variant="body2"
                   sx={{
                     flex: 1,
-                    fontSize: '0.8rem',
+                    fontSize: 12.5,
                     fontWeight: view.current ? 600 : 400,
-                    color: view.current ? TOKENS.ink : TOKENS.textMuted,
+                    color: view.current ? SHELL.text.primary : SHELL.text.secondary,
                   }}
                 >
                   {view.def.railLabel}
                 </Typography>
-
-                {view.current && (
-                  <ArrowForwardRoundedIcon sx={{ fontSize: 14, color: TOKENS.textSubtle }} />
-                )}
               </ButtonBase>
             </Box>
           )
