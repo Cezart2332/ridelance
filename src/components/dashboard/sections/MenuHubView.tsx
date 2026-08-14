@@ -9,6 +9,7 @@ import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import FolderSpecialRoundedIcon from '@mui/icons-material/FolderSpecialRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
+import RedeemRoundedIcon from '@mui/icons-material/RedeemRounded';
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded';
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
@@ -58,6 +59,7 @@ const MENU_GROUPS: { title: string; items: MenuEntry[] }[] = [
   {
     title: 'Altele',
     items: [
+      { id: 'beneficii', label: 'Beneficii', sub: 'Oferte de la partenerii RIDElance', icon: <RedeemRoundedIcon /> },
       { id: 'servicii', label: 'Servicii', sub: 'Cumperi separat, fără abonament', icon: <ShoppingCartRoundedIcon /> },
       { id: 'cars', label: 'Mașini', sub: 'Mașini de închiriat', icon: <DirectionsCarFilledRoundedIcon /> },
       { id: 'asigurari', label: 'Asigurări', sub: 'Oferte prin asigurari.ro', icon: <ShieldRoundedIcon /> },

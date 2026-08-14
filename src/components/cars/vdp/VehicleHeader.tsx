@@ -16,8 +16,10 @@ import {
   formatCarOfferType,
   formatCarStatus,
   getCarStatusColor,
+  isStayOffer,
 } from '../../../utils/carLabels'
 import { formatLei } from '../../../utils/vehiclePricing'
+import { StayAsterisk, StayPriceNote } from '../StayPriceNote'
 import { VDP } from './vdpLayout'
 
 /**
@@ -85,10 +87,20 @@ export function VehicleHeader({ car }: { car: Car }) {
         <Chip icon={<SettingsOutlinedIcon sx={{ fontSize: 15 }} />} label={car.transmission} />
         <Chip icon={<LocalGasStationOutlinedIcon sx={{ fontSize: 15 }} />} label={car.engine} />
         <Chip icon={<LocationOnOutlinedIcon sx={{ fontSize: 15 }} />} label={car.location} />
-        <Chip
-          icon={<HandshakeOutlinedIcon sx={{ fontSize: 15 }} />}
-          label={formatCarOfferType(car.offerType)}
-        />
+        {isStayOffer(car.offerType) ? (
+          <StayPriceNote>
+            <Chip
+              icon={<HandshakeOutlinedIcon sx={{ fontSize: 15 }} />}
+              label={formatCarOfferType(car.offerType)}
+              asterisk
+            />
+          </StayPriceNote>
+        ) : (
+          <Chip
+            icon={<HandshakeOutlinedIcon sx={{ fontSize: 15 }} />}
+            label={formatCarOfferType(car.offerType)}
+          />
+        )}
         {car.garantie != null && car.garantie > 0 && (
           <Chip
             icon={<SavingsOutlinedIcon sx={{ fontSize: 15 }} />}
@@ -107,7 +119,18 @@ export function VehicleHeader({ car }: { car: Car }) {
 }
 
 /** Pastila din spec: border 1px, iconiță într-un cerc la stânga, padding 8/12. */
-function Chip({ icon, label, tone }: { icon?: ReactNode; label: string; tone?: string }) {
+function Chip({
+  icon,
+  label,
+  tone,
+  asterisk,
+}: {
+  icon?: ReactNode
+  label: string
+  tone?: string
+  /** Trimite la informarea despre prețurile „La Rămânere”. */
+  asterisk?: boolean
+}) {
   const color = tone ?? TOKENS.ink
 
   return (
@@ -148,6 +171,7 @@ function Chip({ icon, label, tone }: { icon?: ReactNode; label: string; tone?: s
         }}
       >
         {label}
+        {asterisk && <StayAsterisk />}
       </Typography>
     </Stack>
   )
