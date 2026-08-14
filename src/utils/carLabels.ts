@@ -44,6 +44,12 @@ export function formatCarOfferType(offerType: string | null | undefined): string
   return OFFER_TYPE_LABELS[offerType] ?? offerType;
 }
 
+/** Oferta „La rămânere” — prețul redus ține de abonamentul PRO, deci are informare proprie. */
+export function isStayOffer(offerType: string | null | undefined): boolean {
+  if (!offerType) return false;
+  return offerType === 'Stay' || offerType.toLowerCase().startsWith('la rămânere');
+}
+
 export function formatCarStatus(status: string | null | undefined): string {
   if (!status) return '—';
   return STATUS_LABELS[status] ?? status;

@@ -11,9 +11,11 @@ import {
   formatCarStatus,
   getCarStatusColor,
   isCarRentDisabled,
+  isStayOffer,
 } from '../../utils/carLabels'
 import { hasActiveDiscount } from '../../utils/carPricing'
 import { formatLei } from '../../utils/vehiclePricing'
+import { StayAsterisk, StayPriceNote } from './StayPriceNote'
 import { VDP } from './vdp/vdpLayout'
 
 /**
@@ -100,7 +102,18 @@ export default function CarListCard({ car, newTab = false }: CarListCardProps) {
           <DirectionsCarFilledRoundedIcon sx={{ fontSize: 48, color: TOKENS.textSubtle }} />
         )}
 
-        <Pill sx={{ top: 12, left: 12 }}>{formatCarOfferType(car.offerType)}</Pill>
+        {isStayOffer(car.offerType) ? (
+          <Box sx={{ position: 'absolute', top: 12, left: 12 }}>
+            <StayPriceNote>
+              <Pill sx={{ position: 'static', cursor: 'help' }}>
+                {formatCarOfferType(car.offerType)}
+                <StayAsterisk />
+              </Pill>
+            </StayPriceNote>
+          </Box>
+        ) : (
+          <Pill sx={{ top: 12, left: 12 }}>{formatCarOfferType(car.offerType)}</Pill>
+        )}
 
         {discounted ? (
           <Pill sx={{ top: 12, right: 12, backgroundColor: '#ef4444', color: '#FFFFFF' }}>
@@ -215,7 +228,12 @@ export default function CarListCard({ car, newTab = false }: CarListCardProps) {
   )
 }
 
-/** Pastilă albă peste imagine — fundal opac, nu translucid: pozele sunt imprevizibile. */
+/**
+ * Pastilă albă peste imagine — fundal opac, nu translucid: pozele sunt imprevizibile.
+ *
+ * `position` din `sx` bate valoarea implicită: pastila cu informare e așezată de părinte, ca
+ * declanșatorul tooltipului să fie el cel poziționat.
+ */
 function Pill({ children, sx }: { children: React.ReactNode; sx?: object }) {
   return (
     <Stack
