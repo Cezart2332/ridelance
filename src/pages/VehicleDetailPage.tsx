@@ -11,7 +11,6 @@ import { VehicleDetailSkeleton } from '../components/cars/vdp/VehicleDetailSkele
 import { VehicleFeatureList } from '../components/cars/vdp/VehicleFeatureList'
 import { VehicleGallery } from '../components/cars/vdp/VehicleGallery'
 import { VehicleHeader } from '../components/cars/vdp/VehicleHeader'
-import { VehicleLocationBand } from '../components/cars/vdp/VehicleLocationBand'
 import { VehicleMobilePriceBar } from '../components/cars/vdp/VehicleMobilePriceBar'
 import { VehiclePlatformBadges } from '../components/cars/vdp/VehiclePlatformBadges'
 import { VehiclePriceCard } from '../components/cars/vdp/VehiclePriceCard'
@@ -76,7 +75,6 @@ export default function VehicleDetailPage() {
       ...(hasDescription ? [{ id: 'descriere', label: 'Descriere' }] : []),
       { id: 'dotari', label: 'Dotări' },
       ...(hasPlatforms ? [{ id: 'platforme', label: 'Platforme' }] : []),
-      { id: 'locatie', label: 'Locație' },
       { id: 'similare', label: 'Similare' },
     ]
   }, [car, hasDescription, hasPlatforms])
@@ -227,7 +225,6 @@ export default function VehicleDetailPage() {
         </Box>
       </PageShell>
 
-      <VehicleLocationBand city={car.location} />
       <VehicleBreadcrumbs current={title} />
 
       <VehicleMobilePriceBar

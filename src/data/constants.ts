@@ -1,7 +1,10 @@
 import docs from '../assets/docs.svg'
-import ace from '../assets/ace.svg'
-import mol from '../assets/mol.png'
-import asigurari from '../assets/asigurari.ro.png'
+import ace from '../assets/partners/ace.png'
+import mol from '../assets/partners/mol.png'
+import asigurari from '../assets/partners/asigurari.png'
+import consulto from '../assets/partners/consulto.png'
+import oblio from '../assets/partners/oblio.png'
+import simplifi from '../assets/partners/simplifi.png'
 import character2 from '../assets/Stickers/character 2.png'
 import scene1 from '../assets/Stickers/scene 1.png'
 import scene4 from '../assets/Stickers/scene 4.png'
@@ -100,19 +103,15 @@ export const partnerLogos: { name: string; image: string; href?: string }[] = [
   },
   {
     name: 'Oblio',
-    image: '/oblio.jpeg',
+    image: oblio,
   },
   {
     name: 'Consulto',
-    image: '/consulto.jpeg',
+    image: consulto,
   },
   {
     name: 'Simplifi',
-    image: '/simplifi.jpeg',
-  },
-  {
-    name: 'Transped',
-    image: '/transped.jpeg',
+    image: simplifi,
   },
 ]
 

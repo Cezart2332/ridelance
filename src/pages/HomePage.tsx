@@ -14,7 +14,7 @@ import {
 } from '../data/constants'
 
 import motto from '../assets/motto.svg'
-import car from '../assets/car.svg'
+import heroSticker from '../assets/hero-sticker.png'
 import checkSvg from '../assets/SVG/2- Regular/check-circle.svg'
 import dashboard from '../assets/dashboard.png'
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
@@ -210,7 +210,7 @@ export function HomePage() {
           >
             <Box
               component="img"
-              src={car}
+              src={heroSticker}
               alt="Hero"
               sx={{
                 width: { xs: '90%', md: '100%' },

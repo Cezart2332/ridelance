@@ -1,6 +1,11 @@
-import ace from '../assets/ace.svg'
-import mol from '../assets/mol.png'
-import asigurari from '../assets/asigurari.ro.png'
+// Logourile de partener trăiesc în `src/assets`, nu în `public`: așa trec prin build, primesc hash
+// și nu pot rămâne în cache-ul browserului cu o versiune veche după o înlocuire.
+import ace from '../assets/partners/ace.png'
+import asigurari from '../assets/partners/asigurari.png'
+import consulto from '../assets/partners/consulto.png'
+import mol from '../assets/partners/mol.png'
+import oblio from '../assets/partners/oblio.png'
+import simplifi from '../assets/partners/simplifi.png'
 
 export interface Partner {
   slug: string
@@ -114,22 +119,17 @@ export const partners: Partner[] = [
   {
     slug: 'oblio',
     name: 'Oblio',
-    image: '/oblio.jpeg',
+    image: oblio,
   },
   {
     slug: 'consulto',
     name: 'Consulto',
-    image: '/consulto.jpeg',
+    image: consulto,
   },
   {
     slug: 'simplifi',
     name: 'Simplifi',
-    image: '/simplifi.jpeg',
-  },
-  {
-    slug: 'transped',
-    name: 'Transped',
-    image: '/transped.jpeg',
+    image: simplifi,
   },
 ]
 
