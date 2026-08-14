@@ -25,15 +25,12 @@ import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFil
 
 import { TOKENS } from '../constants/tokens';
 import { carsService, type Car } from '../services/cars.service';
-import CarCard from '../components/dashboard/sections/cars/CarCard';
+import CarListCard from '../components/cars/CarListCard';
 import { matchesOfferTypeFilter, matchesStatusFilter } from '../utils/carLabels';
-import RentFormModal from '../components/dashboard/sections/cars/RentFormModal';
 
 export function CarsPage() {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   
   // Filter States
@@ -61,11 +58,6 @@ export function CarsPage() {
   useEffect(() => {
     fetchCars();
   }, [fetchCars]);
-
-  const handleRentClick = (car: Car) => {
-    setSelectedCar(car);
-    setModalOpen(true);
-  };
 
   const filteredCars = useMemo(() => {
     let result = [...cars];
@@ -396,7 +388,7 @@ export function CarsPage() {
             gap: { xs: 3, md: 5 } 
           }}>
             {filteredCars.map((car) => (
-              <CarCard key={car.id} car={car} onRentClick={handleRentClick} />
+              <CarListCard key={car.id} car={car} />
             ))}
           </Box>
         ) : !loading && (
@@ -412,12 +404,6 @@ export function CarsPage() {
         )}
 
       </Container>
-
-      <RentFormModal 
-        open={modalOpen} 
-        onClose={() => setModalOpen(false)} 
-        car={selectedCar} 
-      />
     </Box>
   );
 }

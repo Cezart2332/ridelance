@@ -1,22 +1,25 @@
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
-import PhotoLibraryRoundedIcon from '@mui/icons-material/PhotoLibraryRounded'
-import { Box, Button, Typography } from '@mui/material'
+import IosShareRoundedIcon from '@mui/icons-material/IosShareRounded'
+import PhotoCameraOutlinedIcon from '@mui/icons-material/PhotoCameraOutlined'
+import { Box, Button, IconButton, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useEffect, useRef, useState } from 'react'
 
 import { TOKENS } from '../../../constants/tokens'
 import { getCarImageUrl, type CarImage } from '../../../services/cars.service'
 import { altFor } from './galleryAlt'
+import { VDP } from './vdpLayout'
 
 /**
  * Galeria din capul paginii (spec §3).
  *
- * Pe desktop, un grid de 4×2 în care prima poză ocupă un sfert de ecran; pe mobil, un carusel cu
- * `scroll-snap`, fiindcă săgețile peste o imagine de 390px sunt mai mult în drum decât de ajutor.
+ * Pe desktop, o grilă asimetrică: fotografia principală ocupă două treimi, iar celelalte două stau
+ * stivuite în dreapta. Pe mobil devine carusel `scroll-snap` cu puncte — săgețile peste o imagine
+ * de 390px sunt mai mult în drum decât de ajutor.
  *
- * Containerul are raport fix: pozele se încarcă la lățimi diferite, iar fără raport pagina ar sări
- * în momentul în care sosesc. Degradarea sub cinci poze e explicită — un grid cu celule goale
- * arată ca un bug, nu ca un anunț cu puține fotografii.
+ * Containerul are raport fix pentru că pozele sosesc la lățimi diferite: fără el, tot ce e sub
+ * galerie sare în momentul încărcării.
  */
 
 interface VehicleGalleryProps {
@@ -68,6 +71,7 @@ function GalleryImage({
         height: '100%',
         cursor: 'zoom-in',
         overflow: 'hidden',
+        borderRadius: `${VDP.radius.image}px`,
         backgroundColor: TOKENS.surfaceAlt,
       }}
     >
@@ -84,8 +88,8 @@ function GalleryImage({
           height: '100%',
           objectFit: 'cover',
           display: 'block',
-          transition: `transform ${TOKENS.duration} ${TOKENS.easing}`,
-          '&:hover': { transform: 'scale(1.03)' },
+          transition: `transform 400ms ${TOKENS.easing}`,
+          '&:hover': { transform: 'scale(1.02)' },
         }}
       />
     </Box>
@@ -94,30 +98,25 @@ function GalleryImage({
 
 function DesktopGallery({ images, title, onOpen }: VehicleGalleryProps) {
   const total = images.length
-  const hasHero = total >= 5
-  const shown = hasHero ? images.slice(0, 5) : images.slice(0, 4)
+  // Grila asimetrică are sens de la trei poze în sus; sub asta, celulele goale ar arăta a bug.
+  const asymmetric = total >= 3
+  const shown = asymmetric ? images.slice(0, 3) : images.slice(0, 2)
 
   return (
     <Box sx={{ position: 'relative' }}>
       <Box
         sx={{
           display: 'grid',
-          gap: '6px',
-          aspectRatio: total === 1 ? '16 / 9' : '2 / 1',
-          borderRadius: `${TOKENS.radius.xl}px`,
-          overflow: 'hidden',
-          gridTemplateColumns: total === 1 ? '1fr' : hasHero ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)',
-          gridTemplateRows: total <= 2 ? '1fr' : 'repeat(2, 1fr)',
+          gap: '8px',
+          aspectRatio: '16 / 10',
+          gridTemplateColumns: total === 1 ? '1fr' : '2fr 1fr',
+          gridTemplateRows: asymmetric ? 'repeat(2, 1fr)' : '1fr',
         }}
       >
         {shown.map((image, index) => (
           <Box
             key={image.id}
-            sx={
-              hasHero && index === 0
-                ? { gridColumn: 'span 2', gridRow: 'span 2', minHeight: 0 }
-                : { minHeight: 0 }
-            }
+            sx={asymmetric && index === 0 ? { gridRow: 'span 2', minHeight: 0 } : { minHeight: 0 }}
           >
             <GalleryImage
               image={image}
@@ -129,10 +128,12 @@ function DesktopGallery({ images, title, onOpen }: VehicleGalleryProps) {
         ))}
       </Box>
 
-      {total > shown.length && (
+      <ShareButton title={title} />
+
+      {total > 1 && (
         <Button
           onClick={() => onOpen(0)}
-          startIcon={<PhotoLibraryRoundedIcon />}
+          startIcon={<PhotoCameraOutlinedIcon />}
           sx={{
             position: 'absolute',
             right: 16,
@@ -142,10 +143,10 @@ function DesktopGallery({ images, title, onOpen }: VehicleGalleryProps) {
             fontWeight: 700,
             textTransform: 'none',
             color: TOKENS.ink,
-            borderRadius: `${TOKENS.radius.md}px`,
-            backgroundColor: alpha('#FFFFFF', 0.92),
+            borderRadius: `${TOKENS.radius.full}px`,
+            backgroundColor: '#FFFFFF',
             boxShadow: TOKENS.shadow.md,
-            '&:hover': { backgroundColor: '#FFFFFF' },
+            '&:hover': { backgroundColor: '#FFFFFF', boxShadow: TOKENS.shadow.lg },
           }}
         >
           Vezi toate pozele ({total})
@@ -160,7 +161,7 @@ function MobileGallery({ images, title, onOpen }: VehicleGalleryProps) {
   const [active, setActive] = useState(0)
   const trackRef = useRef<HTMLDivElement | null>(null)
 
-  // Contorul urmărește scroll-ul real, nu invers: swipe-ul e al browserului, noi doar îl citim.
+  // Punctele urmăresc scroll-ul real, nu invers: swipe-ul e al browserului, noi doar îl citim.
   useEffect(() => {
     const track = trackRef.current
     if (!track) return
@@ -183,6 +184,7 @@ function MobileGallery({ images, title, onOpen }: VehicleGalleryProps) {
           overflowX: 'auto',
           scrollSnapType: 'x mandatory',
           aspectRatio: '4 / 3',
+          gap: '4px',
           scrollbarWidth: 'none',
           '&::-webkit-scrollbar': { display: 'none' },
         }}
@@ -199,25 +201,73 @@ function MobileGallery({ images, title, onOpen }: VehicleGalleryProps) {
         ))}
       </Box>
 
+      <ShareButton title={title} />
+
       {total > 1 && (
-        <Typography
+        <Box
           sx={{
             position: 'absolute',
-            right: 12,
+            left: 0,
+            right: 0,
             bottom: 12,
-            px: 1.25,
-            py: 0.4,
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            color: '#FFFFFF',
-            borderRadius: `${TOKENS.radius.full}px`,
-            backgroundColor: alpha(TOKENS.ink, 0.6),
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 0.75,
           }}
         >
-          {active + 1} / {total}
-        </Typography>
+          {images.map((image, index) => (
+            <Box
+              key={image.id}
+              sx={{
+                width: index === active ? 18 : 6,
+                height: 6,
+                borderRadius: `${TOKENS.radius.full}px`,
+                backgroundColor: index === active ? '#FFFFFF' : alpha('#FFFFFF', 0.55),
+                boxShadow: `0 1px 2px ${alpha(TOKENS.ink, 0.25)}`,
+                transition: `width 200ms ${TOKENS.easing}`,
+              }}
+            />
+          ))}
+        </Box>
       )}
     </Box>
+  )
+}
+
+/**
+ * Butonul rotund din colțul galeriei. În locul inimii din spec: nu avem favorite, dar o pagină de
+ * anunț chiar se trimite mai departe.
+ */
+function ShareButton({ title }: { title: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const share = async () => {
+    const url = window.location.href
+    if (navigator.share) {
+      await navigator.share({ title, url }).catch(() => {})
+      return
+    }
+    await navigator.clipboard.writeText(url).catch(() => {})
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <IconButton
+      onClick={share}
+      aria-label={copied ? 'Link copiat' : 'Trimite anunțul'}
+      sx={{
+        position: 'absolute',
+        top: 16,
+        right: 16,
+        backgroundColor: '#FFFFFF',
+        color: TOKENS.ink,
+        boxShadow: TOKENS.shadow.md,
+        '&:hover': { backgroundColor: '#FFFFFF', boxShadow: TOKENS.shadow.lg },
+      }}
+    >
+      {copied ? <CheckRoundedIcon fontSize="small" /> : <IosShareRoundedIcon fontSize="small" />}
+    </IconButton>
   )
 }
 
@@ -225,10 +275,10 @@ function EmptyGallery() {
   return (
     <Box
       sx={{
-        aspectRatio: '16 / 9',
+        aspectRatio: '16 / 10',
         display: 'grid',
         placeItems: 'center',
-        borderRadius: `${TOKENS.radius.xl}px`,
+        borderRadius: `${VDP.radius.image}px`,
         border: `1px dashed ${TOKENS.borderHover}`,
         backgroundColor: TOKENS.surfaceAlt,
       }}

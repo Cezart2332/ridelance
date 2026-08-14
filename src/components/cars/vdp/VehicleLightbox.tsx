@@ -7,7 +7,7 @@ import { useCallback, useState } from 'react'
 
 import { TOKENS } from '../../../constants/tokens'
 import { getCarImageUrl, type CarImage } from '../../../services/cars.service'
-import { useSwipeGallery } from '../../dashboard/sections/cars/useSwipeGallery'
+import { useSwipeGallery } from '../useSwipeGallery'
 import { altFor } from './galleryAlt'
 
 /**

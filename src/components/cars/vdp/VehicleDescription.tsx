@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { TOKENS } from '../../../constants/tokens'
 
 /**
- * Textul partenerului (spec §8): patru rânduri, apoi „Citește mai mult" care expandează pe loc.
+ * Textul partenerului: patru rânduri, apoi „Citește mai mult" care expandează pe loc.
+ *
+ * Titlul secțiunii nu e aici — îl pune `VehicleSection`, ca toate secțiunile să aibă același ritm.
  *
  * Conținutul e text simplu — coloana din baza de date nu ține markup — deci se randează ca atare,
  * cu păstrarea rândurilor. Nu e nevoie de sanitizare pentru că nu se interpretează nimic.
@@ -23,10 +25,6 @@ export function VehicleDescription({ text }: { text: string }) {
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="h2" sx={{ fontSize: '1.25rem', fontWeight: 800, color: TOKENS.ink }}>
-        Despre mașină
-      </Typography>
-
       <Box sx={{ position: 'relative' }}>
         <Typography
           sx={{

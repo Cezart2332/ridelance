@@ -22,10 +22,6 @@ export function VehiclePlatformBadges({ car }: { car: Car }) {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h2" sx={{ fontSize: '1.25rem', fontWeight: 800, color: TOKENS.ink }}>
-        Platforme acceptate
-      </Typography>
-
       <Stack spacing={1.5}>
         {platforms.map((platform) => (
           <Stack

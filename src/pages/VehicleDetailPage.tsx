@@ -1,37 +1,44 @@
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
-import { Alert, Box, Button, Container, Divider, GlobalStyles, Stack, Typography } from '@mui/material'
-import { Suspense, lazy, useEffect, useRef, useState } from 'react'
+import { Alert, Box, Button, GlobalStyles, Stack, Typography } from '@mui/material'
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
+import RentFormModal from '../components/cars/RentFormModal'
 import { SimilarVehicles } from '../components/cars/vdp/SimilarVehicles'
+import { VehicleBreadcrumbs } from '../components/cars/vdp/VehicleBreadcrumbs'
 import { VehicleDescription } from '../components/cars/vdp/VehicleDescription'
 import { VehicleDetailSkeleton } from '../components/cars/vdp/VehicleDetailSkeleton'
+import { VehicleFeatureList } from '../components/cars/vdp/VehicleFeatureList'
 import { VehicleGallery } from '../components/cars/vdp/VehicleGallery'
 import { VehicleHeader } from '../components/cars/vdp/VehicleHeader'
+import { VehicleLocationBand } from '../components/cars/vdp/VehicleLocationBand'
 import { VehicleMobilePriceBar } from '../components/cars/vdp/VehicleMobilePriceBar'
 import { VehiclePlatformBadges } from '../components/cars/vdp/VehiclePlatformBadges'
 import { VehiclePriceCard } from '../components/cars/vdp/VehiclePriceCard'
-import { VehicleQuickSpecs } from '../components/cars/vdp/VehicleQuickSpecs'
+import { VehiclePromoBanner } from '../components/cars/vdp/VehiclePromoBanner'
+import { VehicleSection } from '../components/cars/vdp/VehicleSection'
+import { VehicleSectionNav, type NavSection } from '../components/cars/vdp/VehicleSectionNav'
 import { VehicleSeo } from '../components/cars/vdp/VehicleSeo'
-import RentFormModal from '../components/dashboard/sections/cars/RentFormModal'
+import { VDP } from '../components/cars/vdp/vdpLayout'
 import { TOKENS } from '../constants/tokens'
 import { useVehicle } from '../hooks/useVehicle'
 import { useVehicleViewTracking } from '../hooks/useVehicleViewTracking'
 import { carsService } from '../services/cars.service'
 import { isCarRentDisabled } from '../utils/carLabels'
+import { hasActiveDiscount } from '../utils/carPricing'
 
 // Lightbox-ul e cod pe care majoritatea vizitatorilor nu-l deschid niciodată.
 const VehicleLightbox = lazy(() => import('../components/cars/vdp/VehicleLightbox'))
 
 /**
- * Pagina de detaliu a unei mașini (spec-pagina-vehicul.md).
+ * Pagina de detaliu a unei mașini, după specul de design.
  *
  * Rol: generare de lead. Nu există checkout, nu există sumă totală, nu se cere niciun instrument de
  * plată. Tot ce face pagina e să arate mașina și să deschidă formularul de cerere.
  *
- * Secțiunile pentru care nu avem date (dotări, ce include, condiții, hartă, partener, recenzii,
- * întrebări frecvente) lipsesc cu totul, în loc să apară ca liste goale.
+ * Secțiunile din spec pentru care nu avem date (ce include prețul, extras, recenzii, gazdă, reguli)
+ * lipsesc cu totul, în loc să apară ca liste goale. Bara de secțiuni se construiește din ce chiar
+ * s-a randat, deci nu poate trimite într-un gol.
  */
 export default function VehicleDetailPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -40,6 +47,7 @@ export default function VehicleDetailPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [lightbox, setLightbox] = useState<number | null>(null)
   const [barVisible, setBarVisible] = useState(false)
+  const [galleryEl, setGalleryEl] = useState<HTMLDivElement | null>(null)
   const inlineCardRef = useRef<HTMLDivElement | null>(null)
 
   useVehicleViewTracking(car?.id, state === 'ready')
@@ -58,6 +66,21 @@ export default function VehicleDetailPage() {
     return () => observer.disconnect()
   }, [car])
 
+  const hasDescription = (car?.description.trim().length ?? 0) > 0
+  const hasPlatforms = (car?.uberCategories.length ?? 0) + (car?.boltCategories.length ?? 0) > 0
+
+  const sections: NavSection[] = useMemo(() => {
+    if (!car) return []
+    return [
+      { id: 'prezentare', label: 'Prezentare' },
+      ...(hasDescription ? [{ id: 'descriere', label: 'Descriere' }] : []),
+      { id: 'dotari', label: 'Dotări' },
+      ...(hasPlatforms ? [{ id: 'platforme', label: 'Platforme' }] : []),
+      { id: 'locatie', label: 'Locație' },
+      { id: 'similare', label: 'Similare' },
+    ]
+  }, [car, hasDescription, hasPlatforms])
+
   const openRequest = () => {
     if (car) carsService.trackClick(car.id).catch(() => {})
     setModalOpen(true)
@@ -65,9 +88,9 @@ export default function VehicleDetailPage() {
 
   if (state === 'loading') {
     return (
-      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
+      <PageShell>
         <VehicleDetailSkeleton />
-      </Container>
+      </PageShell>
     )
   }
 
@@ -87,41 +110,38 @@ export default function VehicleDetailPage() {
 
   const waitlist = isCarRentDisabled(car.status)
   const title = `${car.brand} ${car.model} ${car.year}`
+  const ctaLabel = waitlist ? 'Anunță-mă' : 'Solicită mașina'
 
   return (
-    <Box sx={{ backgroundColor: TOKENS.surface, pb: { xs: 14, md: 10 } }}>
+    <Box sx={{ backgroundColor: TOKENS.paper, pb: { xs: 14, md: 0 } }}>
       {/*
         `overflow-x: hidden` pe html/body/#root (src/main.tsx) transformă documentul în scroll
-        container și anulează `position: sticky`. `clip` taie la fel, dar fără scroll container —
-        de asta cardul de preț rămâne lipit doar cu regula asta activă.
+        container: anulează `position: sticky` și taie benzile full-bleed. `clip` taie la fel, dar
+        fără scroll container — de asta bara de secțiuni și coloana dreaptă rămân lipite.
       */}
       <GlobalStyles styles={{ 'html, body, #root': { overflowX: 'clip' } }} />
       <VehicleSeo car={car} />
 
-      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
-        <Button
-          component={Link}
-          to="/masini"
-          startIcon={<ArrowBackRoundedIcon />}
-          sx={{
-            mb: 2,
-            px: 0,
-            fontWeight: 700,
-            textTransform: 'none',
-            color: TOKENS.textMuted,
-            '&:hover': { backgroundColor: 'transparent', color: TOKENS.ink },
-          }}
-        >
-          Toate mașinile
-        </Button>
+      <VehicleSectionNav
+        sections={sections}
+        priceAnchor={galleryEl}
+        pricePerWeek={car.pricePerWeek}
+        oldPrice={car.oldPrice}
+        discounted={hasActiveDiscount(car)}
+        ctaLabel={ctaLabel}
+        onCta={openRequest}
+      />
 
-        <VehicleGallery images={car.images} title={title} onOpen={setLightbox} />
+      <PageShell>
+        <Box ref={setGalleryEl} sx={{ pt: 3 }}>
+          <VehicleGallery images={car.images} title={title} onOpen={setLightbox} />
+        </Box>
 
         {waitlist && (
           <Alert
             icon={<InfoOutlinedIcon />}
             severity="warning"
-            sx={{ mt: 3, borderRadius: `${TOKENS.radius.lg}px`, fontWeight: 500 }}
+            sx={{ mt: 3, borderRadius: `${VDP.radius.card}px`, fontWeight: 500 }}
           >
             Mașina nu e disponibilă acum. Lasă-ne datele și te anunțăm în clipa în care se
             eliberează.
@@ -130,54 +150,88 @@ export default function VehicleDetailPage() {
 
         <Box
           sx={{
-            mt: { xs: 3, md: 4 },
+            mt: 4,
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.9fr) minmax(300px, 1fr)' },
-            columnGap: 6,
+            gridTemplateColumns: { xs: '1fr', lg: `minmax(0, 1fr) ${VDP.rightColumn}px` },
+            columnGap: `${VDP.columnGap}px`,
             rowGap: 4,
             alignItems: 'start',
           }}
         >
-          <Stack spacing={4} sx={{ minWidth: 0 }}>
-            <VehicleHeader car={car} />
+          <Box sx={{ minWidth: 0 }}>
+            {/* Blocul de titlu nu trece prin `VehicleSection`: titlul lui e chiar H1-ul paginii. */}
+            <Box
+              id="prezentare"
+              sx={{
+                scrollMarginTop: { xs: VDP.headerOffset.xs + 16, md: VDP.headerOffset.md + 16 },
+              }}
+            >
+              <VehicleHeader car={car} />
+              <Box
+                sx={{
+                  mt: `${VDP.sectionGap}px`,
+                  mb: `${VDP.sectionGap}px`,
+                  height: '1px',
+                  backgroundColor: TOKENS.border,
+                }}
+              />
+            </Box>
 
             {/* Pe mobil prețul stă aici, în fluxul paginii; pe desktop, în coloana din dreapta. */}
-            <Box ref={inlineCardRef} sx={{ display: { xs: 'block', md: 'none' } }}>
+            <Box ref={inlineCardRef} sx={{ display: { xs: 'block', lg: 'none' }, mb: 4 }}>
               <VehiclePriceCard car={car} waitlist={waitlist} onRequest={openRequest} />
             </Box>
 
-            <Divider />
-            <VehicleQuickSpecs car={car} />
-
-            {car.description.trim().length > 0 && (
-              <>
-                <Divider />
+            {hasDescription && (
+              <VehicleSection
+                id="descriere"
+                title="Despre mașină"
+                info="Textul e scris de cel care a publicat anunțul. Detaliile care contează pentru contract se confirmă la telefon."
+              >
                 <VehicleDescription text={car.description} />
-              </>
+              </VehicleSection>
             )}
 
-            {(car.uberCategories.length > 0 || car.boltCategories.length > 0) && (
-              <>
-                <Divider />
+            <VehicleSection
+              id="dotari"
+              title="Dotări și detalii"
+              info="Lista vine din datele anunțului. Dacă îți lipsește o informație, întreab-o în formular — ajunge direct la noi."
+            >
+              <VehicleFeatureList car={car} />
+            </VehicleSection>
+
+            {hasPlatforms && (
+              <VehicleSection
+                id="platforme"
+                title="Platforme acceptate"
+                info="Categoriile arată pentru ce e eligibil vehiculul. Contul de platformă rămâne pe numele tău."
+              >
                 <VehiclePlatformBadges car={car} />
-              </>
+              </VehicleSection>
             )}
 
-            <Divider />
+            {/* Caruselul își poartă singur antetul: titlul stă pe același rând cu săgețile (§8). */}
             <SimilarVehicles car={car} />
-          </Stack>
+
+            <Box sx={{ mt: 4 }}>
+              <VehiclePromoBanner />
+            </Box>
+          </Box>
 
           <Box
             sx={{
-              display: { xs: 'none', md: 'block' },
+              display: { xs: 'none', lg: 'block' },
               position: 'sticky',
-              top: 96,
+              top: VDP.headerOffset.md + 24,
             }}
           >
             <VehiclePriceCard car={car} waitlist={waitlist} onRequest={openRequest} />
           </Box>
         </Box>
-      </Container>
+      </PageShell>
+
+      <VehicleLocationBand city={car.location} />
+      <VehicleBreadcrumbs current={title} />
 
       <VehicleMobilePriceBar
         pricePerWeek={car.pricePerWeek}
@@ -208,6 +262,13 @@ export default function VehicleDetailPage() {
   )
 }
 
+/** Grila centrală din spec: 1184px cu 24px de gardă, aceeași pentru tot ce nu e bandă full-bleed. */
+function PageShell({ children }: { children: React.ReactNode }) {
+  return (
+    <Box sx={{ maxWidth: VDP.maxWidth, mx: 'auto', px: `${VDP.gutter}px`, pb: 6 }}>{children}</Box>
+  )
+}
+
 function PageMessage({
   title,
   body,
@@ -218,8 +279,11 @@ function PageMessage({
   onRetry?: () => void
 }) {
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 8, md: 14 }, textAlign: 'center' }}>
-      <Typography variant="h1" sx={{ fontSize: '1.8rem', fontWeight: 800, color: TOKENS.ink, mb: 1.5 }}>
+    <Box sx={{ maxWidth: 560, mx: 'auto', px: 3, py: { xs: 8, md: 14 }, textAlign: 'center' }}>
+      <Typography
+        variant="h1"
+        sx={{ fontSize: '1.8rem', color: TOKENS.ink, mb: 1.5, ...VDP.display }}
+      >
         {title}
       </Typography>
       <Typography sx={{ color: TOKENS.textMuted, mb: 4 }}>{body}</Typography>
@@ -231,9 +295,9 @@ function PageMessage({
             onClick={onRetry}
             sx={{
               px: 4,
-              py: 1.4,
-              borderRadius: `${TOKENS.radius.md}px`,
-              fontWeight: 700,
+              height: 48,
+              borderRadius: `${VDP.radius.image}px`,
+              fontWeight: 800,
               textTransform: 'none',
               boxShadow: 'none',
             }}
@@ -247,8 +311,8 @@ function PageMessage({
           variant="outlined"
           sx={{
             px: 4,
-            py: 1.4,
-            borderRadius: `${TOKENS.radius.md}px`,
+            height: 48,
+            borderRadius: `${VDP.radius.image}px`,
             fontWeight: 700,
             textTransform: 'none',
             borderColor: TOKENS.borderHover,
@@ -258,6 +322,6 @@ function PageMessage({
           Vezi toate mașinile
         </Button>
       </Stack>
-    </Container>
+    </Box>
   )
 }

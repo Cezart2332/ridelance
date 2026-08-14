@@ -21,15 +21,12 @@ import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFil
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { PageHeader } from '../ui';
 import { carsService, type Car } from '../../../services/cars.service';
-import CarCard from './cars/CarCard';
+import CarListCard from '../../cars/CarListCard';
 import { matchesOfferTypeFilter, matchesStatusFilter } from '../../../utils/carLabels';
-import RentFormModal from './cars/RentFormModal';
 
 export function CarsView() {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   
   // Filter States
@@ -57,11 +54,6 @@ export function CarsView() {
   useEffect(() => {
     fetchCars();
   }, [fetchCars]);
-
-  const handleRentClick = (car: Car) => {
-    setSelectedCar(car);
-    setModalOpen(true);
-  };
 
   const filteredCars = useMemo(() => {
     let result = [...cars];
@@ -244,7 +236,7 @@ export function CarsView() {
           gap: 3 
         }}>
           {filteredCars.map((car) => (
-            <CarCard key={car.id} car={car} onRentClick={handleRentClick} />
+            <CarListCard key={car.id} car={car} newTab />
           ))}
         </Box>
       ) : !loading && (
@@ -259,11 +251,6 @@ export function CarsView() {
         </Paper>
       )}
 
-      <RentFormModal 
-        open={modalOpen} 
-        onClose={() => setModalOpen(false)} 
-        car={selectedCar} 
-      />
     </Box>
   );
 }
