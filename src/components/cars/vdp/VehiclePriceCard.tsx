@@ -1,6 +1,7 @@
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded'
 import FacebookRoundedIcon from '@mui/icons-material/FacebookRounded'
+import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined'
 import WhatsAppIcon from '@mui/icons-material/WhatsApp'
 import { Box, Button, IconButton, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -107,6 +108,23 @@ export function VehiclePriceCard({ car, waitlist, onRequest, elevated = true }: 
       >
         {waitlist ? 'Anunță-mă când e liberă' : 'Solicită mașina'}
       </Button>
+
+      {car.garantie != null && car.garantie > 0 && (
+        <>
+          <CardDivider />
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+            <SavingsOutlinedIcon sx={{ fontSize: 24, color: TOKENS.textSubtle, mt: '1px' }} />
+            <Box sx={{ minWidth: 0 }}>
+              <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: TOKENS.ink }}>
+                Garanție restituibilă
+              </Typography>
+              <Typography sx={{ fontSize: '0.8rem', color: TOKENS.textMuted, lineHeight: 1.5 }}>
+                Se returnează la predarea mașinii.
+              </Typography>
+            </Box>
+          </Stack>
+        </>
+      )}
 
       <CardDivider />
 

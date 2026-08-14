@@ -14,7 +14,6 @@ import { VehicleHeader } from '../components/cars/vdp/VehicleHeader'
 import { VehicleMobilePriceBar } from '../components/cars/vdp/VehicleMobilePriceBar'
 import { VehiclePlatformBadges } from '../components/cars/vdp/VehiclePlatformBadges'
 import { VehiclePriceCard } from '../components/cars/vdp/VehiclePriceCard'
-import { VehiclePromoBanner } from '../components/cars/vdp/VehiclePromoBanner'
 import { VehicleSection } from '../components/cars/vdp/VehicleSection'
 import { VehicleSectionNav, type NavSection } from '../components/cars/vdp/VehicleSectionNav'
 import { VehicleSeo } from '../components/cars/vdp/VehicleSeo'
@@ -207,10 +206,6 @@ export default function VehicleDetailPage() {
 
             {/* Caruselul își poartă singur antetul: titlul stă pe același rând cu săgețile (§8). */}
             <SimilarVehicles car={car} />
-
-            <Box sx={{ mt: 4 }}>
-              <VehiclePromoBanner />
-            </Box>
           </Box>
 
           <Box
