@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { microStepsOf, screenCountOf } from './config'
-import type { MicroStepContext, MicroStepView } from './microStepTypes'
+import { useMicroResources } from './useMicroResources'
+import type { MicroStepAnswer, MicroStepAnswers, MicroStepContext, MicroStepView } from './microStepTypes'
 import { MicroStepsContext, type MicroStepsValue } from './microStepsContext'
 import type { StepView } from './stepModel'
 import { useOnboarding } from './useOnboarding'
@@ -27,15 +28,18 @@ interface MicroStepProviderProps {
  * refresh aterizează pe ecranul corect fără câmp nou pe backend.
  */
 export function MicroStepProvider({ activeKey, children }: MicroStepProviderProps) {
-  const { state, documents, eligibility, steps } = useOnboarding()
+  const { state, documents, eligibility, steps, resources } = useOnboarding()
+
+  // Sub-stările pasului curent, ca predicatele din config să poată citi ce zice serverul.
+  useMicroResources(activeKey)
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
-  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [answers, setAnswers] = useState<MicroStepAnswers>({})
 
   const context: MicroStepContext = useMemo(
-    () => ({ answers, documents, eligibility, state }),
-    [answers, documents, eligibility, state],
+    () => ({ answers, documents, eligibility, state, resources }),
+    [answers, documents, eligibility, state, resources],
   )
 
   // Doar ramura pe care o parcurge chiar acest utilizator: `visibleWhen` taie restul, iar totalul
@@ -149,7 +153,7 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
     }
   }, [steps, activeKey, views, current])
 
-  const answer = useCallback((id: string, value: string) => {
+  const answer = useCallback((id: string, value: MicroStepAnswer) => {
     setAnswers((prev) => ({ ...prev, [id]: value }))
   }, [])
 

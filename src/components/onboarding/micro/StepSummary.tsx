@@ -3,7 +3,7 @@ import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import { Box, Button, Chip, Stack, Typography } from '@mui/material'
 
 import { isAiPending, type DocumentSummary } from '../../../services/document.service'
-import type { MicroStepView } from '../microStepTypes'
+import type { MicroStepAnswers, MicroStepView } from '../microStepTypes'
 import { TOKENS } from '../onboardingTheme'
 
 const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
@@ -12,7 +12,7 @@ const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
 interface StepSummaryProps {
   /** Micro-pașii pasului curent, mai puțin rezumatul însuși. */
   steps: MicroStepView[]
-  answers: Record<string, string>
+  answers: MicroStepAnswers
   documents: DocumentSummary[]
   onEdit: (id: string) => void
 }
@@ -41,6 +41,28 @@ export function StepSummary({ steps, answers, documents, onEdit }: StepSummaryPr
     }
 
     const answer = answers[def.id]
+
+    // Bifuri multiple: se listează ce s-a ales, nu doar prima variantă.
+    if (Array.isArray(answer)) {
+      const titles = answer
+        .map((value) => def.choices?.find((c) => c.value === value)?.title ?? value)
+        .join(', ')
+      return { id: def.id, label: def.railLabel, value: titles || 'Nimic ales', pending: false }
+    }
+
+    // Câmpurile de text nu au valoare proprie sub `def.id` — se cheie pe câmp.
+    if (def.kind === 'text') {
+      const filled = (def.fields ?? [])
+        .map((field) => answers[`${def.id}.${field.key}`])
+        .filter((value): value is string => typeof value === 'string' && value.trim() !== '')
+      return {
+        id: def.id,
+        label: def.railLabel,
+        value: filled.length > 0 ? filled.join(' · ') : 'Necompletat',
+        pending: false,
+      }
+    }
+
     const choice = def.choices?.find((c) => c.value === answer)
     return {
       id: def.id,

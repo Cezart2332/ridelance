@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useState, type ReactNode } from 'react'
 
 import { getErrorMessage } from '../../../utils/errorHandler'
+import type { MicroStepContext } from '../microStepTypes'
 import { useMotionTokens } from '../motion'
 import { useMicroSteps } from '../useMicroSteps'
 import { useOnboarding } from '../useOnboarding'
@@ -10,8 +11,13 @@ import { useOnboardingSupport } from '../supportContext'
 import { BlockedStateCard } from './BlockedStateCard'
 import { CardFooter } from './CardFooter'
 import { ChoiceGroup } from './ChoiceGroup'
+import { MicroActionStep } from './MicroActionStep'
+import { MicroInfoStep } from './MicroInfoStep'
+import { MicroMultiStep } from './MicroMultiStep'
+import { MicroTextStep } from './MicroTextStep'
 import { MicroUploadStep } from './MicroUploadStep'
 import { OnboardingCard } from './OnboardingCard'
+import { multiStepComplete, textStepComplete } from './stepCompletion'
 import { StepSummary } from './StepSummary'
 
 /**
@@ -20,7 +26,7 @@ import { StepSummary } from './StepSummary'
  */
 export function OnboardingRunner() {
   const { steps, current, answers, answer, goTo, next } = useMicroSteps()
-  const { documents, eligibility, refresh } = useOnboarding()
+  const { state, documents, eligibility, resources, refresh } = useOnboarding()
   const support = useOnboardingSupport()
   const { step: stepMotion } = useMotionTokens()
 
@@ -31,9 +37,15 @@ export function OnboardingRunner() {
   const { def } = current
   const value = answers[def.id]
 
+  /** Ce poate citi un predicat sau o acțiune din config. Aceeași formă ca la filtrarea pașilor. */
+  const context: MicroStepContext = { answers, documents, eligibility, state, resources }
+
   /** „Continuă": trimite răspunsul dacă micro-pasul are ce trimite, apoi avansează. */
   const advance = async () => {
-    if (def.submit && value !== undefined) {
+    // Ecranele `text` nu au nevoie de flush explicit aici: `useAutosave` salvează la ieșirea din
+    // câmp (clickul pe „Continuă" scoate focusul) și încă o dată la demontare, când `next()`
+    // schimbă ecranul. Un flush în plus ar dubla cererea.
+    if (def.submit && typeof value === 'string') {
       setSubmitting(true)
       try {
         await def.submit(value)
@@ -55,12 +67,22 @@ export function OnboardingRunner() {
           <ChoiceGroup
             label={def.title}
             choices={def.choices ?? []}
-            value={value ?? null}
+            value={typeof value === 'string' ? value : null}
             onChange={(picked) => answer(def.id, picked)}
           />
         )
+      case 'text':
+        return <MicroTextStep def={def} context={context} />
+      case 'multi':
+        return <MicroMultiStep def={def} />
       case 'upload':
         return <MicroUploadStep def={def} />
+      case 'action':
+        return (
+          <MicroActionStep def={def} context={context} done={current.done} onDone={refresh} />
+        )
+      case 'info':
+        return <MicroInfoStep def={def} context={context} />
       case 'summary':
         return (
           <StepSummary
@@ -77,8 +99,28 @@ export function OnboardingRunner() {
     switch (def.kind) {
       case 'question':
         return <CardFooter disabled={submitting || value === undefined} onContinue={() => void advance()} />
+      case 'text':
+        return (
+          <CardFooter
+            disabled={submitting || !textStepComplete(def, answers)}
+            onContinue={() => void advance()}
+          />
+        )
+      case 'multi':
+        return (
+          <CardFooter
+            disabled={submitting || !multiStepComplete(def, value)}
+            onContinue={() => void advance()}
+          />
+        )
       case 'upload':
         return <CardFooter disabled={submitting || !current.done} onContinue={() => void advance()} />
+      // Acțiunea și-a arătat butonul în corpul cardului; footerul doar duce mai departe, după ce
+      // serverul confirmă că s-a întâmplat.
+      case 'action':
+        return <CardFooter disabled={submitting || !current.done} onContinue={() => void advance()} />
+      case 'info':
+        return <CardFooter disabled={submitting} onContinue={() => void advance()} />
       case 'summary':
         return (
           <CardFooter

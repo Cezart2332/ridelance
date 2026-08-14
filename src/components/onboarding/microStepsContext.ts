@@ -1,14 +1,14 @@
 import { createContext } from 'react'
 
-import type { MicroStepView } from './microStepTypes'
+import type { MicroStepAnswer, MicroStepAnswers, MicroStepView } from './microStepTypes'
 
 export interface MicroStepsValue {
   /** Micro-pașii vizibili ai pasului mare curent, în ordine. Gol pentru pașii încă nemigrați. */
   steps: MicroStepView[]
   current: MicroStepView | null
   /** Răspunsurile din sesiunea curentă. Verdictele vin de la server, astea dau doar parcursul. */
-  answers: Record<string, string>
-  answer: (id: string, value: string) => void
+  answers: MicroStepAnswers
+  answer: (id: string, value: MicroStepAnswer) => void
   goTo: (id: string) => void
   next: () => void
   back: () => void
