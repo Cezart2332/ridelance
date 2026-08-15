@@ -90,6 +90,11 @@ async function mockGate(page: Page) {
     }),
   )
 
+  // Fără bancă conectată, endpointul întoarce null — nu un array, cum ar face prinsa generală.
+  await page.route(`${API}/bank/connection`, (route: Route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: 'null' }),
+  )
+
   // Paginile de documente citesc `items`; prinsa generală ar întoarce un array, nu un obiect.
   await page.route(`${API}/documents/overview*`, (route: Route) =>
     route.fulfill({
@@ -210,21 +215,97 @@ test.describe('navigație PFA', () => {
     }
   })
 
-  test('callback-ul bancar ajunge pe Cont bancar cu parametrii primiți', async ({ page }) => {
-    // Pagina de cont bancar consumă parametrii și curăță imediat URL-ul, deci nu ei sunt
-    // dovada că au ajuns — ci apelul de finalizare pe care îl declanșează.
-    let finalizeBody: { reference?: string; code?: string } | null = null
-    await page.route(`${API}/bank/connection/finalize`, (route: Route) => {
-      finalizeBody = route.request().postDataJSON()
-      return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
+  test('conectarea bancară deschide link și așteaptă confirmarea', async ({ page }) => {
+    // Providerul nu redirecționează înapoi: pagina rămâne deschisă și întreabă până apare
+    // conexiunea. Testul verifică exact asta — link cerut, apoi starea de așteptare.
+    let linkRequested = false
+    await page.route(`${API}/bank/connection`, (route: Route) => {
+      if (route.request().method() === 'POST') {
+        linkRequested = true
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ link: 'https://fintable.io/api-link/test', expiresAtUtc: null }),
+        })
+      }
+
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(
+          linkRequested
+            ? {
+                status: 'Created',
+                institutionId: 'bcr',
+                institutionName: '',
+                institutionLogo: null,
+                consentExpiresAtUtc: null,
+                linkedAtUtc: null,
+                lastSyncedAtUtc: null,
+                errorMessage: null,
+                accounts: [],
+                linkExpiresAtUtc: new Date(Date.now() + 600_000).toISOString(),
+                candidates: [],
+              }
+            : null,
+        ),
+      })
     })
 
-    // Providerul nu acceptă query în redirect-ul whitelistat, deci ne întoarce pe rădăcină.
-    await page.goto(`${ROOT}?state=abc123&code=xyz789`, { waitUntil: 'networkidle' })
+    await page.route(`${API}/bank/institutions`, (route: Route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ id: 'bcr', name: 'BCR', logo: null }]),
+      }),
+    )
 
-    await expect(page).toHaveURL(/\/contabilitate\/cont-bancar/)
-    await expect.poll(() => finalizeBody).not.toBeNull()
-    expect(finalizeBody).toMatchObject({ reference: 'abc123', code: 'xyz789' })
+    // Linkul se deschide în tab nou; îl interceptăm ca să nu plece testul la Fintable.
+    await page.context().route('https://fintable.io/**', (route: Route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: '<html></html>' }),
+    )
+
+    await page.goto(`${ROOT}/contabilitate/cont-bancar`, { waitUntil: 'networkidle' })
+    const main = page.getByRole('main')
+
+    await main.getByText('BCR', { exact: true }).click()
+
+    await expect(main.getByText('Se așteaptă confirmarea de la bancă')).toBeVisible()
+    expect(linkRequested).toBe(true)
+  })
+
+  test('alegerea manuală apare când revendicarea e ambiguă', async ({ page }) => {
+    // Cu un singur cont de provider pentru toți clienții, două conectări simultane fac
+    // atribuirea ambiguă. Regula e să nu ghicim, ci să întrebăm.
+    await page.route(`${API}/bank/connection`, (route: Route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'Pending',
+          institutionId: '',
+          institutionName: '',
+          institutionLogo: null,
+          consentExpiresAtUtc: null,
+          linkedAtUtc: null,
+          lastSyncedAtUtc: null,
+          errorMessage: null,
+          accounts: [],
+          linkExpiresAtUtc: new Date(Date.now() + 600_000).toISOString(),
+          candidates: [
+            { providerConnectionId: 'conn_1', institutionName: 'BCR', institutionLogo: null, createdAtUtc: '2026-08-15T10:00:00Z' },
+            { providerConnectionId: 'conn_2', institutionName: 'ING', institutionLogo: null, createdAtUtc: '2026-08-15T10:01:00Z' },
+          ],
+        }),
+      }),
+    )
+
+    await page.goto(`${ROOT}/contabilitate/cont-bancar`, { waitUntil: 'networkidle' })
+    const main = page.getByRole('main')
+
+    await expect(main.getByText('Care dintre conexiuni este a ta?')).toBeVisible()
+    await expect(main.getByText('BCR', { exact: true })).toBeVisible()
+    await expect(main.getByText('ING', { exact: true })).toBeVisible()
   })
 
   test('chatul contabil a plecat din Suport și trimite către Contabilitate', async ({ page }) => {

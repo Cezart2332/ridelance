@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
 
 import {
   Alert,
@@ -44,6 +43,9 @@ import {
 
 const PAGE_SIZE = 25
 
+/** Cât de des reîntrebăm serverul cât timp așteptăm confirmarea conectării. */
+const POLL_INTERVAL_MS = 4000
+
 const cardSx = {
   p: { xs: 2.5, md: 3 },
   borderRadius: `${T.radius.lg}px`,
@@ -81,10 +83,8 @@ interface BankTabProps {
 }
 
 export function BankTab({ onNavigate }: BankTabProps) {
-  const [searchParams, setSearchParams] = useSearchParams()
 
   const [loading, setLoading] = useState(true)
-  const [finalizing, setFinalizing] = useState(false)
   const [connection, setConnection] = useState<BankConnectionDto | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [snackbar, setSnackbar] = useState<string | null>(null)
@@ -104,6 +104,7 @@ export function BankTab({ onNavigate }: BankTabProps) {
   const [page, setPage] = useState(1)
 
   const [confirmDisconnect, setConfirmDisconnect] = useState(false)
+  const [choosingId, setChoosingId] = useState<string | null>(null)
 
   const loadConnection = useCallback(async () => {
     try {
@@ -117,56 +118,52 @@ export function BankTab({ onNavigate }: BankTabProps) {
     }
   }, [])
 
-  // Callback de la bancă: GoCardless întoarce ?ref=..., Enable Banking ?state=...&code=...
-  // (sau ?state=...&error=... când userul anulează autorizarea).
+  // Providerul nu ne întoarce nimic după conectare: linkul se termină la el. Deci starea o
+  // aflăm întrebând, iar întrebarea e chiar cea care declanșează revendicarea pe server.
   useEffect(() => {
-    const reference = searchParams.get('ref') ?? searchParams.get('state')
-    const code = searchParams.get('code')
-    const authError = searchParams.get('error')
-    const authErrorDescription = searchParams.get('error_description')
+    let cancelled = false
 
-    const stripCallbackParams = () => {
-      const next = new URLSearchParams(searchParams)
-      for (const param of ['ref', 'state', 'code', 'error', 'error_description']) {
-        next.delete(param)
-      }
-      setSearchParams(next, { replace: true })
+    bankService
+      .getConnection()
+      .then((data) => {
+        if (cancelled) return
+        setConnection(data)
+        setError(null)
+      })
+      .catch(() => {
+        if (!cancelled) setError('Nu s-a putut încărca starea conexiunii bancare.')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
     }
-
-    const boot = async () => {
-      if (reference && !authError) {
-        setFinalizing(true)
-        try {
-          const data = await bankService.finalizeConnection(reference, code)
-          setConnection(data)
-          if (data.status === 'Linked') setSnackbar('Banca a fost conectată cu succes!')
-        } catch {
-          await loadConnection()
-        } finally {
-          stripCallbackParams()
-          setFinalizing(false)
-          setLoading(false)
-        }
-        return
-      }
-
-      if (authError) {
-        stripCallbackParams()
-        const detail = authErrorDescription ? `${authError}: ${authErrorDescription}` : authError
-        setSnackbar(`Conectarea băncii a eșuat la autorizare (${detail}). Poți încerca din nou.`)
-      }
-
-      await loadConnection()
-      setLoading(false)
-    }
-
-    void boot()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const isWaiting =
+    connection?.status === 'Created' ||
+    (connection?.status === 'Pending' && (connection.candidates?.length ?? 0) === 0)
+
+  const linkExpired =
+    connection?.linkExpiresAtUtc != null && new Date(connection.linkExpiresAtUtc) <= new Date()
+
+  // Cât timp așteptăm confirmarea, reîntrebăm periodic. Ne oprim la expirarea linkului:
+  // după el, o conexiune nouă aparține altcuiva, nu celui care aștepta.
+  useEffect(() => {
+    if (!isWaiting || linkExpired) return undefined
+
+    const timer = window.setInterval(() => {
+      void loadConnection()
+    }, POLL_INTERVAL_MS)
+
+    return () => window.clearInterval(timer)
+  }, [isWaiting, linkExpired, loadConnection])
 
   const needsPicker =
     !loading &&
-    !finalizing &&
+    !isWaiting &&
     (showPicker || !connection || connection.status === 'Revoked')
 
   useEffect(() => {
@@ -202,11 +199,30 @@ export function BankTab({ onNavigate }: BankTabProps) {
     setConnectingId(institutionId)
     try {
       const { link } = await bankService.initiateConnection(institutionId)
-      window.location.href = link
+      // Tab nou, nu redirect: pagina noastră rămâne deschisă și continuă să întrebe, așa că
+      // utilizatorul nu trebuie să facă nimic special la întoarcere.
+      window.open(link, '_blank', 'noopener')
+      await loadConnection()
     } catch (err) {
       const detail = (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
       setSnackbar(detail ?? 'Conectarea nu a putut fi inițiată. Încearcă din nou.')
+    } finally {
       setConnectingId(null)
+    }
+  }
+
+  const handleChoose = async (providerConnectionId: string) => {
+    setChoosingId(providerConnectionId)
+    try {
+      const data = await bankService.chooseConnection(providerConnectionId)
+      setConnection(data)
+      setSnackbar('Banca a fost conectată cu succes!')
+    } catch (err) {
+      const detail = (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
+      setSnackbar(detail ?? 'Conexiunea aleasă nu a putut fi revendicată.')
+      await loadConnection()
+    } finally {
+      setChoosingId(null)
     }
   }
 
@@ -231,13 +247,13 @@ export function BankTab({ onNavigate }: BankTabProps) {
     [institutions, search],
   )
 
-  // ── Loading / finalizing ─────────────────────────────────────────────────
-  if (loading || finalizing) {
+  // ── Loading ──────────────────────────────────────────────────────────────
+  if (loading) {
     return (
       <Stack spacing={2} sx={{ alignItems: 'center', justifyContent: 'center', py: 10 }}>
         <CircularProgress sx={{ color: T.primary }} />
         <Typography sx={{ color: T.textMuted, fontSize: 14 }}>
-          {finalizing ? 'Se conectează banca…' : 'Se încarcă…'}
+          Se încarcă…
         </Typography>
       </Stack>
     )
@@ -253,7 +269,33 @@ export function BankTab({ onNavigate }: BankTabProps) {
       {error && <Alert severity="error">{error}</Alert>}
 
       {/* Stare: în așteptarea autorizării */}
-      {connection && (connection.status === 'Created' || connection.status === 'Pending') && !showPicker && (
+      {/* Așteptăm confirmarea: linkul s-a deschis în alt tab și e încă valabil. */}
+      {connection && isWaiting && !linkExpired && !showPicker && (
+        <Paper elevation={0} sx={cardSx}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' } }}>
+            <CircularProgress size={28} sx={{ color: T.primary, flexShrink: 0 }} />
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography sx={{ fontWeight: 700, color: T.ink }}>
+                Se așteaptă confirmarea de la bancă
+              </Typography>
+              <Typography sx={{ color: T.textMuted, fontSize: 13.5 }}>
+                Termină conectarea în fila care s-a deschis. Pagina se actualizează singură când
+                banca răspunde — nu e nevoie să faci nimic aici.
+              </Typography>
+            </Box>
+            <Button
+              variant="text"
+              onClick={() => setShowPicker(true)}
+              sx={{ textTransform: 'none', fontWeight: 600, color: T.textMuted }}
+            >
+              Începe din nou
+            </Button>
+          </Stack>
+        </Paper>
+      )}
+
+      {/* Linkul a expirat fără să apară vreo conexiune. */}
+      {connection && isWaiting && linkExpired && !showPicker && (
         <Paper elevation={0} sx={cardSx}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' } }}>
             <Box
@@ -272,37 +314,83 @@ export function BankTab({ onNavigate }: BankTabProps) {
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography sx={{ fontWeight: 700, color: T.ink }}>
-                Autorizarea la {connection.institutionName} nu a fost finalizată
+                Linkul de conectare a expirat
               </Typography>
               <Typography sx={{ color: T.textMuted, fontSize: 13.5 }}>
-                Reia procesul de conectare sau alege altă bancă.
+                Linkurile sunt de unică folosință și au viață scurtă. Pornește o conectare nouă.
               </Typography>
             </Box>
-            <Stack direction="row" spacing={1}>
-              <Button
-                variant="contained"
-                disableElevation
-                startIcon={connectingId ? undefined : <ReplayRoundedIcon />}
-                disabled={connectingId !== null}
-                onClick={() => handleConnect(connection.institutionId)}
+            <Button
+              variant="contained"
+              disableElevation
+              startIcon={<ReplayRoundedIcon />}
+              onClick={() => setShowPicker(true)}
+              sx={{
+                borderRadius: `${T.radius.full}px`,
+                textTransform: 'none',
+                fontWeight: 700,
+                backgroundColor: T.primary,
+                '&:hover': { backgroundColor: T.primaryStrong },
+              }}
+            >
+              Reia conectarea
+            </Button>
+          </Stack>
+        </Paper>
+      )}
+
+      {/*
+        Cazul ambiguu. Contul de provider e comun tuturor clienților, iar linkul nu poate purta
+        o referință de-a noastră — deci când apar mai multe conexiuni noi deodată, singurul mod
+        onest de a afla care e a ta e să te întrebăm. Nu ghicim: o ghiceală greșită ar arăta
+        extrasul altcuiva.
+      */}
+      {connection && (connection.candidates?.length ?? 0) > 0 && !showPicker && (
+        <Paper elevation={0} sx={cardSx}>
+          <Typography sx={{ fontWeight: 700, color: T.ink }}>
+            Care dintre conexiuni este a ta?
+          </Typography>
+          <Typography sx={{ color: T.textMuted, fontSize: 13.5, mb: 2 }}>
+            S-au finalizat mai multe conectări în același timp. Alege banca pe care tocmai ai
+            conectat-o.
+          </Typography>
+
+          <Stack spacing={1}>
+            {(connection.candidates ?? []).map((candidate) => (
+              <Paper
+                key={candidate.providerConnectionId}
+                elevation={0}
+                component="button"
+                onClick={() => handleChoose(candidate.providerConnectionId)}
+                disabled={choosingId !== null}
                 sx={{
-                  borderRadius: `${T.radius.full}px`,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  backgroundColor: T.primary,
-                  '&:hover': { backgroundColor: T.primaryStrong },
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  width: '100%',
+                  p: 1.5,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  border: `1px solid ${T.border}`,
+                  borderRadius: `${T.radius.md}px`,
+                  backgroundColor: T.paper,
+                  font: 'inherit',
+                  '&:hover': { borderColor: T.primary },
                 }}
               >
-                {connectingId ? 'Se deschide banca…' : 'Reia conectarea'}
-              </Button>
-              <Button
-                variant="text"
-                onClick={() => setShowPicker(true)}
-                sx={{ textTransform: 'none', fontWeight: 600, color: T.textMuted }}
-              >
-                Altă bancă
-              </Button>
-            </Stack>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography sx={{ fontWeight: 700, color: T.ink, fontSize: 14 }}>
+                    {candidate.institutionName ?? 'Bancă necunoscută'}
+                  </Typography>
+                  {candidate.createdAtUtc && (
+                    <Typography sx={{ color: T.textMuted, fontSize: 12.5 }}>
+                      Conectată la {formatDate(candidate.createdAtUtc)}
+                    </Typography>
+                  )}
+                </Box>
+                {choosingId === candidate.providerConnectionId && <CircularProgress size={18} />}
+              </Paper>
+            ))}
           </Stack>
         </Paper>
       )}
@@ -499,7 +587,7 @@ export function BankTab({ onNavigate }: BankTabProps) {
                           {connectingId === inst.id ? 'Se deschide banca…' : inst.name}
                         </Typography>
                         <Typography sx={{ fontSize: 12, color: T.textSubtle }}>
-                          Istoric până la {inst.maxHistoricalDays} zile
+                          Conectare securizată prin Fintable
                         </Typography>
                       </Box>
                     </Paper>

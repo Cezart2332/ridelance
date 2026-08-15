@@ -19,9 +19,9 @@ import { Box, CircularProgress, Snackbar, Alert } from '@mui/material'
  *
  * Două categorii, ambele încă în circulație:
  *  - `?section=<id>` — linkuri plecate în notificări push, e-mailuri și redirect-uri Stripe;
- *  - callback-ul bancar — providerul nu acceptă query în URL-ul whitelistat, deci banca ne
- *    întoarce pe `/app/dashboard` cu `?ref=` (GoCardless) sau `?state=&code=`/`&error=`
- *    (Enable Banking). Query-ul trebuie păstrat intact: pagina de cont bancar îl citește.
+ *  - callback-ul bancar al providerilor vechi (`?ref=`, `?state=&code=`). Providerul actual nu
+ *    redirecționează înapoi la noi, deci nu mai apar callback-uri noi — dar linkuri vechi pot
+ *    exista încă în e-mailuri, iar ele trebuie să aterizeze pe pagina de cont bancar, nu în gol.
  */
 function resolveLegacyTarget(pathname: string, params: URLSearchParams): string | null {
   if (pathname !== PFA_PATHS.home) return null

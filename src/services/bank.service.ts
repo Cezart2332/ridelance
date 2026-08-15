@@ -4,21 +4,27 @@ export interface BankInstitutionDto {
   id: string;
   name: string;
   logo: string | null;
-  maxHistoricalDays: number;
 }
 
-export type BankConnectionStatus =
-  | 'Created'
-  | 'Pending'
-  | 'Linked'
-  | 'Expired'
-  | 'Error'
-  | 'Revoked';
+export type BankConnectionStatus = 'Created' | 'Pending' | 'Linked' | 'Expired' | 'Error' | 'Revoked';
 
 export interface BankAccountDto {
   ibanMasked: string | null;
   currency: string | null;
   ownerName: string | null;
+}
+
+/**
+ * O conexiune apărută la provider pe care nu am putut-o atribui fără echivoc.
+ *
+ * Apare doar când revendicarea a refuzat să ghicească — două conexiuni noi, sau două conectări
+ * în curs în același timp. Utilizatorul spune care e a lui.
+ */
+export interface BankConnectionCandidateDto {
+  providerConnectionId: string;
+  institutionName: string | null;
+  institutionLogo: string | null;
+  createdAtUtc: string | null;
 }
 
 export interface BankConnectionDto {
@@ -31,6 +37,9 @@ export interface BankConnectionDto {
   lastSyncedAtUtc: string | null;
   errorMessage: string | null;
   accounts: BankAccountDto[];
+  /** Linkul de conectare e de unică folosință; după el, așteptarea se oprește. */
+  linkExpiresAtUtc: string | null;
+  candidates: BankConnectionCandidateDto[];
 }
 
 export interface BankTransactionDto {
@@ -52,41 +61,48 @@ export interface BankTransactionsDto {
   totalOut: number;
 }
 
+export interface InitiateConnectionDto {
+  link: string;
+  expiresAtUtc: string | null;
+}
+
 export const bankService = {
-  async getInstitutions(): Promise<BankInstitutionDto[]> {
-    const { data } = await api.get<BankInstitutionDto[]>('/bank/institutions');
-    return data;
+  getInstitutions: async (): Promise<BankInstitutionDto[]> => {
+    const response = await api.get<BankInstitutionDto[]>('/bank/institutions');
+    return response.data;
   },
 
-  async getConnection(): Promise<BankConnectionDto | null> {
-    const { data } = await api.get<BankConnectionDto | null>('/bank/connection');
-    return data ?? null;
+  /**
+   * Citirea stării e și momentul în care se face revendicarea: providerul nu ne anunță când
+   * cineva a terminat conectarea, deci aflăm exact când întrebăm.
+   */
+  getConnection: async (): Promise<BankConnectionDto | null> => {
+    const response = await api.get<BankConnectionDto | null>('/bank/connection');
+    return response.data;
   },
 
-  async initiateConnection(institutionId: string): Promise<{ link: string }> {
-    const { data } = await api.post<{ link: string }>('/bank/connection', { institutionId });
-    return data;
+  /** `institutionId` null lasă alegerea băncii în ecranul providerului. */
+  initiateConnection: async (institutionId: string | null): Promise<InitiateConnectionDto> => {
+    const response = await api.post<InitiateConnectionDto>('/bank/connection', { institutionId });
+    return response.data;
   },
 
-  async finalizeConnection(reference: string, code?: string | null): Promise<BankConnectionDto> {
-    const { data } = await api.post<BankConnectionDto>('/bank/connection/finalize', {
-      reference,
-      code: code ?? null,
-    });
-    return data;
+  chooseConnection: async (providerConnectionId: string): Promise<BankConnectionDto> => {
+    const response = await api.post<BankConnectionDto>('/bank/connection/choose', { providerConnectionId });
+    return response.data;
   },
 
-  async getTransactions(params: {
-    year?: number;
-    month?: number;
-    page?: number;
-    pageSize?: number;
-  }): Promise<BankTransactionsDto> {
-    const { data } = await api.get<BankTransactionsDto>('/bank/transactions', { params });
-    return data;
+  getTransactions: async (params: {
+    year: number;
+    month: number;
+    page: number;
+    pageSize: number;
+  }): Promise<BankTransactionsDto> => {
+    const response = await api.get<BankTransactionsDto>('/bank/transactions', { params });
+    return response.data;
   },
 
-  async disconnect(): Promise<void> {
+  disconnect: async (): Promise<void> => {
     await api.delete('/bank/connection');
   },
 };

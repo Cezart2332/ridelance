@@ -31,3 +31,5 @@ examplecsv/
 
 # Stripe Example
 stripe-example/
+# Chei private — nu se comit niciodată
+*.pem
