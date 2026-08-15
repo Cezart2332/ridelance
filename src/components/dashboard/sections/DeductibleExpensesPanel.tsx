@@ -299,7 +299,7 @@ export function DeductibleExpensesPanel({
       ) : (
         <Stack spacing={1}>
           {expenses.map((expense) => {
-            const colors = documentStatusColors(expense.status)
+            const colors = documentStatusColors(expense.documentStatus)
             return (
               <Paper
                 key={expense.id}
@@ -327,7 +327,7 @@ export function DeductibleExpensesPanel({
                     </Typography>
                   </Box>
                   <Chip
-                    label={documentStatusLabel(expense.status)}
+                    label={documentStatusLabel(expense.documentStatus)}
                     size="small"
                     sx={{
                       fontWeight: 700,
@@ -384,7 +384,7 @@ export function DeductibleExpensesPanel({
                   >
                     Descarcă
                   </Button>
-                  {contabilContext && normalizeDocumentStatus(expense.status) === 'pending' && (
+                  {contabilContext && normalizeDocumentStatus(expense.documentStatus) === 'pending' && (
                     <>
                       <IconButton
                         size="small"

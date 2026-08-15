@@ -1,63 +1,39 @@
 import React, { useState } from 'react';
-import { Box, Paper, BottomNavigation, BottomNavigationAction, useMediaQuery, useTheme } from '@mui/material';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Box, Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
-import HeadphonesRoundedIcon from '@mui/icons-material/HeadphonesRounded';
+import HeadsetMicRoundedIcon from '@mui/icons-material/HeadsetMicRounded';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import AppSidebar from './AppSidebar';
 import AppHeader from './AppHeader';
+import { MOBILE_TAB_PATHS, PFA_PATHS, pageTitleFor } from '../../../config/pfaNavigation';
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  activeSection: string;
-  setActiveSection: React.Dispatch<React.SetStateAction<any>>;
-  sectionConfig: readonly { id: string; label: string; icon?: string; subItems?: readonly { id: string; label: string }[] }[];
-  bottomSectionConfig?: readonly { id: string; label: string; icon?: string }[];
   onLogout?: () => void;
   showNotifications?: boolean;
   onOpenRecurringDocumentation?: () => void;
 }
 
+/** Valoarea barei de jos: una dintre cele trei destinații directe, altfel „Meniu". */
+const MORE_TAB = 'more';
+
 export default function AppLayout({
   children,
-  activeSection,
-  setActiveSection,
-  sectionConfig,
-  bottomSectionConfig = [],
   onLogout,
   showNotifications,
-  onOpenRecurringDocumentation
+  onOpenRecurringDocumentation,
 }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const theme = useTheme();
-  const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
-  const allSections = [...sectionConfig, ...bottomSectionConfig];
-  
-  const pageTitles: Record<string, string> = {
-    home: 'Dashboard PFA',
-    profile: 'Profilul meu',
-    documents: 'Documentele mele',
-    support: 'Chat & Suport',
-    expenses: 'Cheltuieli deductibile',
-    doc_recurring: 'Documentație recurentă',
-    cars: 'Mașini disponibile',
-    abonamente: 'Abonamente',
-    servicii: 'Servicii',
-    istoric_plati: 'Istoric plăți',
-    more: 'Meniu',
-  };
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
 
-  const sectionTitle = pageTitles[activeSection] ?? allSections.find((item) => item.id === activeSection)?.label ?? '';
-
-  const getBottomNavValue = () => {
-    if (['home', 'profile', 'support'].includes(activeSection)) {
-      return activeSection;
-    }
-    return 'more';
-  };
+  const sectionTitle = pageTitleFor(pathname);
+  const bottomNavValue: string = MOBILE_TAB_PATHS.find((path) => path === pathname) ?? MORE_TAB;
 
   return (
     <Box
@@ -72,35 +48,24 @@ export default function AppLayout({
         backgroundColor: DASHBOARD_TOKENS.surface,
       }}
     >
-      {isMdUp && (
-        <AppSidebar 
-          sidebarOpen={sidebarOpen} 
-          setSidebarOpen={setSidebarOpen} 
-          activeSection={activeSection} 
-          setActiveSection={setActiveSection} 
-          sectionConfig={sectionConfig}
-          bottomSectionConfig={bottomSectionConfig}
-          onLogout={onLogout}
-        />
-      )}
-      <Box 
-        sx={{ 
-          flex: 1, 
-          minWidth: 0, 
-          display: 'flex', 
+      {/* Pe mobil sidebar-ul se randează tot, dar ca sertar — de acolo își ia „Meniu" conținutul. */}
+      <AppSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={onLogout} />
+
+      <Box
+        sx={{
+          flex: 1,
+          minWidth: 0,
+          display: 'flex',
           flexDirection: 'column',
           height: '100%',
           overflow: 'hidden'
         }}
       >
-        <AppHeader 
-          sidebarOpen={sidebarOpen} 
-          setSidebarOpen={setSidebarOpen} 
+        <AppHeader
           title={sectionTitle}
           showNotifications={showNotifications}
           onOpenRecurringDocumentation={onOpenRecurringDocumentation}
-          activeSection={activeSection}
-          setActiveSection={setActiveSection}
+          onOpenMenu={() => setSidebarOpen(true)}
         />
         <Box
           component="main"
@@ -143,9 +108,13 @@ export default function AppLayout({
         }}
       >
         <BottomNavigation
-          value={getBottomNavValue()}
-          onChange={(_, newValue) => {
-            setActiveSection(newValue);
+          value={bottomNavValue}
+          onChange={(_, newValue: string) => {
+            if (newValue === MORE_TAB) {
+              setSidebarOpen(true);
+              return;
+            }
+            navigate(newValue);
           }}
           showLabels
           sx={{
@@ -168,6 +137,7 @@ export default function AppLayout({
               fontSize: 22,
               mb: 0.3,
               transition: 'transform 0.2s ease, color 0.2s ease',
+              '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
             },
             '& .MuiBottomNavigationAction-label': {
               fontSize: '0.65rem',
@@ -179,28 +149,14 @@ export default function AppLayout({
             },
           }}
         >
-          <BottomNavigationAction
-            label="Acasă"
-            value="home"
-            icon={<HomeRoundedIcon />}
-          />
-          <BottomNavigationAction
-            label="Profil"
-            value="profile"
-            icon={<PersonRoundedIcon />}
-          />
-          <BottomNavigationAction
-            label="Chat"
-            value="support"
-            icon={<HeadphonesRoundedIcon />}
-          />
-          <BottomNavigationAction
-            label="Meniu"
-            value="more"
-            icon={<MenuRoundedIcon />}
-          />
+          <BottomNavigationAction label="Acasă" value={PFA_PATHS.home} icon={<HomeRoundedIcon />} />
+          <BottomNavigationAction label="Profil" value={PFA_PATHS.profile} icon={<PersonRoundedIcon />} />
+          <BottomNavigationAction label="Suport" value={PFA_PATHS.support} icon={<HeadsetMicRoundedIcon />} />
+          <BottomNavigationAction label="Meniu" value={MORE_TAB} icon={<MenuRoundedIcon />} />
         </BottomNavigation>
       </Paper>
     </Box>
   );
 }
+
+export type { AppLayoutProps };

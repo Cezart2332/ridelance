@@ -1,4 +1,5 @@
 import { RECURRING_DOCUMENTATION_ITEMS } from './recurringDocumentationItems'
+import { PFA_PATHS } from '../config/pfaNavigation'
 
 export const RECURRING_DOCUMENTATION_NOTIFICATION_TYPE = 'RecurringDocumentation' as const
 
@@ -43,7 +44,7 @@ export function getRecurringDocumentationPushBody(date = new Date()): string {
 /** Deep link opened from push notification click */
 export function getRecurringDocumentationDeepLink(): string {
   const base = typeof window !== 'undefined' ? window.location.origin : ''
-  return `${base}/app/dashboard?section=doc_recurring`
+  return `${base}${PFA_PATHS.docsRecurring}`
 }
 
 export function isFirstDayOfMonthInRomania(date = new Date()): boolean {

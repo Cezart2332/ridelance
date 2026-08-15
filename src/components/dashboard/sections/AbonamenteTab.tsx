@@ -18,6 +18,7 @@ import { getNextMondayBillingDate, formatRomanianDate, isPendingBilling } from '
 import { PaymentPolicyAcceptance } from '../../common/PaymentPolicyAcceptance'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { PageHeader, StatusChip } from '../ui'
+import { PFA_PATHS } from '../../../config/pfaNavigation'
 
 const T = DASHBOARD_TOKENS
 
@@ -82,8 +83,8 @@ export function AbonamenteTab() {
     stripeService
       .redirectToPlan(
         key,
-        `${origin}/app/dashboard?section=abonamente&plan_changed=1`,
-        `${origin}/app/dashboard?section=abonamente`,
+        `${origin}${PFA_PATHS.svcSubscriptions}?plan_changed=1`,
+        `${origin}${PFA_PATHS.svcSubscriptions}`,
         { isPlanChange: true },
       )
       .catch(() => {

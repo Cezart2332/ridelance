@@ -15,6 +15,9 @@ export type { StatusTone } from './statusTone'
 export { PageHeader } from './PageHeader'
 export type { PageHeaderProps } from './PageHeader'
 
+export { ComingSoon } from './ComingSoon'
+export type { ComingSoonProps } from './ComingSoon'
+
 export { formatLei, formatNumber } from './formatLei'
 
 export { pillToggleSx } from './toggleSx'

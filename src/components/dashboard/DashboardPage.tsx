@@ -1,20 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 
-import { DocumentsTab } from './sections/DocumentsTab'
-import { ExpensesRecurringTab } from './sections/ExpensesRecurringTab'
-import { HomeDashboardView } from './sections/HomeDashboardView'
-import { ProfileSection } from './sections/ProfileSection'
-import { SupportChatTab } from './sections/SupportChatTab'
-import { CarsView } from './sections/CarsView'
-import { AbonamenteTab } from './sections/AbonamenteTab'
-import { ServiciiTab } from './sections/ServiciiTab'
-import { BeneficiiTab } from './sections/BeneficiiTab'
-import { InsuranceTab } from './sections/InsuranceTab'
-import { IstoricPlatiTab } from './sections/IstoricPlatiTab'
-import { MenuHubView } from './sections/MenuHubView'
-import { BankTab } from './sections/BankTab'
-
+import { DashboardRoutes } from './DashboardRoutes'
 import AppLayout from './layout/AppLayout'
 
 import { authService } from '../../services/auth.service'
@@ -22,47 +9,44 @@ import { userService } from '../../services/user.service'
 import { stripeService } from '../../services/stripe.service'
 import { canAccessDashboard, resolveClientPath } from '../../utils/clientOnboarding'
 import { useRecurringDocumentationReminder } from '../../hooks/useRecurringDocumentationReminder'
+import { LEGACY_SECTION_ROUTES, PFA_PATHS } from '../../config/pfaNavigation'
 
 import { Box, CircularProgress, Snackbar, Alert } from '@mui/material'
 
-import iconHome from '../../assets/SVG/2- Regular/home.svg'
-import iconProfile from '../../assets/SVG/2- Regular/user.svg'
-import iconDocs from '../../assets/SVG/2- Regular/folder.svg'
-import iconSupport from '../../assets/SVG/2- Regular/headphones.svg'
-import iconWallet from '../../assets/SVG/2- Regular/credit-card.svg'
+/**
+ * Traduce adresele dinaintea rutării reale. Se aplică doar pe rădăcina dashboard-ului,
+ * singurul loc unde ajungeau vechile linkuri.
+ *
+ * Două categorii, ambele încă în circulație:
+ *  - `?section=<id>` — linkuri plecate în notificări push, e-mailuri și redirect-uri Stripe;
+ *  - callback-ul bancar — providerul nu acceptă query în URL-ul whitelistat, deci banca ne
+ *    întoarce pe `/app/dashboard` cu `?ref=` (GoCardless) sau `?state=&code=`/`&error=`
+ *    (Enable Banking). Query-ul trebuie păstrat intact: pagina de cont bancar îl citește.
+ */
+function resolveLegacyTarget(pathname: string, params: URLSearchParams): string | null {
+  if (pathname !== PFA_PATHS.home) return null
 
-const mainSectionConfig = [
-  { id: 'home', label: 'Acasă', icon: iconHome },
-  { id: 'banca', label: 'Banca', icon: 'MUI:AccountBalanceRounded' },
-  { id: 'profile', label: 'Profil', icon: iconProfile },
-  { id: 'documents', label: 'Documente', icon: iconDocs },
-  { id: 'support', label: 'Chat & Suport', icon: iconSupport },
-  {
-    id: 'accordion_group',
-    label: 'Cheltuieli & Documentatie recurenta',
-    icon: iconWallet,
-    subItems: [
-      { id: 'expenses', label: 'Cheltuieli' },
-      { id: 'doc_recurring', label: 'Documentatie recurenta' },
-    ],
-  },
-] as const
+  const section = params.get('section')
+  if (section) {
+    const target = LEGACY_SECTION_ROUTES[section] ?? PFA_PATHS.home
+    const rest = new URLSearchParams(params)
+    rest.delete('section')
+    const query = rest.toString()
+    return query ? `${target}?${query}` : target
+  }
 
-const bottomSectionConfig = [
-  { id: 'cars', label: 'Mașini', icon: 'MUI:DirectionsCarFilledRounded' },
-  { id: 'beneficii', label: 'Beneficii', icon: 'MUI:RedeemRounded' },
-  { id: 'abonamente', label: 'Abonamente', icon: 'MUI:WorkspacePremiumRounded' },
-  { id: 'servicii', label: 'Servicii', icon: 'MUI:ShoppingCartRounded' },
-  { id: 'asigurari', label: 'Asigurări', icon: 'MUI:ShieldRounded' },
-  { id: 'istoric_plati', label: 'Istoric Plăți', icon: 'MUI:ReceiptLongRounded' },
-] as const
+  const isBankCallback = params.has('ref') || (params.has('state') && (params.has('code') || params.has('error')))
+  if (isBankCallback) {
+    return `${PFA_PATHS.bankAccount}?${params.toString()}`
+  }
 
-type SectionId = 'home' | 'cars' | 'profile' | 'documents' | 'support' | 'expenses' | 'doc_recurring' | 'abonamente' | 'servicii' | 'istoric_plati' | string
+  return null
+}
 
 export default function DashboardPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
-  const [activeSection, setActiveSection] = useState<SectionId>('home')
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'error' })
   const [pfaRegistrationId, setPfaRegistrationId] = useState<string | null>(null)
 
@@ -74,26 +58,6 @@ export default function DashboardPage() {
   const [pfaStatus, setPfaStatus] = useState<string | null | 'loading'>('loading')
 
   useRecurringDocumentationReminder(pfaStatus === 'Approved')
-
-  useEffect(() => {
-    const section = searchParams.get('section')
-    if (section) {
-      // Linkuri vechi către secțiunea Platforme, acum doar butonul Bolt din Profil.
-      if (section === 'bolt_integration' || section === 'platforms') {
-        setActiveSection('profile')
-        return
-      }
-      setActiveSection(section)
-      return
-    }
-
-    // Callback de la conectarea bancară: redirect-ul whitelistat la provider nu poate
-    // conține query, așa că banca ne întoarce pe /app/dashboard cu ?ref= (GoCardless)
-    // sau ?state=&code=/&error= (Enable Banking) — deschidem direct tabul Banca.
-    if (searchParams.get('ref') || (searchParams.get('state') && (searchParams.get('code') || searchParams.get('error')))) {
-      setActiveSection('banca')
-    }
-  }, [searchParams])
 
   useEffect(() => {
     // Dashboardul este accesibil doar după onboarding complet + abonament activ;
@@ -132,27 +96,10 @@ export default function DashboardPage() {
     navigate('/auth', { replace: true })
   }
 
-  const renderSection = () => {
-    if (activeSection === 'home') return <HomeDashboardView onNavigate={setActiveSection} />
-    if (activeSection === 'banca') return <BankTab onNavigate={setActiveSection} />
-    if (activeSection === 'cars') return <CarsView />
-    if (activeSection === 'profile') return <ProfileSection />
-    if (activeSection === 'documents') return <DocumentsTab onNavigate={setActiveSection} />
-    if (activeSection === 'support') return <SupportChatTab />
-    if (activeSection === 'abonamente') return <AbonamenteTab />
-    if (activeSection === 'servicii') return <ServiciiTab />
-    if (activeSection === 'beneficii') return <BeneficiiTab onNavigate={setActiveSection} />
-    if (activeSection === 'asigurari') return <InsuranceTab />
-    if (activeSection === 'istoric_plati') return <IstoricPlatiTab />
-    if (activeSection === 'more') return <MenuHubView onNavigate={setActiveSection} onLogout={handleLogout} />
-
-    return (
-      <ExpensesRecurringTab
-        pfaRegistrationId={pfaRegistrationId}
-        viewMode={activeSection as 'expenses' | 'doc_recurring'}
-        onSnackbar={showSnackbar}
-      />
-    )
+  // Înainte de orice randare: adresele vechi ajung pe ruta nouă, fără să treacă prin Acasă.
+  const legacyTarget = resolveLegacyTarget(location.pathname, searchParams)
+  if (legacyTarget) {
+    return <Navigate to={legacyTarget} replace />
   }
 
   // Show spinner while checking PFA status
@@ -166,15 +113,11 @@ export default function DashboardPage() {
 
   return (
     <AppLayout
-      activeSection={activeSection}
-      setActiveSection={setActiveSection}
-      sectionConfig={mainSectionConfig}
-      bottomSectionConfig={bottomSectionConfig}
       onLogout={handleLogout}
       showNotifications
-      onOpenRecurringDocumentation={() => setActiveSection('doc_recurring')}
+      onOpenRecurringDocumentation={() => navigate(PFA_PATHS.docsRecurring)}
     >
-      {renderSection()}
+      <DashboardRoutes pfaRegistrationId={pfaRegistrationId} onSnackbar={showSnackbar} />
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

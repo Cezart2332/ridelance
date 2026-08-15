@@ -4,6 +4,10 @@ export default defineConfig({
   testDir: './tests/responsive',
   outputDir: './test-results/responsive',
   timeout: 30_000,
+  // Aserțiunile au propriul termen, separat de cel al testului. Cu patru browsere pe același
+  // server de dezvoltare, 5s implicit nu ajung pentru montarea unei pagini plus animația
+  // cifrelor — testele picau în paralel și treceau serial, ceea ce nu spune nimic despre cod.
+  expect: { timeout: 15_000 },
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5173',
     trace: 'retain-on-failure',

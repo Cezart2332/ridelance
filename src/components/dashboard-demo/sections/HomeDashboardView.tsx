@@ -113,6 +113,7 @@ const mockSummary: PfaDashboardSummary = {
     estimatedTaxes: demoTaxTotal,
     value: demoProfit,
     retentionRatio: demoProfit / demoNetTotal,
+    expensesAwaitingReview: 0,
   },
   platformSplit: [
     {
@@ -146,12 +147,18 @@ const mockSummary: PfaDashboardSummary = {
         boltNonResident: Math.round(boltFee * 0.02),
       }
     }),
-    realProfit: demoDays.map((point) => ({
-      bucket: point.bucket,
-      label: point.label,
-      netEarnings: point.total,
-      value: Math.round(point.total * (demoProfit / demoNetTotal)),
-    })),
+    realProfit: demoDays.map((point) => {
+      // Aceeași repartizare ca pe server: proporțional cu încasările zilei.
+      const share = point.total / demoNetTotal
+      return {
+        bucket: point.bucket,
+        label: point.label,
+        netEarnings: point.total,
+        deductibleExpenses: Math.round(demoExpenses * share),
+        estimatedTaxes: Math.round(demoTaxTotal * share),
+        value: Math.round(point.total * (demoProfit / demoNetTotal)),
+      }
+    }),
   },
   sources: {
     bolt: { configured: true, connected: true, lastSyncAt: new Date().toISOString(), errorMessage: null },

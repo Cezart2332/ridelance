@@ -55,6 +55,11 @@ export interface RealProfit {
   estimatedTaxes: number;
   value: number;
   retentionRatio: number | null;
+  /**
+   * Cât din cheltuielile perioadei a intrat deja în calcul, dar are documentul neverificat de
+   * RIDElance. Zero înseamnă că totul e validat.
+   */
+  expensesAwaitingReview: number;
 }
 
 export interface PlatformSplitRow {
@@ -84,10 +89,16 @@ export interface FeesAndTaxesPoint {
   boltNonResident: number;
 }
 
+/**
+ * Un bucket din seria financiară. Cheltuielile și taxele vin deja repartizate de server —
+ * proporția e regula lui, nu a graficului.
+ */
 export interface RealProfitPoint {
   bucket: string;
   label: string;
   netEarnings: number;
+  deductibleExpenses: number;
+  estimatedTaxes: number;
   value: number;
 }
 

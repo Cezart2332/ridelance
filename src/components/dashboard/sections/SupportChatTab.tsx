@@ -4,7 +4,9 @@ import {
   Alert, CircularProgress, Divider, Paper, Stack, TextField, Typography,
 } from '@mui/material'
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
+import { Link as RouterLink } from 'react-router-dom'
 
+import { PFA_PATHS } from '../../../config/pfaNavigation'
 import { dashboardFaqItems } from '../dashboardData'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme'
 import { chatService, type ChatMessageDto } from '../../../services/chat.service'
@@ -12,14 +14,12 @@ import { getChatConnection, startChatConnection, stopChatConnection } from '../.
 import { useAppSelector } from '../../../store/hooks'
 import { groupMessagesByDate } from '../../../utils/chat'
 import { Box } from '@mui/material'
-import { AccountantChatTab } from './AccountantChatTab'
 import { getBucharestBusinessHoursStatus } from '../../../utils/businessHours'
 import { OfficeBookingCalendar } from '../../office/OfficeBookingCalendar'
 import { userService, type UserProfile } from '../../../services/user.service'
 import { displayName } from '../../../utils/displayName'
 
 export function SupportChatTab() {
-  const [activeChat, setActiveChat] = useState<'support' | 'accountant'>('support')
   const [roomId, setRoomId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessageDto[]>([])
   const [chatMessage, setChatMessage] = useState('')
@@ -38,8 +38,6 @@ export function SupportChatTab() {
 
   // Bootstrap: get support room, load history, connect to hub
   useEffect(() => {
-    if (activeChat !== 'support') return
-
     let currentRoomId: string
     setLoading(true)
     setNoAgent(false)
@@ -81,7 +79,7 @@ export function SupportChatTab() {
       }
       stopChatConnection()
     }
-  }, [activeChat])
+  }, [])
 
   // Auto scroll to bottom when messages arrive
   useEffect(() => {
@@ -158,49 +156,34 @@ export function SupportChatTab() {
         </Typography>
       </Paper>
 
-      <Paper
-        elevation={0}
+      {/* Suportul e exclusiv despre relația cu RIDElance. Problemele contabile au propriul
+          canal, sub Contabilitate — altfel cele două fire de discuție se amestecă. */}
+      <Alert
+        severity="info"
+        icon={false}
         sx={{
-          p: 1,
           borderRadius: DASHBOARD_TOKENS.radius.lg,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
-          boxShadow: DASHBOARD_TOKENS.shadow.sm,
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-          gap: 1,
+          bgcolor: 'rgba(92,203,245,0.08)',
+          color: DASHBOARD_TOKENS.ink,
+          fontSize: '0.86rem',
         }}
+        action={
+          <Button
+            component={RouterLink}
+            to={PFA_PATHS.accountantChat}
+            size="small"
+            sx={{ textTransform: 'none', fontWeight: 750, whiteSpace: 'nowrap' }}
+          >
+            Deschide chat contabil
+          </Button>
+        }
       >
-        {[
-          { id: 'support' as const, label: 'Chat suport', hours: 'Luni-Vineri 10:00-18:00' },
-          { id: 'accountant' as const, label: 'Chat contabil', hours: 'Luni-Vineri 10:00-15:00' },
-        ].map((item) => {
-          const selected = activeChat === item.id
-          return (
-            <Button
-              key={item.id}
-              onClick={() => setActiveChat(item.id)}
-              sx={{
-                justifyContent: 'space-between',
-                px: 2,
-                py: 1.2,
-                borderRadius: DASHBOARD_TOKENS.radius.md,
-                textTransform: 'none',
-                color: selected ? DASHBOARD_TOKENS.primaryStrong : DASHBOARD_TOKENS.ink,
-                bgcolor: selected ? `rgba(92,203,245,0.12)` : 'transparent',
-                border: `1px solid ${selected ? 'rgba(92,203,245,0.35)' : 'transparent'}`,
-                '&:hover': { bgcolor: `rgba(92,203,245,0.08)` },
-              }}
-            >
-              <span style={{ fontWeight: 800 }}>{item.label}</span>
-              <span style={{ fontSize: '0.75rem', opacity: 0.72 }}>{item.hours}</span>
-            </Button>
-          )
-        })}
-      </Paper>
+        Ai o întrebare despre taxe, declarații sau documente? Acelea se discută cu contabilul tău, în
+        Contabilitate → Chat contabil.
+      </Alert>
 
-      {activeChat === 'accountant' && <AccountantChatTab />}
-
-      {activeChat === 'support' && <Paper
+      <Paper
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
@@ -308,7 +291,7 @@ export function SupportChatTab() {
             </Stack>
           </>
         )}
-      </Paper>}
+      </Paper>
 
       {/* ── Programare vizită la birou ── */}
       <Box>

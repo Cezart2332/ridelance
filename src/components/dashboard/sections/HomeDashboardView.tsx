@@ -3,6 +3,7 @@ import { Box, Button, Chip, Stack, Typography } from '@mui/material'
 
 import { HOME_TOKENS, SPLIT_ROW } from '../home/tokens'
 import { formatPeriodLabel } from '../home/format'
+import { comparisonLabelFor } from '../home/selectors'
 import { useDashboardFilters } from '../home/useDashboardFilters'
 import { useDashboardSummary } from '../home/useDashboardData'
 import { CONDENSED_HEADER_HEIGHT } from '../home/useCondensedHeader'
@@ -22,14 +23,6 @@ import type { PfaDashboardSummary, RidesPage } from '../../../services/pfaDashbo
 
 interface HomeDashboardViewProps {
   onNavigate?: (sectionId: string) => void
-}
-
-const COMPARISON_LABELS: Record<string, string> = {
-  week: 'vs săptămâna anterioară',
-  month: 'vs luna anterioară',
-  prevMonth: 'vs luna precedentă ei',
-  year: 'vs anul anterior',
-  custom: 'vs perioada anterioară echivalentă',
 }
 
 /** `gap: 16px` uniform, pe ambele axe — spec §6.3. */
@@ -111,7 +104,7 @@ export function HomeDashboardContent({
   ridesOverride,
 }: HomeDashboardContentProps) {
   const periodLabel = formatPeriodLabel(filters.from, filters.to)
-  const comparisonLabel = COMPARISON_LABELS[filters.period] ?? COMPARISON_LABELS.custom
+  const comparisonLabel = comparisonLabelFor(filters.period)
   const goToSources = () => onNavigate?.('profile')
 
   const sources = data?.sources

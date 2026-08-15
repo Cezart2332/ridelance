@@ -1,9 +1,10 @@
 import { Box, Stack, Typography } from '@mui/material'
 
 import { HOME_TOKENS } from '../tokens'
-import { formatPercent } from '../format'
+import { formatCurrency, formatPercent } from '../format'
 import type { RealProfit } from '../../../../services/pfaDashboard.service'
 import { CHART } from './charts/chartTheme'
+import { selectFinancialBreakdown, selectRealProfitWaterfall } from '../selectors'
 import { Amount } from './Amount'
 import { HomeCard } from './HomeCard'
 
@@ -11,12 +12,12 @@ interface RealProfitCardProps {
   profit: RealProfit
 }
 
-interface WaterfallRow {
-  label: string
-  amount: number
-  color: string
-  /** Rândul final are separator deasupra și greutate mai mare. */
-  isResult?: boolean
+/** Culoarea fiecărei trepte. Cifrele vin din selector; aici se decide doar cum arată. */
+const STEP_COLOR: Record<string, string> = {
+  net: CHART[1],
+  expenses: CHART[7],
+  taxes: CHART[6],
+  result: CHART[1],
 }
 
 /**
@@ -25,13 +26,8 @@ interface WaterfallRow {
  */
 export function RealProfitCard({ profit }: RealProfitCardProps) {
   const isNegative = profit.value < 0
-
-  const rows: WaterfallRow[] = [
-    { label: 'Încasări nete', amount: profit.netEarnings, color: CHART[1] },
-    { label: 'Cheltuieli deductibile', amount: -profit.deductibleExpenses, color: CHART[7] },
-    { label: 'Taxe estimate', amount: -profit.estimatedTaxes, color: CHART[6] },
-    { label: 'Profit real estimat', amount: profit.value, color: CHART[1], isResult: true },
-  ]
+  const rows = selectRealProfitWaterfall(profit)
+  const { awaitingReview } = selectFinancialBreakdown(profit)
 
   const scale = Math.max(...rows.map((row) => Math.abs(row.amount)), 1)
 
@@ -75,10 +71,19 @@ export function RealProfitCard({ profit }: RealProfitCardProps) {
         </Typography>
       )}
 
+      {/* Cheltuiala confirmată intră imediat în calcul, dar asta nu înseamnă că a fost și
+          verificată. Cifra rămâne cea de sus; nota spune doar cât din ea e încă neconfirmată
+          de un om. */}
+      {awaitingReview > 0 && (
+        <Typography sx={{ fontSize: '0.78rem', color: HOME_TOKENS.text.tertiary, mt: 0.8 }}>
+          Include {formatCurrency(awaitingReview)} din cheltuieli cu documentul în verificare.
+        </Typography>
+      )}
+
       <Stack spacing={1.4} sx={{ mt: 2.2 }}>
         {rows.map((row) => (
           <Box
-            key={row.label}
+            key={row.key}
             sx={{
               pt: row.isResult ? 1.4 : 0,
               borderTop: row.isResult ? `1px solid ${HOME_TOKENS.border.subtle}` : 'none',
@@ -117,7 +122,7 @@ export function RealProfitCard({ profit }: RealProfitCardProps) {
                   height: '100%',
                   width: `${(Math.abs(row.amount) / scale) * 100}%`,
                   borderRadius: HOME_TOKENS.radius.pill,
-                  bgcolor: row.color,
+                  bgcolor: STEP_COLOR[row.key],
                   opacity: row.isResult || row.amount >= 0 ? 1 : 0.8,
                 }}
               />

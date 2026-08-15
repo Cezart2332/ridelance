@@ -1,37 +1,32 @@
 import { Box, IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { useLocation } from 'react-router-dom';
 import { alpha } from '@mui/material/styles';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import { NotificationsBell } from '../../notifications/NotificationsBell';
+import { MOBILE_TAB_PATHS } from '../../../config/pfaNavigation';
 import logo from '../../../assets/logo.svg';
 
 interface AppHeaderProps {
-  sidebarOpen: boolean;
-  setSidebarOpen: (arg: boolean) => void;
   title: string;
   showNotifications?: boolean;
   onOpenRecurringDocumentation?: () => void;
-  activeSection?: string;
-  setActiveSection?: (sectionId: string) => void;
+  /** Deschide sertarul de navigare — pe mobil e singura cale înapoi din subpagini. */
+  onOpenMenu?: () => void;
 }
 
 export default function AppHeader({
-  sidebarOpen: _sidebarOpen,
-  setSidebarOpen: _setSidebarOpen,
   title,
   showNotifications,
   onOpenRecurringDocumentation,
-  activeSection,
-  setActiveSection,
+  onOpenMenu,
 }: AppHeaderProps) {
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
+  const { pathname } = useLocation();
 
-  // A sub-page on mobile is any active section that is NOT one of the primary tabs
-  const isSubPageOnMobile = 
-    !isMdUp && 
-    activeSection && 
-    !['home', 'profile', 'support', 'more'].includes(activeSection);
+  // Subpagină pe mobil = orice rută care nu e una dintre cele trei destinații din bara de jos.
+  const isSubPageOnMobile = !isMdUp && !MOBILE_TAB_PATHS.some((path) => path === pathname);
 
   return (
     <Paper
@@ -54,12 +49,13 @@ export default function AppHeader({
       }}
     >
       <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flex: 1, minWidth: 0 }}>
-        {isSubPageOnMobile && setActiveSection && (
+        {isSubPageOnMobile && onOpenMenu && (
           <IconButton
             size="small"
+            aria-label="Deschide meniul"
             onClick={(e) => {
               e.stopPropagation();
-              setActiveSection('more');
+              onOpenMenu();
             }}
             sx={{
               border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,

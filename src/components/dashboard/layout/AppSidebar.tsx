@@ -1,252 +1,293 @@
-import { Box, Button, Drawer, Stack, Typography, useMediaQuery, Accordion, AccordionSummary, AccordionDetails, Divider } from '@mui/material';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Box, Button, Collapse, Divider, Drawer, Stack, Typography, useMediaQuery } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';
-import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
-import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
-import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
-import ElectricCarRoundedIcon from '@mui/icons-material/ElectricCarRounded';
-import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded';
-import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded';
-import RedeemRoundedIcon from '@mui/icons-material/RedeemRounded';
-import { DASHBOARD_TOKENS } from '../dashboardTheme';
-import logo from '../../../assets/logo.svg';
 
-type NavItem = {
-  id: string;
-  label: string;
-  icon?: string;
-  subItems?: readonly { id: string; label: string }[];
-};
+import { DASHBOARD_TOKENS } from '../dashboardTheme';
+import {
+  NAV_STATE_STORAGE_KEY,
+  PFA_NAV,
+  findActiveGroupId,
+  findActiveLeaf,
+  type NavEntry,
+  type NavLeaf,
+} from '../../../config/pfaNavigation';
+import logo from '../../../assets/logo.svg';
 
 interface AppSidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (arg: boolean) => void;
-  activeSection: string;
-  setActiveSection: (id: string) => void;
-  sectionConfig: readonly NavItem[];
-  bottomSectionConfig?: readonly NavItem[];
   onLogout?: () => void;
 }
 
-/** Single source of truth for nav icon colors — MUI icons and image icons must match. */
+/** Sursa unică pentru culoarea iconițelor de navigație. */
 const navIconColor = (isActive: boolean) =>
   isActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.55);
 
-/**
- * Renders an image icon as a CSS mask so it takes the exact same token color
- * as the MUI icons (the old CSS-filter approach only approximated it).
- */
-function ImgNavIcon({ src, isActive }: { src: string; isActive: boolean }) {
-  return (
-    <Box
-      sx={{
-        width: 18,
-        height: 18,
-        flexShrink: 0,
-        backgroundColor: navIconColor(isActive),
-        // Quoted: asset paths can contain spaces, which break unquoted url().
-        WebkitMaskImage: `url("${src}")`,
-        maskImage: `url("${src}")`,
-        WebkitMaskRepeat: 'no-repeat',
-        maskRepeat: 'no-repeat',
-        WebkitMaskPosition: 'center',
-        maskPosition: 'center',
-        WebkitMaskSize: 'contain',
-        maskSize: 'contain',
-      }}
-    />
-  );
-}
-
-function MuiNavIcon({ iconName, isActive }: { iconName: string; isActive: boolean }) {
-  const sx = { fontSize: 18, color: navIconColor(isActive) };
-  switch (iconName) {
-    case 'DirectionsCarFilledRounded':
-      return <DirectionsCarFilledRoundedIcon sx={sx} />;
-    case 'WorkspacePremiumRounded':
-      return <WorkspacePremiumRoundedIcon sx={sx} />;
-    case 'ShoppingCartRounded':
-      return <ShoppingCartRoundedIcon sx={sx} />;
-    case 'ReceiptLongRounded':
-      return <ReceiptLongRoundedIcon sx={sx} />;
-    case 'ElectricCarRounded':
-      return <ElectricCarRoundedIcon sx={sx} />;
-    case 'ShieldRounded':
-      return <ShieldRoundedIcon sx={sx} />;
-    case 'AccountBalanceRounded':
-      return <AccountBalanceRoundedIcon sx={sx} />;
-    case 'RedeemRounded':
-      return <RedeemRoundedIcon sx={sx} />;
-    default:
-      return null;
+function readStoredOpenGroups(): string[] {
+  try {
+    const raw = window.localStorage.getItem(NAV_STATE_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : [];
+  } catch {
+    // localStorage indisponibil (mod privat, cotă plină) — meniul funcționează și fără memorie.
+    return [];
   }
 }
 
-function NavItems({
-  items,
-  activeSection,
-  setActiveSection,
-  setSidebarOpen,
-}: {
-  items: readonly NavItem[];
-  activeSection: string;
-  setActiveSection: (id: string) => void;
-  setSidebarOpen: (arg: boolean) => void;
-}) {
+function persistOpenGroups(ids: string[]) {
+  try {
+    window.localStorage.setItem(NAV_STATE_STORAGE_KEY, JSON.stringify(ids));
+  } catch {
+    /* pierderea preferinței de expand nu merită să rupă navigarea */
+  }
+}
+
+function ComingSoonBadge() {
   return (
-    <>
-      {items.map((item) => {
-        const isActive = activeSection === item.id;
-        const displayLabel =
-          item.label === 'Cheltuieli & Documentatie recurenta'
-            ? 'Cheltuieli & documente'
-            : item.label;
-
-        if (item.subItems?.length) {
-          const isChildActive = item.subItems.some((sub) => activeSection === sub.id);
-
-          return (
-            <Accordion
-              key={item.id}
-              elevation={0}
-              disableGutters
-              defaultExpanded={isChildActive}
-              sx={{
-                backgroundColor: 'transparent',
-                '&:before': { display: 'none' },
-                boxShadow: 'none',
-                m: '0 !important',
-              }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMoreRoundedIcon sx={{ color: alpha(DASHBOARD_TOKENS.ink, 0.6) }} />}
-                sx={{
-                  minHeight: 'auto',
-                  m: 0,
-                  px: 1.5,
-                  py: 0.8,
-                  borderRadius: DASHBOARD_TOKENS.radius.md,
-                  border: `1px solid ${isChildActive ? alpha(DASHBOARD_TOKENS.primary, 0.25) : 'transparent'}`,
-                  backgroundColor: isChildActive ? alpha(DASHBOARD_TOKENS.primary, 0.08) : 'transparent',
-                  '& .MuiAccordionSummary-content': { m: 0 },
-                  '&.Mui-expanded': { minHeight: 'auto' },
-                  '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.04) },
-                }}
-              >
-                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', width: '100%', minWidth: 0 }}>
-                  {item.icon &&
-                    (item.icon.startsWith('MUI:') ? (
-                      <Box sx={{ width: 20, height: 20, flexShrink: 0, display: 'grid', placeItems: 'center' }}>
-                        <MuiNavIcon iconName={item.icon.split(':')[1]} isActive={isChildActive} />
-                      </Box>
-                    ) : (
-                      <ImgNavIcon src={item.icon} isActive={isChildActive} />
-                    ))}
-                  <Typography
-                    noWrap
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: '0.9rem',
-                      minWidth: 0,
-                      color: isChildActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.8),
-                    }}
-                  >
-                    {displayLabel}
-                  </Typography>
-                </Stack>
-              </AccordionSummary>
-              <AccordionDetails sx={{ p: 0, pl: 2.2, mt: 0.6 }}>
-                <Stack spacing={0.5}>
-                  {item.subItems.map((subItem) => {
-                    const isSubActive = activeSection === subItem.id;
-                    return (
-                      <Button
-                        key={subItem.id}
-                        onClick={() => {
-                          setActiveSection(subItem.id);
-                          setSidebarOpen(false);
-                        }}
-                        sx={{
-                          justifyContent: 'flex-start',
-                          px: 1.5,
-                          py: 0.62,
-                          borderRadius: DASHBOARD_TOKENS.radius.md,
-                          textTransform: 'none',
-                          fontWeight: isSubActive ? 700 : 500,
-                          fontSize: '0.85rem',
-                          width: '100%',
-                          color: isSubActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.7),
-                          border: `1px solid ${isSubActive ? alpha(DASHBOARD_TOKENS.primary, 0.2) : 'transparent'}`,
-                          backgroundColor: isSubActive ? alpha(DASHBOARD_TOKENS.primary, 0.08) : 'transparent',
-                          '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.05) },
-                        }}
-                      >
-                        {subItem.label}
-                      </Button>
-                    );
-                  })}
-                </Stack>
-              </AccordionDetails>
-            </Accordion>
-          );
-        }
-
-        return (
-          <Button
-            key={item.id}
-            onClick={() => {
-              setActiveSection(item.id);
-              setSidebarOpen(false);
-            }}
-            sx={{
-              justifyContent: 'flex-start',
-              px: 1.5,
-              py: 0.72,
-              width: '100%',
-              minHeight: 38,
-              borderRadius: DASHBOARD_TOKENS.radius.md,
-              textTransform: 'none',
-              fontWeight: isActive ? 700 : 500,
-              fontSize: '0.9rem',
-              color: isActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.8),
-              border: `1px solid ${isActive ? alpha(DASHBOARD_TOKENS.primary, 0.25) : 'transparent'}`,
-              backgroundColor: isActive ? alpha(DASHBOARD_TOKENS.primary, 0.12) : 'transparent',
-              '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08) },
-            }}
-          >
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', width: '100%', minWidth: 0 }}>
-              {item.icon &&
-                (item.icon.startsWith('MUI:') ? (
-                  <Box sx={{ width: 20, height: 20, flexShrink: 0, display: 'grid', placeItems: 'center' }}>
-                    <MuiNavIcon iconName={item.icon.split(':')[1]} isActive={isActive} />
-                  </Box>
-                ) : (
-                  <ImgNavIcon src={item.icon} isActive={isActive} />
-                ))}
-              <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {displayLabel}
-              </Box>
-            </Stack>
-          </Button>
-        );
-      })}
-    </>
+    <Box
+      component="span"
+      sx={{
+        ml: 'auto',
+        flexShrink: 0,
+        px: 0.7,
+        py: 0.15,
+        borderRadius: DASHBOARD_TOKENS.radius.full,
+        fontSize: '0.62rem',
+        fontWeight: 700,
+        letterSpacing: 0.2,
+        color: DASHBOARD_TOKENS.textMuted,
+        backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.06),
+      }}
+    >
+      În curând
+    </Box>
   );
 }
 
-export default function AppSidebar({
-  sidebarOpen,
-  setSidebarOpen,
-  activeSection,
-  setActiveSection,
-  sectionConfig,
-  bottomSectionConfig = [],
-  onLogout,
-}: AppSidebarProps) {
+const focusRingSx = {
+  '&:focus-visible': {
+    outline: `2px solid ${DASHBOARD_TOKENS.primaryStrong}`,
+    outlineOffset: 2,
+  },
+};
+
+function SubPageLink({
+  leaf,
+  isActive,
+  onNavigate,
+}: {
+  leaf: NavLeaf;
+  isActive: boolean;
+  onNavigate: () => void;
+}) {
+  return (
+    <Box component="li" sx={{ listStyle: 'none' }}>
+      <Button
+        component={RouterLink}
+        to={leaf.path}
+        onClick={onNavigate}
+        aria-current={isActive ? 'page' : undefined}
+        sx={{
+          justifyContent: 'flex-start',
+          px: 1.5,
+          py: 0.62,
+          width: '100%',
+          borderRadius: DASHBOARD_TOKENS.radius.md,
+          textTransform: 'none',
+          fontWeight: isActive ? 700 : 500,
+          fontSize: '0.85rem',
+          textAlign: 'left',
+          color: isActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.7),
+          border: `1px solid ${isActive ? alpha(DASHBOARD_TOKENS.primary, 0.2) : 'transparent'}`,
+          backgroundColor: isActive ? alpha(DASHBOARD_TOKENS.primary, 0.08) : 'transparent',
+          '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.05) },
+          ...focusRingSx,
+        }}
+      >
+        <Box
+          component="span"
+          sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+        >
+          {leaf.label}
+        </Box>
+        {leaf.badge === 'coming-soon' && <ComingSoonBadge />}
+      </Button>
+    </Box>
+  );
+}
+
+function TopLevelLink({
+  entry,
+  isActive,
+  onNavigate,
+}: {
+  entry: Extract<NavEntry, { kind: 'link' }>;
+  isActive: boolean;
+  onNavigate: () => void;
+}) {
+  const Icon = entry.icon;
+
+  return (
+    <Box component="li" sx={{ listStyle: 'none' }}>
+      <Button
+        component={RouterLink}
+        to={entry.path}
+        onClick={onNavigate}
+        aria-current={isActive ? 'page' : undefined}
+        sx={{
+          justifyContent: 'flex-start',
+          px: 1.5,
+          py: 0.72,
+          width: '100%',
+          minHeight: 38,
+          borderRadius: DASHBOARD_TOKENS.radius.md,
+          textTransform: 'none',
+          fontWeight: isActive ? 700 : 500,
+          fontSize: '0.9rem',
+          color: isActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.8),
+          border: `1px solid ${isActive ? alpha(DASHBOARD_TOKENS.primary, 0.25) : 'transparent'}`,
+          backgroundColor: isActive ? alpha(DASHBOARD_TOKENS.primary, 0.12) : 'transparent',
+          '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08) },
+          ...focusRingSx,
+        }}
+      >
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', width: '100%', minWidth: 0 }}>
+          <Icon sx={{ fontSize: 18, flexShrink: 0, color: navIconColor(isActive) }} />
+          <Box
+            component="span"
+            sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          >
+            {entry.label}
+          </Box>
+        </Stack>
+      </Button>
+    </Box>
+  );
+}
+
+function NavGroup({
+  entry,
+  isExpanded,
+  containsActiveRoute,
+  activeLeafPath,
+  onToggle,
+  onNavigate,
+  reduceMotion,
+}: {
+  entry: Extract<NavEntry, { kind: 'group' }>;
+  isExpanded: boolean;
+  containsActiveRoute: boolean;
+  activeLeafPath?: string;
+  onToggle: () => void;
+  onNavigate: () => void;
+  reduceMotion: boolean;
+}) {
+  const Icon = entry.icon;
+  const listId = `nav-group-${entry.id}`;
+
+  return (
+    <Box component="li" sx={{ listStyle: 'none' }}>
+      <Button
+        onClick={onToggle}
+        aria-expanded={isExpanded}
+        aria-controls={listId}
+        sx={{
+          justifyContent: 'flex-start',
+          px: 1.5,
+          py: 0.8,
+          width: '100%',
+          minHeight: 38,
+          borderRadius: DASHBOARD_TOKENS.radius.md,
+          textTransform: 'none',
+          // Categoria care conține ruta curentă rămâne marcată și când e colapsată.
+          border: `1px solid ${containsActiveRoute ? alpha(DASHBOARD_TOKENS.primary, 0.25) : 'transparent'}`,
+          backgroundColor: containsActiveRoute ? alpha(DASHBOARD_TOKENS.primary, 0.08) : 'transparent',
+          '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.04) },
+          ...focusRingSx,
+        }}
+      >
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', width: '100%', minWidth: 0 }}>
+          <Icon sx={{ fontSize: 18, flexShrink: 0, color: navIconColor(containsActiveRoute) }} />
+          <Typography
+            noWrap
+            sx={{
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              minWidth: 0,
+              flex: 1,
+              textAlign: 'left',
+              color: containsActiveRoute ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.8),
+            }}
+          >
+            {entry.label}
+          </Typography>
+          <ExpandMoreRoundedIcon
+            sx={{
+              fontSize: 18,
+              flexShrink: 0,
+              color: alpha(DASHBOARD_TOKENS.ink, 0.6),
+              transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
+              transition: 'transform 180ms ease',
+              '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+            }}
+          />
+        </Stack>
+      </Button>
+
+      <Collapse in={isExpanded} timeout={reduceMotion ? 0 : 'auto'} unmountOnExit>
+        <Stack component="ul" id={listId} spacing={0.5} sx={{ p: 0, pl: 2.2, m: 0, mt: 0.6 }}>
+          {entry.children.map((child) => (
+            <SubPageLink
+              key={child.id}
+              leaf={child}
+              isActive={activeLeafPath === child.path}
+              onNavigate={onNavigate}
+            />
+          ))}
+        </Stack>
+      </Collapse>
+    </Box>
+  );
+}
+
+export default function AppSidebar({ sidebarOpen, setSidebarOpen, onLogout }: AppSidebarProps) {
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
+  const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  const { pathname } = useLocation();
+
+  const activeGroupId = useMemo(() => findActiveGroupId(pathname), [pathname]);
+  const activeLeafPath = useMemo(() => findActiveLeaf(pathname)?.path, [pathname]);
+  const [openGroups, setOpenGroups] = useState<string[]>(readStoredOpenGroups);
+
+  useEffect(() => {
+    persistOpenGroups(openGroups);
+  }, [openGroups]);
+
+  /**
+   * Regula bate preferința (spec §6): categoria care conține ruta curentă e deschisă
+   * întotdeauna, indiferent ce s-a salvat în localStorage. Derivarea se face la randare,
+   * nu prin sincronizare cu un efect — altfel starea salvată și ruta ar putea diverge
+   * pentru un cadru, exact la refresh, adică fix cazul pe care regula îl protejează.
+   *
+   * Consecință asumată: pe categoria activă, butonul își notează preferința, dar lista
+   * rămâne deschisă până navighezi în altă parte.
+   */
+  const isGroupExpanded = useCallback(
+    (id: string) => id === activeGroupId || openGroups.includes(id),
+    [activeGroupId, openGroups],
+  );
+
+  const toggleGroup = useCallback((id: string) => {
+    setOpenGroups((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+  }, []);
+
+  // Pe mobil, alegerea unei subpagini închide sertarul; pe desktop nu există sertar de închis.
+  const closeDrawer = useCallback(() => setSidebarOpen(false), [setSidebarOpen]);
 
   const sidebarContent = (
     <Stack
@@ -254,8 +295,7 @@ export default function AppSidebar({
         height: '100%',
         px: 2,
         py: 1.5,
-        backgroundColor: alpha(DASHBOARD_TOKENS.paper, 0.96),
-        backdropFilter: 'blur(10px)',
+        backgroundColor: DASHBOARD_TOKENS.paper,
         overflow: 'hidden',
       }}
     >
@@ -273,11 +313,13 @@ export default function AppSidebar({
       </Box>
 
       <Box
+        component="nav"
+        aria-label="Meniu principal"
         sx={{
           flex: 1,
           minHeight: 0,
           mt: 1.45,
-          overflowY: 'hidden',
+          overflowY: 'auto',
           overflowX: 'hidden',
           pr: 0.5,
           '&::-webkit-scrollbar': { width: 5 },
@@ -288,6 +330,7 @@ export default function AppSidebar({
         }}
       >
         <Typography
+          id="pfa-nav-heading"
           sx={{
             px: 1.3,
             mb: 0.75,
@@ -300,40 +343,45 @@ export default function AppSidebar({
         >
           Meniu Principal
         </Typography>
-        <Stack spacing={0.35}>
-          <NavItems
-            items={sectionConfig}
-            activeSection={activeSection}
-            setActiveSection={setActiveSection}
-            setSidebarOpen={setSidebarOpen}
-          />
-        </Stack>
 
-        {bottomSectionConfig.length > 0 && (
-          <Box sx={{ mt: 1.45, pt: 1.35, borderTop: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.06)}` }}>
-            <Typography
-              sx={{
-                px: 1.3,
-                mb: 0.75,
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                color: DASHBOARD_TOKENS.textSubtle,
-                textTransform: 'uppercase',
-                letterSpacing: 0.9,
-              }}
-            >
-              Servicii & Plăți
-            </Typography>
-            <Stack spacing={0.35}>
-              <NavItems
-                items={bottomSectionConfig}
-                activeSection={activeSection}
-                setActiveSection={setActiveSection}
-                setSidebarOpen={setSidebarOpen}
+        <Stack component="ul" aria-labelledby="pfa-nav-heading" spacing={0.35} sx={{ p: 0, m: 0 }}>
+          {PFA_NAV.map((entry) => {
+            if (entry.kind === 'separator') {
+              return (
+                <Box component="li" key={entry.id} sx={{ listStyle: 'none' }}>
+                  <Divider sx={{ my: 1.2, opacity: 0.6 }} />
+                </Box>
+              );
+            }
+
+            // Deconectarea stă în subsolul fix, nu în lista de navigare.
+            if (entry.kind === 'action') return null;
+
+            if (entry.kind === 'group') {
+              return (
+                <NavGroup
+                  key={entry.id}
+                  entry={entry}
+                  isExpanded={isGroupExpanded(entry.id)}
+                  containsActiveRoute={activeGroupId === entry.id}
+                  activeLeafPath={activeLeafPath}
+                  onToggle={() => toggleGroup(entry.id)}
+                  onNavigate={closeDrawer}
+                  reduceMotion={reduceMotion}
+                />
+              );
+            }
+
+            return (
+              <TopLevelLink
+                key={entry.id}
+                entry={entry}
+                isActive={activeLeafPath === entry.path}
+                onNavigate={closeDrawer}
               />
-            </Stack>
-          </Box>
-        )}
+            );
+          })}
+        </Stack>
       </Box>
 
       <Divider sx={{ opacity: 0.5, mx: 1, mt: 1.2, flexShrink: 0 }} />
@@ -355,6 +403,7 @@ export default function AppSidebar({
           fontSize: '0.9rem',
           color: DASHBOARD_TOKENS.stateError,
           '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.stateError, 0.06) },
+          '&:focus-visible': { outline: `2px solid ${DASHBOARD_TOKENS.stateError}`, outlineOffset: 2 },
         }}
       >
         Deconectare
@@ -367,12 +416,10 @@ export default function AppSidebar({
       <Box
         sx={{
           width: 284,
+          flexShrink: 0,
           borderRight: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
-          backgroundColor: alpha(DASHBOARD_TOKENS.paper, 0.96),
-          position: 'sticky',
-          top: 0,
-          alignSelf: 'flex-start',
-          height: '100vh',
+          backgroundColor: DASHBOARD_TOKENS.paper,
+          height: '100%',
         }}
       >
         {sidebarContent}
@@ -384,8 +431,8 @@ export default function AppSidebar({
     <Drawer
       anchor="left"
       open={sidebarOpen}
-      onClose={() => setSidebarOpen(false)}
-      slotProps={{ paper: { sx: { width: 284, backgroundColor: alpha(DASHBOARD_TOKENS.paper, 0.96) } } }}
+      onClose={closeDrawer}
+      slotProps={{ paper: { sx: { width: 284, backgroundColor: DASHBOARD_TOKENS.paper } } }}
     >
       {sidebarContent}
     </Drawer>

@@ -195,20 +195,10 @@ export const DOC_GROUPS: DocGroup[] = [
   },
 ]
 
-// Categories that require an expiry date when uploading
-export const EXPIRABLE_CATEGORIES = new Set([
-  'Buletin',
-  'CarteIdentitate',
-  'AsigurareCalatori',
-  'ITP',
-  'Talon',
-  'RCA',
-  'PermisConducere',
-  'CopieConforma',
-  'EcusonUber',
-  'EcusonBolt',
-  'ContractVehicul',
-])
+// Lista categoriilor expirabile a fost ștearsă de aici: trăiește pe server, în
+// Application/Documents/Expiry/DocumentExpiryPolicy.cs, iar clientul primește starea deja
+// calculată prin GET /documents/overview. Data de expirare nu se mai cere la upload —
+// o completează OCR-ul (`ExpiresAtUtc ??= expiresUtc`).
 
 export type OnboardingSectionKey = 'Pfa' | 'AutorizatieTransport' | 'CopieConforma' | 'Vehicul'
 

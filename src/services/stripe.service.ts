@@ -1,4 +1,5 @@
 import { api } from '../lib/axios'
+import { PFA_PATHS } from '../config/pfaNavigation'
 
 /**
  * Stripe integration service using Payment Links.
@@ -233,7 +234,7 @@ export const stripeService = {
       plan: key
     })
     sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
-    sessionStorage.setItem('stripe_cancel_url', '/app/dashboard?section=servicii')
+    sessionStorage.setItem('stripe_cancel_url', PFA_PATHS.svcIndividual)
     sessionStorage.setItem('stripe_checkout_title', service.title)
     sessionStorage.setItem('stripe_checkout_price', service.price)
     sessionStorage.setItem('stripe_checkout_desc', service.desc)
