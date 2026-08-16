@@ -1,15 +1,19 @@
 import { useState, type FormEvent } from 'react'
 import { Box, Button, FormHelperText, Link, Stack, TextField } from '@mui/material'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import { AuthLayout } from './shell/AuthLayout'
 import { AuthFormHeader } from './shell/AuthFormHeader'
+import { AuthTabs } from './shell/AuthTabs'
 import { AuthAltAction } from './shell/AuthAltAction'
 import { PasswordField } from './shell/PasswordField'
 import { TrustRow } from './shell/TrustRow'
 import { AUTH_CTA_HEIGHT, AUTH_DENSITY, authInputSx } from './shell/authShellSx'
+import { AccountTypeChoice, type AccountType } from './shell/AccountTypeChoice'
 import {
   mapAuthError,
   validateEmail,
+  validateFullName,
   validateNewPassword,
   validateTerms,
   type AuthErrorInfo,
@@ -28,30 +32,42 @@ interface RegisterPageProps {
 
 export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
   const navigate = useNavigate()
+  // Ruta doar preselectează; alegerea rămâne a utilizatorului, vizibilă în formular.
+  const [accountType, setAccountType] = useState<AccountType>(role)
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
-  const [touched, setTouched] = useState({ email: false, password: false, terms: false })
+  const [touched, setTouched] = useState({ fullName: false, email: false, password: false, terms: false })
   const [serverError, setServerError] = useState<AuthErrorInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
+  const fullNameError = touched.fullName ? validateFullName(fullName) : null
   const emailError = touched.email ? validateEmail(email) : null
   const passwordError = touched.password ? validateNewPassword(password) : null
   const termsError = touched.terms ? validateTerms(termsAccepted) : null
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    setTouched({ email: true, password: true, terms: true })
+    setTouched({ fullName: true, email: true, password: true, terms: true })
     setServerError(null)
 
-    if (validateEmail(email) || validateNewPassword(password) || validateTerms(termsAccepted)) return
+    if (
+      validateFullName(fullName) ||
+      validateEmail(email) ||
+      validateNewPassword(password) ||
+      validateTerms(termsAccepted)
+    ) {
+      return
+    }
 
     setIsLoading(true)
     try {
       const trimmedEmail = email.trim()
-      await authService.register(trimmedEmail, password, role)
+      await authService.register(trimmedEmail, password, accountType, fullName)
       await authService.login(trimmedEmail, password)
-      navigate(role === 'CarPoster' ? '/poster' : '/app')
+      // Flota merge direct în dashboardul ei; PFA-ul intră în onboarding, prin `/app`.
+      navigate(accountType === 'CarPoster' ? '/poster' : '/app')
     } catch (err) {
       setServerError(mapAuthError(err, 'register'))
     } finally {
@@ -62,12 +78,8 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
   return (
     <AuthLayout>
       <AuthFormHeader
-        title="Creează-ți contul"
-        subtitle={
-          role === 'CarPoster'
-            ? 'Cont pentru publicarea anunțurilor de închiriere mașini.'
-            : 'Îți configurăm contul în câțiva pași după înregistrare.'
-        }
+        title="Creează-ți contul."
+        subtitle="Alege tipul de cont, iar RIDElance îți pregătește experiența potrivită."
         error={
           serverError && (
             <>
@@ -85,15 +97,34 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
         }
       />
 
+      <AuthTabs active="register" />
+
       <Box component="form" onSubmit={handleSubmit} noValidate>
         <Stack sx={AUTH_DENSITY.betweenFields}>
+          <AccountTypeChoice value={accountType} onChange={setAccountType} disabled={isLoading} />
+
           <TextField
             fullWidth
             required
             autoFocus
+            label="Nume complet"
+            placeholder="Numele tău"
+            autoComplete="name"
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+            onBlur={() => setTouched((current) => ({ ...current, fullName: true }))}
+            disabled={isLoading}
+            error={Boolean(fullNameError)}
+            helperText={fullNameError}
+            sx={authInputSx}
+          />
+
+          <TextField
+            fullWidth
+            required
             type="email"
             label="Email"
-            placeholder="nume@exemplu.ro"
+            placeholder="nume@email.ro"
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -106,6 +137,7 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
 
           <PasswordField
             label="Parolă"
+            placeholder="Introdu parola"
             autoComplete="new-password"
             value={password}
             onChange={setPassword}
@@ -135,13 +167,14 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
           size="large"
           fullWidth
           loading={isLoading}
+          endIcon={<ArrowForwardRoundedIcon />}
           sx={{ ...AUTH_DENSITY.metaToCta, minHeight: AUTH_CTA_HEIGHT }}
         >
-          Continuă
+          Creează contul
         </Button>
       </Box>
 
-      <AuthAltAction prompt="Ai deja cont?" linkLabel="Autentifică-te" to={ROUTES.login} />
+      <AuthAltAction prompt="Ai deja un cont?" linkLabel="Autentifică-te" to={ROUTES.login} />
 
       <TrustRow />
     </AuthLayout>

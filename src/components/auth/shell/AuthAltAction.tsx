@@ -1,4 +1,4 @@
-import { Box, Divider, Link, Typography } from '@mui/material'
+import { Box, Link, Typography } from '@mui/material'
 import { Link as RouterLink } from 'react-router-dom'
 import { AUTH_DENSITY } from './authShellSx'
 import { TOKENS } from '../../../constants/tokens'
@@ -10,33 +10,19 @@ interface AuthAltActionProps {
 }
 
 /**
- * Singurul mecanism de comutare între login și register. Segmented control-ul din mockup a
- * dispărut: două surse de adevăr pentru aceeași acțiune încurcă, iar register duce în onboarding,
- * deci nu e o simplă schimbare de stare a aceluiași formular.
+ * Linkul de sub CTA, ca în mockup — fără divider „sau" între ele. Duplică intenționat destinația
+ * segmented control-ului de sus: e aceeași pereche de rute, doar că una e la îndemână după ce
+ * termini de citit formularul.
  */
 export function AuthAltAction({ prompt, linkLabel, to }: AuthAltActionProps) {
   return (
-    <>
-      <Divider sx={{ ...AUTH_DENSITY.ctaToDivider, color: TOKENS.textMuted }}>
-        <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>
-          sau
-        </Typography>
-      </Divider>
-
-      <Box sx={{ ...AUTH_DENSITY.dividerToAlt, textAlign: 'center' }}>
-        <Typography variant="body2" component="span" sx={{ color: TOKENS.textMuted }}>
-          {prompt}{' '}
-        </Typography>
-        <Link
-          component={RouterLink}
-          to={to}
-          underline="hover"
-          variant="body2"
-          sx={{ fontWeight: 600 }}
-        >
-          {linkLabel}
-        </Link>
-      </Box>
-    </>
+    <Box sx={{ ...AUTH_DENSITY.ctaToDivider, textAlign: 'center' }}>
+      <Typography variant="body2" component="span" sx={{ color: TOKENS.textMuted }}>
+        {prompt}{' '}
+      </Typography>
+      <Link component={RouterLink} to={to} underline="hover" variant="body2" sx={{ fontWeight: 600 }}>
+        {linkLabel}
+      </Link>
+    </Box>
   )
 }

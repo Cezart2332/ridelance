@@ -8,7 +8,13 @@ import { TOKENS } from '../../../constants/tokens'
  * De aici cele două trepte de spațiere de mai jos. Valorile trăiesc doar aici — dacă ajung
  * duplicate prin componente, prima ajustare de buget le desincronizează.
  */
-const DENSE = '@media (max-height:720px)'
+export const DENSE = '@media (max-height:720px)'
+
+/**
+ * Peste pragul ăsta încape și aranjarea completă din mockup (card-urile PFA/Flote din panoul
+ * stâng). Sub el cad primele, ca pagina să rămână fără scroll.
+ */
+export const ROOMY = '@media (max-height:820px)'
 
 /** Sub pragul ăsta se ascunde trust row-ul și alert-ul trece pe varianta compactă. */
 export const SHORT = '@media (max-height:640px)'
@@ -17,8 +23,11 @@ export const SHORT = '@media (max-height:640px)'
 export const VERY_SHORT = '@media (max-height:560px)'
 
 export const AUTH_DENSITY = {
-  /** Padding vertical al panoului drept. */
-  formPanel: { py: 6, [DENSE]: { py: 4 } },
+  /**
+   * Padding vertical al panoului drept. Pe mobil e mai strâns din start: acolo nu există panou
+   * de brand care să ceară aer, iar taburile plus linkul „Înapoi la site" consumă deja din buget.
+   */
+  formPanel: { py: { xs: 3, md: 6 }, [DENSE]: { py: 4 } },
   /** Titlu → subtitlu. */
   titleToSubtitle: { mt: 1, [DENSE]: { mt: 1 } },
   /** Blocul de header → primul câmp. */

@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { Box, Button, Checkbox, FormControlLabel, Link, Stack, TextField, Typography } from '@mui/material'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import { AuthLayout } from './shell/AuthLayout'
 import { AuthFormHeader } from './shell/AuthFormHeader'
+import { AuthTabs } from './shell/AuthTabs'
 import { AuthAltAction } from './shell/AuthAltAction'
 import { PasswordField } from './shell/PasswordField'
 import { TrustRow } from './shell/TrustRow'
@@ -46,10 +48,12 @@ export default function LoginPage() {
   return (
     <AuthLayout>
       <AuthFormHeader
-        title="Bine ai revenit"
-        subtitle="Autentifică-te ca să continui."
+        title="Bine ai revenit."
+        subtitle="Autentifică-te pentru a continua în RIDElance."
         error={serverError?.message}
       />
+
+      <AuthTabs active="login" />
 
       <Box component="form" onSubmit={handleSubmit} noValidate>
         <Stack sx={AUTH_DENSITY.betweenFields}>
@@ -59,7 +63,7 @@ export default function LoginPage() {
             autoFocus
             type="email"
             label="Email"
-            placeholder="nume@exemplu.ro"
+            placeholder="nume@email.ro"
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -72,6 +76,7 @@ export default function LoginPage() {
 
           <PasswordField
             label="Parolă"
+            placeholder="Introdu parola"
             autoComplete="current-password"
             value={password}
             onChange={setPassword}
@@ -115,13 +120,14 @@ export default function LoginPage() {
           size="large"
           fullWidth
           loading={isLoading}
+          endIcon={<ArrowForwardRoundedIcon />}
           sx={{ ...AUTH_DENSITY.metaToCta, minHeight: AUTH_CTA_HEIGHT }}
         >
-          Autentifică-te
+          Intră în RIDElance
         </Button>
       </Box>
 
-      <AuthAltAction prompt="Nu ai cont încă?" linkLabel="Creează cont" to={ROUTES.register} />
+      <AuthAltAction prompt="Nu ai încă un cont?" linkLabel="Creează cont" to={ROUTES.register} />
 
       <TrustRow />
     </AuthLayout>

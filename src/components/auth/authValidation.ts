@@ -27,6 +27,17 @@ export function validateNewPassword(value: string): string | null {
   return null
 }
 
+/**
+ * Numele e obligatoriu la înregistrare: onboardingul, care l-ar fi citit din buletin prin OCR,
+ * există doar pentru PFA — un cont de flotă nu ajunge niciodată acolo.
+ */
+export function validateFullName(value: string): string | null {
+  const trimmed = value.trim()
+  if (!trimmed) return 'Introdu numele tău.'
+  if (trimmed.length < 3) return 'Numele pare prea scurt.'
+  return null
+}
+
 export function validateTerms(accepted: boolean): string | null {
   if (!accepted) return 'Trebuie să accepți termenii pentru a continua.'
   return null

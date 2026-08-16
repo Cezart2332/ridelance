@@ -6,9 +6,9 @@ import { SHORT } from './authShellSx'
 import { TOKENS } from '../../../constants/tokens'
 
 const ITEMS = [
-  { Icon: LockRoundedIcon, label: 'Conexiune criptată' },
-  { Icon: PublicRoundedIcon, label: 'Date stocate în UE' },
-  { Icon: VerifiedUserRoundedIcon, label: 'Conform PSD2' },
+  { Icon: LockRoundedIcon, label: 'Conexiune securizată' },
+  { Icon: PublicRoundedIcon, label: 'Date criptate' },
+  { Icon: VerifiedUserRoundedIcon, label: 'Acces protejat' },
 ]
 
 /**
@@ -22,6 +22,8 @@ export function TrustRow() {
       spacing={2}
       sx={{
         mt: 3,
+        pt: 2.25,
+        borderTop: `1px solid ${TOKENS.border}`,
         flexWrap: 'wrap',
         justifyContent: 'center',
         rowGap: 1,

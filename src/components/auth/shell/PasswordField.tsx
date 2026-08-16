@@ -15,6 +15,7 @@ const TONE_COLOR: Record<StrengthTone, 'error' | 'warning' | 'success'> = {
 
 interface PasswordFieldProps {
   label: string
+  placeholder?: string
   value: string
   onChange: (value: string) => void
   onBlur: () => void
@@ -28,6 +29,7 @@ interface PasswordFieldProps {
 
 export function PasswordField({
   label,
+  placeholder,
   value,
   onChange,
   onBlur,
@@ -44,6 +46,7 @@ export function PasswordField({
       fullWidth
       required
       label={label}
+      placeholder={placeholder}
       type={visible ? 'text' : 'password'}
       value={value}
       onChange={(event) => onChange(event.target.value)}

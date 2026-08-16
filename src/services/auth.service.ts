@@ -31,18 +31,28 @@ export const authService = {
   },
 
   /**
-   * RL-05 — contul se creează doar cu email și parolă. Numele vine din buletin, la pasul de
-   * eligibilitate; până atunci afișarea trece prin `displayName()`.
+   * Numele se cere la înregistrare fiindcă onboardingul — singurul loc care îl putea deduce din
+   * buletin prin OCR — există doar pentru PFA. Un cont `CarPoster` nu trece prin el niciodată,
+   * deci fără câmpul ăsta ar rămâne fără nume.
+   *
+   * Backendul primește `FirstName`/`LastName` separat, deci tăiem la primul spațiu: restul intră
+   * în nume de familie, ca numele compuse să nu se piardă.
    */
   register: async (
     email: string,
     password: string,
-    role: string = 'Client'
+    role: string = 'Client',
+    fullName?: string
   ): Promise<string> => {
+    const trimmed = fullName?.trim()
+    const separator = trimmed ? trimmed.indexOf(' ') : -1
+
     const response = await authAxios.post<string>('/users/register', {
       email,
       password,
       role,
+      firstName: separator === -1 ? trimmed : trimmed!.slice(0, separator),
+      lastName: separator === -1 ? undefined : trimmed!.slice(separator + 1).trim(),
     })
     return response.data
   },

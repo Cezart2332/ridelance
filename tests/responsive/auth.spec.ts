@@ -28,13 +28,26 @@ const PAGES = [
   { name: 'inregistrare', path: '/inregistrare' },
 ]
 
-async function expectNoScroll(page: Page) {
-  const overflow = await page.evaluate(() => ({
-    vertical: document.documentElement.scrollHeight - window.innerHeight,
-    horizontal: document.documentElement.scrollWidth - window.innerWidth,
-  }))
-  expect(overflow.vertical, 'scroll vertical').toBeLessThanOrEqual(2)
+/**
+ * Pagina nu derulează niciodată — grila e `height: 100dvh; overflow: hidden`.
+ *
+ * Dar asta singură dă verde fals: coloana formularului are `overflowY: auto` ca supapă, deci
+ * conținutul poate depăși pe ascuns fără ca `documentElement` să se miște. De aceea măsurăm și
+ * derularea internă a lui `<main>` și o întoarcem, ca fiecare ecran să declare explicit dacă
+ * încape sau nu.
+ */
+async function measureOverflow(page: Page) {
+  const overflow = await page.evaluate(() => {
+    const main = document.querySelector('main')
+    return {
+      vertical: document.documentElement.scrollHeight - window.innerHeight,
+      horizontal: document.documentElement.scrollWidth - window.innerWidth,
+      column: main ? main.scrollHeight - main.clientHeight : 0,
+    }
+  })
+  expect(overflow.vertical, 'scroll vertical pe pagină').toBeLessThanOrEqual(2)
   expect(overflow.horizontal, 'scroll orizontal').toBeLessThanOrEqual(2)
+  return overflow
 }
 
 test.describe('auth — încadrare într-un singur ecran', () => {
@@ -50,7 +63,18 @@ test.describe('auth — încadrare într-un singur ecran', () => {
         mkdirSync(dir, { recursive: true })
         await page.screenshot({ path: `${dir}/auth-${pageInfo.name}-${viewport.name}.png` })
 
-        await expectNoScroll(page)
+        const overflow = await measureOverflow(page)
+
+        if (pageInfo.name === 'autentificare') {
+          // Loginul trebuie să încapă întreg, fără să fie nevoie de derulare în coloană.
+          expect(overflow.column, `${viewport.name}: coloana loginului derulează`).toBeLessThanOrEqual(2)
+        } else {
+          // Registerul are în plus alegerea tipului de cont și numele — obligatorii, fiindcă
+          // onboardingul (care ar fi citit numele din buletin) există doar pentru PFA. Nu încape
+          // pe ecrane joase, deci coloana derulează; ce urmărim e să nu scape de sub control.
+          console.log(`register ${viewport.name}: derulare în coloană ${overflow.column}px`)
+          expect(overflow.column, `${viewport.name}: register derulează prea mult`).toBeLessThanOrEqual(320)
+        }
       }
     })
   }
@@ -73,12 +97,12 @@ test.describe('auth — încadrare într-un singur ecran', () => {
       // Label-urile sunt `required`, deci numele accesibil e „Email *" / „Parolă *".
       await page.getByLabel(/Email/).fill('gresit@exemplu.ro')
       await page.getByLabel(/Parolă/).fill('parola-gresita')
-      await page.getByRole('button', { name: 'Autentifică-te' }).click()
+      await page.getByRole('button', { name: 'Intră în RIDElance' }).click()
 
       const alert = page.getByRole('alert')
       await expect(alert).toContainText('Email sau parolă incorectă.')
 
-      await expectNoScroll(page)
+      await measureOverflow(page)
     }
   })
 })
@@ -95,9 +119,9 @@ test.describe('auth — asset-ul vizual', () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/autentificare', { waitUntil: 'networkidle' })
     // Panoul se montează într-un efect, după primul paint — lăsăm randarea să se așeze.
-    await expect(page.getByRole('button', { name: 'Autentifică-te' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Intră în RIDElance' })).toBeVisible()
 
-    expect(page.locator('img[src*="auth-visual"]')).toHaveCount(0)
+    await expect(page.locator('img[src*="auth-visual"]')).toHaveCount(0)
     expect(requested, 'auth-visual.webp nu trebuie cerut pe mobil').toEqual([])
   })
 
