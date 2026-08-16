@@ -13,8 +13,12 @@ export const DENSE = '@media (max-height:720px)'
 /**
  * Peste pragul ăsta încape și aranjarea completă din mockup (card-urile PFA/Flote din panoul
  * stâng). Sub el cad primele, ca pagina să rămână fără scroll.
+ *
+ * Pragul e 940, nu 820, fiindcă cele două card-uri și captura de produs se bat pe aceeași
+ * înălțime: la 900px ecran, cu card-urile pe loc, poza rămânea la 459×258 — limitată de înălțime,
+ * cu ~300px de gol lateral. Fără ele urcă la ~765×430, adică aproape de trei ori aria.
  */
-export const ROOMY = '@media (max-height:820px)'
+export const ROOMY = '@media (max-height:940px)'
 
 /** Sub pragul ăsta se ascunde trust row-ul și alert-ul trece pe varianta compactă. */
 export const SHORT = '@media (max-height:640px)'

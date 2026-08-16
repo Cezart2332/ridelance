@@ -100,7 +100,7 @@ export function AuthBrandPanel() {
         sx={{
           flex: 1,
           minHeight: 0,
-          mt: 3,
+          mt: 2,
           display: 'flex',
           alignItems: 'flex-start',
           // Plasă de siguranță: dacă `maxHeight: 100%` nu se rezolvă într-un layout viitor,
@@ -138,7 +138,7 @@ export function AuthBrandPanel() {
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
           gap: 2,
-          mt: 2.5,
+          mt: 2,
           [ROOMY]: { display: 'none' },
         }}
       >
@@ -182,7 +182,7 @@ export function AuthBrandPanel() {
       <Stack
         direction="row"
         spacing={2}
-        sx={{ flex: 'none', flexWrap: 'wrap', rowGap: 1, mt: 2.5, [DENSE]: { mt: 1.5 } }}
+        sx={{ flex: 'none', flexWrap: 'wrap', rowGap: 1, mt: 2, [DENSE]: { mt: 1.5 } }}
       >
         {BADGES.map((badge) => (
           <Stack key={badge} direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
@@ -204,7 +204,7 @@ export function AuthBrandPanel() {
       <Stack
         direction="row"
         spacing={2}
-        sx={{ flex: 'none', alignItems: 'center', mt: 1.5, [DENSE]: { mt: 1 } }}
+        sx={{ flex: 'none', alignItems: 'center', mt: 1, [DENSE]: { mt: 1 } }}
       >
         <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>
           © {new Date().getFullYear()} RIDElance
