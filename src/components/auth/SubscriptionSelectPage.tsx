@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ROUTES } from '../../constants/routes'
 import {
   Alert,
   Box,
@@ -392,7 +393,7 @@ export default function SubscriptionSelectPage() {
                 : 'Selectează un plan pentru a continua'}
             </Button>
             <Button
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate(ROUTES.login)}
               sx={{
                 textTransform: 'none',
                 color: TOKENS.textMuted,

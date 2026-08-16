@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { ROUTES } from '../constants/routes'
 import {
   Box,
   Paper,
@@ -83,7 +84,7 @@ export function ContabilDashboard() {
 
   const handleLogout = async () => {
     await authService.logout()
-    navigate('/auth', { replace: true })
+    navigate(ROUTES.login, { replace: true })
   }
 
   const [clients, setClients] = useState<ClientSummary[]>([])

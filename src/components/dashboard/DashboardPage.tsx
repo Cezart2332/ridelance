@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { ROUTES } from '../../constants/routes'
 import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { DashboardRoutes } from './DashboardRoutes'
@@ -93,7 +94,7 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     await authService.logout()
-    navigate('/auth', { replace: true })
+    navigate(ROUTES.login, { replace: true })
   }
 
   // Înainte de orice randare: adresele vechi ajung pe ruta nouă, fără să treacă prin Acasă.

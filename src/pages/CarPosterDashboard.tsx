@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { ROUTES } from '../constants/routes'
 import { DashboardLayout } from '../components/layout/DashboardLayout'
 import { CarsAdminView } from '../components/dashboard/sections/admin/CarsAdminView'
 import { authService } from '../services/auth.service'
@@ -22,7 +23,7 @@ export function CarPosterDashboard() {
 
   const handleLogout = async () => {
     await authService.logout()
-    navigate('/auth', { replace: true })
+    navigate(ROUTES.login, { replace: true })
   }
 
   const userName = profile ? displayName(profile) : '...'

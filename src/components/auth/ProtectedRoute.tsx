@@ -1,4 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom'
+import { ROUTES } from '../../constants/routes'
 import { CircularProgress, Box } from '@mui/material'
 import { NotificationPermissionPrompt } from '../notifications/NotificationPermissionPrompt'
 import { ImpersonationBanner } from './ImpersonationBanner'
@@ -22,7 +23,7 @@ export default function ProtectedRoute() {
   }
 
   if (!accessToken) {
-    return <Navigate to="/auth" replace />
+    return <Navigate to={ROUTES.login} replace />
   }
 
   return (

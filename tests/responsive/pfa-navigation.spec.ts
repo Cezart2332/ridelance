@@ -274,6 +274,68 @@ test.describe('navigație PFA', () => {
     expect(linkRequested).toBe(true)
   })
 
+  test('popup blocat: nu pretindem că s-a deschis o filă, ci oferim linkul', async ({ page }) => {
+    // Cazul raportat: browserul blochează fila, dar conexiunea e deja creată pe server. Textul
+    // „termină conectarea în fila care s-a deschis" ar fi atunci pur și simplu fals.
+    await page.addInitScript(() => {
+      window.open = () => null
+    })
+
+    let linkRequested = false
+    await page.route(`${API}/bank/connection`, (route: Route) => {
+      if (route.request().method() === 'POST') {
+        linkRequested = true
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ link: 'https://fintable.io/api-link/test', expiresAtUtc: null }),
+        })
+      }
+
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(
+          linkRequested
+            ? {
+                status: 'Created',
+                institutionId: 'bcr',
+                institutionName: '',
+                institutionLogo: null,
+                consentExpiresAtUtc: null,
+                linkedAtUtc: null,
+                lastSyncedAtUtc: null,
+                errorMessage: null,
+                accounts: [],
+                linkExpiresAtUtc: new Date(Date.now() + 600_000).toISOString(),
+                candidates: [],
+              }
+            : null,
+        ),
+      })
+    })
+
+    await page.route(`${API}/bank/institutions`, (route: Route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ id: 'bcr', name: 'BCR', logo: null }]),
+      }),
+    )
+
+    await page.goto(`${ROOT}/contabilitate/cont-bancar`, { waitUntil: 'networkidle' })
+    const main = page.getByRole('main')
+
+    await main.getByText('BCR', { exact: true }).click()
+
+    await expect(main.getByText('Deschide pagina băncii')).toBeVisible()
+    await expect(main.getByRole('link', { name: 'Continuă la bancă' })).toHaveAttribute(
+      'href',
+      'https://fintable.io/api-link/test',
+    )
+    await expect(main.getByText('Termină conectarea în fila care s-a deschis')).toHaveCount(0)
+  })
+
   test('alegerea manuală apare când revendicarea e ambiguă', async ({ page }) => {
     // Cu un singur cont de provider pentru toți clienții, două conectări simultane fac
     // atribuirea ambiguă. Regula e să nu ghicim, ci să întrebăm.

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { ROUTES } from '../constants/routes'
 import {
   Box, Paper, Stack, TextField, Typography, Card, CardContent,
   CircularProgress, Alert, Chip, Button,
@@ -391,7 +392,7 @@ export function AdminDashboard() {
 
   const handleLogout = async () => {
     await authService.logout()
-    navigate('/auth', { replace: true })
+    navigate(ROUTES.login, { replace: true })
   }
 
   const handleImpersonate = async (userId: string, userName: string) => {

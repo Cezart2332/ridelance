@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ROUTES } from '../../constants/routes'
 import { useNavigate } from 'react-router-dom'
 import { Box, Button, CircularProgress, Paper, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -26,7 +27,7 @@ export function ImpersonationBanner() {
     } catch {
       // The admin refresh cookie is gone — fall back to a clean login.
       await authService.logout()
-      navigate('/auth', { replace: true })
+      navigate(ROUTES.login, { replace: true })
     } finally {
       setReturning(false)
     }

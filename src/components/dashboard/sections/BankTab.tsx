@@ -105,6 +105,8 @@ export function BankTab({ onNavigate }: BankTabProps) {
 
   const [confirmDisconnect, setConfirmDisconnect] = useState(false)
   const [choosingId, setChoosingId] = useState<string | null>(null)
+  /** Setat doar când fila nu s-a putut deschide — atunci linkul se oferă ca buton. */
+  const [pendingLink, setPendingLink] = useState<string | null>(null)
 
   const loadConnection = useCallback(async () => {
     try {
@@ -197,13 +199,32 @@ export function BankTab({ onNavigate }: BankTabProps) {
 
   const handleConnect = async (institutionId: string) => {
     setConnectingId(institutionId)
+
+    // Fila se deschide *sincron*, în gestul de click, și abia apoi primește adresa. Dacă am
+    // aștepta întâi răspunsul serverului, browserul ar considera `window.open` un popup
+    // nesolicitat și l-ar bloca — utilizatorul ar rămâne cu „termină conectarea în fila care
+    // s-a deschis" fără să se fi deschis vreo filă.
+    //
+    // Fără `noopener`: cu el, `window.open` întoarce prin specificație `null`, deci n-am mai
+    // putea seta adresa filei. Legătura spre noi se rupe imediat după, prin `opener = null`.
+    const tab = window.open('', '_blank')
+
     try {
       const { link } = await bankService.initiateConnection(institutionId)
-      // Tab nou, nu redirect: pagina noastră rămâne deschisă și continuă să întrebe, așa că
-      // utilizatorul nu trebuie să facă nimic special la întoarcere.
-      window.open(link, '_blank', 'noopener')
+
+      if (tab && !tab.closed) {
+        tab.opener = null
+        tab.location.href = link
+        setPendingLink(null)
+      } else {
+        // Popup blocat sau filă închisă între timp: nu pretindem că s-a deschis ceva, ci
+        // oferim linkul ca acțiune explicită.
+        setPendingLink(link)
+      }
+
       await loadConnection()
     } catch (err) {
+      tab?.close()
       const detail = (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
       setSnackbar(detail ?? 'Conectarea nu a putut fi inițiată. Încearcă din nou.')
     } finally {
@@ -276,20 +297,46 @@ export function BankTab({ onNavigate }: BankTabProps) {
             <CircularProgress size={28} sx={{ color: T.primary, flexShrink: 0 }} />
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography sx={{ fontWeight: 700, color: T.ink }}>
-                Se așteaptă confirmarea de la bancă
+                {pendingLink ? 'Deschide pagina băncii' : 'Se așteaptă confirmarea de la bancă'}
               </Typography>
               <Typography sx={{ color: T.textMuted, fontSize: 13.5 }}>
-                Termină conectarea în fila care s-a deschis. Pagina se actualizează singură când
-                banca răspunde — nu e nevoie să faci nimic aici.
+                {pendingLink
+                  ? 'Browserul a blocat deschiderea automată a filei. Apasă butonul ca să continui conectarea.'
+                  : 'Termină conectarea în fila care s-a deschis. Pagina se actualizează singură când banca răspunde — nu e nevoie să faci nimic aici.'}
               </Typography>
             </Box>
-            <Button
-              variant="text"
-              onClick={() => setShowPicker(true)}
-              sx={{ textTransform: 'none', fontWeight: 600, color: T.textMuted }}
-            >
-              Începe din nou
-            </Button>
+            <Stack direction="row" spacing={1}>
+              {pendingLink && (
+                <Button
+                  variant="contained"
+                  disableElevation
+                  component="a"
+                  href={pendingLink}
+                  target="_blank"
+                  rel="noopener"
+                  sx={{
+                    borderRadius: `${T.radius.full}px`,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    backgroundColor: T.primary,
+                    whiteSpace: 'nowrap',
+                    '&:hover': { backgroundColor: T.primaryStrong },
+                  }}
+                >
+                  Continuă la bancă
+                </Button>
+              )}
+              <Button
+                variant="text"
+                onClick={() => {
+                  setPendingLink(null)
+                  setShowPicker(true)
+                }}
+                sx={{ textTransform: 'none', fontWeight: 600, color: T.textMuted }}
+              >
+                Începe din nou
+              </Button>
+            </Stack>
           </Stack>
         </Paper>
       )}

@@ -1,4 +1,5 @@
 import { Navigate } from 'react-router-dom'
+import { ROUTES } from '../../constants/routes'
 import { useEffect, useState } from 'react'
 import { useAppSelector } from '../../store/hooks'
 import { stripeService, type SubscriptionResponse } from '../../services/stripe.service'
@@ -37,5 +38,5 @@ export default function RoleRedirect() {
     return <Navigate to={resolveClientPath(sub)} replace />
   }
 
-  return <Navigate to="/auth" replace />
+  return <Navigate to={ROUTES.login} replace />
 }

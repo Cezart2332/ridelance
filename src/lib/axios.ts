@@ -2,6 +2,7 @@ import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { store } from '../store/store'
 import { clearCredentials } from '../store/authSlice'
 import { isRegistrationPath, refreshAccessToken } from './refreshSession'
+import { ROUTES } from '../constants/routes'
 
 // Create the configured Axios instance
 export const api = axios.create({
@@ -82,8 +83,9 @@ api.interceptors.response.use(
       store.dispatch(clearCredentials())
 
       const path = window.location.pathname
-      if (!path.startsWith('/auth') && !isRegistrationPath(path)) {
-        window.location.href = '/auth'
+      // Potrivire exactă: login și register sunt rute separate acum, fără prefix comun.
+      if (path !== ROUTES.login && path !== ROUTES.forgotPassword && !isRegistrationPath(path)) {
+        window.location.href = ROUTES.login
       }
       return Promise.reject(refreshError)
     } finally {

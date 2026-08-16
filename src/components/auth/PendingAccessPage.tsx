@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { ROUTES } from '../../constants/routes'
 import {
   Box,
   Button,
@@ -85,7 +86,7 @@ export default function PendingAccessPage() {
 
   const handleLogout = () => {
     authService.logout()
-    navigate('/auth')
+    navigate(ROUTES.login)
   }
 
   const TimeBox = ({ value, label }: { value: number; label: string }) => (

@@ -1,4 +1,5 @@
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
+import { ROUTES } from '../../constants/routes'
 import {
   Alert,
   Box,
@@ -257,7 +258,7 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
 
   const handleLogout = () => {
     authService.logout()
-    navigate('/auth')
+    navigate(ROUTES.login)
   }
 
   const goToStep = (target: StepView) => {

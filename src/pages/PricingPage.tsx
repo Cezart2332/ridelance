@@ -1,4 +1,5 @@
 import { Box, Button, Card, CardContent, Container, Stack, Typography } from '@mui/material'
+import { ROUTES } from '../constants/routes'
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
 import { TOKENS } from '../constants/tokens'
@@ -14,7 +15,7 @@ export function PricingPage() {
 
   const handleStart = () => {
     if (!isInitialized) return
-    navigate(accessToken ? '/app' : '/auth')
+    navigate(accessToken ? '/app' : ROUTES.login)
   }
 
   return (

@@ -1,4 +1,5 @@
 import { Box, Button, Card, CardContent, Container, Paper, Stack, Typography } from '@mui/material'
+import { ROUTES } from '../constants/routes'
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '../store/hooks'
@@ -30,7 +31,7 @@ export function HomePage() {
 
   const handleStart = () => {
     if (!isInitialized) return
-    navigate(accessToken ? '/app' : '/auth')
+    navigate(accessToken ? '/app' : ROUTES.login)
   }
 
   return (
