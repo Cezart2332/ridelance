@@ -10,6 +10,7 @@ import { getErrorMessage } from '../../utils/errorHandler'
 import { buildUploadFile } from '../../utils/imagesToPdf'
 import { MAX_UPLOAD_BYTES } from '../../utils/uploadValidation'
 import { stateColors, TOKENS } from './onboardingTheme'
+import { TwoSidedUpload } from './TwoSidedUpload'
 import { UploadField } from './UploadField'
 
 interface DocumentFirstUploadProps {
@@ -97,10 +98,10 @@ export function DocumentFirstUpload({
   const upload = async (picked: File[]) => {
     if (picked.length === 0) return
 
-    if (requireBothSides && picked.length < 2 && !picked.some((f) => f.type === 'application/pdf')) {
-      setError('Încarcă ambele fețe: alege două poze deodată (față și verso) sau un PDF cu ambele.')
-      return
-    }
+    // Documentele cu două fețe nu mai trec pe aici incomplete: `TwoSidedUpload` cheamă `upload`
+    // abia când are ambele fețe (sau un PDF care le conține). Verificarea de dinainte respingea
+    // o singură poză cu „alege două poze deodată" — un mesaj care cerea o selecție multiplă pe
+    // care mulți nu o pot face pe telefon.
 
     setProgress(0)
     setError(null)
@@ -238,14 +239,23 @@ export function DocumentFirstUpload({
 
       {showUpload && (
         <Stack spacing={1.2}>
-          <UploadField
-            label={current ? `Încarcă o versiune nouă: ${label}` : `Încarcă: ${label}`}
-            hideLabel
-            spacious={spacious}
-            hint={hint}
-            onPick={(picked) => void upload(picked)}
-            disabled={uploading}
-          />
+          {requireBothSides ? (
+            <TwoSidedUpload
+              label={label}
+              hint={hint}
+              disabled={uploading}
+              onComplete={(picked) => void upload(picked)}
+            />
+          ) : (
+            <UploadField
+              label={current ? `Încarcă o versiune nouă: ${label}` : `Încarcă: ${label}`}
+              hideLabel
+              spacious={spacious}
+              hint={hint}
+              onPick={(picked) => void upload(picked)}
+              disabled={uploading}
+            />
+          )}
 
           {uploading && (
             <LinearProgress

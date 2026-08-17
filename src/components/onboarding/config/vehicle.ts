@@ -195,7 +195,7 @@ export const vehicleMicroSteps: MicroStepDef[] = [
     document: {
       category: 'CarteIdentitateAuto',
       label: 'Carte de identitate a vehiculului (CIV)',
-      hint: 'Față și verso, în aceeași încărcare.',
+      hint: 'Seria și datele tehnice trebuie să fie lizibile.',
       requireBothSides: true,
     },
     visibleWhen: hasVehicle,

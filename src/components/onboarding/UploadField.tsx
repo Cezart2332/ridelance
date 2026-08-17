@@ -145,8 +145,13 @@ export function UploadField({
     // Un PDF ține loc de document întreg — nu se combină cu altceva.
     const images = picked.filter((f) => !isPdf(f))
 
-    // Modul imediat nu acumulează: ce s-a ales acum e documentul care pleacă.
-    onPick?.(pickedPdf ? [pickedPdf] : images)
+    if (onPick) {
+      // Modul imediat nu acumulează: ce s-a ales acum e documentul care pleacă. Când părintele
+      // ține și lista (`files`), tot el decide ce înseamnă alegerea — nu i-o rescriem noi de
+      // aici, altfel cele două surse s-ar contrazice.
+      onPick(pickedPdf ? [pickedPdf] : images)
+      return
+    }
 
     if (pickedPdf) {
       onFilesChange?.([pickedPdf])

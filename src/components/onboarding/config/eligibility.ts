@@ -91,7 +91,7 @@ export const eligibilityMicroSteps: MicroStepDef[] = [
     document: {
       category: 'PermisConducere',
       label: 'Permis de conducere',
-      hint: 'Față și verso, în aceeași încărcare. Data emiterii trebuie să fie lizibilă.',
+      hint: 'Data emiterii trebuie să fie lizibilă.',
       requireBothSides: true,
     },
     isDone: (c) => hasDocument(c, PERMIS),
@@ -125,6 +125,8 @@ export const eligibilityMicroSteps: MicroStepDef[] = [
       category: 'AtestatSofer',
       label: 'Atestat de transport alternativ',
       hint: 'Documentul emis de ARR. Data expirării trebuie să fie lizibilă.',
+      // Atestatul are date pe ambele fețe, ca permisul și CIV-ul.
+      requireBothSides: true,
     },
     visibleWhen: (c) => c.answers.attestation === 'yes' || hasDocument(c, ATESTAT),
     isDone: (c) => hasDocument(c, ATESTAT),
