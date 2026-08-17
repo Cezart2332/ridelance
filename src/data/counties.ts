@@ -49,3 +49,25 @@ export const COUNTIES = [
 ] as const
 
 export type County = (typeof COUNTIES)[number]
+
+/** Compară județe fără să depindă de diacritice sau de majuscule. */
+const fold = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[\s.-]+/g, '')
+    .toLowerCase()
+
+/**
+ * Forma canonică a unui județ, sau `null` dacă nu se recunoaște.
+ *
+ * OCR-ul citește ce scrie pe buletin: „CLUJ", „Bistrita-Nasaud", „jud. Timis". Un `<Select>` cere
+ * exact una dintre valorile din listă, altfel afișează gol — adică precompletarea ar părea că nu
+ * s-a întâmplat, deși valoarea era acolo.
+ */
+export function canonicalCounty(raw: string | null | undefined): County | null {
+  if (!raw) return null
+
+  const wanted = fold(raw.replace(/^jud\.?\s*/i, ''))
+  return COUNTIES.find((county) => fold(county) === wanted) ?? null
+}

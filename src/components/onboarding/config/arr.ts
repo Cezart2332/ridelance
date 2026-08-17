@@ -1,4 +1,4 @@
-import { COUNTIES } from '../../../data/counties'
+import { COUNTIES, canonicalCounty } from '../../../data/counties'
 import type { DocumentSummary } from '../../../services/document.service'
 import { onboardingService, type ArrState } from '../../../services/onboarding.service'
 import { requirementsOf } from '../documentRequirements'
@@ -67,7 +67,10 @@ const documentSteps: MicroStepDef[] = ARR_DOCUMENTS.map((req) => ({
 
 /** Județul agenției: alegerea din sesiune, apoi ce s-a salvat, apoi sediul social. */
 const agencyCounty = (c: MicroStepContext): string =>
-  field(c, 'arr_agentie', 'county') || arrOf(c)?.agencyName || c.state?.primaryCounty || ''
+  field(c, 'arr_agentie', 'county') ||
+  arrOf(c)?.agencyName ||
+  canonicalCounty(c.state?.primaryCounty) ||
+  ''
 
 export const arrMicroSteps: MicroStepDef[] = [
   ...documentSteps,
@@ -84,9 +87,11 @@ export const arrMicroSteps: MicroStepDef[] = [
         key: 'county',
         label: 'Agenție ARR (județ)',
         options: COUNTIES.map((county) => ({ value: county, title: county })),
-        helper: 'Precompletat pe baza adresei sediului social. Poți alege alt județ.',
-        // Sursa precompletării e starea serverului, nu ce s-a tastat pe alt ecran.
-        initialValue: (c) => c.state?.primaryCounty ?? '',
+        helper: 'Precompletat din adresa ta. Poți alege alt județ.',
+        // Sursa precompletării e starea serverului: sediul social, altfel domiciliul citit din
+        // buletin. Se trece prin forma canonică fiindcă OCR-ul întoarce „CLUJ" sau
+        // „Bistrita-Nasaud", iar selectul cere exact valoarea din listă.
+        initialValue: (c) => canonicalCounty(c.state?.primaryCounty) ?? '',
       },
       {
         key: 'method',

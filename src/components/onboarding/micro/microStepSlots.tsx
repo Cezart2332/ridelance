@@ -5,6 +5,7 @@ import {
   type ArrState,
   type VehicleState,
 } from '../../../services/onboarding.service'
+import { canonicalCounty } from '../../../data/counties'
 import { BankAccountCta } from '../../common/BankAccountCta'
 import { ArrPaymentDetailsCard } from '../arr/ArrPaymentDetailsCard'
 import { DossierPanel } from '../arr/DossierPanel'
@@ -53,7 +54,7 @@ function arrCounty(c: MicroStepContext): string | null {
   if (typeof answered === 'string' && answered !== '') return answered
 
   const arr = (c.resources.arr as ArrState | undefined) ?? null
-  return arr?.agencyName || c.state?.primaryCounty || null
+  return arr?.agencyName || canonicalCounty(c.state?.primaryCounty)
 }
 
 /**
