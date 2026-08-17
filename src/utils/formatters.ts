@@ -56,7 +56,9 @@ export function formatDocumentCategory(category: string | null | undefined): str
     case 'CazierJudiciar':
       return 'Cazier Judiciar';
     case 'AdeverintaMedicala':
-      return 'Adeverință Medicală';
+      return 'Aviz medical';
+    case 'AvizPsihologic':
+      return 'Aviz psihologic';
     case 'ITP':
       return 'ITP Valid';
     case 'RCA':

@@ -69,7 +69,7 @@ export const SUBSCRIPTION_PLANS: PlanInfo[] = [
     cta: 'Alege Solo',
     footnote: 'Fără contabilitate lunară inclusă.',
     list: [
-      'Deschidere PFA la tarif preferențial — 300 lei',
+      'Deschidere PFA la tarif preferențial — 399 lei',
       'Export lunar pentru contabilul propriu',
       'Asistență și consultanță constantă',
       'Acces complet în dashboardul RIDElance',
@@ -142,7 +142,16 @@ export const stripeService = {
   /**
    * Generates a checkout session and redirects the user to Stripe.
    */
-  async redirectToInfiintarePfa(successUrl?: string, cancelUrl?: string): Promise<void> {
+  /**
+   * @param priceLabel Suma afișată pe ecranul de checkout, formatată de apelant din
+   *   `onboardingState.onboardingAdvanceBani`. Nu are voie să fie scrisă aici: prețul e în
+   *   `Pricing` pe backend, iar o copie hardcodată aici l-ar contrazice tăcut.
+   */
+  async redirectToInfiintarePfa(
+    successUrl?: string,
+    cancelUrl?: string,
+    priceLabel?: string,
+  ): Promise<void> {
     const origin = window.location.origin
     const effectiveSuccessUrl = successUrl || `${origin}/inregistrare/succes?session_id={{CHECKOUT_SESSION_ID}}`
     const effectiveCancelUrl = cancelUrl || `${origin}/inregistrare/pfa`
@@ -156,9 +165,13 @@ export const stripeService = {
       })
       sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
       sessionStorage.setItem('stripe_cancel_url', effectiveCancelUrl)
-      sessionStorage.setItem('stripe_checkout_title', 'Înființare PFA')
-      sessionStorage.setItem('stripe_checkout_price', '300 lei')
-      sessionStorage.setItem('stripe_checkout_desc', 'Serviciu de înființare PFA complet de către echipa RIDElance.')
+      sessionStorage.setItem('stripe_checkout_title', 'Abonament RIDElance Start — avans')
+      if (priceLabel) sessionStorage.setItem('stripe_checkout_price', priceLabel)
+      else sessionStorage.removeItem('stripe_checkout_price')
+      sessionStorage.setItem(
+        'stripe_checkout_desc',
+        'Plata în avans a abonamentului RIDElance Start. Nerambursabilă.',
+      )
       window.location.href = '/checkout'
     } catch (error) {
       // Refuzul se propagă: de la RL-03 încoace serverul răspunde 422 cu ce mai lipsește din

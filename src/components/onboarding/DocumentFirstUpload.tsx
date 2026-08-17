@@ -32,6 +32,12 @@ interface DocumentFirstUploadProps {
   pfaRegistrationId?: string | null
   /** Reîncarcă starea de onboarding după upload. */
   onUploaded?: () => void
+  /**
+   * Utilizatorul a cerut înlocuirea fișierului. Ecranul care avansează automat după un upload
+   * reușit își anulează tranziția pe semnalul ăsta — altfel ar pleca de sub el fix când începe
+   * o corectură (spec fix-uri §6).
+   */
+  onReplaceStarted?: () => void
   /** Documentul e singurul lucru de pe ecran: zonă de upload mare, cu instrucțiune. */
   spacious?: boolean
   /** Ce trebuie să se vadă în document. Apare în zona de upload, doar în modul `spacious`. */
@@ -60,6 +66,7 @@ export function DocumentFirstUpload({
   documents,
   pfaRegistrationId,
   onUploaded,
+  onReplaceStarted,
   spacious = false,
   hint,
   hideLabel = false,
@@ -216,8 +223,15 @@ export function DocumentFirstUpload({
           <Typography sx={{ flex: 1, color: TOKENS.textMuted, fontSize: '0.85rem' }} noWrap>
             {reused ? `${current.originalFileName} · de la „${fromStepLabel}”` : current.originalFileName}
           </Typography>
-          <Button size="small" onClick={() => setReplacing(true)} sx={{ color: TOKENS.textMuted }}>
-            Înlocuiește
+          <Button
+            size="small"
+            onClick={() => {
+              setReplacing(true)
+              onReplaceStarted?.()
+            }}
+            sx={{ color: TOKENS.textMuted }}
+          >
+            Înlocuiește fișierul
           </Button>
         </Stack>
       )}

@@ -40,6 +40,11 @@ export interface StepView {
   reason: string | null
   /** Ce mai lipsește din pas, compus pe server. Populat doar pe pasul curent. */
   checklist: OnboardingChecklistItem[] | null
+  /**
+   * Pasul a fost sărit sau completat cu date de test din uneltele de dezvoltare. Se marchează
+   * distinct în stepper, ca să nu poată fi confundat cu unul parcurs corect (spec §13.6).
+   */
+  skippedInDev: boolean
 }
 
 /** Secțiunile de aprobare (OnboardingSectionApproval) care aparțin fiecărui pas. */
@@ -121,6 +126,7 @@ export function toStepView(
     label: step.label,
     path: step.path,
     checklist: step.checklist,
+    skippedInDev: state?.devSkippedSteps?.includes(step.key) ?? false,
   }
 
   const serverState = SERVER_STATE[step.state] ?? 'locked'

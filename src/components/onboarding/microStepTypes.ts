@@ -36,6 +36,15 @@ export type MicroStepKind =
 export interface ChoiceDef {
   value: string
   title: string
+  /**
+   * Varianta există, dar nu se poate alege încă. Rămâne pe ecran, gri, cu explicație — ascunsă
+   * ar face utilizatorul să caute o opțiune despre care i s-a spus că vine.
+   */
+  disabled?: boolean
+  /** Eticheta de lângă o variantă dezactivată: „În curând". */
+  badge?: string
+  /** Ce se explică la hover pe o variantă dezactivată. Obligatoriu împreună cu `disabled`. */
+  disabledReason?: string
 }
 
 /**
@@ -69,11 +78,29 @@ export interface FieldDef {
   key: string
   label: string
   type?: 'text' | 'email' | 'tel' | 'password' | 'number'
-  placeholder?: string
+  /** Text sau funcție de context — pe ramura „am deja cont" indiciul e altul decât pe cealaltă. */
+  placeholder?: string | ((c: MicroStepContext) => string | undefined)
   /** O linie sub câmp, doar când chiar lămurește ceva. */
-  helper?: string
+  helper?: string | ((c: MicroStepContext) => string | undefined)
   optional?: boolean
   options?: ChoiceDef[]
+
+  /**
+   * Valoarea cu care pornește câmpul, când sesiunea încă n-are un răspuns pentru el.
+   *
+   * Precompletările citesc TOATE de aici, din starea serverului — de asta emailul de la Oblio și
+   * cel de la Uber Fleet nu mai pot ajunge să vină din surse diferite (spec fix-uri §5).
+   */
+  initialValue?: (c: MicroStepContext) => string
+
+  /**
+   * Ce e greșit în valoarea curentă, sau `null` dacă e bună. Rulează și pe `Continuă`: un câmp
+   * invalid ține butonul dezactivat, iar motivul se afișează sub el.
+   */
+  validate?: (value: string) => string | null
+
+  /** Parolele primesc buton de afișare și indicator de putere. */
+  strengthMeter?: boolean
 }
 
 export interface MicroStepDef {
@@ -138,6 +165,16 @@ export interface MicroStepDef {
     requireBothSides?: boolean
   }
 
+  /**
+   * Un bloc bogat, randat sub textul ecranului. Config-ul rămâne date: numește componenta, nu o
+   * construiește. Registrul e în `micro/microStepSlots.tsx`.
+   *
+   * Există pentru cazurile în care ecranul chiar are nevoie de mai mult decât text și un buton —
+   * codul QR al băncii, cardul cu contul ARR. Alternativa (o pagină proprie pentru fiecare) e
+   * exact ce a produs ramurile divergente pe care le reparăm.
+   */
+  slot?: MicroStepSlot
+
   /** Micro-pasul apare doar dacă predicatul e adevărat. Absent = mereu vizibil. */
   visibleWhen?: (c: MicroStepContext) => boolean
 
@@ -150,6 +187,29 @@ export interface MicroStepDef {
 
 /** Cheile din `iconMap` (`micro/microStepIcons.tsx`) — nu string liber, ca să nu apară typo-uri. */
 export type MicroStepIcon = 'user' | 'idCard' | 'car' | 'shield' | 'checkCircle' | 'folder'
+
+/**
+ * Blocurile bogate pe care le poate cere un micro-pas. Închise ca uniune, nu string liber:
+ * fiecare apare pe mai multe ramuri, iar un typo ar face-o să dispară tăcut de pe una.
+ */
+export type MicroStepSlot =
+  /** Butonul de deschidere cont la bancă + codul QR cu același link. */
+  | 'bankAccountCta'
+  /** Contul de trezorerie ARR pentru județul ales, cu butoane de copiere. */
+  | 'arrPaymentDetails'
+  /** Dosarul generat: previzualizare, descărcare și starea „descărcat cel puțin o dată". */
+  | 'arrDossier'
+  | 'vehicleDossier'
+
+/**
+ * Sloturile care ȚIN pasul pe loc: ecranul nu se poate părăsi până când serverul nu confirmă că
+ * lucrul din slot s-a făcut.
+ *
+ * Restul nu blochează, și e important că nu blochează: deschiderea contului la bancă se întâmplă
+ * la bancă, iar cardul cu contul ARR e informativ. Un ecran care așteaptă la infinit o confirmare
+ * pe care n-o poate primi e o fundătură.
+ */
+export const BLOCKING_SLOTS = new Set<MicroStepSlot>(['arrDossier', 'vehicleDossier'])
 
 /** Un micro-pas filtrat, cu poziția lui în parcursul real al utilizatorului. */
 export interface MicroStepView {

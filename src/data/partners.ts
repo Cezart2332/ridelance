@@ -21,12 +21,24 @@ export interface Partner {
 export const BCR_GEORGE_MESSAGE =
   'Dacă ești șofer Uber sau Bolt, contul George pentru afacerea ta îți oferă administrarea afacerii direct din telefon, încasări și plăți electronice fără comisioane, card Business inclus și, dacă ești la început de drum, 12 luni fără comision de administrare. Practic, mai puține costuri și mai mult control asupra veniturilor tale.'
 
-export const BCR_ONBOARDING_URL =
-  'https://george.bcr.ro/business-onboarding-start/?entity=0785&productId=GeorgeBusinessAccount&productId=GeorgeBusiness&channelType=gboPartner'
+/**
+ * Deschiderea contului George — o singură definiție pentru toate locurile în care apare
+ * (onboarding, dashboard, pagina de parteneri).
+ *
+ * Linkul și QR-ul stau împreună intenționat: erau în două locuri, iar ecranul de onboarding
+ * ajunsese să arate doar butonul. Codul QR e imaginea furnizată de BCR pentru **acest** link —
+ * dacă `url` se schimbă, `qrImage` trebuie înlocuit în aceeași modificare.
+ */
+export const BCR_ACCOUNT = {
+  url: 'https://george.bcr.ro/business-onboarding-start/?entity=0785&productId=GeorgeBusinessAccount&productId=GeorgeBusiness&channelType=gboPartner',
+  qrImage: '/codqrbcr.jpeg',
+  qrLabel: 'Scanează pentru a deschide contul de pe telefon',
+  ctaLabel: 'Deschide cont la BCR',
+} as const
 
-export const BCR_QR_CODES = [
-  { label: 'Scanează cu telefonul pentru a deschide contul George', image: '/codqrbcr.jpeg' },
-]
+export const BCR_ONBOARDING_URL = BCR_ACCOUNT.url
+
+export const BCR_QR_CODES = [{ label: BCR_ACCOUNT.qrLabel, image: BCR_ACCOUNT.qrImage }]
 
 export const BCR_OFFERS = [
   {

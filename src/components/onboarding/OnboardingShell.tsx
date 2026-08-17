@@ -22,6 +22,7 @@ import { onboardingService } from '../../services/onboarding.service'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { OfficeBookingDialog } from './dialogs/OfficeBookingDialog'
 import { SupportEmailDialog } from './dialogs/SupportEmailDialog'
+import { OnboardingDevTools } from './devtools/OnboardingDevTools'
 import { MicroStepProvider } from './MicroStepProvider'
 import { useMotionTokens } from './motion'
 import { onboardingMuiTheme } from './onboardingMuiTheme'
@@ -289,6 +290,12 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: SHELL.bg.app }}>
+      {/*
+        Bannerul de mod dev și panoul flotant. În build-ul de producție componenta se reduce la
+        `null` — vezi `OnboardingDevTools` (spec fix-uri §13.1/§13.6).
+      */}
+      <OnboardingDevTools />
+
       {isMobile ? (
         <>
           <MobileStepBar

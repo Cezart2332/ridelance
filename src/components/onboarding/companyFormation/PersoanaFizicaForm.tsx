@@ -4,7 +4,7 @@ import type { PersoanaFizica, TipActIdentitate } from '../../../services/company
 import { TOKENS, inputSx } from '../onboardingTheme'
 import { AdresaForm } from './AdresaForm'
 import { PrefilledNotice } from './PrefilledNotice'
-import { cnpBirthDate, cnpSex, isValidCnp } from './cnp'
+import { cnpBirthDate, cnpSex, isValidCnp, normalizeCnp } from './cnp'
 
 const TIP_ACT_LABELS: Record<TipActIdentitate, string> = {
   CI: 'Carte de identitate',
@@ -23,6 +23,11 @@ interface PersoanaFizicaFormProps {
   prefilled?: Set<string>
   /** Data nașterii citită din CI la Eligibilitate, pentru verificarea de consistență cu CNP-ul. */
   knownBirthDate?: string | null
+  /**
+   * OCR-ul a citit buletinul cu încredere sub prag (sau deloc). Atunci nu are voie să contrazică
+   * utilizatorul: verificarea de consistență devine informativă, nu semnal de eroare.
+   */
+  identityReadUnreliable?: boolean
   disabled?: boolean
 }
 
@@ -36,6 +41,7 @@ export function PersoanaFizicaForm({
   onBlur,
   prefilled = new Set(),
   knownBirthDate,
+  identityReadUnreliable = false,
   disabled,
 }: PersoanaFizicaFormProps) {
   const set = <K extends keyof PersoanaFizica>(field: K, next: PersoanaFizica[K]) =>
@@ -44,14 +50,18 @@ export function PersoanaFizicaForm({
   const text = (field: keyof PersoanaFizica, next: string) =>
     set(field, (next === '' ? null : next) as PersoanaFizica[typeof field])
 
-  const cnp = value.cnp ?? ''
+  // Normalizat pe ambele părți, mereu: comparațiile de mai jos trebuie să compare numărul, nu
+  // ambalajul lui (spații nedespărțitoare, zero-width din copy-paste, separatoare).
+  const cnp = normalizeCnp(value.cnp)
   const cnpComplete = cnp.length === 13
   const cnpInvalid = cnpComplete && !isValidCnp(cnp)
 
-  // Verificare soft: CNP-ul codifică data nașterii și sexul. Dacă nu se potrivesc cu ce am
-  // citit din CI, cel mai probabil o cifră e greșită — dar nu blocăm, doar semnalăm.
-  const derivedBirth = cnpComplete ? cnpBirthDate(cnp) : null
+  // CNP-ul codifică data nașterii și sexul. Dacă nu se potrivesc cu ce am citit din CI, cel mai
+  // probabil o cifră e greșită — dar OCR-ul nu e arbitru: sub pragul de încredere, nu spunem
+  // nimic. Vezi `IdentityConfidence` pe backend și §1 din specul de fix-uri.
+  const derivedBirth = cnpComplete && !cnpInvalid ? cnpBirthDate(cnp) : null
   const birthMismatch =
+    !identityReadUnreliable &&
     derivedBirth !== null &&
     knownBirthDate != null &&
     derivedBirth !== knownBirthDate.slice(0, 10)
@@ -84,27 +94,65 @@ export function PersoanaFizicaForm({
         />
       </Box>
 
-      <TextField
-        label="CNP"
-        value={cnp}
-        onChange={(e) => text('cnp', e.target.value.replace(/\D/g, '').slice(0, 13))}
-        onBlur={onBlur}
-        disabled={disabled}
-        error={cnpInvalid}
-        helperText={cnpInvalid ? 'CNP invalid — verifică cifrele.' : undefined}
-        sx={inputSx}
-        fullWidth
-        slotProps={{
-          htmlInput: { inputMode: 'numeric', maxLength: 13 },
-        }}
-      />
+      <Box>
+        <TextField
+          label="CNP"
+          value={cnp}
+          onChange={(e) => text('cnp', normalizeCnp(e.target.value).slice(0, 13))}
+          onBlur={onBlur}
+          disabled={disabled}
+          error={cnpInvalid}
+          helperText={cnpInvalid ? 'CNP invalid — verifică cifrele.' : undefined}
+          sx={inputSx}
+          fullWidth
+          slotProps={{
+            htmlInput: { inputMode: 'numeric', maxLength: 13 },
+          }}
+        />
 
-      {birthMismatch && (
-        <Alert severity="warning" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
-          Verifică CNP-ul: data nașterii din el ({derivedBirth}) nu se potrivește cu cea din
-          cartea de identitate{cnpSex(cnp) ? ` (sex ${cnpSex(cnp)})` : ''}.
-        </Alert>
-      )}
+        {/*
+          Alertele stau imediat sub câmpul lor, nu în josul paginii: explicația trebuie citită
+          fără să pierzi din ochi ce anume trebuie corectat. `role="alert"` + `aria-live` ca
+          apariția lor să fie anunțată, nu doar desenată.
+        */}
+        {cnpInvalid && (
+          <Alert
+            severity="error"
+            role="alert"
+            aria-live="polite"
+            sx={{ mt: 1, borderRadius: `${TOKENS.radius.md}px` }}
+          >
+            Cifra de control a CNP-ului nu iese. Verifică toate cele 13 cifre, în special ziua și
+            luna nașterii — o singură cifră greșită invalidează numărul.
+          </Alert>
+        )}
+
+        {identityReadUnreliable && !cnpInvalid && (
+          <Alert
+            severity="warning"
+            role="alert"
+            aria-live="polite"
+            sx={{ mt: 1, borderRadius: `${TOKENS.radius.md}px` }}
+          >
+            Nu am putut citi clar CNP-ul din buletin. Verifică datele introduse manual — poți
+            continua oricum, un coleg le confirmă înainte de depunere.
+          </Alert>
+        )}
+
+        {birthMismatch && (
+          <Alert
+            severity="warning"
+            role="alert"
+            aria-live="polite"
+            sx={{ mt: 1, borderRadius: `${TOKENS.radius.md}px` }}
+          >
+            Data nașterii din CNP ({derivedBirth}) diferă de cea citită din buletin (
+            {knownBirthDate?.slice(0, 10)}
+            {cnpSex(cnp) ? `, sex ${cnpSex(cnp)}` : ''}). Corectează CNP-ul sau reîncarcă
+            buletinul dacă poza era neclară.
+          </Alert>
+        )}
+      </Box>
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '2fr 1fr 1fr' }, gap: 1.5 }}>
         <TextField

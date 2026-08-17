@@ -1,4 +1,4 @@
-import { Box, ButtonBase, Stack, Tooltip, Typography } from '@mui/material'
+import { Box, ButtonBase, Chip, Stack, Tooltip, Typography } from '@mui/material'
 
 import { SHELL } from '../shellTokens'
 import { stepStateLabel, type StepView } from '../stepModel'
@@ -62,6 +62,15 @@ export function StepRailItem({
         >
           {step.label}
         </Typography>
+
+        {/* Un pas sărit în modul dev nu are voie să arate ca unul parcurs corect (§13.6). */}
+        {step.skippedInDev && (
+          <Chip
+            label="sărit"
+            size="small"
+            sx={{ height: 18, fontSize: 10, fontWeight: 700, flexShrink: 0 }}
+          />
+        )}
       </Stack>
     </ButtonBase>
   )

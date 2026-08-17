@@ -7,6 +7,7 @@ import {
   Checkbox,
   FormControlLabel,
   IconButton,
+  Link,
   MenuItem,
   Radio,
   RadioGroup,
@@ -44,12 +45,29 @@ const ADDRESS_KEYS: (keyof Adresa)[] = [
   'scara',
   'etaj',
   'apartament',
+  'codPostal',
 ]
 
 const sameAddress = (a: Adresa, b: Adresa) =>
   ADDRESS_KEYS.every((k) => (a[k] ?? '') === (b[k] ?? ''))
 
 const hasAddress = (a: Adresa) => Boolean(a.judet && a.localitate && a.strada && a.numar)
+
+/** Ce mai lipsește din adresa sediului, ca butonul dezactivat să spună de ce e dezactivat. */
+function missingOfficeFields(a: Adresa): string[] {
+  const required: [keyof Adresa, string][] = [
+    ['judet', 'județul'],
+    ['localitate', 'localitatea'],
+    ['strada', 'strada'],
+    ['numar', 'numărul'],
+  ]
+
+  const missing = required.filter(([key]) => !a[key]).map(([, label]) => label)
+  // Codul poștal are o cerință în plus față de „completat": șase cifre.
+  if ((a.codPostal ?? '').length !== 6) missing.push('codul poștal (6 cifre)')
+
+  return missing
+}
 
 /**
  * Id-ul unui proprietar nou se generează în pagină, nu pe server: două autosave-uri pornite
@@ -161,6 +179,7 @@ export default function CompanyFormationOfficePage() {
 
   const isOwn = office.type === 'Own'
   const needsOwners = isOwn && office.isOwner === false
+  const officeMissing = isOwn ? missingOfficeFields(office.adresa) : []
 
   return (
     <Stack spacing={3}>
@@ -246,8 +265,14 @@ export default function CompanyFormationOfficePage() {
             </RadioGroup>
           </PanelCard>
 
-          <PanelCard title="Adresa sediului">
+          <PanelCard title="Sediul social">
             <Stack spacing={2}>
+              {/*
+                Bifat implicit când OCR-ul a citit adresa din buletin: în marea majoritate a
+                cazurilor sediul E acolo, iar cine face excepție o debifează. Câmpurile rămân
+                read-only cât timp e bifat — altfel s-ar putea edita o copie care se rescrie
+                la următoarea salvare.
+              */}
               <FormControlLabel
                 control={
                   <Checkbox
@@ -256,14 +281,43 @@ export default function CompanyFormationOfficePage() {
                     disabled={disabled || !hasAddress(domiciliu)}
                   />
                 }
-                label="Sediul social coincide cu domiciliul"
+                label="Sediul social este la adresa din buletin"
               />
+
+              {mirrors && !disabled && (
+                <Link
+                  component="button"
+                  type="button"
+                  onClick={() => setMirror(false)}
+                  sx={{
+                    alignSelf: 'flex-start',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    color: TOKENS.primaryStrong,
+                  }}
+                >
+                  Modifică
+                </Link>
+              )}
+
               <AdresaForm
                 value={office.adresa}
                 onChange={(adresa) => patchOffice({ adresa })}
                 onBlur={() => persist()}
+                requirePostalCode
                 disabled={disabled || mirrors}
               />
+
+              {officeMissing.length > 0 && (
+                <Alert
+                  severity="info"
+                  role="status"
+                  aria-live="polite"
+                  sx={{ borderRadius: `${TOKENS.radius.md}px` }}
+                >
+                  Mai lipsește: {officeMissing.join(', ')}.
+                </Alert>
+              )}
             </Stack>
           </PanelCard>
 

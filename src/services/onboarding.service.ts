@@ -39,6 +39,58 @@ export interface OnboardingState {
   companyFormationStage: string | null
   /** DOAR PENTRU TESTARE — de șters odată cu skipStep(). */
   testSkipEnabled: boolean
+
+  /**
+   * Emailul contului. **Singura** sursă pentru precompletarea câmpurilor de email din onboarding
+   * (Oblio, Uber Fleet, Bolt Fleet). Editarea lor nu îl schimbă — de asta vine de aici, nu din
+   * state-ul vreunui formular.
+   */
+  contactEmail: string | null
+
+  /**
+   * Județul cu care se precompletează agenția ARR: sediul social, apoi adresa din buletin.
+   * Null când nu avem încă niciuna — selectul rămâne gol, nu ghicește.
+   */
+  primaryCounty: string | null
+
+  /** Avansul RIDElance Start, în bani. Vine din `Pricing` — UI-ul nu are sume scrise în el. */
+  onboardingAdvanceBani: number
+  onboardingAdvanceIsRefundable: boolean
+
+  /** OCR-ul n-a citit sigur datele de identitate: dosarul merge mai departe, dar e marcat. */
+  requiresManualIdentityReview: boolean
+
+  /**
+   * Dosarul a fost atins de uneltele de dezvoltare. Sesiunea e în sandbox: fără plăți reale,
+   * fără emailuri, dosarele generate poartă filigran „TEST".
+   */
+  isDevSession: boolean
+
+  /**
+   * Uneltele de dezvoltare sunt disponibile pentru utilizatorul curent. Decizia e a serverului:
+   * UI-ul o citește, nu o ia. În producție e mereu `false`.
+   */
+  devToolsEnabled: boolean
+
+  /**
+   * Pașii săriți sau completați cu fixtures din panoul dev. `null` pentru sesiunile normale —
+   * nu-i interogăm degeaba la fiecare încărcare.
+   */
+  devSkippedSteps: string[] | null
+}
+
+/** Ce readuce la zero un reset din panoul dev. */
+export type OnboardingDevResetScope = 'step' | 'section' | 'all'
+
+/** Contul de trezorerie al unei agenții teritoriale ARR (spec fix-uri §8.2). */
+export interface ArrAccount {
+  countyCode: string
+  countyName: string
+  beneficiaryName: string
+  treasury: string
+  fiscalCode: string
+  /** Fără spații. Gruparea în blocuri de 4 e decizie de afișare. */
+  iban: string
 }
 
 export type OnboardingStepStatus = 'Locked' | 'InProgress' | 'AwaitingValidation' | 'Completed'
@@ -323,6 +375,35 @@ export const onboardingService = {
   /** Admin — avansează statusul de onboarding al unei platforme. */
   async advancePlatformOnboarding(pfaId: string, provider: PlatformProvider, onboardingStatus: PlatformOnboardingStatus): Promise<void> {
     await api.put(`/pfa-registrations/${pfaId}/platforms/advance`, { provider, onboardingStatus })
+  },
+
+  /**
+   * Pasul 3 — conturile de trezorerie ARR, pentru toate județele. Lista e fixă și mică; se
+   * încarcă o dată și alimentează cardul de plată pe toate ramurile.
+   */
+  async getArrAccounts(): Promise<ArrAccount[]> {
+    const { data } = await api.get<ArrAccount[]>('/onboarding/arr/accounts')
+    return data
+  },
+
+  /**
+   * DOAR PENTRU DEZVOLTARE (§13.2). Endpoint-urile răspund 404 când poarta serverului nu trece,
+   * deci un apel de aici nu poate deveni o portiță în producție.
+   */
+  async devJumpToStep(onboardingId: string, targetStepId: string): Promise<void> {
+    await api.post(`/dev/onboarding/${onboardingId}/jump`, { targetStepId })
+  },
+
+  async devCompleteStep(onboardingId: string, stepId: string, useMockData = true): Promise<void> {
+    await api.post(`/dev/onboarding/${onboardingId}/complete`, { stepId, useMockData })
+  },
+
+  async devReset(
+    onboardingId: string,
+    scope: OnboardingDevResetScope,
+    targetId?: string,
+  ): Promise<void> {
+    await api.post(`/dev/onboarding/${onboardingId}/reset`, { scope, targetId: targetId ?? null })
   },
 
   /** Pasul 3 — starea cererii ARR (null dacă nu a fost inițiată). */

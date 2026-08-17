@@ -95,8 +95,8 @@ interface AdminStep {
 const ADMIN_STEPS: AdminStep[] = [
   {
     key: 'eligibility', order: 0, label: 'Eligibilitate',
-    categories: ['Buletin', 'CarteIdentitate', 'PermisConducere', 'AtestatSofer', 'AtestatTransport', 'AdeverintaMedicala'],
-    guidedNote: 'Documentele de eligibilitate (CI, permis, atestat, adeverință). Verificarea automată + de admin se face la nivel de document.',
+    categories: ['Buletin', 'CarteIdentitate', 'PermisConducere', 'AtestatSofer', 'AtestatTransport'],
+    guidedNote: 'Documentele de eligibilitate (CI, permis, atestat). Verificarea automată + de admin se face la nivel de document. Avizele medical și psihologic se cer la pasul ARR.',
   },
   {
     key: 'pfa', order: 1, label: 'PFA',
@@ -110,7 +110,7 @@ const ADMIN_STEPS: AdminStep[] = [
   },
   {
     key: 'arr', order: 3, label: 'Autorizație transport (ARR)',
-    categories: ['CazierJudiciar', 'DovadaPlataArr', 'AutorizatieTransportAlternativ', 'DosarAutorizatieArr'],
+    categories: ['CazierJudiciar', 'AdeverintaMedicala', 'AvizPsihologic', 'DovadaPlataArr', 'AutorizatieTransportAlternativ', 'DosarAutorizatieArr'],
     sections: [{ key: 'AutorizatieTransport' }],
   },
   {

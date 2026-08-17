@@ -15,7 +15,7 @@ import { useCompanyFormation } from './useCompanyFormation'
 /** Etapa 1 din dosarul de înființare: cine ești, cu ce act și unde ai domiciliul. */
 export default function CompanyFormationPersonalDataPage() {
   const navigate = useNavigate()
-  const { eligibility } = useOnboarding()
+  const { eligibility, state: onboarding } = useOnboarding()
   const { state, patch, autosave, submit, submitting, error } = useCompanyFormation()
 
   if (!state) return null
@@ -85,6 +85,7 @@ export default function CompanyFormationPersonalDataPage() {
           onBlur={persist}
           prefilled={prefilled}
           knownBirthDate={eligibility?.dateOfBirth ?? null}
+          identityReadUnreliable={onboarding?.requiresManualIdentityReview ?? false}
           disabled={state.isLocked}
         />
       </PanelCard>

@@ -50,30 +50,98 @@ const lei = (bani: number) => (bani / 100).toLocaleString('ro-RO', { minimumFrac
 
 const EYEBROW = 'VEHICUL'
 
-const OWNERSHIP: { value: VehicleOwnershipMode | 'AddedLater'; title: string }[] = [
+/**
+ * Mașina e obligatorie pentru finalizarea înrolării: fără ea nu există copie conformă, deci nu
+ * există activitate. „Adaug mașina mai târziu" a fost scoasă din UI ȘI din tranziții — vezi
+ * specul de fix-uri §11.1.
+ */
+const OWNERSHIP: { value: ActiveOwnershipMode; title: string }[] = [
   { value: 'Owned', title: 'Proprietate' },
   { value: 'Rented', title: 'Închiriere' },
   { value: 'Leased', title: 'Leasing' },
   { value: 'Comodat', title: 'Comodat' },
-  { value: 'AddedLater', title: 'Adaug mașina mai târziu' },
 ]
 
-const CONTRACT_LABELS: Record<string, string> = {
-  Rented: 'Contract de închiriere',
-  Leased: 'Contract de leasing',
-  Comodat: 'Contract de comodat',
+/**
+ * Ce acte cere fiecare mod de deținere, peste documentele comune (talon, CIV, RCA, asigurare).
+ *
+ * Oglindește `OnboardingSectionCatalog.RequirementsForVehicle` de pe backend. Leasingul cere
+ * DOUĂ acte, nu unul: contractul și acordul finanțatorului. Al doilea lipsea cu totul, iar
+ * primul se numea, generic, „Contract" (spec fix-uri §11.2).
+ */
+interface OwnershipDocument {
+  category: 'ContractVehicul' | 'AcordLeasing'
+  label: string
+  hint: string
 }
 
-/** Modul ales acum, sau cel deja salvat. `AddedLater` e o stare separată pe server. */
+type ActiveOwnershipMode = Exclude<VehicleOwnershipMode, 'AddedLater'>
+
+const OWNERSHIP_DOCUMENTS: Record<ActiveOwnershipMode, OwnershipDocument[]> = {
+  Owned: [],
+  Rented: [
+    {
+      category: 'ContractVehicul',
+      label: 'Contract de închiriere',
+      hint: 'Contractul semnat cu proprietarul mașinii. Semnăturile trebuie să se vadă.',
+    },
+  ],
+  Leased: [
+    {
+      category: 'ContractVehicul',
+      label: 'Contract de leasing',
+      hint: 'Contractul semnat cu societatea de leasing. Semnăturile trebuie să se vadă.',
+    },
+    {
+      category: 'AcordLeasing',
+      label: 'Acord de leasing',
+      hint: 'Acordul societății de leasing pentru utilizarea vehiculului în activitatea de transport alternativ.',
+    },
+  ],
+  Comodat: [
+    {
+      category: 'ContractVehicul',
+      label: 'Contract de comodat',
+      hint: 'Contractul de folosință gratuită, semnat de ambele părți.',
+    },
+    {
+      category: 'AcordLeasing',
+      label: 'Acordul proprietarului',
+      hint: 'Acordul scris al proprietarului pentru folosirea mașinii în transport alternativ.',
+    },
+  ],
+}
+
+/** Modul ales acum, sau cel deja salvat. */
 const ownership = (c: MicroStepContext): string => {
   const answer = c.answers.mod_detinere
   if (typeof answer === 'string') return answer
-  const vehicle = vehicleOf(c)
-  if (!vehicle) return ''
-  return vehicle.addLater ? 'AddedLater' : vehicle.ownershipMode
+  return vehicleOf(c)?.ownershipMode ?? ''
 }
 
-const hasVehicle = (c: MicroStepContext) => ownership(c) !== '' && ownership(c) !== 'AddedLater'
+const hasVehicle = (c: MicroStepContext) => ownership(c) !== ''
+
+/**
+ * Un ecran de upload per (mod de deținere × document cerut). Câte unul singur e vizibil la un
+ * moment dat, iar titlul și descrierea sunt cele ale modului — de asta nu e un singur ecran
+ * „Contract" cu text generic: eticheta „Contract" pe ramura de leasing era chiar defectul.
+ */
+const ownershipDocumentSteps: MicroStepDef[] = (
+  Object.entries(OWNERSHIP_DOCUMENTS) as [ActiveOwnershipMode, OwnershipDocument[]][]
+).flatMap(([mode, documents]) =>
+  documents.map<MicroStepDef>((doc) => ({
+    id: `${mode.toLowerCase()}_${doc.category.toLowerCase()}`,
+    macroStep: 'vehicle',
+    kind: 'upload',
+    eyebrow: 'VEHICUL',
+    icon: 'folder',
+    railLabel: doc.label,
+    title: `Încarcă: ${doc.label}`,
+    document: { category: doc.category, label: doc.label, hint: doc.hint },
+    visibleWhen: (c) => ownership(c) === mode,
+    isDone: (c) => hasDocument(c, [doc.category]),
+  })),
+)
 
 export const vehicleMicroSteps: MicroStepDef[] = [
   {
@@ -87,8 +155,9 @@ export const vehicleMicroSteps: MicroStepDef[] = [
     choices: OWNERSHIP,
     submit: async (value) => {
       await onboardingService.submitVehicle({
-        ownershipMode: value === 'AddedLater' ? 'Owned' : (value as VehicleOwnershipMode),
-        addLater: value === 'AddedLater',
+        ownershipMode: value as VehicleOwnershipMode,
+        // Mașina nu se mai poate amâna: nu există parcurs de înrolare fără ea.
+        addLater: false,
         plateNumber: null,
         vin: null,
         make: null,
@@ -98,23 +167,7 @@ export const vehicleMicroSteps: MicroStepDef[] = [
     },
     isDone: (c) => ownership(c) !== '',
   },
-  {
-    id: 'contract_vehicul',
-    macroStep: 'vehicle',
-    kind: 'upload',
-    eyebrow: EYEBROW,
-    icon: 'folder',
-    railLabel: 'Contract',
-    title: 'Încarcă contractul pentru mașină',
-    document: {
-      category: 'ContractVehicul',
-      label: 'Contract vehicul',
-      hint: 'Contractul care arată că ai dreptul să folosești mașina. Semnăturile trebuie să se vadă.',
-    },
-    // Doar când mașina nu e a ta: la proprietate nu există contract de arătat.
-    visibleWhen: (c) => CONTRACT_LABELS[ownership(c)] !== undefined,
-    isDone: (c) => hasDocument(c, ['ContractVehicul']),
-  },
+  ...ownershipDocumentSteps,
   {
     id: 'talon',
     macroStep: 'vehicle',
@@ -233,6 +286,21 @@ export const vehicleMicroSteps: MicroStepDef[] = [
     isDone: (c) => vehicleOf(c)?.copyRequest != null,
   },
   {
+    id: 'vehicul_cont_arr',
+    macroStep: 'vehicle',
+    kind: 'info',
+    eyebrow: EYEBROW,
+    icon: 'idCard',
+    railLabel: 'Contul ARR',
+    title: 'Unde plătești copia conformă și ecusoanele',
+    lines: () => [
+      'Plata se face în contul agenției teritoriale ARR din județul tău. Dovada se atașează la dosar.',
+    ],
+    slot: 'arrPaymentDetails',
+    visibleWhen: (c) => vehicleOf(c)?.copyRequest != null,
+    isDone: (c) => hasDocument(c, ['DovadaPlataCopieConformaEcusoane']),
+  },
+  {
     id: 'dovada_plata',
     macroStep: 'vehicle',
     kind: 'upload',
@@ -249,41 +317,21 @@ export const vehicleMicroSteps: MicroStepDef[] = [
     isDone: (c) => hasDocument(c, ['DovadaPlataCopieConformaEcusoane']),
   },
   {
-    id: 'vehicul_genereaza',
+    id: 'vehicul_dosar',
     macroStep: 'vehicle',
-    kind: 'action',
+    kind: 'info',
     eyebrow: EYEBROW,
     icon: 'folder',
     railLabel: 'Dosarul',
-    title: 'Generăm dosarul de depus',
+    title: 'Generează și depune dosarul',
     lines: () => [
       'Punem cap la cap documentele de mai sus într-un singur PDF, în ordinea cerută de ARR.',
+      'Verifică-l, descarcă-l și abia apoi marchează depunerea.',
     ],
-    action: {
-      label: 'Generează dosarul',
-      busyLabel: 'Se generează...',
-      run: () => onboardingService.generateVehicleDossier(),
-    },
+    // Exact aceeași componentă ca la pasul ARR — inclusiv pe ramura de leasing, unde înainte
+    // lipsea cu totul (spec fix-uri §11.3).
+    slot: 'vehicleDossier',
     visibleWhen: (c) => vehicleOf(c)?.copyRequest != null,
-    isDone: (c) => vehicleOf(c)?.copyRequest?.hasDossier === true,
-  },
-  {
-    id: 'vehicul_depus',
-    macroStep: 'vehicle',
-    kind: 'action',
-    eyebrow: EYEBROW,
-    icon: 'checkCircle',
-    railLabel: 'Am depus dosarul',
-    title: 'Ai depus dosarul la ARR?',
-    lines: () => [
-      'Marchează asta după ce dosarul a ajuns la agenție. Din acel moment așteptăm copia conformă.',
-    ],
-    action: {
-      label: 'Am depus dosarul la ARR',
-      busyLabel: 'Se salvează...',
-      run: () => onboardingService.markVehicleSubmitted(),
-    },
-    visibleWhen: (c) => vehicleOf(c)?.copyRequest?.hasDossier === true,
     isDone: (c) => vehicleOf(c)?.copyRequest?.submittedAtUtc != null,
   },
   {
@@ -321,19 +369,4 @@ export const vehicleMicroSteps: MicroStepDef[] = [
       badgeSets(c).some((badge) => badge.provider === provider && badge.setCount > 0),
     isDone: (c) => hasDocument(c, [`Ecuson${provider}`]),
   })),
-  {
-    id: 'vehicul_adaugat_mai_tarziu',
-    macroStep: 'vehicle',
-    kind: 'info',
-    eyebrow: EYEBROW,
-    icon: 'car',
-    railLabel: 'Mașina, mai târziu',
-    title: 'Revii cu mașina când o ai',
-    lines: () => [
-      'Am notat că adaugi mașina mai târziu. Restul înrolării merge mai departe fără ea.',
-      'Când ai mașina, revino la acest pas: documentele și copia conformă se cer de aici.',
-    ],
-    visibleWhen: (c) => ownership(c) === 'AddedLater',
-    isDone: (c) => ownership(c) === 'AddedLater',
-  },
 ]

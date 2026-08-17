@@ -48,19 +48,28 @@ export const PERSONAL_PFA_DOCS: MainDocConfig[] = [
     primaryCategory: 'CazierJudiciar',
     tooltip: 'Original, valabilitate 6 luni.',
   },
+  // Două avize, două rânduri: le eliberează instituții diferite și expiră la date diferite,
+  // deci și alertele de expirare trebuie să fie separate (spec fix-uri §7).
   {
     id: 'medical_cert',
-    title: 'Aviz medical și psihologic al titularului',
+    title: 'Aviz medical al titularului',
     categories: ['AdeverintaMedicala'],
     primaryCategory: 'AdeverintaMedicala',
-    tooltip: 'Aviz medical și psihologic al persoanei fizice titulare.',
+    tooltip: 'Eliberat de cabinetul de medicina muncii sau de o unitate autorizată.',
+  },
+  {
+    id: 'psychological_cert',
+    title: 'Aviz psihologic al titularului',
+    categories: ['AvizPsihologic'],
+    primaryCategory: 'AvizPsihologic',
+    tooltip: 'Eliberat de un cabinet de psihologie autorizat. Are valabilitate proprie.',
   },
   {
     id: 'arr_payment',
     title: 'Dovada plății tarifului de eliberare ARR',
     categories: ['DovadaPlataArr'],
     primaryCategory: 'DovadaPlataArr',
-    tooltip: 'Dovada plății tarifului de eliberare — 300 lei, achitat în contul Agenției teritoriale ARR.',
+    tooltip: 'Dovada plății tarifului de eliberare, achitat în contul Agenției teritoriale ARR.',
   },
 ]
 

@@ -46,7 +46,7 @@ export const pricingCards = [
     cta: 'Alege Solo',
     footnote: 'Fără contabilitate lunară inclusă.',
     list: [
-      'Deschidere PFA la tarif preferențial — 300 lei',
+      'Deschidere PFA la tarif preferențial — 399 lei',
       'Export lunar pentru contabilul propriu',
       'Asistență și consultanță constantă',
       'Acces complet în dashboardul RIDElance',

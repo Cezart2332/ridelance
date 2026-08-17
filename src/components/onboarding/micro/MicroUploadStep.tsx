@@ -13,10 +13,13 @@ import { useOnboarding } from '../useOnboarding'
 export function MicroUploadStep({
   def,
   onUploaded,
+  onReplaceStarted,
 }: {
   def: MicroStepDef
   /** S-a terminat o încărcare. Runnerul îl folosește ca să treacă singur mai departe. */
   onUploaded?: () => void
+  /** S-a cerut înlocuirea fișierului — runnerul anulează avansarea programată. */
+  onReplaceStarted?: () => void
 }) {
   const { state, documents, refresh } = useOnboarding()
   const document = def.document
@@ -43,6 +46,7 @@ export function MicroUploadStep({
         onUploaded?.()
         void refresh()
       }}
+      onReplaceStarted={onReplaceStarted}
       spacious
       hint={document.hint}
       hideLabel

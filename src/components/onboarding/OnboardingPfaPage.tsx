@@ -32,11 +32,12 @@ function companyFormationPath(stage: string | null): string {
   }
 }
 
-function redirectToInfiintarePayment(): Promise<void> {
+function redirectToInfiintarePayment(priceLabel: string): Promise<void> {
   const origin = window.location.origin
   return stripeService.redirectToInfiintarePfa(
     `${origin}/onboarding?pfa_setup_paid=1&session_id={{CHECKOUT_SESSION_ID}}`,
     `${origin}/onboarding/pfa`,
+    priceLabel,
   )
 }
 
@@ -73,7 +74,10 @@ export default function OnboardingPfaPage() {
       setError(null)
       setPaying(true)
       try {
-        await redirectToInfiintarePayment()
+        // Eticheta de preț se formatează din starea serverului, nu se scrie în cod.
+        await redirectToInfiintarePayment(
+          `${(state.onboardingAdvanceBani / 100).toLocaleString('ro-RO')} lei`,
+        )
       } catch (err) {
         // 422 = dosarul nu poate fi depus încă. Mesajul serverului spune exact ce lipsește.
         setError(getErrorMessage(err, 'Nu am putut deschide plata. Încearcă din nou.'))

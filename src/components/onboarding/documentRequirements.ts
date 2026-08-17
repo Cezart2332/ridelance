@@ -12,6 +12,23 @@
  *    pasul X" în loc să lăsăm userul să creadă că e o eroare.
  */
 
+/**
+ * Clasificarea cerută de spec (§6): fiecare pas de upload e ori „un singur document", ori „mai
+ * multe".
+ *
+ * În fluxul de micro-pași răspunsul e structural, nu per-pas: un ecran = un document. Nu există
+ * ecran de upload cu două documente, pentru că `MicroStepDef.document` e o singură categorie.
+ * De aici decurge regula, aplicată o singură dată în `OnboardingRunner`:
+ *
+ * - upload reușit → se arată starea de succes (~550 ms) și se avansează automat;
+ * - butonul „Continuă" NU se randează pe ecranele de upload;
+ * - „Înlocuiește fișierul" în intervalul de tranziție anulează avansarea.
+ *
+ * Ecranele care chiar cer mai multe documente sunt paginile de secțiune din dashboard, nu
+ * onboardingul — acolo butonul rămâne, cu contorul lui.
+ */
+export type DocumentStepKind = 'single'
+
 export interface DocumentRequirement {
   /** Categoria în care se încarcă un document nou pentru această cerință. */
   category: string
@@ -87,9 +104,16 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
       label: 'Cazier judiciar',
       originStep: 'arr',
     },
+    // Două avize distincte: emise de instituții diferite, cu valabilități proprii. Erau tratate
+    // ca unul singur, deci un aviz expirat nu se putea distinge de celălalt (spec fix-uri §7).
     {
       category: 'AdeverintaMedicala',
-      label: 'Aviz medical și psihologic',
+      label: 'Aviz medical',
+      originStep: 'arr',
+    },
+    {
+      category: 'AvizPsihologic',
+      label: 'Aviz psihologic',
       originStep: 'arr',
     },
     {

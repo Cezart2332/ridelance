@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { getErrorMessage } from '../../../utils/errorHandler'
-import type { MicroStepContext } from '../microStepTypes'
+import { BLOCKING_SLOTS, type MicroStepContext } from '../microStepTypes'
 import { useMotionTokens } from '../motion'
 import { useMicroSteps } from '../useMicroSteps'
 import { useOnboarding } from '../useOnboarding'
@@ -16,8 +16,9 @@ import { MicroInfoStep } from './MicroInfoStep'
 import { MicroMultiStep } from './MicroMultiStep'
 import { MicroTextStep } from './MicroTextStep'
 import { MicroUploadStep } from './MicroUploadStep'
+import { MicroStepSlotContent } from './microStepSlots'
 import { OnboardingCard } from './OnboardingCard'
-import { multiStepComplete, textStepComplete } from './stepCompletion'
+import { multiStepIssues, textStepIssues } from './stepCompletion'
 import { StepSummary } from './StepSummary'
 
 /**
@@ -146,7 +147,15 @@ export function OnboardingRunner() {
       case 'multi':
         return <MicroMultiStep def={def} />
       case 'upload':
-        return <MicroUploadStep def={def} onUploaded={() => setArmedId(def.id)} />
+        return (
+          <MicroUploadStep
+            def={def}
+            onUploaded={() => setArmedId(def.id)}
+            // §6 — dacă utilizatorul înlocuiește fișierul cât ține tranziția, avansarea se
+            // oprește: altfel ecranul ar pleca de sub el în mijlocul unei corecturi.
+            onReplaceStarted={() => setArmedId(null)}
+          />
+        )
       case 'action':
         return (
           <MicroActionStep
@@ -182,9 +191,9 @@ export function OnboardingRunner() {
   const deadEnd = isLast && !canGoForward
 
   const footer = (): ReactNode => {
-    // Alegerea, uploadul și acțiunea se închid singure — un buton în plus ar fi doar un pas
-    // peste ceva deja terminat. Excepția: un ecran deschis din rail, care era deja rezolvat la
-    // sosire. Acolo nu se mai întâmplă nimic de la sine, deci trebuie o ieșire înainte.
+    // §6 — un pas cu UN singur document obligatoriu nu randează deloc „Continuă": uploadul
+    // reușit e semnalul, iar ecranul avansează singur. Butonul apare doar când nu se mai
+    // întâmplă nimic de la sine — un ecran deschis din rail, deja rezolvat la sosire.
     if (def.kind === 'question' || AUTO_KINDS.has(def.kind)) {
       return resolved && !armed && !deadEnd ? (
         <CardFooter disabled={submitting} onContinue={() => void advance()} />
@@ -192,22 +201,40 @@ export function OnboardingRunner() {
     }
 
     switch (def.kind) {
-      case 'text':
+      case 'text': {
+        const issues = textStepIssues(def, answers)
         return (
           <CardFooter
-            disabled={submitting || !textStepComplete(def, answers)}
+            disabled={submitting || issues.length > 0}
+            reasons={issues}
             onContinue={() => void advance()}
           />
         )
-      case 'multi':
+      }
+      case 'multi': {
+        const issues = multiStepIssues(def, value)
         return (
           <CardFooter
-            disabled={submitting || !multiStepComplete(def, value)}
+            disabled={submitting || issues.length > 0}
+            reasons={issues}
             onContinue={() => void advance()}
           />
         )
-      case 'info':
-        return deadEnd ? null : <CardFooter disabled={submitting} onContinue={() => void advance()} />
+      }
+      case 'info': {
+        if (deadEnd) return null
+        // Un ecran cu slot blocant are ceva de dus la capăt în el (dosarul generat, descărcat și
+        // marcat ca depus): se continuă abia când serverul confirmă. Sloturile informative —
+        // contul băncii, contul ARR — nu blochează pe nimeni.
+        const blocked = def.slot !== undefined && BLOCKING_SLOTS.has(def.slot) && !resolved
+        return (
+          <CardFooter
+            disabled={submitting || blocked}
+            reasons={['Generează dosarul, descarcă-l și marchează depunerea ca să poți continua.']}
+            onContinue={() => void advance()}
+          />
+        )
+      }
       case 'summary':
         return deadEnd ? null : (
           <CardFooter
@@ -254,7 +281,15 @@ export function OnboardingRunner() {
                 title={def.title}
                 footer={footer()}
               >
-                {body()}
+                <Stack spacing={2.5}>
+                  {body()}
+                  {/*
+                    Blocurile bogate (QR-ul băncii, contul ARR, dosarul generat) vin dintr-un
+                    registru unic, deci se randează identic pe toate ramurile — exact fix-ul
+                    cerut pentru „conturi ARR" și „generare dosar".
+                  */}
+                  {def.slot && <MicroStepSlotContent slot={def.slot} context={context} />}
+                </Stack>
               </OnboardingCard>
             )}
           </Stack>

@@ -161,11 +161,18 @@ const mockSummary: PfaDashboardSummary = {
     }),
   },
   sources: {
-    bolt: { configured: true, connected: true, lastSyncAt: new Date().toISOString(), errorMessage: null },
+    bolt: {
+      configured: true,
+      connected: true,
+      lastSyncAt: new Date().toISOString(),
+      errorMessage: null,
+      onboardingPending: false,
+    },
     uber: {
       connected: true,
       lastReportAt: new Date().toISOString(),
       detectedRange: `${isoDay(1)}/${isoDay(DEMO_DAYS_IN_MONTH)}`,
+      onboardingPending: false,
     },
   },
   uberIsMonthlyAggregate: true,

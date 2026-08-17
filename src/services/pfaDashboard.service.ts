@@ -108,11 +108,17 @@ export interface DashboardSources {
     connected: boolean;
     lastSyncAt: string | null;
     errorMessage: string | null;
+    /**
+     * Contul de flotă a fost configurat în onboarding, dar platforma nu l-a activat încă.
+     * Nici conectat, nici lipsă: card informativ, nu CTA (spec fix-uri §12).
+     */
+    onboardingPending: boolean;
   };
   uber: {
     connected: boolean;
     lastReportAt: string | null;
     detectedRange: string | null;
+    onboardingPending: boolean;
   };
 }
 

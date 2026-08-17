@@ -1,4 +1,3 @@
-import { BCR_ONBOARDING_URL } from '../../../data/partners'
 import type { DocumentSummary } from '../../../services/document.service'
 import { onboardingService, type Step2State } from '../../../services/onboarding.service'
 import type { MicroStepContext, MicroStepDef } from '../microStepTypes'
@@ -118,7 +117,7 @@ export const fiscalMicroSteps: MicroStepDef[] = [
   {
     id: 'deschide_cont',
     macroStep: 'fiscal',
-    kind: 'action',
+    kind: 'info',
     eyebrow: EYEBROW,
     icon: 'idCard',
     railLabel: 'Deschide cont',
@@ -127,13 +126,9 @@ export const fiscalMicroSteps: MicroStepDef[] = [
       'Beneficiezi de oferta dedicată parteneriatului RIDElance–BCR: contul îl poți folosi pentru încasările de la platforme, plata taxelor și administrarea activității PFA.',
       'Poți alege și altă bancă. După ce contul e activ, revino aici și încarcă extrasul.',
     ],
-    action: {
-      label: 'Deschide cont la BCR',
-      busyLabel: 'Se deschide...',
-      run: async () => {
-        window.open(BCR_ONBOARDING_URL, '_blank', 'noopener,noreferrer')
-      },
-    },
+    // Butonul ȘI codul QR, din aceeași componentă: pe desktop QR-ul e singura cale rezonabilă
+    // de a continua pe telefon, unde onboardingul BCR chiar se face (spec fix-uri §4).
+    slot: 'bankAccountCta',
     visibleWhen: (c) => c.answers.cont_bancar === 'no',
     // Deschiderea contului se întâmplă la bancă, nu la noi: ecranul nu are cum să afle singur.
     // Trece mai departe de îndată ce apare extrasul.
@@ -185,7 +180,17 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     icon: 'user',
     railLabel: 'Email Oblio',
     title: 'Pe ce email deschidem contul de facturare?',
-    fields: [{ key: 'email', label: 'Email cont Oblio', type: 'email' }],
+    fields: [
+      {
+        key: 'email',
+        label: 'Email cont Oblio',
+        type: 'email',
+        // Aceeași sursă ca la Uber Fleet și Bolt Fleet: emailul contului, de pe starea de
+        // onboarding. Editarea lui aici NU schimbă emailul contului RIDElance (spec §5).
+        initialValue: (c) => c.state?.contactEmail ?? '',
+        helper: 'Precompletat cu emailul contului tău RIDElance. Îl poți modifica.',
+      },
+    ],
     isDone: (c) => Boolean(step2Of(c)?.oblio?.accountEmail) || field(c, 'oblio_email', 'email') !== '',
   },
   {

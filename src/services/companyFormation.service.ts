@@ -25,6 +25,8 @@ export interface Adresa {
   scara: string | null
   etaj: string | null
   apartament: string | null
+  /** Șase cifre. Obligatoriu pentru sediul social (dosarul ONRC îl cere), opțional în rest. */
+  codPostal: string | null
 }
 
 export interface PersoanaFizica {
@@ -176,6 +178,7 @@ export const emptyAdresa = (): Adresa => ({
   scara: null,
   etaj: null,
   apartament: null,
+  codPostal: null,
 })
 
 export const companyFormationService = {

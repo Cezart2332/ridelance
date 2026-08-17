@@ -1,3 +1,4 @@
+import { COUNTIES } from '../../../data/counties'
 import type { DocumentSummary } from '../../../services/document.service'
 import { onboardingService, type ArrState } from '../../../services/onboarding.service'
 import { requirementsOf } from '../documentRequirements'
@@ -10,8 +11,8 @@ import type { MicroStepContext, MicroStepDef } from '../microStepTypes'
  * anteriori (certificat, atestat) apar tot ca ecran, dar deja bifate — userul vede că sunt
  * acoperite, în loc să se întrebe de ce lipsesc dintr-o listă pe care o știa mai lungă.
  *
- * Autorizația o emite ARR, nu noi: ultimele ecrane sunt o acțiune (am depus) și un upload al
- * documentului primit.
+ * Autorizația o emite ARR, nu noi: ultimele ecrane sunt dosarul (generat, descărcat și marcat
+ * ca depus, toate în aceeași componentă) și uploadul documentului primit.
  */
 
 const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
@@ -37,8 +38,10 @@ const HINTS: Record<string, string> = {
   CertificatConstatator: 'Trebuie să conțină codul CAEN 4939.',
   AtestatTransport: 'Preluat de la pasul de eligibilitate.',
   CazierJudiciar: 'Eliberat de poliție, valabil 6 luni de la emitere.',
-  AdeverintaMedicala: 'Avizul medical și cel psihologic, în aceeași încărcare.',
-  DovadaPlataArr: 'Chitanța sau ordinul de plată al tarifului ARR.',
+  // Două documente, două ecrane: emise de instituții diferite, cu valabilități diferite.
+  AdeverintaMedicala: 'Eliberat de cabinetul de medicina muncii. Data expirării trebuie să fie lizibilă.',
+  AvizPsihologic: 'Eliberat de cabinetul de psihologie autorizat. Are altă valabilitate decât cel medical.',
+  DovadaPlataArr: 'Chitanța sau ordinul de plată al tarifului ARR, în contul de trezorerie de mai sus.',
 }
 
 /** Documentele cerute de ARR, minus autorizația însăși — aia vine la final, de la ei. */
@@ -62,6 +65,10 @@ const documentSteps: MicroStepDef[] = ARR_DOCUMENTS.map((req) => ({
   isDone: (c: MicroStepContext) => hasDocument(c, [req.category, ...(req.alsoAccepts ?? [])]),
 }))
 
+/** Județul agenției: alegerea din sesiune, apoi ce s-a salvat, apoi sediul social. */
+const agencyCounty = (c: MicroStepContext): string =>
+  field(c, 'arr_agentie', 'county') || arrOf(c)?.agencyName || c.state?.primaryCounty || ''
+
 export const arrMicroSteps: MicroStepDef[] = [
   ...documentSteps,
   {
@@ -73,65 +80,59 @@ export const arrMicroSteps: MicroStepDef[] = [
     railLabel: 'Unde depui',
     title: 'Unde depui dosarul?',
     fields: [
-      { key: 'agencyName', label: 'Agenție ARR (județ)', placeholder: 'ARR Cluj' },
+      {
+        key: 'county',
+        label: 'Agenție ARR (județ)',
+        options: COUNTIES.map((county) => ({ value: county, title: county })),
+        helper: 'Precompletat pe baza adresei sediului social. Poți alege alt județ.',
+        // Sursa precompletării e starea serverului, nu ce s-a tastat pe alt ecran.
+        initialValue: (c) => c.state?.primaryCounty ?? '',
+      },
       {
         key: 'method',
         label: 'Metodă de depunere',
+        // Depunerea fizică e implicită: e singura care chiar funcționează azi.
+        initialValue: () => 'InPersonByClient',
         options: [
-          { value: 'InPersonByClient', title: 'Depun personal la ARR' },
-          { value: 'OnlineByRidelance', title: 'Depunere online prin RIDElance' },
+          { value: 'InPersonByClient', title: 'Depun personal la agenția ARR' },
+          {
+            value: 'OnlineByRidelance',
+            title: 'Depunere online prin RIDElance',
+            disabled: true,
+            badge: 'În curând',
+            disabledReason:
+              'Această opțiune va fi disponibilă în curând. Momentan dosarul se depune personal la agenția ARR.',
+          },
         ],
       },
     ],
+    // Contul în care se plătește tariful — aceeași componentă pe toate ramurile.
+    slot: 'arrPaymentDetails',
     persist: async (values) => {
+      if (!values.county) return
       await onboardingService.submitArrRequest(
-        values.agencyName || null,
-        (values.method as 'InPersonByClient' | 'OnlineByRidelance') || 'InPersonByClient',
+        values.county,
+        // Online e dezactivat; orice altceva decât depunerea fizică ar fi o promisiune falsă.
+        'InPersonByClient',
       )
     },
-    isDone: (c) => Boolean(arrOf(c)?.agencyName) || field(c, 'arr_agentie', 'agencyName') !== '',
+    isDone: (c) => agencyCounty(c) !== '',
   },
   {
-    id: 'arr_genereaza',
+    id: 'arr_dosar',
     macroStep: 'arr',
-    kind: 'action',
+    kind: 'info',
     eyebrow: EYEBROW,
     icon: 'folder',
     railLabel: 'Dosarul ARR',
-    title: 'Generăm dosarul de depus',
-    lines: (c) => {
-      const fee = ((arrOf(c)?.feeSnapshotBani ?? 30000) / 100).toLocaleString('ro-RO', {
-        minimumFractionDigits: 2,
-      })
-      return [
-        'Punem cap la cap documentele de mai sus într-un singur PDF, în ordinea cerută de ARR.',
-        `Taxa ARR pentru dosar: ${fee} lei.`,
-      ]
-    },
-    action: {
-      label: 'Generează dosarul',
-      busyLabel: 'Se generează...',
-      run: () => onboardingService.generateArrDossier(),
-    },
-    isDone: (c) => arrOf(c)?.hasDossier === true,
-  },
-  {
-    id: 'arr_depus',
-    macroStep: 'arr',
-    kind: 'action',
-    eyebrow: EYEBROW,
-    icon: 'checkCircle',
-    railLabel: 'Am depus dosarul',
-    title: 'Ai depus dosarul la ARR?',
+    title: 'Generează și depune dosarul',
     lines: () => [
-      'Marchează asta după ce dosarul a ajuns la agenție. Din acel moment așteptăm autorizația.',
+      'Punem cap la cap documentele de mai sus într-un singur PDF, în ordinea cerută de ARR.',
+      'Verifică-l, descarcă-l și abia apoi marchează depunerea.',
     ],
-    action: {
-      label: 'Am depus dosarul la ARR',
-      busyLabel: 'Se salvează...',
-      run: () => onboardingService.markArrSubmitted(),
-    },
-    visibleWhen: (c) => arrOf(c)?.hasDossier === true,
+    // Generarea, descărcarea și marcarea depunerii — o singură componentă, folosită identic
+    // pe toate ramurile (spec fix-uri §9 și §11.3).
+    slot: 'arrDossier',
     isDone: (c) => arrOf(c)?.submittedAtUtc != null,
   },
   {

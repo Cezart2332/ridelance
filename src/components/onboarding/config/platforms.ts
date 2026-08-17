@@ -41,13 +41,48 @@ const LABELS: Record<PlatformProvider, string> = {
   Bolt: 'Bolt Fleet',
 }
 
-/** Cele două ecrane ale unei platforme: ce cont ai, apoi datele lui. */
+/**
+ * Parola contului de flotă: minim 8 caractere, cel puțin o literă și o cifră.
+ *
+ * Obligatorie pe ambele ramuri — administrăm contul în numele PFA-ului, iar fără parolă nu
+ * putem nici să-l deschidem, nici să-l legăm. Eticheta „(opțional)" era o promisiune pe care
+ * fluxul n-o putea ține (spec fix-uri §10.3).
+ */
+function validatePassword(value: string): string | null {
+  if (value.trim() === '') return 'Parola e obligatorie.'
+  if (value.length < 8) return 'Minim 8 caractere.'
+  if (!/[a-zA-Z]/.test(value)) return 'Adaugă cel puțin o literă.'
+  if (!/\d/.test(value)) return 'Adaugă cel puțin o cifră.'
+  return null
+}
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+
+function validateEmail(value: string): string | null {
+  if (value.trim() === '') return 'Emailul e obligatoriu.'
+  return EMAIL_PATTERN.test(value.trim()) ? null : 'Verifică adresa de email.'
+}
+
+function validatePhone(value: string): string | null {
+  const digits = value.replace(/\D/g, '')
+  if (digits === '') return 'Telefonul e obligatoriu.'
+  return digits.length >= 9 ? null : 'Numărul pare incomplet.'
+}
+
+/** Cele două ecrane ale unei platforme: ai cont sau nu, apoi datele lui. */
 function platformSteps(provider: PlatformProvider): MicroStepDef[] {
   const label = LABELS[provider]
   const answerId = `cont_${provider.toLowerCase()}`
   const detailsId = `date_${provider.toLowerCase()}`
 
   const isChosen = (c: MicroStepContext) => selectedPlatforms(c).includes(provider)
+
+  /** Contul se deschide acum — atunci emailul e cel al contului RIDElance, precompletat. */
+  const isNewAccount = (c: MicroStepContext) => {
+    const answer = c.answers[answerId]
+    if (typeof answer === 'string') return answer === 'None'
+    return accountOf(c, provider)?.existingAccountAnswer === 'None'
+  }
 
   return [
     {
@@ -58,10 +93,11 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
       icon: 'user',
       railLabel: `Cont ${label}`,
       title: `Ai deja cont de ${label}?`,
+      // Două variante, atât. „Am cont de șofer, dar nu de flotă" ducea la același tratament ca
+      // „Nu am cont" și doar cerea o distincție pe care userul n-avea de ce s-o facă.
       choices: [
-        { value: 'HasOperatorAccount', title: 'Da, am cont de flotă' },
-        { value: 'DriverOnly', title: 'Am cont de șofer, dar nu de flotă' },
-        { value: 'None', title: 'Nu am cont' },
+        { value: 'HasOperatorAccount', title: 'Da' },
+        { value: 'None', title: 'Nu' },
       ],
       visibleWhen: isChosen,
       isDone: (c) =>
@@ -76,18 +112,32 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
       railLabel: `Date ${label}`,
       title: `Datele contului de ${label}`,
       fields: [
-        { key: 'email', label: 'Email', type: 'email' },
-        { key: 'phone', label: 'Telefon', type: 'tel' },
+        {
+          key: 'email',
+          label: 'Email',
+          type: 'email',
+          // Cont nou → emailul contului RIDElance. Cont existent → cel al contului lui, deci gol.
+          initialValue: (c) => (isNewAccount(c) ? (c.state?.contactEmail ?? '') : ''),
+          placeholder: (c) => (isNewAccount(c) ? undefined : 'Emailul contului tău de flotă'),
+          helper: (c) =>
+            isNewAccount(c)
+              ? 'Precompletat cu emailul contului tău RIDElance. Îl poți modifica.'
+              : 'Emailul cu care intri în contul de flotă existent.',
+          validate: validateEmail,
+        },
+        { key: 'phone', label: 'Telefon', type: 'tel', validate: validatePhone },
         {
           key: 'password',
           label: 'Parola contului',
           type: 'password',
-          helper: 'O parolă deja salvată rămâne neschimbată dacă lași câmpul gol.',
-          optional: true,
+          helper: 'Ne trebuie ca să gestionăm contul de flotă în numele PFA-ului tău.',
+          validate: validatePassword,
+          strengthMeter: true,
         },
         { key: 'operatorId', label: `ID cont ${label}`, optional: true },
       ],
       persist: async (values, c) => {
+        // Salvarea de draft nu forțează completitudinea: „Continuă" e cel care o cere.
         if (!values.email?.trim() && !values.phone?.trim()) return
 
         // Răspunsul de la ecranul dinainte decide dacă legăm un cont existent sau deschidem unul.
@@ -108,9 +158,17 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
         })
       },
       visibleWhen: isChosen,
-      isDone: (c) =>
-        Boolean(accountOf(c, provider)?.email) ||
-        (field(c, detailsId, 'email') !== '' && field(c, detailsId, 'phone') !== ''),
+      // Serverul confirmă: are email salvat ȘI parolă. Fără a doua condiție, un cont salvat
+      // înainte de regula de parolă ar părea complet și ar bloca pasul mai încolo.
+      isDone: (c) => {
+        const account = accountOf(c, provider)
+        if (account?.email && account.hasPassword) return true
+        return (
+          validateEmail(field(c, detailsId, 'email')) === null &&
+          validatePhone(field(c, detailsId, 'phone')) === null &&
+          validatePassword(field(c, detailsId, 'password')) === null
+        )
+      },
     },
   ]
 }

@@ -36,12 +36,18 @@ export function ChoiceGroup({ label, choices, value, onChange }: ChoiceGroupProp
     const currentIndex = choices.findIndex((c) => c.value === value)
     const step = NEXT.includes(event.key) ? 1 : -1
     // Fără selecție încă: prima săgeată aterizează pe prima opțiune, indiferent de direcție.
-    const nextIndex =
+    let nextIndex =
       currentIndex < 0
         ? step > 0
           ? 0
           : choices.length - 1
         : (currentIndex + step + choices.length) % choices.length
+
+    // Variantele dezactivate se sar la navigarea cu tastatura: rămân vizibile, dar nu selectabile.
+    for (let i = 0; i < choices.length && choices[nextIndex].disabled; i++) {
+      nextIndex = (nextIndex + step + choices.length) % choices.length
+    }
+    if (choices[nextIndex].disabled) return
 
     onChange(choices[nextIndex].value)
     focusOption(nextIndex)

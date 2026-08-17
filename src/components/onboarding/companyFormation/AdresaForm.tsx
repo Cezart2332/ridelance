@@ -9,14 +9,28 @@ interface AdresaFormProps {
   onChange: (next: Adresa) => void
   /** Salvarea de draft: se face la ieșirea din câmp, nu la fiecare tastă. */
   onBlur: () => void
+  /**
+   * Sediul social nu se poate depune la ONRC fără cod poștal, deci acolo câmpul e obligatoriu
+   * și greșit-completatul se semnalează. La domiciliu rămâne opțional.
+   */
+  requirePostalCode?: boolean
   disabled?: boolean
 }
+
+/** Codul poștal românesc: exact șase cifre. */
+const POSTAL_CODE_LENGTH = 6
 
 /**
  * Adresa din România, în forma cerută de actele de înființare. Același component pentru
  * domiciliul solicitantului, sediul social și domiciliul fiecărui proprietar.
  */
-export function AdresaForm({ value, onChange, onBlur, disabled }: AdresaFormProps) {
+export function AdresaForm({
+  value,
+  onChange,
+  onBlur,
+  requirePostalCode = false,
+  disabled,
+}: AdresaFormProps) {
   const set = (field: keyof Adresa) => (next: string) =>
     onChange({ ...value, [field]: next === '' ? null : next })
 
@@ -36,6 +50,11 @@ export function AdresaForm({ value, onChange, onBlur, disabled }: AdresaFormProp
       fullWidth
     />
   )
+
+  const postalCode = value.codPostal ?? ''
+  // Cât timp se tastează, un cod incomplet e normal. Se semnalează doar ce e clar greșit.
+  const postalCodeInvalid =
+    postalCode.length > 0 && postalCode.length < POSTAL_CODE_LENGTH && !disabled
 
   return (
     <Box sx={{ display: 'grid', gap: 1.5 }}>
@@ -70,6 +89,22 @@ export function AdresaForm({ value, onChange, onBlur, disabled }: AdresaFormProp
         {field('scara', 'Scara')}
         {field('etaj', 'Etaj')}
         {field('apartament', 'Apartament')}
+      </Box>
+
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
+        <TextField
+          label={requirePostalCode ? 'Cod poștal' : 'Cod poștal (opțional)'}
+          value={postalCode}
+          onChange={(e) => set('codPostal')(e.target.value.replace(/\D/g, '').slice(0, POSTAL_CODE_LENGTH))}
+          onBlur={onBlur}
+          disabled={disabled}
+          autoComplete="postal-code"
+          error={postalCodeInvalid}
+          helperText={postalCodeInvalid ? 'Codul poștal are exact șase cifre.' : undefined}
+          sx={inputSx}
+          fullWidth
+          slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: POSTAL_CODE_LENGTH } }}
+        />
       </Box>
     </Box>
   )
