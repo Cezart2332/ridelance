@@ -26,9 +26,9 @@ import { useOnboarding } from '../useOnboarding'
  * evidențiat. Click pe orice micro-pas duce direct la el — testarea unui bug de la pasul 06 nu
  * mai cere reparcurgerea întregului flux.
  *
- * Fișierul e importat DOAR din `OnboardingDevTools`, care există doar când
- * `VITE_ONBOARDING_DEVTOOLS === 'true'`. În build-ul de producție expresia e constantă falsă,
- * importul dinamic nu se emite, iar bundlerul îl elimină.
+ * Se randează doar când serverul spune `devToolsEnabled` — vezi `OnboardingDevToolsGate`.
+ * Nu există un al doilea comutator la build: oricum endpoint-urile sunt cele care decid, iar
+ * două flaguri însemnau două lucruri de pornit ca să meargă unul.
  */
 
 /** Scurtătura de deschidere. Ctrl+Shift+D nu se bate cu nimic din browser pe Linux/Windows. */
