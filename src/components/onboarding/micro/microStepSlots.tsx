@@ -30,14 +30,16 @@ export function MicroStepSlotContent({
   switch (slot) {
     case 'bankAccountCta':
       return <BankAccountCta />
-    case 'arrPaymentDetails':
+    case 'arrPaymentDetails': {
+      const isVehicle = context.state?.currentStep === 'vehicle'
       return (
         <ArrPaymentDetailsCard
           county={arrCounty(context)}
-          amountBani={amountFor(context)}
-          amountLabel={amountLabelFor(context)}
+          amountBani={isVehicle ? amountFor(context) : null}
+          amountLabel={isVehicle ? amountLabelFor(context) : undefined}
         />
       )
+    }
     case 'arrDossier':
       return <ArrDossierSlot />
     case 'vehicleDossier':

@@ -286,21 +286,6 @@ export const vehicleMicroSteps: MicroStepDef[] = [
     isDone: (c) => vehicleOf(c)?.copyRequest != null,
   },
   {
-    id: 'vehicul_cont_arr',
-    macroStep: 'vehicle',
-    kind: 'info',
-    eyebrow: EYEBROW,
-    icon: 'idCard',
-    railLabel: 'Contul ARR',
-    title: 'Unde plătești copia conformă și ecusoanele',
-    lines: () => [
-      'Plata se face în contul agenției teritoriale ARR din județul tău. Dovada se atașează la dosar.',
-    ],
-    slot: 'arrPaymentDetails',
-    visibleWhen: (c) => vehicleOf(c)?.copyRequest != null,
-    isDone: (c) => hasDocument(c, ['DovadaPlataCopieConformaEcusoane']),
-  },
-  {
     id: 'dovada_plata',
     macroStep: 'vehicle',
     kind: 'upload',
@@ -311,8 +296,11 @@ export const vehicleMicroSteps: MicroStepDef[] = [
     document: {
       category: 'DovadaPlataCopieConformaEcusoane',
       label: 'Dovada plății copie conformă și ecusoane',
-      hint: 'Chitanța sau ordinul de plată pentru sumele de mai sus.',
+      hint: 'Chitanța sau ordinul de plată în contul de mai jos.',
     },
+    // Contul de trezorerie stă pe ecranul unde se cere dovada plății, nu pe unul separat: cele
+    // două sunt aceeași sarcină — plătești și încarci dovada.
+    slot: 'arrPaymentDetails',
     visibleWhen: (c) => vehicleOf(c)?.copyRequest != null,
     isDone: (c) => hasDocument(c, ['DovadaPlataCopieConformaEcusoane']),
   },

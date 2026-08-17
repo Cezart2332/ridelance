@@ -8,11 +8,9 @@ import {
   FormControlLabel,
   IconButton,
   Link,
-  MenuItem,
   Radio,
   RadioGroup,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material'
 import { useMemo, useState } from 'react'
@@ -30,9 +28,10 @@ import {
   type RegisteredOfficeType,
 } from '../../../services/companyFormation.service'
 import { PanelCard, PanelHeading } from '../PanelCard'
-import { TOKENS, inputSx } from '../onboardingTheme'
+import { TOKENS } from '../onboardingTheme'
 import { useOnboardingResource } from '../useOnboarding'
 import { AdresaForm } from './AdresaForm'
+import { OfficeZonePicker } from './OfficeZonePicker'
 import { PersoanaFizicaForm } from './PersoanaFizicaForm'
 import { useCompanyFormation } from './useCompanyFormation'
 
@@ -84,13 +83,6 @@ function newOwnerId(): string {
 
   const variant = (8 + Math.floor(Math.random() * 4)).toString(16)
   return `${hex(8)}-${hex(4)}-4${hex(3)}-${variant}${hex(3)}-${hex(12)}`
-}
-
-/** Taxa lunară/anuală, afișată doar când există. Sumele vin în bani. */
-function feeLabel(monthly: number, yearly: number): string {
-  if (monthly > 0) return ` — ${(monthly / 100).toFixed(0)} lei/lună`
-  if (yearly > 0) return ` — ${(yearly / 100).toFixed(0)} lei/an`
-  return ''
 }
 
 /** Etapa 2 din dosarul de înființare: unde va avea firma sediul social. */
@@ -217,29 +209,25 @@ export default function CompanyFormationOfficePage() {
 
       {office.type === 'ConsultoProvided' &&
         (offices && offices.length > 0 ? (
-          <PanelCard>
-            <TextField
-              select
-              label="Adresa sediului"
-              value={office.consultoOfficeId ?? ''}
-              onChange={(e) =>
-                commit({ ...state, office: { ...office, consultoOfficeId: e.target.value } })
-              }
-              disabled={disabled}
-              sx={inputSx}
-              fullWidth
-            >
-              {offices.map((o) => (
-                <MenuItem key={o.id} value={o.id}>
-                  {o.adresa}
-                  {feeLabel(o.monthlyFeeBani, o.yearlyFeeBani)}
-                </MenuItem>
-              ))}
-            </TextField>
+          <PanelCard title="În ce zonă vrei sediul social?">
+            <Stack spacing={2}>
+              <Typography sx={{ fontSize: '0.88rem', color: TOKENS.textMuted }}>
+                Alege zona care ți se potrivește. Adresa exactă și contractul de găzduire vin de la
+                Consulto după validarea dosarului.
+              </Typography>
+              <OfficeZonePicker
+                offices={offices}
+                value={office.consultoOfficeId ?? null}
+                onChange={(consultoOfficeId) =>
+                  commit({ ...state, office: { ...office, consultoOfficeId } })
+                }
+                disabled={disabled}
+              />
+            </Stack>
           </PanelCard>
         ) : (
           <Alert severity="info" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
-            Momentan nu există adrese disponibile. Alege „Am adresă proprie" sau revino mai târziu.
+            Momentan nu există zone disponibile. Alege „Am adresă proprie" sau revino mai târziu.
           </Alert>
         ))}
 

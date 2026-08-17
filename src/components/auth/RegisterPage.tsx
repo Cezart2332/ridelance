@@ -42,7 +42,17 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
   const [serverError, setServerError] = useState<AuthErrorInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const fullNameError = touched.fullName ? validateFullName(fullName) : null
+  /**
+   * Numele se cere doar pentru conturile de flotă.
+   *
+   * PFA-ul încarcă buletinul la primul pas al onboardingului, iar OCR-ul completează numele pe
+   * cont de acolo (`ExtractedFieldApplier.ApplyToUserAsync`). Cerut și aici, ar fi al doilea loc
+   * din care poate veni aceeași informație — adică exact sursa de adevăr dublă pe care fluxul
+   * document-first o desființează. Flota nu are buletin de încărcat, deci acolo rămâne.
+   */
+  const needsFullName = accountType === 'CarPoster'
+
+  const fullNameError = needsFullName && touched.fullName ? validateFullName(fullName) : null
   const emailError = touched.email ? validateEmail(email) : null
   const passwordError = touched.password ? validateNewPassword(password) : null
   const termsError = touched.terms ? validateTerms(termsAccepted) : null
@@ -53,7 +63,7 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
     setServerError(null)
 
     if (
-      validateFullName(fullName) ||
+      (needsFullName && validateFullName(fullName)) ||
       validateEmail(email) ||
       validateNewPassword(password) ||
       validateTerms(termsAccepted)
@@ -64,7 +74,12 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
     setIsLoading(true)
     try {
       const trimmedEmail = email.trim()
-      await authService.register(trimmedEmail, password, accountType, fullName)
+      await authService.register(
+        trimmedEmail,
+        password,
+        accountType,
+        needsFullName ? fullName : undefined,
+      )
       await authService.login(trimmedEmail, password)
       // Flota merge direct în dashboardul ei; PFA-ul intră în onboarding, prin `/app`.
       navigate(accountType === 'CarPoster' ? '/poster' : '/app')
@@ -103,25 +118,28 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
         <Stack sx={AUTH_DENSITY.betweenFields}>
           <AccountTypeChoice value={accountType} onChange={setAccountType} disabled={isLoading} />
 
-          <TextField
-            fullWidth
-            required
-            autoFocus
-            label="Nume complet"
-            placeholder="Numele tău"
-            autoComplete="name"
-            value={fullName}
-            onChange={(event) => setFullName(event.target.value)}
-            onBlur={() => setTouched((current) => ({ ...current, fullName: true }))}
-            disabled={isLoading}
-            error={Boolean(fullNameError)}
-            helperText={fullNameError}
-            sx={authInputSx}
-          />
+          {needsFullName && (
+            <TextField
+              fullWidth
+              required
+              autoFocus
+              label="Nume complet"
+              placeholder="Numele tău"
+              autoComplete="name"
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              onBlur={() => setTouched((current) => ({ ...current, fullName: true }))}
+              disabled={isLoading}
+              error={Boolean(fullNameError)}
+              helperText={fullNameError}
+              sx={authInputSx}
+            />
+          )}
 
           <TextField
             fullWidth
             required
+            autoFocus={!needsFullName}
             type="email"
             label="Email"
             placeholder="nume@email.ro"

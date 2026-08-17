@@ -175,6 +175,9 @@ export interface MicroStepDef {
    */
   slot?: MicroStepSlot
 
+  /** Randează slotul înaintea conținutului principal (ex. contul ARR înainte de upload). */
+  slotBeforeBody?: boolean
+
   /** Micro-pasul apare doar dacă predicatul e adevărat. Absent = mereu vizibil. */
   visibleWhen?: (c: MicroStepContext) => boolean
 

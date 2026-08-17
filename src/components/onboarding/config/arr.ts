@@ -62,6 +62,12 @@ const documentSteps: MicroStepDef[] = ARR_DOCUMENTS.map((req) => ({
     label: req.label,
     hint: HINTS[req.category] ?? 'Fotografie sau PDF, cu textul lizibil.',
   },
+  // Contul de trezorerie apare exact pe ecranul unde e nevoie de el: cel în care se cere dovada
+  // plății. Pe ecranul de agenție era prea devreme (nu ai ce plăti încă), iar pe cel de generare
+  // a dosarului prea târziu — plata era deja făcută sau uitată.
+  ...(req.category === 'DovadaPlataArr'
+    ? { slot: 'arrPaymentDetails' as const, slotBeforeBody: true }
+    : {}),
   isDone: (c: MicroStepContext) => hasDocument(c, [req.category, ...(req.alsoAccepts ?? [])]),
 }))
 
@@ -111,8 +117,6 @@ export const arrMicroSteps: MicroStepDef[] = [
         ],
       },
     ],
-    // Contul în care se plătește tariful — aceeași componentă pe toate ramurile.
-    slot: 'arrPaymentDetails',
     persist: async (values) => {
       if (!values.county) return
       await onboardingService.submitArrRequest(

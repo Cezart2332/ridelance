@@ -113,6 +113,9 @@ export interface RegisteredOfficePayload {
 export interface ConsultoOffice {
   id: string
   adresa: string
+  /** Zona, ca titlu de card: „Sectorul 1", „Cluj-Napoca". */
+  zona: string
+  judet: string
   monthlyFeeBani: number
   yearlyFeeBani: number
 }

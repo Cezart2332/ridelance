@@ -69,25 +69,23 @@ export const pfaMicroSteps: MicroStepDef[] = [
     eyebrow: EYEBROW,
     icon: 'user',
     railLabel: 'Date de contact',
-    title: 'Cum te găsim?',
-    fields: [
-      { key: 'nume', label: 'Nume complet', placeholder: 'Popescu Ion' },
-      { key: 'telefon', label: 'Telefon', type: 'tel', placeholder: '07XX XXX XXX' },
-    ],
+    title: 'La ce număr te putem suna?',
+    // Doar telefonul. Numele îl citim din buletinul încărcat la pasul de eligibilitate, deci
+    // cerut și aici ar fi a doua sursă pentru aceeași informație — exact ce desființează fluxul
+    // document-first. Vezi `ExtractedFieldApplier.ApplyToUserAsync`.
+    fields: [{ key: 'telefon', label: 'Telefon', type: 'tel', placeholder: '07XX XXX XXX' }],
     // Dosarul se creează cu datele de contact; documentele se încarcă pe el, la ecranele următoare.
     persist: async (values) => {
-      if (!values.nume?.trim() || !values.telefon?.trim()) return
+      if (!values.telefon?.trim()) return
       await pfaService.create({
         registrationType: 'AmPfa',
-        fullName: values.nume.trim(),
         phone: values.telefon.trim(),
         isOwner: false,
       })
     },
     visibleWhen: answeredYes,
     isDone: (c) =>
-      c.state?.pfaRegistrationId != null ||
-      (field(c, 'pfa_contact', 'nume') !== '' && field(c, 'pfa_contact', 'telefon') !== ''),
+      c.state?.pfaRegistrationId != null || field(c, 'pfa_contact', 'telefon') !== '',
   },
   {
     id: 'certificat_inregistrare',

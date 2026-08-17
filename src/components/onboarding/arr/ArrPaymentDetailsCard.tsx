@@ -69,15 +69,14 @@ function PlainRow({ label, value }: { label: string; value: string }) {
 interface ArrPaymentDetailsCardProps {
   county: string | null
   /**
-   * Suma de plată, în bani. Vine de la apelant, nu din interiorul cardului: pasul ARR plătește
-   * tariful de autorizație, iar pasul de vehicul copia conformă și ecusoanele. Ambele sunt
-   * sume stampilate pe cerere (`app_settings`), nu valori inventate aici — vezi §15 din spec.
+   * Suma de plată, în bani — doar pe pasul de vehicul (copie conformă și ecusoane). Pe pasul ARR
+   * nu afișăm tariful de autorizație: suma variază și o confirmăm separat înainte de depunere.
    *
    * `0` sau `null` înseamnă „încă nu o știm" și se afișează ca atare.
    */
-  amountBani: number | null
-  /** Ce se plătește, pe scurt: „Tarif ARR", „Copie conformă și ecusoane". */
-  amountLabel: string
+  amountBani?: number | null
+  /** Ce se plătește, pe scurt. Absent = nu se afișează câmpul de sumă. */
+  amountLabel?: string
 }
 
 export function ArrPaymentDetailsCard({
@@ -123,21 +122,22 @@ export function ArrPaymentDetailsCard({
       <CopyableRow label="IBAN" value={groupIban(account.iban)} copyValue={account.iban} />
       <PlainRow label="Trezoreria" value={account.treasury} />
 
-      {amountBani !== null && amountBani > 0 ? (
-        <PlainRow
-          label={`Sumă de plată — ${amountLabel}`}
-          value={`${(amountBani / 100).toLocaleString('ro-RO', { minimumFractionDigits: 2 })} lei`}
-        />
-      ) : (
-        <Box>
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: TOKENS.textMuted }}>
-            Sumă de plată — {amountLabel}
-          </Typography>
-          <Typography sx={{ fontSize: '0.95rem', color: TOKENS.pending }}>
-            Tariful nu e încă înregistrat în sistem — îl confirmăm înainte de depunere.
-          </Typography>
-        </Box>
-      )}
+      {amountLabel &&
+        (amountBani != null && amountBani > 0 ? (
+          <PlainRow
+            label={`Sumă de plată — ${amountLabel}`}
+            value={`${(amountBani / 100).toLocaleString('ro-RO', { minimumFractionDigits: 2 })} lei`}
+          />
+        ) : (
+          <Box>
+            <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: TOKENS.textMuted }}>
+              Sumă de plată — {amountLabel}
+            </Typography>
+            <Typography sx={{ fontSize: '0.95rem', color: TOKENS.pending }}>
+              Tariful nu e încă înregistrat în sistem — îl confirmăm înainte de depunere.
+            </Typography>
+          </Box>
+        ))}
 
       <Typography sx={{ fontSize: '0.85rem', color: TOKENS.textMuted, lineHeight: 1.6 }}>
         Plata se face prin transfer bancar în contul de mai sus. Păstrează chitanța sau ordinul de

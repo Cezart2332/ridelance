@@ -282,13 +282,13 @@ export function OnboardingRunner() {
                 footer={footer()}
               >
                 <Stack spacing={2.5}>
+                  {def.slotBeforeBody && def.slot && (
+                    <MicroStepSlotContent slot={def.slot} context={context} />
+                  )}
                   {body()}
-                  {/*
-                    Blocurile bogate (QR-ul băncii, contul ARR, dosarul generat) vin dintr-un
-                    registru unic, deci se randează identic pe toate ramurile — exact fix-ul
-                    cerut pentru „conturi ARR" și „generare dosar".
-                  */}
-                  {def.slot && <MicroStepSlotContent slot={def.slot} context={context} />}
+                  {def.slot && !def.slotBeforeBody && (
+                    <MicroStepSlotContent slot={def.slot} context={context} />
+                  )}
                 </Stack>
               </OnboardingCard>
             )}
