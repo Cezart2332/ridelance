@@ -66,8 +66,7 @@ const OWNERSHIP: { value: ActiveOwnershipMode; title: string }[] = [
  * Ce acte cere fiecare mod de deținere, peste documentele comune (talon, CIV, RCA, asigurare).
  *
  * Oglindește `OnboardingSectionCatalog.RequirementsForVehicle` de pe backend. Leasingul cere
- * DOUĂ acte, nu unul: contractul și acordul finanțatorului. Al doilea lipsea cu totul, iar
- * primul se numea, generic, „Contract" (spec fix-uri §11.2).
+ * doar acordul finanțatorului — contractul cadru e deja acoperit de acel acord.
  */
 interface OwnershipDocument {
   category: 'ContractVehicul' | 'AcordLeasing'
@@ -87,11 +86,6 @@ const OWNERSHIP_DOCUMENTS: Record<ActiveOwnershipMode, OwnershipDocument[]> = {
     },
   ],
   Leased: [
-    {
-      category: 'ContractVehicul',
-      label: 'Contract de leasing',
-      hint: 'Contractul semnat cu societatea de leasing. Semnăturile trebuie să se vadă.',
-    },
     {
       category: 'AcordLeasing',
       label: 'Acord de leasing',

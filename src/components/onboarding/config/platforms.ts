@@ -134,7 +134,6 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
           validate: validatePassword,
           strengthMeter: true,
         },
-        { key: 'operatorId', label: `ID cont ${label}`, optional: true },
       ],
       persist: async (values, c) => {
         // Salvarea de draft nu forțează completitudinea: „Continuă" e cel care o cere.
@@ -150,7 +149,6 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
         await onboardingService.submitPlatformAccount({
           provider,
           hasExistingAccount: existingAccountAnswer === 'HasOperatorAccount',
-          operatorAccountId: values.operatorId || null,
           existingAccountAnswer,
           email: values.email || null,
           phone: values.phone || null,

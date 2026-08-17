@@ -96,9 +96,6 @@ export function OnboardingRunner() {
 
   /** Trimite răspunsul dacă micro-pasul are ce trimite, apoi avansează. */
   const advance = async (picked?: string) => {
-    // Ecranele `text` nu au nevoie de flush explicit aici: `useAutosave` salvează la ieșirea din
-    // câmp (clickul pe „Continuă" scoate focusul) și încă o dată la demontare, când `next()`
-    // schimbă ecranul. Un flush în plus ar dubla cererea.
     const payload = picked ?? (typeof value === 'string' ? value : undefined)
 
     if (def.submit && typeof payload === 'string') {
@@ -113,6 +110,28 @@ export function OnboardingRunner() {
       }
       setSubmitting(false)
     }
+
+    // Ecranele `text` salvează la blur, dar clickul pe „Continuă" poate rula înainte ca autosave-ul
+    // să termine — mai ales parola contului Bolt/Uber. Forțăm persist înainte de avans.
+    if (def.kind === 'text' && def.persist && textStepIssues(def, answers).length === 0) {
+      const fieldValues: Record<string, string> = {}
+      for (const field of def.fields ?? []) {
+        const stored = answers[`${def.id}.${field.key}`]
+        fieldValues[field.key] = typeof stored === 'string' ? stored : ''
+      }
+
+      setSubmitting(true)
+      try {
+        await def.persist(fieldValues, context)
+        await refresh()
+      } catch (err) {
+        setError(getErrorMessage(err, 'Nu am putut salva datele.'))
+        setSubmitting(false)
+        return
+      }
+      setSubmitting(false)
+    }
+
     nextRef.current()
   }
 

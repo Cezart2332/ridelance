@@ -102,13 +102,14 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
     const order = steps.findIndex((s) => s.key === activeKey)
     if (order < 0) return null
 
-    const target =
-      steps.find((s) => s.key === state?.currentStep) ??
-      steps.slice(order + 1).find((s) => s.state !== 'locked')
+    if (state?.currentStep && state.currentStep !== activeKey) {
+      const serverTarget = steps.find((s) => s.key === state.currentStep)
+      if (serverTarget && serverTarget.state !== 'locked') return serverTarget
+    }
 
-    // Serverul poate spune că pasul curent e tot ăsta — cazul „e la admin". Atunci nu există
-    // ieșire înainte, iar consumatorii trebuie să afle asta ÎNAINTE să arate un buton.
-    return target && target.key !== activeKey ? target : null
+    // Următorul pas mare deblocat — inclusiv când serverul încă marchează pasul curent ca activ
+    // (ex. conturile fleet sunt completate, dar adminul nu le-a activat încă).
+    return steps.slice(order + 1).find((s) => s.state !== 'locked') ?? null
   }, [steps, activeKey, state?.currentStep])
 
   const leave = useCallback(
