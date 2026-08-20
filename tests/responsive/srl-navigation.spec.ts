@@ -25,6 +25,15 @@ async function mockSession(page: Page) {
     }),
   )
 
+  // Suportul citește `history.messages`; prinsa generală întoarce un array, deci `undefined`.
+  await page.route(`${API}/chat/**`, (route: Route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ roomId: null, messages: [], page: 1, pageSize: 50, total: 0 }),
+    }),
+  )
+
   await page.route(`${API}/users/profile`, (route: Route) =>
     route.fulfill({
       status: 200,
@@ -43,7 +52,13 @@ async function mockSession(page: Page) {
 const SECTIONS = [
   { path: ROOT, label: 'Acasă' },
   { path: `${ROOT}/masini`, label: 'Mașinile mele' },
-  { path: `${ROOT}/asigurari`, label: 'Asigurări' },
+  { path: `${ROOT}/profil`, label: 'Profil' },
+  { path: `${ROOT}/servicii`, label: 'Servicii' },
+  { path: `${ROOT}/contabilitate/cont-bancar`, label: 'Cont bancar' },
+  { path: `${ROOT}/contabilitate/fiscal`, label: 'Fiscal' },
+  { path: `${ROOT}/conexiuni`, label: 'Conexiuni' },
+  { path: `${ROOT}/suport`, label: 'Suport' },
+  { path: `${ROOT}/setari`, label: 'Setări' },
 ]
 
 test.describe('navigație SRL', () => {

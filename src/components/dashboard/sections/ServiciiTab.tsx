@@ -3,6 +3,7 @@ import { Alert, Box, Button, Chip, Paper, Snackbar, Typography } from '@mui/mate
 import { alpha } from '@mui/material/styles'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import { ONE_TIME_SERVICES, stripeService, type ServiceKey } from '../../../services/stripe.service'
+import type { OwnerType } from '../../../config/ownerType'
 import { PaymentPolicyAcceptance } from '../../common/PaymentPolicyAcceptance'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { PageHeader } from '../ui'
@@ -21,7 +22,13 @@ const SERVICE_BADGES: Record<ServiceKey, { label: string; color: string; bg: str
   start_ride: { label: 'Recomandat', color: T.primaryStrong, bg: alpha(T.primary, 0.08) },
 }
 
-export function ServiciiTab() {
+interface ServiciiTabProps {
+  /** Filtrează catalogul după tipul de cont (spec §3.2). Implicit PFA, contul care le are pe toate. */
+  ownerType?: OwnerType
+}
+
+export function ServiciiTab({ ownerType = 'Pfa' }: ServiciiTabProps) {
+  const services = ONE_TIME_SERVICES.filter((svc) => svc.ownerTypes.includes(ownerType))
   const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
@@ -51,12 +58,35 @@ export function ServiciiTab() {
           subtitle="Ai nevoie de un serviciu punctual, fără abonament? Poți achiziționa orice serviciu separat, direct prin platforma noastră."
         />
       </Box>
-      <Box sx={{ mb: 3 }}>
-        <PaymentPolicyAcceptance
-          checked={paymentPolicyAccepted}
-          onChange={setPaymentPolicyAccepted}
-        />
-      </Box>
+      {services.length > 0 && (
+        <Box sx={{ mb: 3 }}>
+          <PaymentPolicyAcceptance
+            checked={paymentPolicyAccepted}
+            onChange={setPaymentPolicyAccepted}
+          />
+        </Box>
+      )}
+
+      {services.length === 0 && (
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 3, md: 4 },
+            borderRadius: T.radius.xl,
+            border: `1px solid ${T.border}`,
+            backgroundColor: T.paper,
+            textAlign: 'center',
+          }}
+        >
+          <Typography sx={{ fontWeight: 800, color: T.ink }}>
+            Momentan nu avem servicii individuale pentru SRL
+          </Typography>
+          <Typography sx={{ mt: 0.8, fontSize: '0.9rem', color: T.textMuted }}>
+            Cele existente sunt legate de înființarea și operarea unui PFA. Când apar servicii pentru
+            societăți, le găsești aici.
+          </Typography>
+        </Paper>
+      )}
 
       <Box
         sx={{
@@ -65,7 +95,7 @@ export function ServiciiTab() {
           gap: 3,
         }}
       >
-        {ONE_TIME_SERVICES.map((svc) => {
+        {services.map((svc) => {
           const badge = SERVICE_BADGES[svc.key]
           const icon = SERVICE_ICONS[svc.key]
 

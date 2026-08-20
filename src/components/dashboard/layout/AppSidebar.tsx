@@ -394,6 +394,28 @@ export default function AppSidebar({ nav, sidebarOpen, setSidebarOpen, onLogout,
 
       <Divider sx={{ opacity: 0.5, mx: 1, mt: 1.2, flexShrink: 0 }} />
 
+      {nav.bottomEntries && nav.bottomEntries.length > 0 && (
+        // Landmark propriu: Setările sunt tot navigație, doar că nu stau în lista principală.
+        <Stack
+          component="nav"
+          aria-label="Meniu secundar"
+          sx={{ mx: 1, mt: 0.6, flexShrink: 0 }}
+        >
+        <Stack component="ul" spacing={0.35} sx={{ p: 0, m: 0 }}>
+          {nav.bottomEntries.map((entry) =>
+            entry.kind === 'link' ? (
+              <TopLevelLink
+                key={entry.id}
+                entry={entry}
+                isActive={activeLeafPath === entry.path}
+                onNavigate={closeDrawer}
+              />
+            ) : null,
+          )}
+        </Stack>
+        </Stack>
+      )}
+
       {footer && (
         <Box sx={{ mx: 1, mt: 1, flexShrink: 0 }}>{footer}</Box>
       )}

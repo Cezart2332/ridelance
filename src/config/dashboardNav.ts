@@ -60,6 +60,12 @@ export interface DashboardNavConfig {
   storageKey: string
   /** Destinațiile directe din bara de jos de pe mobil. Restul intră sub „Meniu". */
   mobileTabs: readonly MobileTab[]
+  /**
+   * Itemi de navigație randați în subsol, sub lista principală și deasupra blocului de
+   * identitate. Spec §2.1 cere ca Setările să iasă din listă fără să devină un buton
+   * secundar: rămân link de navigație, cu aceeași stare activă.
+   */
+  bottomEntries?: NavEntry[]
   /** Titluri pentru paginile care nu au item propriu în meniu. */
   extraPageTitles?: Record<string, string>
   /** Titlul afișat când nicio rută nu se potrivește. */
@@ -75,7 +81,7 @@ export function navGroups(config: DashboardNavConfig): NavGroupEntry[] {
 
 /** Toate frunzele navigabile, inclusiv linkurile de nivel unu. */
 export function navLeaves(config: DashboardNavConfig): NavLeaf[] {
-  return config.entries.flatMap((entry) => {
+  return [...config.entries, ...(config.bottomEntries ?? [])].flatMap((entry) => {
     if (entry.kind === 'group') return entry.children
     if (entry.kind === 'link') return [{ id: entry.id, label: entry.label, path: entry.path, hint: entry.hint }]
     return []
