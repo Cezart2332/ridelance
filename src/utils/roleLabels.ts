@@ -1,7 +1,7 @@
 /** User-facing labels for API role identifiers */
 export const ROLE_LABELS: Record<string, string> = {
   Client: 'Șofer PFA',
-  CarPoster: 'Cont inchiriere mașini',
+  CarPoster: 'SRL',
   Contabil: 'Contabil',
   Admin: 'Admin',
 }

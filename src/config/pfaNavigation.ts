@@ -267,4 +267,5 @@ export const PFA_NAV_CONFIG: DashboardNavConfig = {
   ],
   extraPageTitles: EXTRA_PAGE_TITLES,
   fallbackTitle: 'Dashboard PFA',
+  documentTitle: 'RIDElance — Dashboard PFA',
 }

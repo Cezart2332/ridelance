@@ -73,4 +73,5 @@ export const SRL_NAV_CONFIG: DashboardNavConfig = {
     { path: SRL_PATHS.cars, label: 'Mașini', icon: DirectionsCarFilledRoundedIcon },
   ],
   fallbackTitle: 'Dashboard SRL',
+  documentTitle: 'RIDElance — Dashboard SRL',
 }

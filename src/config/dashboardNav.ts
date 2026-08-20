@@ -64,6 +64,8 @@ export interface DashboardNavConfig {
   extraPageTitles?: Record<string, string>
   /** Titlul afișat când nicio rută nu se potrivește. */
   fallbackTitle: string
+  /** Titlul filei de browser cât timp dashboardul e deschis (spec §1.1). */
+  documentTitle: string
 }
 
 /** Categoriile colapsabile, în ordinea din meniu. */

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
 import { alpha } from '@mui/material/styles';
@@ -36,6 +36,18 @@ export default function AppLayout({
   const { pathname } = useLocation();
 
   const sectionTitle = pageTitleFor(nav, pathname);
+
+  /**
+   * Titlul filei spune în ce dashboard ești (spec §1.1). Se restaurează la ieșire: altfel
+   * marketplace-ul public ar rămâne cu titlul dashboardului după o navigare înapoi.
+   */
+  useEffect(() => {
+    const previous = document.title;
+    document.title = nav.documentTitle;
+    return () => {
+      document.title = previous;
+    };
+  }, [nav.documentTitle]);
   const bottomNavValue: string = nav.mobileTabs.find((tab) => tab.path === pathname)?.path ?? MORE_TAB;
 
   return (
