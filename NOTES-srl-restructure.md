@@ -325,11 +325,13 @@ Specul are 2 faze. §0.3.2 și §0.3.3 („refolosește componentele PFA", „ze
 respecta câtă vreme componentele partajate încă trăiesc înăuntrul PFA-ului și sunt legate de
 `PFA_NAV` / `PFA_PATHS` prin import direct. De aici o fază 0:
 
-**FAZA 0 — extracție și parametrizare** (singurul moment în care se atinge PFA-ul):
+**FAZA 0 — extracție și parametrizare** (singurul moment în care se atinge PFA-ul) — **făcută**,
+vezi commit-urile de pe `srl-dashboard-restructure`:
 1. `AppSidebar` / `AppLayout` / `AppHeader` primesc configul de navigație prin props, în loc să
    importe `PFA_NAV`. Tipurile de navigație se mută într-un modul neutru.
 2. `ownerType` introdus în FE ca dimensiune separată de rol.
-3. `Amount` și `chartTheme` ies de sub `home/` la comun.
+3. `Amount` iese de sub `home/` la comun. `chartTheme` **rămâne** unde e: niciun ecran SRL
+   din FAZA 1 nu are grafice, iar mutarea lui acum ar fi speculativă.
 4. `/poster/*` se mută sub `/app/`, cu redirect din vechea rută.
 
 După fiecare pas: verificare pe dashboard-ul PFA, care nu are voie să se schimbe vizual sau
