@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>RIDElance Fleet — Rental Management</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+<style>
+:root{
+  --blue:#54c8f2;--blue2:#8fddfa;--ink:#17192b;--text:#3e4961;--muted:#8992a6;
+  --bg:#f7f9fc;--paper:#fff;--line:#e7ebf1;--green:#16a36a;--green-bg:#eaf8f2;
+  --amber:#c98212;--amber-bg:#fff5e4;--red:#e14747;--red-bg:#fff0f0;
+  --info:#267bdc;--info-bg:#eef6ff;--shadow:0 18px 46px rgba(23,25,43,.07);
+  --shadow-soft:0 8px 28px rgba(23,25,43,.045)
+}
+*{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit} button{cursor:pointer} a{text-decoration:none;color:inherit}
+.app{min-height:100vh;display:grid;grid-template-columns:242px minmax(0,1fr)}
+.sidebar{position:sticky;top:0;height:100vh;background:#fff;border-right:1px solid #edf0f4;padding:18px 14px 15px;display:flex;flex-direction:column;z-index:20}
+.brand{height:48px;display:flex;align-items:center;padding:0 7px 12px;border-bottom:1px solid #f0f2f5;font-size:20px;font-weight:950;letter-spacing:-1px}
+.brand .amp{font-size:30px;line-height:1;color:var(--blue)} .brand .lance,.brand .dot{color:var(--blue)}
+.menu-label{padding:15px 8px 8px;font-size:9px;color:#a5acba;font-weight:900;letter-spacing:.11em}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav-btn{min-height:39px;width:100%;border:1px solid transparent;border-radius:11px;background:transparent;display:flex;align-items:center;gap:10px;padding:0 10px;color:#4d566b;font-size:11.8px;text-align:left}
+.nav-btn:hover{background:#f8fafc}.nav-btn.active{background:#eefaff;border-color:#d3eff9;color:#219bc8;font-weight:850}
+.nav-icon{width:17px;text-align:center;color:#7a8395}.nav-btn.active .nav-icon{color:#239dcc}
+.nav-count{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#f0f3f6;color:#717c90;display:grid;place-items:center;font-size:8.5px;font-weight:900}
+.nav-count.warn{background:#fff1e8;color:#d96f27}.side-bottom{margin-top:auto;border-top:1px solid #f1f2f5;padding-top:10px}
+.profile{display:flex;align-items:center;gap:10px;border:1px solid #e8ebef;border-radius:14px;background:#fafbfd;padding:10px}
+.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#63d6f6,#32afe2);color:#fff;font-size:10px;font-weight:900}
+.profile strong{display:block;font-size:10px}.profile span{display:block;margin-top:2px;color:#939aaa;font-size:8.5px}
+.main{min-width:0}.topbar{position:sticky;top:0;height:62px;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-bottom:1px solid #e9ecf1;display:flex;align-items:center;justify-content:space-between;padding:0 26px;z-index:15}
+.top-title{font-size:16px;font-weight:900}.top-actions{display:flex;align-items:center;gap:8px}.icon-btn{width:34px;height:34px;border:1px solid #e4e8ed;border-radius:10px;background:#fff;color:#697287;display:grid;place-items:center}
+.primary{min-height:38px;border:0;border-radius:10px;padding:0 14px;background:linear-gradient(135deg,#61d5f6,#33b0e3);color:#fff;font-size:10.8px;font-weight:900;box-shadow:0 10px 22px rgba(84,200,242,.24)}
+.secondary{min-height:36px;border:1px solid #e0e4e9;border-radius:10px;background:#fff;color:#59647a;padding:0 12px;font-size:10px;font-weight:850}
+.content{max-width:1500px;margin:0 auto;padding:24px 26px 48px}.page{display:none}.page.active{display:block}
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:16px}.page-head h1{margin:0;font-size:28px;letter-spacing:-1px}.page-head p{margin:6px 0 0;color:#8790a3;font-size:11.2px;line-height:1.55}
+.head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.panel{background:#fff;border:1px solid #e6eaef;border-radius:18px;box-shadow:var(--shadow-soft);overflow:hidden}
+.panel-head{min-height:54px;border-bottom:1px solid #edf0f3;padding:12px 15px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.panel-title{font-size:11.5px;font-weight:900}.panel-sub{font-size:9px;color:#949bab;margin-top:3px}.panel-body{padding:14px 15px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border-radius:999px;font-size:8.4px;font-weight:900}
+.badge.success{background:var(--green-bg);color:var(--green)}.badge.warn{background:var(--amber-bg);color:var(--amber)}.badge.danger{background:var(--red-bg);color:var(--red)}.badge.info{background:var(--info-bg);color:var(--info)}.badge.muted{background:#f1f3f6;color:#6e778a}
+.field{display:grid;gap:6px}.field label{font-size:9px;font-weight:850;color:#5d687e}
+.field input,.field select,.field textarea{width:100%;border:1px solid #dde3e9;border-radius:10px;outline:none;color:#43506a;background:#fff;font-size:9.5px}
+.field input,.field select{height:38px;padding:0 10px}.field textarea{min-height:90px;padding:9px 10px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#8bd8f3;box-shadow:0 0 0 3px rgba(84,200,242,.10)}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:13px}.kpi{min-height:110px;background:#fff;border:1px solid #e8ebf0;border-radius:17px;padding:15px;box-shadow:var(--shadow-soft);position:relative;overflow:hidden}
+.kpi:after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-28px;top:-32px;background:radial-gradient(circle,rgba(84,200,242,.15),transparent 68%)}
+.kpi-label{font-size:9.8px;color:#747e92;font-weight:800}.kpi-value{font-size:22px;font-weight:950;letter-spacing:-.65px;margin-top:9px}.kpi-sub{font-size:8.9px;color:#969dac;margin-top:6px}
+.home-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:13px;margin-bottom:13px}.att-list{display:grid;gap:8px}.att{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #edf0f3;border-radius:12px;background:#fbfcfd}
+.att-ico{width:31px;height:31px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto}.att-ico.red{background:var(--red-bg);color:var(--red)}.att-ico.amber{background:var(--amber-bg);color:var(--amber)}.att-ico.blue{background:#eefaff;color:#2599c6}
+.att-copy{flex:1}.att-copy strong{display:block;font-size:10px}.att-copy span{display:block;margin-top:3px;color:#8e96a7;font-size:8.6px}
+.quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.quick{border:1px solid #e8ebef;border-radius:13px;padding:11px;background:#fff}.quick strong{display:block;font-size:10px}.quick span{display:block;margin-top:4px;color:#8e96a7;font-size:8.6px}.quick button{margin-top:9px}
+.tabs{display:flex;gap:5px;flex-wrap:wrap}.tab{min-height:33px;border:1px solid #e2e6eb;border-radius:999px;background:#fff;color:#697287;padding:0 11px;font-size:9px;font-weight:850}.tab.active{background:#eefaff;border-color:#ccecf8;color:#1a91bd}
+.vehicle-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.search{height:37px;border:1px solid #e1e5ea;border-radius:10px;padding:0 11px;min-width:230px;font-size:9.5px;color:#45516a}
+.vehicle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.vehicle-card{background:#fff;border:1.5px solid rgba(84,200,242,.28);border-radius:18px;overflow:hidden;box-shadow:var(--shadow-soft);transition:.15s}
+.vehicle-card:hover{transform:translateY(-2px);border-color:rgba(84,200,242,.58);box-shadow:var(--shadow)}
+.vehicle-media{height:145px;background:linear-gradient(135deg,#edf4f8,#d9eaf1);display:grid;place-items:center;position:relative}
+.car-shape{width:70%;height:54px;border-radius:30px 40px 16px 16px;background:linear-gradient(135deg,#262c37,#6d7582);position:relative;box-shadow:0 14px 20px rgba(23,25,43,.16)}
+.car-shape:before,.car-shape:after{content:"";position:absolute;width:21px;height:21px;border-radius:50%;background:#17191f;bottom:-9px}.car-shape:before{left:18%}.car-shape:after{right:18%}
+.vehicle-tags{position:absolute;left:10px;top:10px;display:flex;gap:6px}.vehicle-tag{padding:5px 7px;border-radius:999px;background:rgba(255,255,255,.93);font-size:7.8px;font-weight:900;color:#465168}
+.vehicle-body{padding:13px}.vehicle-title{font-size:12.5px;font-weight:900}.vehicle-meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.meta{border:1px solid #e7ebef;border-radius:999px;padding:4px 6px;font-size:8px;color:#737d90}
+.vehicle-row{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin-top:12px}.vehicle-price strong{font-size:16px}.vehicle-price span{display:block;color:#9299aa;font-size:8px;margin-top:2px}
+.vehicle-menu{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px}.vehicle-menu button{height:31px;border:1px solid #e6e9ee;border-radius:9px;background:#fbfcfd;color:#556177;font-size:8.4px;font-weight:850}
+.vehicle-detail-head{background:#fff;border:1px solid #e7ebef;border-radius:18px;padding:14px 15px;box-shadow:var(--shadow-soft);display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
+.vehicle-name{display:flex;gap:11px;align-items:center}.vehicle-square{width:46px;height:46px;border-radius:14px;background:#eef7fb;display:grid;place-items:center;font-weight:900;color:#278fac;font-size:9px}.vehicle-name h2{margin:0;font-size:18px}.vehicle-name p{margin:4px 0 0;color:#8b93a5;font-size:9.2px}
+.vehicle-tabs{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}.detail-page{display:none}.detail-page.active{display:block}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rental-history,.rental-table{width:100%;border-collapse:collapse}.rental-history th,.rental-history td,.rental-table th,.rental-table td{padding:10px 11px;border-bottom:1px solid #edf0f3;text-align:left;font-size:9.2px}.rental-history th,.rental-table th{background:#fbfcfd;color:#8790a2;font-weight:850}
+.doc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.doc-item{border:1px solid #e6eaef;border-radius:13px;padding:11px;background:#fff}.doc-item strong{display:block;font-size:9.5px}.doc-item span{display:block;margin-top:4px;color:#8d95a7;font-size:8.3px}.doc-actions{display:flex;gap:5px;margin-top:9px}.doc-actions button{height:27px;border:1px solid #e2e6eb;border-radius:8px;background:#fff;color:#5e687d;padding:0 7px;font-size:7.8px;font-weight:800}
+.maintenance-list{display:grid;gap:8px}.maintenance-row{border:1px solid #e7eaef;border-radius:12px;padding:10px;background:#fff;display:grid;grid-template-columns:1fr auto;gap:10px}.maintenance-row strong{display:block;font-size:9.5px}.maintenance-row span{display:block;color:#8f96a7;font-size:8.2px;margin-top:3px}.maintenance-cost{font-size:10px;font-weight:900}
+.timeline{display:grid;gap:9px}.timeline-item{display:grid;grid-template-columns:26px 1fr;gap:9px}.timeline-dot{width:26px;height:26px;border-radius:9px;background:#eefaff;color:#2899c5;display:grid;place-items:center;font-size:8px}.timeline-copy strong{display:block;font-size:9.5px}.timeline-copy span{display:block;margin-top:3px;color:#9097a7;font-size:8.3px}
+.rental-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.rental-card{background:#fff;border:1px solid #e7ebef;border-radius:15px;padding:12px;box-shadow:var(--shadow-soft)}.rental-card strong{display:block;font-size:18px}.rental-card span{display:block;margin-top:4px;color:#8e96a8;font-size:8.5px}
+.rental-actions{display:flex;gap:5px}.rental-actions button{height:28px;border:1px solid #e3e7ec;border-radius:8px;background:#fff;color:#5f697e;padding:0 8px;font-size:8px;font-weight:850}
+.doc-summary,.maint-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.doc-stat,.maint-item{background:#fff;border:1px solid #e6eaef;border-radius:15px;padding:12px;box-shadow:var(--shadow-soft)}.doc-stat strong,.maint-item strong{display:block;font-size:18px}.doc-stat span,.maint-item span{display:block;margin-top:4px;color:#8e96a8;font-size:8.5px}
+.company-docs{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.company-doc{border:1px solid #e7ebef;border-radius:14px;padding:12px;background:#fff}.company-doc strong{display:block;font-size:9.8px}.company-doc span{display:block;margin-top:4px;color:#8e96a7;font-size:8.2px}
+.company-grid{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:13px}.public-preview{background:#fff;border:1px solid #e7ebef;border-radius:20px;overflow:hidden;box-shadow:var(--shadow-soft)}
+.cover{height:140px;background:linear-gradient(135deg,#eaf8fe,#d7f0fa);position:relative}.cover:after{content:"";position:absolute;width:230px;height:230px;border:28px solid rgba(84,200,242,.23);border-radius:50%;right:30px;top:-90px}
+.public-body{padding:15px}.public-head{display:flex;gap:11px;align-items:center}.logo-box{width:48px;height:48px;border-radius:15px;background:#17192b;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:900}.public-head h3{margin:0;font-size:17px}.public-head p{margin:4px 0 0;color:#8d95a7;font-size:9px}
+.public-desc{margin-top:12px;color:#657087;font-size:9.6px;line-height:1.6}.public-actions{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+.company-settings{display:grid;gap:9px}.setting-card{background:#fff;border:1px solid #e7ebef;border-radius:14px;padding:12px}.setting-card h4{margin:0;font-size:10.5px}.setting-card p{margin:5px 0 9px;color:#8d95a7;font-size:8.3px;line-height:1.5}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #eff1f4}.toggle-row:last-child{border-bottom:0}.toggle-row span{font-size:8.8px;color:#59657b}
+.switch{position:relative;width:34px;height:20px}.switch input{display:none}.slider{position:absolute;inset:0;border-radius:999px;background:#cfd5dc}.slider:before{content:"";position:absolute;width:14px;height:14px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.15)}.switch input:checked + .slider{background:#54c8f2}.switch input:checked + .slider:before{transform:translateX(14px)}
+#companyMap{width:100%;height:215px;border-radius:12px;border:1px solid rgba(84,200,242,.45)}
+.benefit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}.benefit{background:#fff;border:1px solid #e7ebef;border-radius:16px;padding:14px;box-shadow:var(--shadow-soft)}.benefit-icon{width:34px;height:34px;border-radius:10px;background:#eefaff;color:#279bc8;display:grid;place-items:center;margin-bottom:10px}.benefit h3{margin:0;font-size:11px}.benefit p{margin:6px 0 11px;color:#8690a2;font-size:8.8px;line-height:1.5}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.settings-card{background:#fff;border:1px solid #e7ebef;border-radius:16px;padding:14px}.settings-card h3{margin:0;font-size:11.5px}.settings-card p{margin:5px 0 12px;color:#8d95a7;font-size:8.8px}.defaults-table{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.overlay{position:fixed;inset:0;background:rgba(18,25,43,.38);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:.2s;z-index:50}.overlay.show{opacity:1;pointer-events:auto}
+.modal{position:fixed;left:50%;top:50%;width:min(820px,calc(100vw - 28px));max-height:92vh;overflow:auto;transform:translate(-50%,-48%) scale(.985);opacity:0;pointer-events:none;transition:.2s;background:#fff;border-radius:20px;box-shadow:0 34px 90px rgba(16,24,40,.25);z-index:60}
+.modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}.modal-head{padding:17px 20px;border-bottom:1px solid #edf0f3;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.modal-head h3{margin:0;font-size:16px}.close{width:32px;height:32px;border:0;border-radius:9px;background:#f4f6f8;color:#637087;font-size:18px}
+.modal-body{padding:16px 20px}.modal-foot{position:sticky;bottom:0;background:#fff;border-top:1px solid #edf0f3;padding:12px 20px;display:flex;justify-content:space-between;gap:8px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field.full{grid-column:1/-1}
+.section-label{margin:5px 0 10px;font-size:10.5px;font-weight:900}.helper{font-size:8px;color:#9098a8;line-height:1.45;margin-top:3px}.prefill-note{padding:9px 10px;border:1px solid #d7eef7;background:#f5fcfe;border-radius:10px;color:#507083;font-size:8.6px;margin-bottom:12px}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.photo-slot{min-height:92px;border:1px dashed #bddfeb;border-radius:11px;background:#f8fdff;display:grid;place-items:center;text-align:center;color:#599bb6;font-size:8px;font-weight:850;padding:8px}
+.document-preview{border:1px solid #e3e7ed;border-radius:14px;background:#fbfcfd;padding:14px}.document-preview h4{margin:0 0 10px;font-size:12px}.document-preview p{font-size:9px;color:#556176;line-height:1.7;margin:0}.doc-divider{height:1px;background:#e5e9ee;margin:11px 0}.preview-toolbar{display:flex;gap:7px;justify-content:flex-end;margin-bottom:10px}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.compare-side{border:1px solid #e6eaef;border-radius:13px;padding:11px;background:#fff}.compare-side h4{margin:0 0 9px;font-size:10.5px}.compare-photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.compare-photo{height:76px;border-radius:9px;background:linear-gradient(135deg,#eef4f7,#dfeaf0);display:grid;place-items:center;color:#718095;font-size:7.8px;font-weight:800}
+@media(max-width:1200px){.kpis{grid-template-columns:repeat(3,1fr)}.vehicle-grid{grid-template-columns:repeat(2,1fr)}.company-grid{grid-template-columns:1fr}}
+@media(max-width:860px){.app{grid-template-columns:1fr}.sidebar{display:none}.content{padding:18px 14px 40px}.topbar{padding:0 14px}.home-grid,.detail-grid,.settings-grid,.company-grid{grid-template-columns:1fr}.kpis,.rental-cards,.doc-summary,.maint-kpis,.benefit-grid{grid-template-columns:1fr 1fr}.form-grid,.defaults-table,.compare-grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+@media(max-width:560px){.kpis,.rental-cards,.doc-summary,.maint-kpis,.benefit-grid,.vehicle-grid,.company-docs,.doc-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span>RIDE</span><span class="amp">&</span><span class="lance">lance</span><span class="dot">.</span></div>
+    <div class="menu-label">FLOTĂ / ÎNCHIRIERI AUTO</div>
+    <nav class="nav">
+      <button class="nav-btn active" data-page="home"><span class="nav-icon">⌂</span>Acasă</button>
+      <button class="nav-btn" data-page="vehicles"><span class="nav-icon">▣</span>Mașinile mele <span class="nav-count">12</span></button>
+      <button class="nav-btn" data-page="rentals"><span class="nav-icon">▤</span>Închirieri <span class="nav-count">8</span></button>
+      <button class="nav-btn" data-page="documents"><span class="nav-icon">◇</span>Documente societate</button>
+      <button class="nav-btn" data-page="maintenance"><span class="nav-icon">⚙</span>Mentenanță <span class="nav-count warn">3</span></button>
+      <button class="nav-btn" data-page="company"><span class="nav-icon">↗</span>Pagina firmei</button>
+      <button class="nav-btn" data-page="benefits"><span class="nav-icon">♙</span>Beneficii</button>
+      <button class="nav-btn" data-page="settings"><span class="nav-icon">⌘</span>Setări</button>
+    </nav>
+    <div class="side-bottom"><div class="profile"><div class="avatar">TG</div><div><strong>TUKI GO SRL</strong><span>Flotă verificată ✓</span></div></div></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="top-title" id="topTitle">Acasă</div>
+      <div class="top-actions"><button class="icon-btn">●</button><button class="icon-btn">?</button><button class="primary" id="topAddRental">＋ Închiriere nouă</button></div>
+    </header>
+    <div class="content">
+
+      <section class="page active" id="page-home">
+        <div class="page-head">
+          <div><h1>Bun venit înapoi.</h1><p>Ai aici mașinile, închirierile, documentele și lucrurile care necesită atenție.</p></div>
+          <div class="head-actions"><button class="secondary" data-page-jump="company">Vezi pagina publică</button><button class="primary" data-page-jump="vehicles">＋ Adaugă mașină</button></div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><div class="kpi-label">Mașini în flotă</div><div class="kpi-value">12</div><div class="kpi-sub">9 publicate în marketplace</div></div>
+          <div class="kpi"><div class="kpi-label">Închirieri active</div><div class="kpi-value">8</div><div class="kpi-sub">4 mașini disponibile</div></div>
+          <div class="kpi"><div class="kpi-label">Valoare contractuală / lună</div><div class="kpi-value">49.800 lei</div><div class="kpi-sub">din contractele active</div></div>
+          <div class="kpi"><div class="kpi-label">Documente expiră curând</div><div class="kpi-value">3</div><div class="kpi-sub">în următoarele 30 zile</div></div>
+          <div class="kpi"><div class="kpi-label">Mentenanță programată</div><div class="kpi-value">2</div><div class="kpi-sub">în următoarele 14 zile</div></div>
+        </div>
+
+        <div class="home-grid">
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title">Necesită atenție</div><div class="panel-sub">Doar lucrurile care trebuie rezolvate</div></div><button class="secondary">Vezi tot</button></div>
+            <div class="panel-body">
+              <div class="att-list">
+                <div class="att"><div class="att-ico red">!</div><div class="att-copy"><strong>RCA Tesla Model 3 expiră în 12 zile</strong><span>PH 01 TKI · 28.08.2026</span></div><button class="secondary" data-open-doc>Înlocuiește</button></div>
+                <div class="att"><div class="att-ico amber">◷</div><div class="att-copy"><strong>Revizie programată în 1.850 km</strong><span>Tesla Model 3 · kilometraj curent 222.500 km</span></div><button class="secondary" data-page-jump="maintenance">Vezi</button></div>
+                <div class="att"><div class="att-ico blue">▣</div><div class="att-copy"><strong>Dacia Spring are dosarul vehiculului 45% complet</strong><span>Poți publica fără documente, dar nu vei primi alerte complete.</span></div><button class="secondary" data-page-jump="vehicles">Completează</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title">Acțiuni rapide</div><div class="panel-sub">Lucrurile folosite cel mai des</div></div></div>
+            <div class="panel-body">
+              <div class="quick-grid">
+                <div class="quick"><strong>Închiriere nouă</strong><span>Contract + proces verbal + check-in.</span><button class="primary" data-open-rental>Începe</button></div>
+                <div class="quick"><strong>Adaugă mașină</strong><span>Poți publica fără documentele vehiculului.</span><button class="secondary" data-page-jump="vehicles">Adaugă</button></div>
+                <div class="quick"><strong>Încarcă document</strong><span>Firmă sau vehicul, cu expirare opțională.</span><button class="secondary" data-open-doc>Încarcă</button></div>
+                <div class="quick"><strong>Vezi pagina firmei</strong><span>Linkul public pe care îl poți distribui.</span><button class="secondary" data-page-jump="company">Deschide</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="home-grid">
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title">Închirieri active</div><div class="panel-sub">Situația mașinilor aflate acum la clienți</div></div><button class="secondary" data-page-jump="rentals">Toate închirierile</button></div>
+            <div class="panel-body">
+              <table class="rental-table">
+                <thead><tr><th>Mașină</th><th>Chiriaș</th><th>De la</th><th>Până la</th><th>Valoare</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td>Tesla Model 3 · PH 01 TKI</td><td>Adrian P.</td><td>11.08</td><td>11.10</td><td>14.400 lei</td><td><span class="badge success">Activă</span></td></tr>
+                  <tr><td>Renault Zoe · B 222 RDL</td><td>Mihai C.</td><td>02.08</td><td>30.09</td><td>11.600 lei</td><td><span class="badge success">Activă</span></td></tr>
+                  <tr><td>Dacia Spring · B 123 RID</td><td>Radu A.</td><td>01.08</td><td>01.09</td><td>3.400 lei</td><td><span class="badge warn">Se apropie predarea</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title">Utilizare flotă</div><div class="panel-sub">8 din 12 mașini sunt închiriate</div></div><span class="badge success">67%</span></div>
+            <div class="panel-body">
+              <div style="height:16px;border-radius:999px;background:#eef1f4;overflow:hidden"><div style="height:100%;width:67%;background:linear-gradient(90deg,#54c8f2,#2ca9da)"></div></div>
+              <div style="display:flex;justify-content:space-between;margin-top:12px;color:#8790a2;font-size:8.8px"><span>Închiriate: 8</span><span>Disponibile: 4</span></div>
+              <div style="margin-top:14px;padding:11px;border:1px solid #e7ebef;border-radius:12px;background:#fbfcfd"><strong style="font-size:10px">4 mașini libere</strong><div style="margin-top:4px;color:#8e96a7;font-size:8.5px">Potențial contractual: 5.250 lei / săptămână.</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-vehicles">
+        <div class="page-head"><div><h1>Mașinile mele</h1><p>Fiecare mașină are propriul dosar digital: anunț, închirieri, documente, mentenanță și istoric.</p></div><button class="primary">＋ Adaugă mașină</button></div>
+        <div class="vehicle-toolbar"><div class="tabs"><button class="tab active">Toate</button><button class="tab">Disponibile</button><button class="tab">Închiriate</button><button class="tab">Publicate</button><button class="tab">Draft</button></div><input class="search" placeholder="Caută model, număr sau VIN..."></div>
+        <div class="vehicle-grid">
+          <article class="vehicle-card">
+            <div class="vehicle-media"><div class="car-shape"></div><div class="vehicle-tags"><span class="vehicle-tag">Publicată</span><span class="vehicle-tag">Închiriată</span></div></div>
+            <div class="vehicle-body">
+              <div class="vehicle-title">Tesla Model 3 Dual Motor, 2021</div>
+              <div class="vehicle-meta"><span class="meta">PH 01 TKI</span><span class="meta">222.500 km</span><span class="meta">Dosar 92%</span></div>
+              <div class="vehicle-row"><div class="vehicle-price"><strong>1.800 lei</strong><span>/ săptămână</span></div><span class="badge success">Contract activ</span></div>
+              <div class="vehicle-menu"><button data-open-vehicle>Deschide dosarul</button><button data-open-rental>Închiriere nouă</button><button data-generate-contract>Generează contract</button><button data-generate-pv>Proces predare/primire</button></div>
+            </div>
+          </article>
+
+          <article class="vehicle-card">
+            <div class="vehicle-media"><div class="car-shape" style="background:linear-gradient(135deg,#d6dce2,#f0f3f5)"></div><div class="vehicle-tags"><span class="vehicle-tag">Publicată</span><span class="vehicle-tag">Disponibilă</span></div></div>
+            <div class="vehicle-body">
+              <div class="vehicle-title">Dacia Spring, 2023</div>
+              <div class="vehicle-meta"><span class="meta">B 123 RID</span><span class="meta">71.200 km</span><span class="meta">Dosar 45%</span></div>
+              <div class="vehicle-row"><div class="vehicle-price"><strong>850 lei</strong><span>/ săptămână</span></div><span class="badge info">Disponibilă</span></div>
+              <div class="vehicle-menu"><button data-open-vehicle>Deschide dosarul</button><button data-open-rental>Închiriere nouă</button><button data-generate-contract>Generează contract</button><button data-open-doc>Documente</button></div>
+            </div>
+          </article>
+
+          <article class="vehicle-card">
+            <div class="vehicle-media"><div class="car-shape" style="background:linear-gradient(135deg,#3a414c,#7f8996)"></div><div class="vehicle-tags"><span class="vehicle-tag">Publicată</span><span class="vehicle-tag">Închiriată</span></div></div>
+            <div class="vehicle-body">
+              <div class="vehicle-title">Renault Zoe, 2022</div>
+              <div class="vehicle-meta"><span class="meta">B 222 RDL</span><span class="meta">113.900 km</span><span class="meta">Dosar 100%</span></div>
+              <div class="vehicle-row"><div class="vehicle-price"><strong>1.450 lei</strong><span>/ săptămână</span></div><span class="badge success">Contract activ</span></div>
+              <div class="vehicle-menu"><button data-open-vehicle>Deschide dosarul</button><button data-open-rental>Închiriere nouă</button><button data-generate-contract>Generează contract</button><button data-generate-pv>Proces predare/primire</button></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="page" id="page-vehicle-detail">
+        <div class="vehicle-detail-head">
+          <div class="vehicle-name"><div class="vehicle-square">TESLA</div><div><h2>Tesla Model 3 Dual Motor, 2021</h2><p>PH 01 TKI · VIN 5YJ3E7EB6MF846979 · 222.500 km</p></div></div>
+          <div class="head-actions"><button class="secondary" data-page-jump="vehicles">← Mașinile mele</button><button class="secondary">Vezi anunț public</button><button class="primary" data-open-rental>＋ Închiriere nouă</button></div>
+        </div>
+        <div class="vehicle-tabs"><button class="tab active" data-detail-tab="overview">Prezentare</button><button class="tab" data-detail-tab="rentals">Închirieri</button><button class="tab" data-detail-tab="docs">Documente</button><button class="tab" data-detail-tab="maint">Mentenanță</button><button class="tab" data-detail-tab="history">Istoric</button></div>
+
+        <div class="detail-page active" id="detail-overview">
+          <div class="detail-grid">
+            <div class="panel"><div class="panel-head"><div><div class="panel-title">Situație curentă</div><div class="panel-sub">Date operaționale</div></div><span class="badge success">Închiriată</span></div>
+              <div class="panel-body"><div class="quick-grid"><div class="quick"><strong>Chiriaș actual</strong><span>Adrian P. · din 11.08.2026</span></div><div class="quick"><strong>Valoare contract</strong><span>14.400 lei · 2 luni</span></div><div class="quick"><strong>Garanție</strong><span>500 lei · reținută</span></div><div class="quick"><strong>Următoarea predare</strong><span>11.10.2026 · 18:00</span></div></div></div>
+            </div>
+            <div class="panel"><div class="panel-head"><div><div class="panel-title">Acțiuni</div><div class="panel-sub">Documente și check-in/out</div></div></div>
+              <div class="panel-body"><div class="quick-grid"><div class="quick"><strong>Contract</strong><span>Precompletat din datele mașinii și firmei.</span><button class="secondary" data-generate-contract>Generează</button></div><div class="quick"><strong>Proces verbal</strong><span>Predare / primire cu datele acestei închirieri.</span><button class="secondary" data-generate-pv>Generează</button></div><div class="quick"><strong>Check-in</strong><span>Km, nivel energie, accesorii și poze.</span><button class="secondary" data-open-checkin>Deschide</button></div><div class="quick"><strong>Check-out</strong><span>Compară starea mașinii la retur.</span><button class="secondary" data-open-checkout>Deschide</button></div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-page" id="detail-rentals">
+          <div class="panel"><div class="panel-head"><div><div class="panel-title">Istoric închirieri</div><div class="panel-sub">Contracte, perioade, valori și kilometraj</div></div><button class="primary" data-open-rental>＋ Închiriere nouă</button></div>
+            <div class="panel-body" style="padding:0"><table class="rental-history"><thead><tr><th>Chiriaș</th><th>Perioadă</th><th>Valoare contractuală</th><th>Încasat înregistrat</th><th>Km</th><th>Status</th></tr></thead><tbody><tr><td>Adrian P.</td><td>11.08–11.10.2026</td><td>14.400 lei</td><td>7.200 lei</td><td>—</td><td><span class="badge success">Activă</span></td></tr><tr><td>Mihai C.</td><td>02.05–30.07.2026</td><td>18.900 lei</td><td>18.400 lei</td><td>12.100 km</td><td><span class="badge muted">Încheiată</span></td></tr></tbody></table></div>
+          </div>
+        </div>
+
+        <div class="detail-page" id="detail-docs">
+          <div class="panel"><div class="panel-head"><div><div class="panel-title">Documente vehicul</div><div class="panel-sub">Nu sunt obligatorii pentru publicare. Sunt utile pentru evidență și alerte.</div></div><button class="primary" data-open-doc>＋ Încarcă</button></div>
+            <div class="panel-body"><div class="doc-grid"><div class="doc-item"><strong>RCA</strong><span>Expiră: 28.08.2026</span><span class="badge danger" style="margin-top:7px">12 zile</span><div class="doc-actions"><button data-view-doc>Vizualizează</button><button>Descarcă</button><button>Înlocuiește</button></div></div><div class="doc-item"><strong>ITP</strong><span>Expiră: 10.10.2026</span><span class="badge success" style="margin-top:7px">Activ</span><div class="doc-actions"><button data-view-doc>Vizualizează</button><button>Descarcă</button><button>Înlocuiește</button></div></div><div class="doc-item"><strong>Talon</strong><span>Fără expirare</span><span class="badge success" style="margin-top:7px">Încărcat</span><div class="doc-actions"><button data-view-doc>Vizualizează</button><button>Descarcă</button><button>Înlocuiește</button></div></div></div></div>
+          </div>
+        </div>
+
+        <div class="detail-page" id="detail-maint">
+          <div class="panel"><div class="panel-head"><div><div class="panel-title">Mentenanță</div><div class="panel-sub">Istoric și programări pentru această mașină</div></div><button class="primary">＋ Adaugă intervenție</button></div>
+            <div class="panel-body"><div class="maintenance-list"><div class="maintenance-row"><div><strong>Schimb filtre habitaclu</strong><span>02.08.2026 · 221.840 km · Factură atașată</span></div><div class="maintenance-cost">340 lei</div></div><div class="maintenance-row"><div><strong>Geometrie + verificare suspensie</strong><span>19.06.2026 · 213.100 km</span></div><div class="maintenance-cost">260 lei</div></div></div></div>
+          </div>
+        </div>
+
+        <div class="detail-page" id="detail-history">
+          <div class="panel"><div class="panel-head"><div><div class="panel-title">Timeline vehicul</div><div class="panel-sub">Toate evenimentele importante într-un singur loc</div></div></div>
+            <div class="panel-body"><div class="timeline"><div class="timeline-item"><div class="timeline-dot">▤</div><div class="timeline-copy"><strong>Înregistrată plată 1.800 lei</strong><span>16.08.2026 · Închiriere Adrian P.</span></div></div><div class="timeline-item"><div class="timeline-dot">◉</div><div class="timeline-copy"><strong>Check-in finalizat · 8 fotografii</strong><span>11.08.2026 · 222.500 km · baterie 85%</span></div></div><div class="timeline-item"><div class="timeline-dot">⚙</div><div class="timeline-copy"><strong>Schimb filtre habitaclu</strong><span>02.08.2026 · 340 lei</span></div></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-rentals">
+        <div class="page-head"><div><h1>Închirieri</h1><p>Contractele și procesele verbale sunt generate din datele închirierii și pot fi descărcate de flotă.</p></div><button class="primary" data-open-rental>＋ Închiriere nouă</button></div>
+        <div class="rental-cards"><div class="rental-card"><strong>8</strong><span>închirieri active</span></div><div class="rental-card"><strong>49.800 lei</strong><span>valoare contractuală / lună</span></div><div class="rental-card"><strong>41.250 lei</strong><span>plăți înregistrate luna aceasta</span></div><div class="rental-card"><strong>2</strong><span>predări în următoarele 7 zile</span></div></div>
+        <div class="panel"><div class="panel-head"><div><div class="panel-title">Toate închirierile</div><div class="panel-sub">Active și istorice</div></div><div class="tabs"><button class="tab active">Active</button><button class="tab">Viitoare</button><button class="tab">Încheiate</button></div></div>
+          <div style="overflow:auto"><table class="rental-table"><thead><tr><th>Mașină</th><th>Chiriaș</th><th>Perioadă</th><th>Chirie</th><th>Garanție</th><th>Documente</th><th>Acțiuni</th></tr></thead><tbody>
+            <tr><td>Tesla Model 3 · PH 01 TKI</td><td>Adrian P.</td><td>11.08–11.10</td><td>1.800 lei/săpt.</td><td>500 lei</td><td><span class="badge success">Contract + PV</span></td><td><div class="rental-actions"><button data-generate-contract>Contract</button><button data-generate-pv>PV</button><button data-open-checkout>Check-out</button></div></td></tr>
+            <tr><td>Renault Zoe · B 222 RDL</td><td>Mihai C.</td><td>02.08–30.09</td><td>1.450 lei/săpt.</td><td>500 lei</td><td><span class="badge info">Contract</span></td><td><div class="rental-actions"><button data-generate-contract>Contract</button><button data-generate-pv>PV</button><button data-open-checkin>Check-in</button></div></td></tr>
+          </tbody></table></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-documents">
+        <div class="page-head"><div><h1>Documente societate</h1><p>Stochează documentele firmei și vizualizează-le direct în RIDElance, fără descărcare obligatorie.</p></div><button class="primary" data-open-doc>＋ Încarcă document</button></div>
+        <div class="doc-summary"><div class="doc-stat"><strong>14</strong><span>documente stocate</span></div><div class="doc-stat"><strong>2.4 GB</strong><span>spațiu utilizat</span></div><div class="doc-stat"><strong>2</strong><span>cu expirare setată</span></div><div class="doc-stat"><strong>100%</strong><span>dosar firmă complet</span></div></div>
+        <div class="company-docs"><div class="company-doc"><strong>Certificat înregistrare</strong><span>certificat_tuki_go.pdf · fără expirare</span><div class="doc-actions"><button data-view-doc>Vizualizează</button><button>Descarcă</button></div></div><div class="company-doc"><strong>Certificat constatator</strong><span>constatator_aug_2026.pdf · fără expirare</span><div class="doc-actions"><button data-view-doc>Vizualizează</button><button>Descarcă</button></div></div><div class="company-doc"><strong>Autorizație transport</strong><span>Expiră: 12.06.2027</span><div class="doc-actions"><button data-view-doc>Vizualizează</button><button>Descarcă</button></div></div></div>
+      </section>
+
+      <section class="page" id="page-maintenance">
+        <div class="page-head"><div><h1>Mentenanță</h1><p>Istoric service, costuri și remindere bazate pe dată sau kilometraj.</p></div><button class="primary">＋ Adaugă intervenție</button></div>
+        <div class="maint-kpis"><div class="maint-item"><strong>7.840 lei</strong><span>cost mentenanță / 30 zile</span></div><div class="maint-item"><strong>2</strong><span>intervenții programate</span></div><div class="maint-item"><strong>1</strong><span>reminder în următorii 2.000 km</span></div><div class="maint-item"><strong>12</strong><span>vehicule monitorizate</span></div></div>
+        <div class="panel"><div class="panel-head"><div><div class="panel-title">Programări și istoric</div><div class="panel-sub">Ultimele intervenții și ce urmează</div></div></div><div class="panel-body"><div class="maintenance-list"><div class="maintenance-row"><div><strong>Tesla Model 3 · verificare suspensie</strong><span>Reminder la 224.350 km · acum 222.500 km</span></div><span class="badge warn">1.850 km</span></div><div class="maintenance-row"><div><strong>Dacia Spring · rotație anvelope</strong><span>Programată 24.08.2026</span></div><span class="badge info">7 zile</span></div></div></div></div>
+      </section>
+
+      <section class="page" id="page-company">
+        <div class="page-head"><div><h1>Pagina firmei</h1><p>Mini-site-ul public RIDElance. Controlezi exact ce informații de contact sunt vizibile.</p></div><div class="head-actions"><button class="secondary">Copiază link</button><button class="primary">Vezi pagina publică</button></div></div>
+        <div class="company-grid">
+          <div class="public-preview"><div class="cover"></div><div class="public-body"><div class="public-head"><div class="logo-box">TG</div><div><h3>TUKI GO</h3><p>✓ Flotă verificată RIDElance · București</p></div></div><div class="public-desc">Flotă de ridesharing cu vehicule electrice și clasice. Colaborări flexibile, condiții clare și preluare rapidă.</div><div class="public-actions"><button class="primary">WhatsApp</button><button class="secondary">Sună</button><button class="secondary">Email</button></div><div style="margin-top:14px;padding:11px;border:1px solid #e7ebef;border-radius:12px;background:#fbfcfd;font-size:8.8px;color:#637086">Link public: <b>ridelance.ro/tuki-go</b><br>Mașină: <b>ridelance.ro/tuki-go/tesla-model-3-2021</b></div></div></div>
+          <div class="company-settings">
+            <div class="setting-card"><h4>Contact public</h4><p>Informațiile apar instant pe mini-site în funcție de ce activezi.</p><div class="toggle-row"><span>Afișează telefon</span><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div><div class="toggle-row"><span>Afișează email</span><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div><div class="toggle-row"><span>Buton WhatsApp</span><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div><div class="toggle-row"><span>Afișează locația</span><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div></div>
+            <div class="setting-card"><h4>Linkuri inteligente</h4><p>Poți folosi linkuri diferite pentru OLX, Facebook sau WhatsApp și urmări sursa.</p><input class="search" style="width:100%;min-width:0" value="ridelance.ro/tuki-go/tesla-model-3-2021?utm_source=olx"></div>
+            <div class="setting-card"><h4>Locație de preluare</h4><p>Pinul poate fi reutilizat la anunțurile mașinilor.</p><div id="companyMap"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-benefits">
+        <div class="page-head"><div><h1>Beneficii pentru flotă</h1><p>Parteneriate negociate de RIDElance pentru costuri mai bune și administrare mai simplă.</p></div></div>
+        <div class="benefit-grid">
+          <div class="benefit"><div class="benefit-icon">◈</div><h3>Asigurări</h3><p>Acces rapid la RCA, CASCO și alte polițe prin partenerii RIDElance.</p><button class="secondary">Vezi ofertele</button></div>
+          <div class="benefit"><div class="benefit-icon">⛽</div><h3>MOL</h3><p>Cashback la combustibil și reduceri pentru spălătoriile MOL.</p><button class="secondary">Detalii</button></div>
+          <div class="benefit"><div class="benefit-icon">⚙</div><h3>Service & anvelope</h3><p>Condiții comerciale negociate pentru flote și mentenanță.</p><button class="secondary">Vezi partenerii</button></div>
+          <div class="benefit"><div class="benefit-icon">↗</div><h3>Promovare</h3><p>Marketplace RIDElance, mini-site și linkuri de promovare pentru fiecare mașină.</p><button class="secondary">Pagina firmei</button></div>
+          <div class="benefit"><div class="benefit-icon">✓</div><h3>Flotă verificată</h3><p>Badge public bazat pe verificarea reală a firmei și a profilului.</p><button class="secondary">Status verificare</button></div>
+          <div class="benefit"><div class="benefit-icon">▤</div><h3>Document management</h3><p>Stocare, preview, descărcare și alerte de expirare într-un singur loc.</p><button class="secondary">Documente</button></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-settings">
+        <div class="page-head"><div><h1>Setări</h1><p>Date companie, notificări și valorile implicite folosite pentru generarea documentelor.</p></div><button class="primary" id="saveSettings">Salvează</button></div>
+        <div class="settings-grid">
+          <div class="settings-card"><h3>Date companie</h3><p>Aceste informații sunt preluate automat în contracte și procese verbale.</p><div class="field"><label>Denumire</label><input value="TUKI GO SRL"></div><div class="field"><label>CUI</label><input value="RO12345678"></div><div class="field"><label>Reprezentant</label><input value="Ionescu Victor"></div><div class="field"><label>Sediu</label><input value="București"></div></div>
+          <div class="settings-card"><h3>Valori implicite închiriere</h3><p>RIDElance le precompletează la fiecare închiriere, dar flota le poate modifica înainte de generarea documentului.</p><div class="defaults-table"><div class="field"><label>Chirie standard / săptămână</label><input id="defaultRent" value="1800"></div><div class="field"><label>Garanție standard</label><input id="defaultDeposit" value="500"></div><div class="field"><label>Perioadă minimă</label><select id="defaultPeriod"><option>2 luni</option><option>1 lună</option><option>Fără minim</option></select></div><div class="field"><label>Limită km</label><select id="defaultKmLimit"><option>Fără limită</option><option>Cu limită</option></select></div><div class="field"><label>Cost km extra</label><input id="defaultExtraKm" value="0.50"></div><div class="field"><label>Regulă combustibil / energie</label><select id="defaultFuelRule"><option>Cel puțin nivelul de la preluare</option><option>Plin - plin</option></select></div></div><div class="helper">Acestea sunt doar valori implicite. La fiecare închiriere pot fi schimbate fără să modifici setările generale.</div></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="modal" id="rentalModal">
+  <div class="modal-head"><div><h3>Închiriere nouă — Tesla Model 3</h3><div class="panel-sub">Datele firmei și mașinii sunt deja cunoscute. Completezi doar ce diferă la această închiriere.</div></div><button class="close" data-close>×</button></div>
+  <div class="modal-body">
+    <div class="prefill-note">Valorile standard ale flotei au fost precompletate. <b>Toate câmpurile rămân editabile</b> înainte de generarea contractului și a procesului verbal.</div>
+    <div class="section-label">1. Date chiriaș</div>
+    <div class="form-grid">
+      <div class="field"><label>Tip chiriaș</label><select><option>Persoană fizică</option><option>PFA</option><option>SRL</option></select></div>
+      <div class="field"><label>Nume complet</label><input id="tenantName" value="Adrian Pîrvu"></div>
+      <div class="field"><label>CNP</label><input value="1920604340925"></div>
+      <div class="field"><label>CI serie / număr</label><input value="TR 621424"></div>
+      <div class="field"><label>Telefon</label><input value="0736 186 400"></div>
+      <div class="field"><label>Email</label><input value="adrian@example.ro"></div>
+    </div>
+    <div class="section-label" style="margin-top:16px">2. Perioada și valorile contractului</div>
+    <div class="form-grid">
+      <div class="field"><label>Data preluare</label><input type="date" value="2026-08-17"></div>
+      <div class="field"><label>Ora preluare</label><input type="time" value="14:00"></div>
+      <div class="field"><label>Data predare estimată</label><input type="date" value="2026-10-17"></div>
+      <div class="field"><label>Ora predare</label><input type="time" value="14:00"></div>
+      <div class="field"><label>Chirie / săptămână</label><input id="rentalRent" value="1800"></div>
+      <div class="field"><label>Garanție</label><input id="rentalDeposit" value="500"></div>
+    </div>
+    <div class="section-label" style="margin-top:16px">3. Date la predare</div>
+    <div class="form-grid">
+      <div class="field"><label>Kilometraj</label><input value="222500"></div>
+      <div class="field"><label>Limită km</label><select id="rentalKmLimit"><option>Fără limită</option><option>Cu limită</option></select></div>
+      <div class="field"><label>Cost km extra</label><input id="rentalExtraKm" value="0.50"></div>
+      <div class="field"><label>Nivel combustibil / baterie</label><input value="85%"></div>
+      <div class="field full"><label>Regulă combustibil / energie</label><select id="rentalFuelRule"><option>Cel puțin nivelul de la preluare</option><option>Plin - plin</option></select></div>
+      <div class="field full"><label>Accesorii incluse</label><textarea>2 carduri Tesla, cablu Type 2, adaptor, trusă, stingător, triunghi reflectorizant</textarea></div>
+      <div class="field full"><label>Observații / clauze specifice acestei închirieri</label><textarea>Predarea mai devreme de perioada minimă implică pierderea garanției. Notificare de încetare cu minimum 7 zile înainte.</textarea></div>
+    </div>
+  </div>
+  <div class="modal-foot"><button class="secondary" data-close>Renunță</button><div style="display:flex;gap:7px"><button class="secondary" data-generate-pv>Generează proces verbal</button><button class="primary" data-generate-contract>Generează contract</button></div></div>
+</div>
+
+<div class="modal" id="documentModal">
+  <div class="modal-head"><div><h3 id="docModalTitle">Contract de închiriere</h3><div class="panel-sub">Preview înainte de descărcare</div></div><button class="close" data-close>×</button></div>
+  <div class="modal-body">
+    <div class="preview-toolbar"><button class="secondary" id="downloadDocument">⇩ Descarcă documentul</button></div>
+    <div class="document-preview" id="documentPreview">
+      <h4>CONTRACT DE ÎNCHIRIERE VEHICUL</h4>
+      <p><b>Locator:</b> TUKI GO SRL, reprezentată prin Ionescu Victor.<br><b>Locatar:</b> Adrian Pîrvu.<br><br><b>Vehicul:</b> Tesla Model 3 Dual Motor, 2021<br><b>Nr. înmatriculare:</b> PH 01 TKI<br><b>VIN:</b> 5YJ3E7EB6MF846979<br><br><b>Chirie:</b> 1.800 lei / săptămână<br><b>Garanție:</b> 500 lei<br><b>Limită km:</b> Fără limită</p>
+    </div>
+  </div>
+  <div class="modal-foot"><button class="secondary" data-close>Închide</button><button class="primary" id="downloadDocument2">⇩ Descarcă documentul</button></div>
+</div>
+
+<div class="modal" id="checkModal">
+  <div class="modal-head"><div><h3 id="checkTitle">Check-in vehicul</h3><div class="panel-sub">Starea mașinii este păstrată în istoricul închirierii</div></div><button class="close" data-close>×</button></div>
+  <div class="modal-body">
+    <div class="form-grid"><div class="field"><label>Kilometraj</label><input value="222500"></div><div class="field"><label>Baterie / combustibil</label><input value="85%"></div><div class="field full"><label>Accesorii</label><textarea>2 carduri Tesla, cablu Type 2, adaptor, trusă, stingător</textarea></div><div class="field full"><label>Observații</label><textarea>Mică zgârietură existentă pe bara spate dreapta.</textarea></div></div>
+    <div class="section-label" style="margin-top:16px">Fotografii recomandate</div>
+    <div class="photo-grid"><div class="photo-slot">＋ Față</div><div class="photo-slot">＋ Spate</div><div class="photo-slot">＋ Stânga</div><div class="photo-slot">＋ Dreapta</div><div class="photo-slot">＋ Interior</div><div class="photo-slot">＋ Bord / km</div></div>
+  </div>
+  <div class="modal-foot"><button class="secondary" data-close>Renunță</button><button class="primary" data-close>Salvează în istoric</button></div>
+</div>
+
+<div class="modal" id="checkoutModal">
+  <div class="modal-head"><div><h3>Check-out / Returnare</h3><div class="panel-sub">Compară vizual starea mașinii cu fotografiile de la predare</div></div><button class="close" data-close>×</button></div>
+  <div class="modal-body">
+    <div class="compare-grid">
+      <div class="compare-side"><h4>Check-in · 11.08.2026</h4><div class="compare-photo-grid"><div class="compare-photo">Față</div><div class="compare-photo">Spate</div><div class="compare-photo">Stânga</div><div class="compare-photo">Dreapta</div></div></div>
+      <div class="compare-side"><h4>Check-out · Astăzi</h4><div class="compare-photo-grid"><div class="compare-photo">＋ Față</div><div class="compare-photo">＋ Spate</div><div class="compare-photo">＋ Stânga</div><div class="compare-photo">＋ Dreapta</div></div></div>
+    </div>
+    <div class="form-grid" style="margin-top:14px"><div class="field"><label>Km retur</label><input value="230740"></div><div class="field"><label>Baterie retur</label><input value="82%"></div><div class="field"><label>Garanție returnată</label><input value="500"></div><div class="field"><label>Garanție reținută</label><input value="0"></div><div class="field full"><label>Observații retur</label><textarea>Fără daune noi vizibile. Toate accesoriile sunt prezente.</textarea></div></div>
+  </div>
+  <div class="modal-foot"><button class="secondary" data-close>Renunță</button><button class="primary" data-close>Încheie închirierea</button></div>
+</div>
+
+<div class="modal" id="uploadDocModal">
+  <div class="modal-head"><div><h3>Încarcă document</h3><div class="panel-sub">Documentele pot fi vizualizate direct în platformă</div></div><button class="close" data-close>×</button></div>
+  <div class="modal-body"><div class="form-grid"><div class="field"><label>Tip document</label><select><option>RCA</option><option>CASCO</option><option>ITP</option><option>Talon</option><option>Document societate</option><option>Altul</option></select></div><div class="field"><label>Asociat cu</label><select><option>Tesla Model 3 · PH 01 TKI</option><option>TUKI GO SRL</option></select></div><div class="field"><label>Data emiterii</label><input type="date" value="2026-08-17"></div><div class="field"><label>Data expirării</label><input type="date"></div><div class="field full"><label>Fișier</label><div class="photo-slot" style="min-height:120px">⇧ Selectează PDF / imagine</div></div></div></div>
+  <div class="modal-foot"><button class="secondary" data-close>Renunță</button><button class="primary" data-close>Încarcă document</button></div>
+</div>
+
+<div class="modal" id="viewDocModal">
+  <div class="modal-head"><div><h3>RCA — Tesla Model 3</h3><div class="panel-sub">Preview în RIDElance · fără descărcare obligatorie</div></div><button class="close" data-close>×</button></div>
+  <div class="modal-body"><div style="height:440px;border:1px solid #e3e7ec;border-radius:13px;background:linear-gradient(180deg,#fff,#f8fafc);display:grid;place-items:center;text-align:center;color:#7c8699"><div><div style="font-size:46px">▤</div><strong style="display:block;margin-top:10px;font-size:12px">RCA_Tesla_PH01TKI.pdf</strong><span style="display:block;margin-top:5px;font-size:9px">Aici se afișează PDF-ul direct în viewer.</span></div></div></div>
+  <div class="modal-foot"><button class="secondary" data-close>Închide</button><button class="primary">⇩ Descarcă</button></div>
+</div>
+
+<script>
+mapboxgl.accessToken='MAPBOX_TOKEN_AICI'; /* Token-ul Mapbox a fost scos: mockup-ul e referință de structură (spec §0.3.1), iar push protection îl respinge. Pune-l aici local ca să vezi harta. */
+
+const titleMap={home:'Acasă',vehicles:'Mașinile mele',rentals:'Închirieri',documents:'Documente societate',maintenance:'Mentenanță',company:'Pagina firmei',benefits:'Beneficii',settings:'Setări','vehicle-detail':'Dosar vehicul'};
+
+function openPage(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+  document.getElementById('topTitle').textContent=titleMap[page]||'RIDElance';
+  if(page==='company') setTimeout(initCompanyMap,70);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>openPage(b.dataset.page)));
+document.querySelectorAll('[data-page-jump]').forEach(b=>b.addEventListener('click',()=>openPage(b.dataset.pageJump)));
+document.querySelectorAll('[data-open-vehicle]').forEach(b=>b.addEventListener('click',()=>openPage('vehicle-detail')));
+
+document.querySelectorAll('[data-detail-tab]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-detail-tab]').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.detail-page').forEach(x=>x.classList.remove('active'));
+    document.getElementById('detail-'+btn.dataset.detailTab).classList.add('active');
+  });
+});
+
+let companyMapReady=false;
+function initCompanyMap(){
+  if(companyMapReady)return;
+  companyMapReady=true;
+  const map=new mapboxgl.Map({container:'companyMap',style:'mapbox://styles/mapbox/light-v11',center:[26.1025,44.4268],zoom:11.2});
+  const shell=document.createElement('div');
+  shell.style.width='28px';shell.style.height='28px';shell.style.borderRadius='50%';shell.style.background='#54c8f2';shell.style.border='4px solid white';shell.style.boxShadow='0 7px 18px rgba(23,25,43,.18)';
+  new mapboxgl.Marker({element:shell}).setLngLat([26.1025,44.4268]).addTo(map);
+}
+
+const overlay=document.getElementById('overlay');
+function closeAll(){overlay.classList.remove('show');document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'));}
+function openModal(id){closeAll();overlay.classList.add('show');document.getElementById(id).classList.add('show');}
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeAll));
+overlay.addEventListener('click',closeAll);
+
+document.querySelectorAll('[data-open-rental]').forEach(b=>b.addEventListener('click',()=>{
+  document.getElementById('rentalRent').value=document.getElementById('defaultRent').value;
+  document.getElementById('rentalDeposit').value=document.getElementById('defaultDeposit').value;
+  document.getElementById('rentalKmLimit').value=document.getElementById('defaultKmLimit').value;
+  document.getElementById('rentalExtraKm').value=document.getElementById('defaultExtraKm').value;
+  document.getElementById('rentalFuelRule').value=document.getElementById('defaultFuelRule').value;
+  openModal('rentalModal');
+}));
+document.getElementById('topAddRental').addEventListener('click',()=>document.querySelector('[data-open-rental]').click());
+
+document.querySelectorAll('[data-open-checkin]').forEach(b=>b.addEventListener('click',()=>{document.getElementById('checkTitle').textContent='Check-in vehicul';openModal('checkModal');}));
+document.querySelectorAll('[data-open-checkout]').forEach(b=>b.addEventListener('click',()=>openModal('checkoutModal')));
+document.querySelectorAll('[data-open-doc]').forEach(b=>b.addEventListener('click',()=>openModal('uploadDocModal')));
+document.querySelectorAll('[data-view-doc]').forEach(b=>b.addEventListener('click',()=>openModal('viewDocModal')));
+
+function showDocument(type){
+  const title=document.getElementById('docModalTitle');
+  const preview=document.getElementById('documentPreview');
+  const tenant=document.getElementById('tenantName').value||'Adrian Pîrvu';
+  const rent=document.getElementById('rentalRent').value||'1800';
+  const dep=document.getElementById('rentalDeposit').value||'500';
+  const km=document.getElementById('rentalKmLimit').value;
+  const fuel=document.getElementById('rentalFuelRule').value;
+  if(type==='contract'){
+    title.textContent='Contract de închiriere';
+    preview.innerHTML=`<h4>CONTRACT DE ÎNCHIRIERE VEHICUL</h4><p><b>Locator:</b> TUKI GO SRL, reprezentată prin Ionescu Victor.<br><b>Locatar:</b> ${tenant}.<br><br><b>Vehicul:</b> Tesla Model 3 Dual Motor, 2021<br><b>Nr. înmatriculare:</b> PH 01 TKI<br><b>VIN:</b> 5YJ3E7EB6MF846979<br><br><b>Chirie:</b> ${rent} lei / săptămână<br><b>Garanție:</b> ${dep} lei<br><b>Limită km:</b> ${km}<br><b>Regulă energie:</b> ${fuel}</p><div class="doc-divider"></div><p>Preview demonstrativ. În implementarea live, se inserează template-ul juridic RIDElance complet.</p>`;
+  }else{
+    title.textContent='Proces-verbal predare / primire';
+    preview.innerHTML=`<h4>PROCES-VERBAL DE PREDARE / PRIMIRE</h4><p><b>Predător:</b> TUKI GO SRL<br><b>Primitor:</b> ${tenant}<br><br><b>Vehicul:</b> Tesla Model 3 Dual Motor, 2021 · PH 01 TKI<br><b>Kilometraj:</b> 222.500 km<br><b>Baterie la predare:</b> 85%<br><b>Accesorii:</b> 2 carduri Tesla, cablu Type 2, adaptor, trusă, stingător.<br><b>Observații:</b> Mică zgârietură existentă pe bara spate dreapta.</p><div class="doc-divider"></div><p>Document generat din datele vehiculului și ale închirierii. Poate fi descărcat de flotă.</p>`;
+  }
+  openModal('documentModal');
+}
+document.querySelectorAll('[data-generate-contract]').forEach(b=>b.addEventListener('click',()=>showDocument('contract')));
+document.querySelectorAll('[data-generate-pv]').forEach(b=>b.addEventListener('click',()=>showDocument('pv')));
+
+function downloadGenerated(){
+  const title=document.getElementById('docModalTitle').textContent;
+  const body=document.getElementById('documentPreview').innerHTML;
+  const file=`<!doctype html><html><meta charset="utf-8"><title>${title}</title><body style="font-family:Arial;padding:40px;line-height:1.6">${body}</body></html>`;
+  const blob=new Blob([file],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=(title.toLowerCase().includes('contract')?'contract_inchiriere':'proces_verbal')+'.html';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),500);
+}
+document.getElementById('downloadDocument').addEventListener('click',downloadGenerated);
+document.getElementById('downloadDocument2').addEventListener('click',downloadGenerated);
+
+document.getElementById('saveSettings').addEventListener('click',()=>{
+  alert('Demo: valorile implicite au fost salvate. Vor precompleta următoarele închirieri, dar rămân editabile.');
+});
+</script>
+</body>
+</html>
