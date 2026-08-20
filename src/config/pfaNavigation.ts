@@ -20,6 +20,8 @@ import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded'
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded'
 
+import type { DashboardNavConfig, NavEntry } from './dashboardNav'
+
 /**
  * Sursa unică de adevăr pentru navigația Dashboard-ului PFA.
  *
@@ -80,21 +82,6 @@ export const PFA_PATHS = {
 } as const
 
 export type PfaPath = (typeof PFA_PATHS)[keyof typeof PFA_PATHS]
-
-export type NavLeaf = {
-  id: string
-  label: string
-  path: string
-  /** Text scurt pentru hub-ul de meniu de pe mobil. */
-  hint?: string
-  badge?: 'coming-soon'
-}
-
-export type NavEntry =
-  | ({ kind: 'link'; icon: SvgIconComponent } & NavLeaf)
-  | { kind: 'group'; id: string; label: string; icon: SvgIconComponent; children: NavLeaf[] }
-  | { kind: 'separator'; id: string }
-  | { kind: 'action'; id: string; label: string; icon: SvgIconComponent }
 
 export const PFA_NAV: NavEntry[] = [
   {
@@ -261,52 +248,23 @@ const EXTRA_PAGE_TITLES: Record<string, string> = {
   [PFA_PATHS.home]: 'Dashboard PFA',
 }
 
-export type NavGroupEntry = Extract<NavEntry, { kind: 'group' }>
-export type NavLinkEntry = Extract<NavEntry, { kind: 'link' }>
-
-export const NAV_GROUPS: NavGroupEntry[] = PFA_NAV.filter(
-  (entry): entry is NavGroupEntry => entry.kind === 'group',
-)
-
-/** Toate frunzele navigabile, inclusiv linkurile de nivel unu. */
-export const NAV_LEAVES: NavLeaf[] = PFA_NAV.flatMap((entry) => {
-  if (entry.kind === 'group') return entry.children
-  if (entry.kind === 'link') return [{ id: entry.id, label: entry.label, path: entry.path, hint: entry.hint }]
-  return []
-})
-
 /**
- * Potrivirea rutei active. Se compară pe segmente, nu cu `startsWith`, ca `/profil` să nu
- * revendice `/profil/istoric-plati` doar pentru că e prefixul lui textual.
+ * Configul complet al dashboard-ului PFA. Layout-ul primește doar obiectul ăsta — nu importă
+ * nimic din fișierul de față și nu știe că PFA-ul există.
  */
-function isPathActive(pathname: string, path: string): boolean {
-  if (pathname === path) return true
-  return pathname.startsWith(`${path}/`)
+export const PFA_NAV_CONFIG: DashboardNavConfig = {
+  ownerType: 'Pfa',
+  root: DASHBOARD_ROOT,
+  menuLabel: 'Meniu Principal',
+  entries: PFA_NAV,
+  /** Versionată: o schimbare de structură invalidează starea veche. */
+  storageKey: 'ridelance.pfa.nav.v1',
+  /** Cele trei destinații directe din bara de jos. Restul intră sub „Meniu". */
+  mobileTabs: [
+    { path: PFA_PATHS.home, label: 'Acasă', icon: HomeRoundedIcon },
+    { path: PFA_PATHS.profile, label: 'Profil', icon: PersonRoundedIcon },
+    { path: PFA_PATHS.support, label: 'Suport', icon: HeadsetMicRoundedIcon },
+  ],
+  extraPageTitles: EXTRA_PAGE_TITLES,
+  fallbackTitle: 'Dashboard PFA',
 }
-
-/** Frunza care corespunde rutei curente — cea mai specifică potrivire câștigă. */
-export function findActiveLeaf(pathname: string): NavLeaf | undefined {
-  if (pathname === PFA_PATHS.home) {
-    return NAV_LEAVES.find((leaf) => leaf.path === PFA_PATHS.home)
-  }
-
-  return NAV_LEAVES.filter((leaf) => leaf.path !== PFA_PATHS.home && isPathActive(pathname, leaf.path)).sort(
-    (a, b) => b.path.length - a.path.length,
-  )[0]
-}
-
-/** Grupul care conține ruta curentă. Rămâne deschis chiar dacă utilizatorul l-a închis manual. */
-export function findActiveGroupId(pathname: string): string | undefined {
-  return NAV_GROUPS.find((group) => group.children.some((child) => isPathActive(pathname, child.path)))?.id
-}
-
-export function pageTitleFor(pathname: string): string {
-  if (EXTRA_PAGE_TITLES[pathname]) return EXTRA_PAGE_TITLES[pathname]
-  return findActiveLeaf(pathname)?.label ?? 'Dashboard PFA'
-}
-
-/** Cheia de persistare a grupurilor deschise. Versionată: o schimbare de structură invalidează starea veche. */
-export const NAV_STATE_STORAGE_KEY = 'ridelance.pfa.nav.v1'
-
-/** Cele patru destinații din bara de jos de pe mobil. Restul intră sub „Meniu". */
-export const MOBILE_TAB_PATHS = [PFA_PATHS.home, PFA_PATHS.profile, PFA_PATHS.support] as const

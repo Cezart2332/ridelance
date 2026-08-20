@@ -4,10 +4,12 @@ import { alpha } from '@mui/material/styles';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import { NotificationsBell } from '../../notifications/NotificationsBell';
-import { MOBILE_TAB_PATHS } from '../../../config/pfaNavigation';
+import type { DashboardNavConfig } from '../../../config/dashboardNav';
 import logo from '../../../assets/logo.svg';
 
 interface AppHeaderProps {
+  /** Meniul curent — antetul are nevoie doar de destinațiile din bara de jos. */
+  nav: DashboardNavConfig;
   title: string;
   showNotifications?: boolean;
   onOpenRecurringDocumentation?: () => void;
@@ -16,6 +18,7 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({
+  nav,
   title,
   showNotifications,
   onOpenRecurringDocumentation,
@@ -25,8 +28,8 @@ export default function AppHeader({
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
   const { pathname } = useLocation();
 
-  // Subpagină pe mobil = orice rută care nu e una dintre cele trei destinații din bara de jos.
-  const isSubPageOnMobile = !isMdUp && !MOBILE_TAB_PATHS.some((path) => path === pathname);
+  // Subpagină pe mobil = orice rută care nu e una dintre destinațiile din bara de jos.
+  const isSubPageOnMobile = !isMdUp && !nav.mobileTabs.some((tab) => tab.path === pathname);
 
   return (
     <Paper
