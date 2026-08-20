@@ -1,6 +1,7 @@
 import { alpha } from '@mui/material/styles'
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { NUMERIC_TEXT } from '../ui/numeric'
 
 /**
  * Tokenii paginii „Acasă", exprimați ca obiect TS pentru că aplicația stilizează prin `sx`,
@@ -21,8 +22,8 @@ export const HOME_TOKENS = {
     surface2: '#FAFBFC',
   },
   text: {
-    primary: '#101828',
-    secondary: '#667085',
+    primary: NUMERIC_TEXT.primary,
+    secondary: NUMERIC_TEXT.secondary,
     tertiary: '#98A2B3',
   },
   border: {
@@ -95,15 +96,8 @@ export function toneColors(tone: HomeTone): { fg: string; bg: string } {
   }
 }
 
-/**
- * Cifrele monetare nu au voie să „danseze" între rânduri. `lining-nums` le ține pe aceeași
- * linie de bază, `tabular-nums` le dă tuturor aceeași lățime — fără el, „3.625" și „1.172"
- * ocupă spații diferite și coloana pare strâmbă.
- */
-export const tabularNums = {
-  fontVariantNumeric: 'tabular-nums lining-nums',
-  fontFeatureSettings: "'tnum' 1, 'lnum' 1",
-} as const
+/** Reexportat din `ui/numeric` — pagina Acasă îl importa de aici înainte să fie comun. */
+export { tabularNums } from '../ui/numeric'
 
 /**
  * Motion-ul e discret și dispare complet la `prefers-reduced-motion`.

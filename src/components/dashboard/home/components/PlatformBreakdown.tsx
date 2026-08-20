@@ -7,7 +7,7 @@ import { HOME_TOKENS, tabularNums } from '../tokens'
 import { formatCurrency } from '../format'
 import type { PlatformSplitRow } from '../../../../services/pfaDashboard.service'
 import { PLATFORM_COLOR } from './charts/chartTheme'
-import { Amount } from './Amount'
+import { Amount } from '../../ui/Amount'
 import { HomeCard } from './HomeCard'
 
 const PLATFORM_LABEL: Record<string, string> = { bolt: 'Bolt', uber: 'Uber' }

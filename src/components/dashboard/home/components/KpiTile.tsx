@@ -3,7 +3,7 @@ import { Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material
 import { HOME_TOKENS, SPLIT_ROW } from '../tokens'
 import { useCountUp } from '../useCountUp'
 import type { DashboardMetric } from '../../../../services/pfaDashboard.service'
-import { Amount } from './Amount'
+import { Amount } from '../../ui/Amount'
 import { DeltaBadge } from './DeltaBadge'
 
 export interface KpiTileProps {

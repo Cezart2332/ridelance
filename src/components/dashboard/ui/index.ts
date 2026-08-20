@@ -1,3 +1,8 @@
+export { Amount } from './Amount'
+export type { AmountSize } from './Amount'
+
+export { NUMERIC_TEXT, tabularNums } from './numeric'
+
 export { Panel } from './Panel'
 export type { PanelProps } from './Panel'
 
