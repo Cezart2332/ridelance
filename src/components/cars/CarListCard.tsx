@@ -15,6 +15,7 @@ import {
 } from '../../utils/carLabels'
 import { hasActiveDiscount } from '../../utils/carPricing'
 import { formatLei } from '../../utils/vehiclePricing'
+import { CarOwnerBlock } from './CarOwnerBlock'
 import { StayAsterisk, StayPriceNote } from './StayPriceNote'
 import { VDP } from './vdp/vdpLayout'
 
@@ -198,6 +199,12 @@ export default function CarListCard({ car, newTab = false }: CarListCardProps) {
               / săptămână
             </Typography>
           </Stack>
+
+          {car.owner && (
+            <Box sx={{ pt: 1.25 }}>
+              <CarOwnerBlock owner={car.owner} />
+            </Box>
+          )}
 
           <Button
             fullWidth

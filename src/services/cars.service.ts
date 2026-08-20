@@ -25,6 +25,29 @@ export interface CarStats {
   forms: number;
 }
 
+/**
+ * Identitatea proprietarului unui anunț (spec §4.1).
+ *
+ * Deliberat agnostică: `ownerType` e informativ, nu un comutator de randare. Cardul arată la
+ * fel pentru PFA și pentru SRL.
+ */
+/** O sugestie concretă de îmbunătățire a anunțului, cu câștigul ei: „Adaugă 3 poze: +7". */
+export interface ScoreSuggestion {
+  id: string;
+  label: string;
+  points: number;
+}
+
+export interface CarOwner {
+  ownerId: string;
+  ownerType: 'Pfa' | 'Srl';
+  displayName: string;
+  logoUrl: string | null;
+  /** Identitatea din URL-ul mini-site-ului: `/f/{slug}`. */
+  slug: string;
+  verified: boolean;
+}
+
 export interface Car {
   id: string;
   /** Identitatea din URL-ul public: `dacia-logan-2022-4f3a`. */
@@ -51,6 +74,23 @@ export interface Car {
   paymentStatus: string;
   paidAtUtc?: string | null;
   postedByAdmin: boolean;
+  /**
+   * Cine închiriază mașina. Opțional cât timp API-ul nu îl trimite încă — atunci blocul de
+   * proprietar nu se randează deloc. Alternativa, o identitate compusă în frontend, ar fi
+   * însemnat să atribuim public un anunț cuiva pe baza unei presupuneri.
+   */
+  owner?: CarOwner;
+  /**
+   * Scorul intern al anunțului, 0–100 (spec §5.2). Calculat și stocat pe server; frontendul
+   * doar sortează după el. Absent cât timp API-ul nu îl trimite, caz în care „Recomandate"
+   * cade pe criteriile de departajare.
+   */
+  recommendationScore?: number;
+  /**
+   * Ce ar crește scorul, cu punctajul fiecărei acțiuni. Vin de la server odată cu scorul:
+   * regulile de punctaj stau în `Marketplace:Scoring`, nu în frontend (spec §5.2).
+   */
+  scoreSuggestions?: ScoreSuggestion[];
   images: CarImage[];
   createdAtUtc: string;
   stats: CarStats;

@@ -21,6 +21,7 @@ import {
 import { formatLei } from '../../../utils/vehiclePricing'
 import { StayAsterisk, StayPriceNote } from '../StayPriceNote'
 import { VDP } from './vdpLayout'
+import { CarOwnerBlock } from '../CarOwnerBlock'
 
 /**
  * Blocul de titlu (spec §4): H1 display, un rând de metadate separate prin „·" și un rând de chips.
@@ -78,6 +79,9 @@ export function VehicleHeader({ car }: { car: Car }) {
           ))}
         </Stack>
       </Box>
+
+      {/* Aceeași componentă ca pe cardul din listă, doar mai mare (spec §4.1). */}
+      {car.owner && <CarOwnerBlock owner={car.owner} size={32} />}
 
       <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
         <Chip

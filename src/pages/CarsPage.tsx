@@ -27,6 +27,7 @@ import { TOKENS } from '../constants/tokens';
 import { carsService, type Car } from '../services/cars.service';
 import CarListCard from '../components/cars/CarListCard';
 import { matchesOfferTypeFilter, matchesStatusFilter } from '../utils/carLabels';
+import { DEFAULT_SORT, SORT_OPTIONS, sortCars, type SortOption } from '../utils/carSorting';
 
 export function CarsPage() {
   const [cars, setCars] = useState<Car[]>([]);
@@ -41,7 +42,7 @@ export function CarsPage() {
   const [transmission, setTransmission] = useState('Toate');
   const [status, setStatus] = useState('Toate');
   const [platform, setPlatform] = useState('Toate');
-  const [sort, setSort] = useState('Preț: Mic la Mare');
+  const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
 
   const fetchCars = useCallback(async () => {
     setLoading(true);
@@ -80,11 +81,7 @@ export function CarsPage() {
       );
     }
 
-    // Sort
-    if (sort === 'Preț: Mic la Mare') result.sort((a, b) => a.pricePerWeek - b.pricePerWeek);
-    if (sort === 'Preț: Mare la Mic') result.sort((a, b) => b.pricePerWeek - a.pricePerWeek);
-
-    return result;
+    return sortCars(result, sort);
   }, [cars, search, city, offerType, engine, transmission, status, platform, sort]);
 
   const activeFiltersCount = [city, offerType, engine, transmission, status, platform].filter(f => f !== 'Toate').length;
@@ -279,7 +276,7 @@ export function CarsPage() {
               select
               size="medium"
               value={sort}
-              onChange={(e) => setSort(e.target.value)}
+              onChange={(e) => setSort(e.target.value as SortOption)}
               sx={{ 
                 width: { xs: '100%', md: 'auto' },
                 minWidth: { md: 220 },
@@ -299,7 +296,7 @@ export function CarsPage() {
                 },
               }}
             >
-              {['Preț: Mic la Mare', 'Preț: Mare la Mic'].map(opt => (
+              {SORT_OPTIONS.map(opt => (
                 <MenuItem key={opt} value={opt} sx={{ fontWeight: 600 }}>{opt}</MenuItem>
               ))}
             </TextField>
@@ -352,8 +349,10 @@ export function CarsPage() {
                     variant="text"
                     startIcon={<CloseRoundedIcon />}
                     onClick={() => {
-                      setCity('Toate'); setOfferType('Toate'); setEngine('Toate'); 
+                      setCity('Toate'); setOfferType('Toate'); setEngine('Toate');
                       setTransmission('Toate'); setStatus('Toate'); setPlatform('Toate');
+                      // Ștergerea filtrelor readuce și sortarea implicită (spec §5.1).
+                      setSort(DEFAULT_SORT);
                     }}
                     sx={{ color: TOKENS.textMuted, fontWeight: 700, '&:hover': { color: TOKENS.primaryStrong } }}
                   >

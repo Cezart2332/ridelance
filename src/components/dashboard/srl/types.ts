@@ -9,6 +9,7 @@
  */
 
 import type { OwnerType } from '../../../config/ownerType'
+import type { ScoreSuggestion } from '../../../services/cars.service'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Profil firmă (§3.1)
@@ -103,13 +104,6 @@ export interface SrlFiscalOverview {
 // ──────────────────────────────────────────────────────────────────────────────
 // Scor de anunț (§5.2)
 // ──────────────────────────────────────────────────────────────────────────────
-
-/** O sugestie concretă, cu câștigul ei: „Adaugă 3 poze: +7". */
-export interface ScoreSuggestion {
-  id: string
-  label: string
-  points: number
-}
 
 export interface ListingScore {
   carId: string
