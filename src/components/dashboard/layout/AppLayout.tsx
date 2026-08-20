@@ -14,6 +14,8 @@ interface AppLayoutProps {
   nav: DashboardNavConfig;
   children: React.ReactNode;
   onLogout?: () => void;
+  /** Blocul de identitate din subsolul sidebar-ului. Vezi `AppSidebar.footer`. */
+  sidebarFooter?: React.ReactNode;
   showNotifications?: boolean;
   onOpenRecurringDocumentation?: () => void;
 }
@@ -25,6 +27,7 @@ export default function AppLayout({
   nav,
   children,
   onLogout,
+  sidebarFooter,
   showNotifications,
   onOpenRecurringDocumentation,
 }: AppLayoutProps) {
@@ -49,7 +52,13 @@ export default function AppLayout({
       }}
     >
       {/* Pe mobil sidebar-ul se randează tot, dar ca sertar — de acolo își ia „Meniu" conținutul. */}
-      <AppSidebar nav={nav} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={onLogout} />
+      <AppSidebar
+        nav={nav}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        onLogout={onLogout}
+        footer={sidebarFooter}
+      />
 
       <Box
         sx={{

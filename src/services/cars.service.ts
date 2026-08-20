@@ -1,4 +1,5 @@
 import { api } from '../lib/axios';
+import { SRL_ROOT } from '../config/srlNavigation';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -140,12 +141,12 @@ const carsService = {
     const origin = window.location.origin;
     const res = await api.post<{ clientSecret: string }>('/payments/car-listing-checkout', {
       carId,
-      successUrl: `${origin}/poster?car_paid=1&car_id=${carId}&session_id={{CHECKOUT_SESSION_ID}}`,
-      cancelUrl: `${origin}/poster?car_payment_cancelled=1&car_id=${carId}`,
+      successUrl: `${origin}${SRL_ROOT}?car_paid=1&car_id=${carId}&session_id={{CHECKOUT_SESSION_ID}}`,
+      cancelUrl: `${origin}${SRL_ROOT}?car_payment_cancelled=1&car_id=${carId}`,
     });
 
     sessionStorage.setItem('stripe_client_secret', res.data.clientSecret);
-    sessionStorage.setItem('stripe_cancel_url', `/poster?car_payment_cancelled=1&car_id=${carId}`);
+    sessionStorage.setItem('stripe_cancel_url', `${SRL_ROOT}?car_payment_cancelled=1&car_id=${carId}`);
     sessionStorage.setItem('stripe_checkout_title', 'Publicare Anunț Auto');
     sessionStorage.setItem('stripe_checkout_price', '30 lei / lună');
     sessionStorage.setItem('stripe_checkout_desc', 'Abonament lunar pentru menținerea activă a anunțului pe platformă.');

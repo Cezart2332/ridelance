@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { Box, Button, Collapse, Divider, Drawer, Stack, Typography, useMediaQuery } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -21,6 +21,11 @@ interface AppSidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (arg: boolean) => void;
   onLogout?: () => void;
+  /**
+   * Bloc opțional deasupra butonului de deconectare — identitatea contului.
+   * PFA-ul nu îl folosește; SRL-ul pune acolo firma (spec §2.1).
+   */
+  footer?: ReactNode;
 }
 
 /** Sursa unică pentru culoarea iconițelor de navigație. */
@@ -255,7 +260,7 @@ function NavGroup({
   );
 }
 
-export default function AppSidebar({ nav, sidebarOpen, setSidebarOpen, onLogout }: AppSidebarProps) {
+export default function AppSidebar({ nav, sidebarOpen, setSidebarOpen, onLogout, footer }: AppSidebarProps) {
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
   const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
@@ -388,6 +393,10 @@ export default function AppSidebar({ nav, sidebarOpen, setSidebarOpen, onLogout 
       </Box>
 
       <Divider sx={{ opacity: 0.5, mx: 1, mt: 1.2, flexShrink: 0 }} />
+
+      {footer && (
+        <Box sx={{ mx: 1, mt: 1, flexShrink: 0 }}>{footer}</Box>
+      )}
 
       <Button
         onClick={onLogout}
