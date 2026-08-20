@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { Box, Button, Collapse, Divider, Drawer, Stack, Typography, useMediaQuery } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -7,28 +7,34 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import {
-  NAV_STATE_STORAGE_KEY,
-  PFA_NAV,
   findActiveGroupId,
   findActiveLeaf,
+  type DashboardNavConfig,
   type NavEntry,
   type NavLeaf,
-} from '../../../config/pfaNavigation';
+} from '../../../config/dashboardNav';
 import logo from '../../../assets/logo.svg';
 
 interface AppSidebarProps {
+  /** Meniul de randat. Sidebar-ul nu cunoaște niciun dashboard anume. */
+  nav: DashboardNavConfig;
   sidebarOpen: boolean;
   setSidebarOpen: (arg: boolean) => void;
   onLogout?: () => void;
+  /**
+   * Bloc opțional deasupra butonului de deconectare — identitatea contului.
+   * PFA-ul nu îl folosește; SRL-ul pune acolo firma (spec §2.1).
+   */
+  footer?: ReactNode;
 }
 
 /** Sursa unică pentru culoarea iconițelor de navigație. */
 const navIconColor = (isActive: boolean) =>
   isActive ? DASHBOARD_TOKENS.primaryStrong : alpha(DASHBOARD_TOKENS.ink, 0.55);
 
-function readStoredOpenGroups(): string[] {
+function readStoredOpenGroups(storageKey: string): string[] {
   try {
-    const raw = window.localStorage.getItem(NAV_STATE_STORAGE_KEY);
+    const raw = window.localStorage.getItem(storageKey);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : [];
@@ -38,9 +44,9 @@ function readStoredOpenGroups(): string[] {
   }
 }
 
-function persistOpenGroups(ids: string[]) {
+function persistOpenGroups(storageKey: string, ids: string[]) {
   try {
-    window.localStorage.setItem(NAV_STATE_STORAGE_KEY, JSON.stringify(ids));
+    window.localStorage.setItem(storageKey, JSON.stringify(ids));
   } catch {
     /* pierderea preferinței de expand nu merită să rupă navigarea */
   }
@@ -254,19 +260,19 @@ function NavGroup({
   );
 }
 
-export default function AppSidebar({ sidebarOpen, setSidebarOpen, onLogout }: AppSidebarProps) {
+export default function AppSidebar({ nav, sidebarOpen, setSidebarOpen, onLogout, footer }: AppSidebarProps) {
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
   const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const { pathname } = useLocation();
 
-  const activeGroupId = useMemo(() => findActiveGroupId(pathname), [pathname]);
-  const activeLeafPath = useMemo(() => findActiveLeaf(pathname)?.path, [pathname]);
-  const [openGroups, setOpenGroups] = useState<string[]>(readStoredOpenGroups);
+  const activeGroupId = useMemo(() => findActiveGroupId(nav, pathname), [nav, pathname]);
+  const activeLeafPath = useMemo(() => findActiveLeaf(nav, pathname)?.path, [nav, pathname]);
+  const [openGroups, setOpenGroups] = useState<string[]>(() => readStoredOpenGroups(nav.storageKey));
 
   useEffect(() => {
-    persistOpenGroups(openGroups);
-  }, [openGroups]);
+    persistOpenGroups(nav.storageKey, openGroups);
+  }, [nav.storageKey, openGroups]);
 
   /**
    * Regula bate preferința (spec §6): categoria care conține ruta curentă e deschisă
@@ -288,6 +294,8 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, onLogout }: Ap
 
   // Pe mobil, alegerea unei subpagini închide sertarul; pe desktop nu există sertar de închis.
   const closeDrawer = useCallback(() => setSidebarOpen(false), [setSidebarOpen]);
+
+  const navHeadingId = `${nav.ownerType.toLowerCase()}-nav-heading`;
 
   const sidebarContent = (
     <Stack
@@ -330,7 +338,7 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, onLogout }: Ap
         }}
       >
         <Typography
-          id="pfa-nav-heading"
+          id={navHeadingId}
           sx={{
             px: 1.3,
             mb: 0.75,
@@ -341,11 +349,11 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, onLogout }: Ap
             letterSpacing: 0.9,
           }}
         >
-          Meniu Principal
+          {nav.menuLabel}
         </Typography>
 
-        <Stack component="ul" aria-labelledby="pfa-nav-heading" spacing={0.35} sx={{ p: 0, m: 0 }}>
-          {PFA_NAV.map((entry) => {
+        <Stack component="ul" aria-labelledby={navHeadingId} spacing={0.35} sx={{ p: 0, m: 0 }}>
+          {nav.entries.map((entry) => {
             if (entry.kind === 'separator') {
               return (
                 <Box component="li" key={entry.id} sx={{ listStyle: 'none' }}>
@@ -385,6 +393,32 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen, onLogout }: Ap
       </Box>
 
       <Divider sx={{ opacity: 0.5, mx: 1, mt: 1.2, flexShrink: 0 }} />
+
+      {nav.bottomEntries && nav.bottomEntries.length > 0 && (
+        // Landmark propriu: Setările sunt tot navigație, doar că nu stau în lista principală.
+        <Stack
+          component="nav"
+          aria-label="Meniu secundar"
+          sx={{ mx: 1, mt: 0.6, flexShrink: 0 }}
+        >
+        <Stack component="ul" spacing={0.35} sx={{ p: 0, m: 0 }}>
+          {nav.bottomEntries.map((entry) =>
+            entry.kind === 'link' ? (
+              <TopLevelLink
+                key={entry.id}
+                entry={entry}
+                isActive={activeLeafPath === entry.path}
+                onNavigate={closeDrawer}
+              />
+            ) : null,
+          )}
+        </Stack>
+        </Stack>
+      )}
+
+      {footer && (
+        <Box sx={{ mx: 1, mt: 1, flexShrink: 0 }}>{footer}</Box>
+      )}
 
       <Button
         onClick={onLogout}

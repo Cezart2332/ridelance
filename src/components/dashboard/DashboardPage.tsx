@@ -10,7 +10,7 @@ import { userService } from '../../services/user.service'
 import { stripeService } from '../../services/stripe.service'
 import { canAccessDashboard, resolveClientPath } from '../../utils/clientOnboarding'
 import { useRecurringDocumentationReminder } from '../../hooks/useRecurringDocumentationReminder'
-import { LEGACY_SECTION_ROUTES, PFA_PATHS } from '../../config/pfaNavigation'
+import { LEGACY_SECTION_ROUTES, PFA_NAV_CONFIG, PFA_PATHS } from '../../config/pfaNavigation'
 
 import { Box, CircularProgress, Snackbar, Alert } from '@mui/material'
 
@@ -114,6 +114,7 @@ export default function DashboardPage() {
 
   return (
     <AppLayout
+      nav={PFA_NAV_CONFIG}
       onLogout={handleLogout}
       showNotifications
       onOpenRecurringDocumentation={() => navigate(PFA_PATHS.docsRecurring)}

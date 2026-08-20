@@ -6,7 +6,7 @@ import {
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 import { Link as RouterLink } from 'react-router-dom'
 
-import { PFA_PATHS } from '../../../config/pfaNavigation'
+
 import { dashboardFaqItems } from '../dashboardData'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme'
 import { chatService, type ChatMessageDto } from '../../../services/chat.service'
@@ -19,7 +19,16 @@ import { OfficeBookingCalendar } from '../../office/OfficeBookingCalendar'
 import { userService, type UserProfile } from '../../../services/user.service'
 import { displayName } from '../../../utils/displayName'
 
-export function SupportChatTab() {
+interface SupportChatTabProps {
+  /**
+   * Ruta chatului cu contabilul. Lipsește la conturile care nu au contabil în platformă
+   * (SRL, azi), iar atunci trimiterea către el nu se mai afișează — spec §3.5 cere aceeași
+   * pagină, nu o promisiune care duce într-o rută inexistentă.
+   */
+  accountantChatPath?: string
+}
+
+export function SupportChatTab({ accountantChatPath }: SupportChatTabProps) {
   const [roomId, setRoomId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessageDto[]>([])
   const [chatMessage, setChatMessage] = useState('')
@@ -158,6 +167,7 @@ export function SupportChatTab() {
 
       {/* Suportul e exclusiv despre relația cu RIDElance. Problemele contabile au propriul
           canal, sub Contabilitate — altfel cele două fire de discuție se amestecă. */}
+      {accountantChatPath && (
       <Alert
         severity="info"
         icon={false}
@@ -171,7 +181,7 @@ export function SupportChatTab() {
         action={
           <Button
             component={RouterLink}
-            to={PFA_PATHS.accountantChat}
+            to={accountantChatPath}
             size="small"
             sx={{ textTransform: 'none', fontWeight: 750, whiteSpace: 'nowrap' }}
           >
@@ -182,6 +192,7 @@ export function SupportChatTab() {
         Ai o întrebare despre taxe, declarații sau documente? Acelea se discută cu contabilul tău, în
         Contabilitate → Chat contabil.
       </Alert>
+      )}
 
       <Paper
         elevation={0}

@@ -16,6 +16,11 @@ const TONE_STYLES: Record<StatusTone, { color: string; bg: string; border: strin
     bg: alpha(DASHBOARD_TOKENS.ink, 0.06),
     border: alpha(DASHBOARD_TOKENS.ink, 0.12),
   },
+  warning: {
+    color: DASHBOARD_TOKENS.stateWarning,
+    bg: alpha(DASHBOARD_TOKENS.stateWarning, 0.1),
+    border: alpha(DASHBOARD_TOKENS.stateWarning, 0.24),
+  },
   error: {
     color: DASHBOARD_TOKENS.stateError,
     bg: alpha(DASHBOARD_TOKENS.stateError, 0.1),

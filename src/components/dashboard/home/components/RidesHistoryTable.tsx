@@ -20,7 +20,7 @@ import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 
 import { HOME_TOKENS, tabularNums } from '../tokens'
 import { EMPTY_FIELD, formatDate, formatDistance, formatDuration, formatTime } from '../format'
-import { Amount } from './Amount'
+import { Amount } from '../../ui/Amount'
 import type { RidesPage, RideRow } from '../../../../services/pfaDashboard.service'
 import type { DashboardFilters } from '../useDashboardFilters'
 import { useRidesHistory } from '../useDashboardData'

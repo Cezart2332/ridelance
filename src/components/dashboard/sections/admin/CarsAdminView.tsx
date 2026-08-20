@@ -39,6 +39,7 @@ import {
   getApprovalStatusColor,
 } from '../../../../utils/carLabels';
 import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardTheme';
+import { ListingScoreIndicator } from '../../srl/ListingScoreIndicator'
 
 interface LocalImage {
   id: string;
@@ -741,6 +742,15 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
                             <Box>
                               <Typography sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink }}>{car.brand} {car.model}</Typography>
                               <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle }}>{car.year} • {car.engine} • {car.transmission}</Typography>
+                              {/* Scorul e vizibil doar proprietarului, pe anunțul lui (spec §5.2). */}
+                              {isPoster && car.recommendationScore != null && (
+                                <Box sx={{ mt: 0.8 }}>
+                                  <ListingScoreIndicator
+                                    score={car.recommendationScore}
+                                    suggestions={car.scoreSuggestions ?? []}
+                                  />
+                                </Box>
+                              )}
                             </Box>
                           </Stack>
                         </TableCell>

@@ -21,6 +21,7 @@ import {
 import { TermsAcceptance } from '../common/TermsAcceptance'
 import { authService } from '../../services/auth.service'
 import { ROUTES } from '../../constants/routes'
+import { SRL_ROOT } from '../../config/srlNavigation'
 
 interface RegisterPageProps {
   /**
@@ -82,7 +83,7 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
       )
       await authService.login(trimmedEmail, password)
       // Flota merge direct în dashboardul ei; PFA-ul intră în onboarding, prin `/app`.
-      navigate(accountType === 'CarPoster' ? '/poster' : '/app')
+      navigate(accountType === 'CarPoster' ? SRL_ROOT : '/app')
     } catch (err) {
       setServerError(mapAuthError(err, 'register'))
     } finally {

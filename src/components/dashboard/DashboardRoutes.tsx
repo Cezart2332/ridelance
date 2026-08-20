@@ -97,7 +97,7 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
       <Route path={rel(PFA_PATHS.svcInsurance)} element={<InsuranceTab />} />
 
       {/* ── Suport, Profil ── */}
-      <Route path={rel(PFA_PATHS.support)} element={<SupportChatTab />} />
+      <Route path={rel(PFA_PATHS.support)} element={<SupportChatTab accountantChatPath={PFA_PATHS.accountantChat} />} />
       <Route path={rel(PFA_PATHS.profile)} element={<ProfileSection />} />
       {/* Istoricul plăților e o secțiune în Profil; calea proprie rămâne doar ca punct de
           aterizare pentru notificările deja trimise. */}

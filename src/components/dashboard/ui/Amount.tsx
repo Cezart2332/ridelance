@@ -2,7 +2,7 @@ import { Box } from '@mui/material'
 import type { SxProps, Theme } from '@mui/material/styles'
 import { visuallyHidden } from '@mui/utils'
 
-import { HOME_TOKENS, tabularNums } from '../tokens'
+import { NUMERIC_TEXT, tabularNums } from './numeric'
 
 export type AmountSize = 'hero' | 'kpi' | 'card' | 'row' | 'axis'
 
@@ -44,7 +44,7 @@ export function Amount({
   unit,
   size = 'row',
   decimals = 2,
-  color = HOME_TOKENS.text.primary,
+  color = NUMERIC_TEXT.primary,
   weight = 600,
   sx,
 }: AmountProps) {
@@ -95,7 +95,7 @@ export function Amount({
         {fraction && (
           <Box
             component="span"
-            sx={{ fontSize: '0.6em', fontWeight: 500, color: HOME_TOKENS.text.secondary }}
+            sx={{ fontSize: '0.6em', fontWeight: 500, color: NUMERIC_TEXT.secondary }}
           >
             {fraction}
           </Box>
@@ -111,7 +111,7 @@ export function Amount({
             ml: '4px',
             fontSize: px * 0.5,
             fontWeight: 500,
-            color: HOME_TOKENS.text.secondary,
+            color: NUMERIC_TEXT.secondary,
           }}
         >
           {unit}

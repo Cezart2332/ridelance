@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import { ROUTES } from '../../constants/routes'
+import { SRL_ROOT } from '../../config/srlNavigation'
 import { useEffect, useState } from 'react'
 import { useAppSelector } from '../../store/hooks'
 import { stripeService, type SubscriptionResponse } from '../../services/stripe.service'
@@ -24,7 +25,7 @@ export default function RoleRedirect() {
 
   if (role === 'Contabil') return <Navigate to="/contabil" replace />
   if (role === 'Admin') return <Navigate to="/admin" replace />
-  if (role === 'CarPoster') return <Navigate to="/poster" replace />
+  if (role === 'CarPoster') return <Navigate to={SRL_ROOT} replace />
 
   if (role === 'Client') {
     if (sub === undefined) {

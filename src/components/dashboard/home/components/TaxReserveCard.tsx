@@ -5,7 +5,7 @@ import { HOME_TOKENS, tabularNums } from '../tokens'
 import { formatCurrency, formatFiscalMonth, formatPercent } from '../format'
 import type { TaxReserve } from '../../../../services/pfaDashboard.service'
 import { TAX_RAMP } from './charts/chartTheme'
-import { Amount } from './Amount'
+import { Amount } from '../../ui/Amount'
 import { HomeCard } from './HomeCard'
 
 /**

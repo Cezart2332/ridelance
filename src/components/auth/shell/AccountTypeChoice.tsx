@@ -16,8 +16,8 @@ const OPTIONS = [
   },
   {
     value: 'CarPoster' as const,
-    tag: 'F',
-    title: 'Flotă',
+    tag: 'S',
+    title: 'SRL',
     hint: 'Pentru mașini, cereri și documente',
     help: 'Vei primi dashboardul pentru mașini, cereri, documente și administrarea flotei.',
   },
@@ -31,7 +31,7 @@ interface AccountTypeChoiceProps {
 
 /**
  * Tipul de cont se alege obligatoriu aici, nu în onboarding: onboardingul există doar pentru PFA,
- * iar un cont de flotă nu trece prin el niciodată. E singura ramificație reală dinainte de crearea
+ * iar un cont de SRL nu trece prin el niciodată. E singura ramificație reală dinainte de crearea
  * contului, fiindcă decide și rolul (`UserRole`) și dashboardul unde aterizezi.
  */
 export function AccountTypeChoice({ value, onChange, disabled = false }: AccountTypeChoiceProps) {

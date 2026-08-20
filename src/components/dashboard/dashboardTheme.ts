@@ -29,6 +29,11 @@ export const DASHBOARD_TOKENS = {
   stateActive: '#0E7FA8',
   stateNeutral: 'rgba(26, 26, 46, 0.6)',
   stateError: '#D32F2F',
+  /**
+   * Ce **urmează** să fie greșit: un consimțământ care expiră, un termen care se apropie.
+   * Aceeași ambră ca `HOME_TOKENS.warn[600]`, ca dashboardul să nu aibă două galbenuri.
+   */
+  stateWarning: '#B54708',
   radius: {
     xs: 4,
     sm: 8,
@@ -43,6 +48,23 @@ export const DASHBOARD_TOKENS = {
     glow: '0 0 0 3px rgba(92, 203, 245, 0.16)',
   },
 }
+
+/**
+ * Fundalurile avatarelor fără logo încărcat. Spec §3.1 cere un fallback „pe fundal din paletă,
+ * derivat determinist din nume", iar tokenii nu aveau o rampă pentru așa ceva.
+ *
+ * Alese deliberat în familia albastru → violet → ardezie: verdele, ambra și roșul au înțeles de
+ * stare în dashboard, iar un avatar roșu ar citi ca o eroare. Toate au contrast ≥ 4.5:1 cu textul
+ * alb pe care îl poartă.
+ */
+export const AVATAR_PALETTE = [
+  DASHBOARD_TOKENS.accent,
+  '#1D4ED8',
+  '#4F46E5',
+  '#6D28D9',
+  '#9333EA',
+  '#334155',
+] as const
 
 /** Horizontal scroll for wide tables on small screens */
 export const responsiveTableContainerSx: SxProps<Theme> = {

@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { lazyWithRetry } from './utils/lazyWithRetry'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { ScrollToTop } from './components/layout/ScrollToTop'
 import InstallPWA from './components/pwa/InstallPWA'
 import { RouteFallback } from './components/common/RouteFallback'
@@ -15,6 +15,17 @@ import SubscriptionSelectPage from './components/auth/SubscriptionSelectPage'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import RoleRedirect from './components/auth/RoleRedirect'
 import PendingAccessPage from './components/auth/PendingAccessPage'
+import { SRL_ROOT } from './config/srlNavigation'
+
+/**
+ * Ruta de dinainte de mutarea dashboard-ului SRL sub `/app`. Păstrează query string-ul:
+ * sesiunile Stripe create înainte de mutare se întorc pe `/poster?car_paid=1&...`, iar un
+ * `Navigate` simplu ar fi tăiat exact partea care spune ce s-a întâmplat.
+ */
+function LegacySrlRedirect() {
+  const { search, hash } = useLocation()
+  return <Navigate to={`${SRL_ROOT}${search}${hash}`} replace />
+}
 
 // Dashboards & marketing shell — lazy-loaded to split the production bundle
 const DashboardPage = lazyWithRetry(() => import('./components/dashboard/DashboardPage'))
@@ -97,7 +108,8 @@ function App() {
             <Route path="/app/dashboard/*" element={<DashboardPage />} />
             <Route path="/contabil/*" element={<ContabilDashboard />} />
             <Route path="/admin/*" element={<AdminDashboard />} />
-            <Route path="/poster/*" element={<CarPosterDashboard />} />
+            <Route path={`${SRL_ROOT}/*`} element={<CarPosterDashboard />} />
+            <Route path="/poster/*" element={<LegacySrlRedirect />} />
           </Route>
 
           <Route path="/demo/*" element={<DashboardDemoPage />} />

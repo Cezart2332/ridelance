@@ -5,7 +5,7 @@ import { formatCurrency, formatPercent } from '../format'
 import type { RealProfit } from '../../../../services/pfaDashboard.service'
 import { CHART } from './charts/chartTheme'
 import { selectFinancialBreakdown, selectRealProfitWaterfall } from '../selectors'
-import { Amount } from './Amount'
+import { Amount } from '../../ui/Amount'
 import { HomeCard } from './HomeCard'
 
 interface RealProfitCardProps {

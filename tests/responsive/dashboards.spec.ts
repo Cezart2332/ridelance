@@ -6,7 +6,7 @@ const pages = [
   { name: 'client-acasa', path: '/app/dashboard' },
   { name: 'admin-acasa', path: '/admin' },
   { name: 'contabil-acasa', path: '/contabil' },
-  { name: 'poster-masini', path: '/poster' },
+  { name: 'srl-acasa', path: '/app/dashboard-srl' },
 ];
 
 test.describe('responsive dashboards', () => {

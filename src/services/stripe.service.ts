@@ -1,5 +1,6 @@
 import { api } from '../lib/axios'
 import { PFA_PATHS } from '../config/pfaNavigation'
+import type { OwnerType } from '../config/ownerType'
 
 /**
  * Stripe integration service using Payment Links.
@@ -57,6 +58,12 @@ export interface ServiceInfo {
   desc: string
   tagline?: string
   cta: string
+  /**
+   * Cui i se oferă serviciul. Spec §3.2: ce e PFA-only se ascunde pe baza tipului de cont, nu
+   * se șterge din catalog. Toate trei sunt azi despre înființarea și operarea unui PFA, deci
+   * un SRL nu are ce cumpăra de aici — pagina lui arată starea goală, nu carduri irelevante.
+   */
+  ownerTypes: OwnerType[]
 }
 
 export const SUBSCRIPTION_PLANS: PlanInfo[] = [
@@ -119,6 +126,7 @@ export const ONE_TIME_SERVICES: ServiceInfo[] = [
     price: '450 lei',
     desc: 'Deschizi rapid un PFA printr-un proces simplu și organizat, fără abonament lunar.',
     cta: 'Cumpără serviciul',
+    ownerTypes: ['Pfa'],
   },
   {
     key: 'sediu_social',
@@ -126,6 +134,7 @@ export const ONE_TIME_SERVICES: ServiceInfo[] = [
     price: '449 lei / an',
     desc: 'O soluție practică pentru cei care au nevoie de sediu social pentru PFA în București / Ilfov.',
     cta: 'Cumpără serviciul',
+    ownerTypes: ['Pfa'],
   },
   {
     key: 'start_ride',
@@ -135,6 +144,7 @@ export const ONE_TIME_SERVICES: ServiceInfo[] = [
     desc: 'Începi pe PFA, fără să pierzi timp cu pași neclari. RIDElance te ghidează prin deschiderea PFA-ului și activarea pentru ridesharing, până ești pregătit să lucrezi independent.',
     tagline: 'Proces clar. Pornire corectă. Suport până la activare.',
     cta: 'Alege serviciul',
+    ownerTypes: ['Pfa'],
   },
 ]
 

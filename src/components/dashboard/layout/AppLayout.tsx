@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
-import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
-import HeadsetMicRoundedIcon from '@mui/icons-material/HeadsetMicRounded';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import AppSidebar from './AppSidebar';
 import AppHeader from './AppHeader';
-import { MOBILE_TAB_PATHS, PFA_PATHS, pageTitleFor } from '../../../config/pfaNavigation';
+import { pageTitleFor, type DashboardNavConfig } from '../../../config/dashboardNav';
 
 interface AppLayoutProps {
+  /** Meniul dashboardului curent. Layout-ul e agnostic la tipul de cont. */
+  nav: DashboardNavConfig;
   children: React.ReactNode;
   onLogout?: () => void;
+  /** Blocul de identitate din subsolul sidebar-ului. Vezi `AppSidebar.footer`. */
+  sidebarFooter?: React.ReactNode;
   showNotifications?: boolean;
   onOpenRecurringDocumentation?: () => void;
 }
@@ -23,8 +24,10 @@ interface AppLayoutProps {
 const MORE_TAB = 'more';
 
 export default function AppLayout({
+  nav,
   children,
   onLogout,
+  sidebarFooter,
   showNotifications,
   onOpenRecurringDocumentation,
 }: AppLayoutProps) {
@@ -32,8 +35,20 @@ export default function AppLayout({
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  const sectionTitle = pageTitleFor(pathname);
-  const bottomNavValue: string = MOBILE_TAB_PATHS.find((path) => path === pathname) ?? MORE_TAB;
+  const sectionTitle = pageTitleFor(nav, pathname);
+
+  /**
+   * Titlul filei spune în ce dashboard ești (spec §1.1). Se restaurează la ieșire: altfel
+   * marketplace-ul public ar rămâne cu titlul dashboardului după o navigare înapoi.
+   */
+  useEffect(() => {
+    const previous = document.title;
+    document.title = nav.documentTitle;
+    return () => {
+      document.title = previous;
+    };
+  }, [nav.documentTitle]);
+  const bottomNavValue: string = nav.mobileTabs.find((tab) => tab.path === pathname)?.path ?? MORE_TAB;
 
   return (
     <Box
@@ -49,7 +64,13 @@ export default function AppLayout({
       }}
     >
       {/* Pe mobil sidebar-ul se randează tot, dar ca sertar — de acolo își ia „Meniu" conținutul. */}
-      <AppSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={onLogout} />
+      <AppSidebar
+        nav={nav}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        onLogout={onLogout}
+        footer={sidebarFooter}
+      />
 
       <Box
         sx={{
@@ -62,6 +83,7 @@ export default function AppLayout({
         }}
       >
         <AppHeader
+          nav={nav}
           title={sectionTitle}
           showNotifications={showNotifications}
           onOpenRecurringDocumentation={onOpenRecurringDocumentation}
@@ -149,9 +171,12 @@ export default function AppLayout({
             },
           }}
         >
-          <BottomNavigationAction label="Acasă" value={PFA_PATHS.home} icon={<HomeRoundedIcon />} />
-          <BottomNavigationAction label="Profil" value={PFA_PATHS.profile} icon={<PersonRoundedIcon />} />
-          <BottomNavigationAction label="Suport" value={PFA_PATHS.support} icon={<HeadsetMicRoundedIcon />} />
+          {nav.mobileTabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <BottomNavigationAction key={tab.path} label={tab.label} value={tab.path} icon={<Icon />} />
+            );
+          })}
           <BottomNavigationAction label="Meniu" value={MORE_TAB} icon={<MenuRoundedIcon />} />
         </BottomNavigation>
       </Paper>
