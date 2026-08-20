@@ -68,9 +68,15 @@ test.describe('navigație SRL', () => {
     await mockSession(page)
   })
 
-  test('fiecare secțiune are adresă proprie și e marcată în meniu', async ({ page }) => {
+  test('fiecare secțiune are adresă proprie și e marcată în meniu', async ({ page }, testInfo) => {
+    // Pe mobil sidebar-ul e sertar închis, deci n-are ce marca fără să-l deschizi mai întâi;
+    // acoperirea de acolo e testul separat de mai jos.
+    test.skip(testInfo.project.name !== 'desktop', 'sidebar vizibil doar pe desktop')
+
     for (const section of SECTIONS) {
-      await page.goto(section.path, { waitUntil: 'networkidle' })
+      // Fără `networkidle`: chatul din Suport ține o conexiune deschisă, iar așteptarea ei
+      // făcea testul să depindă de cât de încărcat e serverul de dezvoltare.
+      await page.goto(section.path)
       await expect(page, `${section.path} rămâne pe adresa cerută`).toHaveURL(new RegExp(`${section.path}$`))
 
       const current = page.locator('nav [aria-current="page"]')
@@ -79,8 +85,10 @@ test.describe('navigație SRL', () => {
     }
   })
 
-  test('sidebar-ul e cel comun, cu eticheta și identitatea contului SRL', async ({ page }) => {
-    await page.goto(ROOT, { waitUntil: 'networkidle' })
+  test('sidebar-ul e cel comun, cu eticheta și identitatea contului SRL', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'sidebar vizibil doar pe desktop')
+
+    await page.goto(ROOT)
 
     const nav = page.locator('nav[aria-label="Meniu principal"]')
     await expect(nav).toBeVisible()
@@ -88,6 +96,18 @@ test.describe('navigație SRL', () => {
     await expect(nav.getByText('SRL', { exact: true })).toBeVisible()
     // Blocul de identitate din subsol — slotul pe care §2.1 îl va umple cu logo și badge.
     await expect(page.getByText('TUKI GO')).toBeVisible()
+  })
+
+  test('pe mobil meniul se deschide din bara de jos', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile', 'bara de jos există doar pe mobil')
+
+    await page.goto(ROOT)
+    await page.getByRole('button', { name: 'Meniu' }).click()
+
+    const nav = page.locator('nav[aria-label="Meniu principal"]')
+    await expect(nav).toBeVisible()
+    await expect(nav.getByText('SRL', { exact: true })).toBeVisible()
+    await expect(nav.getByRole('button', { name: /Firmă/ })).toBeVisible()
   })
 
   test('ruta veche /poster redirecționează, păstrând query string-ul', async ({ page }) => {
