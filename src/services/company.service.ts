@@ -1,4 +1,5 @@
 import { api } from '../lib/axios'
+import type { Car } from './cars.service'
 
 /**
  * Profilul firmei — identitatea juridică și publică a contului.
@@ -49,7 +50,27 @@ export interface CompanyProfileInput {
   showLocation: boolean
 }
 
+/** Mini-site-ul public. Contactele lipsesc când proprietarul le-a marcat private. */
+export interface PublicCompany {
+  legalName: string
+  slug: string
+  logoUrl: string | null
+  publicDescription: string | null
+  isVerified: boolean
+  phone: string | null
+  email: string | null
+  whatsAppEnabled: boolean
+  location: string | null
+  cars: Car[]
+}
+
 export const companyService = {
+  /** Public: nu cere autentificare și e filtrat de serverul care decide ce e vizibil. */
+  async getPublic(slug: string): Promise<PublicCompany> {
+    const res = await api.get<PublicCompany>(`/companies/${slug}/public`)
+    return res.data
+  },
+
   /**
    * `null` când contul încă nu și-a completat datele — serverul răspunde 204, nu 404.
    * E starea normală a unui cont nou, nu o eroare.

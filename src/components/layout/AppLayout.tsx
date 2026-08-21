@@ -37,6 +37,7 @@ const PaymentPolicyPage = lazyWithRetry(() =>
 )
 const CarsPage = lazyWithRetry(() => import('../../pages/CarsPage').then((m) => ({ default: m.CarsPage })))
 const VehicleDetailPage = lazyWithRetry(() => import('../../pages/VehicleDetailPage'))
+const CompanyPublicPage = lazyWithRetry(() => import('../../pages/CompanyPublicPage'))
 
 export function AppLayout() {
   const location = useLocation()
@@ -407,6 +408,8 @@ export function AppLayout() {
             <Route path="/" element={<HomePage />} />
             <Route path="/masini" element={<CarsPage />} />
             <Route path="/masini/:slug" element={<VehicleDetailPage />} />
+            {/* Mini-site-ul firmei — destinația blocului de proprietar de pe cardul de mașină. */}
+            <Route path="/f/:slug" element={<CompanyPublicPage />} />
             <Route path="/intrebari-frecvente" element={<FaqPage />} />
             <Route path="/servicii" element={<ServicesPage />} />
             <Route path="/despre-ridelance" element={<AboutPage />} />

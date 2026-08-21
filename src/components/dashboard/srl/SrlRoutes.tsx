@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded'
 import BuildRoundedIcon from '@mui/icons-material/BuildRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
-import PublicRoundedIcon from '@mui/icons-material/PublicRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 
 import { SRL_PATHS } from '../../../config/srlNavigation'
@@ -11,6 +10,7 @@ import { BeneficiiTab } from '../sections/BeneficiiTab'
 import { CarsAdminView } from '../sections/admin/CarsAdminView'
 import { SupportChatTab } from '../sections/SupportChatTab'
 import { ComingSoon } from '../ui'
+import { SrlCompanyPagePage } from './pages/SrlCompanyPagePage'
 import { SrlConnectionsPage } from './pages/SrlConnectionsPage'
 import { SrlFiscalPage } from './pages/SrlFiscalPage'
 import { SrlProfilePage } from './pages/SrlProfilePage'
@@ -60,17 +60,7 @@ export function SrlRoutes() {
 
       {/* ── Firmă ── */}
       <Route path={rel(SRL_PATHS.profile)} element={<SrlProfilePage />} />
-      <Route
-        path={rel(SRL_PATHS.companyPage)}
-        element={
-          <ComingSoon
-            icon={<PublicRoundedIcon />}
-            title="Mini-site-ul public al firmei"
-            description="Pagina pe care o pot vedea clienții, cu mașinile tale și datele de contact pe care le alegi în Profil."
-            upcoming={['Link public propriu', 'Mașinile listate cu identitatea firmei', 'Contact filtrat de setările din Profil']}
-          />
-        }
-      />
+      <Route path={rel(SRL_PATHS.companyPage)} element={<SrlCompanyPagePage />} />
       <Route
         path={rel(SRL_PATHS.companyDocuments)}
         element={

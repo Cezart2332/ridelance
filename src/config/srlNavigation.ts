@@ -108,13 +108,7 @@ export const SRL_NAV: NavEntry[] = [
     icon: BusinessRoundedIcon,
     children: [
       { id: 'profile', label: 'Profil', path: SRL_PATHS.profile, hint: 'Datele și identitatea firmei' },
-      {
-        id: 'company-page',
-        label: 'Pagina firmei',
-        path: SRL_PATHS.companyPage,
-        hint: 'În curând',
-        badge: 'coming-soon',
-      },
+      { id: 'company-page', label: 'Pagina firmei', path: SRL_PATHS.companyPage, hint: 'Linkul public al firmei' },
       {
         id: 'company-documents',
         label: 'Documente societate',
