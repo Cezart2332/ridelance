@@ -1,6 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded'
-import BuildRoundedIcon from '@mui/icons-material/BuildRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 
@@ -12,6 +11,7 @@ import { SupportChatTab } from '../sections/SupportChatTab'
 import { ComingSoon } from '../ui'
 import { SrlCompanyPagePage } from './pages/SrlCompanyPagePage'
 import { SrlConnectionsPage } from './pages/SrlConnectionsPage'
+import { SrlMaintenancePage } from './pages/SrlMaintenancePage'
 import { SrlFiscalPage } from './pages/SrlFiscalPage'
 import { SrlProfilePage } from './pages/SrlProfilePage'
 import { SrlServicesPage } from './pages/SrlServicesPage'
@@ -46,17 +46,7 @@ export function SrlRoutes() {
           />
         }
       />
-      <Route
-        path={rel(SRL_PATHS.maintenance)}
-        element={
-          <ComingSoon
-            icon={<BuildRoundedIcon />}
-            title="Mentenanța flotei, într-un singur loc"
-            description="Istoric de service, costuri și remindere bazate pe dată sau pe kilometraj."
-            upcoming={['Intervenții cu facturi atașate', 'Remindere la km sau la dată', 'Costuri pe mașină și pe flotă']}
-          />
-        }
-      />
+      <Route path={rel(SRL_PATHS.maintenance)} element={<SrlMaintenancePage />} />
 
       {/* ── Firmă ── */}
       <Route path={rel(SRL_PATHS.profile)} element={<SrlProfilePage />} />

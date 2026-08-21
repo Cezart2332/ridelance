@@ -91,13 +91,7 @@ export const SRL_NAV: NavEntry[] = [
         hint: 'În curând',
         badge: 'coming-soon',
       },
-      {
-        id: 'maintenance',
-        label: 'Mentenanță',
-        path: SRL_PATHS.maintenance,
-        hint: 'În curând',
-        badge: 'coming-soon',
-      },
+      { id: 'maintenance', label: 'Mentenanță', path: SRL_PATHS.maintenance, hint: 'Service, costuri și remindere' },
     ],
   },
 
