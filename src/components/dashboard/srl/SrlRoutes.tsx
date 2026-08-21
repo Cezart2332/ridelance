@@ -1,5 +1,4 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 
@@ -12,6 +11,7 @@ import { ComingSoon } from '../ui'
 import { SrlCompanyPagePage } from './pages/SrlCompanyPagePage'
 import { SrlConnectionsPage } from './pages/SrlConnectionsPage'
 import { SrlMaintenancePage } from './pages/SrlMaintenancePage'
+import { SrlRentalsPage } from './pages/SrlRentalsPage'
 import { SrlFiscalPage } from './pages/SrlFiscalPage'
 import { SrlProfilePage } from './pages/SrlProfilePage'
 import { SrlServicesPage } from './pages/SrlServicesPage'
@@ -35,17 +35,7 @@ export function SrlRoutes() {
 
       {/* ── Flotă ── */}
       <Route path={rel(SRL_PATHS.cars)} element={<CarsAdminView variant="poster" posterSection="manage" />} />
-      <Route
-        path={rel(SRL_PATHS.rentals)}
-        element={
-          <ComingSoon
-            icon={<ReceiptLongRoundedIcon />}
-            title="Închirierile, cu contracte și procese verbale"
-            description="Vei putea porni o închiriere din dosarul mașinii, cu documentele generate din datele deja cunoscute."
-            upcoming={['Contract și proces verbal generate automat', 'Check-in și check-out cu fotografii', 'Istoric per mașină și per chiriaș']}
-          />
-        }
-      />
+      <Route path={rel(SRL_PATHS.rentals)} element={<SrlRentalsPage />} />
       <Route path={rel(SRL_PATHS.maintenance)} element={<SrlMaintenancePage />} />
 
       {/* ── Firmă ── */}
@@ -72,7 +62,7 @@ export function SrlRoutes() {
         path={rel(SRL_PATHS.invoices)}
         element={
           <ComingSoon
-            icon={<AccountBalanceRoundedIcon />}
+            icon={<ReceiptLongRoundedIcon />}
             title="Facturile tale, într-un singur loc"
             description="Emise prin RIDElance sau sincronizate din Oblio, cu filtre, PDF și status de încasare."
             upcoming={['Emitere și stornare', 'Sincronizare cu Oblio', 'Trimitere pe email către client']}

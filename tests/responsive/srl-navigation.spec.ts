@@ -34,6 +34,29 @@ async function mockSession(page: Page) {
     }),
   )
 
+  // Închirierile și mentenanța: cont nou, fără nimic înregistrat.
+  await page.route(`${API}/rentals`, (route: Route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        summary: { activeCount: 0, monthlyContractValueBani: 0, upcomingHandoverCount: 0, availableCars: 0 },
+        rentals: [],
+      }),
+    }),
+  )
+
+  await page.route(`${API}/maintenance*`, (route: Route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        summary: { costLast30DaysBani: 0, scheduledCount: 0, activeReminders: 0, monitoredCars: 0 },
+        entries: [],
+      }),
+    }),
+  )
+
   // Integrările: proiecție peste conexiunile existente, deci un cont fără bancă le are pe toate
   // neconectate.
   await page.route(`${API}/connections`, (route: Route) =>
@@ -91,6 +114,9 @@ async function mockSession(page: Page) {
 const SECTIONS = [
   { path: ROOT, label: 'Acasă' },
   { path: `${ROOT}/masini`, label: 'Mașinile mele' },
+  { path: `${ROOT}/inchirieri`, label: 'Închirieri' },
+  { path: `${ROOT}/mentenanta`, label: 'Mentenanță' },
+  { path: `${ROOT}/pagina-firmei`, label: 'Pagina firmei' },
   { path: `${ROOT}/profil`, label: 'Profil' },
   { path: `${ROOT}/servicii`, label: 'Servicii' },
   { path: `${ROOT}/contabilitate/cont-bancar`, label: 'Cont bancar' },

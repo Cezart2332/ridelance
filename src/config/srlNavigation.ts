@@ -84,13 +84,7 @@ export const SRL_NAV: NavEntry[] = [
     icon: DirectionsCarFilledRoundedIcon,
     children: [
       { id: 'cars', label: 'Mașinile mele', path: SRL_PATHS.cars, hint: 'Anunțurile și dosarele mașinilor' },
-      {
-        id: 'rentals',
-        label: 'Închirieri',
-        path: SRL_PATHS.rentals,
-        hint: 'În curând',
-        badge: 'coming-soon',
-      },
+      { id: 'rentals', label: 'Închirieri', path: SRL_PATHS.rentals, hint: 'Contracte, perioade și valori' },
       { id: 'maintenance', label: 'Mentenanță', path: SRL_PATHS.maintenance, hint: 'Service, costuri și remindere' },
     ],
   },
