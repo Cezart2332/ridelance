@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Alert,
   Box,
@@ -16,10 +16,13 @@ import {
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
 import { PageHeader, Panel, StatusChip } from '../../ui'
 import type { StatusTone } from '../../ui'
-import { integrationsMock } from '../mocks/srl.mock'
+import {
+  connectionsService,
+  type Integration,
+  type IntegrationProvider,
+  type IntegrationStatus,
+} from '../../../../services/connections.service'
 import { usePendingBackend } from '../pendingBackendContext'
-import type { Integration, IntegrationProvider, IntegrationStatus } from '../types'
-import { useSrlMock } from '../useSrlMock'
 
 /**
  * Conexiunile SRL (spec §3.4): Oblio, bancă și eldrive, ca grid de carduri.
@@ -82,8 +85,30 @@ function formatDateTime(iso: string | null): string {
 }
 
 export function SrlConnectionsPage() {
-  const { data, loading, error } = useSrlMock(integrationsMock)
+  const [data, setData] = useState<Integration[] | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [dialogFor, setDialogFor] = useState<IntegrationProvider | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    connectionsService
+      .getAll()
+      .then((integrations) => {
+        if (!cancelled) setData(integrations)
+      })
+      .catch(() => {
+        if (!cancelled) setError('Nu am putut încărca integrările.')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   if (loading) {
     return (
@@ -163,8 +188,14 @@ function IntegrationCard({ integration, onConnect }: { integration: Integration;
 
         <Box sx={{ flexGrow: 1 }} />
 
+        {!integration.available && (
+          <Typography sx={{ fontSize: '0.8rem', color: DASHBOARD_TOKENS.textMuted }}>
+            Integrarea nu e disponibilă încă pentru conturile SRL.
+          </Typography>
+        )}
+
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
-          {!isConnected && (
+          {!isConnected && integration.available && (
             <Button
               variant="contained"
               disableElevation

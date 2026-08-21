@@ -34,6 +34,20 @@ async function mockSession(page: Page) {
     }),
   )
 
+  // Integrările: proiecție peste conexiunile existente, deci un cont fără bancă le are pe toate
+  // neconectate.
+  await page.route(`${API}/connections`, (route: Route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([
+        { provider: 'Oblio', status: 'disconnected', connectedAtUtc: null, expiresAtUtc: null, lastSyncAtUtc: null, errorMessage: null, available: false, details: [] },
+        { provider: 'Bank', status: 'disconnected', connectedAtUtc: null, expiresAtUtc: null, lastSyncAtUtc: null, errorMessage: null, available: true, details: [] },
+        { provider: 'Eldrive', status: 'disconnected', connectedAtUtc: null, expiresAtUtc: null, lastSyncAtUtc: null, errorMessage: null, available: false, details: [] },
+      ]),
+    }),
+  )
+
   // Profilul firmei: un cont nou nu are unul, iar serverul răspunde 204.
   await page.route(`${API}/companies/profile`, (route: Route) =>
     route.fulfill({
