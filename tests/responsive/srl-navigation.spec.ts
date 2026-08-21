@@ -34,6 +34,31 @@ async function mockSession(page: Page) {
     }),
   )
 
+  // Profilul firmei: un cont nou nu are unul, iar serverul răspunde 204.
+  await page.route(`${API}/companies/profile`, (route: Route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 'company-1',
+        ownerType: 'Srl',
+        legalName: 'TUKI GO SRL',
+        cui: 'RO12345678',
+        regCom: 'J40/1234/2021',
+        legalRepresentative: 'Ionescu Victor',
+        registeredOffice: 'București',
+        phone: '0736186400',
+        email: 'contact@tukigo.ro',
+        website: 'https://tukigo.ro',
+        publicDescription: 'Flotă de ridesharing.',
+        logoUrl: null,
+        slug: 'tuki-go',
+        isVerified: true,
+        visibility: { phone: true, email: true, whatsapp: true, location: true },
+      }),
+    }),
+  )
+
   await page.route(`${API}/users/profile`, (route: Route) =>
     route.fulfill({
       status: 200,

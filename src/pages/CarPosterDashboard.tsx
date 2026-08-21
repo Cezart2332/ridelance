@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import { Box, ButtonBase, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -9,7 +8,7 @@ import AppLayout from '../components/dashboard/layout/AppLayout'
 import { DASHBOARD_TOKENS } from '../components/dashboard/dashboardTheme'
 import { PendingBackendProvider } from '../components/dashboard/srl/PendingBackend'
 import { SrlRoutes } from '../components/dashboard/srl/SrlRoutes'
-import { companyProfileMock } from '../components/dashboard/srl/mocks/srl.mock'
+import { useCompanyProfile } from '../components/dashboard/srl/useCompanyProfile'
 import { ROUTES } from '../constants/routes'
 import { SRL_NAV_CONFIG, SRL_PATHS } from '../config/srlNavigation'
 import { authService } from '../services/auth.service'
@@ -63,8 +62,7 @@ function CompanyIdentity({ name, logoUrl, verified }: { name: string; logoUrl: s
 
 export function CarPosterDashboard() {
   const navigate = useNavigate()
-  // FAZA 1: identitatea firmei vine din mock, ca peste tot în dashboardul SRL (spec §6.2).
-  const [company] = useState(companyProfileMock)
+  const { data: company } = useCompanyProfile()
 
   const handleLogout = async () => {
     await authService.logout()
@@ -77,7 +75,14 @@ export function CarPosterDashboard() {
         nav={SRL_NAV_CONFIG}
         onLogout={handleLogout}
         sidebarFooter={
-          <CompanyIdentity name={company.legalName} logoUrl={company.logoUrl} verified={company.isVerified} />
+          // Fără profil salvat nu există nimic de arătat aici — și nici nu inventăm o denumire.
+          company ? (
+            <CompanyIdentity
+              name={company.legalName}
+              logoUrl={company.logoUrl}
+              verified={company.isVerified}
+            />
+          ) : undefined
         }
       >
         <SrlRoutes />

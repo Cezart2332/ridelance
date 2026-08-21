@@ -7,10 +7,8 @@ import { PrivacyPanel } from '../../sections/profile/PrivacyPanel'
 import { SecurityPanel } from '../../sections/profile/SecurityPanel'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
 import { PageHeader, Panel, StatusChip } from '../../ui'
-import { companyProfileMock } from '../mocks/srl.mock'
-import { usePendingBackend } from '../pendingBackendContext'
-import type { CompanyProfile, PublicVisibility } from '../types'
-import { useSrlMock } from '../useSrlMock'
+import { companyService, type CompanyProfile, type PublicVisibility } from '../../../../services/company.service'
+import { useCompanyProfile } from '../useCompanyProfile'
 import { CompanyLogoPanel } from './CompanyLogoPanel'
 
 /**
@@ -25,9 +23,12 @@ import { CompanyLogoPanel } from './CompanyLogoPanel'
  * preferințe operaționale, ca să nu existe două locuri de unde se editează același CUI.
  */
 
-/** Doar cheile cu valoare text — restul profilului (vizibilitate, flag-uri) nu e câmp de formular. */
+/**
+ * Doar cheile cu valoare text — restul profilului (vizibilitate, flag-uri) nu e câmp de formular.
+ * `string | null` fiindcă serverul întoarce `null` pentru ce nu s-a completat încă.
+ */
 type TextField_ = {
-  [K in keyof CompanyProfile]: CompanyProfile[K] extends string ? K : never
+  [K in keyof CompanyProfile]: CompanyProfile[K] extends string | null ? K : never
 }[keyof CompanyProfile]
 
 const IDENTITY_FIELDS: { key: TextField_; label: string }[] = [
@@ -48,12 +49,34 @@ const VISIBILITY_ROWS: { key: keyof PublicVisibility; label: string; hint: strin
   { key: 'location', label: 'Afișează locația', hint: 'Pinul de preluare de pe hartă.' },
 ]
 
-export function SrlProfilePage() {
-  const notifyPending = usePendingBackend()
-  const { data, loading, error } = useSrlMock(companyProfileMock)
-  const [draft, setDraft] = useState<CompanyProfile | null>(null)
+/** Profilul gol al unui cont care încă nu a salvat nimic. */
+const EMPTY_PROFILE: CompanyProfile = {
+  id: '',
+  ownerType: 'Srl',
+  legalName: '',
+  cui: null,
+  regCom: null,
+  legalRepresentative: null,
+  registeredOffice: null,
+  phone: null,
+  email: null,
+  website: null,
+  publicDescription: null,
+  logoUrl: null,
+  slug: '',
+  isVerified: false,
+  visibility: { phone: true, email: true, whatsapp: true, location: true },
+}
 
-  const profile = draft ?? data
+export function SrlProfilePage() {
+  const { data, loading, error, setProfile } = useCompanyProfile()
+  const [draft, setDraft] = useState<CompanyProfile | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+
+  // Un cont nou nu are încă profil (204). Atunci se editează unul gol, nu se afișează eroare.
+  const profile = draft ?? data ?? (loading ? null : EMPTY_PROFILE)
 
   if (loading) {
     return (
@@ -65,18 +88,53 @@ export function SrlProfilePage() {
     )
   }
 
-  if (error || !profile) {
+  if (error && !profile) {
     return (
       <Box sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
         <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}>
-          {error ?? 'Nu am putut încărca profilul firmei.'}
+          {error}
         </Alert>
       </Box>
     )
   }
 
+  if (!profile) {
+    return null
+  }
+
   const update = <K extends keyof CompanyProfile>(key: K, value: CompanyProfile[K]) => {
+    setSaved(false)
     setDraft({ ...profile, [key]: value })
+  }
+
+  const save = async () => {
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const updated = await companyService.saveProfile({
+        legalName: profile.legalName,
+        cui: profile.cui,
+        regCom: profile.regCom,
+        legalRepresentative: profile.legalRepresentative,
+        registeredOffice: profile.registeredOffice,
+        phone: profile.phone,
+        email: profile.email,
+        website: profile.website,
+        publicDescription: profile.publicDescription,
+        showPhone: profile.visibility.phone,
+        showEmail: profile.visibility.email,
+        showWhatsApp: profile.visibility.whatsapp,
+        showLocation: profile.visibility.location,
+      })
+      // Serverul întoarce profilul salvat, inclusiv slug-ul generat la prima salvare.
+      setProfile(updated)
+      setDraft(null)
+      setSaved(true)
+    } catch {
+      setSaveError('Nu am putut salva datele firmei. Încearcă din nou.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -98,11 +156,23 @@ export function SrlProfilePage() {
         }
       />
 
+      {saveError && (
+        <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}>
+          {saveError}
+        </Alert>
+      )}
+      {saved && (
+        <Alert severity="success" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}>
+          Datele firmei au fost salvate.
+        </Alert>
+      )}
+
       <CompanyLogoPanel
-        companyName={profile.legalName}
+        companyName={profile.legalName || 'Firma ta'}
         logoUrl={profile.logoUrl}
         verified={profile.isVerified}
-        onLogoChange={(url) => update('logoUrl', url)}
+        hasProfile={profile.id !== ''}
+        onLogoChange={(url) => setProfile({ ...profile, logoUrl: url })}
       />
 
       <Panel
@@ -112,10 +182,11 @@ export function SrlProfilePage() {
           <Button
             variant="contained"
             disableElevation
-            onClick={() => notifyPending('Salvarea datelor firmei')}
+            disabled={saving || draft === null}
+            onClick={() => void save()}
             sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
           >
-            Salvează
+            {saving ? 'Se salvează…' : 'Salvează'}
           </Button>
         }
       >
@@ -130,8 +201,10 @@ export function SrlProfilePage() {
             <TextField
               key={field.key}
               label={field.label}
-              value={profile[field.key]}
-              onChange={(event) => update(field.key, event.target.value)}
+              value={profile[field.key] ?? ''}
+              // Câmpul golit se trimite ca `null`, nu ca șir gol: „necompletat" și „completat cu
+              // nimic" ar ajunge altfel două stări diferite în baza de date.
+              onChange={(event) => update(field.key, event.target.value || null)}
               fullWidth
               size="small"
               sx={dashboardInputSx}
@@ -139,8 +212,8 @@ export function SrlProfilePage() {
           ))}
           <TextField
             label="Descriere publică"
-            value={profile.publicDescription}
-            onChange={(event) => update('publicDescription', event.target.value)}
+            value={profile.publicDescription ?? ''}
+            onChange={(event) => update('publicDescription', event.target.value || null)}
             fullWidth
             multiline
             minRows={3}

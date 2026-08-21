@@ -141,8 +141,13 @@ export interface CreateCarRequest {
 
 const carsService = {
   // ── Public ──────────────────────────────────────────────────────
-  async getAll(): Promise<Car[]> {
-    const res = await api.get<Car[]>('/cars');
+  /**
+   * @param sort Cheia de sortare a serverului (`recommended` implicit). Ordonarea se face acolo:
+   * doar serverul cunoaște scorul, iar `score DESC, updated_at DESC, id ASC` trebuie să rămână
+   * același între cereri, altfel paginarea ar sări rânduri.
+   */
+  async getAll(sort?: string): Promise<Car[]> {
+    const res = await api.get<Car[]>('/cars', { params: sort ? { sort } : undefined });
     return res.data;
   },
 

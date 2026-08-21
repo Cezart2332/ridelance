@@ -27,7 +27,7 @@ import { TOKENS } from '../constants/tokens';
 import { carsService, type Car } from '../services/cars.service';
 import CarListCard from '../components/cars/CarListCard';
 import { matchesOfferTypeFilter, matchesStatusFilter } from '../utils/carLabels';
-import { DEFAULT_SORT, SORT_OPTIONS, sortCars, type SortOption } from '../utils/carSorting';
+import { DEFAULT_SORT, SORT_OPTIONS, sortKeyFor, type SortOption } from '../utils/carSorting';
 
 export function CarsPage() {
   const [cars, setCars] = useState<Car[]>([]);
@@ -44,17 +44,18 @@ export function CarsPage() {
   const [platform, setPlatform] = useState('Toate');
   const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
 
+  // Refetch la schimbarea sortării: ordinea vine de la server, care e singurul care știe scorul.
   const fetchCars = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await carsService.getAll();
+      const data = await carsService.getAll(sortKeyFor(sort));
       setCars(data);
     } catch (error) {
       console.error('Error fetching cars:', error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sort]);
 
   useEffect(() => {
     fetchCars();
@@ -81,8 +82,9 @@ export function CarsPage() {
       );
     }
 
-    return sortCars(result, sort);
-  }, [cars, search, city, offerType, engine, transmission, status, platform, sort]);
+    // Filtrarea păstrează ordinea primită de la server; nu se re-sortează local.
+    return result;
+  }, [cars, search, city, offerType, engine, transmission, status, platform]);
 
   const activeFiltersCount = [city, offerType, engine, transmission, status, platform].filter(f => f !== 'Toate').length;
 

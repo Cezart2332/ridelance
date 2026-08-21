@@ -5,9 +5,9 @@ import UploadRoundedIcon from '@mui/icons-material/UploadRounded'
 import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded'
 
 import { OwnerAvatar } from '../../../common/OwnerAvatar'
+import { companyService } from '../../../../services/company.service'
 import { DASHBOARD_TOKENS } from '../../dashboardTheme'
 import { Panel } from '../../ui'
-import { usePendingBackend } from '../pendingBackendContext'
 
 /**
  * Uploaderul de logo, cu previzualizare în cele trei contexte cerute de spec §3.1: sidebar,
@@ -18,7 +18,8 @@ import { usePendingBackend } from '../pendingBackendContext'
  * publicul. Cele trei împreună sunt argumentul pentru care uploaderul cere explicit un logo, nu
  * o fotografie.
  *
- * FAZA 1: fișierul rămâne în browser, ca `blob:` URL. Nu pleacă nicăieri.
+ * Validarea din browser dublează pe cea de pe server. Nu e redundanță inutilă: o eroare
+ * afișată înainte de a urca 2 MB e o eroare pe care o vezi imediat, nu după așteptare.
  */
 
 const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml']
@@ -30,6 +31,8 @@ interface CompanyLogoPanelProps {
   companyName: string
   logoUrl: string | null
   verified: boolean
+  /** Logo-ul se atașează unui profil existent, deci prima salvare trebuie să fi avut loc. */
+  hasProfile: boolean
   onLogoChange: (url: string | null) => void
 }
 
@@ -65,10 +68,16 @@ async function validate(file: File): Promise<string | null> {
   return null
 }
 
-export function CompanyLogoPanel({ companyName, logoUrl, verified, onLogoChange }: CompanyLogoPanelProps) {
-  const notifyPending = usePendingBackend()
+export function CompanyLogoPanel({
+  companyName,
+  logoUrl,
+  verified,
+  hasProfile,
+  onLogoChange,
+}: CompanyLogoPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
   const objectUrlRef = useRef<string | null>(null)
 
   // `blob:` URL-urile trăiesc până sunt revocate explicit; fără asta, fiecare încercare de logo
@@ -87,21 +96,25 @@ export function CompanyLogoPanel({ companyName, logoUrl, verified, onLogoChange 
       setError(problem)
       return
     }
+
     setError(null)
-    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current)
-    const url = URL.createObjectURL(file)
-    objectUrlRef.current = url
-    onLogoChange(url)
+    setUploading(true)
+    try {
+      const url = await companyService.uploadLogo(file)
+      // Previzualizarea locală nu mai e necesară odată ce serverul a răspuns cu calea reală.
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current)
+        objectUrlRef.current = null
+      }
+      onLogoChange(url)
+    } catch {
+      setError('Nu am putut încărca logo-ul. Încearcă din nou.')
+    } finally {
+      setUploading(false)
+    }
   }
 
-  const clearLogo = () => {
-    if (objectUrlRef.current) {
-      URL.revokeObjectURL(objectUrlRef.current)
-      objectUrlRef.current = null
-    }
-    setError(null)
-    onLogoChange(null)
-  }
+
 
   return (
     <Panel
@@ -115,20 +128,13 @@ export function CompanyLogoPanel({ companyName, logoUrl, verified, onLogoChange 
             <Button
               variant="contained"
               disableElevation
+              disabled={uploading || !hasProfile}
               startIcon={<UploadRoundedIcon />}
               onClick={() => inputRef.current?.click()}
               sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
             >
-              {logoUrl ? 'Schimbă logo-ul' : 'Încarcă logo'}
+              {uploading ? 'Se încarcă…' : logoUrl ? 'Schimbă logo-ul' : 'Încarcă logo'}
             </Button>
-            {logoUrl && (
-              <Button
-                onClick={clearLogo}
-                sx={{ textTransform: 'none', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted }}
-              >
-                Elimină
-              </Button>
-            )}
           </Stack>
           <input
             ref={inputRef}
@@ -142,6 +148,12 @@ export function CompanyLogoPanel({ companyName, logoUrl, verified, onLogoChange 
             }}
           />
         </Stack>
+
+        {!hasProfile && (
+          <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>
+            Salvează întâi datele firmei — logo-ul se atașează profilului.
+          </Typography>
+        )}
 
         {error && (
           <Typography role="alert" sx={{ color: DASHBOARD_TOKENS.stateError, fontSize: '0.85rem', fontWeight: 600 }}>
@@ -197,15 +209,7 @@ export function CompanyLogoPanel({ companyName, logoUrl, verified, onLogoChange 
           </Stack>
         </Box>
 
-        <Box>
-          <Button
-            variant="outlined"
-            onClick={() => notifyPending('Salvarea logo-ului')}
-            sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
-          >
-            Salvează logo-ul
-          </Button>
-        </Box>
+
       </Stack>
     </Panel>
   )
