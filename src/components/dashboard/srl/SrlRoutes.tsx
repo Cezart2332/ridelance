@@ -1,5 +1,4 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 
 import { SRL_PATHS } from '../../../config/srlNavigation'
@@ -8,8 +7,10 @@ import { BeneficiiTab } from '../sections/BeneficiiTab'
 import { CarsAdminView } from '../sections/admin/CarsAdminView'
 import { SupportChatTab } from '../sections/SupportChatTab'
 import { ComingSoon } from '../ui'
+import { SrlCompanyDocumentsPage } from './pages/SrlCompanyDocumentsPage'
 import { SrlCompanyPagePage } from './pages/SrlCompanyPagePage'
 import { SrlConnectionsPage } from './pages/SrlConnectionsPage'
+import { SrlHomePage } from './pages/SrlHomePage'
 import { SrlMaintenancePage } from './pages/SrlMaintenancePage'
 import { SrlRentalsPage } from './pages/SrlRentalsPage'
 import { SrlFiscalPage } from './pages/SrlFiscalPage'
@@ -31,7 +32,7 @@ export function SrlRoutes() {
 
   return (
     <Routes>
-      <Route index element={<CarsAdminView variant="poster" posterSection="overview" />} />
+      <Route index element={<SrlHomePage />} />
 
       {/* ── Flotă ── */}
       <Route path={rel(SRL_PATHS.cars)} element={<CarsAdminView variant="poster" posterSection="manage" />} />
@@ -41,17 +42,7 @@ export function SrlRoutes() {
       {/* ── Firmă ── */}
       <Route path={rel(SRL_PATHS.profile)} element={<SrlProfilePage />} />
       <Route path={rel(SRL_PATHS.companyPage)} element={<SrlCompanyPagePage />} />
-      <Route
-        path={rel(SRL_PATHS.companyDocuments)}
-        element={
-          <ComingSoon
-            icon={<DescriptionRoundedIcon />}
-            title="Documentele societății"
-            description="Certificat de înregistrare, certificat constatator, autorizații — stocate și cu alerte de expirare."
-            upcoming={['Preview fără descărcare', 'Alerte înainte de expirare', 'Acces rapid la generarea contractelor']}
-          />
-        }
-      />
+      <Route path={rel(SRL_PATHS.companyDocuments)} element={<SrlCompanyDocumentsPage />} />
       <Route path={rel(SRL_PATHS.services)} element={<SrlServicesPage />} />
 
       {/* ── Contabilitate ── */}

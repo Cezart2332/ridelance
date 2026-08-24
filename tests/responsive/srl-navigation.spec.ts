@@ -34,6 +34,26 @@ async function mockSession(page: Page) {
     }),
   )
 
+  // Acasă: sumarul flotei, gol pentru un cont nou.
+  await page.route(`${API}/srl/home`, (route: Route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        fleetSize: 0,
+        publishedCount: 0,
+        rentedCount: 0,
+        availableCount: 0,
+        activeRentals: 0,
+        monthlyContractValueBani: 0,
+        documentsExpiringSoon: 0,
+        scheduledMaintenance: 0,
+        attention: [],
+        activeRentalRows: [],
+      }),
+    }),
+  )
+
   // Închirierile și mentenanța: cont nou, fără nimic înregistrat.
   await page.route(`${API}/rentals`, (route: Route) =>
     route.fulfill({
@@ -117,6 +137,7 @@ const SECTIONS = [
   { path: `${ROOT}/inchirieri`, label: 'Închirieri' },
   { path: `${ROOT}/mentenanta`, label: 'Mentenanță' },
   { path: `${ROOT}/pagina-firmei`, label: 'Pagina firmei' },
+  { path: `${ROOT}/documente-societate`, label: 'Documente societate' },
   { path: `${ROOT}/profil`, label: 'Profil' },
   { path: `${ROOT}/servicii`, label: 'Servicii' },
   { path: `${ROOT}/contabilitate/cont-bancar`, label: 'Cont bancar' },
