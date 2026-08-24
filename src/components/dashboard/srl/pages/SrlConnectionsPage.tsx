@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material'
 
-import eldriveLogo from '../../../../assets/partners/eldrive.svg'
+import eldriveLogo from '../../../../assets/partners/eldrive.png'
 import oblioLogo from '../../../../assets/partners/oblio.png'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
 import { PageHeader, Panel, StatusChip } from '../../ui'
