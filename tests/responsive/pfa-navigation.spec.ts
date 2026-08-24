@@ -189,7 +189,9 @@ test.describe('navigație PFA', () => {
       await page.goto(leaf.path)
 
       const nav = page.getByRole('navigation', { name: 'Meniu principal' })
-      const current = nav.locator('[aria-current="page"]')
+      // Suport și Profil stau în landmark-ul secundar, lângă Deconectare, deci marcajul se
+      // caută în tot sidebar-ul, nu doar în lista principală.
+      const current = page.locator('nav [aria-current="page"]')
 
       // Exact un item marcat, și acela e cel corect.
       await expect(current, `${leaf.path} → un singur item activ`).toHaveCount(1)

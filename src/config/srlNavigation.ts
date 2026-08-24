@@ -132,6 +132,13 @@ export const SRL_NAV: NavEntry[] = [
     path: SRL_PATHS.benefits,
     hint: 'Oferte de la partenerii RIDElance',
   },
+]
+
+/**
+ * Ies din lista principală, dar rămân itemi de navigație (spec §2.1). Suportul coboară aici
+ * lângă Setări: și el e despre cont, nu despre activitatea flotei.
+ */
+const SRL_BOTTOM_NAV: NavEntry[] = [
   {
     kind: 'link',
     id: 'support',
@@ -140,10 +147,6 @@ export const SRL_NAV: NavEntry[] = [
     path: SRL_PATHS.support,
     hint: 'Ajutor din partea RIDElance',
   },
-]
-
-/** Setările ies din lista principală, dar rămân item de navigație (spec §2.1). */
-const SRL_BOTTOM_NAV: NavEntry[] = [
   {
     kind: 'link',
     id: 'settings',

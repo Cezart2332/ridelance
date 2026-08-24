@@ -3,6 +3,7 @@ import ace from '../assets/partners/ace.png'
 import mol from '../assets/partners/mol.png'
 import asigurari from '../assets/partners/asigurari.png'
 import consulto from '../assets/partners/consulto.png'
+import eldrive from '../assets/partners/eldrive.svg'
 import oblio from '../assets/partners/oblio.png'
 import simplifi from '../assets/partners/simplifi.png'
 import character2 from '../assets/Stickers/character 2.png'
@@ -104,6 +105,10 @@ export const partnerLogos: { name: string; image: string; href?: string }[] = [
   {
     name: 'Oblio',
     image: oblio,
+  },
+  {
+    name: 'eldrive',
+    image: eldrive,
   },
   {
     name: 'Consulto',

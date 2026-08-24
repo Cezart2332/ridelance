@@ -13,6 +13,8 @@ import {
   Typography,
 } from '@mui/material'
 
+import eldriveLogo from '../../../../assets/partners/eldrive.svg'
+import oblioLogo from '../../../../assets/partners/oblio.png'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
 import { PageHeader, Panel, StatusChip } from '../../ui'
 import type { StatusTone } from '../../ui'
@@ -30,6 +32,12 @@ import { usePendingBackend } from '../pendingBackendContext'
  * Restul integrărilor din PFA (Bolt, Uber) nu apar aici. Nu sunt șterse din cod — pur și simplu
  * nu sunt în configul de mai jos, care e locul unde se adaugă înapoi când vor fi cerute.
  */
+
+/** Logo-urile providerilor, unde există. Cardul le arată în locul numelui scris. */
+const PROVIDER_LOGO: Partial<Record<IntegrationProvider, string>> = {
+  Oblio: oblioLogo,
+  Eldrive: eldriveLogo,
+}
 
 const PROVIDER_COPY: Record<
   IntegrationProvider,
@@ -52,7 +60,7 @@ const PROVIDER_COPY: Record<
   },
   Eldrive: {
     name: 'eldrive',
-    purpose: 'Sesiunile de încărcare intră în costurile flotei.',
+    purpose: 'Sesiunile de încărcare intră în costurile flotei, iar stațiile apar pe hartă.',
     connectLabel: 'Conectează eldrive',
     fields: [
       { name: 'email', label: 'Email cont eldrive', type: 'email' },
@@ -161,13 +169,33 @@ function IntegrationCard({ integration, onConnect }: { integration: Integration;
   const presentation = STATUS_PRESENTATION[integration.status]
   const isConnected = integration.status !== 'disconnected'
 
+  const logo = PROVIDER_LOGO[integration.provider]
+
   return (
-    <Panel
-      title={copy.name}
-      subtitle={copy.purpose}
-      action={<StatusChip label={presentation.label} tone={presentation.tone} size="sm" outlined />}
-    >
-      <Stack spacing={1.6} sx={{ height: '100%' }}>
+    // `fill`: fără el corpul panoului nu e coloană flexibilă, iar spațiatorul de dinaintea
+    // butoanelor le împingea în afara cardului.
+    <Panel fill action={<StatusChip label={presentation.label} tone={presentation.tone} size="sm" outlined />}>
+      {/* Identitatea providerului: logo unde există, altfel numele scris. Nu amândouă — ar fi
+          aceeași informație de două ori pe un card mic. */}
+      {logo ? (
+        <Box
+          component="img"
+          src={logo}
+          alt={copy.name}
+          sx={{ height: 26, width: 'auto', maxWidth: 120, objectFit: 'contain', display: 'block', mb: 1 }}
+        />
+      ) : (
+        <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: DASHBOARD_TOKENS.ink }}>
+          {copy.name}
+        </Typography>
+      )}
+
+      <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.82rem', mb: 1.8, lineHeight: 1.5 }}>
+        {copy.purpose}
+      </Typography>
+      {/* `flex: 1`, nu `height: 100%`: are frați deasupra (logo, descriere), iar 100% din corp
+          ar fi însemnat înălțimea întregului card pe lângă ei. */}
+      <Stack spacing={1.6} sx={{ flex: 1, minHeight: 0 }}>
         {integration.errorMessage && (
           <Typography sx={{ color: DASHBOARD_TOKENS.stateError, fontSize: '0.82rem', fontWeight: 600 }}>
             {integration.errorMessage}

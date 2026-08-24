@@ -1,5 +1,6 @@
 import asigurari from '../assets/partners/asigurari.png'
 import consulto from '../assets/partners/consulto.png'
+import eldrive from '../assets/partners/eldrive.svg'
 import mol from '../assets/partners/mol.png'
 import oblio from '../assets/partners/oblio.png'
 import simplifi from '../assets/partners/simplifi.png'
@@ -185,6 +186,24 @@ export const partnerBenefits: PartnerBenefit[] = [
         badge: 'RIDElance + Simplifi',
         title: 'Tot fluxul într-un singur loc',
         text: 'Pentru procuri, documente fiscale, dosare și orice altceva trebuie semnat calificat.',
+      },
+    ],
+  },
+  {
+    slug: 'eldrive',
+    name: 'eldrive',
+    image: eldrive,
+    tagline: 'Încărcare pentru flotele electrice, cu costurile decontate în RIDElance.',
+    blocks: [
+      {
+        badge: 'În pregătire',
+        title: 'Rețeaua de încărcare, direct în dashboard',
+        text: 'Lucrăm la integrarea cu eldrive. Când e gata, sesiunile de încărcare intră automat în costurile flotei, iar stațiile apar pe hartă.',
+        checks: [
+          'Harta stațiilor de încărcare',
+          'Sesiunile de încărcare în costurile mașinii',
+          'Card sau RFID asociat contului',
+        ],
       },
     ],
   },

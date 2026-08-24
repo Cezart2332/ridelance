@@ -275,22 +275,48 @@ export default function AppSidebar({ nav, sidebarOpen, setSidebarOpen, onLogout,
   }, [nav.storageKey, openGroups]);
 
   /**
-   * Regula bate preferința (spec §6): categoria care conține ruta curentă e deschisă
-   * întotdeauna, indiferent ce s-a salvat în localStorage. Derivarea se face la randare,
-   * nu prin sincronizare cu un efect — altfel starea salvată și ruta ar putea diverge
-   * pentru un cadru, exact la refresh, adică fix cazul pe care regula îl protejează.
+   * Categoriile închise manual **cât timp** ele conțin ruta curentă.
    *
-   * Consecință asumată: pe categoria activă, butonul își notează preferința, dar lista
-   * rămâne deschisă până navighezi în altă parte.
+   * Categoria activă se deschide singură — altfel ai ateriza pe o pagină al cărei item nu se
+   * vede. Dar închiderea ei trebuie să funcționeze: până acum regula bătea preferința, iar
+   * click-ul pe antetul categoriei active nu făcea nimic vizibil, ceea ce se citește ca buton
+   * stricat.
+   *
+   * `key` e categoria activă la momentul închiderii. Când navighezi în altă categorie, cheia nu
+   * mai corespunde și lista se golește de la sine, fără efect de sincronizare: preferința e
+   * despre ecranul pe care ești, nu una permanentă.
    */
+  const [collapsed, setCollapsed] = useState<{ key: string; ids: string[] }>({ key: '', ids: [] });
+  const activeKey = activeGroupId ?? '';
+  const collapsedIds = collapsed.key === activeKey ? collapsed.ids : [];
+
   const isGroupExpanded = useCallback(
-    (id: string) => id === activeGroupId || openGroups.includes(id),
-    [activeGroupId, openGroups],
+    (id: string) => {
+      if (collapsedIds.includes(id)) return false;
+      return id === activeGroupId || openGroups.includes(id);
+    },
+    [activeGroupId, collapsedIds, openGroups],
   );
 
-  const toggleGroup = useCallback((id: string) => {
-    setOpenGroups((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
-  }, []);
+  const toggleGroup = useCallback(
+    (id: string) => {
+      // Categoria activă are propriul mecanism: `openGroups` n-o poate închide, fiindcă e
+      // deschisă prin apartenența la rută, nu prin preferință.
+      if (id === activeGroupId) {
+        setCollapsed((prev) => {
+          const ids = prev.key === activeKey ? prev.ids : [];
+          return {
+            key: activeKey,
+            ids: ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id],
+          };
+        });
+        return;
+      }
+
+      setOpenGroups((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+    },
+    [activeGroupId, activeKey],
+  );
 
   // Pe mobil, alegerea unei subpagini închide sertarul; pe desktop nu există sertar de închis.
   const closeDrawer = useCallback(() => setSidebarOpen(false), [setSidebarOpen]);

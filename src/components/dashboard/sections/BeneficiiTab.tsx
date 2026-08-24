@@ -87,20 +87,21 @@ function PartnerTabs({
               key={item.slug}
               role="tab"
               aria-selected={isActive}
+              aria-label={item.name}
+              title={item.name}
               data-active={isActive ? 'true' : undefined}
               onClick={() => onSelect(item.slug)}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1,
-                px: { xs: 1.4, md: 2 },
+                px: { xs: 2, md: 2.6 },
                 py: 1.4,
                 flexShrink: 0,
                 borderBottom: `2px solid ${isActive ? DASHBOARD_TOKENS.primary : 'transparent'}`,
                 mb: '-1px',
                 transition: 'all 200ms ease',
                 '&:hover .benefit-tab-logo': { opacity: 1, filter: 'grayscale(0)' },
-                '&:hover .benefit-tab-label': { color: DASHBOARD_TOKENS.ink },
               }}
             >
               <Box
@@ -109,27 +110,16 @@ function PartnerTabs({
                 alt=""
                 className="benefit-tab-logo"
                 sx={{
-                  height: 20,
+                  // Fără etichetă alături, logo-ul poartă singur identificarea, deci crește.
+                  height: 30,
                   width: 'auto',
-                  maxWidth: 40,
+                  maxWidth: 96,
                   objectFit: 'contain',
                   opacity: isActive ? 1 : 0.55,
                   filter: isActive ? 'grayscale(0)' : 'grayscale(1)',
                   transition: 'all 200ms ease',
                 }}
               />
-              <Typography
-                noWrap
-                className="benefit-tab-label"
-                sx={{
-                  fontWeight: isActive ? 800 : 650,
-                  fontSize: '0.88rem',
-                  color: isActive ? DASHBOARD_TOKENS.ink : DASHBOARD_TOKENS.textMuted,
-                  transition: 'color 200ms ease',
-                }}
-              >
-                {item.name}
-              </Typography>
             </ButtonBase>
           )
         })}
@@ -188,12 +178,16 @@ function PartnerPanel({
         </Box>
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
+          {/* Numele nu se mai scrie: logo-ul de alături îl spune, iar dublarea lui făcea antetul
+              să repete aceeași informație de două ori. Rămâne în `alt`, pentru cititoarele de ecran. */}
           <Typography
-            sx={{ fontWeight: 900, fontSize: { xs: '1.15rem', md: '1.3rem' }, color: DASHBOARD_TOKENS.ink }}
+            sx={{
+              color: DASHBOARD_TOKENS.ink,
+              fontSize: { xs: '1rem', md: '1.1rem' },
+              fontWeight: 700,
+              lineHeight: 1.5,
+            }}
           >
-            {partner.name}
-          </Typography>
-          <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.86rem', mt: 0.3, lineHeight: 1.5 }}>
             {partner.tagline}
           </Typography>
         </Box>

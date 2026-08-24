@@ -181,11 +181,33 @@ export const PFA_NAV: NavEntry[] = [
     ],
   },
 
-  { kind: 'separator', id: 'sep-1' },
-
-  { kind: 'link', id: 'support', label: 'Suport', icon: HeadsetMicRoundedIcon, path: PFA_PATHS.support, hint: 'Ajutor din partea RIDElance' },
-  { kind: 'link', id: 'profile', label: 'Profil', icon: PersonRoundedIcon, path: PFA_PATHS.profile, hint: 'Datele și setările contului' },
   { kind: 'action', id: 'logout', label: 'Deconectare', icon: LogoutRoundedIcon },
+]
+
+/**
+ * Suport și Profil ies din lista principală și coboară lângă Deconectare.
+ *
+ * Nu sunt destinații de lucru: nu intri în dashboard ca să deschizi Profilul, ci ajungi acolo
+ * când ai nevoie de cont. Locul lor firesc e la subsol, cu celelalte lucruri despre tine, nu
+ * printre secțiunile de activitate.
+ */
+const PFA_BOTTOM_NAV: NavEntry[] = [
+  {
+    kind: 'link',
+    id: 'support',
+    label: 'Suport',
+    icon: HeadsetMicRoundedIcon,
+    path: PFA_PATHS.support,
+    hint: 'Ajutor din partea RIDElance',
+  },
+  {
+    kind: 'link',
+    id: 'profile',
+    label: 'Profil',
+    icon: PersonRoundedIcon,
+    path: PFA_PATHS.profile,
+    hint: 'Datele și setările contului',
+  },
 ]
 
 /**
@@ -257,6 +279,7 @@ export const PFA_NAV_CONFIG: DashboardNavConfig = {
   root: DASHBOARD_ROOT,
   menuLabel: 'Meniu Principal',
   entries: PFA_NAV,
+  bottomEntries: PFA_BOTTOM_NAV,
   /** Versionată: o schimbare de structură invalidează starea veche. */
   storageKey: 'ridelance.pfa.nav.v1',
   /** Cele trei destinații directe din bara de jos. Restul intră sub „Meniu". */
