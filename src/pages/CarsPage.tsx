@@ -146,8 +146,6 @@ export function CarsPage() {
     [filteredCars],
   );
 
-  const withoutLocation = filteredCars.length - mapPoints.length;
-
   const activeFiltersCount = [city, offerType, engine, transmission, status, platform].filter(f => f !== 'Toate').length;
 
   const benefits = [
@@ -543,12 +541,6 @@ export function CarsPage() {
                   onSelect={setActiveCarId}
                   onBoundsSearch={setMapBounds}
                 />
-                {withoutLocation > 0 && (
-                  <Typography sx={{ mt: 1, fontSize: '0.8rem', color: TOKENS.textMuted }}>
-                    {withoutLocation}{' '}
-                    {withoutLocation === 1 ? 'mașină nu are' : 'mașini nu au'} locație setată și nu apar pe hartă.
-                  </Typography>
-                )}
               </Box>
             )}
           </Box>
