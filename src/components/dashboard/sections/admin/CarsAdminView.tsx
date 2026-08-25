@@ -40,6 +40,8 @@ import {
 } from '../../../../utils/carLabels';
 import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardTheme';
 import { ListingScoreIndicator } from '../../srl/ListingScoreIndicator'
+import { Link as RouterLink } from 'react-router-dom'
+import { SRL_PATHS } from '../../../../config/srlNavigation'
 
 interface LocalImage {
   id: string;
@@ -425,9 +427,16 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
           )}
         </Box>
         {activeTab === 0 && !isPosterOverview && (
-          <Button variant="contained" startIcon={<AddRoundedIcon />}
-            onClick={() => handleOpenCarModal()}
-            sx={{ bgcolor: DASHBOARD_TOKENS.primary, fontWeight: 700, borderRadius: 2 }}>
+          // Contul SRL adaugă prin fluxul pe șase pași; administrarea internă rămâne pe dialogul
+          // rapid, unde se completează zeci de anunțuri la rând și pașii ar fi doar clicuri în plus.
+          <Button
+            variant="contained"
+            startIcon={<AddRoundedIcon />}
+            {...(isPoster
+              ? { component: RouterLink as React.ElementType, to: SRL_PATHS.addCar }
+              : { onClick: () => handleOpenCarModal() })}
+            sx={{ bgcolor: DASHBOARD_TOKENS.primary, fontWeight: 700, borderRadius: 2, textDecoration: 'none' }}
+          >
             Adaugă Mașină
           </Button>
         )}

@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 
 import { SRL_PATHS } from '../../../config/srlNavigation'
@@ -7,6 +7,7 @@ import { BeneficiiTab } from '../sections/BeneficiiTab'
 import { CarsAdminView } from '../sections/admin/CarsAdminView'
 import { SupportChatTab } from '../sections/SupportChatTab'
 import { ComingSoon } from '../ui'
+import { AddCarWizard } from './addCar/AddCarWizard'
 import { SrlCompanyDocumentsPage } from './pages/SrlCompanyDocumentsPage'
 import { SrlCompanyPagePage } from './pages/SrlCompanyPagePage'
 import { SrlConnectionsPage } from './pages/SrlConnectionsPage'
@@ -26,6 +27,14 @@ import { SrlSettingsPage } from './pages/SrlSettingsPage'
  * (`NOTES-srl-restructure.md` §6.1). Ruta există și e navigabilă, item-ul rămâne în meniu cu
  * badge, iar pagina spune deschis că nu e gata — în loc să pară stricată.
  */
+/** Wizardul are nevoie de navigare la ieșire; ruta o furnizează, componenta rămâne pură. */
+function AddCarRoute() {
+  const navigate = useNavigate()
+  const toCars = () => navigate(SRL_PATHS.cars)
+
+  return <AddCarWizard onCancel={toCars} onSaved={toCars} />
+}
+
 export function SrlRoutes() {
   // Rutele se declară relativ la `/app/dashboard-srl/*`, splat-ul din App.tsx.
   const rel = (path: string) => path.slice(`${SRL_PATHS.home}/`.length)
@@ -36,6 +45,9 @@ export function SrlRoutes() {
 
       {/* ── Flotă ── */}
       <Route path={rel(SRL_PATHS.cars)} element={<CarsAdminView variant="poster" posterSection="manage" />} />
+      {/* Adăugarea are rută proprie, nu dialog: șase pași într-un modal n-ar avea unde încăpea,
+          iar un refresh la jumătatea completării ar fi pierdut tot. */}
+      <Route path={rel(SRL_PATHS.addCar)} element={<AddCarRoute />} />
       <Route path={rel(SRL_PATHS.rentals)} element={<SrlRentalsPage />} />
       <Route path={rel(SRL_PATHS.maintenance)} element={<SrlMaintenancePage />} />
 

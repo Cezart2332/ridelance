@@ -74,6 +74,7 @@ export interface Car {
   paymentStatus: string;
   paidAtUtc?: string | null;
   postedByAdmin: boolean;
+  details?: CarListingDetails;
   /**
    * Cine închiriază mașina. Opțional cât timp API-ul nu îl trimite încă — atunci blocul de
    * proprietar nu se randează deloc. Alternativa, o identitate compusă în frontend, ar fi
@@ -118,6 +119,27 @@ export interface CarLead {
   createdAtUtc: string;
 }
 
+/**
+ * Detaliile adăugate de fluxul pe șase pași: locație pe hartă, identitate vizuală și dosarul
+ * administrativ. Toate opționale — mașina se publică fără ele.
+ */
+export interface CarListingDetails {
+  zone: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  showExactLocation: boolean;
+  useCompanyContacts: boolean;
+  color: string | null;
+  seats: number | null;
+  minimumPeriod: string | null;
+  conditions: string | null;
+  availableFromUtc: string | null;
+  plateNumber: string | null;
+  vin: string | null;
+  mileage: number | null;
+  firstRegistrationAtUtc: string | null;
+}
+
 export interface CreateCarRequest {
   brand: string;
   model: string;
@@ -137,6 +159,7 @@ export interface CreateCarRequest {
   description: string;
   active: boolean;
   listingSource: string;
+  details?: CarListingDetails;
 }
 
 const carsService = {

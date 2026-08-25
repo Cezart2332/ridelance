@@ -42,6 +42,7 @@ export const SRL_PATHS = {
 
   // ── Flotă ──
   cars: at('masini'),
+  addCar: at('masini/adauga'),
   rentals: at('inchirieri'),
   maintenance: at('mentenanta'),
 
