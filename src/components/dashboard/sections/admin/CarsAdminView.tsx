@@ -24,7 +24,7 @@ import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import PendingActionsRoundedIcon from '@mui/icons-material/PendingActionsRounded';
 import PaymentsRoundedIcon from '@mui/icons-material/PaymentsRounded';
 import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
-import { carsService, getCarImageUrl, type Car, type CarLead } from '../../../../services/cars.service';
+import { carsService, getCarImageUrl, type Car, type CarLead, type CarListingDetails } from '../../../../services/cars.service';
 import carListJson from '../../../../data/car-list.json';
 import {
   formatCarStatus,
@@ -43,6 +43,27 @@ import { ListingScoreIndicator } from '../../srl/ListingScoreIndicator'
 import { Link as RouterLink } from 'react-router-dom'
 import { SRL_PATHS } from '../../../../config/srlNavigation'
 import { AddCarWizard } from '../../addCar/AddCarWizard'
+import { AddressSearch } from '../../../cars/map/AddressSearch'
+import { PinPicker } from '../../../cars/map/LazyMaps'
+import { reverseGeocode } from '../../../../lib/geocoding'
+
+/** Detalii goale, ca punct de plecare când mașina n-are încă niciunul. */
+const BLANK_DETAILS: CarListingDetails = {
+  zone: null,
+  latitude: null,
+  longitude: null,
+  showExactLocation: false,
+  useCompanyContacts: true,
+  color: null,
+  seats: null,
+  minimumPeriod: null,
+  conditions: null,
+  availableFromUtc: null,
+  plateNumber: null,
+  vin: null,
+  mileage: null,
+  firstRegistrationAtUtc: null,
+};
 
 interface LocalImage {
   id: string;
@@ -137,6 +158,35 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  /*
+   * Locația se poate schimba și la editare, nu doar la adăugare.
+   *
+   * `details` se trimite întreg, nu doar coordonatele: pe server `Apply` suprascrie tot obiectul,
+   * deci o trimitere parțială ar șterge numărul de înmatriculare, VIN-ul și restul dosarului.
+   * De aceea patch-ul se așază peste ce are deja mașina.
+   */
+  const carDetails: CarListingDetails = { ...BLANK_DETAILS, ...editingCar?.details };
+
+  const patchDetails = (patch: Partial<CarListingDetails>) => {
+    setEditingCar((prev) => (prev ? { ...prev, details: { ...BLANK_DETAILS, ...prev.details, ...patch } } : prev));
+  };
+
+  /** Pinul mutat completează orașul și zona înapoi, la fel ca în wizard. */
+  const placePin = (latitude: number, longitude: number) => {
+    patchDetails({ latitude, longitude });
+    void reverseGeocode(latitude, longitude).then((place) => {
+      if (!place) return;
+      setEditingCar((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          location: place.city ?? prev.location,
+          details: { ...BLANK_DETAILS, ...prev.details, latitude, longitude, zone: place.zone ?? prev.details?.zone ?? null },
+        };
+      });
+    });
+  };
 
   const modelsListForSelectedBrand = (() => {
     if (!editingCar?.brand) return [];
@@ -318,6 +368,7 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
         listingSource: LISTING_SOURCE_TO_API[editingCar.listingSource as string]
           ?? editingCar.listingSource
           ?? 'Ridelance',
+        details: editingCar.details,
       };
 
       if (carId) {
@@ -1078,6 +1129,45 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }} component="div"><TextField fullWidth label="An Fabricație" type="number" value={editingCar?.year ?? ''} onChange={(e) => setEditingCar({ ...editingCar, year: parseInt(e.target.value) })} /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }} component="div"><TextField fullWidth label="Oraș / Locație" value={editingCar?.location ?? ''} onChange={(e) => setEditingCar({ ...editingCar, location: e.target.value })} /></Grid>
+                <Grid size={{ xs: 12 }} component="div">
+                  <Stack spacing={1.5}>
+                    <AddressSearch
+                      value={carDetails.latitude != null ? (editingCar?.location ?? '') : ''}
+                      helperText="Alege o adresă ca să pui pinul, sau apasă direct pe hartă."
+                      onPick={(place) => {
+                        setEditingCar((prev) => (prev ? {
+                          ...prev,
+                          location: place.city ?? prev.location,
+                          details: {
+                            ...BLANK_DETAILS,
+                            ...prev.details,
+                            latitude: place.latitude,
+                            longitude: place.longitude,
+                            zone: place.zone ?? prev.details?.zone ?? null,
+                          },
+                        } : prev));
+                      }}
+                    />
+                    <PinPicker latitude={carDetails.latitude} longitude={carDetails.longitude} onChange={placePin} />
+                    <Stack direction="row" spacing={2}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Zonă / cartier"
+                        value={carDetails.zone ?? ''}
+                        onChange={(e) => patchDetails({ zone: e.target.value })}
+                      />
+                      {carDetails.latitude != null && (
+                        <Button
+                          onClick={() => patchDetails({ latitude: null, longitude: null })}
+                          sx={{ whiteSpace: 'nowrap', fontWeight: 700, color: DASHBOARD_TOKENS.textSubtle }}
+                        >
+                          Șterge pinul
+                        </Button>
+                      )}
+                    </Stack>
+                  </Stack>
+                </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }} component="div">
                   <TextField select fullWidth label="Motorizare" value={editingCar?.engine ?? 'GPL'} onChange={(e) => setEditingCar({ ...editingCar, engine: e.target.value })}>
                     {['Electric', 'Hybrid', 'GPL', 'Benzină', 'Diesel'].map(o => <MenuItem key={o} value={o}>{o}</MenuItem>)}

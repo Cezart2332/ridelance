@@ -356,10 +356,6 @@ export function InvoicesPage() {
 
           <OblioConnectPanel connection={connection} onChanged={reload} />
 
-          <Alert severity="info" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
-            Facturile primite nu apar aici: Oblio nu le expune prin API, ele există doar în
-            interfața lor, aduse din SPV.
-          </Alert>
         </>
       )}
     </Stack>
