@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Alert,
   Box,
+  Button,
   IconButton,
   Skeleton,
   Stack,
@@ -11,6 +12,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
+import AddRoundedIcon from '@mui/icons-material/AddRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import PaidRoundedIcon from '@mui/icons-material/PaidRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
@@ -23,6 +25,7 @@ import {
 } from '../../../services/invoices.service'
 import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '../dashboardTheme'
 import { Amount, PageHeader, Panel, StatusChip } from '../ui'
+import { NewInvoiceDialog } from './NewInvoiceDialog'
 import type { StatusTone } from '../ui'
 import { OblioConnectPanel } from './OblioConnectPanel'
 
@@ -63,6 +66,7 @@ export function InvoicesPage() {
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<TabId>('all')
   const [search, setSearch] = useState('')
+  const [composing, setComposing] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
   const [busyInvoice, setBusyInvoice] = useState<string | null>(null)
 
@@ -175,7 +179,30 @@ export function InvoicesPage() {
             ? `Facturile emise pe ${connection.cif}, citite din Oblio.`
             : 'Conectează-ți contul Oblio ca să vezi facturile emise.'
         }
+        actions={
+          // Apare doar cu contul conectat: fără credențiale n-are pe ce cont să emită.
+          connection.connected ? (
+            <Button
+              variant="contained"
+              disableElevation
+              startIcon={<AddRoundedIcon />}
+              onClick={() => setComposing(true)}
+              sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
+            >
+              Factură nouă
+            </Button>
+          ) : undefined
+        }
       />
+
+      {composing && (
+        <NewInvoiceDialog
+          open
+          connection={connection}
+          onClose={() => setComposing(false)}
+          onIssued={reload}
+        />
+      )}
 
       {error && (
         <Alert severity="error" onClose={() => setError(null)} sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}>

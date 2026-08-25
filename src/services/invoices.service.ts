@@ -43,6 +43,48 @@ export interface InvoicesOverview {
   invoices: Invoice[]
 }
 
+/** O linie de pe factura de emis. Prețul în bani, ca peste tot. */
+export interface NewInvoiceLine {
+  name: string
+  quantity: number
+  priceBani: number
+  measuringUnit: string
+  vatPercent: number
+  vatIncluded: boolean
+}
+
+export interface IssueInvoiceInput {
+  seriesName: string
+  clientName: string
+  clientCif: string | null
+  clientEmail: string | null
+  clientAddress: string | null
+  clientCity: string | null
+  clientState: string | null
+  /** Scadența ca număr de zile de la emitere. `0` înseamnă fără scadență. */
+  dueDateDays: number
+  lines: NewInvoiceLine[]
+  note: string | null
+  sendToSpv: boolean
+}
+
+export interface IssuedInvoiceResult {
+  seriesName: string
+  number: string
+  link: string | null
+}
+
+/** Datele publice ale unei firme, din registrul ANAF. */
+export interface CompanyLookup {
+  cui: string
+  name: string
+  address: string | null
+  city: string | null
+  county: string | null
+  registrationNumber: string | null
+  vatPayer: boolean
+}
+
 export interface OblioConnectInput {
   clientId: string
   clientSecret: string
@@ -56,6 +98,27 @@ export const invoicesService = {
       params: { from: from || undefined, to: to || undefined },
     })
     return res.data
+  },
+
+  /** Emite factura pe contul Oblio al proprietarului. Oblio o numerotează, nu noi. */
+  async issue(input: IssueInvoiceInput): Promise<IssuedInvoiceResult> {
+    const res = await api.post<IssuedInvoiceResult>('/invoices/issue', input)
+    return res.data
+  },
+
+  /**
+   * Caută firma după CUI, pentru precompletare.
+   *
+   * `null` când registrul n-o are sau nu răspunde: un CUI negăsit nu e o eroare de arătat, e un
+   * formular care rămâne de completat de mână.
+   */
+  async lookupCompany(cui: string): Promise<CompanyLookup | null> {
+    try {
+      const res = await api.get<CompanyLookup>(`/invoices/company/${encodeURIComponent(cui)}`)
+      return res.data
+    } catch {
+      return null
+    }
   },
 
   async connectOblio(input: OblioConnectInput): Promise<OblioConnection> {
