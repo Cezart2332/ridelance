@@ -15,6 +15,8 @@ import {
   partnerLogos,
 } from '../data/constants'
 import { PARTNER_LOGO } from '../data/partnerLogo'
+import { priceFor } from '../data/plans'
+import { PlanFeatureItem } from '../components/pricing/PlanFeatureItem'
 
 import motto from '../assets/motto.svg'
 import heroSticker from '../assets/hero-sticker.png'
@@ -442,20 +444,18 @@ export function HomePage() {
                       mt: 0.5,
                     }}
                   >
-                    {item.price}
+                    {priceFor(item, 'monthly').amount} lei / lună
                   </Typography>
-                  {item.priceNote && (
-                    <Typography
-                      sx={{
-                        color: TOKENS.textMuted,
-                        fontSize: '0.78rem',
-                        mt: 0.5,
-                        fontStyle: 'italic',
-                      }}
-                    >
-                      {item.priceNote}
-                    </Typography>
-                  )}
+                  <Typography
+                    sx={{
+                      color: TOKENS.textMuted,
+                      fontSize: '0.78rem',
+                      mt: 0.5,
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    {item.noteMonthly}
+                  </Typography>
                 </Box>
 
                 <Typography
@@ -480,34 +480,17 @@ export function HomePage() {
                   </Typography>
                 )}
 
-                <Stack spacing={1.8} sx={{ flexGrow: 1 }}>
-                  {item.list.map((point) => (
-                    <Stack
-                      direction="row"
-                      spacing={1.5}
-                      key={point}
-                      sx={{ alignItems: 'flex-start' }}
-                    >
-                      <CheckCircleOutlineRoundedIcon
-                        sx={{
-                          color: TOKENS.primary,
-                          fontSize: 20,
-                          flexShrink: 0,
-                          mt: 0.1,
-                        }}
-                      />
-                      <Typography
-                        sx={{
-                          fontSize: '0.92rem',
-                          color: alpha(TOKENS.ink, 0.82),
-                          lineHeight: 1.55,
-                        }}
-                      >
-                        {point}
-                      </Typography>
-                    </Stack>
+                <Box
+                  component="ul"
+                  sx={{ p: 0, m: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 1.4, flexGrow: 1 }}
+                >
+                  {item.features.map((feature, featureIndex) => (
+                    <PlanFeatureItem
+                      key={`${feature.strong ?? ''}-${feature.text ?? ''}-${featureIndex}`}
+                      feature={feature}
+                    />
                   ))}
-                </Stack>
+                </Box>
 
                 {item.footnote && (
                   <Typography

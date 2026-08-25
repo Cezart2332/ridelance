@@ -7,6 +7,7 @@ import eldrive from '../assets/partners/eldrive.png'
 import oblio from '../assets/partners/oblio.png'
 import simplifi from '../assets/partners/simplifi.png'
 import { sortByPartnerOrder } from './benefits'
+import { PFA_PLANS } from './plans'
 import character2 from '../assets/Stickers/character 2.png'
 import scene1 from '../assets/Stickers/scene 1.png'
 import scene4 from '../assets/Stickers/scene 4.png'
@@ -39,52 +40,14 @@ export const faqItems = [
   { title: 'De ce documente am nevoie?', text: loremLongText },
 ]
 
-export const pricingCards = [
-  {
-    title: 'RIDElance Solo',
-    price: '49 lei / săptămână',
-    priceNote: 'Abonament săptămânal, cu reînnoire automată în fiecare luni.',
-    summary: 'Pentru șoferii care au deja contabil sau vor să își gestioneze singuri partea contabilă, dar vor infrastructura RIDElance.',
-    cta: 'Alege Solo',
-    footnote: 'Fără contabilitate lunară inclusă.',
-    list: [
-      'Deschidere PFA la tarif preferențial — 399 lei',
-      'Export lunar pentru contabilul propriu',
-      'Asistență și consultanță constantă',
-      'Acces complet în dashboardul RIDElance',
-      'Organizare completă pentru activitatea de șofer PFA',
-      'Reduceri și beneficii prin partenerii RIDElance',
-    ],
-  },
-  {
-    title: 'RIDElance Start',
-    price: '99 lei / săptămână',
-    priceNote: 'Abonament săptămânal, cu reînnoire automată în fiecare luni.',
-    summary: 'Pentru șoferii care vor să înceapă rapid și să aibă totul pus la punct.',
-    cta: 'Începe cu Start',
-    list: [
-      'Deschidere PFA cu cost rambursabil + bonus 100 lei',
-      'Asistență și consultanță constantă',
-      'Acces complet în dashboardul RIDElance',
-      'Contabilitate completă pentru PFA',
-      'Reduceri și beneficii prin partenerii RIDElance',
-    ],
-  },
-  {
-    title: 'RIDElance Pro',
-    price: '149 lei / săptămână',
-    priceNote: 'Abonament săptămânal, cu reînnoire automată în fiecare luni.',
-    summary: 'Pentru cei care vor mai mult confort, suport prioritar și avantaje suplimentare.',
-    cta: 'Vezi Pro',
-    intro: 'Include tot ce ai în Start, plus:',
-    list: [
-      'Găzduire sediu social gratuit în București / Ilfov',
-      'Suport prioritar',
-      'Oferte, campanii și promoții exclusive PRO',
-      'Reducere la chiria mașinilor RIDElance',
-    ],
-  },
-]
+/**
+ * Cardurile de abonament de pe landing.
+ *
+ * Derivate din `plans.ts`, nu scrise a doua oară: erau o copie a acelorași planuri și ajunseseră
+ * să anunțe alte prețuri decât pagina de Abonamente. Landingul arată doar varianta lunară pentru
+ * PFA — comparația lunar/anual și planul de flotă stau pe pagina dedicată.
+ */
+export const pricingCards = PFA_PLANS
 
 /**
  * Logourile de pe pagina publică. Ordinea vine din `benefits.ts`, ca peste tot: aici era scrisă
