@@ -32,11 +32,16 @@ export function HomeCard({ title, hint, subtitle, action, accent, fill, children
       elevation={0}
       sx={{
         p: '20px',
+        /*
+         * `height: 100%` egalizează cardurile alăturate dintr-o grilă. `fit-content` e garda:
+         * pus direct într-o coloană flex, cardul n-are voie să ajungă mai scund decât conținutul
+         * lui. Aceeași regulă ca la `Panel` — cele două au tiparul identic.
+         */
         height: '100%',
+        minHeight: 'fit-content',
         display: 'flex',
         flexDirection: 'column',
         minWidth: 0,
-        minHeight: 0,
         borderRadius: HOME_TOKENS.radius.card,
         border: `1px solid ${HOME_TOKENS.border.subtle}`,
         borderLeft: accent ? `3px solid ${accent}` : `1px solid ${HOME_TOKENS.border.subtle}`,
