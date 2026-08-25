@@ -211,3 +211,25 @@ export const partnerBenefits: PartnerBenefit[] = [
 
 export const getPartnerBenefit = (slug: string) =>
   partnerBenefits.find((partner) => partner.slug === slug)
+
+/**
+ * Ordinea în care partenerii apar oriunde în aplicație.
+ *
+ * Se citește din lista de beneficii, nu se scrie a doua oară: aveam trei liste de parteneri
+ * (aici, `constants.partnerLogos`, `partners.ts`) cu trei ordini diferite, pentru că fiecare era
+ * ordonată de mână. Derivată, ordinea nu mai poate să divergă — un partener adăugat aici își ia
+ * locul singur peste tot.
+ */
+export const partnerOrder = partnerBenefits.map((partner) => partner.slug)
+
+/**
+ * Așază o listă de parteneri în ordinea de mai sus. Cine nu are pagină de beneficii — ACE, de
+ * exemplu — rămâne la coadă, în ordinea în care a fost scris.
+ */
+export function sortByPartnerOrder<T extends { slug: string }>(items: readonly T[]): T[] {
+  const rank = (slug: string) => {
+    const index = partnerOrder.indexOf(slug)
+    return index === -1 ? partnerOrder.length : index
+  }
+  return [...items].sort((a, b) => rank(a.slug) - rank(b.slug))
+}

@@ -6,6 +6,7 @@ import consulto from '../assets/partners/consulto.png'
 import mol from '../assets/partners/mol.png'
 import oblio from '../assets/partners/oblio.png'
 import simplifi from '../assets/partners/simplifi.png'
+import { sortByPartnerOrder } from './benefits'
 
 export interface Partner {
   slug: string
@@ -93,7 +94,7 @@ export const BCR_OFFERS = [
   },
 ]
 
-export const partners: Partner[] = [
+const partnersUnordered: Partner[] = [
   {
     slug: 'bcr',
     name: 'BCR',
@@ -144,6 +145,9 @@ export const partners: Partner[] = [
     image: simplifi,
   },
 ]
+
+/** Ordinea e cea din Beneficii; ACE, care n-are pagină de beneficii, rămâne la coadă. */
+export const partners: Partner[] = sortByPartnerOrder(partnersUnordered)
 
 export const getPartnerBySlug = (slug: string) =>
   partners.find((partner) => partner.slug === slug)

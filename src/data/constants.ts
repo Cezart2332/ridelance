@@ -6,6 +6,7 @@ import consulto from '../assets/partners/consulto.png'
 import eldrive from '../assets/partners/eldrive.png'
 import oblio from '../assets/partners/oblio.png'
 import simplifi from '../assets/partners/simplifi.png'
+import { sortByPartnerOrder } from './benefits'
 import character2 from '../assets/Stickers/character 2.png'
 import scene1 from '../assets/Stickers/scene 1.png'
 import scene4 from '../assets/Stickers/scene 4.png'
@@ -85,40 +86,21 @@ export const pricingCards = [
   },
 ]
 
-export const partnerLogos: { name: string; image: string; href?: string }[] = [
-  {
-    name: 'ACE',
-    image: ace,
-  },
-  {
-    name: 'MOL',
-    image: mol,
-  },
-  {
-    name: 'asigurari.ro',
-    image: asigurari,
-  },
-  {
-    name: 'BCR',
-    image: '/logobcr.jpeg',
-  },
-  {
-    name: 'Oblio',
-    image: oblio,
-  },
-  {
-    name: 'eldrive',
-    image: eldrive,
-  },
-  {
-    name: 'Consulto',
-    image: consulto,
-  },
-  {
-    name: 'Simplifi',
-    image: simplifi,
-  },
-]
+/**
+ * Logourile de pe pagina publică. Ordinea vine din `benefits.ts`, ca peste tot: aici era scrisă
+ * de mână și ajunsese alta decât în Beneficii.
+ */
+export const partnerLogos: { slug: string; name: string; image: string; href?: string }[] =
+  sortByPartnerOrder([
+    { slug: 'ace', name: 'ACE', image: ace },
+    { slug: 'mol', name: 'MOL', image: mol },
+    { slug: 'asigurari-ro', name: 'asigurari.ro', image: asigurari },
+    { slug: 'bcr', name: 'BCR', image: '/logobcr.jpeg' },
+    { slug: 'oblio', name: 'Oblio', image: oblio },
+    { slug: 'eldrive', name: 'eldrive', image: eldrive },
+    { slug: 'consulto', name: 'Consulto', image: consulto },
+    { slug: 'simplifi', name: 'Simplifi', image: simplifi },
+  ])
 
 export const homeSec2 = [
   'Deschidere PFA',

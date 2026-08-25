@@ -28,6 +28,7 @@ import {
   partners,
   type Partner,
 } from '../data/partners'
+import { PARTNER_LOGO } from '../data/partnerLogo'
 
 const ctaButtonSx = {
   px: 4,
@@ -102,9 +103,8 @@ function PartnerTabs({ activeSlug }: { activeSlug: string }) {
                 alt=""
                 className="partner-tab-logo"
                 sx={{
-                  height: 22,
+                  ...PARTNER_LOGO.tab,
                   width: 'auto',
-                  maxWidth: 44,
                   objectFit: 'contain',
                   opacity: isActive ? 1 : 0.55,
                   filter: isActive ? 'grayscale(0)' : 'grayscale(1)',
@@ -308,8 +308,7 @@ function PartnerPanel({ partner }: { partner: Partner }) {
       >
         <Box
           sx={{
-            width: 120,
-            height: 72,
+            ...PARTNER_LOGO.panelBox,
             flexShrink: 0,
             display: 'grid',
             placeItems: 'center',
@@ -324,7 +323,7 @@ function PartnerPanel({ partner }: { partner: Partner }) {
             component="img"
             src={partner.image}
             alt={partner.name}
-            sx={{ maxWidth: 96, maxHeight: 48, width: 'auto', height: 'auto', objectFit: 'contain' }}
+            sx={{ ...PARTNER_LOGO.panel, width: 'auto', height: 'auto', objectFit: 'contain' }}
           />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>

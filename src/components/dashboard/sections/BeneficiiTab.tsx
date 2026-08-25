@@ -12,6 +12,7 @@ import {
   type BenefitBlock,
   type PartnerBenefit,
 } from '../../../data/benefits'
+import { PARTNER_LOGO } from '../../../data/partnerLogo'
 import { BCR_OFFERS, BCR_ONBOARDING_URL } from '../../../data/partners'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { PageHeader } from '../ui'
@@ -111,9 +112,8 @@ function PartnerTabs({
                 className="benefit-tab-logo"
                 sx={{
                   // Fără etichetă alături, logo-ul poartă singur identificarea, deci crește.
-                  height: 30,
+                  ...PARTNER_LOGO.tab,
                   width: 'auto',
-                  maxWidth: 96,
                   objectFit: 'contain',
                   opacity: isActive ? 1 : 0.55,
                   filter: isActive ? 'grayscale(0)' : 'grayscale(1)',
@@ -158,8 +158,7 @@ function PartnerPanel({
       >
         <Box
           sx={{
-            width: 104,
-            height: 64,
+            ...PARTNER_LOGO.panelBox,
             flexShrink: 0,
             display: 'grid',
             placeItems: 'center',
@@ -173,7 +172,7 @@ function PartnerPanel({
             component="img"
             src={partner.image}
             alt={partner.name}
-            sx={{ maxWidth: 84, maxHeight: 44, objectFit: 'contain' }}
+            sx={{ ...PARTNER_LOGO.panel, objectFit: 'contain' }}
           />
         </Box>
 

@@ -13,6 +13,7 @@ import {
   economyComparison,
   partnerLogos,
 } from '../data/constants'
+import { PARTNER_LOGO } from '../data/partnerLogo'
 
 import motto from '../assets/motto.svg'
 import heroSticker from '../assets/hero-sticker.png'
@@ -1157,10 +1158,8 @@ export function HomePage() {
                   src={partner.image}
                   alt={partner.name}
                   sx={{
-                    maxHeight: partner.name === 'ACE' ? { xs: 58, md: 78 } : { xs: 42, md: 58 },
-                    maxWidth: partner.name === 'ACE' ? { xs: 190, md: 250 } : { xs: 150, md: 190 },
+                    ...PARTNER_LOGO.wall,
                     width: 'auto',
-                    height: 'auto',
                     objectFit: 'contain',
                   }}
                 />

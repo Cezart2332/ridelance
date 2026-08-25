@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material'
 
+import { PARTNER_LOGO } from '../../../../data/partnerLogo'
 import eldriveLogo from '../../../../assets/partners/eldrive.png'
 import oblioLogo from '../../../../assets/partners/oblio.png'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
@@ -182,7 +183,7 @@ function IntegrationCard({ integration, onConnect }: { integration: Integration;
           component="img"
           src={logo}
           alt={copy.name}
-          sx={{ height: 26, width: 'auto', maxWidth: 120, objectFit: 'contain', display: 'block', mb: 1 }}
+          sx={{ ...PARTNER_LOGO.tab, width: 'auto', objectFit: 'contain', display: 'block', mb: 1 }}
         />
       ) : (
         <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: DASHBOARD_TOKENS.ink }}>
