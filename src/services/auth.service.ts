@@ -57,6 +57,16 @@ export const authService = {
     return response.data
   },
 
+  /** Confirmă adresa cu codul primit pe email. */
+  verifyEmail: async (email: string, code: string): Promise<void> => {
+    await authAxios.post('/users/verify-email', { email, code })
+  },
+
+  /** Cere un cod nou. Serverul răspunde la fel și dacă adresa n-are cont. */
+  resendVerification: async (email: string): Promise<void> => {
+    await authAxios.post('/users/resend-verification', { email })
+  },
+
   logout: async () => {
     const userId = store.getState().auth.userId ?? undefined
     // Grab the current access token BEFORE clearing Redux

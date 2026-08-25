@@ -82,8 +82,12 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
         needsFullName ? fullName : undefined,
       )
       await authService.login(trimmedEmail, password)
-      // Flota merge direct în dashboardul ei; PFA-ul intră în onboarding, prin `/app`.
-      navigate(accountType === 'CarPoster' ? SRL_ROOT : '/app')
+      // Confirmarea adresei se cere înaintea oricărui alt pas. Destinația de după ea se decide
+      // aici, unde se știe tipul de cont: flota merge în dashboardul ei, PFA-ul în onboarding.
+      navigate(ROUTES.verifyEmail, {
+        replace: true,
+        state: { email: trimmedEmail, next: accountType === 'CarPoster' ? SRL_ROOT : '/app' },
+      })
     } catch (err) {
       setServerError(mapAuthError(err, 'register'))
     } finally {

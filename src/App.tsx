@@ -8,6 +8,7 @@ import { RouteFallback } from './components/common/RouteFallback'
 // Auth (kept eager — small, needed immediately on /autentificare)
 import LoginPage from './components/auth/LoginPage'
 import RegisterPage from './components/auth/RegisterPage'
+import VerifyEmailPage from './components/auth/VerifyEmailPage'
 import ForgotPasswordPage from './components/auth/ForgotPasswordPage'
 import { ROUTES } from './constants/routes'
 import RegistrationSuccessPage from './components/auth/RegistrationSuccessPage'
@@ -77,6 +78,7 @@ function App() {
           <Route path={ROUTES.register} element={<RegisterPage />} />
           {/* Singura ramificație reală dinainte de crearea contului: rolul `CarPoster`. */}
           <Route path={ROUTES.registerCarPoster} element={<RegisterPage role="CarPoster" />} />
+          <Route path={ROUTES.verifyEmail} element={<VerifyEmailPage />} />
           <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
           <Route path="/auth" element={<Navigate to={ROUTES.login} replace />} />
           <Route path="/inregistrare/pfa" element={<Navigate to="/onboarding/pfa" replace />} />

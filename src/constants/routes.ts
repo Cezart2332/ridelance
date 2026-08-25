@@ -11,5 +11,7 @@ export const ROUTES = {
   register: '/inregistrare',
   /** Înregistrare pentru conturile de închiriere mașini (rol `CarPoster`). */
   registerCarPoster: '/inregistrare/anunturi',
+  /** Confirmarea adresei, imediat după crearea contului. */
+  verifyEmail: '/confirmare-email',
   forgotPassword: '/parola-uitata',
 } as const
