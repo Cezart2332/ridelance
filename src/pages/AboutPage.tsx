@@ -5,7 +5,7 @@ import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
 import { homeSec9 } from '../data/constants'
 import { pageFrameSx } from '../constants/layout'
-import logo from '../assets/logo.svg'
+import logoWithMotto from '../assets/logowithmotto.svg'
 import motto from '../assets/motto.svg'
 
 export function AboutPage() {
@@ -32,18 +32,14 @@ export function AboutPage() {
     <Box sx={pageFrameSx}>
       <Container maxWidth="lg">
         <Stack spacing={6} sx={{ alignItems: "center" }}>
-          <Box sx={{ textAlign: 'center', maxWidth: 700, mx: 'auto' }}>
-            <Box
-              component="img"
-              src={logo}
-              alt="Ridelance Logo"
-              sx={{ height: 60, width: 'auto', mb: 4 }}
-            />
-            <SectionHeader
-              title="Despre Ridelance"
-              subtitle="Ridelance este platforma creată pentru șoferii de ridesharing care vor să lucreze pe cont propriu, dar într-un mod mai organizat, mai clar și mai profesionist."
-            />
-          </Box>
+          {/* Logoul cu motto spune și ce e RIDElance, deci titlul și fraza de sub el ar fi
+              repetat aceeași idee de trei ori pe același ecran. A rămas doar logoul. */}
+          <Box
+            component="img"
+            src={logoWithMotto}
+            alt="RIDElance — Independent. Dar nu singur."
+            sx={{ width: '100%', maxWidth: 520, height: 'auto', mx: 'auto' }}
+          />
 
           <Box sx={{ position: 'relative', width: '100%', maxWidth: 1000, mx: 'auto', py: 2 }}>
             {/* The central vertical line */}
