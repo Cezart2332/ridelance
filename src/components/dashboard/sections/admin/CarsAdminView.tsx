@@ -42,6 +42,7 @@ import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardThe
 import { ListingScoreIndicator } from '../../srl/ListingScoreIndicator'
 import { Link as RouterLink } from 'react-router-dom'
 import { SRL_PATHS } from '../../../../config/srlNavigation'
+import { AddCarWizard } from '../../addCar/AddCarWizard'
 
 interface LocalImage {
   id: string;
@@ -130,6 +131,7 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isCarModalOpen, setIsCarModalOpen] = useState(false);
+  const [isAddingCar, setIsAddingCar] = useState(false);
   const [editingCar, setEditingCar] = useState<Partial<Car> | null>(null);
   const [localImages, setLocalImages] = useState<LocalImage[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -413,6 +415,25 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
     return true;
   });
 
+  /*
+   * Adăugarea trece prin wizard și la admin, nu doar la SRL. Dialogul rapid rămâne pentru
+   * editare: acolo se schimbă un câmp-două pe o mașină care există deja, iar șase pași ar fi
+   * doar drum în plus. Wizardul ia locul listei în loc să se deschidă ca rută, pentru că
+   * dashboard-ul de admin comută secțiuni pe stare, nu pe adrese.
+   */
+  if (isAddingCar) {
+    return (
+      <AddCarWizard
+        mode="admin"
+        onCancel={() => setIsAddingCar(false)}
+        onSaved={() => {
+          setIsAddingCar(false);
+          void fetchData();
+        }}
+      />
+    );
+  }
+
   return (
     <Box>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -427,14 +448,13 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
           )}
         </Box>
         {activeTab === 0 && !isPosterOverview && (
-          // Contul SRL adaugă prin fluxul pe șase pași; administrarea internă rămâne pe dialogul
-          // rapid, unde se completează zeci de anunțuri la rând și pașii ar fi doar clicuri în plus.
+          // SRL-ul are wizardul pe rută proprie; adminul îl deschide pe loc, în ecranul curent.
           <Button
             variant="contained"
             startIcon={<AddRoundedIcon />}
             {...(isPoster
               ? { component: RouterLink as React.ElementType, to: SRL_PATHS.addCar }
-              : { onClick: () => handleOpenCarModal() })}
+              : { onClick: () => setIsAddingCar(true) })}
             sx={{ bgcolor: DASHBOARD_TOKENS.primary, fontWeight: 700, borderRadius: 2, textDecoration: 'none' }}
           >
             Adaugă Mașină

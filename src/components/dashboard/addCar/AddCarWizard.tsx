@@ -6,9 +6,9 @@ import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded'
 
-import { carsService } from '../../../../services/cars.service'
-import { DASHBOARD_TOKENS } from '../../dashboardTheme'
-import { PageHeader, Panel } from '../../ui'
+import { carsService } from '../../../services/cars.service'
+import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { PageHeader, Panel } from '../ui'
 import { ListingPreview } from './ListingPreview'
 import { StepRail } from './StepRail'
 import {
@@ -28,6 +28,7 @@ import {
   toCreateRequest,
   type CarDraft,
   type StepId,
+  type WizardMode,
 } from './wizardModel'
 
 /**
@@ -44,9 +45,12 @@ import {
 interface AddCarWizardProps {
   onCancel: () => void
   onSaved: (carId: string) => void
+  /** Vezi `WizardMode`. Implicit e contul de flotă, cazul pentru care a fost scris fluxul. */
+  mode?: WizardMode
 }
 
-export function AddCarWizard({ onCancel, onSaved }: AddCarWizardProps) {
+export function AddCarWizard({ onCancel, onSaved, mode = 'owner' }: AddCarWizardProps) {
+  const isAdmin = mode === 'admin'
   const [draft, setDraft] = useState<CarDraft>(EMPTY_DRAFT)
   const [photos, setPhotos] = useState<DraftPhoto[]>([])
   const [step, setStep] = useState<StepId>('vehicul')
@@ -103,7 +107,7 @@ export function AddCarWizard({ onCancel, onSaved }: AddCarWizardProps) {
     setSaving(true)
     setError(null)
     try {
-      const carId = await carsService.create(toCreateRequest(draft))
+      const carId = await carsService.create(toCreateRequest(draft, mode))
 
       // Fotografiile se urcă după ce anunțul există: au nevoie de id-ul lui. Secvențial, ca
       // ordinea de pe server să fie cea aleasă aici — coperta prima.
@@ -122,8 +126,12 @@ export function AddCarWizard({ onCancel, onSaved }: AddCarWizardProps) {
   return (
     <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
       <PageHeader
-        title="Adaugă o mașină în flotă"
-        subtitle="Completează informațiile necesare pentru administrare și pentru marketplace."
+        title={isAdmin ? 'Adaugă o mașină în catalog' : 'Adaugă o mașină în flotă'}
+        subtitle={
+          isAdmin
+            ? 'Anunțul intră direct în marketplace, activ, sub numele RIDElance.'
+            : 'Completează informațiile necesare pentru administrare și pentru marketplace.'
+        }
         actions={
           <Button onClick={onCancel} sx={{ textTransform: 'none', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted }}>
             Renunță
@@ -151,14 +159,20 @@ export function AddCarWizard({ onCancel, onSaved }: AddCarWizardProps) {
             }
           >
             {step === 'vehicul' && <VehicleStep draft={draft} update={update} />}
-            {step === 'oferta' && <OfferStep draft={draft} update={update} />}
+            {step === 'oferta' && <OfferStep draft={draft} update={update} mode={mode} />}
             {step === 'poze' && (
               <PhotosStep photos={photos} onAdd={addPhotos} onRemove={removePhoto} onMakeCover={makeCover} />
             )}
             {step === 'locatie' && <LocationStep draft={draft} update={update} />}
             {step === 'dosar' && <DossierStep draft={draft} update={update} />}
             {step === 'preview' && (
-              <PreviewStep draft={draft} photoCount={photos.length} incomplete={incomplete} onFix={goTo} />
+              <PreviewStep
+                draft={draft}
+                photoCount={photos.length}
+                incomplete={incomplete}
+                onFix={goTo}
+                mode={mode}
+              />
             )}
 
             {currentMissing.length > 0 && step !== 'preview' && (
@@ -228,11 +242,13 @@ function PreviewStep({
   photoCount,
   incomplete,
   onFix,
+  mode,
 }: {
   draft: CarDraft
   photoCount: number
   incomplete: Set<StepId>
   onFix: (step: StepId) => void
+  mode: WizardMode
 }) {
   const dossier = Math.round(dossierCompletion(draft) * 100)
 
@@ -335,8 +351,9 @@ function PreviewStep({
       ))}
 
       <Alert severity="info" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, mt: 1 }}>
-        Anunțul se salvează ca nefiind încă vizibil public. Devine vizibil după validare și după
-        activarea plății, din „Mașinile mele".
+        {mode === 'admin'
+          ? 'Anunțul devine vizibil în marketplace imediat după salvare. Poate fi dezactivat oricând din listă.'
+          : 'Anunțul se salvează ca nefiind încă vizibil public. Devine vizibil după validare și după activarea plății, din „Mașinile mele".'}
       </Alert>
     </Stack>
   )

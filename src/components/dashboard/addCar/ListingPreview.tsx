@@ -2,8 +2,8 @@ import { Box, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 
-import { DASHBOARD_TOKENS } from '../../dashboardTheme'
-import { Amount } from '../../ui'
+import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { Amount } from '../ui'
 import type { CarDraft } from './wizardModel'
 
 /**

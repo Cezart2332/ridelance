@@ -2,7 +2,7 @@ import { Box, ButtonBase, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
 
-import { DASHBOARD_TOKENS } from '../../dashboardTheme'
+import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { STEPS, type StepId } from './wizardModel'
 
 /**

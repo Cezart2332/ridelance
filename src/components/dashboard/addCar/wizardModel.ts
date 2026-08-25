@@ -1,4 +1,5 @@
-import type { CarListingDetails, CreateCarRequest } from '../../../../services/cars.service'
+import { LISTING_SOURCE_TO_API } from '../../../utils/carLabels'
+import type { CarListingDetails, CreateCarRequest } from '../../../services/cars.service'
 
 /**
  * Starea formularului de adăugare a unei mașini, pe cei șase pași.
@@ -29,6 +30,10 @@ export interface CarDraft {
   conditions: string
   description: string
   badges: string[]
+  /** Doar admin: prețul tăiat de deasupra celui curent. Gol înseamnă fără reducere. */
+  oldPrice: string
+  /** Doar admin: anunț adus din afara platformei, marcat ca atare în marketplace. */
+  listingSource: string
 
   // 4. Locație
   /** Adresa aleasă din căutare sau citită înapoi din pin. Doar pentru afișare în formular. */
@@ -67,6 +72,8 @@ export const EMPTY_DRAFT: CarDraft = {
   conditions: '',
   description: '',
   badges: [],
+  oldPrice: '',
+  listingSource: 'Oferit de RIDElance',
 
   address: '',
   location: '',
@@ -81,6 +88,15 @@ export const EMPTY_DRAFT: CarDraft = {
   mileage: '',
   firstRegistration: '',
 }
+
+/**
+ * Cine adaugă mașina.
+ *
+ * `owner` e un cont de flotă: anunțul se salvează inactiv, trece prin validare și prin plata
+ * listării. `admin` adaugă direct în catalogul RIDElance, deci anunțul e activ din prima și poate
+ * purta reducere și sursă externă — câmpuri pe care un proprietar nu le stabilește singur.
+ */
+export type WizardMode = 'owner' | 'admin'
 
 export const STEPS = [
   { id: 'vehicul', title: 'Vehicul', hint: 'Date de bază' },
@@ -99,6 +115,9 @@ export const SEATS = ['4', '5', '7']
 export const OFFER_TYPES = ['Închiriere săptămânală', 'La rămânere', 'Închiriere cu opțiune de cumpărare']
 export const MINIMUM_PERIODS = ['Fără perioadă minimă', '1 lună', '2 luni', '3 luni']
 export const AVAILABILITY = ['Disponibilă acum', 'Disponibilă de la o dată', 'Momentan indisponibilă']
+
+/** Doar pentru admin. Etichetele vin din maparea comună, ca să nu existe o a doua listă. */
+export const LISTING_SOURCES = Object.keys(LISTING_SOURCE_TO_API)
 
 /** Avantajele afișate ca insigne pe anunț. Aceleași etichete ca în marketplace. */
 export const BADGE_OPTIONS = [
@@ -171,7 +190,14 @@ export function toDetails(draft: CarDraft): CarListingDetails {
   }
 }
 
-export function toCreateRequest(draft: CarDraft): CreateCarRequest {
+export function toCreateRequest(draft: CarDraft, mode: WizardMode = 'owner'): CreateCarRequest {
+  const isAdmin = mode === 'admin'
+  const oldPrice = isAdmin ? toNumber(draft.oldPrice) : null
+  const price = toNumber(draft.pricePerWeek) ?? 0
+  // Reducerea e reală doar dacă prețul vechi chiar e mai mare; altfel anunțul ar afișa o
+  // tăietură care nu înseamnă nimic.
+  const hasDiscount = oldPrice != null && oldPrice > price
+
   return {
     brand: draft.brand.trim(),
     model: draft.model.trim(),
@@ -179,8 +205,9 @@ export function toCreateRequest(draft: CarDraft): CreateCarRequest {
     engine: draft.engine,
     transmission: draft.transmission,
     location: draft.location.trim(),
-    pricePerWeek: toNumber(draft.pricePerWeek) ?? 0,
-    discountActive: false,
+    pricePerWeek: price,
+    oldPrice: hasDiscount ? oldPrice : undefined,
+    discountActive: hasDiscount,
     garantie: toNumber(draft.garantie) ?? undefined,
     offerType: draft.offerType,
     status: draft.status === 'Disponibilă de la o dată' ? 'Disponibilă acum' : draft.status,
@@ -188,9 +215,12 @@ export function toCreateRequest(draft: CarDraft): CreateCarRequest {
     boltCategories: draft.boltCategories,
     badges: draft.badges,
     description: draft.description.trim(),
-    // Publicarea trece prin validarea și plata platformei; anunțul nu devine vizibil de aici.
-    active: false,
-    listingSource: 'Ridelance',
+    // Proprietarul publică prin validarea și plata platformei, deci anunțul lui nu devine vizibil
+    // de aici. Adminul scrie direct în catalog, unde nu e nimic de validat.
+    active: isAdmin,
+    listingSource: isAdmin
+      ? (LISTING_SOURCE_TO_API[draft.listingSource] ?? 'Ridelance')
+      : 'Ridelance',
     details: toDetails(draft),
   }
 }

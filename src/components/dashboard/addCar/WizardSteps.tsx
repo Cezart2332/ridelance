@@ -3,20 +3,22 @@ import { alpha } from '@mui/material/styles'
 import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded'
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
 
-import { AddressSearch } from '../../../cars/map/AddressSearch'
-import { PinPicker } from '../../../cars/map/LazyMaps'
-import { reverseGeocode } from '../../../../lib/geocoding'
-import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
+import { AddressSearch } from '../../cars/map/AddressSearch'
+import { PinPicker } from '../../cars/map/LazyMaps'
+import { reverseGeocode } from '../../../lib/geocoding'
+import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme'
 import {
   AVAILABILITY,
   BADGE_OPTIONS,
   ENGINES,
+  LISTING_SOURCES,
   MINIMUM_PERIODS,
   OFFER_TYPES,
   SEATS,
   TRANSMISSIONS,
   dossierCompletion,
   type CarDraft,
+  type WizardMode,
 } from './wizardModel'
 
 /**
@@ -105,12 +107,48 @@ function splitList(value: string): string[] {
 
 // ── 2. Ofertă ─────────────────────────────────────────────────────────────────────────────
 
-export function OfferStep({ draft, update }: { draft: CarDraft; update: Update }) {
+export function OfferStep({
+  draft,
+  update,
+  mode,
+}: {
+  draft: CarDraft
+  update: Update
+  mode: WizardMode
+}) {
+  const isAdmin = mode === 'admin'
+
   return (
     <Stack spacing={2.5}>
       <Box sx={grid2}>
         <TextField label="Preț / săptămână (lei)" required type="number" value={draft.pricePerWeek} onChange={(e) => update('pricePerWeek', e.target.value)} fullWidth size="small" sx={dashboardInputSx} />
+        {/* Reducerea o stabilește doar RIDElance; un proprietar își scrie un singur preț. */}
+        {isAdmin && (
+          <TextField
+            label="Preț vechi (lei)"
+            type="number"
+            value={draft.oldPrice}
+            onChange={(e) => update('oldPrice', e.target.value)}
+            fullWidth
+            size="small"
+            sx={dashboardInputSx}
+            helperText="Lasă gol dacă anunțul n-are reducere. Se aplică doar dacă e peste prețul curent."
+          />
+        )}
         <TextField label="Garanție (lei)" type="number" value={draft.garantie} onChange={(e) => update('garantie', e.target.value)} fullWidth size="small" sx={dashboardInputSx} />
+        {isAdmin && (
+          <TextField
+            select
+            label="Sursa anunțului"
+            value={draft.listingSource}
+            onChange={(e) => update('listingSource', e.target.value)}
+            fullWidth
+            size="small"
+            sx={dashboardInputSx}
+          >
+            {LISTING_SOURCES.map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+          </TextField>
+        )}
         <TextField select label="Tip ofertă" value={draft.offerType} onChange={(e) => update('offerType', e.target.value)} fullWidth size="small" sx={dashboardInputSx}>
           {OFFER_TYPES.map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
         </TextField>
