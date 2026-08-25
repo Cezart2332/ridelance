@@ -3,6 +3,7 @@ import { alpha } from '@mui/material/styles'
 import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded'
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
 
+import { PinPicker } from '../../../cars/map/LazyMaps'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
 import {
   AVAILABILITY,
@@ -340,11 +341,42 @@ export function LocationStep({ draft, update }: { draft: CarDraft; update: Updat
         />
       </Box>
 
-      <Alert severity={hasPin ? 'success' : 'info'} sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
-        {hasPin
-          ? 'Pinul e salvat. Anunțul primește punctajul pentru locație pe hartă.'
-          : 'Fără pin, anunțul apare doar cu orașul și pierde 10 puncte la „Recomandate". Alegerea pe hartă vine odată cu integrarea Mapbox.'}
-      </Alert>
+      <SectionTitle>Pinul de preluare</SectionTitle>
+      <Typography sx={{ fontSize: '0.82rem', color: DASHBOARD_TOKENS.textMuted, mt: -1.5 }}>
+        Două căi, oricare e de ajuns: apeși pe hartă și tragi pinul unde vrei, sau scrii direct
+        coordonatele de mai sus. Ce alegi într-un loc apare în celălalt.
+      </Typography>
+
+      <PinPicker
+        latitude={draft.latitude}
+        longitude={draft.longitude}
+        onChange={(lat, lng) => {
+          update('latitude', lat)
+          update('longitude', lng)
+        }}
+      />
+
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+        <Alert
+          severity={hasPin ? 'success' : 'info'}
+          sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, flex: 1 }}
+        >
+          {hasPin
+            ? 'Pinul e setat. Anunțul primește punctajul pentru locație pe hartă.'
+            : 'Fără pin, anunțul apare doar cu orașul și pierde 10 puncte la „Recomandate".'}
+        </Alert>
+        {hasPin && (
+          <Button
+            onClick={() => {
+              update('latitude', null)
+              update('longitude', null)
+            }}
+            sx={{ textTransform: 'none', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted }}
+          >
+            Șterge pinul
+          </Button>
+        )}
+      </Stack>
 
       <SectionTitle>Ce afișăm public</SectionTitle>
       <ToggleRow

@@ -24,6 +24,26 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';
 
 import { TOKENS } from '../constants/tokens';
+import { FleetMap } from '../components/cars/map/LazyMaps';
+import type { FleetMapPoint } from '../components/cars/map/FleetMap';
+import { formatCarStatus } from '../utils/carLabels';
+
+/** Cum se împarte ecranul între listă și hartă. */
+type FleetView = 'list' | 'split' | 'map';
+
+const VIEW_OPTIONS: { id: FleetView; label: string }[] = [
+  { id: 'list', label: 'Listă' },
+  { id: 'split', label: 'Split' },
+  { id: 'map', label: 'Hartă' },
+];
+
+/** Marginile hărții la momentul apăsării pe „Caută în această zonă". */
+interface MapBounds {
+  west: number;
+  south: number;
+  east: number;
+  north: number;
+}
 import { carsService, type Car } from '../services/cars.service';
 import CarListCard from '../components/cars/CarListCard';
 import { matchesOfferTypeFilter, matchesStatusFilter } from '../utils/carLabels';
@@ -43,6 +63,15 @@ export function CarsPage() {
   const [status, setStatus] = useState('Toate');
   const [platform, setPlatform] = useState('Toate');
   const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
+
+  /**
+   * Cum se împarte ecranul între listă și hartă. „Split" e implicit pe desktop: harta răspunde
+   * la „unde e mașina", lista la „ce e mașina", iar ambele întrebări se pun în același timp.
+   */
+  const [view, setView] = useState<FleetView>('split');
+  const [activeCarId, setActiveCarId] = useState<string | null>(null);
+  /** Marginile alese prin „Caută în această zonă". `null` = fără restricție geografică. */
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
 
   // Refetch la schimbarea sortării: ordinea vine de la server, care e singurul care știe scorul.
   const fetchCars = useCallback(async () => {
@@ -82,9 +111,42 @@ export function CarsPage() {
       );
     }
 
+    // „Caută în această zonă": mașinile fără coordonate ies din listă cât timp filtrul e activ,
+    // fiindcă despre ele nu putem spune dacă sunt înăuntru sau afară.
+    if (mapBounds) {
+      result = result.filter((c) => {
+        const lat = c.details?.latitude;
+        const lng = c.details?.longitude;
+        if (lat == null || lng == null) return false;
+        return lng >= mapBounds.west && lng <= mapBounds.east && lat >= mapBounds.south && lat <= mapBounds.north;
+      });
+    }
+
     // Filtrarea păstrează ordinea primită de la server; nu se re-sortează local.
     return result;
-  }, [cars, search, city, offerType, engine, transmission, status, platform]);
+  }, [cars, search, city, offerType, engine, transmission, status, platform, mapBounds]);
+
+  /**
+   * Punctele hărții. Mașinile fără coordonate nu apar — anunțurile de dinaintea fluxului cu pin
+   * n-au locație, iar plasarea lor în centrul orașului ar fi fost o informație inventată.
+   */
+  const mapPoints = useMemo<FleetMapPoint[]>(
+    () =>
+      filteredCars
+        .filter((c) => c.details?.latitude != null && c.details?.longitude != null)
+        .map((c) => ({
+          id: c.id,
+          latitude: c.details!.latitude!,
+          longitude: c.details!.longitude!,
+          title: `${c.brand} ${c.model}, ${c.year}`,
+          pricePerWeek: c.pricePerWeek,
+          meta: [c.location, c.engine, formatCarStatus(c.status)].filter(Boolean).join(' · '),
+          available: c.status === 'Available',
+        })),
+    [filteredCars],
+  );
+
+  const withoutLocation = filteredCars.length - mapPoints.length;
 
   const activeFiltersCount = [city, offerType, engine, transmission, status, platform].filter(f => f !== 'Toate').length;
 
@@ -378,19 +440,117 @@ export function CarsPage() {
               {filteredCars.length} {filteredCars.length === 1 ? 'mașină disponibilă' : 'mașini disponibile'} pentru tine
             </Typography>
           </Box>
+
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            {mapBounds && (
+              <Button
+                size="small"
+                startIcon={<CloseRoundedIcon />}
+                onClick={() => setMapBounds(null)}
+                sx={{ textTransform: 'none', fontWeight: 700, color: TOKENS.textMuted }}
+              >
+                Toată zona
+              </Button>
+            )}
+
+            <Box
+              role="group"
+              aria-label="Mod de afișare"
+              sx={{
+                display: { xs: 'none', md: 'inline-flex' },
+                p: 0.4,
+                gap: 0.4,
+                borderRadius: `${TOKENS.radius.full}px`,
+                border: `1px solid ${TOKENS.border}`,
+                bgcolor: TOKENS.paper,
+              }}
+            >
+              {VIEW_OPTIONS.map((option) => (
+                <Button
+                  key={option.id}
+                  size="small"
+                  onClick={() => setView(option.id)}
+                  aria-pressed={view === option.id}
+                  sx={{
+                    minWidth: 0,
+                    px: 1.6,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    borderRadius: `${TOKENS.radius.full}px`,
+                    color: view === option.id ? TOKENS.paper : TOKENS.textMuted,
+                    bgcolor: view === option.id ? TOKENS.ink : 'transparent',
+                    '&:hover': { bgcolor: view === option.id ? TOKENS.ink : alpha(TOKENS.ink, 0.05) },
+                  }}
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </Box>
+          </Stack>
         </Box>
 
         {loading && <LinearProgress sx={{ mb: 6, borderRadius: 2, height: 6, bgcolor: alpha(TOKENS.primary, 0.1) }} />}
 
         {filteredCars.length > 0 ? (
-          <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, 
-            gap: { xs: 3, md: 5 } 
-          }}>
-            {filteredCars.map((car) => (
-              <CarListCard key={car.id} car={car} />
-            ))}
+          <Box
+            sx={{
+              display: 'grid',
+              alignItems: 'start',
+              gridTemplateColumns: {
+                xs: '1fr',
+                lg: view === 'split' ? 'minmax(0, 1fr) minmax(0, 1fr)' : '1fr',
+              },
+              gap: { xs: 3, md: 4 },
+            }}
+          >
+            {view !== 'map' && (
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: view === 'split' ? '1fr' : 'repeat(2, 1fr)',
+                    lg: view === 'split' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+                  },
+                  gap: { xs: 3, md: view === 'split' ? 3 : 5 },
+                }}
+              >
+                {filteredCars.map((car) => (
+                  <Box
+                    key={car.id}
+                    // Trecerea peste card ridică pinul corespunzător: legătura dintre listă și
+                    // hartă e ce face vederea împărțită utilă, nu simpla lor alăturare.
+                    onMouseEnter={() => setActiveCarId(car.id)}
+                    onMouseLeave={() => setActiveCarId(null)}
+                  >
+                    <CarListCard car={car} />
+                  </Box>
+                ))}
+              </Box>
+            )}
+
+            {view !== 'list' && (
+              <Box
+                sx={{
+                  position: { lg: 'sticky' },
+                  top: { lg: 96 },
+                  height: { xs: 420, lg: view === 'map' ? 640 : 'calc(100vh - 140px)' },
+                }}
+              >
+                <FleetMap
+                  points={mapPoints}
+                  activeId={activeCarId}
+                  onSelect={setActiveCarId}
+                  onBoundsSearch={setMapBounds}
+                />
+                {withoutLocation > 0 && (
+                  <Typography sx={{ mt: 1, fontSize: '0.8rem', color: TOKENS.textMuted }}>
+                    {withoutLocation}{' '}
+                    {withoutLocation === 1 ? 'mașină nu are' : 'mașini nu au'} locație setată și nu apar pe hartă.
+                  </Typography>
+                )}
+              </Box>
+            )}
           </Box>
         ) : !loading && (
           <Paper sx={{ py: 12, textAlign: 'center', borderRadius: TOKENS.radius.xl, border: `2px dashed ${TOKENS.border}`, bgcolor: 'transparent' }} elevation={0}>

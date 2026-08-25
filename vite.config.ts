@@ -53,6 +53,16 @@ export default defineConfig({
       integration: {
         configureCustomSWViteBuild: configureServiceWorkerBuild,
       },
+      injectManifest: {
+        /**
+         * Harta stă în afara precache-ului.
+         *
+         * `mapbox-gl` are 1,8 MB și e folosit de două ecrane. Precachat, îl descarcă la
+         * instalarea PWA-ului oricine, inclusiv de pe date mobile, ca să nu-l atingă niciodată.
+         * Se încarcă la cerere, ca orice alt chunk lazy, și e oricum cache-uit de browser după.
+         */
+        globIgnores: ['**/FleetMap-*.js', '**/PinPicker-*.js', '**/MapUnavailable-*.js'],
+      },
       manifest: {
         name: 'Ridelance',
         short_name: 'Ridelance',
