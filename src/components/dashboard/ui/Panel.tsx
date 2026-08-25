@@ -29,11 +29,20 @@ export function Panel({ title, subtitle, action, fill, dense, children }: PanelP
         border: `1px solid ${DASHBOARD_TOKENS.border}`,
         bgcolor: DASHBOARD_TOKENS.paper,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,
+        /*
+         * `height: 100%` face panoul să umple celula de grilă, ca două panouri alăturate să fie
+         * egale. Într-o coloană flex însă, aceeași regulă îl lăsa să fie comprimat sub conținutul
+         * lui: panoul primea înălțimea calculată de flexbox, iar tabelul dinăuntru curgea peste
+         * panoul următor.
+         *
+         * `minHeight: fit-content` spune exact ce lipsea — umple cât poți, dar niciodată mai
+         * puțin decât conținutul — și nu schimbă nimic în grile, unde oricum era mai înalt.
+         */
         height: '100%',
+        minHeight: 'fit-content',
         display: 'flex',
         flexDirection: 'column',
         minWidth: 0,
-        minHeight: 0,
       }}
     >
       {(title || action) && (
