@@ -9,15 +9,15 @@
  */
 export const PARTNER_LOGO = {
   /**
-   * Banda de logouri de pe pagina publică: o casetă de 40×40 pentru fiecare.
+   * Banda de logouri de pe pagina publică: jumătate din celula lor.
    *
-   * Logourile își păstrează proporția înăuntru, nu se întind la pătrat — întinse, „asigurari.ro"
-   * și „eldrive", care sunt de patru ori mai late decât înalte, ar fi ieșit strivite. Egal e
-   * spațiul primit, nu pixelii umpluți.
+   * În procente, nu în pixeli, ca logourile să urmeze celula pe fiecare lățime de ecran. Cere o
+   * celulă cu înălțime definită — un procent măsurat față de o înălțime `auto` nu înseamnă nimic
+   * și se comportă ca `none`.
    */
   wall: {
-    maxWidth: 40,
-    maxHeight: 40,
+    maxWidth: '50%',
+    maxHeight: '50%',
   },
 
   /** Logo într-un rând de taburi, lângă sau în locul etichetei. */

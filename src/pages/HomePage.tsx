@@ -1115,7 +1115,9 @@ export function HomePage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  minHeight: { xs: 76, md: 96 },
+                  // Înălțime, nu `minHeight`: logoul dinăuntru se măsoară în procente, iar
+                  // procentele au nevoie de o înălțime definită ca să însemne ceva.
+                  height: { xs: 76, md: 96 },
                   px: 2,
                 }}
               >
