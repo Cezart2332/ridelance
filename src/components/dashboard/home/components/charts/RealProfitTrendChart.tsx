@@ -1,4 +1,4 @@
-import { Box } from '@mui/material'
+
 import {
   Area,
   CartesianGrid,
@@ -17,6 +17,7 @@ import type { RealProfitPoint } from '../../../../../services/pfaDashboard.servi
 import { HomeCard } from '../HomeCard'
 import { ChartDataTable, ChartLegend, ChartTooltip } from './chartSetup'
 import { axisProps, CHART, gridProps } from './chartTheme'
+import { ChartFrame } from './ChartFrame'
 
 interface RealProfitTrendChartProps {
   points: RealProfitPoint[]
@@ -43,11 +44,7 @@ export function RealProfitTrendChart({ points, granularity, animate }: RealProfi
         ]}
       />
 
-      <Box
-        role="img"
-        aria-label="Evoluția profitului real estimat față de încasările nete, pe perioada selectată"
-        sx={{ position: 'relative', height: 220, width: '100%' }}
-      >
+      <ChartFrame height={220} ariaLabel="Evoluția profitului real estimat față de încasările nete, pe perioada selectată">
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <ComposedChart data={points} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
             <CartesianGrid {...gridProps} />
@@ -117,7 +114,7 @@ export function RealProfitTrendChart({ points, granularity, animate }: RealProfi
             formatCurrency(point.value),
           ])}
         />
-      </Box>
+      </ChartFrame>
     </HomeCard>
   )
 }

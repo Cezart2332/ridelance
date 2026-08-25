@@ -104,6 +104,19 @@ async function mockGate(page: Page) {
     }),
   )
 
+  // Facturile: cont fără Oblio conectat, adică starea în care pornește oricine.
+  await page.route(`${API}/invoices*`, (route: Route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        connection: { connected: false, companyName: null, cif: null, seriesName: null, availableSeries: [], errorMessage: null, lastSyncAtUtc: null },
+        summary: { issuedBani: 0, issuedCount: 0, collectedBani: 0, collectedCount: 0, outstandingBani: 0, overdueCount: 0 },
+        invoices: [],
+      }),
+    }),
+  )
+
   // Chatul cu contabilul citește `history.messages`; un array gol l-ar lăsa cu `undefined`.
   await page.route(`${API}/chat/**`, (route: Route) =>
     route.fulfill({

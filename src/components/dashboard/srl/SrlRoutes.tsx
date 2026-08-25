@@ -1,12 +1,11 @@
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
-import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 
 import { SRL_PATHS } from '../../../config/srlNavigation'
 import { BankTab } from '../sections/BankTab'
 import { BeneficiiTab } from '../sections/BeneficiiTab'
 import { CarsAdminView } from '../sections/admin/CarsAdminView'
 import { SupportChatTab } from '../sections/SupportChatTab'
-import { ComingSoon } from '../ui'
+import { InvoicesPage } from '../invoices/InvoicesPage'
 import { AddCarWizard } from './addCar/AddCarWizard'
 import { SrlCompanyDocumentsPage } from './pages/SrlCompanyDocumentsPage'
 import { SrlCompanyPagePage } from './pages/SrlCompanyPagePage'
@@ -61,17 +60,8 @@ export function SrlRoutes() {
       <Route path={rel(SRL_PATHS.accounting)} element={<Navigate to={SRL_PATHS.bankAccount} replace />} />
       {/* Aceeași componentă ca la PFA, fără nicio ramificație pe tip de cont (spec §3.3). */}
       <Route path={rel(SRL_PATHS.bankAccount)} element={<BankTab />} />
-      <Route
-        path={rel(SRL_PATHS.invoices)}
-        element={
-          <ComingSoon
-            icon={<ReceiptLongRoundedIcon />}
-            title="Facturile tale, într-un singur loc"
-            description="Emise prin RIDElance sau sincronizate din Oblio, cu filtre, PDF și status de încasare."
-            upcoming={['Emitere și stornare', 'Sincronizare cu Oblio', 'Trimitere pe email către client']}
-          />
-        }
-      />
+      {/* Aceeași pagină ca la PFA — spec §3.3.1 cere una singură, nu două. */}
+      <Route path={rel(SRL_PATHS.invoices)} element={<InvoicesPage />} />
       <Route path={rel(SRL_PATHS.fiscal)} element={<SrlFiscalPage />} />
 
       {/* ── Platformă ── */}

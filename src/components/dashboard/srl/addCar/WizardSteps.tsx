@@ -3,7 +3,9 @@ import { alpha } from '@mui/material/styles'
 import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded'
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
 
+import { AddressSearch } from '../../../cars/map/AddressSearch'
 import { PinPicker } from '../../../cars/map/LazyMaps'
+import { reverseGeocode } from '../../../../lib/geocoding'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
 import {
   AVAILABILITY,
@@ -316,45 +318,50 @@ const removeSx = {
 export function LocationStep({ draft, update }: { draft: CarDraft; update: Update }) {
   const hasPin = draft.latitude != null && draft.longitude != null
 
+  /**
+   * Pinul mutat pe hartă completează adresa înapoi.
+   *
+   * Fără asta, cine alege locul pe hartă rămâne cu orașul necompletat — câmp obligatoriu — și
+   * n-ar avea de unde ghici că trebuie scris separat.
+   */
+  const fillFromPin = (latitude: number, longitude: number) => {
+    update('latitude', latitude)
+    update('longitude', longitude)
+
+    void reverseGeocode(latitude, longitude).then((place) => {
+      if (!place) return
+      update('address', place.label)
+      if (place.city) update('location', place.city)
+      if (place.zone) update('zone', place.zone)
+    })
+  }
+
   return (
     <Stack spacing={2.5}>
-      <Box sx={grid2}>
-        <TextField label="Oraș" required value={draft.location} onChange={(e) => update('location', e.target.value)} fullWidth size="small" sx={dashboardInputSx} />
-        <TextField label="Zonă / cartier" value={draft.zone} onChange={(e) => update('zone', e.target.value)} fullWidth size="small" sx={dashboardInputSx} helperText="Se afișează public când pinul exact e ascuns." />
-        <TextField
-          label="Latitudine"
-          type="number"
-          value={draft.latitude ?? ''}
-          onChange={(e) => update('latitude', e.target.value === '' ? null : Number(e.target.value))}
-          fullWidth
-          size="small"
-          sx={dashboardInputSx}
-        />
-        <TextField
-          label="Longitudine"
-          type="number"
-          value={draft.longitude ?? ''}
-          onChange={(e) => update('longitude', e.target.value === '' ? null : Number(e.target.value))}
-          fullWidth
-          size="small"
-          sx={dashboardInputSx}
-        />
-      </Box>
-
-      <SectionTitle>Pinul de preluare</SectionTitle>
+      <SectionTitle>Unde se preia mașina</SectionTitle>
       <Typography sx={{ fontSize: '0.82rem', color: DASHBOARD_TOKENS.textMuted, mt: -1.5 }}>
-        Două căi, oricare e de ajuns: apeși pe hartă și tragi pinul unde vrei, sau scrii direct
-        coordonatele de mai sus. Ce alegi într-un loc apare în celălalt.
+        Două căi, oricare e de ajuns: cauți adresa și o alegi din listă, sau apeși direct pe hartă
+        și tragi pinul. Ce alegi într-un loc completează celălalt.
       </Typography>
 
-      <PinPicker
-        latitude={draft.latitude}
-        longitude={draft.longitude}
-        onChange={(lat, lng) => {
-          update('latitude', lat)
-          update('longitude', lng)
+      <AddressSearch
+        value={draft.address}
+        helperText="Selectarea unei adrese pune și pinul pe hartă."
+        onPick={(place) => {
+          update('address', place.label)
+          update('latitude', place.latitude)
+          update('longitude', place.longitude)
+          if (place.city) update('location', place.city)
+          if (place.zone) update('zone', place.zone)
         }}
       />
+
+      <PinPicker latitude={draft.latitude} longitude={draft.longitude} onChange={fillFromPin} />
+
+      <Box sx={grid2}>
+        <TextField label="Oraș" required value={draft.location} onChange={(e) => update('location', e.target.value)} fullWidth size="small" sx={dashboardInputSx} helperText="Completat automat din adresă; îl poți corecta." />
+        <TextField label="Zonă / cartier" value={draft.zone} onChange={(e) => update('zone', e.target.value)} fullWidth size="small" sx={dashboardInputSx} helperText="Se afișează public când pinul exact e ascuns." />
+      </Box>
 
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         <Alert

@@ -8,6 +8,7 @@ import type { NetEarningsPoint } from '../../../../../services/pfaDashboard.serv
 import { HomeCard } from '../HomeCard'
 import { ChartDataTable, ChartTooltip } from './chartSetup'
 import { areaGradient, axisProps, CHART, gridProps, PLATFORM_COLOR } from './chartTheme'
+import { ChartFrame } from './ChartFrame'
 
 interface NetEarningsChartProps {
   points: NetEarningsPoint[]
@@ -58,11 +59,7 @@ export function NetEarningsChart({ points, total, granularity, animate }: NetEar
       }
       fill
     >
-      <Box
-        role="img"
-        aria-label={`Evoluția încasărilor nete pe perioada selectată, total ${formatCurrency(total)}`}
-        sx={{ position: 'relative', height: 260, width: '100%' }}
-      >
+      <ChartFrame height={260} ariaLabel={`Evoluția încasărilor nete pe perioada selectată, total ${formatCurrency(total)}`}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <defs>
@@ -151,7 +148,7 @@ export function NetEarningsChart({ points, total, granularity, animate }: NetEar
           columns={['Perioadă', 'Bolt', 'Uber', 'Total', 'Curse']}
           rows={points.map((point) => [point.label, point.bolt, point.uber, point.total, point.rides])}
         />
-      </Box>
+      </ChartFrame>
 
       {points.length === 0 && (
         <Stack sx={{ alignItems: 'center', justifyContent: 'center', flexGrow: 1 }}>

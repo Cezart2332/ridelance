@@ -17,6 +17,7 @@ import type { RealProfitPoint } from '../../../../../services/pfaDashboard.servi
 import { HomeCard } from '../HomeCard'
 import { ChartDataTable, ChartTooltip } from './chartSetup'
 import { axisProps, CHART, gridProps } from './chartTheme'
+import { ChartFrame } from './ChartFrame'
 
 type SeriesKey = 'netEarnings' | 'value' | 'deductibleExpenses' | 'estimatedTaxes'
 
@@ -121,11 +122,7 @@ export function FinancialTrendChart({ points, granularity, animate }: FinancialT
         ))}
       </Stack>
 
-      <Box
-        role="img"
-        aria-label="Evoluția încasărilor, profitului, cheltuielilor și taxelor pe perioada selectată"
-        sx={{ position: 'relative', height: 260, width: '100%' }}
-      >
+      <ChartFrame height={260} ariaLabel="Evoluția încasărilor, profitului, cheltuielilor și taxelor pe perioada selectată">
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <ComposedChart data={points} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
             <CartesianGrid {...gridProps} />
@@ -175,7 +172,7 @@ export function FinancialTrendChart({ points, granularity, animate }: FinancialT
             ...SERIES.map((series) => formatCurrency(point[series.key])),
           ])}
         />
-      </Box>
+      </ChartFrame>
     </HomeCard>
   )
 }

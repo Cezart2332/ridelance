@@ -1,4 +1,4 @@
-import { Box } from '@mui/material'
+
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import { HOME_TOKENS } from '../../tokens'
@@ -7,6 +7,7 @@ import type { FeesAndTaxesPoint } from '../../../../../services/pfaDashboard.ser
 import { HomeCard } from '../HomeCard'
 import { ChartDataTable, ChartLegend, ChartTooltip } from './chartSetup'
 import { axisProps, CHART, gridProps } from './chartTheme'
+import { ChartFrame } from './ChartFrame'
 
 /**
  * Comisioanele în rampa accentului, taxele în ambru. Așa graficul spune vizual singurul
@@ -42,11 +43,7 @@ export function FeesAndTaxesChart({ points, granularity, animate }: FeesAndTaxes
     >
       <ChartLegend items={SERIES.map((series) => ({ label: series.label, color: series.color }))} />
 
-      <Box
-        role="img"
-        aria-label={`Comisioane și taxe estimate, total ${formatCurrency(total)} în perioada selectată`}
-        sx={{ position: 'relative', height: 220, width: '100%' }}
-      >
+      <ChartFrame height={220} ariaLabel={`Comisioane și taxe estimate, total ${formatCurrency(total)} în perioada selectată`}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <BarChart data={points} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
             <CartesianGrid {...gridProps} />
@@ -96,7 +93,7 @@ export function FeesAndTaxesChart({ points, granularity, animate }: FeesAndTaxes
           columns={['Perioadă', ...SERIES.map((series) => series.label)]}
           rows={points.map((point) => [point.label, ...SERIES.map((series) => point[series.key])])}
         />
-      </Box>
+      </ChartFrame>
     </HomeCard>
   )
 }

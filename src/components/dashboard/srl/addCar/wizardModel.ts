@@ -31,6 +31,8 @@ export interface CarDraft {
   badges: string[]
 
   // 4. Locație
+  /** Adresa aleasă din căutare sau citită înapoi din pin. Doar pentru afișare în formular. */
+  address: string
   location: string
   zone: string
   latitude: number | null
@@ -66,6 +68,7 @@ export const EMPTY_DRAFT: CarDraft = {
   description: '',
   badges: [],
 
+  address: '',
   location: '',
   zone: '',
   latitude: null,

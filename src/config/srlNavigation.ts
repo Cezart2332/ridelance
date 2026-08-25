@@ -110,7 +110,7 @@ export const SRL_NAV: NavEntry[] = [
     icon: CalculateRoundedIcon,
     children: [
       { id: 'bank-account', label: 'Cont bancar', path: SRL_PATHS.bankAccount, hint: 'Cont conectat și tranzacții' },
-      { id: 'invoices', label: 'Facturi', path: SRL_PATHS.invoices, hint: 'În curând', badge: 'coming-soon' },
+      { id: 'invoices', label: 'Facturi', path: SRL_PATHS.invoices, hint: 'Emise prin Oblio' },
       { id: 'fiscal', label: 'Fiscal', path: SRL_PATHS.fiscal, hint: 'Regim fiscal și termene' },
     ],
   },

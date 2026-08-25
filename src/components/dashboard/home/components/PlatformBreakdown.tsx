@@ -9,6 +9,7 @@ import type { PlatformSplitRow } from '../../../../services/pfaDashboard.service
 import { PLATFORM_COLOR } from './charts/chartTheme'
 import { Amount } from '../../ui/Amount'
 import { HomeCard } from './HomeCard'
+import { ChartFrame } from './charts/ChartFrame'
 
 const PLATFORM_LABEL: Record<string, string> = { bolt: 'Bolt', uber: 'Uber' }
 
@@ -67,13 +68,9 @@ export function PlatformBreakdown({ rows, animate }: PlatformBreakdownProps) {
       }
       fill
     >
-      <Box
-        role="img"
-        aria-label={rows
+      <ChartFrame height={168} ariaLabel={rows
           .map((row) => `${PLATFORM_LABEL[row.platform]} ${formatCurrency(row.net)} net`)
-          .join(', ')}
-        sx={{ position: 'relative', height: 168, width: '100%' }}
-      >
+          .join(', ')}>
         {donutData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <PieChart>
@@ -130,7 +127,7 @@ export function PlatformBreakdown({ rows, animate }: PlatformBreakdownProps) {
             <Amount value={total.net} unit="lei" size="card" />
           </Stack>
         )}
-      </Box>
+      </ChartFrame>
 
       <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', mt: 1.6 }}>
         <Box component="caption" sx={visuallyHidden}>

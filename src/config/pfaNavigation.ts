@@ -108,7 +108,7 @@ export const PFA_NAV: NavEntry[] = [
       { id: 'expenses', label: 'Cheltuieli', path: PFA_PATHS.expenses, hint: 'Ce poți deduce din taxe' },
       { id: 'taxes', label: 'Taxe & declarații', path: PFA_PATHS.taxes, hint: 'Estimări și termene' },
       { id: 'bank-account', label: 'Cont bancar', path: PFA_PATHS.bankAccount, hint: 'Cont conectat și tranzacții' },
-      { id: 'invoices', label: 'Facturi', path: PFA_PATHS.invoices, hint: 'În curând', badge: 'coming-soon' },
+      { id: 'invoices', label: 'Facturi', path: PFA_PATHS.invoices, hint: 'Emise prin Oblio' },
       {
         id: 'accountant-chat',
         label: 'Chat contabil',

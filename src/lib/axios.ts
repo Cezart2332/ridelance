@@ -19,6 +19,19 @@ api.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
+
+    /*
+     * Instanța are `Content-Type: application/json` ca implicit, ceea ce e corect pentru aproape
+     * toate cererile — dar un upload trimite `FormData`, iar antetul rămas pe JSON îl face pe
+     * server să respingă cererea cu 415, deși corpul e perfect valid.
+     *
+     * Ștergem antetul și lăsăm browserul să-l pună el: doar el cunoaște `boundary`-ul generat
+     * pentru corpul respectiv, deci nici scrierea lui de mână nu ajută.
+     */
+    if (config.data instanceof FormData) {
+      config.headers.delete('Content-Type')
+    }
+
     return config
   },
   (error) => Promise.reject(error)

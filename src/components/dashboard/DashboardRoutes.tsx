@@ -1,5 +1,4 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 
 import { AbonamenteTab } from './sections/AbonamenteTab'
 import { AccountantChatTab } from './sections/AccountantChatTab'
@@ -19,7 +18,7 @@ import { InsuranceTab } from './sections/InsuranceTab'
 import { ProfileSection } from './sections/ProfileSection'
 import { ServiciiTab } from './sections/ServiciiTab'
 import { SupportChatTab } from './sections/SupportChatTab'
-import { ComingSoon } from './ui'
+import { InvoicesPage } from './invoices/InvoicesPage'
 import { useSectionNavigate } from './useSectionNavigate'
 import { PFA_PATHS } from '../../config/pfaNavigation'
 
@@ -50,16 +49,8 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
       <Route path={rel(PFA_PATHS.expenses)} element={<ExpensesPage pfaRegistrationId={pfaRegistrationId} />} />
       <Route path={rel(PFA_PATHS.taxes)} element={<TaxesPage />} />
       <Route path={rel(PFA_PATHS.bankAccount)} element={<BankTab onNavigate={navigateToSection} />} />
-      <Route
-        path={rel(PFA_PATHS.invoices)}
-        element={
-          <ComingSoon
-            icon={<ReceiptLongRoundedIcon />}
-            title="Facturile tale, într-un singur loc"
-            description="În curând vei putea vedea și gestiona facturile sincronizate direct în RIDElance."
-          />
-        }
-      />
+      {/* Construită o singură dată, folosită de ambele dashboard-uri (spec §3.3.1). */}
+      <Route path={rel(PFA_PATHS.invoices)} element={<InvoicesPage />} />
       <Route path={rel(PFA_PATHS.accountantChat)} element={<AccountantChatTab />} />
 
       {/* ── Documente ── */}
