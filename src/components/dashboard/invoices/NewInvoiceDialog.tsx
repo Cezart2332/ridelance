@@ -105,6 +105,8 @@ export function NewInvoiceDialog({
     setLines((prev) => prev.map((line) => (line.id === id ? { ...line, ...patch } : line)))
   }
 
+  const noSeries = connection.availableSeries.length === 0
+
   const total = lines.reduce((sum, line) => sum + toNumber(line.quantity) * toNumber(line.price), 0)
 
   const lookup = async () => {
@@ -279,7 +281,22 @@ export function NewInvoiceDialog({
           <SectionLabel>Emitere</SectionLabel>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField select label="Serie" value={series} onChange={(e) => setSeries(e.target.value)} size="small" sx={{ ...dashboardInputSx, flex: 1 }}>
+            <TextField
+              select
+              label="Serie"
+              value={series}
+              onChange={(e) => setSeries(e.target.value)}
+              size="small"
+              sx={{ ...dashboardInputSx, flex: 1 }}
+              error={noSeries}
+              // Fără serie nu se poate emite, iar o listă goală fără explicație arată ca un câmp
+              // stricat. Seriile sunt ale contului Oblio, deci acolo se rezolvă.
+              helperText={
+                noSeries
+                  ? 'Contul Oblio nu are nicio serie de tip Factură. Creează una în Oblio (Setări → Serii documente), apoi reconectează contul.'
+                  : undefined
+              }
+            >
               {connection.availableSeries.map((name) => <MenuItem key={name} value={name}>{name}</MenuItem>)}
             </TextField>
             <TextField select label="Scadență" value={dueDays} onChange={(e) => setDueDays(Number(e.target.value))} size="small" sx={{ ...dashboardInputSx, flex: 1 }}>
