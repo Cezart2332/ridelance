@@ -3,6 +3,7 @@
 import ace from '../assets/partners/ace.png'
 import asigurari from '../assets/partners/asigurari.png'
 import consulto from '../assets/partners/consulto.png'
+import eldrive from '../assets/partners/eldrive.png'
 import mol from '../assets/partners/mol.png'
 import oblio from '../assets/partners/oblio.png'
 import simplifi from '../assets/partners/simplifi.png'
@@ -143,6 +144,15 @@ const partnersUnordered: Partner[] = [
     slug: 'simplifi',
     name: 'Simplifi',
     image: simplifi,
+  },
+  {
+    slug: 'eldrive',
+    name: 'eldrive',
+    image: eldrive,
+    tagline: 'Rețea de încărcare pentru flotele electrice.',
+    description:
+      'eldrive operează una dintre cele mai extinse rețele de stații de încărcare din România. Prin parteneriatul cu RIDElance, șoferii și flotele electrice vor putea vedea stațiile direct pe hartă în dashboard, iar sesiunile de încărcare vor intra automat în costurile mașinii. Integrarea e în lucru.',
+    website: 'https://eldrive.ro',
   },
 ]
 

@@ -9,17 +9,17 @@
  */
 export const PARTNER_LOGO = {
   /**
-   * Banda de logouri de pe pagina publică.
+   * Banda de logouri de pe pagina publică: o casetă de 40×40 pentru fiecare.
    *
-   * Înălțime fixă, nu plafon: cu plafon pe ambele laturi, logourile late (asigurari.ro, eldrive)
-   * se opreau în limita de lățime și ieșeau cu 13px mai scunde decât restul. Ochiul compară
-   * înălțimile pe un rând, deci aceea e latura care trebuie să fie egală; lățimea urmează
-   * proporția fiecărui logo, mărginită de celula lui ca să nu dea pe afară pe ecran mic.
+   * Logourile își păstrează proporția înăuntru, nu se întind la pătrat — întinse, „asigurari.ro"
+   * și „eldrive", care sunt de patru ori mai late decât înalte, ar fi ieșit strivite. Egal e
+   * spațiul primit, nu pixelii umpluți.
    */
   wall: {
-    height: { xs: 30, md: 48 },
-    maxWidth: '100%',
+    maxWidth: 40,
+    maxHeight: 40,
   },
+
   /** Logo într-un rând de taburi, lângă sau în locul etichetei. */
   tab: {
     height: 26,

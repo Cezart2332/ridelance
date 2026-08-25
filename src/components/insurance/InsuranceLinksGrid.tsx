@@ -107,12 +107,25 @@ export const INSURANCE_LINKS: InsuranceLink[] = [
   },
 ]
 
+/**
+ * Categoriile arătate pe landing.
+ *
+ * Sunt cele patru care privesc un șofer de ridesharing. Restul de nouă — locuință, malpraxis,
+ * CMR — există în catalog, dar pe pagina principală mutau atenția de la ce caută cineva ajuns
+ * acolo. Se ajunge la toate din pagina partenerului.
+ */
+export const LANDING_INSURANCE_SLUGS = ['rca', 'casco', 'casco_econom', 'accidents_traveler'] as const
+
 interface InsuranceLinksGridProps {
   /** Smaller cards and paddings for embedding inside dashboards. */
   compact?: boolean
+  /** Doar categoriile cu aceste slug-uri, în ordinea din catalog. Implicit: toate. */
+  only?: readonly string[]
 }
 
-export function InsuranceLinksGrid({ compact = false }: InsuranceLinksGridProps) {
+export function InsuranceLinksGrid({ compact = false, only }: InsuranceLinksGridProps) {
+  const items = only ? INSURANCE_LINKS.filter((item) => only.includes(item.slug)) : INSURANCE_LINKS
+
   return (
     <Box
       sx={{
@@ -122,7 +135,7 @@ export function InsuranceLinksGrid({ compact = false }: InsuranceLinksGridProps)
         gap: compact ? 2 : 2.5,
       }}
     >
-      {INSURANCE_LINKS.map((item) => (
+      {items.map((item) => (
         <Box
           key={item.slug}
           component="a"

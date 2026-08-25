@@ -1,7 +1,8 @@
 import { Box, Button, Card, CardContent, Container, Paper, Stack, Typography } from '@mui/material'
 import { ROUTES } from '../constants/routes'
 import { alpha } from '@mui/material/styles'
-import { useNavigate } from 'react-router-dom'
+import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import { useAppSelector } from '../store/hooks'
 import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
@@ -24,7 +25,7 @@ import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 import { ProcessVisual } from '../components/home/ProcessVisual'
 import { CarCarousel } from '../components/home/CarCarousel'
-import { InsuranceLinksGrid } from '../components/insurance/InsuranceLinksGrid'
+import { InsuranceLinksGrid, LANDING_INSURANCE_SLUGS } from '../components/insurance/InsuranceLinksGrid'
 
 export function HomePage() {
   const navigate = useNavigate()
@@ -1047,55 +1048,15 @@ export function HomePage() {
               }}
             >
               <Box
+                component="img"
+                src={dashboard}
+                alt="Dashboardul RIDElance"
                 sx={{
                   width: '100%',
+                  display: 'block',
                   borderRadius: TOKENS.radius.xl,
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  boxShadow: '0 24px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(92,203,245,0.06)',
-                  overflow: 'hidden',
-                  backgroundColor: '#1b223c',
                 }}
-              >
-                {/* Browser bar header mockup */}
-                <Box
-                  sx={{
-                    height: 36,
-                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    px: 2,
-                    gap: 1,
-                  }}
-                >
-                  <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#ff5f56' }} />
-                  <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#ffbd2e' }} />
-                  <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#27c93f' }} />
-                  <Box
-                    sx={{
-                      mx: 'auto',
-                      height: 18,
-                      width: '45%',
-                      borderRadius: 1,
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.15)', mr: 0.8 }} />
-                    <Box sx={{ height: 4, width: 80, borderRadius: 0.5, backgroundColor: 'rgba(255, 255, 255, 0.15)' }} />
-                  </Box>
-                </Box>
-                <Box
-                  component="img"
-                  src={dashboard}
-                  sx={{
-                    width: '100%',
-                    display: 'block',
-                  }}
-                />
-              </Box>
+              />
             </Box>
           </Box>
         </Container>
@@ -1107,7 +1068,29 @@ export function HomePage() {
           title="Asigurări"
           subtitle="Oferte rapide pentru orice tip de asigurare, prin partenerul nostru asigurari.ro. Alege categoria potrivită și primești oferta direct online."
         />
-        <InsuranceLinksGrid />
+        <InsuranceLinksGrid only={LANDING_INSURANCE_SLUGS} />
+
+        <Stack sx={{ alignItems: 'center', mt: 5 }}>
+          <Button
+            component={RouterLink}
+            to="/parteneri/asigurari-ro"
+            variant="outlined"
+            size="large"
+            endIcon={<ArrowForwardRoundedIcon />}
+            sx={{
+              borderRadius: TOKENS.radius.lg,
+              px: 4,
+              py: 1.4,
+              fontWeight: 800,
+              textTransform: 'none',
+              borderColor: TOKENS.border,
+              color: TOKENS.ink,
+              '&:hover': { borderColor: TOKENS.primary, backgroundColor: 'transparent' },
+            }}
+          >
+            Vezi toate asigurările
+          </Button>
+        </Stack>
       </Container>
 
       {/* ═══════ PARTNERS SECTION ═══════ */}
@@ -1160,6 +1143,7 @@ export function HomePage() {
                   sx={{
                     ...PARTNER_LOGO.wall,
                     width: 'auto',
+                    height: 'auto',
                     objectFit: 'contain',
                   }}
                 />

@@ -79,6 +79,8 @@ function PartnerTabs({ activeSlug }: { activeSlug: string }) {
           return (
             <ButtonBase
               key={tab.slug}
+              aria-label={tab.name}
+              title={tab.name}
               data-active={isActive ? 'true' : undefined}
               onClick={() => navigate(`/parteneri/${tab.slug}`)}
               sx={{
@@ -97,10 +99,12 @@ function PartnerTabs({ activeSlug }: { activeSlug: string }) {
                 },
               }}
             >
+              {/* Doar logoul: numele scris alături era aceeași informație de două ori. Rămâne
+                  în `alt` și în `aria-label`, pentru cititoarele de ecran. */}
               <Box
                 component="img"
                 src={tab.image}
-                alt=""
+                alt={tab.name}
                 className="partner-tab-logo"
                 sx={{
                   ...PARTNER_LOGO.tab,
@@ -111,18 +115,6 @@ function PartnerTabs({ activeSlug }: { activeSlug: string }) {
                   transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
                 }}
               />
-              <Typography
-                noWrap
-                className="partner-tab-label"
-                sx={{
-                  fontWeight: isActive ? 800 : 650,
-                  fontSize: '0.92rem',
-                  color: isActive ? TOKENS.ink : TOKENS.textMuted,
-                  transition: `color ${TOKENS.duration} ${TOKENS.easing}`,
-                }}
-              >
-                {tab.name}
-              </Typography>
             </ButtonBase>
           )
         })}
