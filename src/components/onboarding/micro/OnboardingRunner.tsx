@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { getErrorMessage } from '../../../utils/errorHandler'
+import { currentAutosave } from '../autosaveStore'
 import { BLOCKING_SLOTS, type MicroStepContext } from '../microStepTypes'
 import { useMotionTokens } from '../motion'
 import { useMicroSteps } from '../useMicroSteps'
@@ -112,17 +113,24 @@ export function OnboardingRunner() {
     }
 
     // Ecranele `text` salvează la blur, dar clickul pe „Continuă" poate rula înainte ca autosave-ul
-    // să termine — mai ales parola contului Bolt/Uber. Forțăm persist înainte de avans.
-    if (def.kind === 'text' && def.persist && textStepIssues(def, answers).length === 0) {
-      const fieldValues: Record<string, string> = {}
-      for (const field of def.fields ?? []) {
-        const stored = answers[`${def.id}.${field.key}`]
-        fieldValues[field.key] = typeof stored === 'string' ? stored : ''
-      }
+    // să termine — mai ales parola contului Bolt/Uber. Golim ce e în așteptare înainte de avans.
+    //
+    // Prin autosave, nu printr-un `persist` refăcut de mână: retrimiterea oarbă a datelor deja
+    // salvate bloca pasul Uber/Bolt. Autosave-ul închidea pasul pe server, iar a doua scriere
+    // pica pe poarta RL-01 („se scrie doar pe pasul activ"), deci „Continuă" arăta o eroare și
+    // nu avansa niciodată. `flush` nu trimite nimic când nu e nimic în așteptare.
+    const autosave = currentAutosave()
 
+    if (def.kind === 'text' && autosave?.dirty === true && textStepIssues(def, answers).length === 0) {
       setSubmitting(true)
       try {
-        await def.persist(fieldValues, context)
+        if (!(await autosave.flush())) {
+          // Autosave-ul nu aruncă — reîncearcă în fundal. Dar plecarea de pe ecran se oprește
+          // aici: mai departe peste date nesalvate ar fi mai rău decât un buton care refuză.
+          setError('Nu am putut salva datele. Reîncearcă în câteva momente.')
+          setSubmitting(false)
+          return
+        }
         await refresh()
       } catch (err) {
         setError(getErrorMessage(err, 'Nu am putut salva datele.'))

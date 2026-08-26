@@ -118,7 +118,13 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
       if (order < 0) return
 
       if (direction === 1) {
-        if (forwardTarget) navigate(forwardTarget.path)
+        // Fără țintă calculată, mergem la rădăcina onboardingului: `OnboardingRedirect` alege
+        // pasul din starea proaspătă a serverului.
+        //
+        // Contează pe ultimul ecran al unui pas, cel care tocmai l-a și închis: ținta de aici e
+        // memoizată pe starea de dinaintea salvării, în care pasul următor era încă blocat. Ieșea
+        // `null`, iar „Continuă" nu făcea absolut nimic — exact fundătura de la Uber/Bolt Fleet.
+        navigate(forwardTarget?.path ?? '/onboarding')
         return
       }
 

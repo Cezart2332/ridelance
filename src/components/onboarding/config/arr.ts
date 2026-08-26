@@ -7,6 +7,11 @@ import type { MicroStepContext, MicroStepDef } from '../microStepTypes'
 /**
  * Pasul 4 — Autorizația de transport alternativ, ca ecrane.
  *
+ * Județul agenției se alege PRIMUL, înaintea documentelor. Nu e o preferință de ordine: ecranul
+ * „Dovada plății tarifului ARR" arată contul de trezorerie al agenției, iar contul se alege după
+ * județ. Cu întrebarea la coadă, ecranul ăla cerea dovada unei plăți fără să poată spune unde se
+ * plătește — afișa „alege întâi județul", pentru un județ pe care fluxul nu-l ceruse încă.
+ *
  * Documentele se cer unul câte unul, în ordinea în care le cere ARR. Cele preluate din pașii
  * anteriori (certificat, atestat) apar tot ca ecran, dar deja bifate — userul vede că sunt
  * acoperite, în loc să se întrebe de ce lipsesc dintr-o listă pe care o știa mai lungă.
@@ -79,7 +84,6 @@ const agencyCounty = (c: MicroStepContext): string =>
   ''
 
 export const arrMicroSteps: MicroStepDef[] = [
-  ...documentSteps,
   {
     id: 'arr_agentie',
     macroStep: 'arr',
@@ -127,6 +131,7 @@ export const arrMicroSteps: MicroStepDef[] = [
     },
     isDone: (c) => agencyCounty(c) !== '',
   },
+  ...documentSteps,
   {
     id: 'arr_dosar',
     macroStep: 'arr',

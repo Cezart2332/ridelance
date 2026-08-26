@@ -38,8 +38,14 @@ export interface Autosave<T> {
   dirty: boolean
   /** Programează o salvare (debounced). De apelat la fiecare modificare. */
   schedule: (payload: T) => void
-  /** Salvează imediat ce e în așteptare — la `blur` sau înainte de a părăsi pasul. */
-  flush: () => Promise<void>
+  /**
+   * Salvează imediat ce e în așteptare — la `blur` sau înainte de a părăsi pasul.
+   *
+   * Întoarce `true` când nu mai e nimic nesalvat: fie n-a fost, fie serverul a confirmat. `false`
+   * înseamnă că salvarea a eșuat și retry-ul e programat — apelantul care voia să plece de pe pas
+   * trebuie să se oprească, altfel ar duce userul mai departe peste date pierdute.
+   */
+  flush: () => Promise<boolean>
   /** Reîncearcă după ce backoff-ul s-a epuizat. Legat de „Nesalvat · Reîncearcă". */
   retry: () => Promise<void>
   /** Draftul rămas nesalvat din sesiunea anterioară, dacă `storageKey` e setat. */
@@ -171,12 +177,15 @@ export function useAutosave<T>({
     [debounceMs, run, writeDraft],
   )
 
-  const flush = useCallback(async () => {
+  const flush = useCallback(async (): Promise<boolean> => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current)
       debounceTimer.current = null
     }
     await run()
+    // `run` nu aruncă: la eșec trece pe „error" și programează retry. Coada rămasă e singurul
+    // semnal sincer că ceva n-a ajuns pe server, iar el e disponibil imediat, fără re-randare.
+    return pending.current === null
   }, [run])
 
   const retry = useCallback(async () => {
