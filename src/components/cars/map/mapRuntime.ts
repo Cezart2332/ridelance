@@ -1,4 +1,35 @@
+import type { SxProps, Theme } from '@mui/material/styles'
 import type { Map as MapboxMap } from 'mapbox-gl'
+
+/**
+ * Stilul containerului în care Mapbox își montează pânza.
+ *
+ * Selectorul dublat pe `.mapboxgl-map` nu e paranoia. `mapbox-gl.css` conține
+ * `.mapboxgl-map { position: relative; overflow: hidden }`, iar Mapbox pune clasa aia chiar pe
+ * containerul nostru. O clasă emotion are aceeași specificitate ca ea, deci cine câștigă depinde
+ * de ordinea în care ajung stilurile în `<head>` — și ordinea diferă între dev și build, fiindcă
+ * CSS-ul hărții vine cu un chunk încărcat la cerere.
+ *
+ * Când câștiga Mapbox, containerul rămânea `position: relative` fără înălțime — `inset: 0` nu
+ * mai făcea nimic — iar `overflow: hidden` tăia tot ce era înăuntru. Harta se construia corect,
+ * nu arunca nicio eroare și nu se vedea absolut nimic.
+ *
+ * `&.mapboxgl-map` produce `.css-xxx.mapboxgl-map`, cu o clasă în plus, deci câștigă indiferent
+ * de ordine. Înălțimea explicită e plasa de siguranță: chiar dacă poziționarea ar pierde din nou,
+ * containerul tot umple părintele.
+ */
+export const mapContainerSx: SxProps<Theme> = {
+  position: 'absolute',
+  inset: 0,
+  width: '100%',
+  height: '100%',
+  '&.mapboxgl-map': {
+    position: 'absolute',
+    inset: 0,
+    width: '100%',
+    height: '100%',
+  },
+}
 
 /**
  * Cele trei moduri în care o hartă Mapbox rămâne goală fără să se plângă nimeni.
@@ -95,13 +126,25 @@ export function attachMapDiagnostics(
 
   // Plasa de siguranță pentru blocajul mut: nici `load`, nici `error`. Fără ea, ecranul rămâne
   // gol la nesfârșit și nimeni n-are de unde ști de ce.
-  watchdog = window.setTimeout(() => {
-    settle(
-      'Harta nu a răspuns. Cel mai des e un Content-Security-Policy care blochează ' +
-        'api.mapbox.com sau worker-ul (`worker-src blob:`) — verifică tab-ul Network și ' +
-        'consola pentru erori CSP.',
-    )
-  }, LOAD_TIMEOUT_MS)
+  const armWatchdog = () => {
+    watchdog = window.setTimeout(() => {
+      // Un tab în fundal nu primește cadre, deci Mapbox n-are cum să desenezeze și `load` nu vine.
+      // Fără garda asta, orice pagină lăsată deschisă într-un tab inactiv ar raporta un defect
+      // care nu există. Ceasul repornește când utilizatorul se întoarce la ea.
+      if (document.visibilityState !== 'visible') {
+        armWatchdog()
+        return
+      }
+
+      settle(
+        'Harta nu a răspuns. Cel mai des e un Content-Security-Policy care blochează ' +
+          'api.mapbox.com sau worker-ul (`worker-src blob:`) — verifică tab-ul Network și ' +
+          'consola pentru erori CSP.',
+      )
+    }, LOAD_TIMEOUT_MS)
+  }
+
+  armWatchdog()
 
   // Containerul își poate primi dimensiunea după crearea hărții. `resize` e idempotent, deci
   // îl putem chema la fiecare schimbare fără să ne pese care dintre ele a fost cea reală.

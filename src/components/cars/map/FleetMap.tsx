@@ -6,7 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { DEFAULT_CENTER, DEFAULT_ZOOM, MAPBOX_AVAILABLE, MAPBOX_STYLE, MAPBOX_TOKEN } from '../../../lib/mapbox'
 import { TOKENS } from '../../../constants/tokens'
 import { MapUnavailable } from './MapUnavailable'
-import { attachMapDiagnostics } from './mapRuntime'
+import { attachMapDiagnostics, mapContainerSx } from './mapRuntime'
 
 /**
  * Harta flotei, cu un pin per mașină.
@@ -212,7 +212,7 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
         }}
       />
 
-      <Box ref={containerRef} sx={{ position: 'absolute', inset: 0 }} />
+      <Box ref={containerRef} sx={mapContainerSx} />
 
       {onBoundsSearch && (
         <Box
