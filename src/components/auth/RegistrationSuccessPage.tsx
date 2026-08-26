@@ -5,13 +5,14 @@ import { useNavigate } from 'react-router-dom'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 
 import logo from '../../assets/logo.svg'
+import { TOKENS as GLOBAL_TOKENS } from '../../constants/tokens'
 
 const TOKENS = {
   ink: '#1a1a2e',
   primary: '#5CCBF5',
   primaryStrong: '#45B8E2',
   paper: '#FFFFFF',
-  surface: '#F8F9FC',
+  surface: GLOBAL_TOKENS.surface,
   border: 'rgba(0, 0, 0, 0.06)',
   textMuted: 'rgba(26, 26, 46, 0.55)',
   radius: { md: 8, lg: 12, xl: 16, full: 9999 },

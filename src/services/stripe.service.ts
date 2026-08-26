@@ -1,6 +1,8 @@
 import { api } from '../lib/axios'
 import { PFA_PATHS } from '../config/pfaNavigation'
 import type { OwnerType } from '../config/ownerType'
+import { PFA_PLANS, annualSummary, priceFor, type BillingCycle, type Plan, type PlanFeature } from '../data/plans'
+import { getPartnerBenefit } from '../data/benefits'
 
 /**
  * Stripe integration service using Payment Links.
@@ -9,6 +11,20 @@ import type { OwnerType } from '../config/ownerType'
 
 export type PlanKey = 'solo' | 'start' | 'pro'
 export type ServiceKey = 'infiintare_pfa' | 'sediu_social' | 'start_ride'
+
+/** Cum se reînnoiește abonamentul, în vocabularul serverului. */
+export type SubscriptionCycle = 'Monthly' | 'Annual'
+
+/** `BillingCycle` din `data/plans.ts`, în forma pe care o așteaptă API-ul. */
+const cycleParam = (cycle: BillingCycle): SubscriptionCycle =>
+  cycle === 'annual' ? 'Annual' : 'Monthly'
+
+/**
+ * Ce cumpără utilizatorul. Ecranul de plată își alege promisiunile după asta: un abonament
+ * poate promite reînnoire și anulare oricând, o taxă de înființare plătită o dată nu are ce
+ * anula, iar avansul din onboarding e explicit nerambursabil.
+ */
+export type CheckoutKind = 'subscription' | 'service' | 'advance'
 
 export interface SubscriptionResponse {
   id: string | null
@@ -19,6 +35,8 @@ export interface SubscriptionResponse {
   nextBillingDateUtc: string | null
   createdAtUtc: string | null
   dashboardAccessGranted: boolean
+  /** „Monthly" | „Annual" — cum se reînnoiește abonamentul. Null cât timp nu există unul. */
+  billingCycle: SubscriptionCycle | null
   pfaStatus: string | null
   pfaRegistrationType: string | null
   pendingPlan: PlanKey | null
@@ -66,58 +84,71 @@ export interface ServiceInfo {
   ownerTypes: OwnerType[]
 }
 
-export const SUBSCRIPTION_PLANS: PlanInfo[] = [
-  {
-    key: 'solo',
-    title: 'RIDElance Solo',
-    price: '49 lei / săptămână',
-    priceNote: 'Reînnoire automată în fiecare luni la 15:00.',
-    summary: 'Pentru șoferii care au deja contabil sau vor să își gestioneze singuri partea contabilă, dar vor infrastructura RIDElance.',
-    cta: 'Alege Solo',
-    footnote: 'Fără contabilitate lunară inclusă.',
-    list: [
-      'Deschidere PFA la tarif preferențial — 399 lei',
-      'Export lunar pentru contabilul propriu',
-      'Asistență și consultanță constantă',
-      'Acces complet în dashboardul RIDElance',
-      'Organizare completă pentru activitatea de șofer PFA',
-      'Reduceri și beneficii prin partenerii RIDElance',
-    ],
-    highlighted: false,
-  },
-  {
-    key: 'start',
-    title: 'RIDElance Start',
-    price: '99 lei / săptămână',
-    priceNote: 'Reînnoire automată în fiecare luni la 15:00.',
-    summary: 'Pentru șoferii care vor să înceapă rapid și să aibă totul pus la punct.',
-    cta: 'Începe cu Start',
-    list: [
-      'Deschidere PFA cu cost rambursabil + bonus 100 lei',
-      'Asistență și consultanță constantă',
-      'Acces complet în dashboardul RIDElance',
-      'Contabilitate completă pentru PFA',
-      'Reduceri și beneficii prin partenerii RIDElance',
-    ],
-    highlighted: false,
-  },
-  {
-    key: 'pro',
-    title: 'RIDElance Pro',
-    price: '149 lei / săptămână',
-    priceNote: 'Reînnoire automată în fiecare luni la 15:00.',
-    summary: 'Pentru cei care vor mai mult confort, suport prioritar și avantaje suplimentare.',
-    intro: 'Include tot ce ai în Start, plus:',
-    cta: 'Alege Pro',
-    list: [
-      'Găzduire sediu social gratuit în București / Ilfov',
-      'Suport prioritar',
-      'Oferte, campanii și promoții exclusive PRO',
-      'Reducere la chiria mașinilor RIDElance',
-    ],
-    highlighted: true,
-  },
-]
+/**
+ * Planurile de abonament, derivate din `data/plans.ts`.
+ *
+ * Erau scrise a doua oară aici, cu prețurile săptămânale (49/99/149 lei) și cu nota „reînnoire
+ * automată în fiecare luni la 15:00" — adică pagina publică și checkoutul anunțau două modele
+ * diferite ale aceluiași abonament. O singură sursă: `PFA_PLANS`.
+ */
+const featureLine = (feature: PlanFeature): string => {
+  const partner = feature.partner ? getPartnerBenefit(feature.partner)?.name : null
+  const parts = [partner ? `${partner}:` : null, feature.prefix, feature.strong, feature.text]
+    .filter((part): part is string => Boolean(part))
+
+  // Fragmentele sunt scrise ca să se lipească de partea îngroșată: `text` începe des cu „, prin
+  // partener CECCAR". Un `join(' ')` naiv scotea „inclusă , prin partener".
+  return parts.reduce((line, part) => {
+    if (line === '') return part
+    return /^[,.;:!?)]/.test(part) ? `${line}${part}` : `${line} ${part}`
+  }, '')
+}
+
+const toPlanInfo = (plan: Plan, cycle: BillingCycle): PlanInfo => {
+  const { amount, unit, note } = priceFor(plan, cycle)
+  const annual = cycle === 'annual' ? annualSummary(plan) : null
+
+  return {
+    key: plan.key as PlanKey,
+    title: plan.title,
+    price: `${amount} lei ${unit}`,
+    // Pe ciclul anual, nota utilă e totalul facturat o dată pe an — nu textul generic.
+    priceNote: annual ?? note,
+    summary: plan.summary,
+    intro: plan.intro,
+    list: plan.features.map(featureLine),
+    footnote: plan.footnote,
+    cta: plan.cta,
+    highlighted: plan.recommended === true,
+  }
+}
+
+/** Planurile pe ciclul cerut. Lunar e implicit peste tot unde nu se alege altceva. */
+export const subscriptionPlansFor = (cycle: BillingCycle): PlanInfo[] =>
+  PFA_PLANS.map((plan) => toPlanInfo(plan, cycle))
+
+/**
+ * Suma care se încasează chiar acum, nu cea pe lună.
+ *
+ * Cardurile compară planuri, deci arată prețul pe lună pe ambele cicluri — corect acolo. Ecranul
+ * de plată stă lângă formularul Stripe, care pe anual cere tot anul dintr-o dată: „179,10 lei /
+ * lună" lângă un buton care ia 2.149,20 lei ar fi două sume diferite pe același ecran.
+ */
+function chargedPriceLabel(key: PlanKey, cycle: BillingCycle): string | undefined {
+  const plan = PFA_PLANS.find((p) => p.key === key)
+  if (!plan) return undefined
+
+  if (cycle === 'annual' && plan.pricing.annualTotalLei != null) {
+    return `${plan.pricing.annualTotalLei.toLocaleString('ro-RO', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })} lei / an`
+  }
+
+  return `${plan.pricing.monthlyLei.toLocaleString('ro-RO')} lei / lună`
+}
+
+export const SUBSCRIPTION_PLANS: PlanInfo[] = subscriptionPlansFor('monthly')
 
 export const ONE_TIME_SERVICES: ServiceInfo[] = [
   {
@@ -148,6 +179,48 @@ export const ONE_TIME_SERVICES: ServiceInfo[] = [
   },
 ]
 
+/**
+ * Ce se transmite ecranului `/checkout`. `sessionStorage` fiindcă Stripe montează formularul cu un
+ * client secret care nu are voie să treacă prin URL; restul câmpurilor merg pe același drum ca
+ * să rămână o singură convenție.
+ */
+interface CheckoutHandoff {
+  clientSecret: string
+  cancelUrl: string
+  kind: CheckoutKind
+  title: string
+  price?: string
+  desc?: string
+  /** Doar pe abonamente: ce scrie sub preț despre reînnoire. */
+  renewal?: string
+}
+
+const CHECKOUT_KEYS = [
+  'stripe_client_secret',
+  'stripe_cancel_url',
+  'stripe_checkout_kind',
+  'stripe_checkout_title',
+  'stripe_checkout_price',
+  'stripe_checkout_desc',
+  'stripe_checkout_renewal',
+] as const
+
+function goToCheckout(handoff: CheckoutHandoff): void {
+  // Curățăm întâi: o cheie rămasă de la o plată anterioară (prețul, de exemplu) s-ar amesteca
+  // în sumarul celei noi și ar arăta o sumă care nu se încasează.
+  for (const key of CHECKOUT_KEYS) sessionStorage.removeItem(key)
+
+  sessionStorage.setItem('stripe_client_secret', handoff.clientSecret)
+  sessionStorage.setItem('stripe_cancel_url', handoff.cancelUrl)
+  sessionStorage.setItem('stripe_checkout_kind', handoff.kind)
+  sessionStorage.setItem('stripe_checkout_title', handoff.title)
+  if (handoff.price) sessionStorage.setItem('stripe_checkout_price', handoff.price)
+  if (handoff.desc) sessionStorage.setItem('stripe_checkout_desc', handoff.desc)
+  if (handoff.renewal) sessionStorage.setItem('stripe_checkout_renewal', handoff.renewal)
+
+  window.location.href = '/checkout'
+}
+
 export const stripeService = {
   /**
    * Generates a checkout session and redirects the user to Stripe.
@@ -173,16 +246,14 @@ export const stripeService = {
         successUrl: effectiveSuccessUrl,
         cancelUrl: effectiveCancelUrl
       })
-      sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
-      sessionStorage.setItem('stripe_cancel_url', effectiveCancelUrl)
-      sessionStorage.setItem('stripe_checkout_title', 'Abonament RIDElance Start — avans')
-      if (priceLabel) sessionStorage.setItem('stripe_checkout_price', priceLabel)
-      else sessionStorage.removeItem('stripe_checkout_price')
-      sessionStorage.setItem(
-        'stripe_checkout_desc',
-        'Plata în avans a abonamentului RIDElance Start. Nerambursabilă.',
-      )
-      window.location.href = '/checkout'
+      goToCheckout({
+        clientSecret: response.data.clientSecret,
+        cancelUrl: effectiveCancelUrl,
+        kind: 'advance',
+        title: 'Abonament RIDElance Start — avans',
+        price: priceLabel,
+        desc: 'Plata în avans a abonamentului RIDElance Start. Nerambursabilă.',
+      })
     } catch (error) {
       // Refuzul se propagă: de la RL-03 încoace serverul răspunde 422 cu ce mai lipsește din
       // dosar, iar mesajul ăla trebuie să ajungă pe ecran, nu doar în consolă.
@@ -191,13 +262,17 @@ export const stripeService = {
     }
   },
 
+  /**
+   * @param options.cycle Lunar sau anual. Decide și prețul Stripe, și ce scrie pe ecranul de plată.
+   */
   async redirectToPlan(
     key: PlanKey,
     successUrl?: string,
     cancelUrl?: string,
-    options?: { isPlanChange?: boolean },
+    options?: { isPlanChange?: boolean; cycle?: BillingCycle },
   ): Promise<void> {
-    const plan = SUBSCRIPTION_PLANS.find(p => p.key === key)
+    const cycle: BillingCycle = options?.cycle ?? 'monthly'
+    const plan = subscriptionPlansFor(cycle).find(p => p.key === key)
     if (!plan) return
 
     const origin = window.location.origin
@@ -207,17 +282,23 @@ export const stripeService = {
     const response = await api.post<{clientSecret: string}>('/payments/checkout-session', {
       mode: 'subscription',
       plan: key,
-      billingAnchorUnix: null,
+      cycle: cycleParam(cycle),
       isPlanChange: options?.isPlanChange ?? false,
       successUrl: effectiveSuccessUrl,
       cancelUrl: effectiveCancelUrl
     })
-    sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
-    sessionStorage.setItem('stripe_cancel_url', effectiveCancelUrl)
-    sessionStorage.setItem('stripe_checkout_title', plan.title)
-    sessionStorage.setItem('stripe_checkout_price', plan.price)
-    sessionStorage.setItem('stripe_checkout_desc', plan.summary)
-    window.location.href = '/checkout'
+    goToCheckout({
+      clientSecret: response.data.clientSecret,
+      cancelUrl: effectiveCancelUrl,
+      kind: 'subscription',
+      title: plan.title,
+      price: chargedPriceLabel(key, cycle),
+      desc: plan.summary,
+      renewal:
+        cycle === 'annual'
+          ? `Se reînnoiește automat în fiecare an. Revine la ${plan.price}.`
+          : 'Se reînnoiește automat în fiecare lună. Anulezi oricând.',
+    })
   },
 
   async redirectToPublicService(
@@ -240,12 +321,14 @@ export const stripeService = {
     })
     
     const service = ONE_TIME_SERVICES.find(s => s.key === key)
-    sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
-    sessionStorage.setItem('stripe_cancel_url', effectiveCancelUrl)
-    sessionStorage.setItem('stripe_checkout_title', service?.title || 'Serviciu RIDElance')
-    sessionStorage.setItem('stripe_checkout_price', service?.price || '')
-    sessionStorage.setItem('stripe_checkout_desc', service?.desc || '')
-    window.location.href = '/checkout'
+    goToCheckout({
+      clientSecret: response.data.clientSecret,
+      cancelUrl: effectiveCancelUrl,
+      kind: 'service',
+      title: service?.title || 'Serviciu RIDElance',
+      price: service?.price,
+      desc: service?.desc,
+    })
   },
 
   async redirectToService(key: ServiceKey): Promise<void> {
@@ -256,12 +339,14 @@ export const stripeService = {
       mode: 'payment',
       plan: key
     })
-    sessionStorage.setItem('stripe_client_secret', response.data.clientSecret)
-    sessionStorage.setItem('stripe_cancel_url', PFA_PATHS.svcIndividual)
-    sessionStorage.setItem('stripe_checkout_title', service.title)
-    sessionStorage.setItem('stripe_checkout_price', service.price)
-    sessionStorage.setItem('stripe_checkout_desc', service.desc)
-    window.location.href = '/checkout'
+    goToCheckout({
+      clientSecret: response.data.clientSecret,
+      cancelUrl: PFA_PATHS.svcIndividual,
+      kind: 'service',
+      title: service.title,
+      price: service.price,
+      desc: service.desc,
+    })
   },
 
   /** Store selected plan in sessionStorage for the registration flow. */

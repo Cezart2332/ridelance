@@ -15,20 +15,21 @@ import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlin
 import StarRoundedIcon from '@mui/icons-material/StarRounded'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
-import { SUBSCRIPTION_PLANS, type PlanKey, stripeService } from '../../services/stripe.service'
+import { subscriptionPlansFor, type PlanKey, stripeService } from '../../services/stripe.service'
 import { canAccessDashboard } from '../../utils/clientOnboarding'
-import { getNextMondayBillingDate, formatRomanianDate } from '../../utils/billing'
+import { ANNUAL_DISCOUNT, type BillingCycle } from '../../data/plans'
+import { Switcher } from '../pricing/Switcher'
 import { TermsAcceptance } from '../common/TermsAcceptance'
 import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
 import logo from '../../assets/logo.svg'
+import { TOKENS as GLOBAL_TOKENS } from '../../constants/tokens'
 
 const TOKENS = {
   ink: '#1a1a2e',
   primary: '#5CCBF5',
   primaryStrong: '#45B8E2',
   paper: '#FFFFFF',
-  surface: '#F8F9FC',
-  surfaceAlt: '#EEF2F7',
+  surface: GLOBAL_TOKENS.surface,
   border: 'rgba(0,0,0,0.06)',
   borderHover: 'rgba(0,0,0,0.12)',
   textMuted: 'rgba(26,26,46,0.55)',
@@ -47,7 +48,8 @@ export default function SubscriptionSelectPage() {
   const [selected, setSelected] = useState<PlanKey | null>(null)
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
-  const nextBilling = getNextMondayBillingDate()
+  const [cycle, setCycle] = useState<BillingCycle>('monthly')
+  const plans = subscriptionPlansFor(cycle)
   const isSuspendedAccount = searchParams.get('reason') === 'suspended'
   const [gateChecking, setGateChecking] = useState(true)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
@@ -78,8 +80,7 @@ export default function SubscriptionSelectPage() {
   const handleContinue = () => {
     if (!selected || !termsAccepted || !paymentPolicyAccepted) return
     setCheckoutError(null)
-    stripeService.activateSubscription(selected, nextBilling)
-    stripeService.redirectToPlan(selected).catch(() => {
+    stripeService.redirectToPlan(selected, undefined, undefined, { cycle }).catch(() => {
       setCheckoutError('Nu am putut deschide plata. Încearcă din nou în câteva momente.')
     })
   }
@@ -135,12 +136,9 @@ export default function SubscriptionSelectPage() {
               Alege abonamentul tău
             </Typography>
             <Typography sx={{ color: TOKENS.textMuted, fontSize: '1rem', lineHeight: 1.7 }}>
-              După confirmarea contului, alegi abonamentul potrivit. Reînnoirea automată se face în fiecare{' '}
-              <strong>luni la 15:00</strong>, următoarea plată fiind programată pe{' '}
-              <Box component="span" sx={{ color: TOKENS.primaryStrong, fontWeight: 700 }}>
-                {formatRomanianDate(nextBilling)}
-              </Box>
-              .
+              După confirmarea contului, alegi abonamentul potrivit. Plata se face acum, iar
+              reînnoirea automată cade {cycle === 'annual' ? 'peste un an' : 'peste o lună'}, la
+              aceeași dată.
             </Typography>
           </Box>
 
@@ -173,10 +171,20 @@ export default function SubscriptionSelectPage() {
           >
             <InfoOutlinedIcon sx={{ color: TOKENS.primaryStrong, fontSize: 20, flexShrink: 0 }} />
             <Typography sx={{ color: TOKENS.ink, fontSize: '0.88rem', lineHeight: 1.6 }}>
-              Abonamentul se activează imediat după plată. Nu mai aștepți până luni pentru acces;
-              luni la 15:00 este doar momentul recurent de facturare.
+              Abonamentul se activează imediat după plată — nu mai aștepți nimic. Îl poți anula
+              oricând din contul tău.
             </Typography>
           </Paper>
+
+          {/* Lunar sau anual — aceeași alegere ca pe pagina publică de Abonamente. */}
+          <Switcher
+            value={cycle}
+            onChange={setCycle}
+            options={[
+              { value: 'monthly', label: 'Lunar' },
+              { value: 'annual', label: 'Anual', badge: `-${Math.round(ANNUAL_DISCOUNT * 100)}%` },
+            ]}
+          />
 
           {/* Plan Cards */}
           <Box
@@ -187,7 +195,7 @@ export default function SubscriptionSelectPage() {
               width: '100%',
             }}
           >
-            {SUBSCRIPTION_PLANS.map((plan) => {
+            {plans.map((plan) => {
               const isSelected = selected === plan.key
               const isHighlighted = plan.highlighted
 
@@ -388,7 +396,7 @@ export default function SubscriptionSelectPage() {
             >
               {selected
                 ? termsAccepted && paymentPolicyAccepted
-                  ? `Continuă cu ${SUBSCRIPTION_PLANS.find(p => p.key === selected)?.title}`
+                  ? `Continuă cu ${plans.find(p => p.key === selected)?.title}`
                   : 'Acceptă politicile pentru a continua'
                 : 'Selectează un plan pentru a continua'}
             </Button>

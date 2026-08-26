@@ -99,10 +99,10 @@ export function partnerLogoFor(slug: string): string | null {
 /**
  * Planurile pentru PFA.
  *
- * Sumele sunt cele din materialul comercial: lunar, cu 10% reducere la plata anuală. Catalogul
- * Stripe încă are prețuri **săptămânale** (49 / 99 / 149 lei) și niciun preț anual, deci pagina
- * anunță un model pe care plata nu-l face încă. E deliberat, pentru moment: plățile se aliniază
- * separat, iar butoanele de aici duc la autentificare, nu la casă.
+ * Sumele sunt cele din materialul comercial: lunar, cu 10% reducere la plata anuală. Sunt și
+ * sumele pe care le încasează Stripe: catalogul din `Domain/Payments/StripeCatalog.cs` le citește
+ * din `Pricing.Plans`, pe ambele cicluri. Până la trecerea de la săptămânal la lunar, pagina
+ * anunța un model pe care casa nu-l putea onora (49 / 99 / 149 lei pe săptămână); acum e unul.
  */
 export const PFA_PLANS: Plan[] = [
   {

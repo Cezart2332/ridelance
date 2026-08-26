@@ -1,13 +1,17 @@
 import type { SxProps, Theme } from '@mui/material/styles'
 import { alpha } from '@mui/material/styles'
 
+import { TOKENS as GLOBAL } from '../../constants/tokens'
+
 export const DASHBOARD_TOKENS = {
   ink: '#1a1a2e',
   primary: '#5CCBF5',
   primaryStrong: '#45B8E2',
-  paper: '#FFFFFF',
-  surface: '#FAFAFA',
-  surfaceAlt: '#F5F5F7',
+  paper: GLOBAL.paper,
+  // Fundalul vine din tokenii globali, nu scris a doua oară: dashboardul și site-ul public
+  // trebuie să aibă exact aceeași tentă, altfel trecerea dintre ele se vede.
+  surface: GLOBAL.surface,
+  surfaceAlt: GLOBAL.surfaceAlt,
   border: 'rgba(0, 0, 0, 0.06)',
   borderHover: 'rgba(0, 0, 0, 0.12)',
   textMuted: 'rgba(26, 26, 46, 0.6)',

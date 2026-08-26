@@ -6,15 +6,14 @@ import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlin
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import SwapHorizRoundedIcon from '@mui/icons-material/SwapHorizRounded'
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import StarRoundedIcon from '@mui/icons-material/StarRounded'
 import {
-  SUBSCRIPTION_PLANS,
+  subscriptionPlansFor,
   stripeService,
   type PlanKey,
   type SubscriptionResponse,
 } from '../../../services/stripe.service'
-import { getNextMondayBillingDate, formatRomanianDate, isPendingBilling } from '../../../utils/billing'
+import { cycleLabel, formatRomanianDate, nextBillingDate as projectNextBilling } from '../../../utils/billing'
 import { PaymentPolicyAcceptance } from '../../common/PaymentPolicyAcceptance'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { PageHeader, StatusChip } from '../ui'
@@ -22,13 +21,17 @@ import { PFA_PATHS } from '../../../config/pfaNavigation'
 
 const T = DASHBOARD_TOKENS
 
-function SubscriptionStatusChip({ pending }: { pending: boolean }) {
+/**
+ * Un abonament plătit e activ, punct. Chipul avea și starea „Programat Luni", pentru intervalul
+ * dintre plată și ancora de facturare — un interval care nu mai există.
+ */
+function SubscriptionStatusChip() {
   return (
     <StatusChip
       outlined
       icon={<CheckCircleOutlineRoundedIcon sx={{ fontSize: '14px !important' }} />}
-      label={pending ? 'Programat Luni' : 'Activ'}
-      tone={pending ? 'neutral' : 'active'}
+      label="Activ"
+      tone="active"
     />
   )
 }
@@ -69,12 +72,17 @@ export function AbonamenteTab() {
   }
 
   const activePlan = subStatus?.plan
-  const nextBillingDate = subStatus?.nextBillingDateUtc ? new Date(subStatus.nextBillingDateUtc) : getNextMondayBillingDate()
-  const pending = isPendingBilling(nextBillingDate)
+  const cycle = subStatus?.billingCycle === 'Annual' ? 'annual' : 'monthly'
+  const plans = subscriptionPlansFor(cycle)
+  // Data reală vine de la server; proiecția locală acoperă doar fereastra dintre plată și
+  // primul webhook, când abonamentul există dar data încă n-a fost scrisă.
+  const nextBillingDate = subStatus?.nextBillingDateUtc
+    ? new Date(subStatus.nextBillingDateUtc)
+    : projectNextBilling(new Date(), subStatus?.billingCycle ?? 'Monthly')
 
   // Default to start plan if no active plan
   const currentPlanKey: PlanKey = activePlan || 'start'
-  const currentPlan = SUBSCRIPTION_PLANS.find(p => p.key === currentPlanKey) || SUBSCRIPTION_PLANS[1]
+  const currentPlan = plans.find(p => p.key === currentPlanKey) || plans[1]
 
   const handleUpgrade = (key: PlanKey) => {
     if (!paymentPolicyAccepted) return
@@ -85,7 +93,7 @@ export function AbonamenteTab() {
         key,
         `${origin}${PFA_PATHS.svcSubscriptions}?plan_changed=1`,
         `${origin}${PFA_PATHS.svcSubscriptions}`,
-        { isPlanChange: true },
+        { isPlanChange: true, cycle },
       )
       .catch(() => {
         setCheckoutError('Nu am putut deschide plata. Încearcă din nou în câteva momente.')
@@ -101,7 +109,7 @@ export function AbonamenteTab() {
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert severity="success" onClose={() => setPlanChangeNotice(false)} sx={{ width: '100%' }}>
-          Plata a fost înregistrată. Noul abonament se activează de luni la 15:00; până atunci păstrezi accesul curent.
+          Plata a fost înregistrată. Noul abonament este activ de acum.
         </Alert>
       </Snackbar>
 
@@ -137,7 +145,7 @@ export function AbonamenteTab() {
               <Typography sx={{ fontWeight: 800, fontSize: '1.25rem', color: T.ink }}>
                 {currentPlan.title}
               </Typography>
-              <SubscriptionStatusChip pending={pending} />
+              <SubscriptionStatusChip />
             </Box>
             <Typography sx={{ fontWeight: 800, fontSize: '1.5rem', color: T.primaryStrong }}>
               {currentPlan.price}
@@ -151,7 +159,6 @@ export function AbonamenteTab() {
             <Button
               variant="outlined"
               startIcon={<SwapHorizRoundedIcon />}
-              disabled={!!subStatus?.pendingPlan}
               onClick={() => setShowUpgrade((v) => !v)}
               size="small"
               sx={{
@@ -193,51 +200,16 @@ export function AbonamenteTab() {
           <CalendarTodayRoundedIcon sx={{ color: T.primaryStrong, fontSize: 18, flexShrink: 0 }} />
           <Box>
             <Typography sx={{ fontWeight: 700, color: T.ink, fontSize: '0.88rem' }}>
-              {pending ? 'Prima plată automată:' : 'Următoarea plată:'}
+              Următoarea plată:
             </Typography>
             <Typography sx={{ color: T.textMuted, fontSize: '0.85rem' }}>
-              {formatRomanianDate(nextBillingDate)} la 15:00
+              {formatRomanianDate(nextBillingDate)} · abonament {cycleLabel(subStatus?.billingCycle)}
             </Typography>
           </Box>
         </Box>
 
-        {/* Pending billing explanation */}
-        {pending && (
-          <Box
-            sx={{
-              mt: 2,
-              p: 2,
-              borderRadius: T.radius.lg,
-              backgroundColor: alpha(T.ink, 0.03),
-              border: `1px solid ${T.border}`,
-              display: 'flex',
-              gap: 1.5,
-            }}
-          >
-            <InfoOutlinedIcon sx={{ color: T.accent, fontSize: 18, mt: 0.1, flexShrink: 0 }} />
-            <Typography sx={{ color: T.textMuted, fontSize: '0.83rem', lineHeight: 1.6 }}>
-              {subStatus?.pendingPlan ? (
-                <>
-                  Ai deja o modificare de abonament programată pentru <strong>luni la 15:00</strong>:
-                  trecerea de la <strong>{currentPlan.title}</strong> la <strong>{SUBSCRIPTION_PLANS.find(p => p.key === subStatus.pendingPlan)?.title}</strong>.
-                  Poți schimba din nou tipul abonamentului doar o singură dată pe săptămână, după ce noua perioadă devine activă.
-                </>
-              ) : subStatus?.status === 'ActivePendingBilling' ? (
-                <>
-                  Abonamentul tău este activ. Prima factură automată se va genera{' '}
-                  <strong>luni la 15:00</strong>. Dacă ai plătit luni înainte de 15:00, factura va fi
-                  generată lunea următoare, nu în aceeași zi.
-                </>
-              ) : (
-                <>
-                  Abonamentul tău este activ. Prima factură automată se va genera{' '}
-                  <strong>luni la 15:00</strong>. Dacă ai plătit luni înainte de 15:00, factura va fi
-                  generată lunea următoare, nu în aceeași zi.
-                </>
-              )}
-            </Typography>
-          </Box>
-        )}
+        {/* Blocul care explica ancora de luni 15:00 a dispărut odată cu ea: abonamentul se
+            încasează la cumpărare, iar data de mai sus spune deja tot ce era de spus. */}
 
         {/* Feature list */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 3 }}>
@@ -266,7 +238,7 @@ export function AbonamenteTab() {
             />
           </Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
-            {SUBSCRIPTION_PLANS.map((plan) => {
+            {plans.map((plan) => {
               const isCurrent = plan.key === currentPlanKey
               return (
                 <Paper

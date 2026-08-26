@@ -15,7 +15,6 @@ import RegistrationSuccessPage from './components/auth/RegistrationSuccessPage'
 import SubscriptionSelectPage from './components/auth/SubscriptionSelectPage'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import RoleRedirect from './components/auth/RoleRedirect'
-import PendingAccessPage from './components/auth/PendingAccessPage'
 import { SRL_ROOT } from './config/srlNavigation'
 
 /**
@@ -89,7 +88,6 @@ function App() {
           {/* ── Protected routes ── */}
           <Route element={<ProtectedRoute />}>
             <Route path="/app" element={<RoleRedirect />} />
-            <Route path="/app/pending-access" element={<PendingAccessPage />} />
             {/* Un singur shell pentru toți cei 6 pași: rail-ul, datele și poll-ul trăiesc aici,
                 deci schimbarea pasului nu remontează nimic. */}
             <Route path="/onboarding" element={<OnboardingShell />}>

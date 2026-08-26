@@ -3,7 +3,8 @@ import { Box, Paper, Typography, CircularProgress } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded'
-import { stripeService, SUBSCRIPTION_PLANS } from '../../../services/stripe.service'
+import { stripeService, subscriptionPlansFor } from '../../../services/stripe.service'
+import { cycleLabel } from '../../../utils/billing'
 import { formatRomanianDate } from '../../../utils/billing'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { PageHeader, StatusChip, type StatusTone } from '../ui'
@@ -61,15 +62,15 @@ export function IstoricPlatiTab() {
         if (statusData?.nextBillingDateUtc &&
             (statusData.status === 'Active' || statusData.status === 'ActivePendingBilling')) {
           const nextPlan = statusData.pendingPlan || statusData.plan
-          const planInfo = SUBSCRIPTION_PLANS.find(p => p.key === nextPlan)
-          const priceStr = planInfo ? planInfo.price : '99 lei / săptămână'
-          const titleStr = planInfo ? planInfo.title : 'RIDElance Start'
+          const cycle = statusData.billingCycle === 'Annual' ? 'annual' : 'monthly'
+          const planInfo = subscriptionPlansFor(cycle).find(p => p.key === nextPlan)
 
+          // Fără plan cunoscut nu se inventează o sumă: rândul spune că urmează o plată, nu cât.
           mappedPayments.push({
             id: 'scheduled_next_payment',
             date: new Date(statusData.nextBillingDateUtc),
-            amount: priceStr,
-            description: `${titleStr} — abonament săptămânal`,
+            amount: planInfo?.price ?? '—',
+            description: `${planInfo?.title ?? 'Abonament RIDElance'} — abonament ${cycleLabel(statusData.billingCycle)}`,
             status: 'scheduled',
           })
         }

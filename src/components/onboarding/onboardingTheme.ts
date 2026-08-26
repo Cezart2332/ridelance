@@ -15,7 +15,7 @@ export const TOKENS = {
   primary: GLOBAL.primary,
   primaryStrong: GLOBAL.primaryStrong,
   paper: GLOBAL.paper,
-  surface: '#F8F9FC',
+  surface: GLOBAL.surface,
   border: GLOBAL.border,
   borderHover: GLOBAL.borderHover,
   textMuted: 'rgba(26, 26, 46, 0.55)',

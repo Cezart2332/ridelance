@@ -1,10 +1,20 @@
+/**
+ * Fundalul platformei: alb cu o tentă din albastrul logoului, nu gri neutru.
+ *
+ * Valorile sunt `primary` amestecat în alb — 5,5% pentru fundalul de pagină, 8,5% pentru banda
+ * alternativă. Scrise ca hex, nu calculate: fundalul e prima culoare pe care o vede orice ecran,
+ * iar o funcție de amestec ar face-o să depindă de ordinea de evaluare a modulelor.
+ *
+ * `paper` rămâne alb curat. Tenta există ca să se vadă ceva sub carduri: dacă și cardurile ar fi
+ * colorate, n-ar mai avea față de ce să se desprindă și pagina ar arăta doar spălăcită.
+ */
 export const TOKENS = {
   ink: '#1a1a2e',
   primary: '#5CCBF5',
   primaryStrong: '#45B8E2',
   paper: '#FFFFFF',
-  surface: '#FAFAFA',
-  surfaceAlt: '#F5F5F7',
+  surface: '#F6FCFE',
+  surfaceAlt: '#F1FBFE',
   border: 'rgba(0, 0, 0, 0.06)',
   borderHover: 'rgba(0, 0, 0, 0.12)',
   textMain: '#1a1a2e',

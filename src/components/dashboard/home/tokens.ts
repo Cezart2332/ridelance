@@ -19,7 +19,8 @@ export const HOME_TOKENS = {
     // Bara sticky trebuie să-l folosească opac, altfel conținutul se vede prin ea.
     app: DASHBOARD_TOKENS.surface,
     surface: '#FFFFFF',
-    surface2: '#FAFBFC',
+    // Aceeași tentă ca fundalul, doar mai aproape de alb: stă între carduri și pagină.
+    surface2: '#FAFDFF',
   },
   text: {
     primary: NUMERIC_TEXT.primary,

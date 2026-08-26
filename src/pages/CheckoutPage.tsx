@@ -7,6 +7,8 @@ import { loadStripe } from '@stripe/stripe-js'
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js'
 import { motion } from 'motion/react' // In motion v12, the package name is motion or motion/react depending on setup, but typically motion is used or motion/react. Let's make sure we import standard motion.
 import logo from '../assets/logo.svg'
+import type { CheckoutKind } from '../services/stripe.service'
+import { TOKENS as GLOBAL_TOKENS } from '../constants/tokens'
 
 // Initialize Stripe outside component render
 const stripePromise = loadStripe(import.meta.env.VITE_PUBLIC_STRIPE || '')
@@ -16,7 +18,7 @@ const TOKENS = {
   primary: '#5CCBF5',
   primaryStrong: '#45B8E2',
   paper: '#FFFFFF',
-  surface: '#F8F9FC',
+  surface: GLOBAL_TOKENS.surface,
   border: 'rgba(0, 0, 0, 0.08)',
   textMuted: 'rgba(26, 26, 46, 0.55)',
   radius: { md: 12, lg: 16, xl: 24, full: 9999 },
@@ -27,12 +29,47 @@ const TOKENS = {
   },
 }
 
+/**
+ * Ce promite ecranul de plată, în funcție de ce se cumpără.
+ *
+ * Lista era una singură pentru orice plată: cine cumpăra „Înființare PFA" — un serviciu plătit o
+ * dată, executat de oameni în câteva zile — citea „acces instant în platformă" și „anulezi oricând
+ * fără costuri suplimentare". Două promisiuni pe care produsul ăla nu le face.
+ *
+ * Rândul de reînnoire nu e aici: vine din plan (`stripe_checkout_renewal`), fiindcă diferă între
+ * lunar și anual și e deja scris o singură dată în `data/plans.ts`.
+ */
+const ASSURANCES: Record<CheckoutKind, string[]> = {
+  subscription: [
+    'Acces imediat în platformă după plată',
+    'Factură automată trimisă pe email',
+    'Anulezi oricând, din contul tău — fără costuri suplimentare',
+  ],
+  service: [
+    'Plată unică — fără abonament și fără reînnoire',
+    'Factură automată trimisă pe email',
+    'Urmărești fiecare etapă din contul tău RIDElance',
+  ],
+  advance: [
+    'Avans din abonamentul RIDElance Start, nu un cost în plus',
+    'Factură automată trimisă pe email',
+    'Dosarul pleacă la partenerul contabil imediat după plată',
+  ],
+}
+
+const isCheckoutKind = (value: string | null): value is CheckoutKind =>
+  value === 'subscription' || value === 'service' || value === 'advance'
+
 export default function CheckoutPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [cancelUrl, setCancelUrl] = useState<string>('/app')
   const [title, setTitle] = useState<string>('Plată RIDElance')
   const [price, setPrice] = useState<string>('')
   const [desc, setDesc] = useState<string>('')
+  const [renewal, setRenewal] = useState<string>('')
+  // Serviciu, nu abonament: e varianta cu cele mai puține promisiuni, deci cea în care o
+  // etichetă lipsă nu poate promite ceva ce nu se livrează.
+  const [kind, setKind] = useState<CheckoutKind>('service')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -42,6 +79,8 @@ export default function CheckoutPage() {
     const t = sessionStorage.getItem('stripe_checkout_title')
     const p = sessionStorage.getItem('stripe_checkout_price')
     const d = sessionStorage.getItem('stripe_checkout_desc')
+    const r = sessionStorage.getItem('stripe_checkout_renewal')
+    const k = sessionStorage.getItem('stripe_checkout_kind')
 
     if (secret) {
       setClientSecret(secret)
@@ -50,6 +89,8 @@ export default function CheckoutPage() {
     if (t) setTitle(t)
     if (p) setPrice(p)
     if (d) setDesc(d)
+    if (r) setRenewal(r)
+    if (isCheckoutKind(k)) setKind(k)
 
     setLoading(false)
   }, [])
@@ -57,9 +98,11 @@ export default function CheckoutPage() {
   const handleCancel = () => {
     // Clear storage on cancel
     sessionStorage.removeItem('stripe_client_secret')
+    sessionStorage.removeItem('stripe_checkout_kind')
     sessionStorage.removeItem('stripe_checkout_title')
     sessionStorage.removeItem('stripe_checkout_price')
     sessionStorage.removeItem('stripe_checkout_desc')
+    sessionStorage.removeItem('stripe_checkout_renewal')
     window.location.href = cancelUrl
   }
 
@@ -211,8 +254,14 @@ export default function CheckoutPage() {
             </Typography>
 
             {price && (
-              <Typography variant="h4" sx={{ fontWeight: 800, color: TOKENS.primary, mb: 3 }}>
+              <Typography variant="h4" sx={{ fontWeight: 800, color: TOKENS.primary, mb: renewal ? 1 : 3 }}>
                 {price}
+              </Typography>
+            )}
+
+            {renewal && (
+              <Typography sx={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.85rem', mb: 3 }}>
+                {renewal}
               </Typography>
             )}
 
@@ -230,26 +279,16 @@ export default function CheckoutPage() {
               </Typography>
             )}
 
-            {/* List of checkout trust factors */}
+            {/* Ce promite exact plata asta — vezi ASSURANCES. */}
             <Stack spacing={2} sx={{ mt: 4, pt: 4, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CheckCircleOutlineRoundedIcon sx={{ color: TOKENS.primary, fontSize: 20 }} />
-                <Typography sx={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.85)' }}>
-                  Acces instant la platformă după plată
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CheckCircleOutlineRoundedIcon sx={{ color: TOKENS.primary, fontSize: 20 }} />
-                <Typography sx={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.85)' }}>
-                  Factură automată trimisă pe email
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CheckCircleOutlineRoundedIcon sx={{ color: TOKENS.primary, fontSize: 20 }} />
-                <Typography sx={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.85)' }}>
-                  Anulezi oricând fără costuri suplimentare
-                </Typography>
-              </Box>
+              {ASSURANCES[kind].map((line) => (
+                <Box key={line} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <CheckCircleOutlineRoundedIcon sx={{ color: TOKENS.primary, fontSize: 20 }} />
+                  <Typography sx={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.85)' }}>
+                    {line}
+                  </Typography>
+                </Box>
+              ))}
             </Stack>
           </Box>
 
