@@ -3,6 +3,20 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # Variabilele `VITE_*` se coc în bundle la `npm run build`, deci trebuie să ajungă la
+      # build, nu la rulare. `env_file` de mai jos le pune doar în containerul nginx, unde nu
+      # le citește nimeni: bundle-ul e deja construit, cu valorile goale.
+      #
+      # De aici veneau „harta nu e disponibilă" și checkoutul Stripe care nu pornea pe un deploy
+      # unde tokenul chiar era setat. `Dockerfile` are `ARG` pentru toate patru; astea sunt
+      # jumătatea care lipsea.
+      #
+      # Valorile se interpolează din `./.env`, pe care Docker Compose îl citește singur.
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_MAPBOX_TOKEN: ${VITE_MAPBOX_TOKEN}
+        VITE_PUBLIC_STRIPE: ${VITE_PUBLIC_STRIPE}
+        VITE_VAPID_PUBLIC_KEY: ${VITE_VAPID_PUBLIC_KEY}
     env_file:
       - .env
     ports:

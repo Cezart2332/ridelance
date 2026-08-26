@@ -60,8 +60,13 @@ export default defineConfig({
          * `mapbox-gl` are 1,8 MB și e folosit de două ecrane. Precachat, îl descarcă la
          * instalarea PWA-ului oricine, inclusiv de pe date mobile, ca să nu-l atingă niciodată.
          * Se încarcă la cerere, ca orice alt chunk lazy, și e oricum cache-uit de browser după.
+         *
+         * Numele vin din grupul `vendor-mapbox` de mai jos, nu din cel ales de bundler. Lista
+         * enumera înainte numele componentelor, dar chunk-ul partajat se numește după unul dintre
+         * modulele lui — deci un fișier nou lângă hartă îl rebotează și scoate tăcut cei 1,8 MB
+         * de sub excludere. Un grup numit explicit nu se poate redenumi singur.
          */
-        globIgnores: ['**/FleetMap-*.js', '**/PinPicker-*.js', '**/MapUnavailable-*.js'],
+        globIgnores: ['**/vendor-mapbox-*.js', '**/vendor-mapbox-*.css'],
       },
       manifest: {
         name: 'Ridelance',
@@ -118,6 +123,13 @@ export default defineConfig({
             {
               name: 'vendor-motion',
               test: /node_modules\/(motion|lenis|@studio-freight)/,
+            },
+            // Numit explicit ca să aibă un nume stabil: `globIgnores` de mai sus îl ține în
+            // afara precache-ului, iar o excludere pe un nume pe care îl alege bundlerul se
+            // rupe la prima refactorizare.
+            {
+              name: 'vendor-mapbox',
+              test: /node_modules\/mapbox-gl/,
             },
           ],
         },

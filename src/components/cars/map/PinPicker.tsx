@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Box } from '@mui/material'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -6,6 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { DEFAULT_CENTER, DEFAULT_ZOOM, MAPBOX_AVAILABLE, MAPBOX_STYLE, MAPBOX_TOKEN } from '../../../lib/mapbox'
 import { TOKENS } from '../../../constants/tokens'
 import { MapUnavailable } from './MapUnavailable'
+import { attachMapDiagnostics } from './mapRuntime'
 
 /**
  * Alegerea locului de preluare prin click pe hartă.
@@ -25,6 +26,8 @@ export function PinPicker({ latitude, longitude, onChange, height = 300 }: PinPi
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const markerRef = useRef<mapboxgl.Marker | null>(null)
   const onChangeRef = useRef(onChange)
+  /** Motivul pentru care harta n-a pornit. Null cât timp e în regulă. */
+  const [failure, setFailure] = useState<string | null>(null)
 
   useEffect(() => {
     onChangeRef.current = onChange
@@ -49,7 +52,10 @@ export function PinPicker({ latitude, longitude, onChange, height = 300 }: PinPi
 
     mapRef.current = map
 
+    const detach = attachMapDiagnostics(map, containerRef.current, setFailure)
+
     return () => {
+      detach()
       map.remove()
       mapRef.current = null
       markerRef.current = null
@@ -91,6 +97,10 @@ export function PinPicker({ latitude, longitude, onChange, height = 300 }: PinPi
     return (
       <MapUnavailable hint="Fără hartă poți completa manual latitudinea și longitudinea de mai sus." />
     )
+  }
+
+  if (failure) {
+    return <MapUnavailable hint={`${failure} Între timp poți completa manual latitudinea și longitudinea de mai sus.`} />
   }
 
   return (

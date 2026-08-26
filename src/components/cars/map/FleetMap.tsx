@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Box, GlobalStyles } from '@mui/material'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -6,6 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { DEFAULT_CENTER, DEFAULT_ZOOM, MAPBOX_AVAILABLE, MAPBOX_STYLE, MAPBOX_TOKEN } from '../../../lib/mapbox'
 import { TOKENS } from '../../../constants/tokens'
 import { MapUnavailable } from './MapUnavailable'
+import { attachMapDiagnostics } from './mapRuntime'
 
 /**
  * Harta flotei, cu un pin per mașină.
@@ -47,6 +48,8 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map())
   const movedRef = useRef(false)
   const searchButtonRef = useRef<HTMLButtonElement | null>(null)
+  /** Motivul pentru care harta n-a pornit. Null cât timp e în regulă. */
+  const [failure, setFailure] = useState<string | null>(null)
 
   // Callback-urile se citesc dintr-un ref: harta se creează o singură dată, iar dependența de
   // funcții recreate la fiecare randare ar fi distrus-o și reconstruit-o continuu.
@@ -72,6 +75,8 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right')
     mapRef.current = map
 
+    const detach = attachMapDiagnostics(map, containerRef.current, setFailure)
+
     // Butonul de căutare în zonă apare abia după ce utilizatorul a mișcat harta: înainte de
     // asta, „caută aici" ar însemna exact ce se vede deja.
     const onMove = () => {
@@ -82,6 +87,7 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
     map.on('zoomend', onMove)
 
     return () => {
+      detach()
       map.remove()
       mapRef.current = null
       markersRef.current.clear()
@@ -152,6 +158,10 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
 
   if (!MAPBOX_AVAILABLE) {
     return <MapUnavailable />
+  }
+
+  if (failure) {
+    return <MapUnavailable hint={failure} />
   }
 
   return (

@@ -30,8 +30,9 @@ export function MapUnavailable({ hint }: { hint?: string }) {
       <Typography sx={{ fontWeight: 700, color: TOKENS.ink, fontSize: '0.92rem' }}>
         Harta nu e disponibilă
       </Typography>
-      <Typography sx={{ fontSize: '0.82rem', color: TOKENS.textMuted, maxWidth: 320 }}>
-        {hint ?? 'Setează VITE_MAPBOX_TOKEN pe mediul de rulare ca să se încarce harta.'}
+      <Typography sx={{ fontSize: '0.82rem', color: TOKENS.textMuted, maxWidth: 380, lineHeight: 1.55 }}>
+        {hint ??
+          'Lipsește VITE_MAPBOX_TOKEN din build. Vite coace variabilele `VITE_*` în bundle, deci tokenul trebuie dat ca build arg — setat doar ca variabilă de runtime nu ajunge la el.'}
       </Typography>
     </Stack>
   )
