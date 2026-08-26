@@ -35,6 +35,7 @@ import {
   type UpsertPfaPlatformAccountItem,
 } from '../../services/pfa.service'
 import { documentService } from '../../services/document.service'
+import { DateField } from '../common/DateField'
 
 type Provider = 'Uber' | 'Bolt'
 type AccountKind = 'Driver' | 'Fleet'
@@ -690,7 +691,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
                     <TextField select fullWidth size="small" label="Cod special TVA" value={form.specialVatCodeStatus} onChange={(e) => setForm((f) => ({ ...f, specialVatCodeStatus: e.target.value }))} sx={inputSx}>
                       {specialVatOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
                     </TextField>
-                    <TextField fullWidth size="small" label="Data obținerii" type="date" value={form.specialVatCodeObtainedAtUtc} onChange={(e) => setForm((f) => ({ ...f, specialVatCodeObtainedAtUtc: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} sx={inputSx} />
+                    <DateField fullWidth size="small" label="Data obținerii" value={form.specialVatCodeObtainedAtUtc} onChange={(specialVatCodeObtainedAtUtc) => setForm((f) => ({ ...f, specialVatCodeObtainedAtUtc }))} sx={inputSx} />
                     <LockedField label="Document TVA intracomunitar" value={profile.specialVatCodeDocumentId ? 'Încărcat' : 'Lipsă'} />
                   </>
                 ) : (

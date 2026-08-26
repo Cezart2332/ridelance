@@ -25,6 +25,7 @@ import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded'
 import { TOKENS } from '../../../../constants/tokens'
 import { getErrorMessage } from '../../../../utils/errorHandler'
 import { discountsService, type DiscountCode } from '../../../../services/discounts.service'
+import { DateField } from '../../../common/DateField'
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
@@ -262,15 +263,13 @@ export function DiscountsAdminView() {
               sx={inputSx}
             />
 
-            <TextField
+            <DateField
               label="Expiră la"
-              type="date"
               value={expiresAt}
-              onChange={(e) => setExpiresAt(e.target.value)}
+              onChange={setExpiresAt}
               fullWidth
               size="small"
               sx={inputSx}
-              slotProps={{ inputLabel: { shrink: true } }}
             />
 
             <TextField

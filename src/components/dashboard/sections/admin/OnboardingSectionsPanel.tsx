@@ -35,6 +35,7 @@ import {
   type OnboardingState,
 } from '../../../../services/onboarding.service'
 import { formatDocumentCategory } from '../../../../utils/formatters'
+import { DateField } from '../../../common/DateField'
 
 interface OnboardingSectionsPanelProps {
   pfaId: string
@@ -279,13 +280,11 @@ function SignaturePacketReview({
           onChange={(e) => setSignatureCount(e.target.value)}
           sx={{ minWidth: 140 }}
         />
-        <TextField
+        <DateField
           size="small"
           label="Expiră la"
-          type="date"
           value={expiresAt}
-          onChange={(e) => setExpiresAt(e.target.value)}
-          slotProps={{ inputLabel: { shrink: true } }}
+          onChange={setExpiresAt}
           sx={{ minWidth: 170 }}
         />
       </Stack>

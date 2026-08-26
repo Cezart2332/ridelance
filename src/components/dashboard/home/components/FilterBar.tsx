@@ -4,7 +4,6 @@ import {
   Button,
   Drawer,
   Stack,
-  TextField,
   Typography,
   useMediaQuery,
   useTheme,
@@ -16,6 +15,7 @@ import { HOME_TOKENS } from '../tokens'
 import type { DashboardFilters, PeriodPreset } from '../useDashboardFilters'
 import { SegmentedControl, type SegmentOption } from './SegmentedControl'
 import type { DashboardPayment, DashboardPlatform } from '../../../../services/pfaDashboard.service'
+import { DateField } from '../../../common/DateField'
 
 const PERIOD_OPTIONS: readonly SegmentOption<PeriodPreset>[] = [
   { value: 'week', label: 'Săpt. curentă' },
@@ -86,21 +86,19 @@ export function FilterBar({
 
   const customRange = filters.period === 'custom' && (
     <Stack direction="row" spacing={0.8} sx={{ alignItems: 'center' }}>
-      <TextField
-        type="date"
+      <DateField
         size="small"
         value={filters.from}
-        slotProps={{ htmlInput: { 'aria-label': 'Data de început' } }}
-        onChange={(event) => onCustomRangeChange(event.target.value, filters.to)}
+        ariaLabel="Data de început"
+        onChange={(from) => onCustomRangeChange(from, filters.to)}
         sx={dateFieldSx}
       />
       <Typography sx={{ color: HOME_TOKENS.text.tertiary, fontSize: '0.8rem' }}>–</Typography>
-      <TextField
-        type="date"
+      <DateField
         size="small"
         value={filters.to}
-        slotProps={{ htmlInput: { 'aria-label': 'Data de sfârșit' } }}
-        onChange={(event) => onCustomRangeChange(filters.from, event.target.value)}
+        ariaLabel="Data de sfârșit"
+        onChange={(to) => onCustomRangeChange(filters.from, to)}
         sx={dateFieldSx}
       />
     </Stack>

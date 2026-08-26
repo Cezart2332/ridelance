@@ -39,6 +39,7 @@ import {
   type AdminRevenueType,
   type AdminServiceSaleRow,
 } from '../../../../services/adminOverview.service'
+import { DateField } from '../../../common/DateField'
 
 interface AdminOverviewViewProps {
   onImpersonate: (userId: string, userName: string) => void
@@ -434,8 +435,8 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
           </TextField>
           {filters.periodPreset === 'custom' && (
             <>
-              <TextField size="small" type="date" label="De la" value={filters.dateFrom ?? ''} onChange={(e) => updateFilter('dateFrom', e.target.value)} sx={inputSx} slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField size="small" type="date" label="Până la" value={filters.dateTo ?? ''} onChange={(e) => updateFilter('dateTo', e.target.value)} sx={inputSx} slotProps={{ inputLabel: { shrink: true } }} />
+              <DateField size="small" label="De la" value={filters.dateFrom ?? ''} onChange={(next) => updateFilter('dateFrom', next)} sx={inputSx} />
+              <DateField size="small" label="Până la" value={filters.dateTo ?? ''} onChange={(next) => updateFilter('dateTo', next)} sx={inputSx} />
             </>
           )}
           <TextField select size="small" label="Tip venit" value={filters.revenueType ?? ''} onChange={(e) => updateFilter('revenueType', e.target.value as AdminRevenueType)} sx={inputSx}>

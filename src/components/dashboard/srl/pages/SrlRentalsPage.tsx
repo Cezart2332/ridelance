@@ -28,6 +28,7 @@ import {
 import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '../../dashboardTheme'
 import { Amount, PageHeader, Panel, StatCard, StatusChip } from '../../ui'
 import type { StatusTone } from '../../ui'
+import { DateField } from '../../../common/DateField'
 
 /**
  * Închirierile flotei: cine are ce mașină, până când și pe ce bani.
@@ -458,25 +459,21 @@ function NewRentalDialog({
               size="small"
               sx={{ ...dashboardInputSx, gridColumn: { xs: 'auto', sm: '1 / -1' } }}
             />
-            <TextField
+            <DateField
               label="Preluare"
-              type="date"
               value={start}
-              onChange={(e) => setStart(e.target.value)}
+              onChange={setStart}
               fullWidth
               size="small"
               sx={dashboardInputSx}
-              slotProps={{ inputLabel: { shrink: true } }}
             />
-            <TextField
+            <DateField
               label="Predare estimată"
-              type="date"
               value={end}
-              onChange={(e) => setEnd(e.target.value)}
+              onChange={setEnd}
               fullWidth
               size="small"
               sx={dashboardInputSx}
-              slotProps={{ inputLabel: { shrink: true } }}
             />
             <TextField
               label="Chirie / săptămână (lei)"

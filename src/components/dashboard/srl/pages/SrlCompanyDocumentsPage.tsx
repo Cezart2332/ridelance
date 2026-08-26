@@ -21,6 +21,7 @@ import UploadRoundedIcon from '@mui/icons-material/UploadRounded'
 import { documentService, type DocumentSummary } from '../../../../services/document.service'
 import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '../../dashboardTheme'
 import { PageHeader, Panel, StatCard, StatusChip } from '../../ui'
+import { DateField } from '../../../common/DateField'
 
 /**
  * Documentele societății.
@@ -318,15 +319,13 @@ function UploadDialog({
 
           {/* Data de expirare se cere doar acolo unde documentul chiar expiră. */}
           {selected?.expires && (
-            <TextField
+            <DateField
               label="Expiră la"
-              type="date"
               value={expiresAt}
-              onChange={(e) => setExpiresAt(e.target.value)}
+              onChange={setExpiresAt}
               fullWidth
               size="small"
               sx={dashboardInputSx}
-              slotProps={{ inputLabel: { shrink: true } }}
               helperText="Primești alertă cu 30 de zile înainte."
             />
           )}

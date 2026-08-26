@@ -25,6 +25,7 @@ import {
 } from '../../../../services/maintenance.service'
 import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '../../dashboardTheme'
 import { Amount, PageHeader, Panel, StatCard, StatusChip } from '../../ui'
+import { DateField } from '../../../common/DateField'
 
 /**
  * Mentenanța flotei: istoric de service, costuri și remindere.
@@ -368,15 +369,13 @@ function AddDialog({
           />
 
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-            <TextField
+            <DateField
               label="Data"
-              type="date"
               value={date}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={setDate}
               fullWidth
               size="small"
               sx={dashboardInputSx}
-              slotProps={{ inputLabel: { shrink: true } }}
               helperText="O dată viitoare o marchează drept programare."
             />
             <TextField
@@ -406,15 +405,13 @@ function AddDialog({
               size="small"
               sx={dashboardInputSx}
             />
-            <TextField
+            <DateField
               label="Reminder la dată"
-              type="date"
               value={reminderDate}
-              onChange={(e) => setReminderDate(e.target.value)}
+              onChange={setReminderDate}
               fullWidth
               size="small"
               sx={{ ...dashboardInputSx, gridColumn: { xs: 'auto', sm: '1 / -1' } }}
-              slotProps={{ inputLabel: { shrink: true } }}
             />
           </Box>
 

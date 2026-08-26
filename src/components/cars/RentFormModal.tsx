@@ -28,6 +28,7 @@ import { TOKENS } from '../../constants/tokens'
 import { carsService, getCarImageUrl, type Car, type CarLeadIntent } from '../../services/cars.service'
 import { isValidRoPhone, normalizePhone } from '../../utils/phone'
 import { VDP } from './vdp/vdpLayout'
+import { DateField } from '../common/DateField'
 
 /**
  * Formularul de cerere, deschis din pagina de detaliu.
@@ -232,13 +233,12 @@ export default function RentFormModal({ open, onClose, car, intent = 'Request' }
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 />
-                <TextField
+                <DateField
                   fullWidth
+                  size="medium"
                   label="De când ai nevoie de mașină"
-                  type="date"
                   value={formData.startDate}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  slotProps={{ inputLabel: { shrink: true } }}
+                  onChange={(startDate) => setFormData({ ...formData, startDate })}
                 />
               </Stack>
 

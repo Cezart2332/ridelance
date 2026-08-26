@@ -5,6 +5,7 @@ import { TOKENS, inputSx } from '../onboardingTheme'
 import { AdresaForm } from './AdresaForm'
 import { PrefilledNotice } from './PrefilledNotice'
 import { cnpBirthDate, cnpSex, isValidCnp, normalizeCnp } from './cnp'
+import { DateField } from '../../common/DateField'
 
 const TIP_ACT_LABELS: Record<TipActIdentitate, string> = {
   CI: 'Carte de identitate',
@@ -206,27 +207,23 @@ export function PersoanaFizicaForm({
       />
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
-        <TextField
-          type="date"
+        <DateField
           label="Data emiterii"
           value={value.dataEmiterii ?? ''}
-          onChange={(e) => text('dataEmiterii', e.target.value)}
+          onChange={(next) => text('dataEmiterii', next)}
           onBlur={onBlur}
           disabled={disabled}
           sx={inputSx}
           fullWidth
-          slotProps={{ inputLabel: { shrink: true } }}
         />
-        <TextField
-          type="date"
+        <DateField
           label="Data expirării"
           value={value.dataExpirarii ?? ''}
-          onChange={(e) => text('dataExpirarii', e.target.value)}
+          onChange={(next) => text('dataExpirarii', next)}
           onBlur={onBlur}
           disabled={disabled}
           sx={inputSx}
           fullWidth
-          slotProps={{ inputLabel: { shrink: true } }}
         />
       </Box>
 

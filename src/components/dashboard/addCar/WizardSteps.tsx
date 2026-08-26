@@ -20,6 +20,7 @@ import {
   type CarDraft,
   type WizardMode,
 } from './wizardModel'
+import { DateField } from '../../common/DateField'
 
 /**
  * Conținutul fiecărui pas. Separat de învelișul wizardului ca pașii să rămână citibili — un
@@ -160,15 +161,13 @@ export function OfferStep({
         </TextField>
         {/* Data apare doar când e cerută de opțiunea aleasă — altfel ar fi un câmp mort. */}
         {draft.status === 'Disponibilă de la o dată' && (
-          <TextField
+          <DateField
             label="Disponibilă din"
-            type="date"
             value={draft.availableFrom}
-            onChange={(e) => update('availableFrom', e.target.value)}
+            onChange={(next) => update('availableFrom', next)}
             fullWidth
             size="small"
             sx={dashboardInputSx}
-            slotProps={{ inputLabel: { shrink: true } }}
           />
         )}
         <TextField label="Condiții principale" value={draft.conditions} onChange={(e) => update('conditions', e.target.value)} fullWidth multiline minRows={2} size="small" sx={{ ...dashboardInputSx, ...fullWidth }} placeholder="Garanție 500 lei. Perioadă minimă 2 luni. Notificare cu 7 zile înainte de predare." />
@@ -487,15 +486,13 @@ export function DossierStep({ draft, update }: { draft: CarDraft; update: Update
         <TextField label="Număr înmatriculare" value={draft.plateNumber} onChange={(e) => update('plateNumber', e.target.value)} fullWidth size="small" sx={dashboardInputSx} placeholder="B 123 RID" />
         <TextField label="VIN" value={draft.vin} onChange={(e) => update('vin', e.target.value)} fullWidth size="small" sx={dashboardInputSx} />
         <TextField label="Kilometraj curent" type="number" value={draft.mileage} onChange={(e) => update('mileage', e.target.value)} fullWidth size="small" sx={dashboardInputSx} />
-        <TextField
+        <DateField
           label="Data primei înmatriculări"
-          type="date"
           value={draft.firstRegistration}
-          onChange={(e) => update('firstRegistration', e.target.value)}
+          onChange={(next) => update('firstRegistration', next)}
           fullWidth
           size="small"
           sx={dashboardInputSx}
-          slotProps={{ inputLabel: { shrink: true } }}
         />
       </Box>
 

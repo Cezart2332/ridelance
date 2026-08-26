@@ -23,6 +23,7 @@ import {
   type DeductibleExpenseOption,
 } from '../../../../utils/deductibleExpenseCatalog'
 import { getErrorMessage } from '../../../../utils/errorHandler'
+import { DateField } from '../../../common/DateField'
 
 type Step = 'pick-file' | 'extracting' | 'confirm'
 
@@ -237,13 +238,11 @@ export function AddExpenseDialog({
             />
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-              <TextField
+              <DateField
                 label="Data documentului"
-                type="date"
                 size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
                 value={form.expenseDate}
-                onChange={(e) => setForm((prev) => ({ ...prev, expenseDate: e.target.value }))}
+                onChange={(expenseDate) => setForm((prev) => ({ ...prev, expenseDate }))}
                 sx={dashboardInputSx}
               />
               <TextField
