@@ -6,7 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { DEFAULT_CENTER, DEFAULT_ZOOM, MAPBOX_AVAILABLE, MAPBOX_STYLE, MAPBOX_TOKEN } from '../../../lib/mapbox'
 import { TOKENS } from '../../../constants/tokens'
 import { MapUnavailable } from './MapUnavailable'
-import { attachMapDiagnostics, mapContainerSx } from './mapRuntime'
+import { applyBrandTint, attachMapDiagnostics, mapContainerSx } from './mapRuntime'
 
 /**
  * Alegerea locului de preluare prin click pe hartă.
@@ -53,6 +53,10 @@ export function PinPicker({ latitude, longitude, onChange, height = 300 }: PinPi
     mapRef.current = map
 
     const detach = attachMapDiagnostics(map, containerRef.current, setFailure)
+
+    // Aceeași paletă ca harta flotei: două hărți colorate diferit în același produs se citesc
+    // ca două produse.
+    map.on('style.load', () => applyBrandTint(map))
 
     return () => {
       detach()

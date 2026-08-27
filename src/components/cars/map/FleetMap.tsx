@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Box, GlobalStyles } from '@mui/material'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -6,7 +7,8 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { DEFAULT_CENTER, DEFAULT_ZOOM, MAPBOX_AVAILABLE, MAPBOX_STYLE, MAPBOX_TOKEN } from '../../../lib/mapbox'
 import { TOKENS } from '../../../constants/tokens'
 import { MapUnavailable } from './MapUnavailable'
-import { attachMapDiagnostics, mapContainerSx } from './mapRuntime'
+import { CarMapCard } from './CarMapCard'
+import { applyBrandTint, attachMapDiagnostics, mapContainerSx } from './mapRuntime'
 
 /**
  * Harta flotei, cu un pin per mașină.
@@ -21,12 +23,18 @@ import { attachMapDiagnostics, mapContainerSx } from './mapRuntime'
 
 export interface FleetMapPoint {
   id: string
+  /** Pentru linkul din card către anunț. */
+  slug: string
   latitude: number
   longitude: number
   title: string
   pricePerWeek: number
-  /** Subtitlul din popup: oraș, motorizare, status. */
-  meta: string
+  oldPrice?: number
+  /** Prima poză a anunțului, brută; cardul o trece prin `getCarImageUrl`. */
+  imageUrl?: string
+  /** Chipurile din card: oraș, motorizare, cutie. Scurte, nu o frază. */
+  specs: string[]
+  statusLabel: string
   available: boolean
 }
 
@@ -50,6 +58,15 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
   const searchButtonRef = useRef<HTMLButtonElement | null>(null)
   /** Motivul pentru care harta n-a pornit. Null cât timp e în regulă. */
   const [failure, setFailure] = useState<string | null>(null)
+  /** Mașina al cărei card e deschis. Ținem id-ul, nu obiectul: dacă filtrele scot mașina din
+      listă, `openPoint` devine null de la sine și cardul se închide fără efect care s-o observe. */
+  const [openId, setOpenId] = useState<string | null>(null)
+  /** Nodul în care React randează cardul, dat lui Mapbox drept conținut de popup. Creat o
+      singură dată, prin inițializator leneș — nu în corpul randării. */
+  const [popupHost] = useState(() => document.createElement('div'))
+  const popupRef = useRef<mapboxgl.Popup | null>(null)
+
+  const openPoint = points.find((p) => p.id === openId) ?? null
 
   // Callback-urile se citesc dintr-un ref: harta se creează o singură dată, iar dependența de
   // funcții recreate la fiecare randare ar fi distrus-o și reconstruit-o continuu.
@@ -77,6 +94,23 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
 
     const detach = attachMapDiagnostics(map, containerRef.current, setFailure)
 
+    // Recolorarea cere stilul deja încărcat; înainte de `style.load` nu există straturi.
+    map.on('style.load', () => applyBrandTint(map))
+
+    // Un singur popup, mutat de la un pin la altul. Câte unul per marker ar însemna să reconstruim
+    // cardul la fiecare schimbare de filtru, pentru mașini pe care nu dă nimeni click.
+    const popup = new mapboxgl.Popup({
+      offset: 22,
+      closeButton: true,
+      maxWidth: 'none',
+      className: 'fleet-popup',
+    }).setDOMContent(popupHost)
+    popup.on('close', () => setOpenId(null))
+    popupRef.current = popup
+
+    // Click pe hartă, lângă pinuri: închide cardul. Altfel rămâne agățat peste zona explorată.
+    map.on('click', () => setOpenId(null))
+
     // Butonul de căutare în zonă apare abia după ce utilizatorul a mișcat harta: înainte de
     // asta, „caută aici" ar însemna exact ce se vede deja.
     const onMove = () => {
@@ -88,11 +122,13 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
 
     return () => {
       detach()
+      popup.remove()
+      popupRef.current = null
       map.remove()
       mapRef.current = null
       markersRef.current.clear()
     }
-  }, [])
+  }, [popupHost])
 
   // Marker-ele se refac la fiecare schimbare a listei filtrate.
   useEffect(() => {
@@ -112,17 +148,14 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
         `<span>${formatPrice(point.pricePerWeek)}</span>`
 
       el.addEventListener('click', (event) => {
+        // Fără asta, click-ul urcă la hartă, unde handlerul de închidere l-ar anula imediat.
         event.stopPropagation()
         handlers.current.onSelect?.(point.id)
+        setOpenId(point.id)
       })
-
-      const popup = new mapboxgl.Popup({ offset: 18, closeButton: false }).setHTML(
-        `<strong>${escapeHtml(point.title)}</strong><br><span>${escapeHtml(point.meta)}</span>`,
-      )
 
       const marker = new mapboxgl.Marker({ element: el })
         .setLngLat([point.longitude, point.latitude])
-        .setPopup(popup)
         .addTo(map)
 
       markersRef.current.set(point.id, marker)
@@ -140,6 +173,20 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
       }
     }
   }, [points])
+
+  // Cardul urmează punctul deschis: îl mută la pinul lui, sau îl scoate de tot.
+  useEffect(() => {
+    const map = mapRef.current
+    const popup = popupRef.current
+    if (!map || !popup) return
+
+    if (!openPoint) {
+      popup.remove()
+      return
+    }
+
+    popup.setLngLat([openPoint.longitude, openPoint.latitude]).addTo(map)
+  }, [openPoint])
 
   // Mașina selectată din listă: pin ridicat și hartă adusă peste el.
   useEffect(() => {
@@ -202,17 +249,36 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
           },
           // Verdele apare o singură dată, ca semnal de disponibilitate — restul pastilei e neutru.
           '.fleet-marker__dot.is-available': { background: '#16A34A' },
-          '.mapboxgl-popup-content': {
-            borderRadius: 12,
-            padding: '10px 12px',
-            font: '400 0.82rem/1.45 inherit',
-            boxShadow: '0 10px 28px rgba(16,24,40,0.18)',
+          // Popup-ul devine ramă pentru card: Mapbox îi dă padding și colțuri proprii, care ar
+          // fi apărut ca un chenar alb în jurul pozei care merge până la margine.
+          '.fleet-popup .mapboxgl-popup-content': {
+            padding: 0,
+            borderRadius: `${TOKENS.radius.xl}px`,
+            overflow: 'hidden',
+            boxShadow: '0 12px 34px rgba(16,24,40,0.22)',
+            font: 'inherit',
           },
-          '.mapboxgl-popup-content strong': { color: TOKENS.ink },
+          '.fleet-popup .mapboxgl-popup-close-button': {
+            width: 26,
+            height: 26,
+            top: 6,
+            right: 6,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.92)',
+            color: TOKENS.ink,
+            font: '700 1rem/1 inherit',
+            boxShadow: '0 2px 8px rgba(16,24,40,0.18)',
+          },
+          '.fleet-popup .mapboxgl-popup-close-button:hover': { background: '#FFFFFF' },
+          '.fleet-popup .mapboxgl-popup-tip': { borderTopColor: TOKENS.paper, borderBottomColor: TOKENS.paper },
         }}
       />
 
       <Box ref={containerRef} sx={mapContainerSx} />
+
+      {/* Cardul trăiește în arborele React, dar e randat în nodul pe care îl ține Mapbox. Un
+          `createRoot` separat ar fi rupt contextul: cardul are nevoie de router pentru link. */}
+      {openPoint && createPortal(<CarMapCard point={openPoint} />, popupHost)}
 
       {onBoundsSearch && (
         <Box
@@ -260,9 +326,3 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
   )
 }
 
-/** Popup-ul primește HTML, deci textul care vine din date trebuie escapat. */
-function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (char) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char,
-  )
-}

@@ -27,6 +27,7 @@ import { TOKENS } from '../constants/tokens';
 import { FleetMap } from '../components/cars/map/LazyMaps';
 import type { FleetMapPoint } from '../components/cars/map/FleetMap';
 import { formatCarStatus } from '../utils/carLabels';
+import { hasActiveDiscount } from '../utils/carPricing';
 
 /** Cum se împarte ecranul între listă și hartă. */
 type FleetView = 'list' | 'split' | 'map';
@@ -136,11 +137,17 @@ export function CarsPage() {
         .filter((c) => c.details?.latitude != null && c.details?.longitude != null)
         .map((c) => ({
           id: c.id,
+          slug: c.slug,
           latitude: c.details!.latitude!,
           longitude: c.details!.longitude!,
           title: `${c.brand} ${c.model}, ${c.year}`,
           pricePerWeek: c.pricePerWeek,
-          meta: [c.location, c.engine, formatCarStatus(c.status)].filter(Boolean).join(' · '),
+          oldPrice: hasActiveDiscount(c) ? c.oldPrice : undefined,
+          imageUrl: c.images[0]?.imageUrl,
+          // Trei cel mult: cardul are 268px, iar al patrulea chip ar trece pe rândul următor
+          // și ar împinge prețul în afara primei priviri.
+          specs: [c.location, c.engine, c.transmission].filter(Boolean).slice(0, 3),
+          statusLabel: formatCarStatus(c.status),
           available: c.status === 'Available',
         })),
     [filteredCars],

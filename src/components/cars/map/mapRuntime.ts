@@ -158,3 +158,93 @@ export function attachMapDiagnostics(
     map.off('error', onError)
   }
 }
+
+/**
+ * Paleta hărții, în culorile produsului.
+ *
+ * Stilul `light-v11` e proiectat să dispară sub datele puse peste el: uscat aproape alb, apă
+ * gri-albăstruie, drumuri albe pe fundal alb. Când datele sunt douăzeci de pastile de preț, ce
+ * rămâne în spate e o suprafață goală — harta nu se citea ca hartă.
+ *
+ * Aici se inversează raportul: uscatul primește o tentă din albastrul logoului, iar drumurile
+ * rămân albe. Contrastul se mută pe rețeaua de străzi, care e singurul lucru după care se
+ * orientează cineva, fără să crească deloc zgomotul de sub pinuri.
+ */
+const MAP_PALETTE = {
+  land: '#E9F4F9',
+  water: '#A9DDF2',
+  green: '#D6EBDA',
+  road: '#FFFFFF',
+  building: '#DEEBF2',
+  label: '#1a1a2e',
+  labelHalo: '#FFFFFF',
+}
+
+/**
+ * Straturile pe care le atingem, recunoscute după id. Stilurile Mapbox n-au o taxonomie, doar
+ * convenții de denumire.
+ *
+ * Din familia drumurilor se albește doar rețeaua carosabilă — `road-simple` și perechile ei de
+ * pod și tunel. Restul rămân cum sunt: potecile, treptele, trotuarele și calea ferată se
+ * desenează diferit tocmai ca să nu fie confundate cu străzi, iar `-case` e conturul sub asfalt.
+ * Vopsite toate cu aceeași culoare, harta pierde exact ierarhia pentru care o citește cineva.
+ */
+const NOT_A_ROADWAY = /case|rail|path|steps|pedestrian|trail|cycleway|piste/
+
+function layerRole(id: string): keyof typeof MAP_PALETTE | null {
+  if (id.includes('water')) return 'water'
+  if (id.includes('park') || id.includes('landuse') || id.includes('pitch') || id.includes('grass')) return 'green'
+  if (id.includes('building')) return 'building'
+  if (/road|bridge|tunnel/.test(id) && !NOT_A_ROADWAY.test(id)) return 'road'
+  return null
+}
+
+/**
+ * Recolorează stilul încărcat, strat cu strat.
+ *
+ * Fiecare `setPaintProperty` e izolat: id-urile straturilor aparțin stilului Mapbox, nu nouă, și
+ * se pot schimba fără preaviz la o versiune nouă. Un id dispărut trebuie să lase harta
+ * necolorată, nu s-o dărâme — de aceea nimic de aici nu are voie să arunce mai departe.
+ */
+export function applyBrandTint(map: MapboxMap): void {
+  // Numele proprietăților se iau din semnătura lui Mapbox, nu ca `string`: dacă una dispare
+  // dintr-o versiune, vrem eroare la compilare, nu un `setPaintProperty` care tace la rulare.
+  const paint = (
+    layerId: string,
+    property: Parameters<MapboxMap['setPaintProperty']>[1],
+    value: Parameters<MapboxMap['setPaintProperty']>[2],
+  ) => {
+    try {
+      map.setPaintProperty(layerId, property, value)
+    } catch {
+      // Strat inexistent în versiunea asta de stil. Harta rămâne validă fără el.
+    }
+  }
+
+  const layers = map.getStyle()?.layers
+  if (!layers) return
+
+  for (const layer of layers) {
+    if (layer.type === 'background') {
+      paint(layer.id, 'background-color', MAP_PALETTE.land)
+      continue
+    }
+
+    if (layer.type === 'symbol') {
+      // Etichetele urcă pe ink, cu halou alb: pe fundalul colorat, gri-ul implicit se pierdea.
+      paint(layer.id, 'text-color', MAP_PALETTE.label)
+      paint(layer.id, 'text-halo-color', MAP_PALETTE.labelHalo)
+      paint(layer.id, 'text-halo-width', 1.2)
+      continue
+    }
+
+    const role = layerRole(layer.id)
+    if (!role) continue
+
+    if (layer.type === 'fill') {
+      paint(layer.id, 'fill-color', MAP_PALETTE[role])
+    } else if (layer.type === 'line') {
+      paint(layer.id, 'line-color', MAP_PALETTE[role])
+    }
+  }
+}
