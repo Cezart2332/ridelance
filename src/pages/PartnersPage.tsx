@@ -20,6 +20,8 @@ import { SectionHeader } from '../components/common/SectionHeader'
 import { pageFrameSx } from '../constants/layout'
 import { InsuranceLinksGrid } from '../components/insurance/InsuranceLinksGrid'
 import { EldriveOffer } from '../components/partners/EldriveOffer'
+import { PartnerBenefitBlocks } from '../components/partners/PartnerBenefitBlocks'
+import { getPartnerBenefit } from '../data/benefits'
 import {
   BCR_GEORGE_MESSAGE,
   BCR_OFFERS,
@@ -278,6 +280,11 @@ function BcrPanelContent() {
 }
 
 function PartnerPanel({ partner }: { partner: Partner }) {
+  // Textul de la Beneficii ține loc de prezentare pentru partenerii care n-au încă una proprie.
+  // Fără el, pagina lor publică arăta doar logoul și numele.
+  const benefit = getPartnerBenefit(partner.slug)
+  const tagline = partner.tagline ?? benefit?.tagline
+
   return (
     <Paper
       elevation={0}
@@ -323,9 +330,9 @@ function PartnerPanel({ partner }: { partner: Partner }) {
           <Typography sx={{ fontWeight: 850, fontSize: { xs: '1.35rem', md: '1.6rem' }, color: TOKENS.ink }}>
             {partner.name}
           </Typography>
-          {partner.tagline && (
+          {tagline && (
             <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.4 }}>
-              {partner.tagline}
+              {tagline}
             </Typography>
           )}
         </Box>
@@ -376,6 +383,7 @@ function PartnerPanel({ partner }: { partner: Partner }) {
             {partner.slug === 'eldrive' && (
               <EldriveOffer tokens={TOKENS} title="Tarife preferențiale RIDElance" />
             )}
+            {!partner.description && benefit && <PartnerBenefitBlocks blocks={benefit.blocks} />}
           </Stack>
         )}
       </Box>

@@ -4,44 +4,70 @@
  * Într-un singur fișier pentru că apare în două locuri — pagina publică de Parteneri și Beneficii
  * din dashboard — iar un tarif scris de două ori e un tarif care va ajunge diferit.
  *
- * Cifrele vin din materialul primit de la partener. Nu se rotunjesc și nu se recalculează nicăieri
- * în interfață: se afișează exact așa cum sunt negociate.
+ * Textele sunt cele din materialul primit de la partener, cu o singură abatere: sumele se scriu cu
+ * virgulă, ca peste tot în interfața românească. Cifrele nu se rotunjesc și nu se recalculează
+ * nicăieri — se afișează exact așa cum sunt negociate.
  */
 
 export interface EldriveTariff {
-  /** Cheia de culoare din bandă. */
-  kind: 'night' | 'day'
-  label: string
-  /** Ora de început, 0–24. Intervalul poate trece peste miezul nopții. */
-  fromHour: number
-  toHour: number
-  /** Scris cu virgulă, ca peste tot în interfața românească. */
+  key: string
+  title: string
+  /** Rândul mic de sub titlu: la ce stații și în ce interval se aplică. */
+  scope: string
   price: string
+  /** Unitatea, cu precizarea care ține de tariful ăsta. */
+  unit: string
+  /** Tariful mic poartă accentul mărcii: culoarea spune când merită încărcat. */
+  highlighted: boolean
 }
 
-/** Tariful de bază, cel care depinde de oră. */
 export const ELDRIVE_TARIFFS: EldriveTariff[] = [
-  { kind: 'night', label: 'Noapte', fromHour: 22, toHour: 6, price: '1,50' },
-  { kind: 'day', label: 'Zi', fromHour: 6, toHour: 22, price: '2,30' },
+  {
+    key: 'night',
+    title: 'Tarif noapte',
+    scope: 'Stațiile eligibile 22:00–06:00',
+    price: '1,50',
+    unit: 'lei / kWh · TVA inclus',
+    highlighted: true,
+  },
+  {
+    key: 'day',
+    title: 'Tarif zi',
+    scope: 'Stațiile eligibile 06:00–22:00',
+    price: '2,30',
+    unit: 'lei / kWh · TVA inclus',
+    highlighted: false,
+  },
+  {
+    key: 'nonstop',
+    title: 'Non-stop',
+    scope: 'Mega Mall & Unirea',
+    price: '1,50',
+    unit: 'lei / kWh · 24/7',
+    highlighted: true,
+  },
 ]
 
-/**
- * Stațiile unde tariful de noapte se aplică tot timpul.
- *
- * E o excepție de la bandă, nu un al treilea tarif: aceeași sumă, alt program. De aceea stă lipită
- * de bandă în interfață, nu într-un card alături — altfel ar arăta ca o a treia opțiune de preț.
- */
-export const ELDRIVE_NONSTOP = {
-  price: '1,50',
-  stations: 'Mega Mall și Unirea',
+/** Blocul „ce e integrat la noi": numărul de stații și ce se vede despre ele. */
+export const ELDRIVE_INTEGRATION = {
+  badge: 'Integrat în RIDElance',
+  title: 'Harta interactivă',
+  stationCount: 17,
+  text: 'stații afișate cu listă, pin-uri, porturi și navigare',
 }
-
-export const ELDRIVE_UNIT = 'lei / kWh'
-export const ELDRIVE_VAT_NOTE = 'TVA inclus'
 
 export const ELDRIVE_NETWORK = {
   stationCount: 17,
-  area: 'București și Ilfov',
+  area: 'București + Ilfov',
+}
+
+/** Textele secțiunii de hartă. Se afișează doar când există stații — vezi `ELDRIVE_STATIONS`. */
+export const ELDRIVE_MAP_SECTION = {
+  title: 'Harta stațiilor Eldrive incluse în ofertă',
+  text:
+    'Secțiune dedicată în pagina de Parteneri. Poți vedea toate stațiile eligibile, lista completă ' +
+    'în stânga, detalii despre putere și conectori, plus navigare rapidă din telefon.',
+  facts: ['17 locații', 'București + Ilfov', 'Tarife RIDElance'],
 }
 
 /** Ce vezi în platformă pentru fiecare stație. */
@@ -82,15 +108,3 @@ export interface EldriveStation {
  * Când vin datele, se completează aici și restul merge singur.
  */
 export const ELDRIVE_STATIONS: EldriveStation[] = []
-
-/**
- * Ora curentă → tariful activ. Intervalul de noapte trece peste miezul nopții, deci comparația e
- * „sau", nu „și".
- */
-export function eldriveTariffAt(date: Date): EldriveTariff {
-  const hour = date.getHours() + date.getMinutes() / 60
-  const night = ELDRIVE_TARIFFS.find((t) => t.kind === 'night')!
-  return hour >= night.fromHour || hour < night.toHour
-    ? night
-    : ELDRIVE_TARIFFS.find((t) => t.kind === 'day')!
-}
