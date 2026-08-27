@@ -2,7 +2,7 @@ import { Box, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 
-import { partnerLogoFor, type PlanFeature } from '../../data/plans'
+import { partnerLogoFor, partnerNameFor, type PlanFeature } from '../../data/plans'
 import { TOKENS } from '../../constants/tokens'
 
 /**
@@ -14,9 +14,20 @@ import { TOKENS } from '../../constants/tokens'
  *
  * Logoul stă inline, pe linia de bază a textului, nu ca pictogramă separată: e parte din
  * propoziție, nu o decorație lângă ea.
+ *
+ * Cu `showPartnerLogo` stins, numele se scrie cu litere. Nu se șterge pur și simplu: logoul e
+ * subiectul frazei, iar fără el ar rămâne „100 lei bonus la deschiderea contului" — un bonus fără
+ * bancă.
  */
-export function PlanFeatureItem({ feature }: { feature: PlanFeature }) {
-  const logo = feature.partner ? partnerLogoFor(feature.partner) : null
+export function PlanFeatureItem({
+  feature,
+  showPartnerLogo = true,
+}: {
+  feature: PlanFeature
+  showPartnerLogo?: boolean
+}) {
+  const logo = feature.partner && showPartnerLogo ? partnerLogoFor(feature.partner) : null
+  const partnerName = feature.partner && !showPartnerLogo ? partnerNameFor(feature.partner) : null
 
   return (
     <Box component="li" sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.2 }}>
@@ -41,6 +52,11 @@ export function PlanFeatureItem({ feature }: { feature: PlanFeature }) {
               mr: 0.7,
             }}
           />
+        )}
+        {partnerName && (
+          <Box component="strong" sx={{ fontWeight: 800, color: TOKENS.ink }}>
+            {partnerName}:{' '}
+          </Box>
         )}
         {feature.prefix ? `${feature.prefix} ` : null}
         {feature.strong && (

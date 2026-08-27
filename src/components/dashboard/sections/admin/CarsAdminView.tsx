@@ -25,7 +25,7 @@ import PendingActionsRoundedIcon from '@mui/icons-material/PendingActionsRounded
 import PaymentsRoundedIcon from '@mui/icons-material/PaymentsRounded';
 import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
 import { carsService, getCarImageUrl, type Car, type CarLead, type CarListingDetails } from '../../../../services/cars.service';
-import carListJson from '../../../../data/car-list.json';
+import { BOLT_CATEGORIES, CAR_BRANDS as brandsList, CAR_BRANDS_DATA as allBrandsData, UBER_CATEGORIES } from '../../../../data/carCatalog';
 import {
   formatCarStatus,
   getCarStatusColor,
@@ -72,8 +72,6 @@ interface LocalImage {
   isExisting?: boolean;
 }
 
-const UBER_CATEGORIES = ['UberX', 'Uber Comfort', 'Uber Green', 'Uber Black', 'Uber Kids'];
-const BOLT_CATEGORIES = ['Bolt', 'Bolt Comfort', 'Bolt Green', 'Bolt Premium', 'Bolt Economy'];
 const BADGES = ['Consum Mic', 'Hybrid', 'GPL', 'Top Rated', 'Nou', 'Reducere'];
 
 const PAYMENT_LABELS: Record<string, string> = {
@@ -92,50 +90,6 @@ const PAYMENT_COLORS: Record<string, string> = {
   Cancelled: '#64748b',
 };
 
-interface CarBrandData {
-  brand: string;
-  models: string[];
-}
-
-const curatedBrands: CarBrandData[] = [
-  {
-    brand: 'Tesla',
-    models: ['Model 3', 'Model Y', 'Model S', 'Model X']
-  },
-  {
-    brand: 'Dacia',
-    models: ['Logan', 'Sandero', 'Jogger', 'Spring', 'Duster', 'Lodgy', 'Dokker', 'Solenza']
-  },
-  {
-    brand: 'Toyota',
-    models: ['Prius', 'Corolla', 'Camry', 'Auris', 'Yaris', 'RAV4', 'C-HR', 'Avensis']
-  },
-  {
-    brand: 'Hyundai',
-    models: ['Ioniq', 'Ioniq 5', 'Ioniq 6', 'Elantra', 'Accent', 'Tucson', 'Kona', 'i30', 'i20']
-  },
-  {
-    brand: 'Kia',
-    models: ['Ceed', 'Niro', 'Stonic', 'Sportage', 'Rio', 'Optima', 'XCeed']
-  }
-];
-
-const allBrandsData: CarBrandData[] = (() => {
-  const list = [...(carListJson as CarBrandData[])];
-  
-  curatedBrands.forEach(curated => {
-    const existing = list.find(item => item.brand.toLowerCase() === curated.brand.toLowerCase());
-    if (existing) {
-      existing.models = Array.from(new Set([...existing.models, ...curated.models])).sort();
-    } else {
-      list.push(curated);
-    }
-  });
-  
-  return list.sort((a, b) => a.brand.localeCompare(b.brand));
-})();
-
-const brandsList = allBrandsData.map(item => item.brand);
 
 interface CarsAdminViewProps {
   variant?: 'admin' | 'poster';

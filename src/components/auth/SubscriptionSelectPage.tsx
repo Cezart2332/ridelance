@@ -23,7 +23,6 @@ import { BcrDiscountCheckbox } from '../pricing/BcrDiscountCheckbox'
 import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../../data/bcrDiscount'
 import { TermsAcceptance } from '../common/TermsAcceptance'
 import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
-import logo from '../../assets/logo.svg'
 import { TOKENS as GLOBAL_TOKENS } from '../../constants/tokens'
 
 const TOKENS = {
@@ -118,15 +117,6 @@ export default function SubscriptionSelectPage() {
     >
       <Container maxWidth="lg">
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'center' }}>
-          {/* Logo */}
-          <Box
-            component="img"
-            src={logo}
-            alt="Ridelance"
-            sx={{ height: 46, width: 'auto', cursor: 'pointer' }}
-            onClick={() => navigate('/app')}
-          />
-
           {/* Header */}
           <Box sx={{ textAlign: 'center', maxWidth: 600 }}>
             <Typography

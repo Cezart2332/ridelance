@@ -97,6 +97,14 @@ export function partnerLogoFor(slug: string): string | null {
 }
 
 /**
+ * Numele partenerului, scris. Ține locul logoului acolo unde acesta nu se afișează — fără el,
+ * „100 lei bonus la deschiderea contului" n-ar mai spune de la cine vine.
+ */
+export function partnerNameFor(slug: string): string | null {
+  return getPartnerBenefit(slug)?.name ?? null
+}
+
+/**
  * Planurile pentru PFA.
  *
  * Sumele sunt cele din materialul comercial: lunar, cu 10% reducere la plata anuală. Sunt și

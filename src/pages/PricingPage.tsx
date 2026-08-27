@@ -270,7 +270,11 @@ function PlanCard({
             </Typography>
           )}
           {plan.features.map((feature, index) => (
-            <PlanFeatureItem key={`${feature.strong ?? ''}-${feature.text ?? ''}-${index}`} feature={feature} />
+            <PlanFeatureItem
+              key={`${feature.strong ?? ''}-${feature.text ?? ''}-${index}`}
+              feature={feature}
+              showPartnerLogo={false}
+            />
           ))}
         </Box>
 

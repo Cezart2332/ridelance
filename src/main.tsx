@@ -137,8 +137,19 @@ const theme = createTheme({
         body: {
           color: TOKENS.ink,
           backgroundColor: TOKENS.surface,
-          overflowX: 'hidden',
-          overflowY: 'auto',
+          // `clip`, nu `hidden`. Amândouă taie ce iese lateral, dar `hidden` transformă elementul
+          // într-un container de scroll, iar un `position: sticky` dinăuntru se lipește atunci de
+          // el, nu de fereastră — adică nu se lipește niciodată, pentru că `body` și `#root` n-au
+          // ce derula. `clip` taie fără să creeze containerul, deci sticky funcționează din nou.
+          //
+          // `overflow-y` lipsește dinadins. `clip` pe o axă, cu orice altceva decât `visible` pe
+          // cealaltă, se calculează înapoi ca `hidden` — adică exact ce încercăm să evităm. Pagina
+          // derulează oricum pe `html`, nu pe `body`, deci nu se pierde nimic.
+          //
+          // Două valori: Safari sub 16 nu cunoaște `clip` și ignoră a doua declarație, rămânând pe
+          // `hidden` — tăiere corectă, sticky nefuncțional, adică exact comportamentul de până
+          // acum. Restul browserelor iau `clip`.
+          overflowX: ['hidden', 'clip'],
           minHeight: '100%',
           width: '100%',
           margin: 0,
@@ -149,7 +160,8 @@ const theme = createTheme({
         '#root': {
           minHeight: '100%',
           width: '100%',
-          overflowX: 'hidden',
+          // Vezi nota de la `body`.
+          overflowX: ['hidden', 'clip'],
         },
         'input, textarea': {
           WebkitUserSelect: 'text',

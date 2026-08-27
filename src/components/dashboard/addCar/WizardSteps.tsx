@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Chip, MenuItem, Stack, Switch, TextField, Typography } from '@mui/material'
+import { Alert, Autocomplete, Box, Button, Checkbox, Chip, FormControlLabel, MenuItem, Stack, Switch, TextField, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded'
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
@@ -20,6 +20,7 @@ import {
   type CarDraft,
   type WizardMode,
 } from './wizardModel'
+import { BOLT_CATEGORIES, CAR_BRANDS, UBER_CATEGORIES, modelsForBrand } from '../../../data/carCatalog'
 import { DateField } from '../../common/DateField'
 
 /**
@@ -50,14 +51,42 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 export function VehicleStep({ draft, update }: { draft: CarDraft; update: Update }) {
   return (
     <Stack spacing={2.5}>
-      <Alert severity="info" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
-        Mașina poate fi adăugată și publicată fără talon, RCA sau CASCO. Dosarul se completează
-        oricând, la pasul 5.
-      </Alert>
-
       <Box sx={grid2}>
-        <TextField label="Marcă" required value={draft.brand} onChange={(e) => update('brand', e.target.value)} fullWidth size="small" sx={dashboardInputSx} />
-        <TextField label="Model" required value={draft.model} onChange={(e) => update('model', e.target.value)} fullWidth size="small" sx={dashboardInputSx} />
+        {/* `freeSolo`: catalogul acoperă mult, dar nu tot. O marcă lipsă nu are voie să blocheze
+            publicarea unui anunț — se scrie de mână și merge mai departe. */}
+        <Autocomplete
+          freeSolo
+          options={CAR_BRANDS}
+          value={draft.brand}
+          onInputChange={(_, value) => {
+            update('brand', value)
+            // Modelul aparține mărcii. Rămas pe loc la schimbarea ei, ar fi produs perechi care
+            // nu există — „Dacia Corolla".
+            if (value.trim().toLowerCase() !== draft.brand.trim().toLowerCase()) {
+              update('model', '')
+            }
+          }}
+          renderInput={(params) => (
+            <TextField {...params} label="Marcă" required fullWidth size="small" sx={dashboardInputSx} />
+          )}
+        />
+        <Autocomplete
+          freeSolo
+          options={modelsForBrand(draft.brand)}
+          value={draft.model}
+          onInputChange={(_, value) => update('model', value)}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Model"
+              required
+              fullWidth
+              size="small"
+              sx={dashboardInputSx}
+              helperText={draft.brand ? undefined : 'Alege întâi marca.'}
+            />
+          )}
+        />
         <TextField label="An fabricație" required type="number" value={draft.year} onChange={(e) => update('year', e.target.value)} fullWidth size="small" sx={dashboardInputSx} />
         <TextField select label="Motorizare" value={draft.engine} onChange={(e) => update('engine', e.target.value)} fullWidth size="small" sx={dashboardInputSx}>
           {ENGINES.map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
@@ -76,35 +105,79 @@ export function VehicleStep({ draft, update }: { draft: CarDraft; update: Update
         Pe ce categorii poate rula mașina. Se folosesc ca filtru în marketplace.
       </Typography>
       <Box sx={grid2}>
-        <TextField
+        <CategoryPicker
           label="Categorii Uber"
-          value={draft.uberCategories.join(', ')}
-          onChange={(e) => update('uberCategories', splitList(e.target.value))}
-          fullWidth
-          size="small"
-          sx={dashboardInputSx}
-          placeholder="UberX, Comfort"
-          helperText="Separate prin virgulă."
+          options={UBER_CATEGORIES}
+          selected={draft.uberCategories}
+          onChange={(next) => update('uberCategories', next)}
         />
-        <TextField
+        <CategoryPicker
           label="Categorii Bolt"
-          value={draft.boltCategories.join(', ')}
-          onChange={(e) => update('boltCategories', splitList(e.target.value))}
-          fullWidth
-          size="small"
-          sx={dashboardInputSx}
-          placeholder="Bolt, Comfort"
-          helperText="Separate prin virgulă."
+          options={BOLT_CATEGORIES}
+          selected={draft.boltCategories}
+          onChange={(next) => update('boltCategories', next)}
         />
       </Box>
     </Stack>
   )
 }
 
-/** Lista scrisă cu virgule, curățată de spații și de intrări goale. */
-function splitList(value: string): string[] {
-  return value.split(',').map((item) => item.trim()).filter(Boolean)
+/**
+ * Categoriile unei platforme, ca bife.
+ *
+ * Erau un câmp liber în care se scriau despărțite prin virgulă. Filtrele de pe pagina publică
+ * caută șiruri exacte, deci „confort" scris cu mâna nu se potrivea cu nimic, iar anunțul nu apărea
+ * la filtrul lui. O listă închisă nu are cum să greșească scrierea.
+ */
+function CategoryPicker({
+  label,
+  options,
+  selected,
+  onChange,
+}: {
+  label: string
+  options: string[]
+  selected: string[]
+  onChange: (next: string[]) => void
+}) {
+  const toggle = (option: string, checked: boolean) => {
+    // Ordinea din catalog, nu ordinea bifării: două anunțuri cu aceleași categorii trebuie să le
+    // aibă scrise la fel.
+    onChange(
+      checked
+        ? options.filter((item) => item === option || selected.includes(item))
+        : selected.filter((item) => item !== option),
+    )
+  }
+
+  return (
+    <Box>
+      <Typography
+        sx={{ fontSize: '0.78rem', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted, mb: 0.6 }}
+      >
+        {label}
+      </Typography>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 1.5 }}>
+        {options.map((option) => (
+          <FormControlLabel
+            key={option}
+            control={
+              <Checkbox
+                size="small"
+                checked={selected.includes(option)}
+                onChange={(event) => toggle(option, event.target.checked)}
+                sx={{ py: 0.4, color: DASHBOARD_TOKENS.textSubtle, '&.Mui-checked': { color: DASHBOARD_TOKENS.primary } }}
+              />
+            }
+            label={option}
+            slotProps={{ typography: { sx: { fontSize: '0.84rem', color: DASHBOARD_TOKENS.ink } } }}
+          />
+        ))}
+      </Box>
+    </Box>
+  )
 }
+
 
 // ── 2. Ofertă ─────────────────────────────────────────────────────────────────────────────
 
@@ -477,11 +550,6 @@ export function DossierStep({ draft, update }: { draft: CarDraft; update: Update
 
   return (
     <Stack spacing={2.5}>
-      <Alert severity="info" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
-        Pas opțional. Nu blochează publicarea, dar completează dosarul digital și devine obligatoriu
-        înainte de generarea primului contract de închiriere.
-      </Alert>
-
       <Box sx={grid2}>
         <TextField label="Număr înmatriculare" value={draft.plateNumber} onChange={(e) => update('plateNumber', e.target.value)} fullWidth size="small" sx={dashboardInputSx} placeholder="B 123 RID" />
         <TextField label="VIN" value={draft.vin} onChange={(e) => update('vin', e.target.value)} fullWidth size="small" sx={dashboardInputSx} />
@@ -513,10 +581,6 @@ export function DossierStep({ draft, update }: { draft: CarDraft; update: Update
         </Typography>
       </Box>
 
-      <Alert severity="info" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
-        Documentele mașinii — talon, RCA, CASCO, ITP, copie conformă — se încarcă din dosarul
-        mașinii, după ce anunțul e salvat.
-      </Alert>
     </Stack>
   )
 }
