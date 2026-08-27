@@ -19,6 +19,8 @@ import { subscriptionPlansFor, type PlanKey, stripeService } from '../../service
 import { canAccessDashboard } from '../../utils/clientOnboarding'
 import { ANNUAL_DISCOUNT, type BillingCycle } from '../../data/plans'
 import { Switcher } from '../pricing/Switcher'
+import { BcrDiscountCheckbox } from '../pricing/BcrDiscountCheckbox'
+import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../../data/bcrDiscount'
 import { TermsAcceptance } from '../common/TermsAcceptance'
 import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
 import logo from '../../assets/logo.svg'
@@ -53,6 +55,8 @@ export default function SubscriptionSelectPage() {
   const isSuspendedAccount = searchParams.get('reason') === 'suspended'
   const [gateChecking, setGateChecking] = useState(true)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  // Pornește de la ce a bifat omul pe pagina publică, dacă a trecut pe acolo în sesiunea asta.
+  const [bcrDiscount, setBcrDiscount] = useState(readBcrDiscountIntent)
 
   // Abonamentul se alege doar după onboarding complet; cu abonament activ → dashboard.
   useEffect(() => {
@@ -80,7 +84,7 @@ export default function SubscriptionSelectPage() {
   const handleContinue = () => {
     if (!selected || !termsAccepted || !paymentPolicyAccepted) return
     setCheckoutError(null)
-    stripeService.redirectToPlan(selected, undefined, undefined, { cycle }).catch(() => {
+    stripeService.redirectToPlan(selected, undefined, undefined, { cycle, bcrDiscountRequested: bcrDiscount }).catch(() => {
       setCheckoutError('Nu am putut deschide plata. Încearcă din nou în câteva momente.')
     })
   }
@@ -301,6 +305,15 @@ export default function SubscriptionSelectPage() {
                     <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.78rem', mt: 0.5, fontStyle: 'italic' }}>
                       {plan.priceNote}
                     </Typography>
+
+                    <BcrDiscountCheckbox
+                      checked={bcrDiscount}
+                      onChange={(next) => {
+                        setBcrDiscount(next)
+                        writeBcrDiscountIntent(next)
+                      }}
+                      stopPropagation
+                    />
                   </Box>
 
                   {/* Summary */}

@@ -269,7 +269,7 @@ export const stripeService = {
     key: PlanKey,
     successUrl?: string,
     cancelUrl?: string,
-    options?: { isPlanChange?: boolean; cycle?: BillingCycle },
+    options?: { isPlanChange?: boolean; cycle?: BillingCycle; bcrDiscountRequested?: boolean },
   ): Promise<void> {
     const cycle: BillingCycle = options?.cycle ?? 'monthly'
     const plan = subscriptionPlansFor(cycle).find(p => p.key === key)
@@ -284,6 +284,9 @@ export const stripeService = {
       plan: key,
       cycle: cycleParam(cycle),
       isPlanChange: options?.isPlanChange ?? false,
+      // Nu schimbă suma încasată acum: serverul o reține pe abonament, iar reducerea pornește
+      // după confirmarea BCR.
+      bcrDiscountRequested: options?.bcrDiscountRequested ?? false,
       successUrl: effectiveSuccessUrl,
       cancelUrl: effectiveCancelUrl
     })

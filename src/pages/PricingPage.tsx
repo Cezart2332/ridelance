@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '../constants/routes'
 import { TOKENS } from '../constants/tokens'
+import { BcrDiscountCheckbox } from '../components/pricing/BcrDiscountCheckbox'
+import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../data/bcrDiscount'
 import { SectionHeader } from '../components/common/SectionHeader'
 import { PlanFeatureItem } from '../components/pricing/PlanFeatureItem'
 import { Switcher } from '../components/pricing/Switcher'
@@ -39,6 +41,9 @@ export function PricingPage() {
   const { accessToken, isInitialized } = useAppSelector((s) => s.auth)
 
   const [audience, setAudience] = useState<Audience>('pfa')
+  // Bifa e o singură decizie, deci o singură stare pentru toate cardurile. Se reține în sesiune și
+  // devine valoarea implicită la alegerea abonamentului, unde chiar pleacă spre server.
+  const [bcrDiscount, setBcrDiscount] = useState(readBcrDiscountIntent)
   const [cycle, setCycle] = useState<BillingCycle>('monthly')
 
   const plans = plansFor(audience)
@@ -109,7 +114,20 @@ export function PricingPage() {
             }}
           >
             {plans.map((plan) => (
-              <PlanCard key={plan.key} plan={plan} cycle={cycle} single={plans.length === 1} onStart={handleStart} />
+              <PlanCard
+                key={plan.key}
+                plan={plan}
+                cycle={cycle}
+                single={plans.length === 1}
+                onStart={handleStart}
+                // Doar planurile PFA: contul BCR e pentru afacerea unei persoane fizice
+                // autorizate, iar abonamentul de flotă nu are cum să-l primească.
+                bcrDiscount={audience === 'pfa' ? bcrDiscount : null}
+                onBcrDiscountChange={(next) => {
+                  setBcrDiscount(next)
+                  writeBcrDiscountIntent(next)
+                }}
+              />
             ))}
           </Box>
 
@@ -125,11 +143,16 @@ function PlanCard({
   cycle,
   single,
   onStart,
+  bcrDiscount,
+  onBcrDiscountChange,
 }: {
   plan: Plan
   cycle: BillingCycle
   single: boolean
   onStart: () => void
+  /** `null` ascunde bifa: planul nu e eligibil. */
+  bcrDiscount: boolean | null
+  onBcrDiscountChange: (checked: boolean) => void
 }) {
   const price = priceFor(plan, cycle)
   const annual = cycle === 'annual' ? annualSummary(plan) : null
@@ -217,6 +240,10 @@ function PlanCard({
           <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.78rem', mt: 0.5, fontStyle: 'italic' }}>
             {price.note}
           </Typography>
+
+          {bcrDiscount !== null && (
+            <BcrDiscountCheckbox checked={bcrDiscount} onChange={onBcrDiscountChange} align="center" />
+          )}
         </Box>
 
         <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.95rem', lineHeight: 1.6 }}>
