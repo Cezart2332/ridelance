@@ -14,6 +14,7 @@ import {
 } from '../../../data/benefits'
 import { PARTNER_LOGO } from '../../../data/partnerLogo'
 import { BCR_OFFERS, BCR_ONBOARDING_URL } from '../../../data/partners'
+import { EldriveOffer } from '../../partners/EldriveOffer'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { PageHeader } from '../ui'
 
@@ -296,6 +297,10 @@ function PartnerPanel({
           )}
 
           {partner.showBcrOffers && <BcrOffers />}
+
+          {partner.slug === 'eldrive' && (
+            <EldriveOffer tokens={DASHBOARD_TOKENS} title="Oferta Eldrive pentru RIDElance" />
+          )}
 
           {partner.blocks.length > 0 && (
             <Box

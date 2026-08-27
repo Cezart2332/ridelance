@@ -19,6 +19,7 @@ import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
 import { pageFrameSx } from '../constants/layout'
 import { InsuranceLinksGrid } from '../components/insurance/InsuranceLinksGrid'
+import { EldriveOffer } from '../components/partners/EldriveOffer'
 import {
   BCR_GEORGE_MESSAGE,
   BCR_OFFERS,
@@ -371,6 +372,9 @@ function PartnerPanel({ partner }: { partner: Partner }) {
                 </Typography>
                 <InsuranceLinksGrid compact />
               </Box>
+            )}
+            {partner.slug === 'eldrive' && (
+              <EldriveOffer tokens={TOKENS} title="Tarife preferențiale RIDElance" />
             )}
           </Stack>
         )}

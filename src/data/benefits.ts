@@ -193,19 +193,12 @@ export const partnerBenefits: PartnerBenefit[] = [
     slug: 'eldrive',
     name: 'eldrive',
     image: eldrive,
-    tagline: 'Încărcare pentru flotele electrice, cu costurile decontate în RIDElance.',
-    blocks: [
-      {
-        badge: 'În pregătire',
-        title: 'Rețeaua de încărcare, direct în dashboard',
-        text: 'Lucrăm la integrarea cu eldrive. Când e gata, sesiunile de încărcare intră automat în costurile flotei, iar stațiile apar pe hartă.',
-        checks: [
-          'Harta stațiilor de încărcare',
-          'Sesiunile de încărcare în costurile mașinii',
-          'Card sau RFID asociat contului',
-        ],
-      },
-    ],
+    tagline: 'Tarife preferențiale la încărcarea mașinilor electrice.',
+    intro:
+      'Perfect pentru PFA-urile și flotele care lucrează cu mașini electrice: tarif preferențial la încărcare, cu prețul de zi și de noapte și stațiile eligibile din rețea.',
+    // Fără blocuri: oferta depinde de oră, iar o listă de bife n-ar fi arătat asta. Conținutul
+    // vine din `EldriveOffer`, aceeași componentă ca în pagina publică de Parteneri.
+    blocks: [],
   },
 ]
 

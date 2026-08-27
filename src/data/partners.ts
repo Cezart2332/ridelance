@@ -149,9 +149,9 @@ const partnersUnordered: Partner[] = [
     slug: 'eldrive',
     name: 'eldrive',
     image: eldrive,
-    tagline: 'Rețea de încărcare pentru flotele electrice.',
+    tagline: 'Tarife preferențiale la încărcarea mașinilor electrice.',
     description:
-      'eldrive operează una dintre cele mai extinse rețele de stații de încărcare din România. Prin parteneriatul cu RIDElance, șoferii și flotele electrice vor putea vedea stațiile direct pe hartă în dashboard, iar sesiunile de încărcare vor intra automat în costurile mașinii. Integrarea e în lucru.',
+      'Beneficiu dedicat șoferilor și flotelor RIDElance care folosesc mașini electrice. În platformă vezi direct stațiile incluse în ofertă, tariful de zi și de noapte, plus acces rapid către navigare.',
     website: 'https://eldrive.ro',
   },
 ]
