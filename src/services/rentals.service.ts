@@ -113,7 +113,62 @@ export interface RentalDefaults {
   defaultConditions: string | null
 }
 
+/** Ce document se generează. */
+export type RentalDocumentType = 'RentalContract' | 'HandoverProtocol' | 'ReturnProtocol'
+
+export interface GeneratedDocument {
+  id: string
+  type: RentalDocumentType
+  status: 'Generated' | 'SentForSignature' | 'Signed' | 'Cancelled'
+  version: number
+  documentId: string
+  signedDocumentId: string | null
+  generatedAtUtc: string
+  sentAtUtc: string | null
+  sentToEmail: string | null
+  signedAtUtc: string | null
+}
+
+/**
+ * Un câmp care lipsește ca să se poată genera documentul.
+ *
+ * `owner` spune unde se completează — mașină, firmă sau chiriaș — ca interfața să poată duce omul
+ * exact acolo, nu în formularul complet de editare.
+ */
+export interface MissingField {
+  field: string
+  label: string
+  owner: 'car' | 'company' | 'tenant' | 'rental'
+}
+
+/**
+ * Serverul întoarce câmpurile lipsă ca eșec, împachetate în `detail`. Le despachetăm aici, într-un
+ * singur loc: forma sârmei nu are ce căuta într-o componentă.
+ */
+export function parseMissingFields(error: unknown): MissingField[] | null {
+  const response = (error as { response?: { data?: { title?: string; detail?: string } } })?.response
+  if (response?.data?.title !== 'RentalDocument.MissingFields') return null
+
+  return (response.data.detail ?? '')
+    .split('|')
+    .filter(Boolean)
+    .map((part) => {
+      const [field, label, owner] = part.split(';')
+      return { field, label, owner: owner as MissingField['owner'] }
+    })
+}
+
 export const rentalsService = {
+  async getDocuments(rentalId: string): Promise<GeneratedDocument[]> {
+    const res = await api.get<GeneratedDocument[]>(`/rentals/${rentalId}/documents`)
+    return res.data
+  },
+
+  async generateDocument(rentalId: string, type: RentalDocumentType): Promise<GeneratedDocument> {
+    const res = await api.post<GeneratedDocument>(`/rentals/${rentalId}/documents`, { type })
+    return res.data
+  },
+
   async getOverview(): Promise<RentalOverview> {
     const res = await api.get<RentalOverview>('/rentals')
     return res.data

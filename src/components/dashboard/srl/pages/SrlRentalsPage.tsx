@@ -34,6 +34,7 @@ import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '
 import { Amount, PageHeader, Panel, StatCard, StatusChip } from '../../ui'
 import type { StatusTone } from '../../ui'
 import { DateField } from '../../../common/DateField'
+import { RentalDocumentsPanel } from '../RentalDocumentsPanel'
 
 /**
  * Închirierile flotei: cine are ce mașină, până când și pe ce bani.
@@ -94,6 +95,8 @@ export function SrlRentalsPage() {
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<TabId>('open')
   const [dialogOpen, setDialogOpen] = useState(false)
+  /** Închirierea al cărei set de documente e deschis. */
+  const [documentsFor, setDocumentsFor] = useState<Rental | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
 
   const reload = useCallback(() => setReloadToken((token) => token + 1), [])
@@ -295,16 +298,25 @@ export function SrlRentalsPage() {
                       />
                     </Box>
                     <Box component="td" sx={{ ...cellSx, textAlign: 'right' }}>
-                      {rental.status !== 'completed' && (
+                      <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
                         <Button
                           size="small"
-                          variant="outlined"
-                          onClick={() => void close(rental)}
+                          onClick={() => setDocumentsFor(rental)}
                           sx={{ textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}
                         >
-                          Încheie
+                          Documente
                         </Button>
-                      )}
+                        {rental.status !== 'completed' && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => void close(rental)}
+                            sx={{ textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}
+                          >
+                            Încheie
+                          </Button>
+                        )}
+                      </Stack>
                     </Box>
                   </Box>
                 ))}
@@ -313,6 +325,19 @@ export function SrlRentalsPage() {
           </Box>
         )}
       </Panel>
+
+      {/* Documentele se deschid peste listă, nu într-o pagină separată: sunt un rezultat al
+          închirierii, iar drumul înapoi la ea trebuie să fie un click. */}
+      <Dialog open={documentsFor !== null} onClose={() => setDocumentsFor(null)} fullWidth maxWidth="sm">
+        <DialogContent sx={{ p: 0 }}>
+          {documentsFor && <RentalDocumentsPanel rental={documentsFor} />}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDocumentsFor(null)} sx={{ textTransform: 'none', fontWeight: 700 }}>
+            Închide
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <NewRentalDialog
         open={dialogOpen}
