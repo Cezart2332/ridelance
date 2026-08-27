@@ -16,11 +16,11 @@ import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '../../dashboardTheme'
 import { PageHeader, StatusChip, formatLei, type StatusTone } from '../../ui'
 import { tabularNums } from '../../home/tokens'
-import { documentService } from '../../../../services/document.service'
 import { expenseService, type DeductibleExpense } from '../../../../services/expense.service'
 import { deductibleExpensesData } from '../../../../data/cheltuieliDeductibile'
 import { getErrorMessage } from '../../../../utils/errorHandler'
 import { AddExpenseDialog } from './AddExpenseDialog'
+import { openDocument } from '../../../common/documentViewerBus'
 
 const MONTHS = [
   'Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie',
@@ -279,7 +279,7 @@ export function ExpensesPage({ pfaRegistrationId }: { pfaRegistrationId: string 
                           size="small"
                           endIcon={<OpenInNewRoundedIcon sx={{ fontSize: 14 }} />}
                           onClick={() =>
-                            void documentService.openInNewTab(expense.documentId, expense.originalFileName)
+                            openDocument(expense.documentId, expense.originalFileName)
                           }
                           sx={{ textTransform: 'none', fontSize: '0.82rem', fontWeight: 600 }}
                         >

@@ -29,6 +29,7 @@ import { TOKENS } from '../../constants/tokens'
 import { documentService, type DocumentSummary } from '../../services/document.service'
 import { formatDocumentCategory } from '../../utils/formatters'
 import { documentStatusColors, documentStatusLabel, normalizeDocumentStatus } from '../../utils/documentStatus'
+import { openDocument } from '../common/documentViewerBus'
 
 // ─── Expiry helpers ──────────────────────────────────────────────────────────
 
@@ -171,7 +172,7 @@ export function ContabilDocumentReviewList({
   const handleOpen = async (doc: DocumentSummary) => {
     setOpeningId(doc.id)
     try {
-      await documentService.openInNewTab(doc.id, doc.originalFileName)
+      openDocument(doc.id, doc.originalFileName)
     } finally {
       setOpeningId(null)
     }

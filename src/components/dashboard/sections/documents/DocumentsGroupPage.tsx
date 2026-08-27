@@ -26,6 +26,7 @@ import {
   type DocumentOverviewStatus,
 } from '../../../../services/documentsOverview.service'
 import { getErrorMessage } from '../../../../utils/errorHandler'
+import { openDocument } from '../../../common/documentViewerBus'
 
 const GROUP_COPY: Record<DocumentGroup, { title: string; subtitle: string; category: string }> = {
   personal: {
@@ -328,7 +329,9 @@ export function DocumentsGroupPage({ group }: { group: DocumentGroup }) {
               key={item.key}
               item={item}
               busy={busyKey === item.key}
-              onView={() => withDocument(item, documentService.openInNewTab)}
+              // Vizualizarea e sincronă acum — deschide suprapunerea, nu un tab. Nu mai are ce
+              // aștepta, deci nu mai trece prin `withDocument`, care ținea starea de „se încarcă".
+              onView={() => item.documentId && openDocument(item.documentId, item.originalFileName ?? item.label)}
               onDownload={() => withDocument(item, documentService.downloadAndSave)}
               onReplace={(file) => handleReplace(item, file)}
             />

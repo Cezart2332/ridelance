@@ -36,6 +36,7 @@ import {
 } from '../../services/pfa.service'
 import { documentService } from '../../services/document.service'
 import { DateField } from '../common/DateField'
+import { openDocument } from '../common/documentViewerBus'
 
 type Provider = 'Uber' | 'Bolt'
 type AccountKind = 'Driver' | 'Fleet'
@@ -407,7 +408,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
     if (!documentId) return
     setOpeningVatDoc(true)
     try {
-      await documentService.openInNewTab(documentId, 'Certificat TVA intracomunitar')
+      openDocument(documentId, 'Certificat TVA intracomunitar')
     } finally {
       setOpeningVatDoc(false)
     }

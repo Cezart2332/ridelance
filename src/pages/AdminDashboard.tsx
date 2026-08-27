@@ -48,6 +48,7 @@ import {
   type AdminPfaDetail,
   type AdminPlanFilter,
 } from '../services/adminOverview.service'
+import { openDocument } from '../components/common/documentViewerBus'
 
 interface PfaSummary {
   id: string
@@ -285,7 +286,7 @@ export function AdminDashboard() {
   const handleOpenDocument = useCallback(async (doc: DocumentSummary) => {
     setOpeningId(doc.id)
     try {
-      await documentService.openInNewTab(doc.id, doc.originalFileName)
+      openDocument(doc.id, doc.originalFileName)
     } finally {
       setOpeningId(null)
     }

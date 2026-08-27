@@ -10,9 +10,9 @@ import { tabularNums } from '../../home/tokens'
 import { FilterBar } from '../../home/components/FilterBar'
 import { useDashboardFilters } from '../../home/useDashboardFilters'
 import { useDashboardSummary } from '../../home/useDashboardData'
-import { documentService } from '../../../../services/document.service'
 import { taxObligationsService, type TaxObligation } from '../../../../services/taxObligations.service'
 import { getErrorMessage } from '../../../../utils/errorHandler'
+import { openDocument } from '../../../common/documentViewerBus'
 
 const STATUS_TONE: Record<TaxObligation['status'], StatusTone> = {
   InPregatire: 'neutral',
@@ -263,7 +263,7 @@ export function TaxesPage() {
                     spacing={0.6}
                     component="button"
                     onClick={() =>
-                      void documentService.openInNewTab(obligation.documentId!, `${obligation.typeLabel}.pdf`)
+                      openDocument(obligation.documentId!, `${obligation.typeLabel}.pdf`)
                     }
                     sx={{
                       mt: 1.6,

@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Box, Button, Skeleton, Stack, Tab, Tabs, Typography } from '@mui/material'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
-import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded'
+import UploadRoundedIcon from '@mui/icons-material/UploadRounded'
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
 
 import { SRL_PATHS } from '../../../../config/srlNavigation'
 import { carsService, type Car } from '../../../../services/cars.service'
+import { documentService, type CarDossier, type CarDossierSlot } from '../../../../services/document.service'
+import { openDocument } from '../../../common/documentViewerBus'
 import { maintenanceService, type MaintenanceEntry } from '../../../../services/maintenance.service'
 import { rentalsService, type Rental } from '../../../../services/rentals.service'
 import { formatCarStatus } from '../../../../utils/carLabels'
@@ -48,9 +51,13 @@ export function SrlCarPage() {
   const [car, setCar] = useState<Car | null>(null)
   const [rentals, setRentals] = useState<Rental[]>([])
   const [maintenance, setMaintenance] = useState<MaintenanceEntry[]>([])
+  const [dossier, setDossier] = useState<CarDossier | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<TabId>('prezentare')
+  const [reloadToken, setReloadToken] = useState(0)
+
+  const reload = useCallback(() => setReloadToken((token) => token + 1), [])
 
   useEffect(() => {
     let cancelled = false
@@ -59,14 +66,16 @@ export function SrlCarPage() {
       carsService.getById(carId),
       rentalsService.getOverview(),
       maintenanceService.getOverview(carId),
+      documentService.getCarDossier(carId),
     ])
-      .then(([loadedCar, overview, maintenanceOverview]) => {
+      .then(([loadedCar, overview, maintenanceOverview, carDossier]) => {
         if (cancelled) return
         setCar(loadedCar)
         // Închirierile vin întregi și se filtrează aici: o flotă are zeci, nu zeci de mii, iar un
         // parametru nou pe endpoint ar fi fost cod în plus pentru aceeași listă.
         setRentals(overview.rentals.filter((r) => r.carId === carId))
         setMaintenance(maintenanceOverview.entries)
+        setDossier(carDossier)
         setError(null)
       })
       .catch(() => {
@@ -79,7 +88,7 @@ export function SrlCarPage() {
     return () => {
       cancelled = true
     }
-  }, [carId])
+  }, [carId, reloadToken])
 
   const openRentals = useMemo(
     () => rentals.filter((r) => r.status !== 'completed' && r.status !== 'cancelled'),
@@ -160,7 +169,10 @@ export function SrlCarPage() {
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
         <StatCard label="Stare" value={formatCarStatus(car.status)} />
         <StatCard label="Închirieri deschise" value={String(openRentals.length)} />
-        <StatCard label="Intervenții înregistrate" value={String(maintenance.length)} />
+        <StatCard
+          label="Dosar vehicul"
+          value={dossier ? `${dossier.completionPercent}%` : '—'}
+        />
       </Box>
 
       <Tabs
@@ -184,14 +196,7 @@ export function SrlCarPage() {
       {tab === 'inchirieri' && <RentalsTab rentals={rentals} />}
       {tab === 'mentenanta' && <MaintenanceTab entries={maintenance} />}
 
-      {tab === 'documente' && (
-        <ComingSoon
-          title="Documentele mașinii"
-          description="Talonul, RCA, CASCO, ITP și copia conformă se vor încărca aici, pe mașină. Până atunci se încarcă din Documente societate."
-          upcoming={['Încărcare per mașină', 'Alerte de expirare', 'Vizualizare fără descărcare']}
-          icon={<DescriptionRoundedIcon />}
-        />
-      )}
+      {tab === 'documente' && dossier && <DocumentsTab carId={carId} dossier={dossier} onUploaded={reload} />}
 
       {tab === 'istoric' && (
         <ComingSoon
@@ -201,6 +206,152 @@ export function SrlCarPage() {
           icon={<HistoryRoundedIcon />}
         />
       )}
+    </Stack>
+  )
+}
+
+/**
+ * Dosarul mașinii: ce document se așteaptă, ce e încărcat și ce expiră.
+ *
+ * Sloturile sunt fixe, iar cele goale rămân vizibile. O listă doar cu ce s-a încărcat n-ar fi
+ * spus niciodată ce lipsește — exact întrebarea la care trebuie să răspundă un dosar.
+ */
+function DocumentsTab({
+  carId,
+  dossier,
+  onUploaded,
+}: {
+  carId: string
+  dossier: CarDossier
+  onUploaded: () => void
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const [uploadingFor, setUploadingFor] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const pickFile = (category: string) => {
+    setUploadingFor(category)
+    inputRef.current?.click()
+  }
+
+  const onFile = async (file: File | undefined) => {
+    if (!file || !uploadingFor) return
+    setUploadError(null)
+    try {
+      await documentService.upload(file, uploadingFor, undefined, undefined, undefined, undefined, carId)
+      onUploaded()
+    } catch {
+      setUploadError('Nu am putut încărca documentul.')
+    } finally {
+      setUploadingFor(null)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  return (
+    <Panel
+      title="Dosarul mașinii"
+      subtitle={`${dossier.completionPercent}% complet. Documentele nu blochează publicarea anunțului.`}
+    >
+      {uploadError && (
+        <Alert severity="error" sx={{ mb: 2, borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}>
+          {uploadError}
+        </Alert>
+      )}
+
+      <Box
+        component="input"
+        type="file"
+        ref={inputRef}
+        onChange={(event: React.ChangeEvent<HTMLInputElement>) => void onFile(event.target.files?.[0])}
+        sx={{ display: 'none' }}
+      />
+
+      <Stack>
+        {dossier.slots.map((slot, index) => (
+          <DossierRow
+            key={slot.category}
+            slot={slot}
+            first={index === 0}
+            busy={uploadingFor === slot.category}
+            onUpload={() => pickFile(slot.category)}
+          />
+        ))}
+      </Stack>
+    </Panel>
+  )
+}
+
+const SLOT_STATE: Record<CarDossierSlot['state'], { label: string; tone: 'active' | 'neutral' | 'error' }> = {
+  valid: { label: 'Valabil', tone: 'active' },
+  expiring_soon: { label: 'Expiră curând', tone: 'error' },
+  expired: { label: 'Expirat', tone: 'error' },
+  missing: { label: 'Lipsește', tone: 'neutral' },
+}
+
+function DossierRow({
+  slot,
+  first,
+  busy,
+  onUpload,
+}: {
+  slot: CarDossierSlot
+  first: boolean
+  busy: boolean
+  onUpload: () => void
+}) {
+  const state = SLOT_STATE[slot.state]
+
+  return (
+    <Stack
+      direction={{ xs: 'column', sm: 'row' }}
+      spacing={1.5}
+      sx={{
+        alignItems: { sm: 'center' },
+        justifyContent: 'space-between',
+        py: 1.4,
+        borderTop: first ? 'none' : `1px solid ${DASHBOARD_TOKENS.border}`,
+      }}
+    >
+      <Box sx={{ minWidth: 0 }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Typography sx={{ fontWeight: 800, fontSize: '0.9rem', color: DASHBOARD_TOKENS.ink }}>
+            {slot.label}
+          </Typography>
+          {!slot.required && (
+            <Typography sx={{ fontSize: '0.72rem', color: DASHBOARD_TOKENS.textSubtle, fontWeight: 700 }}>
+              opțional
+            </Typography>
+          )}
+        </Stack>
+        <Typography sx={{ fontSize: '0.8rem', color: DASHBOARD_TOKENS.textMuted }} noWrap>
+          {slot.fileName ?? 'Neîncărcat'}
+          {slot.expiresAtUtc ? ` · expiră ${formatDate(slot.expiresAtUtc)}` : ''}
+        </Typography>
+      </Box>
+
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexShrink: 0 }}>
+        <StatusChip tone={state.tone} label={state.label} />
+        {slot.documentId && (
+          <Button
+            size="small"
+            startIcon={<VisibilityRoundedIcon sx={{ fontSize: 16 }} />}
+            onClick={() => openDocument(slot.documentId!, slot.fileName ?? slot.label)}
+            sx={{ textTransform: 'none', fontWeight: 700 }}
+          >
+            Vezi
+          </Button>
+        )}
+        <Button
+          size="small"
+          startIcon={<UploadRoundedIcon sx={{ fontSize: 16 }} />}
+          onClick={onUpload}
+          disabled={busy}
+          sx={{ textTransform: 'none', fontWeight: 700 }}
+        >
+          {slot.documentId ? 'Înlocuiește' : 'Încarcă'}
+        </Button>
+      </Stack>
     </Stack>
   )
 }

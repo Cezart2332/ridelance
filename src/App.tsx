@@ -16,6 +16,7 @@ import SubscriptionSelectPage from './components/auth/SubscriptionSelectPage'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import RoleRedirect from './components/auth/RoleRedirect'
 import { SRL_ROOT } from './config/srlNavigation'
+import { DocumentViewerHost } from './components/common/documentViewerHost'
 
 /**
  * Ruta de dinainte de mutarea dashboard-ului SRL sub `/app`. Păstrează query string-ul:
@@ -70,6 +71,8 @@ function App() {
     <>
       <ScrollToTop />
       <InstallPWA />
+      {/* Suprapunere unică pentru vizualizarea documentelor, apelabilă din orice pagină. */}
+      <DocumentViewerHost />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           {/* ── Public auth pages ── */}

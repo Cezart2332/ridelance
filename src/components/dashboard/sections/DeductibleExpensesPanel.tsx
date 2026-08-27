@@ -31,6 +31,7 @@ import {
 import { documentStatusColors, documentStatusLabel, normalizeDocumentStatus } from '../../../utils/documentStatus'
 import { currentMonthYear } from '../../../utils/monthLabels'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme'
+import { openDocument } from '../../common/documentViewerBus'
 
 type DeductibleExpensesPanelProps = {
   year?: number
@@ -346,7 +347,7 @@ export function DeductibleExpensesPanel({
                     onClick={async () => {
                       setOpeningId(expense.documentId)
                       try {
-                        await documentService.openInNewTab(expense.documentId, expense.originalFileName)
+                        openDocument(expense.documentId, expense.originalFileName)
                       } finally {
                         setOpeningId(null)
                       }

@@ -27,6 +27,7 @@ import { documentStatusColors, documentStatusLabel, normalizeDocumentStatus } fr
 import { isUploadedInRomaniaMonth } from '../../../utils/romaniaMonth'
 import { formatMonthLabelRomania } from '../../../constants/recurringDocumentationNotification'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { openDocument } from '../../common/documentViewerBus'
 
 type RecurringDocumentationPanelProps = {
   year?: number
@@ -327,7 +328,7 @@ export function RecurringDocumentationPanel({
                           onClick={async () => {
                             setOpeningId(doc.id)
                             try {
-                              await documentService.openInNewTab(doc.id, doc.originalFileName)
+                              openDocument(doc.id, doc.originalFileName)
                             } finally {
                               setOpeningId(null)
                             }

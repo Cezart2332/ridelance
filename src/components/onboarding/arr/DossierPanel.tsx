@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { documentService } from '../../../services/document.service'
 import { getErrorMessage } from '../../../utils/errorHandler'
 import { TOKENS } from '../onboardingTheme'
+import { openDocument } from '../../common/documentViewerBus'
 
 /**
  * Generarea și descărcarea unui dosar PDF — o singură componentă pentru dosarul ARR și pentru
@@ -91,7 +92,7 @@ export function DossierPanel({
   const preview = async () => {
     if (!dossier.documentId) return
     try {
-      await documentService.openInNewTab(dossier.documentId, fileName)
+      openDocument(dossier.documentId, fileName)
       // Deschiderea în tab e tot o vizualizare a documentului final: contează la fel de mult.
       setDownloaded(true)
     } catch (err) {

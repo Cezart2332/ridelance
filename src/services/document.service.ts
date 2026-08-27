@@ -60,7 +60,28 @@ export interface ExtractedFieldsResponse {
   fields: ExtractedField[];
 }
 
+/** Un slot din dosarul unei mașini. `state`: missing | valid | expiring_soon | expired. */
+export interface CarDossierSlot {
+  category: string;
+  label: string;
+  required: boolean;
+  documentId: string | null;
+  fileName: string | null;
+  expiresAtUtc: string | null;
+  state: 'missing' | 'valid' | 'expiring_soon' | 'expired';
+}
+
+export interface CarDossier {
+  completionPercent: number;
+  slots: CarDossierSlot[];
+}
+
 export const documentService = {
+  async getCarDossier(carId: string): Promise<CarDossier> {
+    const res = await api.get<CarDossier>(`/documents/car/${carId}`);
+    return res.data;
+  },
+
   /**
    * @param onProgress Progresul real al uploadului, 0–100. Distinct de prevalidarea automată,
    *   care începe abia după ce fișierul a ajuns pe server (vezi `isAiPending`).
@@ -72,6 +93,8 @@ export const documentService = {
     userId?: string,
     expiresAt?: string,
     onProgress?: (percent: number) => void,
+    /** Mașina din flotă, când documentul e al ei. */
+    carId?: string,
   ) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -84,6 +107,9 @@ export const documentService = {
     }
     if (expiresAt) {
       formData.append('expiresAt', expiresAt);
+    }
+    if (carId) {
+      formData.append('carId', carId);
     }
 
     const response = await api.post('/documents/upload', formData, {
