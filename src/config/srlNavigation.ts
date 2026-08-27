@@ -43,6 +43,8 @@ export const SRL_PATHS = {
   // ── Flotă ──
   cars: at('masini'),
   addCar: at('masini/adauga'),
+  /** Pagina unei mașini. `:carId` se înlocuiește la navigare — vezi `carPath`. */
+  car: at('masini/:carId'),
   rentals: at('inchirieri'),
   maintenance: at('mentenanta'),
 
@@ -67,6 +69,9 @@ export const SRL_PATHS = {
 } as const
 
 export type SrlPath = (typeof SRL_PATHS)[keyof typeof SRL_PATHS]
+
+/** Calea către pagina unei mașini. Într-un singur loc, ca ruta și linkurile să nu poată diverge. */
+export const srlCarPath = (carId: string) => SRL_PATHS.car.replace(':carId', carId)
 
 export const SRL_NAV: NavEntry[] = [
   {

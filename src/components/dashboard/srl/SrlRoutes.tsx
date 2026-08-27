@@ -16,6 +16,7 @@ import { SrlRentalsPage } from './pages/SrlRentalsPage'
 import { SrlFiscalPage } from './pages/SrlFiscalPage'
 import { SrlProfilePage } from './pages/SrlProfilePage'
 import { SrlServicesPage } from './pages/SrlServicesPage'
+import { SrlCarPage } from './pages/SrlCarPage'
 import { SrlSettingsPage } from './pages/SrlSettingsPage'
 
 /**
@@ -47,6 +48,8 @@ export function SrlRoutes() {
       {/* Adăugarea are rută proprie, nu dialog: șase pași într-un modal n-ar avea unde încăpea,
           iar un refresh la jumătatea completării ar fi pierdut tot. */}
       <Route path={rel(SRL_PATHS.addCar)} element={<AddCarRoute />} />
+      {/* După `masini/adauga`: altfel `:carId` ar revendica și segmentul „adauga". */}
+      <Route path={rel(SRL_PATHS.car)} element={<SrlCarPage />} />
       <Route path={rel(SRL_PATHS.rentals)} element={<SrlRentalsPage />} />
       <Route path={rel(SRL_PATHS.maintenance)} element={<SrlMaintenancePage />} />
 

@@ -42,7 +42,7 @@ import {
 import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardTheme';
 import { ListingScoreIndicator } from '../../srl/ListingScoreIndicator'
 import { Link as RouterLink } from 'react-router-dom'
-import { SRL_PATHS } from '../../../../config/srlNavigation'
+import { SRL_PATHS, srlCarPath } from '../../../../config/srlNavigation'
 import { AddCarWizard } from '../../addCar/AddCarWizard'
 import { AddressSearch } from '../../../cars/map/AddressSearch'
 import { PinPicker } from '../../../cars/map/LazyMaps'
@@ -796,7 +796,25 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
                               <DirectionsCarFilledRoundedIcon />
                             </Avatar>
                             <Box>
-                              <Typography sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink }}>{car.brand} {car.model}</Typography>
+                              {/* Numele duce în pagina mașinii — pentru flotă, punctul din care
+                                  pornesc închirierea, documentele și mentenanța. Adminul n-are
+                                  pagina asta: el administrează anunțuri, nu operează o flotă. */}
+                              {isPoster ? (
+                                <Typography
+                                  component={RouterLink}
+                                  to={srlCarPath(car.id)}
+                                  sx={{
+                                    fontWeight: 800,
+                                    color: DASHBOARD_TOKENS.ink,
+                                    textDecoration: 'none',
+                                    '&:hover': { textDecoration: 'underline' },
+                                  }}
+                                >
+                                  {car.brand} {car.model}
+                                </Typography>
+                              ) : (
+                                <Typography sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink }}>{car.brand} {car.model}</Typography>
+                              )}
                               <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle }}>{car.year} • {car.engine} • {car.transmission}</Typography>
                               {/* Scorul e vizibil doar proprietarului, pe anunțul lui (spec §5.2). */}
                               {isPoster && car.recommendationScore != null && (
