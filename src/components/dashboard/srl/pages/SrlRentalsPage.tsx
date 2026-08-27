@@ -3,10 +3,12 @@ import {
   Alert,
   Box,
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   MenuItem,
   Skeleton,
   Stack,
@@ -19,10 +21,13 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded'
 
 import { carsService, type Car } from '../../../../services/cars.service'
 import {
+  RENTAL_ACCESSORIES,
   rentalsService,
   type Rental,
+  type RentalDefaults,
   type RentalOverview,
   type RentalStatus,
+  type Tenant,
   type TenantType,
 } from '../../../../services/rentals.service'
 import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '../../dashboardTheme'
@@ -39,10 +44,14 @@ import { DateField } from '../../../common/DateField'
  */
 
 const STATUS_PRESENTATION: Record<RentalStatus, { label: string; tone: StatusTone }> = {
+  // `draft` și `cancelled` vin din decizii, restul din calendar. Amândouă sunt neutre: nici una
+  // nu cere ceva de la proprietar acum.
+  draft: { label: 'Pregătită', tone: 'neutral' },
   upcoming: { label: 'Viitoare', tone: 'neutral' },
   active: { label: 'Activă', tone: 'active' },
   ending_soon: { label: 'Se apropie predarea', tone: 'warning' },
   completed: { label: 'Încheiată', tone: 'neutral' },
+  cancelled: { label: 'Anulată', tone: 'neutral' },
 }
 
 const TABS = [
@@ -79,6 +88,8 @@ function matchesTab(rental: Rental, tab: TabId): boolean {
 export function SrlRentalsPage() {
   const [overview, setOverview] = useState<RentalOverview | null>(null)
   const [cars, setCars] = useState<Car[]>([])
+  const [tenants, setTenants] = useState<Tenant[]>([])
+  const [defaults, setDefaults] = useState<RentalDefaults | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<TabId>('open')
@@ -90,11 +101,18 @@ export function SrlRentalsPage() {
   useEffect(() => {
     let cancelled = false
 
-    Promise.all([rentalsService.getOverview(), carsService.getMyCars()])
-      .then(([data, myCars]) => {
+    Promise.all([
+      rentalsService.getOverview(),
+      carsService.getMyCars(),
+      rentalsService.getTenants(),
+      rentalsService.getDefaults(),
+    ])
+      .then(([data, myCars, myTenants, myDefaults]) => {
         if (cancelled) return
         setOverview(data)
         setCars(myCars)
+        setTenants(myTenants)
+        setDefaults(myDefaults)
         setError(null)
       })
       .catch(() => {
@@ -244,12 +262,15 @@ export function SrlRentalsPage() {
                       </Typography>
                     </Box>
                     <Box component="td" sx={cellSx}>
-                      <Typography sx={{ fontSize: '0.85rem', fontWeight: 700 }}>{rental.tenantName}</Typography>
-                      {rental.tenantPhone && (
+                      <Typography sx={{ fontSize: '0.85rem', fontWeight: 700 }}>{rental.tenant.name}</Typography>
+                      {rental.tenant.phone && (
                         <Typography sx={{ fontSize: '0.76rem', color: DASHBOARD_TOKENS.textMuted }}>
-                          {rental.tenantPhone}
+                          {rental.tenant.phone}
                         </Typography>
                       )}
+                      <Typography sx={{ fontSize: '0.72rem', color: DASHBOARD_TOKENS.textSubtle, fontWeight: 700 }}>
+                        {rental.publicCode}
+                      </Typography>
                     </Box>
                     <Box component="td" sx={{ ...cellSx, fontSize: '0.8rem' }}>
                       {formatDate(rental.startAtUtc)} – {formatDate(rental.endAtUtc)}
@@ -296,6 +317,8 @@ export function SrlRentalsPage() {
       <NewRentalDialog
         open={dialogOpen}
         cars={cars}
+        tenants={tenants}
+        defaults={defaults}
         onClose={() => setDialogOpen(false)}
         onSaved={() => {
           setDialogOpen(false)
@@ -309,20 +332,35 @@ export function SrlRentalsPage() {
 function NewRentalDialog({
   open,
   cars,
+  tenants,
+  defaults,
   onClose,
   onSaved,
 }: {
   open: boolean
   cars: Car[]
+  tenants: Tenant[]
+  /** Valorile firmei. `null` cât timp nu s-au încărcat — formularul pornește gol, nu cu zerouri. */
+  defaults: RentalDefaults | null
   onClose: () => void
   onSaved: () => void
 }) {
   const [pickedCarId, setPickedCarId] = useState<string | null>(null)
+  /** `''` înseamnă „chiriaș nou". Un chiriaș existent nu se mai retastează. */
+  const [tenantId, setTenantId] = useState('')
   const [tenantName, setTenantName] = useState('')
   const [tenantType, setTenantType] = useState<TenantType>('Individual')
   const [fiscalCode, setFiscalCode] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
+  const [otherCosts, setOtherCosts] = useState('')
+  const [hasKmLimit, setHasKmLimit] = useState(false)
+  const [mileageLimit, setMileageLimit] = useState('')
+  const [extraKmCost, setExtraKmCost] = useState('')
+  const [fuelRule, setFuelRule] = useState('')
+  const [fuelLevel, setFuelLevel] = useState('')
+  const [accessories, setAccessories] = useState<string[]>([])
+  const [accessoriesOther, setAccessoriesOther] = useState('')
   // Inițializatoare leneșe: citirea ceasului e impură, deci nu are ce căuta în corpul randării.
   const [start, setStart] = useState(() => isoDate(new Date()))
   const [end, setEnd] = useState(() => isoDate(new Date(Date.now() + DEFAULT_PERIOD_DAYS * 86_400_000)))
@@ -334,13 +372,33 @@ function NewRentalDialog({
   const [error, setError] = useState<string | null>(null)
 
   const carId = pickedCarId ?? cars[0]?.id ?? ''
-  // Prețul mașinii e punctul de plecare al chiriei — cel mai des e chiar el.
   const selectedCar = cars.find((c) => c.id === carId)
-  const rentValue = rent || (selectedCar ? String(selectedCar.pricePerWeek) : '')
+
+  /**
+   * Ordinea de precompletare: ce a tastat omul, apoi valorile firmei, apoi prețul anunțului.
+   * Firma bate anunțul pentru că e o decizie luată o dată pentru toate mașinile; anunțul e ultimul
+   * refugiu, pentru flotele care n-au apucat să-și seteze nimic.
+   *
+   * Nimic din ce se vede aici nu se întoarce în setările firmei — precompletează, nu leagă.
+   */
+  const rentValue =
+    rent || (defaults?.weeklyRentBani != null ? String(defaults.weeklyRentBani / 100) : '')
+    || (selectedCar ? String(selectedCar.pricePerWeek) : '')
+  const depositValue = deposit || (defaults?.depositBani != null ? String(defaults.depositBani / 100) : '')
+  const extraKmValue =
+    extraKmCost || (defaults?.extraKmCostBani != null ? String(defaults.extraKmCostBani / 100) : '')
+  const mileageLimitValue = mileageLimit || (defaults?.mileageLimit != null ? String(defaults.mileageLimit) : '')
+  const fuelRuleValue = fuelRule || defaults?.fuelRule || ''
+  const kmLimitChecked = hasKmLimit || (defaults?.hasKmLimit ?? false)
 
   const save = async () => {
-    if (!carId || !tenantName.trim()) {
-      setError('Alege mașina și scrie numele chiriașului.')
+    if (!carId) {
+      setError('Alege mașina.')
+      return
+    }
+
+    if (!tenantId && !tenantName.trim()) {
+      setError('Alege un chiriaș sau scrie numele unuia nou.')
       return
     }
 
@@ -349,29 +407,50 @@ function NewRentalDialog({
     try {
       await rentalsService.create({
         carId,
-        tenantName: tenantName.trim(),
-        tenantType,
-        tenantFiscalCode: fiscalCode.trim() || null,
-        tenantPhone: phone.trim() || null,
-        tenantEmail: email.trim() || null,
+        tenantId: tenantId || null,
+        // Datele chiriașului pleacă doar când e unul nou. Pentru unul existent, serverul le are —
+        // retrimiterea lor ar fi însemnat că formularul poate rescrie tăcut un chiriaș.
+        tenant: tenantId
+          ? null
+          : {
+              name: tenantName.trim(),
+              type: tenantType,
+              cnp: tenantType === 'Individual' ? fiscalCode.trim() || null : null,
+              cui: tenantType === 'Individual' ? null : fiscalCode.trim() || null,
+              idSeries: null,
+              idNumber: null,
+              regCom: null,
+              address: null,
+              phone: phone.trim() || null,
+              email: email.trim() || null,
+              driverLicenseNumber: null,
+            },
         startAtUtc: new Date(`${start}T12:00:00Z`).toISOString(),
         endAtUtc: new Date(`${end}T12:00:00Z`).toISOString(),
         weeklyRentBani: rentValue ? Math.round(Number(rentValue) * 100) : 0,
-        depositBani: deposit ? Math.round(Number(deposit) * 100) : 0,
-        hasKmLimit: false,
-        extraKmCostBani: 0,
-        fuelRule: null,
+        depositBani: depositValue ? Math.round(Number(depositValue) * 100) : 0,
+        otherCostsBani: otherCosts ? Math.round(Number(otherCosts) * 100) : 0,
+        hasKmLimit: kmLimitChecked,
+        mileageLimit: kmLimitChecked && mileageLimitValue ? Number(mileageLimitValue) : null,
+        extraKmCostBani: extraKmValue ? Math.round(Number(extraKmValue) * 100) : 0,
+        fuelRule: fuelRuleValue.trim() || null,
+        fuelLevelAtPickup: fuelLevel.trim() || null,
         startMileage: mileage ? Number(mileage) : null,
-        accessories: null,
+        accessories,
+        accessoriesOther: accessoriesOther.trim() || null,
         notes: notes.trim() || null,
       })
+      setTenantId('')
       setTenantName('')
       setFiscalCode('')
       setPhone('')
       setEmail('')
       setRent('')
       setDeposit('')
+      setOtherCosts('')
       setMileage('')
+      setAccessories([])
+      setAccessoriesOther('')
       setNotes('')
       onSaved()
     } catch (err) {
@@ -410,7 +489,35 @@ function NewRentalDialog({
             ))}
           </TextField>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+          {tenants.length > 0 && (
+            <TextField
+              select
+              label="Chiriaș"
+              value={tenantId}
+              onChange={(e) => setTenantId(e.target.value)}
+              fullWidth
+              size="small"
+              sx={dashboardInputSx}
+              helperText={tenantId ? 'Datele lui sunt deja la noi.' : 'Completează mai jos datele unui chiriaș nou.'}
+            >
+              <MenuItem value="">Chiriaș nou</MenuItem>
+              {tenants.map((t) => (
+                <MenuItem key={t.id} value={t.id}>
+                  {t.name}
+                  {t.phone ? ` · ${t.phone}` : ''}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+
+          {/* Datele se cer o singură dată. Pentru un chiriaș ales, blocul dispare. */}
+          <Box
+            sx={{
+              display: tenantId ? 'none' : 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+              gap: 2,
+            }}
+          >
             <TextField
               select
               label="Tip chiriaș"
@@ -459,6 +566,11 @@ function NewRentalDialog({
               size="small"
               sx={{ ...dashboardInputSx, gridColumn: { xs: 'auto', sm: '1 / -1' } }}
             />
+          </Box>
+
+          {/* Termenii închirierii. Grilă separată de datele chiriașului: pe aceea o ascundem când
+              s-a ales un chiriaș existent, iar perioada și prețul trebuie completate oricum. */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
             <DateField
               label="Preluare"
               value={start}
@@ -483,16 +595,43 @@ function NewRentalDialog({
               fullWidth
               size="small"
               sx={dashboardInputSx}
-              helperText="Precompletată din prețul anunțului."
+              helperText={defaults?.weeklyRentBani != null ? 'Din valorile firmei.' : 'Din prețul anunțului.'}
             />
             <TextField
               label="Garanție (lei)"
               type="number"
-              value={deposit}
+              value={depositValue}
               onChange={(e) => setDeposit(e.target.value)}
               fullWidth
               size="small"
               sx={dashboardInputSx}
+            />
+            <TextField
+              label="Alte costuri (lei)"
+              type="number"
+              value={otherCosts}
+              onChange={(e) => setOtherCosts(e.target.value)}
+              fullWidth
+              size="small"
+              sx={dashboardInputSx}
+            />
+            <TextField
+              label="Nivel combustibil la preluare"
+              value={fuelLevel}
+              onChange={(e) => setFuelLevel(e.target.value)}
+              fullWidth
+              size="small"
+              sx={dashboardInputSx}
+              placeholder="plin, 3/4, 80%"
+            />
+            <TextField
+              label="Regulă de retur"
+              value={fuelRuleValue}
+              onChange={(e) => setFuelRule(e.target.value)}
+              fullWidth
+              size="small"
+              sx={{ ...dashboardInputSx, gridColumn: { xs: 'auto', sm: '1 / -1' } }}
+              placeholder="plin → plin"
             />
             <TextField
               label="Kilometraj la preluare"
@@ -502,6 +641,84 @@ function NewRentalDialog({
               fullWidth
               size="small"
               sx={{ ...dashboardInputSx, gridColumn: { xs: 'auto', sm: '1 / -1' } }}
+            />
+          </Box>
+
+          {/* Limita de km și numărul ei stau împreună: „cu limită" fără cifră nu înseamnă nimic. */}
+          <Box>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="small"
+                  checked={kmLimitChecked}
+                  onChange={(e) => {
+                    setHasKmLimit(e.target.checked)
+                    if (!e.target.checked) setMileageLimit('')
+                  }}
+                />
+              }
+              label="Limită de kilometri"
+              slotProps={{ typography: { sx: { fontSize: '0.88rem', fontWeight: 700 } } }}
+            />
+            {kmLimitChecked && (
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mt: 1 }}>
+                <TextField
+                  label="Km incluși"
+                  type="number"
+                  value={mileageLimitValue}
+                  onChange={(e) => setMileageLimit(e.target.value)}
+                  fullWidth
+                  size="small"
+                  sx={dashboardInputSx}
+                />
+                <TextField
+                  label="Cost / km suplimentar (lei)"
+                  type="number"
+                  value={extraKmValue}
+                  onChange={(e) => setExtraKmCost(e.target.value)}
+                  fullWidth
+                  size="small"
+                  sx={dashboardInputSx}
+                />
+              </Box>
+            )}
+          </Box>
+
+          <Box>
+            <Typography sx={{ fontSize: '0.82rem', fontWeight: 800, color: DASHBOARD_TOKENS.ink, mb: 0.5 }}>
+              Accesorii predate
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 1.5 }}>
+              {RENTAL_ACCESSORIES.map((item) => (
+                <FormControlLabel
+                  key={item}
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={accessories.includes(item)}
+                      onChange={(e) =>
+                        setAccessories(
+                          e.target.checked
+                            // Ordinea din catalog, nu ordinea bifării: două procese-verbale cu
+                            // aceleași accesorii trebuie să le enumere la fel.
+                            ? RENTAL_ACCESSORIES.filter((a) => a === item || accessories.includes(a))
+                            : accessories.filter((a) => a !== item),
+                        )
+                      }
+                    />
+                  }
+                  label={item}
+                  slotProps={{ typography: { sx: { fontSize: '0.84rem' } } }}
+                />
+              ))}
+            </Box>
+            <TextField
+              label="Altele"
+              value={accessoriesOther}
+              onChange={(e) => setAccessoriesOther(e.target.value)}
+              fullWidth
+              size="small"
+              sx={{ ...dashboardInputSx, mt: 1 }}
             />
           </Box>
 

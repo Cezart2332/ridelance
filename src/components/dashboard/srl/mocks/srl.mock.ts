@@ -3,7 +3,6 @@ import type {
   Integration,
   ListingScore,
   SrlFiscalOverview,
-  SrlSettings,
 } from '../types'
 
 /**
@@ -93,15 +92,6 @@ export const fiscalOverviewMock: SrlFiscalOverview = {
     { code: 'D112', label: 'Contribuții și impozit pe venit', period: 'August 2026', dueDateUtc: '2026-09-25T00:00:00Z' },
     { code: 'D101', label: 'Impozit pe profit anual', period: '2026', dueDateUtc: '2027-03-25T00:00:00Z' },
   ],
-}
-
-export const settingsMock: SrlSettings = {
-  defaultWeeklyRentBani: 180_000,
-  defaultDepositBani: 50_000,
-  minimumPeriod: '2 luni',
-  kmLimit: 'Fără limită',
-  extraKmCostBani: 50,
-  fuelRule: 'Cel puțin nivelul de la preluare',
 }
 
 /** Scorurile de anunț, pe id de mașină. §5.2: scorul brut se vede doar de proprietar. */

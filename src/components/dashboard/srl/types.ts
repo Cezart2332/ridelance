@@ -112,15 +112,3 @@ export interface ListingScore {
   suggestions: ScoreSuggestion[]
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Setări operaționale (§3.1 — identitatea trăiește în Profil, aici rămân preferințele)
-// ──────────────────────────────────────────────────────────────────────────────
-
-export interface SrlSettings {
-  defaultWeeklyRentBani: number
-  defaultDepositBani: number
-  minimumPeriod: string
-  kmLimit: 'Fără limită' | 'Cu limită'
-  extraKmCostBani: number
-  fuelRule: string
-}
