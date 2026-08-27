@@ -160,24 +160,28 @@ export function attachMapDiagnostics(
 }
 
 /**
- * Paleta hărții, în culorile produsului.
+ * Paleta hărții: fond întunecat, cu culorile lăsate să iasă din el.
  *
- * Stilul `light-v11` e proiectat să dispară sub datele puse peste el: uscat aproape alb, apă
- * gri-albăstruie, drumuri albe pe fundal alb. Când datele sunt douăzeci de pastile de preț, ce
- * rămâne în spate e o suprafață goală — harta nu se citea ca hartă.
+ * Două variante deschise au picat înainte, pe același lucru: pe un uscat aproape alb, străzile
+ * albe și pastilele albe n-aveau de ce se desprinde, iar adâncirea fundalului le apropia doar
+ * cu un pas. Problema nu era nuanța, ci că totul stătea în aceeași jumătate a scalei.
  *
- * Aici se inversează raportul: uscatul primește o tentă din albastrul logoului, iar drumurile
- * rămân albe. Contrastul se mută pe rețeaua de străzi, care e singurul lucru după care se
- * orientează cineva, fără să crească deloc zgomotul de sub pinuri.
+ * Pe fond întunecat raportul se rezolvă de la sine: tot ce punem deasupra — pastile albe, card
+ * alb, etichete deschise — e la capătul opus al scalei. Iar culorile devin în sfârșit vizibile,
+ * pentru că apa și verdele nu mai trebuie să concureze cu albul: pe negru, un albastru saturat
+ * se vede, pe alb-pal se spăla.
+ *
+ * Uscatul stă în familia lui `TOKENS.ink`, nu pe negru pur: negrul absolut sub un card alb dă un
+ * contrast dur, iar harta ar fi ieșit din restul platformei.
  */
 const MAP_PALETTE = {
-  land: '#E9F4F9',
-  water: '#A9DDF2',
-  green: '#D6EBDA',
-  road: '#FFFFFF',
-  building: '#DEEBF2',
-  label: '#1a1a2e',
-  labelHalo: '#FFFFFF',
+  land: '#111A28',
+  water: '#17587C',
+  green: '#1C4A38',
+  road: '#44637E',
+  building: '#1A2433',
+  label: '#DCE9F2',
+  labelHalo: '#111A28',
 }
 
 /**

@@ -228,17 +228,20 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
             color: TOKENS.ink,
             font: '700 0.78rem/1 inherit',
             cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(16,24,40,0.14)',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
             transition: 'transform 140ms ease, box-shadow 140ms ease',
             whiteSpace: 'nowrap',
           },
           '.fleet-marker:hover': { transform: 'translateY(-2px)' },
+          // Pe fondul întunecat, starea activă nu mai poate fi ink: ar fi însemnat să stingem
+          // pinul selectat în hartă. Trece pe albastrul brandului, singura culoare din paletă
+          // care iese și din negru, și din albul celorlalte pastile.
           '.fleet-marker.is-active': {
-            background: TOKENS.ink,
-            color: '#FFFFFF',
-            borderColor: TOKENS.ink,
+            background: TOKENS.primary,
+            color: TOKENS.ink,
+            borderColor: TOKENS.primaryStrong,
             transform: 'translateY(-2px) scale(1.04)',
-            boxShadow: '0 8px 22px rgba(16,24,40,0.28)',
+            boxShadow: '0 8px 22px rgba(0,0,0,0.45)',
           },
           '.fleet-marker__dot': {
             width: 7,
@@ -311,12 +314,13 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
             py: 0.9,
             border: 'none',
             borderRadius: `${TOKENS.radius.full}px`,
-            bgcolor: TOKENS.ink,
-            color: '#FFFFFF',
+            // Alb pe hartă întunecată, nu ink pe ink.
+            bgcolor: TOKENS.paper,
+            color: TOKENS.ink,
             fontSize: '0.82rem',
             fontWeight: 700,
             cursor: 'pointer',
-            boxShadow: '0 6px 18px rgba(16,24,40,0.22)',
+            boxShadow: '0 6px 18px rgba(0,0,0,0.4)',
           }}
         >
           Caută în această zonă
