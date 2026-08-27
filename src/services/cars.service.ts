@@ -48,6 +48,17 @@ export interface CarOwner {
   verified: boolean;
 }
 
+/**
+ * Starea anunțului, ca intenție a proprietarului. Separată de `active`, care spune dacă anunțul
+ * chiar se vede: un anunț `Published` neaprobat sau neplătit rămâne invizibil.
+ */
+export type ListingStatus = 'Draft' | 'Published' | 'Paused' | 'Archived';
+
+export interface CarListingState {
+  listingStatus: ListingStatus;
+  active: boolean;
+}
+
 export interface Car {
   id: string;
   /** Identitatea din URL-ul public: `dacia-logan-2022-4f3a`. */
@@ -69,6 +80,8 @@ export interface Car {
   badges: string[];
   description: string;
   active: boolean;
+  /** Intenția proprietarului: `Draft` | `Published` | `Paused` | `Archived`. */
+  listingStatus: ListingStatus;
   listingSource: string;
   approvalStatus: string;
   paymentStatus: string;
@@ -230,9 +243,15 @@ const carsService = {
     await api.delete(`/cars/${id}`);
   },
 
-  async toggleActive(id: string): Promise<boolean> {
-    const res = await api.patch<{ active: boolean }>(`/cars/${id}/toggle-active`);
-    return res.data.active;
+  /** Scoate mașina din flotă păstrându-i istoricul. Alternativa nedistructivă la ștergere. */
+  async archive(id: string): Promise<CarListingState> {
+    const res = await api.patch<CarListingState>(`/cars/${id}/archive`);
+    return res.data;
+  },
+
+  async toggleActive(id: string): Promise<CarListingState> {
+    const res = await api.patch<CarListingState>(`/cars/${id}/toggle-active`);
+    return res.data;
   },
 
   // ── Images ───────────────────────────────────────────────────────

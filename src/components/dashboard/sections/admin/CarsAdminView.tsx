@@ -11,6 +11,7 @@ import { alpha } from '@mui/material/styles';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import Inventory2RoundedIcon from '@mui/icons-material/Inventory2Rounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';
 import AssignmentIndRoundedIcon from '@mui/icons-material/AssignmentIndRounded';
@@ -73,6 +74,17 @@ interface LocalImage {
 }
 
 const BADGES = ['Consum Mic', 'Hybrid', 'GPL', 'Top Rated', 'Nou', 'Reducere'];
+
+/**
+ * Ce scrie sub comutator. „Publicat" nu înseamnă „se vede": pentru asta se colorează eticheta,
+ * după `car.active`, care ține cont și de aprobare, și de plată.
+ */
+const LISTING_STATE_LABELS: Record<string, string> = {
+  Draft: 'Nepublicat',
+  Published: 'Publicat',
+  Paused: 'Pe pauză',
+  Archived: 'Arhivat',
+};
 
 const PAYMENT_LABELS: Record<string, string> = {
   NotRequired: 'Nu necesită',
@@ -185,10 +197,20 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
 
   const handleToggleCarActive = async (id: string) => {
     try {
-      const newState = await carsService.toggleActive(id);
-      setCars(prev => prev.map(c => c.id === id ? { ...c, active: newState } : c));
+      const next = await carsService.toggleActive(id);
+      setCars(prev => prev.map(c => c.id === id ? { ...c, ...next } : c));
     } catch (error) {
       alert('Eroare la modificarea vizibilității.');
+    }
+  };
+
+  const handleArchiveCar = async (id: string) => {
+    if (!window.confirm('Scoți mașina din flotă? Anunțul dispare de pe piață, dar închirierile, dosarul și mentenanța rămân.')) return;
+    try {
+      const next = await carsService.archive(id);
+      setCars(prev => prev.map(c => c.id === id ? { ...c, ...next } : c));
+    } catch {
+      alert('Eroare la scoaterea mașinii din flotă.');
     }
   };
 
@@ -844,12 +866,28 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
                           </Stack>
                         </TableCell>
                         <TableCell>
-                          <Switch
-                            checked={car.active}
-                            onChange={() => handleToggleCarActive(car.id)}
-                            color="primary"
-                            disabled={isPoster && (car.approvalStatus !== 'Approved' || car.paymentStatus !== 'Paid')}
-                          />
+                          {/* Comutatorul arată intenția, eticheta de dedesubt arată realitatea.
+                              Un anunț publicat dar neaprobat sau neplătit nu se vede — iar dacă
+                              bifa ar reflecta vizibilitatea, ar părea că se stinge singură. */}
+                          <Stack spacing={0.5} sx={{ alignItems: 'flex-start' }}>
+                            <Switch
+                              checked={car.listingStatus === 'Published'}
+                              onChange={() => handleToggleCarActive(car.id)}
+                              color="primary"
+                              disabled={car.listingStatus === 'Archived'}
+                            />
+                            <Chip
+                              size="small"
+                              label={LISTING_STATE_LABELS[car.listingStatus] ?? car.listingStatus}
+                              sx={{
+                                height: 20,
+                                fontSize: '0.65rem',
+                                fontWeight: 700,
+                                bgcolor: car.active ? '#dcfce7' : '#f1f5f9',
+                                color: car.active ? '#166534' : '#475569',
+                              }}
+                            />
+                          </Stack>
                         </TableCell>
                         <TableCell align="right">
                           <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
@@ -862,7 +900,21 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
                               </>
                             )}
                             <IconButton size="small" onClick={() => handleOpenCarModal(car)}><EditRoundedIcon fontSize="small" /></IconButton>
-                            <IconButton size="small" color="error" onClick={() => handleDeleteCar(car.id)}><DeleteRoundedIcon fontSize="small" /></IconButton>
+                            {/* Proprietarul arhivează, adminul șterge. O mașină ștearsă ia cu ea
+                                închirierile, dosarul și mentenanța — adică exact ce trebuie să
+                                rămână după ce mașina a plecat din flotă. */}
+                            {isPoster ? (
+                              <IconButton
+                                size="small"
+                                onClick={() => handleArchiveCar(car.id)}
+                                disabled={car.listingStatus === 'Archived'}
+                                title="Scoate din flotă"
+                              >
+                                <Inventory2RoundedIcon fontSize="small" />
+                              </IconButton>
+                            ) : (
+                              <IconButton size="small" color="error" onClick={() => handleDeleteCar(car.id)}><DeleteRoundedIcon fontSize="small" /></IconButton>
+                            )}
                           </Stack>
                         </TableCell>
                       </TableRow>
