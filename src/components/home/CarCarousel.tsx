@@ -47,8 +47,11 @@ export function CarCarousel() {
             alignItems: 'stretch',
             gap: 3, 
             overflowX: 'auto', 
+            // Loc pentru umbra și ridicarea cardului la hover. Fără el, containerul derulabil le
+            // taie: cardul se ridică 4px într-o zonă care nu există.
+            pt: 1.5,
             pb: 4,
-            px: 1,
+            px: 1.5,
             '&::-webkit-scrollbar': { height: 6 },
             '&::-webkit-scrollbar-thumb': { bgcolor: alpha(TOKENS.ink, 0.1), borderRadius: 10 },
             scrollSnapType: 'x mandatory',
@@ -58,12 +61,26 @@ export function CarCarousel() {
           {loading ? (
             // Skeletons for loading state
             [1, 2, 3, 4].map((i) => (
-              <Box key={i} sx={{ minWidth: { xs: 260, sm: 300, md: 320 } }}>
-                <Skeleton variant="rectangular" sx={{ aspectRatio: '4 / 3', borderRadius: '8px' }} />
-                <Skeleton width="65%" height={28} sx={{ mt: 1.5 }} />
-                <Skeleton width="45%" />
-                <Skeleton width="40%" height={30} sx={{ mt: 1 }} />
-                <Skeleton variant="rectangular" height={44} sx={{ borderRadius: '8px', mt: 1.5 }} />
+              // Aceeași formă ca un card încărcat — chenar, colțuri, poza până în margine. Un
+              // schelet de altă formă face ca lista să sară în momentul în care sosesc datele.
+              <Box
+                key={i}
+                sx={{
+                  minWidth: { xs: 260, sm: 300, md: 320 },
+                  backgroundColor: TOKENS.paper,
+                  border: `1px solid ${TOKENS.border}`,
+                  borderRadius: `${TOKENS.radius.xl}px`,
+                  overflow: 'hidden',
+                  boxShadow: TOKENS.shadow.sm,
+                }}
+              >
+                <Skeleton variant="rectangular" sx={{ aspectRatio: '4 / 3' }} />
+                <Box sx={{ p: 2 }}>
+                  <Skeleton width="65%" height={28} />
+                  <Skeleton width="45%" />
+                  <Skeleton width="40%" height={30} sx={{ mt: 1 }} />
+                  <Skeleton variant="rectangular" height={44} sx={{ borderRadius: '8px', mt: 1.5 }} />
+                </Box>
               </Box>
             ))
           ) : cars.length === 0 ? (

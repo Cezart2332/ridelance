@@ -143,7 +143,10 @@ export function SimilarVehicles({ car }: { car: Car }) {
             spacing={2}
             sx={{
               overflowX: 'auto',
-              pb: 1,
+              // Loc pentru umbră și pentru ridicarea de 4px; banda derulabilă le-ar tăia.
+              pt: 1,
+              pb: 2,
+              px: 0.5,
               scrollSnapType: 'x proximity',
               scrollbarWidth: 'none',
               '&::-webkit-scrollbar': { display: 'none' },
@@ -198,12 +201,24 @@ function SimilarCard({ car }: { car: Car }) {
         flex: `0 0 ${CARD_WIDTH}px`,
         scrollSnapAlign: 'start',
         textDecoration: 'none',
+        // Aceeași formă ca anunțurile din listă și de pe landing: o mașină arată la fel oriunde
+        // apare, altfel „mașini similare" pare o altă categorie de conținut.
+        backgroundColor: TOKENS.paper,
+        border: `1px solid ${TOKENS.border}`,
+        borderRadius: `${TOKENS.radius.xl}px`,
+        overflow: 'hidden',
+        boxShadow: TOKENS.shadow.sm,
+        transition: `transform ${TOKENS.duration} ${TOKENS.easing}, box-shadow ${TOKENS.duration} ${TOKENS.easing}, border-color ${TOKENS.duration} ${TOKENS.easing}`,
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: TOKENS.shadow.xl,
+          borderColor: alpha(TOKENS.primary, 0.35),
+        },
       }}
     >
       <Box
         sx={{
           aspectRatio: '16 / 10',
-          borderRadius: `${VDP.radius.image}px`,
           overflow: 'hidden',
           backgroundColor: TOKENS.surfaceAlt,
           display: 'grid',
@@ -223,12 +238,14 @@ function SimilarCard({ car }: { car: Car }) {
         )}
       </Box>
 
-      <Typography noWrap sx={{ mt: 1.25, fontWeight: 800, color: TOKENS.ink }}>
-        {car.brand} {car.model}
-      </Typography>
-      <Typography noWrap sx={{ fontSize: '0.82rem', color: TOKENS.textMuted }}>
-        {car.year} · {car.engine} · {formatLei(car.pricePerWeek)} lei/săpt.
-      </Typography>
+      <Box sx={{ p: 1.5 }}>
+        <Typography noWrap sx={{ fontWeight: 800, color: TOKENS.ink }}>
+          {car.brand} {car.model}
+        </Typography>
+        <Typography noWrap sx={{ fontSize: '0.82rem', color: TOKENS.textMuted }}>
+          {car.year} · {car.engine} · {formatLei(car.pricePerWeek)} lei/săpt.
+        </Typography>
+      </Box>
     </Box>
   )
 }

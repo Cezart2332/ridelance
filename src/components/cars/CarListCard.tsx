@@ -31,6 +31,11 @@ import { VDP } from './vdp/vdpLayout'
  * Cardul întreg e clicabil, dar titlul și butonul sunt linkuri reale, ca să funcționeze
  * „deschide în tab nou” și navigarea de la tastatură. Rădăcina rămâne `Box` cu `onClick`,
  * altfel ar ieși ancore imbricate.
+ *
+ * Chiar e un card: fundal alb, chenar, colțuri, umbră. Până acum poza și textul stăteau direct pe
+ * fundalul paginii, iar de când fundalul are tenta albastră din logo nu mai era clar unde se
+ * termină un anunț și începe următorul. Albul cardului e și motivul pentru care `paper` a rămas
+ * alb curat în tokeni.
  */
 
 interface CarListCardProps {
@@ -70,6 +75,18 @@ export default function CarListCard({ car, newTab = false }: CarListCardProps) {
         flexDirection: 'column',
         height: '100%',
         cursor: 'pointer',
+        backgroundColor: TOKENS.paper,
+        border: `1px solid ${TOKENS.border}`,
+        borderRadius: `${TOKENS.radius.xl}px`,
+        // Poza urcă până în marginea cardului; colțurile ei le dă cardul, prin `overflow`.
+        overflow: 'hidden',
+        boxShadow: TOKENS.shadow.sm,
+        transition: `transform ${TOKENS.duration} ${TOKENS.easing}, box-shadow ${TOKENS.duration} ${TOKENS.easing}, border-color ${TOKENS.duration} ${TOKENS.easing}`,
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: TOKENS.shadow.xl,
+          borderColor: alpha(TOKENS.primary, 0.35),
+        },
         '&:hover .car-card-cover img': { transform: 'scale(1.04)' },
         '&:hover .car-card-title': { textDecoration: 'underline' },
       }}
@@ -79,7 +96,6 @@ export default function CarListCard({ car, newTab = false }: CarListCardProps) {
         sx={{
           position: 'relative',
           aspectRatio: '4 / 3',
-          borderRadius: COVER_RADIUS,
           overflow: 'hidden',
           backgroundColor: TOKENS.surfaceAlt,
           display: 'grid',
@@ -136,7 +152,7 @@ export default function CarListCard({ car, newTab = false }: CarListCardProps) {
         )}
       </Box>
 
-      <Stack spacing={0.75} sx={{ pt: 1.75, flexGrow: 1 }}>
+      <Stack spacing={0.75} sx={{ p: 2, flexGrow: 1 }}>
         <Typography
           className="car-card-title"
           component={Link}
