@@ -2,7 +2,8 @@ import { api } from '../lib/axios';
 
 export interface BoltIntegrationDto {
   id: string;
-  clientId: string;
+  /** Mascat pentru afișare (`4wEssh...ME`). Nu e o credențială: nu-l trimite înapoi la salvare. */
+  clientIdMasked: string;
   companyId: number;
   companyName: string | null;
   isConnected: boolean;

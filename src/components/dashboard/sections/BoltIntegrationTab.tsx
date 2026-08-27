@@ -131,9 +131,11 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
       setTotalOrdersCount(ordersResponse.totalOrdersCount);
       setDashboard(dashboardData);
 
-      if (integrationData) {
-        setClientId(integrationData.clientId);
-      }
+      // Câmpurile de credențiale rămân goale, chiar și când există deja o integrare. Aici se
+      // punea masca primită de la server ca valoare inițială; cine apăsa Conectează fără s-o
+      // rescrie trimitea `4wEssh...ME` în loc de Client ID, iar salvarea suprascria valoarea
+      // bună cu masca. De acolo încolo Bolt răspundea 500 la fiecare încercare, la nesfârșit:
+      // masca mascată e tot masca, deci nimic nu mai ieșea din starea asta singur.
     } catch (err: any) {
       console.error('Failed to load Bolt integration data', err);
       setErrorMsg('Nu s-au putut încărca datele Bolt.');
@@ -174,6 +176,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
       await boltService.configureIntegration(clientId, clientSecret);
       await loadData();
       setConfiguring(false);
+      setClientId('');
       setClientSecret('');
       onConnected?.();
     } catch (err: any) {
@@ -321,6 +324,11 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
                   placeholder="Introdu Client ID de la Bolt"
                   value={clientId}
                   onChange={(e) => setClientId(e.target.value)}
+                  helperText={
+                    integration
+                      ? `Momentan salvat: ${integration.clientIdMasked}. Scrie-l din nou, întreg, ca să-l schimbi.`
+                      : undefined
+                  }
                   sx={dashboardInputSx}
                 />
               </Box>
