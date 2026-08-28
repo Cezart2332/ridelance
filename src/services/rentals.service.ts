@@ -169,6 +169,11 @@ export const rentalsService = {
     return res.data
   },
 
+  /** Trimite documentul spre semnare. Retrimiterea invalidează linkurile trimise înainte. */
+  async sendForSignature(documentId: string, email: string): Promise<void> {
+    await api.post(`/rentals/documents/${documentId}/send`, { email })
+  },
+
   async getOverview(): Promise<RentalOverview> {
     const res = await api.get<RentalOverview>('/rentals')
     return res.data

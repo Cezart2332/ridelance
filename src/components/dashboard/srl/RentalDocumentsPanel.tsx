@@ -9,9 +9,11 @@ import {
   DialogTitle,
   Skeleton,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
+import SendRoundedIcon from '@mui/icons-material/SendRounded'
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
 
 import {
@@ -69,6 +71,8 @@ export function RentalDocumentsPanel({ rental }: { rental: Rental }) {
   const [error, setError] = useState<string | null>(null)
   const [generating, setGenerating] = useState<RentalDocumentType | null>(null)
   const [missing, setMissing] = useState<MissingField[] | null>(null)
+  /** Documentul pentru care se cere adresa de email. */
+  const [sendingFor, setSendingFor] = useState<GeneratedDocument | null>(null)
 
   const load = useCallback(() => {
     rentalsService
@@ -171,6 +175,18 @@ export function RentalDocumentsPanel({ rental }: { rental: Rental }) {
                   >
                     Vezi
                   </Button>
+                  {/* Cele două căi din spec §7 sunt de rang egal: descarci și semnezi pe hârtie,
+                      sau trimiți linkul. RIDElance n-o forțează pe niciuna. */}
+                  {doc.status !== 'Signed' && (
+                    <Button
+                      size="small"
+                      startIcon={<SendRoundedIcon sx={{ fontSize: 16 }} />}
+                      onClick={() => setSendingFor(doc)}
+                      sx={{ textTransform: 'none', fontWeight: 700 }}
+                    >
+                      {doc.status === 'SentForSignature' ? 'Retrimite' : 'Trimite'}
+                    </Button>
+                  )}
                 </Stack>
               </Stack>
             )
@@ -179,6 +195,16 @@ export function RentalDocumentsPanel({ rental }: { rental: Rental }) {
       )}
 
       <MissingFieldsDialog missing={missing} onClose={() => setMissing(null)} />
+
+      <SendForSignatureDialog
+        document={sendingFor}
+        defaultEmail={rental.tenant.email ?? ''}
+        onClose={() => setSendingFor(null)}
+        onSent={() => {
+          setSendingFor(null)
+          load()
+        }}
+      />
     </Panel>
   )
 }
@@ -231,6 +257,107 @@ function MissingFieldsDialog({
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onClose} sx={{ textTransform: 'none', fontWeight: 700 }}>
           Am înțeles
+        </Button>
+      </DialogActions>
+    </Dialog>
+  )
+}
+
+
+/**
+ * Un singur câmp: adresa. Precompletată de pe chiriaș, editabilă — spec §7 cere exact atât.
+ */
+function SendForSignatureDialog({
+  document: target,
+  defaultEmail,
+  onClose,
+  onSent,
+}: {
+  document: GeneratedDocument | null
+  defaultEmail: string
+  onClose: () => void
+  onSent: () => void
+}) {
+  if (!target) return null
+
+  return (
+    <SendDialogBody
+      key={target.id}
+      document={target}
+      defaultEmail={defaultEmail}
+      onClose={onClose}
+      onSent={onSent}
+    />
+  )
+}
+
+function SendDialogBody({
+  document: target,
+  defaultEmail,
+  onClose,
+  onSent,
+}: {
+  document: GeneratedDocument
+  defaultEmail: string
+  onClose: () => void
+  onSent: () => void
+}) {
+  // Remontare per document, ca adresa să pornească de la chiriașul potrivit fără reset într-un efect.
+  const [email, setEmail] = useState(target.sentToEmail ?? defaultEmail)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const send = async () => {
+    setSending(true)
+    setError(null)
+    try {
+      await rentalsService.sendForSignature(target.id, email.trim())
+      onSent()
+    } catch (cause) {
+      const detail = (cause as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setError(detail ?? 'Nu am putut trimite documentul.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <Dialog open onClose={onClose} fullWidth maxWidth="xs">
+      <DialogTitle sx={{ fontWeight: 800 }}>Trimite pentru semnare</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ pt: 0.5 }}>
+          {error && (
+            <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
+              {error}
+            </Alert>
+          )}
+          <TextField
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            fullWidth
+            size="small"
+            autoFocus
+          />
+          <Typography sx={{ fontSize: '0.8rem', color: DASHBOARD_TOKENS.textMuted }}>
+            Chiriașul primește un link valabil șapte zile, folosibil o singură dată. Nu are nevoie
+            de cont.
+          </Typography>
+        </Stack>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose} sx={{ textTransform: 'none', fontWeight: 700 }}>
+          Anulează
+        </Button>
+        <Button
+          variant="contained"
+          disableElevation
+          onClick={() => void send()}
+          disabled={sending || !email.includes('@')}
+          sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
+        >
+          {sending ? 'Se trimite…' : 'Trimite'}
         </Button>
       </DialogActions>
     </Dialog>

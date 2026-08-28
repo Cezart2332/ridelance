@@ -17,6 +17,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import RoleRedirect from './components/auth/RoleRedirect'
 import { SRL_ROOT } from './config/srlNavigation'
 import { DocumentViewerHost } from './components/common/documentViewerHost'
+import { SignDocumentPage } from './pages/SignDocumentPage'
 
 /**
  * Ruta de dinainte de mutarea dashboard-ului SRL sub `/app`. Păstrează query string-ul:
@@ -81,6 +82,8 @@ function App() {
           {/* Singura ramificație reală dinainte de crearea contului: rolul `CarPoster`. */}
           <Route path={ROUTES.registerCarPoster} element={<RegisterPage role="CarPoster" />} />
           <Route path={ROUTES.verifyEmail} element={<VerifyEmailPage />} />
+          {/* Semnarea din email. Fără `ProtectedRoute`: cine semnează n-are cont. */}
+          <Route path={ROUTES.signDocument} element={<SignDocumentPage />} />
           <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
           <Route path="/auth" element={<Navigate to={ROUTES.login} replace />} />
           <Route path="/inregistrare/pfa" element={<Navigate to="/onboarding/pfa" replace />} />

@@ -14,4 +14,10 @@ export const ROUTES = {
   /** Confirmarea adresei, imediat după crearea contului. */
   verifyEmail: '/confirmare-email',
   forgotPassword: '/parola-uitata',
+  /**
+   * Semnarea unui document de închiriere, deschisă din email.
+   *
+   * Publică prin proiectare: chiriașul n-are cont RIDElance. Tokenul din cale e autentificarea.
+   */
+  signDocument: '/semneaza/:token',
 } as const
