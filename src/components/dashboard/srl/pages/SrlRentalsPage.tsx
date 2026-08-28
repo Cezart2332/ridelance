@@ -34,6 +34,7 @@ import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '
 import { Amount, PageHeader, Panel, StatCard, StatusChip } from '../../ui'
 import type { StatusTone } from '../../ui'
 import { DateField } from '../../../common/DateField'
+import { RentalChecksPanel } from '../RentalChecksPanel'
 import { RentalDocumentsPanel } from '../RentalDocumentsPanel'
 
 /**
@@ -330,7 +331,12 @@ export function SrlRentalsPage() {
           închirierii, iar drumul înapoi la ea trebuie să fie un click. */}
       <Dialog open={documentsFor !== null} onClose={() => setDocumentsFor(null)} fullWidth maxWidth="sm">
         <DialogContent sx={{ p: 0 }}>
-          {documentsFor && <RentalDocumentsPanel rental={documentsFor} />}
+          {documentsFor && (
+            <Stack spacing={2}>
+              <RentalDocumentsPanel rental={documentsFor} />
+              <RentalChecksPanel rental={documentsFor} />
+            </Stack>
+          )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setDocumentsFor(null)} sx={{ textTransform: 'none', fontWeight: 700 }}>

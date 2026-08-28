@@ -3,7 +3,6 @@ import { Alert, Box, Button, Skeleton, Stack, Tab, Tabs, Typography } from '@mui
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
-import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded'
 import UploadRoundedIcon from '@mui/icons-material/UploadRounded'
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
 
@@ -11,11 +10,12 @@ import { SRL_PATHS } from '../../../../config/srlNavigation'
 import { carsService, type Car } from '../../../../services/cars.service'
 import { documentService, type CarDossier, type CarDossierSlot } from '../../../../services/document.service'
 import { openDocument } from '../../../common/documentViewerBus'
+import { checksService, type VehicleEvent } from '../../../../services/checks.service'
 import { maintenanceService, type MaintenanceEntry } from '../../../../services/maintenance.service'
 import { rentalsService, type Rental } from '../../../../services/rentals.service'
 import { formatCarStatus } from '../../../../utils/carLabels'
 import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardTheme'
-import { Amount, ComingSoon, PageHeader, Panel, StatCard, StatusChip } from '../../ui'
+import { Amount, PageHeader, Panel, StatCard, StatusChip } from '../../ui'
 
 /**
  * Pagina unei mașini din flotă — locul din care pornesc operațiunile pe ea.
@@ -24,9 +24,9 @@ import { Amount, ComingSoon, PageHeader, Panel, StatCard, StatusChip } from '../
  * niciun ecran care să le adune pe una singură. Ca să afli ce s-a întâmplat cu o mașină trebuia să
  * treci prin trei pagini și să filtrezi din ochi.
  *
- * Taburile sunt cele cinci din spec §13, chiar dacă două n-au încă de unde lua date: structura
- * paginii e o promisiune făcută o dată, nu una rescrisă la fiecare fază. Cele două goale spun ce
- * vor conține, prin `ComingSoon` — ruta e navigabilă, nu produce erori și nu inventează conținut.
+ * Cele cinci taburi din spec §13, toate cu date: prezentare, închirieri, documente, mentenanță și
+ * istoric. Structura a fost declarată o dată, în Faza 2, iar fazele următoare au umplut-o — nu au
+ * rearanjat-o.
  */
 
 type TabId = 'prezentare' | 'inchirieri' | 'documente' | 'mentenanta' | 'istoric'
@@ -52,6 +52,7 @@ export function SrlCarPage() {
   const [rentals, setRentals] = useState<Rental[]>([])
   const [maintenance, setMaintenance] = useState<MaintenanceEntry[]>([])
   const [dossier, setDossier] = useState<CarDossier | null>(null)
+  const [timeline, setTimeline] = useState<VehicleEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<TabId>('prezentare')
@@ -67,8 +68,9 @@ export function SrlCarPage() {
       rentalsService.getOverview(),
       maintenanceService.getOverview(carId),
       documentService.getCarDossier(carId),
+      checksService.getTimeline(carId),
     ])
-      .then(([loadedCar, overview, maintenanceOverview, carDossier]) => {
+      .then(([loadedCar, overview, maintenanceOverview, carDossier, events]) => {
         if (cancelled) return
         setCar(loadedCar)
         // Închirierile vin întregi și se filtrează aici: o flotă are zeci, nu zeci de mii, iar un
@@ -76,6 +78,7 @@ export function SrlCarPage() {
         setRentals(overview.rentals.filter((r) => r.carId === carId))
         setMaintenance(maintenanceOverview.entries)
         setDossier(carDossier)
+        setTimeline(events)
         setError(null)
       })
       .catch(() => {
@@ -198,14 +201,7 @@ export function SrlCarPage() {
 
       {tab === 'documente' && dossier && <DocumentsTab carId={carId} dossier={dossier} onUploaded={reload} />}
 
-      {tab === 'istoric' && (
-        <ComingSoon
-          title="Istoricul mașinii"
-          description="Contracte semnate, predări, primiri și intervenții, în ordine, scrise automat din acțiunile sistemului."
-          upcoming={['Cronologie completă', 'Kilometri parcurși per închiriere', 'Plăți înregistrate']}
-          icon={<HistoryRoundedIcon />}
-        />
-      )}
+      {tab === 'istoric' && <TimelineTab events={timeline} />}
     </Stack>
   )
 }
@@ -353,6 +349,58 @@ function DossierRow({
         </Button>
       </Stack>
     </Stack>
+  )
+}
+
+/**
+ * Cronologia mașinii. Se scrie singură, din acțiunile sistemului (spec §10).
+ *
+ * Nu se poate adăuga nimic de mână: un istoric în care poate scrie cineva nu mai e istoric, e o
+ * listă de afirmații.
+ */
+function TimelineTab({ events }: { events: VehicleEvent[] }) {
+  if (events.length === 0) {
+    return (
+      <Panel title="Istoric">
+        <Typography sx={{ fontSize: '0.9rem', color: DASHBOARD_TOKENS.textMuted }}>
+          Încă nu s-a întâmplat nimic cu mașina asta. Cronologia se completează singură, pe măsură
+          ce se generează documente, se predă mașina sau se face o intervenție.
+        </Typography>
+      </Panel>
+    )
+  }
+
+  return (
+    <Panel title="Istoric" subtitle="Scris automat din acțiunile sistemului.">
+      <Stack>
+        {events.map((event, index) => (
+          <Stack
+            key={event.id}
+            direction="row"
+            spacing={2}
+            sx={{
+              py: 1.2,
+              borderTop: index === 0 ? 'none' : `1px solid ${DASHBOARD_TOKENS.border}`,
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                color: DASHBOARD_TOKENS.textSubtle,
+                minWidth: 76,
+                flexShrink: 0,
+              }}
+            >
+              {formatDate(event.occurredAtUtc)}
+            </Typography>
+            <Typography sx={{ fontSize: '0.88rem', color: DASHBOARD_TOKENS.ink }}>
+              {event.description}
+            </Typography>
+          </Stack>
+        ))}
+      </Stack>
+    </Panel>
   )
 }
 
