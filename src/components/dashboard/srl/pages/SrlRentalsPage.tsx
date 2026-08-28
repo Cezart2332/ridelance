@@ -36,6 +36,7 @@ import type { StatusTone } from '../../ui'
 import { DateField } from '../../../common/DateField'
 import { RentalChecksPanel } from '../RentalChecksPanel'
 import { RentalDocumentsPanel } from '../RentalDocumentsPanel'
+import { RentalPaymentsPanel } from '../RentalPaymentsPanel'
 
 /**
  * Închirierile flotei: cine are ce mașină, până când și pe ce bani.
@@ -335,6 +336,7 @@ export function SrlRentalsPage() {
             <Stack spacing={2}>
               <RentalDocumentsPanel rental={documentsFor} />
               <RentalChecksPanel rental={documentsFor} />
+              <RentalPaymentsPanel rental={documentsFor} />
             </Stack>
           )}
         </DialogContent>
