@@ -7,6 +7,8 @@ export interface UserProfile {
   firstName: string;
   lastName: string;
   phoneNumber: string | null;
+  /** Numărul a fost confirmat prin SMS. */
+  isPhoneVerified: boolean;
   role: string;
   createdAtUtc: string;
 }
@@ -111,6 +113,20 @@ export const userService = {
   getDashboardSummary: async (): Promise<DashboardSummary> => {
     const response = await api.get<DashboardSummary>('/users/dashboard-summary');
     return response.data;
+  },
+
+  /**
+   * Trimite codul de confirmare pe numărul contului.
+   *
+   * `phoneNumber` doar când se schimbă numărul: atunci serverul îl salvează și anulează
+   * confirmarea veche, fiindcă bifa era pe alt număr.
+   */
+  sendPhoneCode: async (phoneNumber?: string): Promise<void> => {
+    await api.post('/users/phone/send-code', { phoneNumber: phoneNumber ?? null });
+  },
+
+  confirmPhone: async (code: string): Promise<void> => {
+    await api.post('/users/phone/confirm', { code });
   },
 
   inviteContabil: async (fullName: string, email: string): Promise<string> => {

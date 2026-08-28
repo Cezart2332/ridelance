@@ -10,6 +10,7 @@ import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { ProfileTab } from './ProfileTab'
 import { IstoricPlatiTab } from './IstoricPlatiTab'
 import { SecurityPanel } from './profile/SecurityPanel'
+import { PhoneVerificationPanel } from './profile/PhoneVerificationPanel'
 import { NotificationPreferencesPanel } from './profile/NotificationPreferencesPanel'
 import { PrivacyPanel } from './profile/PrivacyPanel'
 
@@ -118,6 +119,7 @@ export function ProfileSection() {
         </Paper>
       </Box>
       <SecurityPanel />
+      <PhoneVerificationPanel />
       <NotificationPreferencesPanel />
       {/* Confidențialitatea stă la final, cum cere spec-ul §10.4. */}
       <PrivacyPanel />

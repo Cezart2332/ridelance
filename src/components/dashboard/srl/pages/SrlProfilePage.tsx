@@ -5,6 +5,7 @@ import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded'
 import { NotificationPreferencesPanel } from '../../sections/profile/NotificationPreferencesPanel'
 import { PrivacyPanel } from '../../sections/profile/PrivacyPanel'
 import { SecurityPanel } from '../../sections/profile/SecurityPanel'
+import { PhoneVerificationPanel } from '../../sections/profile/PhoneVerificationPanel'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
 import { PageHeader, Panel, StatusChip } from '../../ui'
 import { companyService, type CompanyProfile, type PublicVisibility } from '../../../../services/company.service'
@@ -324,6 +325,7 @@ export function SrlProfilePage() {
       </Panel>
 
       <SecurityPanel />
+      <PhoneVerificationPanel />
       <NotificationPreferencesPanel />
       {/* Confidențialitatea stă la final, ca în Profilul PFA. */}
       <PrivacyPanel />
