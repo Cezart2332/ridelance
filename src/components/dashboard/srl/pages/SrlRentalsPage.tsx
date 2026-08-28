@@ -61,6 +61,9 @@ const TABS = [
   { id: 'open', label: 'Active' },
   { id: 'upcoming', label: 'Viitoare' },
   { id: 'completed', label: 'Încheiate' },
+  // „Toate" nu e un filtru, e o plasă de siguranță: fără el, o închiriere pregătită sau anulată
+  // n-ar fi apărut în niciun tab, deci n-ar fi existat pentru cel care o caută.
+  { id: 'all', label: 'Toate' },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
@@ -83,6 +86,7 @@ function isoDate(date: Date): string {
 const DEFAULT_PERIOD_DAYS = 60
 
 function matchesTab(rental: Rental, tab: TabId): boolean {
+  if (tab === 'all') return true
   if (tab === 'upcoming') return rental.status === 'upcoming'
   if (tab === 'completed') return rental.status === 'completed'
   return rental.status === 'active' || rental.status === 'ending_soon'
@@ -166,7 +170,13 @@ export function SrlRentalsPage() {
   }
 
   const summary = overview?.summary
-  const visible = (overview?.rentals ?? []).filter((r) => matchesTab(r, tab))
+  const allRentals = overview?.rentals ?? []
+  const visible = allRentals.filter((r) => matchesTab(r, tab))
+  // Cifra de pe fiecare tab: cel care tocmai a creat o închiriere și n-o vede în „Active" trebuie
+  // să citească de pe ecran unde a ajuns, nu să le deschidă pe rând.
+  const counts = Object.fromEntries(
+    TABS.map((t) => [t.id, allRentals.filter((r) => matchesTab(r, t.id)).length]),
+  ) as Record<TabId, number>
 
   return (
     <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
@@ -235,7 +245,11 @@ export function SrlRentalsPage() {
             }}
           >
             {TABS.map((t) => (
-              <Tab key={t.id} value={t.id} label={t.label} />
+              <Tab
+                key={t.id}
+                value={t.id}
+                label={counts[t.id] > 0 ? `${t.label} (${counts[t.id]})` : t.label}
+              />
             ))}
           </Tabs>
         }
@@ -244,7 +258,9 @@ export function SrlRentalsPage() {
           <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, py: 2 }}>
             {cars.length === 0
               ? 'Adaugă întâi o mașină în flotă — o închiriere se face pe o mașină.'
-              : 'Nicio închiriere în această categorie.'}
+              : allRentals.length > 0
+                ? 'Nicio închiriere aici. Sunt în celelalte categorii — vezi cifrele de pe taburi.'
+                : 'Nicio închiriere încă.'}
           </Typography>
         ) : (
           <Box sx={responsiveTableContainerSx}>
