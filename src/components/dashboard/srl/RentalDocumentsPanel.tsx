@@ -19,13 +19,15 @@ import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
 import {
   parseMissingFields,
   rentalsService,
+  toFieldKey,
+  type FilledDocumentFields,
   type GeneratedDocument,
   type MissingField,
   type Rental,
   type RentalDocumentType,
 } from '../../../services/rentals.service'
 import { openDocument } from '../../common/documentViewerBus'
-import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme'
 import { Panel, StatusChip } from '../ui'
 
 /**
@@ -55,12 +57,15 @@ const STATUS_LABELS: Record<GeneratedDocument['status'], { label: string; tone: 
   Cancelled: { label: 'Anulat', tone: 'neutral' },
 }
 
-/** Unde se completează un câmp lipsă. Textul spune omului unde să se ducă, nu doar ce lipsește. */
-const OWNER_HINTS: Record<MissingField['owner'], string> = {
-  car: 'Se completează în pagina mașinii.',
-  company: 'Se completează în Profilul firmei.',
-  tenant: 'Se completează pe chiriaș, la editarea închirierii.',
-  rental: 'Se completează pe închiriere.',
+/**
+ * Titlul grupei de câmpuri. Spune unde ajunge valoarea, fiindcă se salvează la sursă: adresa
+ * completată aici rămâne pe chiriaș și la închirierea următoare.
+ */
+const OWNER_TITLES: Record<MissingField['owner'], string> = {
+  car: 'Mașina',
+  company: 'Firma',
+  tenant: 'Chiriașul',
+  rental: 'Închirierea',
 }
 
 const formatDateTime = (iso: string): string =>
@@ -71,6 +76,8 @@ export function RentalDocumentsPanel({ rental }: { rental: Rental }) {
   const [error, setError] = useState<string | null>(null)
   const [generating, setGenerating] = useState<RentalDocumentType | null>(null)
   const [missing, setMissing] = useState<MissingField[] | null>(null)
+  /** Ce document se aștepta să iasă. Se reia singur după ce câmpurile au fost completate. */
+  const [missingFor, setMissingFor] = useState<RentalDocumentType | null>(null)
   /** Documentul pentru care se cere adresa de email. */
   const [sendingFor, setSendingFor] = useState<GeneratedDocument | null>(null)
 
@@ -95,6 +102,7 @@ export function RentalDocumentsPanel({ rental }: { rental: Rental }) {
       const fields = parseMissingFields(cause)
       if (fields) {
         setMissing(fields)
+        setMissingFor(type)
       } else {
         setError('Nu am putut genera documentul.')
       }
@@ -194,7 +202,18 @@ export function RentalDocumentsPanel({ rental }: { rental: Rental }) {
         </Stack>
       )}
 
-      <MissingFieldsDialog missing={missing} onClose={() => setMissing(null)} />
+      <MissingFieldsDialog
+        rentalId={rental.id}
+        missing={missing}
+        onClose={() => setMissing(null)}
+        onFilled={() => {
+          const type = missingFor
+          setMissing(null)
+          setMissingFor(null)
+          // Reia generarea de la sine: omul a cerut documentul, nu completarea formularului.
+          if (type) void generate(type)
+        }}
+      />
 
       <SendForSignatureDialog
         document={sendingFor}
@@ -217,46 +236,133 @@ export function RentalDocumentsPanel({ rental }: { rental: Rental }) {
  * trebuie să știe câte are de făcut înainte să înceapă.
  */
 function MissingFieldsDialog({
+  rentalId,
   missing,
   onClose,
+  onFilled,
 }: {
+  rentalId: string
   missing: MissingField[] | null
   onClose: () => void
+  onFilled: () => void
 }) {
+  const [values, setValues] = useState<Record<string, string>>({})
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   if (!missing) return null
 
   const owners = [...new Set(missing.map((m) => m.owner))]
+  // Profilul firmei lipsește cu totul: are slug și vizibilități, adică decizii care se iau în
+  // ecranul lui. Aici se spune atât, fără să pretindem că un câmp de text rezolvă.
+  const needsProfile = missing.some((m) => m.field === 'company.profile')
+  const editable = missing.filter((m) => m.field !== 'company.profile')
+  const complete = editable.every((m) => (values[m.field] ?? '').trim().length > 0)
+
+  const save = async () => {
+    setSaving(true)
+    setError(null)
+    try {
+      const payload: FilledDocumentFields = {}
+      for (const field of editable) {
+        const value = (values[field.field] ?? '').trim()
+        if (!value) continue
+
+        if (field.field === 'rental.startMileage') {
+          payload.rentalStartMileage = Number(value)
+        } else {
+          // Cheile sunt fixe și verificate de tip; valoarea e mereu text.
+          ;(payload as Record<string, string | number>)[toFieldKey(field.field)] = value
+        }
+      }
+
+      await rentalsService.fillDocumentFields(rentalId, payload)
+      onFilled()
+    } catch {
+      setError('Nu am putut salva. Verifică valorile și încearcă din nou.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 800 }}>Mai trebuie completate</DialogTitle>
       <DialogContent>
-        <Stack spacing={2}>
-          {owners.map((owner) => (
-            <Box key={owner}>
-              <Stack component="ul" sx={{ m: 0, pl: 2.5 }}>
-                {missing
-                  .filter((m) => m.owner === owner)
-                  .map((field) => (
-                    <Typography
-                      component="li"
+        <Stack spacing={2.5} sx={{ pt: 0.5 }}>
+          {needsProfile && (
+            <Alert severity="info" sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, fontWeight: 600 }}>
+              Firma n-are încă profil. Completează-l în Profil firmă, apoi revino aici.
+            </Alert>
+          )}
+
+          {owners.map((owner) => {
+            const fields = editable.filter((m) => m.owner === owner)
+            if (fields.length === 0) return null
+
+            return (
+              <Box key={owner}>
+                <Typography
+                  sx={{
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    color: DASHBOARD_TOKENS.textSubtle,
+                    mb: 1,
+                  }}
+                >
+                  {OWNER_TITLES[owner]}
+                </Typography>
+
+                <Stack spacing={1.5}>
+                  {fields.map((field) => (
+                    <TextField
                       key={field.field}
-                      sx={{ fontSize: '0.92rem', fontWeight: 700, color: DASHBOARD_TOKENS.ink, py: 0.3 }}
-                    >
-                      {field.label}
-                    </Typography>
+                      label={field.label}
+                      size="small"
+                      fullWidth
+                      value={values[field.field] ?? ''}
+                      onChange={(event) =>
+                        setValues((current) => ({ ...current, [field.field]: event.target.value }))
+                      }
+                      slotProps={
+                        field.field === 'rental.startMileage'
+                          ? { htmlInput: { inputMode: 'numeric' } }
+                          : undefined
+                      }
+                      sx={dashboardInputSx}
+                    />
                   ))}
-              </Stack>
-              <Typography sx={{ fontSize: '0.8rem', color: DASHBOARD_TOKENS.textMuted, mt: 0.5 }}>
-                {OWNER_HINTS[owner]}
-              </Typography>
-            </Box>
-          ))}
+                </Stack>
+              </Box>
+            )
+          })}
+
+          {error && (
+            <Alert severity="error" sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, fontWeight: 600 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Typography sx={{ fontSize: '0.78rem', color: DASHBOARD_TOKENS.textMuted }}>
+            Valorile se salvează acolo unde le e locul — pe chiriaș, pe mașină, pe firmă — deci nu
+            se mai cer a doua oară.
+          </Typography>
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onClose} sx={{ textTransform: 'none', fontWeight: 700 }}>
-          Am înțeles
+          Renunț
+        </Button>
+        <Button
+          variant="contained"
+          disableElevation
+          onClick={() => void save()}
+          disabled={saving || !complete}
+          sx={{ textTransform: 'none', fontWeight: 700 }}
+        >
+          {saving ? 'Se salvează…' : 'Salvează și generează'}
         </Button>
       </DialogActions>
     </Dialog>

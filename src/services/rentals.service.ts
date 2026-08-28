@@ -158,7 +158,43 @@ export function parseMissingFields(error: unknown): MissingField[] | null {
     })
 }
 
+/**
+ * Câmpurile lipsă, completate. Cheile sunt cele din `MissingField.field`, traduse în numele pe
+ * care le așteaptă serverul; se trimit doar cele completate.
+ */
+export type FilledDocumentFields = Partial<{
+  companyLegalName: string
+  companyCui: string
+  companyRegisteredOffice: string
+  companyLegalRepresentative: string
+  carPlateNumber: string
+  carVin: string
+  tenantName: string
+  tenantAddress: string
+  tenantCnp: string
+  tenantIdSeries: string
+  tenantIdNumber: string
+  tenantCui: string
+  rentalStartMileage: number
+}>
+
+/**
+ * `car.plateNumber` → `carPlateNumber`.
+ *
+ * Serverul întoarce cheia câmpului în forma „proprietar.câmp", iar comanda le are aplatizate.
+ * Conversia stă aici, lângă tipul pe care îl produce, nu în componenta care desenează formularul.
+ */
+export function toFieldKey(field: string): keyof FilledDocumentFields {
+  const [owner, name] = field.split('.')
+  return (owner + name[0].toUpperCase() + name.slice(1)) as keyof FilledDocumentFields
+}
+
 export const rentalsService = {
+  /** Trimite înapoi câmpurile pe care generarea le-a cerut. Fiecare ajunge la sursa lui. */
+  async fillDocumentFields(rentalId: string, fields: FilledDocumentFields): Promise<void> {
+    await api.put(`/rentals/${rentalId}/document-fields`, fields)
+  },
+
   async getDocuments(rentalId: string): Promise<GeneratedDocument[]> {
     const res = await api.get<GeneratedDocument[]>(`/rentals/${rentalId}/documents`)
     return res.data
