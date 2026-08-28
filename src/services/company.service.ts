@@ -23,6 +23,8 @@ export interface CompanyProfile {
   regCom: string | null
   legalRepresentative: string | null
   registeredOffice: string | null
+  /** Contul în care se încasează chiriile. Intră în contracte și în facturi. */
+  iban: string | null
   phone: string | null
   email: string | null
   website: string | null
@@ -40,6 +42,7 @@ export interface CompanyProfileInput {
   regCom: string | null
   legalRepresentative: string | null
   registeredOffice: string | null
+  iban: string | null
   phone: string | null
   email: string | null
   website: string | null
@@ -64,7 +67,33 @@ export interface PublicCompany {
   cars: Car[]
 }
 
+/** Datele publice ale unei firme din registrul ANAF. */
+export interface CompanyLookup {
+  cui: string
+  name: string
+  address: string | null
+  city: string | null
+  county: string | null
+  registrationNumber: string | null
+  vatPayer: boolean
+}
+
 export const companyService = {
+  /**
+   * Caută firma după CUI, în registrul ANAF.
+   *
+   * `null` când registrul n-o are: un CUI greșit nu e o eroare de sistem, e un CUI greșit, și se
+   * spune omului ca atare, nu printr-o alertă roșie de eșec.
+   */
+  async lookupByCui(cui: string): Promise<CompanyLookup | null> {
+    try {
+      const res = await api.get<CompanyLookup>(`/companies/lookup/${encodeURIComponent(cui)}`)
+      return res.data
+    } catch {
+      return null
+    }
+  },
+
   /** Public: nu cere autentificare și e filtrat de serverul care decide ce e vizibil. */
   async getPublic(slug: string): Promise<PublicCompany> {
     const res = await api.get<PublicCompany>(`/companies/${slug}/public`)

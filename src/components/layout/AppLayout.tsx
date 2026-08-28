@@ -427,6 +427,16 @@ export function AppLayout() {
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/politica-cookies" element={<CookiesPolicyPage />} />
             <Route path="/politica-plati-abonamente" element={<PaymentPolicyPage />} />
+            {/*
+              Mini-site-ul la rădăcină: /tuki-go și /tuki-go/dacia-logan-2021.
+
+              Ultimele rute din tabel, ca orice pagină a site-ului să câștige în fața unei firme cu
+              același nume. Serverul refuză oricum să dea unei firme un slug care se bate cu o
+              pagină (vezi `CompanySlug.IsReserved`), dar ordinea de aici e cea care contează
+              pentru linkurile deja distribuite. /f/{slug} rămâne mai sus, pentru ele.
+            */}
+            <Route path="/:companySlug" element={<CompanyPublicPage />} />
+            <Route path="/:companySlug/:slug" element={<VehicleDetailPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>

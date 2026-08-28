@@ -27,7 +27,7 @@ export function CarOwnerBlock({ owner, size = 28 }: CarOwnerBlockProps) {
   return (
     <Stack
       component={Link}
-      to={`/f/${owner.slug}`}
+      to={`/${owner.slug}`}
       target="_blank"
       rel="noopener"
       onClick={(event: React.MouseEvent) => event.stopPropagation()}

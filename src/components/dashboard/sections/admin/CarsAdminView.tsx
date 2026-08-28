@@ -990,7 +990,15 @@ export function CarsAdminView({ variant = 'admin', posterSection = 'manage' }: C
                           </Typography>
                         )}
                       </TableCell>
-                      <TableCell><Typography variant="caption">{new Date(lead.createdAtUtc).toLocaleDateString('ro-RO')}</Typography></TableCell>
+                      <TableCell>
+                        <Typography variant="caption">{new Date(lead.createdAtUtc).toLocaleDateString('ro-RO')}</Typography>
+                        {/* Sursa apare doar când chiar spune ceva: „direct" e valoarea tuturor. */}
+                        {lead.source && lead.source !== 'vdp' && (
+                          <Typography variant="caption" sx={{ color: DASHBOARD_TOKENS.textSubtle, display: 'block' }}>
+                            din {lead.source}
+                          </Typography>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Chip label={lead.status} size="small"
                           sx={{ fontWeight: 800, fontSize: '0.65rem', bgcolor: alpha(leadStatusColors[lead.status] ?? '#999', 0.1), color: leadStatusColors[lead.status] ?? '#999', border: `1px solid ${alpha(leadStatusColors[lead.status] ?? '#999', 0.2)}` }} />

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Alert, Box, Button, Skeleton, Stack, Switch, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, InputAdornment, Skeleton, Stack, Switch, TextField, Typography } from '@mui/material'
 import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded'
 
 import { NotificationPreferencesPanel } from '../../sections/profile/NotificationPreferencesPanel'
@@ -37,6 +37,7 @@ const IDENTITY_FIELDS: { key: TextField_; label: string }[] = [
   { key: 'regCom', label: 'Nr. Reg. Com.' },
   { key: 'legalRepresentative', label: 'Reprezentant legal' },
   { key: 'registeredOffice', label: 'Sediu social' },
+  { key: 'iban', label: 'IBAN' },
   { key: 'phone', label: 'Telefon' },
   { key: 'email', label: 'Email' },
   { key: 'website', label: 'Website' },
@@ -58,6 +59,7 @@ const EMPTY_PROFILE: CompanyProfile = {
   regCom: null,
   legalRepresentative: null,
   registeredOffice: null,
+  iban: null,
   phone: null,
   email: null,
   website: null,
@@ -74,6 +76,8 @@ export function SrlProfilePage() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [lookingUp, setLookingUp] = useState(false)
+  const [lookupNote, setLookupNote] = useState<string | null>(null)
 
   // Un cont nou nu are încă profil (204). Atunci se editează unul gol, nu se afișează eroare.
   const profile = draft ?? data ?? (loading ? null : EMPTY_PROFILE)
@@ -107,6 +111,41 @@ export function SrlProfilePage() {
     setDraft({ ...profile, [key]: value })
   }
 
+  /**
+   * Umple denumirea, numărul de la Registrul Comerțului și sediul din registrul ANAF.
+   *
+   * Nu suprascrie orbește: câmpurile deja completate rămân cum le-a scris omul. Registrul e o
+   * sursă bună pentru ce lipsește, dar nu are dreptate peste cineva care tocmai a corectat ceva.
+   */
+  const fillFromAnaf = async (current: CompanyProfile) => {
+    const cui = (current.cui ?? '').trim()
+    if (!cui) return
+
+    setLookingUp(true)
+    setLookupNote(null)
+    try {
+      const found = await companyService.lookupByCui(cui)
+      if (!found) {
+        setLookupNote('Registrul ANAF nu are acest CUI. Verifică cifrele.')
+        return
+      }
+
+      const address = [found.address, found.city, found.county].filter(Boolean).join(', ')
+      setSaved(false)
+      setDraft({
+        ...current,
+        legalName: current.legalName || found.name,
+        regCom: current.regCom ?? found.registrationNumber,
+        registeredOffice: current.registeredOffice ?? (address || null),
+      })
+      setLookupNote(`Preluat din ANAF: ${found.name}`)
+    } catch {
+      setLookupNote('Registrul ANAF nu răspunde acum. Completează manual sau încearcă mai târziu.')
+    } finally {
+      setLookingUp(false)
+    }
+  }
+
   const save = async () => {
     setSaving(true)
     setSaveError(null)
@@ -117,6 +156,7 @@ export function SrlProfilePage() {
         regCom: profile.regCom,
         legalRepresentative: profile.legalRepresentative,
         registeredOffice: profile.registeredOffice,
+        iban: profile.iban,
         phone: profile.phone,
         email: profile.email,
         website: profile.website,
@@ -208,6 +248,33 @@ export function SrlProfilePage() {
               fullWidth
               size="small"
               sx={dashboardInputSx}
+              helperText={field.key === 'cui' ? lookupNote ?? ' ' : undefined}
+              slotProps={
+                field.key === 'cui'
+                  ? {
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <Button
+                              size="small"
+                              onClick={() => void fillFromAnaf(profile)}
+                              disabled={lookingUp || !(profile.cui ?? '').trim()}
+                              sx={{
+                                textTransform: 'none',
+                                fontWeight: 700,
+                                fontSize: '0.78rem',
+                                minWidth: 0,
+                                px: 1,
+                              }}
+                            >
+                              {lookingUp ? 'Caut…' : 'Din ANAF'}
+                            </Button>
+                          </InputAdornment>
+                        ),
+                      },
+                    }
+                  : undefined
+              }
             />
           ))}
           <TextField

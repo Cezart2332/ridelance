@@ -65,7 +65,8 @@ export function SrlCompanyPagePage() {
     )
   }
 
-  const path = `/f/${profile.slug}`
+  // Adresa scurtă, cea care se dă mai departe. `/f/{slug}` rămâne valabilă pentru linkurile vechi.
+  const path = `/${profile.slug}`
   const publicUrl = `${window.location.origin}${path}`
 
   const copyLink = async () => {

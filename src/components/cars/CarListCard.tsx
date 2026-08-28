@@ -42,14 +42,21 @@ interface CarListCardProps {
   car: Car
   /** Dashboardul deschide într-un tab nou, ca sesiunea de lucru să nu se piardă. */
   newTab?: boolean
+  /**
+   * Slug-ul firmei, pe mini-site-ul ei: linkul devine `/{firma}/{masina}`.
+   *
+   * Lipsește în rest, unde anunțul se deschide la `/masini/{masina}` — aceeași pagină, dar adresa
+   * spune de unde a fost deschisă, iar pe pagina firmei asta e tot ce se răsfoiește.
+   */
+  companySlug?: string
 }
 
 const COVER_RADIUS = `${VDP.radius.image}px`
 
-export default function CarListCard({ car, newTab = false }: CarListCardProps) {
+export default function CarListCard({ car, newTab = false, companySlug }: CarListCardProps) {
   const navigate = useNavigate()
 
-  const to = `/masini/${car.slug}`
+  const to = companySlug ? `/${companySlug}/${car.slug}` : `/masini/${car.slug}`
   const linkProps = newTab ? { target: '_blank' as const, rel: 'noopener' } : {}
 
   const cover = car.images[0]

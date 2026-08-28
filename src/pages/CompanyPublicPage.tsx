@@ -14,7 +14,7 @@ import { TOKENS } from '../constants/tokens'
 import { companyService, type PublicCompany } from '../services/company.service'
 
 /**
- * Mini-site-ul public al unei firme, la `/f/{slug}` (spec §4.2).
+ * Mini-site-ul public al unei firme, la `/{firma}` (spec §4.2). `/f/{slug}` rămâne valabil.
  *
  * E destinația blocului de proprietar de pe cardul de mașină, deci trebuie să răspundă la
  * întrebarea pe care și-o pune cineva care tocmai a dat click pe un nume: cine sunt ăștia și ce
@@ -24,17 +24,19 @@ import { companyService, type PublicCompany } from '../services/company.service'
  * pagina afișează ce a primit — altfel un câmp ascuns ar fi rămas oricum în răspunsul API.
  */
 export function CompanyPublicPage() {
-  const { slug } = useParams<{ slug: string }>()
+  // Două rute duc aici: /f/{slug}, cea veche, și /{companySlug}, cea de azi.
+  const { slug, companySlug } = useParams<{ slug?: string; companySlug?: string }>()
+  const companyPath = slug ?? companySlug
   const [company, setCompany] = useState<PublicCompany | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
-    if (!slug) return
+    if (!companyPath) return
     let cancelled = false
 
     companyService
-      .getPublic(slug)
+      .getPublic(companyPath)
       .then((data) => {
         if (!cancelled) setCompany(data)
       })
@@ -48,7 +50,7 @@ export function CompanyPublicPage() {
     return () => {
       cancelled = true
     }
-  }, [slug])
+  }, [companyPath])
 
   useEffect(() => {
     if (!company) return
@@ -186,7 +188,7 @@ export function CompanyPublicPage() {
           }}
         >
           {company.cars.map((car) => (
-            <CarListCard key={car.id} car={car} />
+            <CarListCard key={car.id} car={car} companySlug={company.slug} />
           ))}
         </Box>
       )}

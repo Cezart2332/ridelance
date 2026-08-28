@@ -1,5 +1,6 @@
 import { api } from '../lib/axios';
 import { SRL_ROOT } from '../config/srlNavigation';
+import { currentSource } from '../lib/trafficSource';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -127,6 +128,8 @@ export interface CarLead {
   weeks?: number | null;
   hasPlatformAccount?: boolean | null;
   message?: string | null;
+  /** De unde a venit cererea. „vdp" = direct pe anunț. */
+  source: string;
   status: string;
   adminNote?: string;
   createdAtUtc: string;
@@ -284,7 +287,11 @@ const carsService = {
     hasPlatformAccount?: boolean | null;
     message?: string | null;
   }): Promise<string> {
-    const res = await api.post<{ leadId: string }>(`/cars/${carId}/leads`, data);
+    // Sursa nu vine din formular — vine din linkul pe care a intrat omul, cu o sesiune în urmă.
+    const res = await api.post<{ leadId: string }>(`/cars/${carId}/leads`, {
+      ...data,
+      source: currentSource(),
+    });
     return res.data.leadId;
   },
 
@@ -307,7 +314,7 @@ const carsService = {
    * dacă utilizatorul navighează imediat, XHR-ul ar fi anulat exact în cazul care contează.
    * Serverul deduplică oricum pe 30 de minute, deci un apel în plus nu strică nimic.
    */
-  trackView(carId: string, source = 'vdp'): Promise<void> {
+  trackView(carId: string, source = currentSource()): Promise<void> {
     return fetch(`${BASE_URL}/cars/${carId}/analytics/view`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
