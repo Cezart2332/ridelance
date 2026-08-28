@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Alert,
   Box,
@@ -20,6 +20,7 @@ import {
   type CheckKind,
   type CheckRecord,
   type Checks,
+  type CheckSlot,
 } from '../../../services/checks.service'
 import { openDocument } from '../../common/documentViewerBus'
 import { type Rental } from '../../../services/rentals.service'
@@ -93,14 +94,18 @@ export function RentalChecksPanel({ rental }: { rental: Rental }) {
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
         <CheckColumn
           kind="CheckIn"
+          rentalId={rental.id}
           record={checks.checkIn}
           onEdit={() => setEditing('CheckIn')}
+          onPhotoAdded={load}
           disabled={false}
         />
         <CheckColumn
           kind="CheckOut"
+          rentalId={rental.id}
           record={checks.checkOut}
           onEdit={() => setEditing('CheckOut')}
+          onPhotoAdded={load}
           // Primirea vine după predare. Butonul stins spune de ce, în loc să lase serverul s-o refuze.
           disabled={checks.checkIn === null}
         />
@@ -132,15 +137,43 @@ export function RentalChecksPanel({ rental }: { rental: Rental }) {
 
 function CheckColumn({
   kind,
+  rentalId,
   record,
   onEdit,
+  onPhotoAdded,
   disabled,
 }: {
   kind: CheckKind
+  rentalId: string
   record: CheckRecord | null
   onEdit: () => void
+  onPhotoAdded: () => void
   disabled: boolean
 }) {
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const [uploadingSlot, setUploadingSlot] = useState<CheckSlot | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const pick = (slot: CheckSlot) => {
+    setUploadingSlot(slot)
+    inputRef.current?.click()
+  }
+
+  const onFile = async (file: File | undefined) => {
+    if (!file || !uploadingSlot) return
+    setUploadError(null)
+    try {
+      await checksService.addPhoto(rentalId, kind, uploadingSlot, file)
+      onPhotoAdded()
+    } catch (cause) {
+      const detail = (cause as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setUploadError(detail ?? 'Nu am putut urca fotografia.')
+    } finally {
+      setUploadingSlot(null)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
   return (
     <Box
       sx={{
@@ -195,29 +228,56 @@ function CheckColumn({
 
           {/* Sloturile se afișează toate, în aceeași ordine pe ambele coloane: o poză lipsă pe o
               parte trebuie să se vadă ca gol, nu prin absența rândului. */}
+          {uploadError && (
+            <Alert severity="error" sx={{ mt: 1, borderRadius: `${DASHBOARD_TOKENS.radius.sm}px`, fontSize: '0.78rem' }}>
+              {uploadError}
+            </Alert>
+          )}
+
+          <Box
+            component="input"
+            type="file"
+            accept="image/*"
+            ref={inputRef}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => void onFile(event.target.files?.[0])}
+            sx={{ display: 'none' }}
+          />
+
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.8, pt: 1 }}>
             {CHECK_SLOTS.map((slot) => {
               const photo = record.photos.find((p) => p.slot === slot)
               return (
                 <Box
                   key={slot}
-                  onClick={() => photo && openDocument(photo.documentId, `${SLOT_LABELS[slot]}.jpg`)}
+                  component="button"
+                  type="button"
+                  // Plin, se deschide. Gol, cere o poză. Aceeași casetă, două înțelesuri, fără
+                  // buton separat care ar dubla numărul de ținte pe ecran.
+                  onClick={() =>
+                    photo ? openDocument(photo.documentId, `${SLOT_LABELS[slot]}.jpg`) : pick(slot)
+                  }
+                  disabled={uploadingSlot !== null}
+                  title={photo ? `Vezi ${SLOT_LABELS[slot]}` : `Adaugă ${SLOT_LABELS[slot]}`}
                   sx={{
                     aspectRatio: '1',
                     borderRadius: `${DASHBOARD_TOKENS.radius.sm}px`,
-                    border: `1px solid ${DASHBOARD_TOKENS.border}`,
-                    bgcolor: photo ? DASHBOARD_TOKENS.accentWash : DASHBOARD_TOKENS.surface,
+                    border: photo
+                      ? `1px solid ${DASHBOARD_TOKENS.border}`
+                      : `1px dashed ${DASHBOARD_TOKENS.borderHover}`,
+                    bgcolor: photo ? DASHBOARD_TOKENS.accentWash : 'transparent',
                     display: 'grid',
                     placeItems: 'center',
-                    cursor: photo ? 'pointer' : 'default',
+                    cursor: 'pointer',
                     fontSize: '0.6rem',
                     fontWeight: 700,
+                    fontFamily: 'inherit',
                     color: photo ? DASHBOARD_TOKENS.accent : DASHBOARD_TOKENS.textSubtle,
                     textAlign: 'center',
                     px: 0.3,
+                    '&:hover': { borderColor: DASHBOARD_TOKENS.primary },
                   }}
                 >
-                  {SLOT_LABELS[slot]}
+                  {uploadingSlot === slot ? '…' : SLOT_LABELS[slot]}
                 </Box>
               )
             })}

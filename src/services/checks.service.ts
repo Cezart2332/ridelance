@@ -82,6 +82,16 @@ export const checksService = {
     return res.data.id
   },
 
+  /** Urcă fotografia unui slot. A doua o înlocuiește pe prima — un slot, o poză. */
+  async addPhoto(rentalId: string, kind: CheckKind, slot: CheckSlot, file: File): Promise<void> {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('slot', slot)
+    await api.post(`/rentals/${rentalId}/checks/${kind}/photos`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
   async getTimeline(carId: string): Promise<VehicleEvent[]> {
     const res = await api.get<VehicleEvent[]>(`/cars/${carId}/timeline`)
     return res.data
