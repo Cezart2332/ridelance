@@ -11,6 +11,7 @@ import { PageHeader, Panel, StatusChip } from '../../ui'
 import { companyService, type CompanyProfile, type PublicVisibility } from '../../../../services/company.service'
 import { useCompanyProfile } from '../useCompanyProfile'
 import { CompanyLogoPanel } from './CompanyLogoPanel'
+import { CompanySignaturePanel } from './CompanySignaturePanel'
 
 /**
  * Profilul SRL (spec §3.1).
@@ -66,6 +67,7 @@ const EMPTY_PROFILE: CompanyProfile = {
   website: null,
   publicDescription: null,
   logoUrl: null,
+  signatureDocumentId: null,
   slug: '',
   isVerified: false,
   visibility: { phone: true, email: true, whatsapp: true, location: true },
@@ -214,6 +216,12 @@ export function SrlProfilePage() {
         verified={profile.isVerified}
         hasProfile={profile.id !== ''}
         onLogoChange={(url) => setProfile({ ...profile, logoUrl: url })}
+      />
+
+      <CompanySignaturePanel
+        signatureDocumentId={profile.signatureDocumentId}
+        hasProfile={profile.id !== ''}
+        onSignatureChange={(id) => setProfile({ ...profile, signatureDocumentId: id })}
       />
 
       <Panel

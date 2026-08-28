@@ -30,6 +30,8 @@ export interface CompanyProfile {
   website: string | null
   publicDescription: string | null
   logoUrl: string | null
+  /** Specimenul de semnătură al firmei, dacă a fost salvat unul. */
+  signatureDocumentId: string | null
   slug: string
   isVerified: boolean
   visibility: PublicVisibility
@@ -120,5 +122,21 @@ export const companyService = {
 
     const res = await api.post<{ logoUrl: string }>('/companies/profile/logo', form)
     return res.data.logoUrl
+  },
+
+  /**
+   * Salvează specimenul de semnătură. `image` e PNG-ul din pânză, ca data-URL.
+   *
+   * Se trimite ca text, nu ca fișier: vine dintr-o pânză de desenat, nu de pe discul cuiva.
+   */
+  async saveSignature(image: string): Promise<string> {
+    const res = await api.put<{ signatureDocumentId: string }>('/companies/profile/signature', {
+      signatureImage: image,
+    })
+    return res.data.signatureDocumentId
+  },
+
+  async deleteSignature(): Promise<void> {
+    await api.delete('/companies/profile/signature')
   },
 }
