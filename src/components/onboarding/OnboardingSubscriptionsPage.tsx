@@ -4,11 +4,11 @@ import { PanelCard, PanelHeading } from './PanelCard'
 import { TOKENS } from './onboardingTheme'
 
 /**
- * Abonamente — secțiunea există în rail, dar conținutul ei nu e definit încă.
+ * Abonamente — o secțiune a shell-ului de onboarding, nu un pas al lui.
  *
- * Ruta e montată în shell-ul de onboarding, nu doar în dashboard, ca intrarea din sidebar să
- * ducă undeva: un pas cu lacăt pe care dai click și nu se întâmplă nimic arată ca un bug.
- * Pagina repetă exact ce spune lacătul, atât — restul se scrie când se decide conținutul.
+ * Se ajunge aici din blocul de suport din sidebar, fiindcă nu e o etapă a înrolării: nu se
+ * completează, nu se validează și nu deblochează nimic. Conținutul se definește separat; până
+ * atunci pagina spune atât — o secțiune goală e mai onestă decât una inventată.
  */
 export default function OnboardingSubscriptionsPage() {
   return (

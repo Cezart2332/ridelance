@@ -1,8 +1,10 @@
+import CardMembershipRoundedIcon from '@mui/icons-material/CardMembershipRounded'
 import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import HeadsetMicRoundedIcon from '@mui/icons-material/HeadsetMicRounded'
 import MailOutlineRoundedIcon from '@mui/icons-material/MailOutlineRounded'
 import { Box, Button, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from '@mui/material'
 import { useState } from 'react'
+import { NavLink } from 'react-router-dom'
 
 import { SHELL } from '../shellTokens'
 import { useOnboardingSupport } from '../supportContext'
@@ -58,6 +60,32 @@ export function SidebarSupportBlock() {
           }}
         >
           Contactează suportul
+        </Button>
+
+        {/*
+          Abonamentele stau aici, sub ajutor — nu în lista de pași. Nu sunt o etapă a înrolării:
+          nu se completează, nu se validează și nu deblochează nimic. Puse în rail, ar fi arătat
+          ca un pas rămas nefăcut pentru cineva care terminase tot.
+        */}
+        <Button
+          component={NavLink}
+          to="/onboarding/abonamente"
+          startIcon={<CardMembershipRoundedIcon sx={{ fontSize: 17 }} />}
+          sx={{
+            width: '100%',
+            height: 32,
+            mt: 0.75,
+            textTransform: 'none',
+            fontSize: 13,
+            fontWeight: 600,
+            borderRadius: SHELL.radius.input,
+            justifyContent: 'flex-start',
+            color: SHELL.text.secondary,
+            '&:hover': { backgroundColor: SHELL.bg.surface, color: SHELL.text.primary },
+            '&.active': { color: SHELL.text.primary },
+          }}
+        >
+          Abonamente
         </Button>
       </Box>
 

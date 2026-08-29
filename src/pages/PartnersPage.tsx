@@ -293,6 +293,10 @@ function PartnerPanel({ partner }: { partner: Partner }) {
         border: `1px solid ${TOKENS.border}`,
         boxShadow: TOKENS.shadow.md,
         overflow: 'hidden',
+        // Un prag de înălțime, ca schimbarea partenerului să nu scurteze pagina sub poziția
+        // curentă de derulare: când se întâmplă, browserul trage scroll-ul înapoi și antetul
+        // „Parteneri" pare că sare. Partenerii cu text puțin cresc peste el oricum.
+        minHeight: { xs: 'auto', md: '60vh' },
       }}
     >
       {/* Antet panel */}

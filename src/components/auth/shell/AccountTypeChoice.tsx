@@ -1,26 +1,18 @@
 import { Box, ButtonBase, Typography } from '@mui/material'
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
 import { alpha } from '@mui/material/styles'
-import { ROOMY } from './authShellSx'
 import { TOKENS } from '../../../constants/tokens'
 
 export type AccountType = 'Client' | 'CarPoster'
 
+/**
+ * Doar numele formei juridice. Inițiala din pastilă („P", „S") repeta prima literă a cuvântului
+ * de lângă ea, iar descrierile explicau ceva ce alegătorul știe deja despre propria firmă —
+ * două rânduri de text pentru o alegere între două cuvinte.
+ */
 const OPTIONS = [
-  {
-    value: 'Client' as const,
-    tag: 'P',
-    title: 'PFA',
-    hint: 'Pentru activitatea ta individuală',
-    help: 'Vei primi dashboardul dedicat administrării activității PFA.',
-  },
-  {
-    value: 'CarPoster' as const,
-    tag: 'S',
-    title: 'SRL',
-    hint: 'Pentru mașini, cereri și documente',
-    help: 'Vei primi dashboardul pentru mașini, cereri, documente și administrarea flotei.',
-  },
+  { value: 'Client' as const, title: 'PFA' },
+  { value: 'CarPoster' as const, title: 'SRL' },
 ]
 
 interface AccountTypeChoiceProps {
@@ -35,8 +27,6 @@ interface AccountTypeChoiceProps {
  * contului, fiindcă decide și rolul (`UserRole`) și dashboardul unde aterizezi.
  */
 export function AccountTypeChoice({ value, onChange, disabled = false }: AccountTypeChoiceProps) {
-  const selected = OPTIONS.find((option) => option.value === value) ?? OPTIONS[0]
-
   return (
     <Box>
       <Typography
@@ -64,7 +54,7 @@ export function AccountTypeChoice({ value, onChange, disabled = false }: Account
               onClick={() => onChange(option.value)}
               sx={{
                 display: 'grid',
-                gridTemplateColumns: '34px 1fr 18px',
+                gridTemplateColumns: '1fr 18px',
                 alignItems: 'center',
                 gap: 1,
                 p: 1.25,
@@ -76,33 +66,11 @@ export function AccountTypeChoice({ value, onChange, disabled = false }: Account
                 '&:hover': { borderColor: active ? alpha(TOKENS.primary, 0.5) : TOKENS.borderHover },
               }}
             >
-              <Box
-                sx={{
-                  width: 34,
-                  height: 34,
-                  display: 'grid',
-                  placeItems: 'center',
-                  borderRadius: `${TOKENS.radius.md}px`,
-                  fontSize: '0.8125rem',
-                  fontWeight: 700,
-                  backgroundColor: active ? alpha(TOKENS.primary, 0.18) : TOKENS.surfaceAlt,
-                  color: active ? TOKENS.primaryStrong : TOKENS.textMuted,
-                }}
+              <Typography
+                sx={{ minWidth: 0, fontSize: '0.875rem', fontWeight: 700, color: TOKENS.ink }}
               >
-                {option.tag}
-              </Box>
-
-              <Box sx={{ minWidth: 0 }}>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 700, color: TOKENS.ink }}>
-                  {option.title}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{ display: 'block', color: TOKENS.textMuted, [ROOMY]: { display: 'none' } }}
-                >
-                  {option.hint}
-                </Typography>
-              </Box>
+                {option.title}
+              </Typography>
 
               <CheckRoundedIcon
                 sx={{
@@ -116,13 +84,6 @@ export function AccountTypeChoice({ value, onChange, disabled = false }: Account
           )
         })}
       </Box>
-
-      <Typography
-        variant="caption"
-        sx={{ display: 'block', mt: 1, color: TOKENS.textMuted, [ROOMY]: { display: 'none' } }}
-      >
-        {selected.help}
-      </Typography>
     </Box>
   )
 }
