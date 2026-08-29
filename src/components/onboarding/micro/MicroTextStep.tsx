@@ -91,6 +91,10 @@ export function MicroTextStep({ def, context }: { def: MicroStepDef; context: Mi
         const isPassword = field.type === 'password'
         const show = revealed[field.key] === true
 
+        // Câmp venit din fișa clientului: se vede, nu se scrie. Serverul îl re-hidratează la
+        // salvare, deci blocarea de aici e comoditate, nu control de acces.
+        const locked = field.lockedWhenPrefilled === true && value !== ''
+
         return (
           <Box key={field.key}>
             <TextField
@@ -101,6 +105,7 @@ export function MicroTextStep({ def, context }: { def: MicroStepDef; context: Mi
               helperText={error ?? resolve(field.helper)}
               error={error !== null}
               value={value}
+              disabled={locked}
               onChange={(event) => set(field, event.target.value)}
               onBlur={() => {
                 setTouched((prev) => ({ ...prev, [field.key]: true }))
@@ -110,7 +115,9 @@ export function MicroTextStep({ def, context }: { def: MicroStepDef; context: Mi
               sx={inputSx}
               fullWidth
               slotProps={
-                isPassword
+                locked
+                  ? { input: { readOnly: true } }
+                  : isPassword
                   ? {
                       input: {
                         endAdornment: (

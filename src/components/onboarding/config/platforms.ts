@@ -36,9 +36,19 @@ const field = (c: MicroStepContext, stepId: string, key: string): string => {
 
 const EYEBROW = 'UBER & BOLT'
 
-const LABELS: Record<PlatformProvider, string> = {
+/**
+ * Patru entități, două grupuri. Numele poartă singur grupul — „Uber Fleet" e contul de operator,
+ * „Uber Driver" e contul cu care se conduce — deci ecranele nu mai au nevoie de un titlu de
+ * secțiune pe lângă ele.
+ */
+const FLEET_LABELS: Record<PlatformProvider, string> = {
   Uber: 'Uber Fleet',
   Bolt: 'Bolt Fleet',
+}
+
+const DRIVER_LABELS: Record<PlatformProvider, string> = {
+  Uber: 'Uber Driver',
+  Bolt: 'Bolt Driver',
 }
 
 /**
@@ -63,25 +73,70 @@ function validateEmail(value: string): string | null {
   return EMAIL_PATTERN.test(value.trim()) ? null : 'Verifică adresa de email.'
 }
 
+/**
+ * E.164, cu aceleași reguli ca `PlatformContactRules` de pe backend: „0712345678",
+ * „0040712345678" și „+40 712 345 678" sunt același număr, iar ce se salvează e forma canonică.
+ */
+export function toE164(value: string): string | null {
+  const raw = value.trim()
+  if (raw === '') return null
+
+  const hadPlus = raw.startsWith('+')
+  let digits = raw.replace(/\D/g, '')
+  if (digits === '') return null
+
+  if (!hadPlus) {
+    if (digits.startsWith('00')) digits = digits.slice(2)
+    else if (digits.startsWith('0')) digits = `40${digits.slice(1)}`
+  }
+
+  return digits.length >= 8 && digits.length <= 15 ? `+${digits}` : null
+}
+
 function validatePhone(value: string): string | null {
-  const digits = value.replace(/\D/g, '')
-  if (digits === '') return 'Telefonul e obligatoriu.'
-  return digits.length >= 9 ? null : 'Numărul pare incomplet.'
+  if (value.trim() === '') return 'Telefonul e obligatoriu.'
+  return toE164(value) === null ? 'Verifică numărul de telefon.' : null
 }
 
 /** Cele două ecrane ale unei platforme: ai cont sau nu, apoi datele lui. */
 function platformSteps(provider: PlatformProvider): MicroStepDef[] {
-  const label = LABELS[provider]
+  const label = FLEET_LABELS[provider]
+  const driverLabel = DRIVER_LABELS[provider]
   const answerId = `cont_${provider.toLowerCase()}`
   const detailsId = `date_${provider.toLowerCase()}`
+  const driverId = `sofer_${provider.toLowerCase()}`
 
   const isChosen = (c: MicroStepContext) => selectedPlatforms(c).includes(provider)
 
-  /** Contul se deschide acum — atunci emailul e cel al contului RIDElance, precompletat. */
-  const isNewAccount = (c: MicroStepContext) => {
+  /**
+   * Ambele ecrane scriu în același cont: e o singură entitate pe platformă, cu datele de flotă
+   * și cele de șofer una lângă alta. Câmpurile neatinse de ecranul curent se retrimit din ce
+   * s-a salvat deja, ca o salvare parțială să nu le șteargă pe celelalte.
+   */
+  const persistAccount = async (c: MicroStepContext, values: Record<string, string>) => {
+    const saved = accountOf(c, provider)
+
     const answer = c.answers[answerId]
-    if (typeof answer === 'string') return answer === 'None'
-    return accountOf(c, provider)?.existingAccountAnswer === 'None'
+    const existingAccountAnswer =
+      typeof answer === 'string'
+        ? (answer as ExistingAccountAnswer)
+        : (saved?.existingAccountAnswer ?? 'None')
+
+    await onboardingService.submitPlatformAccount({
+      provider,
+      hasExistingAccount: existingAccountAnswer === 'HasOperatorAccount',
+      existingAccountAnswer,
+      email: values.email || field(c, detailsId, 'email') || saved?.email || null,
+      phone: values.phone || field(c, detailsId, 'phone') || saved?.phone || null,
+      password: values.password || null,
+      driverEmail: values.driverEmail || field(c, driverId, 'driverEmail') || saved?.driverEmail || null,
+      driverPhone: values.driverPhone || field(c, driverId, 'driverPhone') || saved?.driverPhone || null,
+      driverExternalId:
+        values.driverExternalId ||
+        field(c, driverId, 'driverExternalId') ||
+        saved?.driverExternalId ||
+        null,
+    })
   }
 
   return [
@@ -109,28 +164,30 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
       kind: 'text',
       eyebrow: EYEBROW,
       icon: 'idCard',
-      railLabel: `Date ${label}`,
-      title: `Datele contului de ${label}`,
+      railLabel: label,
+      title: `Datele contului ${label}`,
       fields: [
         {
           key: 'email',
           label: 'Email',
           type: 'email',
-          // Cont nou → emailul contului RIDElance. Cont existent → cel al contului lui, deci gol.
-          initialValue: (c) => (isNewAccount(c) ? (c.state?.contactEmail ?? '') : ''),
-          placeholder: (c) => (isNewAccount(c) ? undefined : 'Emailul contului tău de flotă'),
-          helper: (c) =>
-            isNewAccount(c)
-              ? 'Precompletat cu emailul contului tău RIDElance. Îl poți modifica.'
-              : 'Emailul cu care intri în contul de flotă existent.',
+          // Vine din fișa clientului: e contul RIDElance, nu unul pe care îl alegi aici.
+          initialValue: (c) => c.state?.contactEmail ?? '',
+          lockedWhenPrefilled: true,
           validate: validateEmail,
         },
-        { key: 'phone', label: 'Telefon', type: 'tel', validate: validatePhone },
+        {
+          key: 'phone',
+          label: 'Telefon',
+          type: 'tel',
+          initialValue: (c) => c.state?.contactPhone ?? '',
+          lockedWhenPrefilled: true,
+          validate: validatePhone,
+        },
         {
           key: 'password',
           label: 'Parola contului',
           type: 'password',
-          helper: 'Ne trebuie ca să gestionăm contul de flotă în numele PFA-ului tău.',
           validate: validatePassword,
           strengthMeter: true,
         },
@@ -138,22 +195,7 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
       persist: async (values, c) => {
         // Salvarea de draft nu forțează completitudinea: „Continuă" e cel care o cere.
         if (!values.email?.trim() && !values.phone?.trim()) return
-
-        // Răspunsul de la ecranul dinainte decide dacă legăm un cont existent sau deschidem unul.
-        const answer = c.answers[answerId]
-        const existingAccountAnswer =
-          typeof answer === 'string'
-            ? (answer as ExistingAccountAnswer)
-            : (accountOf(c, provider)?.existingAccountAnswer ?? 'None')
-
-        await onboardingService.submitPlatformAccount({
-          provider,
-          hasExistingAccount: existingAccountAnswer === 'HasOperatorAccount',
-          existingAccountAnswer,
-          email: values.email || null,
-          phone: values.phone || null,
-          password: values.password || null,
-        })
+        await persistAccount(c, values)
       },
       visibleWhen: isChosen,
       // Serverul confirmă: are email salvat ȘI parolă. Fără a doua condiție, un cont salvat
@@ -165,6 +207,53 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
           validateEmail(field(c, detailsId, 'email')) === null &&
           validatePhone(field(c, detailsId, 'phone')) === null &&
           validatePassword(field(c, detailsId, 'password')) === null
+        )
+      },
+    },
+    {
+      // Al doilea cont, nu al doilea set de câmpuri pe același: contul de flotă administrează
+      // mașinile, contul de șofer e cel cu care se conduce. Pasul cerea doar flota, deci
+      // jumătate din ce trebuie ca să poți lucra lipsea din dosar.
+      id: driverId,
+      macroStep: 'platforms',
+      kind: 'text',
+      eyebrow: EYEBROW,
+      icon: 'user',
+      railLabel: driverLabel,
+      title: `Datele contului ${driverLabel}`,
+      fields: [
+        {
+          key: 'driverEmail',
+          label: 'Email',
+          type: 'email',
+          initialValue: (c) => accountOf(c, provider)?.driverEmail ?? '',
+          validate: validateEmail,
+        },
+        {
+          key: 'driverPhone',
+          label: 'Telefon',
+          type: 'tel',
+          initialValue: (c) => accountOf(c, provider)?.driverPhone ?? '',
+          validate: validatePhone,
+        },
+        {
+          key: 'driverExternalId',
+          label: 'ID șofer',
+          optional: true,
+          initialValue: (c) => accountOf(c, provider)?.driverExternalId ?? '',
+        },
+      ],
+      persist: async (values, c) => {
+        if (!values.driverEmail?.trim() && !values.driverPhone?.trim()) return
+        await persistAccount(c, values)
+      },
+      visibleWhen: isChosen,
+      isDone: (c) => {
+        const account = accountOf(c, provider)
+        if (account?.driverEmail && account.driverPhone) return true
+        return (
+          validateEmail(field(c, driverId, 'driverEmail')) === null &&
+          validatePhone(field(c, driverId, 'driverPhone')) === null
         )
       },
     },
@@ -196,7 +285,7 @@ export const platformsMicroSteps: MicroStepDef[] = [
     railLabel: 'Confirmă platformele',
     title: 'Confirmă platformele alese',
     lines: (c) => {
-      const chosen = selectedPlatforms(c).map((p) => LABELS[p as PlatformProvider] ?? p)
+      const chosen = selectedPlatforms(c).map((p) => FLEET_LABELS[p as PlatformProvider] ?? p)
       return chosen.length > 0
         ? [`Îți deschidem conturile de operator pentru: ${chosen.join(' și ')}.`]
         : ['Alege întâi cel puțin o platformă.']

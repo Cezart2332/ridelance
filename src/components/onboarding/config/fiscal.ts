@@ -185,10 +185,11 @@ export const fiscalMicroSteps: MicroStepDef[] = [
         key: 'email',
         label: 'Email cont Oblio',
         type: 'email',
-        // Aceeași sursă ca la Uber Fleet și Bolt Fleet: emailul contului, de pe starea de
-        // onboarding. Editarea lui aici NU schimbă emailul contului RIDElance (spec §5).
+        // Aceeași sursă ca la conturile de flotă: emailul contului RIDElance, din fișa
+        // clientului. Precompletat înseamnă read-only — se schimbă prin suport, nu de aici,
+        // iar serverul îl re-hidratează oricum la salvare.
         initialValue: (c) => c.state?.contactEmail ?? '',
-        helper: 'Precompletat cu emailul contului tău RIDElance. Îl poți modifica.',
+        lockedWhenPrefilled: true,
       },
     ],
     isDone: (c) => Boolean(step2Of(c)?.oblio?.accountEmail) || field(c, 'oblio_email', 'email') !== '',

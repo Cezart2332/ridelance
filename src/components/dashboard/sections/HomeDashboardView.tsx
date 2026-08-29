@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Box, Button, Chip, Stack, Typography } from '@mui/material'
+import { Box, Chip, Stack, Typography } from '@mui/material'
 
 import { HOME_TOKENS, SPLIT_ROW } from '../home/tokens'
 import { formatPeriodLabel } from '../home/format'
@@ -113,12 +113,21 @@ export function HomeDashboardContent({
     !!sources && sources.bolt.configured !== sources.uber.connected && !noSources
 
   /**
-   * Contul de flotă e creat în onboarding, dar platforma nu l-a activat încă. Atunci nu există
-   * nimic de conectat: CTA-ul ar trimite utilizatorul să refacă exact pasul pe care tocmai l-a
-   * terminat. Vezi specul de fix-uri §12.
+   * Contul de flotă e creat în onboarding, dar platforma nu l-a activat încă.
+   *
+   * Nu mai înlocuiește dashboardul cu un card de așteptare: un cont fără curse are aceleași
+   * cifre ca oricare altul, doar că toate sunt `0`. Structura se randează întotdeauna — KPI-uri,
+   * grafice, tabele — iar starea de activare rămâne o pastilă discretă sus, lângă celelalte.
    */
   const awaitingActivation =
     !!sources && (sources.bolt.onboardingPending || sources.uber.onboardingPending)
+
+  const activationLabel = [
+    sources?.uber.onboardingPending ? 'Uber Fleet' : null,
+    sources?.bolt.onboardingPending ? 'Bolt Fleet' : null,
+  ]
+    .filter((p): p is string => p !== null)
+    .join(' și ')
 
   return (
     <Stack spacing={0} sx={{ width: '100%', maxWidth: 1440, mx: 'auto' }}>
@@ -137,6 +146,19 @@ export function HomeDashboardContent({
         spacing={GRID_GAP}
         sx={{ pt: GRID_GAP, scrollMarginTop: `${CONDENSED_HEADER_HEIGHT}px` }}
       >
+        {awaitingActivation && (
+          <Chip
+            label={`${activationLabel} — cont în curs de activare`}
+            sx={{
+              alignSelf: 'flex-start',
+              bgcolor: HOME_TOKENS.bg.surface,
+              border: `1px solid ${HOME_TOKENS.border.subtle}`,
+              color: HOME_TOKENS.text.secondary,
+              fontSize: 12,
+            }}
+          />
+        )}
+
         {onlyOneSource && (
           <Chip
             label={
@@ -159,14 +181,6 @@ export function HomeDashboardContent({
           <HomeCard title="Nu am putut încărca dashboardul">
             <CardError message={error} onRetry={onRetry} />
           </HomeCard>
-        ) : noSources ? (
-          <EmptyAccountCard
-            onConnectBolt={goToSources}
-            onImportUber={goToSources}
-            awaitingActivation={awaitingActivation}
-            boltPending={sources?.bolt.onboardingPending ?? false}
-            uberPending={sources?.uber.onboardingPending ?? false}
-          />
         ) : (
           <Box sx={{ opacity: isFetching && data ? 0.6 : 1, transition: 'opacity 150ms ease-out' }}>
             <Stack spacing={GRID_GAP}>
@@ -363,91 +377,5 @@ export function HomeDashboardContent({
         )}
       </Stack>
     </Stack>
-  )
-}
-
-/**
- * Cont nou, fără nicio sursă conectată.
- *
- * Două situații complet diferite, care arătau la fel:
- *
- * - Integrarea chiar lipsește (pasul a fost sărit sau conectarea a eșuat) → CTA de conectare.
- * - Contul de flotă a fost configurat în onboarding și așteaptă activarea de la Uber/Bolt →
- *   card informativ, fără niciun buton. Cine tocmai a terminat pasul nu are ce reface.
- */
-function EmptyAccountCard({
-  onConnectBolt,
-  onImportUber,
-  awaitingActivation,
-  boltPending,
-  uberPending,
-}: {
-  onConnectBolt: () => void
-  onImportUber: () => void
-  awaitingActivation: boolean
-  boltPending: boolean
-  uberPending: boolean
-}) {
-  if (awaitingActivation) {
-    const platforms = [uberPending ? 'Uber Fleet' : null, boltPending ? 'Bolt Fleet' : null]
-      .filter((p): p is string => p !== null)
-      .join(' și ')
-
-    return (
-      <HomeCard title="Totul e pregătit">
-        <Stack spacing={1.5} sx={{ py: 3, alignItems: 'center', textAlign: 'center' }}>
-          <Typography sx={{ fontSize: 14, color: HOME_TOKENS.text.secondary, maxWidth: 460 }}>
-            Contul tău {platforms} este în curs de activare. Primele rapoarte apar automat după
-            prima cursă.
-          </Typography>
-          <Typography sx={{ fontSize: 13, color: HOME_TOKENS.text.tertiary, maxWidth: 460 }}>
-            Datele apar aici după prima ta cursă.
-          </Typography>
-        </Stack>
-      </HomeCard>
-    )
-  }
-
-  return (
-    <HomeCard title="Conectează o sursă ca să vezi datele">
-      <Stack spacing={2} sx={{ py: 3, alignItems: 'center', textAlign: 'center' }}>
-        <Typography sx={{ fontSize: 14, color: HOME_TOKENS.text.secondary, maxWidth: 420 }}>
-          Conectează contul Bolt sau încarcă un raport Uber. Dashboardul se completează singur, iar taxele
-          estimate apar imediat ce există prima cursă.
-        </Typography>
-        <Stack direction="row" spacing={1.2} sx={{ flexWrap: 'wrap', justifyContent: 'center', rowGap: 1 }}>
-          {!boltPending && (
-            <Button
-              variant="contained"
-              disableElevation
-              onClick={onConnectBolt}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 700,
-                borderRadius: HOME_TOKENS.radius.input,
-                bgcolor: HOME_TOKENS.brand[600],
-              }}
-            >
-              Conectează Bolt
-            </Button>
-          )}
-          {!uberPending && (
-            <Button
-              variant="outlined"
-              onClick={onImportUber}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 700,
-                borderRadius: HOME_TOKENS.radius.input,
-                borderColor: HOME_TOKENS.border.strong,
-                color: HOME_TOKENS.text.primary,
-              }}
-            >
-              Încarcă raport Uber
-            </Button>
-          )}
-        </Stack>
-      </Stack>
-    </HomeCard>
   )
 }

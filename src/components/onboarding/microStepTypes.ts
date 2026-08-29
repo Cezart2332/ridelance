@@ -101,6 +101,13 @@ export interface FieldDef {
 
   /** Parolele primesc buton de afișare și indicator de putere. */
   strengthMeter?: boolean
+
+  /**
+   * Câmpul e al contului RIDElance, nu al pasului: vine din fișa clientului și nu se editează
+   * aici. `readOnly` + `disabled`, fără text explicativ — se vede din stare că nu se scrie în el.
+   * Schimbarea trece prin suport, iar serverul îl re-hidratează oricum la salvare.
+   */
+  lockedWhenPrefilled?: boolean
 }
 
 export interface MicroStepDef {

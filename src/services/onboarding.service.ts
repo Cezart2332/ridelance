@@ -46,6 +46,7 @@ export interface OnboardingState {
    * state-ul vreunui formular.
    */
   contactEmail: string | null
+  contactPhone: string | null
 
   /**
    * Județul cu care se precompletează agenția ARR: sediul social, apoi adresa din buletin.
@@ -281,6 +282,10 @@ export interface PlatformAccount {
   phone: string | null
   /** Doar dacă există o parolă salvată — valoarea nu părăsește niciodată serverul. */
   hasPassword: boolean
+  /** Contul de ȘOFER de pe aceeași platformă — alt cont decât cel de flotă. */
+  driverEmail: string | null
+  driverPhone: string | null
+  driverExternalId: string | null
 }
 
 export interface PlatformOnboardingState {
@@ -367,6 +372,9 @@ export const onboardingService = {
     phone?: string | null
     /** Se trimite doar când userul o completează; gol înseamnă „păstreaz-o pe cea salvată". */
     password?: string | null
+    driverEmail?: string | null
+    driverPhone?: string | null
+    driverExternalId?: string | null
   }): Promise<PlatformOnboardingState> {
     const { data } = await api.post<PlatformOnboardingState>('/onboarding/platforms/account', payload)
     return data

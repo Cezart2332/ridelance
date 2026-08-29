@@ -4,7 +4,7 @@ import type { PersoanaFizica, TipActIdentitate } from '../../../services/company
 import { TOKENS, inputSx } from '../onboardingTheme'
 import { AdresaForm } from './AdresaForm'
 import { PrefilledNotice } from './PrefilledNotice'
-import { cnpBirthDate, cnpSex, isValidCnp, normalizeCnp } from './cnp'
+import { cnpBirthDate, isValidCnp, normalizeCnp } from './cnp'
 import { DateField } from '../../common/DateField'
 
 const TIP_ACT_LABELS: Record<TipActIdentitate, string> = {
@@ -72,6 +72,25 @@ export function PersoanaFizicaForm({
   return (
     <Stack spacing={2}>
       <PrefilledNotice show={prefilled.size > 0} />
+
+      {/*
+        Discrepanța stă pe zona datelor citite din buletin, nu pe câmpul CNP.
+        CNP-ul e sursa de adevăr — e un cod cu cifră de control, pe când data din buletin trece
+        printr-un OCR — deci el nu e „greșit" când cele două nu se potrivesc. Ancorat sub CNP,
+        avertismentul spunea exact pe dos: că de reparat e numărul pe care tocmai l-ai tastat corect.
+      */}
+      {birthMismatch && (
+        <Alert
+          severity="warning"
+          role="alert"
+          aria-live="polite"
+          sx={{ borderRadius: `${TOKENS.radius.md}px` }}
+        >
+          Data nașterii citită din buletin ({knownBirthDate?.slice(0, 10)}) nu se potrivește cu cea
+          din CNP ({derivedBirth}). Am reținut-o pe cea din CNP. Dacă poza buletinului era neclară,
+          o poți reîncărca.
+        </Alert>
+      )}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
         <TextField
           label="Nume"
@@ -140,19 +159,6 @@ export function PersoanaFizicaForm({
           </Alert>
         )}
 
-        {birthMismatch && (
-          <Alert
-            severity="warning"
-            role="alert"
-            aria-live="polite"
-            sx={{ mt: 1, borderRadius: `${TOKENS.radius.md}px` }}
-          >
-            Data nașterii din CNP ({derivedBirth}) diferă de cea citită din buletin (
-            {knownBirthDate?.slice(0, 10)}
-            {cnpSex(cnp) ? `, sex ${cnpSex(cnp)}` : ''}). Corectează CNP-ul sau reîncarcă
-            buletinul dacă poza era neclară.
-          </Alert>
-        )}
       </Box>
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '2fr 1fr 1fr' }, gap: 1.5 }}>
