@@ -18,6 +18,10 @@ import { useOnboarding } from './useOnboarding'
  * ca la eligibilitate. Aici rămân doar cele trei ecrane care NU sunt întrebări: plata, așteptarea
  * validării și respingerea. Nu se parcurg — apar în funcție de starea dosarului, deci n-au ce
  * căuta într-o listă de micro-pași.
+ *
+ * RL-03: pe ramura „Nu am PFA" plata vine ÎNAINTEA dosarului. Ecranul de plată se ia înaintea
+ * formularelor de înființare, iar acestea se deschid abia după confirmare — nu completezi un
+ * dosar pentru un serviciu pe care încă nu l-ai cumpărat.
  */
 
 /** Etapa la care a rămas dosarul de înființare, ca ramura „Nu am PFA" să continue de acolo. */
@@ -60,15 +64,24 @@ export default function OnboardingPfaPage() {
   }, [state?.pfaStatus, navigate])
 
   // Ramura „Nu am PFA": dosarul de înființare e un flux propriu (semnătură, blocare), deci pasul
-  // continuă acolo de îndată ce dosarul e deschis. RL-03: completarea vine ÎNAINTEA plății.
+  // continuă acolo — dar abia după ce avansul e plătit. Cât timp nu e, `canPay` ține ecranul de
+  // plată în față și redirectul de aici nu se face.
   useEffect(() => {
     if (state?.registrationType !== 'NuAmPfa' || state.pfaRegistrationId == null) return
+    if (state.paymentStatus !== 'PAID') return
     if (formationStatus !== null && formationStatus !== 'Draft' && formationStatus !== 'InfoRequested') return
 
     navigate(companyFormationPath(formationStage), { replace: true })
-  }, [state?.registrationType, state?.pfaRegistrationId, formationStatus, formationStage, navigate])
+  }, [
+    state?.registrationType,
+    state?.pfaRegistrationId,
+    state?.paymentStatus,
+    formationStatus,
+    formationStage,
+    navigate,
+  ])
 
-  // ── Dosarul e completat și semnat, urmează plata (RL-03) ──
+  // ── Avansul, înaintea dosarului (RL-03) ──
   if (state?.canPay) {
     const startPayment = async () => {
       setError(null)

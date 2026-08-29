@@ -6,21 +6,16 @@ import {
   Button,
   Checkbox,
   Chip,
-  Divider,
   FormControlLabel,
-  Link,
   Stack,
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 
-import { companyFormationService } from '../../../services/companyFormation.service'
 import type { OnboardingState } from '../../../services/onboarding.service'
 import { TOKENS, tabularSx } from '../onboardingTheme'
 import { PanelCard } from '../PanelCard'
-import { useOnboardingResource } from '../useOnboarding'
 
 /** Ce intră în taxa de înființare — scris o dată, ca ecranul să nu promită altceva decât livrăm. */
 const INCLUDED = [
@@ -37,42 +32,12 @@ const INCLUDED = [
 const lei = (bani: number) =>
   (bani / 100).toLocaleString('ro-RO', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 
-interface SummaryRowProps {
-  label: string
-  value: string
-  onEdit: () => void
-}
-
-function SummaryRow({ label, value, onEdit }: SummaryRowProps) {
-  return (
-    <Stack
-      direction="row"
-      sx={{ alignItems: 'flex-start', justifyContent: 'space-between', gap: 2, py: 1.2 }}
-    >
-      <Box sx={{ minWidth: 0 }}>
-        <Typography sx={{ fontSize: '0.78rem', color: TOKENS.textMuted, fontWeight: 700 }}>
-          {label}
-        </Typography>
-        <Typography sx={{ fontSize: '0.92rem', color: TOKENS.ink }}>{value}</Typography>
-      </Box>
-      <Link
-        component="button"
-        type="button"
-        onClick={onEdit}
-        sx={{ fontSize: '0.82rem', fontWeight: 700, flexShrink: 0, color: TOKENS.primaryStrong }}
-      >
-        Modifică
-      </Link>
-    </Stack>
-  )
-}
-
 /**
- * RL-03 — ultimul ecran înainte de plată: ce a completat, ce urmează, cât costă și ce include.
+ * RL-03 — ecranul de plată al înființării, luat ÎNAINTEA dosarului: ce se cumpără, cât costă și
+ * ce urmează după.
  *
- * Ecranul e read-only intenționat. Modificarea se face întorcându-te la etapa respectivă, care
- * își păstrează datele — nu se editează nimic de aici, ca rezumatul să rămână o confirmare, nu
- * încă un formular.
+ * Nu mai recapitulează date completate, fiindcă la momentul ăsta nu există niciuna: dosarul se
+ * deschide după plată, nu invers.
  */
 export function CompanyFormationSummary({
   state,
@@ -83,67 +48,33 @@ export function CompanyFormationSummary({
   onPay: () => void
   paying: boolean
 }) {
-  const navigate = useNavigate()
   const [acknowledged, setAcknowledged] = useState(false)
-  const { data: formation } = useOnboardingResource('companyFormation', () =>
-    companyFormationService.getState(),
-  )
 
   const amount = lei(state.onboardingAdvanceBani)
-
-  const solicitant = formation?.solicitant
-  const office = formation?.office
-
-  const fullName = [solicitant?.nume, solicitant?.prenume].filter(Boolean).join(' ') || '—'
-  const address =
-    [office?.adresa?.strada, office?.adresa?.numar, office?.adresa?.localitate, office?.adresa?.judet]
-      .filter(Boolean)
-      .join(', ') || '—'
 
   return (
     <Stack spacing={3}>
       <Box>
         <Typography sx={{ fontWeight: 800, fontSize: '1.35rem', color: TOKENS.ink }}>
-          Dosarul tău e gata
+          Îți deschidem PFA-ul
         </Typography>
         {/*
-          Nimic nu a plecat încă nicăieri. Formularea anterioară („depunem dosarul") lăsa
-          impresia că datele sunt deja la partener, iar userul plătea pentru ceva ce credea
-          deja făcut.
+          Ecranul vine ÎNAINTEA dosarului, nu după: se plătește serviciul, apoi începem lucrul
+          la el. Deci aici nu e nimic de recapitulat — nu s-a completat încă nimic — ci de
+          arătat ce se cumpără și ce urmează după plată.
         */}
         <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.5 }}>
-          Datele tale sunt pregătite pentru transmitere. După confirmarea plății, le trimitem
-          către partenerul nostru contabil.
+          După confirmarea plății îți deschidem dosarul de înființare și completezi datele.
         </Typography>
       </Box>
 
       {state.paymentStatus === 'FAILED' && (
         <Alert severity="warning" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
-          Plata anterioară nu a trecut. Datele tale sunt intacte — poți reîncerca acum.
+          Plata anterioară nu a trecut. Poți reîncerca acum.
         </Alert>
       )}
 
-      <PanelCard title="Ce ai completat">
-        <SummaryRow
-          label="Solicitant"
-          value={fullName}
-          onEdit={() => navigate('/onboarding/pfa/date-personale')}
-        />
-        <Divider />
-        <SummaryRow
-          label="Sediu profesional"
-          value={address}
-          onEdit={() => navigate('/onboarding/pfa/sediu')}
-        />
-        <Divider />
-        <SummaryRow
-          label="Semnătura"
-          value={formation?.signature ? 'Dosar semnat' : 'Nesemnat'}
-          onEdit={() => navigate('/onboarding/pfa/consimtamant')}
-        />
-      </PanelCard>
-
-      <PanelCard title="Ce urmează">
+      <PanelCard title="Ce include">
         <Stack spacing={1}>
           {INCLUDED.map((item) => (
             <Stack key={item} direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>

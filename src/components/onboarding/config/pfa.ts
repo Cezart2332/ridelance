@@ -10,8 +10,8 @@ import type { MicroStepContext, MicroStepDef } from '../microStepTypes'
  * rateze. Restul ecranelor se filtrează din răspuns prin `visibleWhen` — asta e rutarea.
  *
  * Ramura „Nu am PFA" se oprește aici intenționat: dosarul de înființare are semnătură, blocare și
- * pași proprii (`/onboarding/pfa/date-personale`), deci rămâne un flux separat. Ecranul de aici
- * doar deschide dosarul și predă ștafeta.
+ * pași proprii (`/onboarding/pfa/date-personale`), deci rămâne un flux separat. Ecranele de aici
+ * duc doar până la plata avansului — dosarul se deschide după ea, nu înaintea ei.
  */
 
 const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
@@ -140,7 +140,7 @@ export const pfaMicroSteps: MicroStepDef[] = [
     eyebrow: EYEBROW,
     icon: 'shield',
     railLabel: 'Politica de plăți',
-    title: 'Confirmă înainte să deschidem dosarul',
+    title: 'Confirmă înainte să mergem mai departe',
     choices: [
       { value: 'accept', title: 'Am citit și accept Politica de Plăți și Abonamente' },
     ],
@@ -148,16 +148,23 @@ export const pfaMicroSteps: MicroStepDef[] = [
     isDone: (c) => c.state?.pfaRegistrationId != null,
   },
   {
-    id: 'deschide_dosar',
+    // Ecranul ăsta NU deschide dosarul — doar înregistrează ramura aleasă, ca să existe pe ce
+    // atârna plata. Dosarul se deschide după ce avansul e încasat: nu completezi un dosar
+    // pentru un serviciu pe care încă nu l-ai cumpărat (RL-03).
+    id: 'incepe_infiintare',
     macroStep: 'pfa',
     kind: 'action',
     eyebrow: EYEBROW,
     icon: 'folder',
-    railLabel: 'Deschide dosarul',
-    title: 'Îți deschidem dosarul de înființare',
+    railLabel: 'Înființare PFA',
+    title: 'Îți înființăm PFA-ul',
+    lines: () => [
+      'Următorul pas e plata în avans a abonamentului RIDElance Start.',
+      'După confirmarea plății îți deschidem dosarul de înființare și completezi datele.',
+    ],
     action: {
-      label: 'Deschide dosarul',
-      busyLabel: 'Se deschide...',
+      label: 'Continuă spre plată',
+      busyLabel: 'Se pregătește...',
       run: async () => {
         await pfaService.create({ registrationType: 'NuAmPfa', isOwner: false })
       },
