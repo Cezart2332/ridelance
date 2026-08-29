@@ -111,6 +111,26 @@ export interface Car {
   stats: CarStats;
 }
 
+/**
+ * O valoare citită din talon.
+ *
+ * `matchesFormat` spune dacă trece validatorul de format (plăcuță românească, VIN de 17
+ * caractere). Valoarea vine și când nu trece: e mai util să se vadă ce s-a citit și să se
+ * corecteze, decât un câmp gol fără explicație.
+ */
+export interface ScannedValue {
+  value: string;
+  matchesFormat: boolean;
+  confidence: number;
+}
+
+/** `note` explică de ce n-a ieșit nimic; e `null` când citirea a mers. */
+export interface VehicleRegistrationScan {
+  plateNumber: ScannedValue | null;
+  vin: ScannedValue | null;
+  note: string | null;
+}
+
 /** `Request` = vrea mașina acum, `Waitlist` = vrea să fie anunțat când se eliberează. */
 export type CarLeadIntent = 'Request' | 'Waitlist';
 
@@ -263,6 +283,23 @@ const carsService = {
     formData.append('file', file);
     const res = await api.post<{ imageId: string; url: string }>(
       `/cars/${carId}/images`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    return res.data;
+  },
+
+  /**
+   * Citește talonul ca să precompleteze numărul de înmatriculare și VIN-ul.
+   *
+   * Fișierul nu se salvează nicăieri — e o citire, nu o depunere în dosar. De aceea nu cere un
+   * `carId`: se folosește și la adăugare, când mașina încă nu există.
+   */
+  async scanRegistration(file: File): Promise<VehicleRegistrationScan> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await api.post<VehicleRegistrationScan>(
+      '/cars/scan-registration',
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );

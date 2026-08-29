@@ -89,9 +89,10 @@ export const SRL_NAV: NavEntry[] = [
     label: 'Flotă',
     icon: DirectionsCarFilledRoundedIcon,
     children: [
-      { id: 'cars', label: 'Mașinile mele', path: SRL_PATHS.cars, hint: 'Anunțurile și dosarele mașinilor' },
-      { id: 'rentals', label: 'Închirieri', path: SRL_PATHS.rentals, hint: 'Contracte, perioade și valori' },
-      { id: 'maintenance', label: 'Mentenanță', path: SRL_PATHS.maintenance, hint: 'Service, costuri și remindere' },
+      { id: 'cars', label: 'Mașinile mele', path: SRL_PATHS.cars, hint: 'Flota și acțiunile pe fiecare mașină' },
+      // Cele două de mai jos sunt istoric la nivel de flotă: se operează din pagina mașinii.
+      { id: 'rentals', label: 'Închirieri', path: SRL_PATHS.rentals, hint: 'Istoricul contractelor' },
+      { id: 'maintenance', label: 'Mentenanță', path: SRL_PATHS.maintenance, hint: 'Istoric service și costuri' },
     ],
   },
 

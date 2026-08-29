@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Alert, Box, Button, Skeleton, Stack, Tab, Tabs, Typography } from '@mui/material'
-import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
+import { Alert, Box, Button, Dialog, DialogActions, DialogContent, IconButton, Skeleton, Stack, Tab, Tabs, Typography } from '@mui/material'
+import { Link as RouterLink, useParams } from 'react-router-dom'
+import AddRoundedIcon from '@mui/icons-material/AddRounded'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
+import EditRoundedIcon from '@mui/icons-material/EditRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import UploadRoundedIcon from '@mui/icons-material/UploadRounded'
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
@@ -16,6 +19,12 @@ import { rentalsService, type Rental } from '../../../../services/rentals.servic
 import { formatCarStatus } from '../../../../utils/carLabels'
 import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardTheme'
 import { Amount, PageHeader, Panel, StatCard, StatusChip } from '../../ui'
+import { CarEditDialog } from '../CarEditDialog'
+import { MaintenanceEntryDialog } from '../MaintenanceEntryDialog'
+import { NewRentalDialog } from '../NewRentalDialog'
+import { RentalChecksPanel } from '../RentalChecksPanel'
+import { RentalDocumentsPanel } from '../RentalDocumentsPanel'
+import { RentalPaymentsPanel } from '../RentalPaymentsPanel'
 
 /**
  * Pagina unei mașini din flotă — locul din care pornesc operațiunile pe ea.
@@ -24,9 +33,12 @@ import { Amount, PageHeader, Panel, StatCard, StatusChip } from '../../ui'
  * niciun ecran care să le adune pe una singură. Ca să afli ce s-a întâmplat cu o mașină trebuia să
  * treci prin trei pagini și să filtrezi din ochi.
  *
+ * Acum e și singurul loc în care se **fac** lucrurile: închirierea se deschide de aici, documentele
+ * ei se generează de aici, intervențiile de service se înregistrează de aici. Paginile de
+ * închirieri și de mentenanță au rămas ce erau de fapt — istoricul flotei, la nivel de flotă.
+ *
  * Cele cinci taburi din spec §13, toate cu date: prezentare, închirieri, documente, mentenanță și
- * istoric. Structura a fost declarată o dată, în Faza 2, iar fazele următoare au umplut-o — nu au
- * rearanjat-o.
+ * istoric.
  */
 
 type TabId = 'prezentare' | 'inchirieri' | 'documente' | 'mentenanta' | 'istoric'
@@ -46,7 +58,6 @@ const formatKm = (km: number | null | undefined): string =>
 
 export function SrlCarPage() {
   const { carId = '' } = useParams()
-  const navigate = useNavigate()
 
   const [car, setCar] = useState<Car | null>(null)
   const [rentals, setRentals] = useState<Rental[]>([])
@@ -57,6 +68,12 @@ export function SrlCarPage() {
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<TabId>('prezentare')
   const [reloadToken, setReloadToken] = useState(0)
+
+  const [editing, setEditing] = useState(false)
+  const [renting, setRenting] = useState(false)
+  const [addingMaintenance, setAddingMaintenance] = useState(false)
+  /** Închirierea al cărei set de documente e deschis. */
+  const [documentsFor, setDocumentsFor] = useState<Rental | null>(null)
 
   const reload = useCallback(() => setReloadToken((token) => token + 1), [])
 
@@ -98,6 +115,24 @@ export function SrlCarPage() {
     [rentals],
   )
 
+  const closeRental = async (rental: Rental) => {
+    try {
+      await rentalsService.close(rental.id, null)
+      reload()
+    } catch {
+      setError('Nu am putut încheia închirierea.')
+    }
+  }
+
+  const removeMaintenance = async (id: string) => {
+    try {
+      await maintenanceService.remove(id)
+      reload()
+    } catch {
+      setError('Nu am putut șterge intervenția.')
+    }
+  }
+
   if (loading) {
     return (
       <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
@@ -107,11 +142,21 @@ export function SrlCarPage() {
     )
   }
 
-  if (error || !car) {
+  if (error && !car) {
     return (
       <Box sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
         <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}>
-          {error ?? 'Mașina nu a fost găsită.'}
+          {error}
+        </Alert>
+      </Box>
+    )
+  }
+
+  if (!car) {
+    return (
+      <Box sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
+        <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}>
+          Mașina nu a fost găsită.
         </Alert>
       </Box>
     )
@@ -146,14 +191,22 @@ export function SrlCarPage() {
         title={title}
         subtitle={identity}
         actions={
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
             <Button
               variant="contained"
               disableElevation
-              onClick={() => navigate(SRL_PATHS.rentals)}
+              startIcon={<AddRoundedIcon />}
+              onClick={() => setRenting(true)}
               sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
             >
-              + Închiriere nouă
+              Închiriere nouă
+            </Button>
+            <Button
+              startIcon={<EditRoundedIcon sx={{ fontSize: 17 }} />}
+              onClick={() => setEditing(true)}
+              sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
+            >
+              Editează
             </Button>
             <Button
               component="a"
@@ -168,6 +221,16 @@ export function SrlCarPage() {
           </Stack>
         }
       />
+
+      {error && (
+        <Alert
+          severity="error"
+          onClose={() => setError(null)}
+          sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}
+        >
+          {error}
+        </Alert>
+      )}
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
         <StatCard label="Stare" value={formatCarStatus(car.status)} />
@@ -196,12 +259,79 @@ export function SrlCarPage() {
       </Tabs>
 
       {tab === 'prezentare' && <PresentationTab car={car} />}
-      {tab === 'inchirieri' && <RentalsTab rentals={rentals} />}
-      {tab === 'mentenanta' && <MaintenanceTab entries={maintenance} />}
+
+      {tab === 'inchirieri' && (
+        <RentalsTab
+          rentals={rentals}
+          onNew={() => setRenting(true)}
+          onDocuments={setDocumentsFor}
+          onClose={(rental) => void closeRental(rental)}
+        />
+      )}
+
+      {tab === 'mentenanta' && (
+        <MaintenanceTab
+          entries={maintenance}
+          onAdd={() => setAddingMaintenance(true)}
+          onDelete={(id) => void removeMaintenance(id)}
+        />
+      )}
 
       {tab === 'documente' && dossier && <DocumentsTab carId={carId} dossier={dossier} onUploaded={reload} />}
 
       {tab === 'istoric' && <TimelineTab events={timeline} />}
+
+      <CarEditDialog
+        open={editing}
+        car={car}
+        mode="owner"
+        onClose={() => setEditing(false)}
+        onSaved={() => {
+          setEditing(false)
+          reload()
+        }}
+      />
+
+      <NewRentalDialog
+        open={renting}
+        cars={[car]}
+        fixedCarId={car.id}
+        onClose={() => setRenting(false)}
+        onSaved={() => {
+          setRenting(false)
+          reload()
+        }}
+      />
+
+      <MaintenanceEntryDialog
+        open={addingMaintenance}
+        cars={[car]}
+        fixedCarId={car.id}
+        onClose={() => setAddingMaintenance(false)}
+        onSaved={() => {
+          setAddingMaintenance(false)
+          reload()
+        }}
+      />
+
+      {/* Documentele se deschid peste pagina mașinii, nu într-un alt ecran: sunt un rezultat al
+          închirierii, iar drumul înapoi la ea trebuie să fie un click. */}
+      <Dialog open={documentsFor !== null} onClose={() => setDocumentsFor(null)} fullWidth maxWidth="sm">
+        <DialogContent sx={{ p: 0 }}>
+          {documentsFor && (
+            <Stack spacing={2}>
+              <RentalDocumentsPanel rental={documentsFor} />
+              <RentalChecksPanel rental={documentsFor} />
+              <RentalPaymentsPanel rental={documentsFor} />
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDocumentsFor(null)} sx={{ textTransform: 'none', fontWeight: 700 }}>
+            Închide
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   )
 }
@@ -476,10 +606,37 @@ function DefinitionList({ rows }: { rows: [string, string][] }) {
   )
 }
 
-function RentalsTab({ rentals }: { rentals: Rental[] }) {
+/**
+ * Închirierile mașinii, cu ce se poate face pe fiecare.
+ *
+ * Butoanele astea stăteau în pagina de închirieri a flotei. Acolo trebuia întâi găsit rândul
+ * potrivit printre toate contractele; aici sunt deja pe mașina în cauză.
+ */
+function RentalsTab({
+  rentals,
+  onNew,
+  onDocuments,
+  onClose,
+}: {
+  rentals: Rental[]
+  onNew: () => void
+  onDocuments: (rental: Rental) => void
+  onClose: (rental: Rental) => void
+}) {
+  const action = (
+    <Button
+      size="small"
+      startIcon={<AddRoundedIcon sx={{ fontSize: 17 }} />}
+      onClick={onNew}
+      sx={{ textTransform: 'none', fontWeight: 700 }}
+    >
+      Închiriere nouă
+    </Button>
+  )
+
   if (rentals.length === 0) {
     return (
-      <Panel title="Închirieri">
+      <Panel title="Închirieri" action={action}>
         <Typography sx={{ fontSize: '0.9rem', color: DASHBOARD_TOKENS.textMuted }}>
           Mașina n-a fost încă închiriată.
         </Typography>
@@ -488,13 +645,13 @@ function RentalsTab({ rentals }: { rentals: Rental[] }) {
   }
 
   return (
-    <Panel title="Închirieri" subtitle="Toate contractele mașinii, de la cel mai recent.">
+    <Panel title="Închirieri" subtitle="Toate contractele mașinii, de la cel mai recent." action={action}>
       <Box sx={responsiveTableContainerSx}>
-        <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+        <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
           <Box component="thead">
             <Box component="tr">
-              {['Cod', 'Chiriaș', 'Perioadă', 'Chirie', 'Status'].map((header) => (
-                <Box key={header} component="th" sx={headSx}>
+              {['Cod', 'Chiriaș', 'Perioadă', 'Chirie', 'Status', ''].map((header, index) => (
+                <Box key={header || index} component="th" sx={headSx}>
                   {header}
                 </Box>
               ))}
@@ -521,6 +678,27 @@ function RentalsTab({ rentals }: { rentals: Rental[] }) {
                     label={rental.status === 'active' ? 'Activă' : 'Încheiată'}
                   />
                 </Box>
+                <Box component="td" sx={{ ...cellSx, textAlign: 'right' }}>
+                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                    <Button
+                      size="small"
+                      onClick={() => onDocuments(rental)}
+                      sx={{ textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}
+                    >
+                      Documente
+                    </Button>
+                    {rental.status !== 'completed' && rental.status !== 'cancelled' && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => onClose(rental)}
+                        sx={{ textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}
+                      >
+                        Încheie
+                      </Button>
+                    )}
+                  </Stack>
+                </Box>
               </Box>
             ))}
           </Box>
@@ -530,10 +708,29 @@ function RentalsTab({ rentals }: { rentals: Rental[] }) {
   )
 }
 
-function MaintenanceTab({ entries }: { entries: MaintenanceEntry[] }) {
+function MaintenanceTab({
+  entries,
+  onAdd,
+  onDelete,
+}: {
+  entries: MaintenanceEntry[]
+  onAdd: () => void
+  onDelete: (id: string) => void
+}) {
+  const action = (
+    <Button
+      size="small"
+      startIcon={<AddRoundedIcon sx={{ fontSize: 17 }} />}
+      onClick={onAdd}
+      sx={{ textTransform: 'none', fontWeight: 700 }}
+    >
+      Adaugă intervenție
+    </Button>
+  )
+
   if (entries.length === 0) {
     return (
-      <Panel title="Mentenanță">
+      <Panel title="Mentenanță" action={action}>
         <Typography sx={{ fontSize: '0.9rem', color: DASHBOARD_TOKENS.textMuted }}>
           Nicio intervenție înregistrată pentru mașina asta.
         </Typography>
@@ -542,7 +739,7 @@ function MaintenanceTab({ entries }: { entries: MaintenanceEntry[] }) {
   }
 
   return (
-    <Panel title="Mentenanță" subtitle="Intervenții și programări, de la cea mai recentă.">
+    <Panel title="Mentenanță" subtitle="Intervenții și programări, de la cea mai recentă." action={action}>
       <Stack spacing={1.5}>
         {entries.map((entry) => (
           <Stack
@@ -551,7 +748,7 @@ function MaintenanceTab({ entries }: { entries: MaintenanceEntry[] }) {
             spacing={1}
             sx={{
               justifyContent: 'space-between',
-              alignItems: { sm: 'baseline' },
+              alignItems: { sm: 'center' },
               py: 1.2,
               borderBottom: `1px solid ${DASHBOARD_TOKENS.border}`,
             }}
@@ -565,7 +762,17 @@ function MaintenanceTab({ entries }: { entries: MaintenanceEntry[] }) {
                 {entry.mileage != null ? ` · ${formatKm(entry.mileage)}` : ''}
               </Typography>
             </Box>
-            <Amount value={entry.costBani / 100} size="row" />
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              <Amount value={entry.costBani / 100} size="row" />
+              <IconButton
+                size="small"
+                aria-label={`Șterge intervenția ${entry.title}`}
+                onClick={() => onDelete(entry.id)}
+                sx={{ color: DASHBOARD_TOKENS.textMuted, '&:hover': { color: DASHBOARD_TOKENS.stateError } }}
+              >
+                <DeleteOutlineRoundedIcon fontSize="small" />
+              </IconButton>
+            </Stack>
           </Stack>
         ))}
       </Stack>

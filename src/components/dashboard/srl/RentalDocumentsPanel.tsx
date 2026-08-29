@@ -71,7 +71,20 @@ const OWNER_TITLES: Record<MissingField['owner'], string> = {
 const formatDateTime = (iso: string): string =>
   new Date(iso).toLocaleString('ro-RO', { dateStyle: 'short', timeStyle: 'short' })
 
-export function RentalDocumentsPanel({ rental }: { rental: Rental }) {
+export function RentalDocumentsPanel({
+  rental,
+  only,
+}: {
+  rental: Rental
+  /**
+   * Ce se poate genera de aici. Lipsă = toate trei.
+   *
+   * Acțiunile rapide de pe mașină cer un document anume — „Generează contract" nu trebuie să
+   * deschidă un ecran cu trei butoane, dintre care două nu sunt cele cerute. Lista documentelor
+   * deja generate rămâne întreagă: acolo întrebarea e ce există, nu ce s-a cerut acum.
+   */
+  only?: RentalDocumentType[]
+}) {
   const [documents, setDocuments] = useState<GeneratedDocument[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [generating, setGenerating] = useState<RentalDocumentType | null>(null)
@@ -123,7 +136,7 @@ export function RentalDocumentsPanel({ rental }: { rental: Rental }) {
       )}
 
       <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 2.5 }}>
-        {DOCUMENT_TYPES.map((entry) => (
+        {DOCUMENT_TYPES.filter((entry) => !only || only.includes(entry.type)).map((entry) => (
           <Button
             key={entry.type}
             variant="outlined"

@@ -22,6 +22,7 @@ import {
 } from './wizardModel'
 import { BOLT_CATEGORIES, CAR_BRANDS, UBER_CATEGORIES, modelsForBrand } from '../../../data/carCatalog'
 import { DateField } from '../../common/DateField'
+import { TalonScan } from '../srl/TalonScan'
 
 /**
  * Conținutul fiecărui pas. Separat de învelișul wizardului ca pașii să rămână citibili — un
@@ -550,6 +551,15 @@ export function DossierStep({ draft, update }: { draft: CarDraft; update: Update
 
   return (
     <Stack spacing={2.5}>
+      {/* Numărul și VIN-ul se citesc din talon: sunt cele două câmpuri din tot wizardul pe care
+          nimeni nu le știe pe de rost și pe care le greșește oricine le tastează. */}
+      <TalonScan
+        onRead={(scan) => {
+          if (scan.plateNumber) update('plateNumber', scan.plateNumber.value)
+          if (scan.vin) update('vin', scan.vin.value)
+        }}
+      />
+
       <Box sx={grid2}>
         <TextField label="Număr înmatriculare" value={draft.plateNumber} onChange={(e) => update('plateNumber', e.target.value)} fullWidth size="small" sx={dashboardInputSx} placeholder="B 123 RID" />
         <TextField label="VIN" value={draft.vin} onChange={(e) => update('vin', e.target.value)} fullWidth size="small" sx={dashboardInputSx} />

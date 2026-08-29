@@ -1,49 +1,22 @@
-import { useCallback, useEffect, useState } from 'react'
-import {
-  Alert,
-  Box,
-  Button,
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  MenuItem,
-  Skeleton,
-  Stack,
-  Tab,
-  Tabs,
-  TextField,
-  Typography,
-} from '@mui/material'
-import AddRoundedIcon from '@mui/icons-material/AddRounded'
+import { useEffect, useState } from 'react'
+import { Link as RouterLink } from 'react-router-dom'
+import { Alert, Box, Button, Skeleton, Stack, Tab, Tabs, Typography } from '@mui/material'
 
-import { carsService, type Car } from '../../../../services/cars.service'
-import {
-  RENTAL_ACCESSORIES,
-  rentalsService,
-  type Rental,
-  type RentalDefaults,
-  type RentalOverview,
-  type RentalStatus,
-  type Tenant,
-  type TenantType,
-} from '../../../../services/rentals.service'
-import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '../../dashboardTheme'
+import { srlCarPath } from '../../../../config/srlNavigation'
+import { rentalsService, type Rental, type RentalOverview, type RentalStatus } from '../../../../services/rentals.service'
+import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardTheme'
 import { Amount, PageHeader, Panel, StatCard, StatusChip } from '../../ui'
 import type { StatusTone } from '../../ui'
-import { DateField } from '../../../common/DateField'
-import { RentalChecksPanel } from '../RentalChecksPanel'
-import { RentalDocumentsPanel } from '../RentalDocumentsPanel'
-import { RentalPaymentsPanel } from '../RentalPaymentsPanel'
 
 /**
- * Închirierile flotei: cine are ce mașină, până când și pe ce bani.
+ * Închirierile flotei, ca istoric.
  *
- * Valorile contractuale se completează din setările firmei doar ca punct de plecare — odată
- * salvate, trăiesc pe închiriere. O modificare ulterioară a tarifului standard nu are voie să
- * rescrie retroactiv ce s-a convenit.
+ * Pagina a fost și locul din care se deschideau contracte și se generau documente. Nu mai e:
+ * o închiriere se face pe o mașină, iar mașina are propriul ecran — a alege din nou mașina
+ * dintr-un select, după ce tocmai o aveai în față, era un drum în plus fără niciun câștig.
+ *
+ * Ce a rămas e întrebarea la nivel de flotă: cine a avut ce, când și pe ce bani. De aceea aici nu
+ * se mai poate schimba nimic; fiecare rând duce în mașina lui, unde se și operează.
  */
 
 const STATUS_PRESENTATION: Record<RentalStatus, { label: string; tone: StatusTone }> = {
@@ -68,22 +41,9 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id']
 
-const TENANT_TYPES: { value: TenantType; label: string }[] = [
-  { value: 'Individual', label: 'Persoană fizică' },
-  { value: 'Pfa', label: 'PFA' },
-  { value: 'Srl', label: 'SRL' },
-]
-
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short', year: 'numeric' })
 }
-
-function isoDate(date: Date): string {
-  return date.toISOString().slice(0, 10)
-}
-
-/** Perioada implicită propusă la o închiriere nouă — două luni, minimul obișnuit din flote. */
-const DEFAULT_PERIOD_DAYS = 60
 
 function matchesTab(rental: Rental, tab: TabId): boolean {
   if (tab === 'all') return true
@@ -94,35 +54,17 @@ function matchesTab(rental: Rental, tab: TabId): boolean {
 
 export function SrlRentalsPage() {
   const [overview, setOverview] = useState<RentalOverview | null>(null)
-  const [cars, setCars] = useState<Car[]>([])
-  const [tenants, setTenants] = useState<Tenant[]>([])
-  const [defaults, setDefaults] = useState<RentalDefaults | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<TabId>('open')
-  const [dialogOpen, setDialogOpen] = useState(false)
-  /** Închirierea al cărei set de documente e deschis. */
-  const [documentsFor, setDocumentsFor] = useState<Rental | null>(null)
-  const [reloadToken, setReloadToken] = useState(0)
-
-  const reload = useCallback(() => setReloadToken((token) => token + 1), [])
 
   useEffect(() => {
     let cancelled = false
 
-    Promise.all([
-      rentalsService.getOverview(),
-      carsService.getMyCars(),
-      rentalsService.getTenants(),
-      rentalsService.getDefaults(),
-    ])
-      .then(([data, myCars, myTenants, myDefaults]) => {
-        if (cancelled) return
-        setOverview(data)
-        setCars(myCars)
-        setTenants(myTenants)
-        setDefaults(myDefaults)
-        setError(null)
+    rentalsService
+      .getOverview()
+      .then((data) => {
+        if (!cancelled) setOverview(data)
       })
       .catch(() => {
         if (!cancelled) setError('Nu am putut încărca închirierile.')
@@ -134,16 +76,7 @@ export function SrlRentalsPage() {
     return () => {
       cancelled = true
     }
-  }, [reloadToken])
-
-  const close = async (rental: Rental) => {
-    try {
-      await rentalsService.close(rental.id, null)
-      reload()
-    } catch {
-      setError('Nu am putut încheia închirierea.')
-    }
-  }
+  }, [])
 
   if (loading) {
     return (
@@ -182,26 +115,8 @@ export function SrlRentalsPage() {
     <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
       <PageHeader
         title="Închirieri"
-        subtitle="Cine are ce mașină, până când și în ce condiții."
-        actions={
-          <Button
-            variant="contained"
-            disableElevation
-            startIcon={<AddRoundedIcon />}
-            disabled={cars.length === 0}
-            onClick={() => setDialogOpen(true)}
-            sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
-          >
-            Închiriere nouă
-          </Button>
-        }
+        subtitle="Istoricul contractelor flotei. O închiriere nouă se deschide din pagina mașinii."
       />
-
-      {error && (
-        <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}>
-          {error}
-        </Alert>
-      )}
 
       {summary && (
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' }, gap: 2 }}>
@@ -256,11 +171,9 @@ export function SrlRentalsPage() {
       >
         {visible.length === 0 ? (
           <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, py: 2 }}>
-            {cars.length === 0
-              ? 'Adaugă întâi o mașină în flotă — o închiriere se face pe o mașină.'
-              : allRentals.length > 0
-                ? 'Nicio închiriere aici. Sunt în celelalte categorii — vezi cifrele de pe taburi.'
-                : 'Nicio închiriere încă.'}
+            {allRentals.length > 0
+              ? 'Nicio închiriere aici. Sunt în celelalte categorii — vezi cifrele de pe taburi.'
+              : 'Nicio închiriere încă. Prima se deschide din pagina unei mașini.'}
           </Typography>
         ) : (
           <Box sx={responsiveTableContainerSx}>
@@ -315,26 +228,17 @@ export function SrlRentalsPage() {
                         outlined
                       />
                     </Box>
+                    {/* Singurul lucru care pleacă de aici e drumul spre mașină: documentele,
+                        încheierea și predarea se fac acolo. */}
                     <Box component="td" sx={{ ...cellSx, textAlign: 'right' }}>
-                      <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-                        <Button
-                          size="small"
-                          onClick={() => setDocumentsFor(rental)}
-                          sx={{ textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}
-                        >
-                          Documente
-                        </Button>
-                        {rental.status !== 'completed' && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => void close(rental)}
-                            sx={{ textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}
-                          >
-                            Încheie
-                          </Button>
-                        )}
-                      </Stack>
+                      <Button
+                        component={RouterLink}
+                        to={srlCarPath(rental.carId)}
+                        size="small"
+                        sx={{ textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}
+                      >
+                        Vezi mașina
+                      </Button>
                     </Box>
                   </Box>
                 ))}
@@ -343,461 +247,7 @@ export function SrlRentalsPage() {
           </Box>
         )}
       </Panel>
-
-      {/* Documentele se deschid peste listă, nu într-o pagină separată: sunt un rezultat al
-          închirierii, iar drumul înapoi la ea trebuie să fie un click. */}
-      <Dialog open={documentsFor !== null} onClose={() => setDocumentsFor(null)} fullWidth maxWidth="sm">
-        <DialogContent sx={{ p: 0 }}>
-          {documentsFor && (
-            <Stack spacing={2}>
-              <RentalDocumentsPanel rental={documentsFor} />
-              <RentalChecksPanel rental={documentsFor} />
-              <RentalPaymentsPanel rental={documentsFor} />
-            </Stack>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDocumentsFor(null)} sx={{ textTransform: 'none', fontWeight: 700 }}>
-            Închide
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <NewRentalDialog
-        open={dialogOpen}
-        cars={cars}
-        tenants={tenants}
-        defaults={defaults}
-        onClose={() => setDialogOpen(false)}
-        onSaved={() => {
-          setDialogOpen(false)
-          reload()
-        }}
-      />
     </Stack>
-  )
-}
-
-function NewRentalDialog({
-  open,
-  cars,
-  tenants,
-  defaults,
-  onClose,
-  onSaved,
-}: {
-  open: boolean
-  cars: Car[]
-  tenants: Tenant[]
-  /** Valorile firmei. `null` cât timp nu s-au încărcat — formularul pornește gol, nu cu zerouri. */
-  defaults: RentalDefaults | null
-  onClose: () => void
-  onSaved: () => void
-}) {
-  const [pickedCarId, setPickedCarId] = useState<string | null>(null)
-  /** `''` înseamnă „chiriaș nou". Un chiriaș existent nu se mai retastează. */
-  const [tenantId, setTenantId] = useState('')
-  const [tenantName, setTenantName] = useState('')
-  const [tenantType, setTenantType] = useState<TenantType>('Individual')
-  const [fiscalCode, setFiscalCode] = useState('')
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
-  const [otherCosts, setOtherCosts] = useState('')
-  const [hasKmLimit, setHasKmLimit] = useState(false)
-  const [mileageLimit, setMileageLimit] = useState('')
-  const [extraKmCost, setExtraKmCost] = useState('')
-  const [fuelRule, setFuelRule] = useState('')
-  const [fuelLevel, setFuelLevel] = useState('')
-  const [accessories, setAccessories] = useState<string[]>([])
-  const [accessoriesOther, setAccessoriesOther] = useState('')
-  // Inițializatoare leneșe: citirea ceasului e impură, deci nu are ce căuta în corpul randării.
-  const [start, setStart] = useState(() => isoDate(new Date()))
-  const [end, setEnd] = useState(() => isoDate(new Date(Date.now() + DEFAULT_PERIOD_DAYS * 86_400_000)))
-  const [rent, setRent] = useState('')
-  const [deposit, setDeposit] = useState('')
-  const [mileage, setMileage] = useState('')
-  const [notes, setNotes] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const carId = pickedCarId ?? cars[0]?.id ?? ''
-  const selectedCar = cars.find((c) => c.id === carId)
-
-  /**
-   * Ordinea de precompletare: ce a tastat omul, apoi valorile firmei, apoi prețul anunțului.
-   * Firma bate anunțul pentru că e o decizie luată o dată pentru toate mașinile; anunțul e ultimul
-   * refugiu, pentru flotele care n-au apucat să-și seteze nimic.
-   *
-   * Nimic din ce se vede aici nu se întoarce în setările firmei — precompletează, nu leagă.
-   */
-  const rentValue =
-    rent || (defaults?.weeklyRentBani != null ? String(defaults.weeklyRentBani / 100) : '')
-    || (selectedCar ? String(selectedCar.pricePerWeek) : '')
-  const depositValue = deposit || (defaults?.depositBani != null ? String(defaults.depositBani / 100) : '')
-  const extraKmValue =
-    extraKmCost || (defaults?.extraKmCostBani != null ? String(defaults.extraKmCostBani / 100) : '')
-  const mileageLimitValue = mileageLimit || (defaults?.mileageLimit != null ? String(defaults.mileageLimit) : '')
-  const fuelRuleValue = fuelRule || defaults?.fuelRule || ''
-  const kmLimitChecked = hasKmLimit || (defaults?.hasKmLimit ?? false)
-
-  const save = async () => {
-    if (!carId) {
-      setError('Alege mașina.')
-      return
-    }
-
-    if (!tenantId && !tenantName.trim()) {
-      setError('Alege un chiriaș sau scrie numele unuia nou.')
-      return
-    }
-
-    setSaving(true)
-    setError(null)
-    try {
-      await rentalsService.create({
-        carId,
-        tenantId: tenantId || null,
-        // Datele chiriașului pleacă doar când e unul nou. Pentru unul existent, serverul le are —
-        // retrimiterea lor ar fi însemnat că formularul poate rescrie tăcut un chiriaș.
-        tenant: tenantId
-          ? null
-          : {
-              name: tenantName.trim(),
-              type: tenantType,
-              cnp: tenantType === 'Individual' ? fiscalCode.trim() || null : null,
-              cui: tenantType === 'Individual' ? null : fiscalCode.trim() || null,
-              idSeries: null,
-              idNumber: null,
-              regCom: null,
-              address: null,
-              phone: phone.trim() || null,
-              email: email.trim() || null,
-              driverLicenseNumber: null,
-            },
-        startAtUtc: new Date(`${start}T12:00:00Z`).toISOString(),
-        endAtUtc: new Date(`${end}T12:00:00Z`).toISOString(),
-        weeklyRentBani: rentValue ? Math.round(Number(rentValue) * 100) : 0,
-        depositBani: depositValue ? Math.round(Number(depositValue) * 100) : 0,
-        otherCostsBani: otherCosts ? Math.round(Number(otherCosts) * 100) : 0,
-        hasKmLimit: kmLimitChecked,
-        mileageLimit: kmLimitChecked && mileageLimitValue ? Number(mileageLimitValue) : null,
-        extraKmCostBani: extraKmValue ? Math.round(Number(extraKmValue) * 100) : 0,
-        fuelRule: fuelRuleValue.trim() || null,
-        fuelLevelAtPickup: fuelLevel.trim() || null,
-        startMileage: mileage ? Number(mileage) : null,
-        accessories,
-        accessoriesOther: accessoriesOther.trim() || null,
-        notes: notes.trim() || null,
-      })
-      setTenantId('')
-      setTenantName('')
-      setFiscalCode('')
-      setPhone('')
-      setEmail('')
-      setRent('')
-      setDeposit('')
-      setOtherCosts('')
-      setMileage('')
-      setAccessories([])
-      setAccessoriesOther('')
-      setNotes('')
-      onSaved()
-    } catch (err) {
-      // Suprapunerea de perioade e cea mai probabilă respingere; mesajul serverului o explică.
-      const message = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      setError(message ?? 'Nu am putut salva închirierea.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: 800 }}>Închiriere nouă</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ pt: 0.5 }}>
-          {error && (
-            <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
-              {error}
-            </Alert>
-          )}
-
-          <TextField
-            select
-            label="Mașină"
-            value={carId}
-            onChange={(e) => setPickedCarId(e.target.value)}
-            fullWidth
-            size="small"
-            sx={dashboardInputSx}
-          >
-            {cars.map((car) => (
-              <MenuItem key={car.id} value={car.id}>
-                {car.brand} {car.model}, {car.year}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          {tenants.length > 0 && (
-            <TextField
-              select
-              label="Chiriaș"
-              value={tenantId}
-              onChange={(e) => setTenantId(e.target.value)}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-              helperText={tenantId ? 'Datele lui sunt deja la noi.' : 'Completează mai jos datele unui chiriaș nou.'}
-            >
-              <MenuItem value="">Chiriaș nou</MenuItem>
-              {tenants.map((t) => (
-                <MenuItem key={t.id} value={t.id}>
-                  {t.name}
-                  {t.phone ? ` · ${t.phone}` : ''}
-                </MenuItem>
-              ))}
-            </TextField>
-          )}
-
-          {/* Datele se cer o singură dată. Pentru un chiriaș ales, blocul dispare. */}
-          <Box
-            sx={{
-              display: tenantId ? 'none' : 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-              gap: 2,
-            }}
-          >
-            <TextField
-              select
-              label="Tip chiriaș"
-              value={tenantType}
-              onChange={(e) => setTenantType(e.target.value as TenantType)}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-            >
-              {TENANT_TYPES.map((t) => (
-                <MenuItem key={t.value} value={t.value}>
-                  {t.label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              label="Nume complet"
-              value={tenantName}
-              onChange={(e) => setTenantName(e.target.value)}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-            />
-            <TextField
-              label={tenantType === 'Individual' ? 'CNP' : 'CUI'}
-              value={fiscalCode}
-              onChange={(e) => setFiscalCode(e.target.value)}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-            />
-            <TextField
-              label="Telefon"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-            />
-            <TextField
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              fullWidth
-              size="small"
-              sx={{ ...dashboardInputSx, gridColumn: { xs: 'auto', sm: '1 / -1' } }}
-            />
-          </Box>
-
-          {/* Termenii închirierii. Grilă separată de datele chiriașului: pe aceea o ascundem când
-              s-a ales un chiriaș existent, iar perioada și prețul trebuie completate oricum. */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-            <DateField
-              label="Preluare"
-              value={start}
-              onChange={setStart}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-            />
-            <DateField
-              label="Predare estimată"
-              value={end}
-              onChange={setEnd}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-            />
-            <TextField
-              label="Chirie / săptămână (lei)"
-              type="number"
-              value={rentValue}
-              onChange={(e) => setRent(e.target.value)}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-              helperText={defaults?.weeklyRentBani != null ? 'Din valorile firmei.' : 'Din prețul anunțului.'}
-            />
-            <TextField
-              label="Garanție (lei)"
-              type="number"
-              value={depositValue}
-              onChange={(e) => setDeposit(e.target.value)}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-            />
-            <TextField
-              label="Alte costuri (lei)"
-              type="number"
-              value={otherCosts}
-              onChange={(e) => setOtherCosts(e.target.value)}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-            />
-            <TextField
-              label="Nivel combustibil la preluare"
-              value={fuelLevel}
-              onChange={(e) => setFuelLevel(e.target.value)}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-              placeholder="plin, 3/4, 80%"
-            />
-            <TextField
-              label="Regulă de retur"
-              value={fuelRuleValue}
-              onChange={(e) => setFuelRule(e.target.value)}
-              fullWidth
-              size="small"
-              sx={{ ...dashboardInputSx, gridColumn: { xs: 'auto', sm: '1 / -1' } }}
-              placeholder="plin → plin"
-            />
-            <TextField
-              label="Kilometraj la preluare"
-              type="number"
-              value={mileage}
-              onChange={(e) => setMileage(e.target.value)}
-              fullWidth
-              size="small"
-              sx={{ ...dashboardInputSx, gridColumn: { xs: 'auto', sm: '1 / -1' } }}
-            />
-          </Box>
-
-          {/* Limita de km și numărul ei stau împreună: „cu limită" fără cifră nu înseamnă nimic. */}
-          <Box>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  size="small"
-                  checked={kmLimitChecked}
-                  onChange={(e) => {
-                    setHasKmLimit(e.target.checked)
-                    if (!e.target.checked) setMileageLimit('')
-                  }}
-                />
-              }
-              label="Limită de kilometri"
-              slotProps={{ typography: { sx: { fontSize: '0.88rem', fontWeight: 700 } } }}
-            />
-            {kmLimitChecked && (
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mt: 1 }}>
-                <TextField
-                  label="Km incluși"
-                  type="number"
-                  value={mileageLimitValue}
-                  onChange={(e) => setMileageLimit(e.target.value)}
-                  fullWidth
-                  size="small"
-                  sx={dashboardInputSx}
-                />
-                <TextField
-                  label="Cost / km suplimentar (lei)"
-                  type="number"
-                  value={extraKmValue}
-                  onChange={(e) => setExtraKmCost(e.target.value)}
-                  fullWidth
-                  size="small"
-                  sx={dashboardInputSx}
-                />
-              </Box>
-            )}
-          </Box>
-
-          <Box>
-            <Typography sx={{ fontSize: '0.82rem', fontWeight: 800, color: DASHBOARD_TOKENS.ink, mb: 0.5 }}>
-              Accesorii predate
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 1.5 }}>
-              {RENTAL_ACCESSORIES.map((item) => (
-                <FormControlLabel
-                  key={item}
-                  control={
-                    <Checkbox
-                      size="small"
-                      checked={accessories.includes(item)}
-                      onChange={(e) =>
-                        setAccessories(
-                          e.target.checked
-                            // Ordinea din catalog, nu ordinea bifării: două procese-verbale cu
-                            // aceleași accesorii trebuie să le enumere la fel.
-                            ? RENTAL_ACCESSORIES.filter((a) => a === item || accessories.includes(a))
-                            : accessories.filter((a) => a !== item),
-                        )
-                      }
-                    />
-                  }
-                  label={item}
-                  slotProps={{ typography: { sx: { fontSize: '0.84rem' } } }}
-                />
-              ))}
-            </Box>
-            <TextField
-              label="Altele"
-              value={accessoriesOther}
-              onChange={(e) => setAccessoriesOther(e.target.value)}
-              fullWidth
-              size="small"
-              sx={{ ...dashboardInputSx, mt: 1 }}
-            />
-          </Box>
-
-          <TextField
-            label="Observații"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            fullWidth
-            multiline
-            minRows={2}
-            size="small"
-            sx={dashboardInputSx}
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2.5 }}>
-        <Button onClick={onClose} sx={{ textTransform: 'none', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted }}>
-          Renunță
-        </Button>
-        <Button
-          variant="contained"
-          disableElevation
-          disabled={saving}
-          onClick={() => void save()}
-          sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
-        >
-          {saving ? 'Se salvează…' : 'Salvează'}
-        </Button>
-      </DialogActions>
-    </Dialog>
   )
 }
 

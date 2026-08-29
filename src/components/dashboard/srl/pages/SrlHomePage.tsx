@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import { Alert, Box, Button, Skeleton, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import AddRoundedIcon from '@mui/icons-material/AddRounded'
+import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded'
@@ -104,15 +104,17 @@ export function SrlHomePage() {
             >
               Pagina publică
             </Button>
+            {/* Închirierea se deschide de pe mașină, nu de aici: butonul duce în flotă, unde
+                fiecare card are acțiunea pe el. */}
             <Button
               component={RouterLink}
-              to={SRL_PATHS.rentals}
+              to={SRL_PATHS.cars}
               variant="contained"
               disableElevation
-              startIcon={<AddRoundedIcon />}
+              startIcon={<DirectionsCarFilledRoundedIcon />}
               sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
             >
-              Închiriere nouă
+              Mașinile mele
             </Button>
           </Stack>
         }

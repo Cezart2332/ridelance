@@ -1,43 +1,27 @@
-import { useCallback, useEffect, useState } from 'react'
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  MenuItem,
-  Skeleton,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
-import AddRoundedIcon from '@mui/icons-material/AddRounded'
-import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
+import { useEffect, useState } from 'react'
+import { Link as RouterLink } from 'react-router-dom'
+import { Alert, Box, Skeleton, Stack, Typography } from '@mui/material'
 
-import { carsService, type Car } from '../../../../services/cars.service'
+import { srlCarPath } from '../../../../config/srlNavigation'
 import {
   maintenanceService,
   type MaintenanceEntry,
   type MaintenanceOverview,
 } from '../../../../services/maintenance.service'
-import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '../../dashboardTheme'
+import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardTheme'
 import { Amount, PageHeader, Panel, StatCard, StatusChip } from '../../ui'
-import { DateField } from '../../../common/DateField'
 
 /**
- * Mentenanța flotei: istoric de service, costuri și remindere.
+ * Mentenanța flotei, ca istoric.
+ *
+ * Ca la închirieri: intervenția se înregistrează pe mașina care a fost în service, din pagina ei.
+ * Aici rămâne privirea de ansamblu — cât s-a cheltuit, ce urmează, pe care mașini — fără nimic de
+ * apăsat, în afară de drumul înapoi la mașină.
  *
  * Intervențiile viitoare și cele trecute stau în aceeași listă, ordonate descrescător, fiindcă
  * întrebarea reală a unui administrator de flotă e „ce urmează și ce s-a făcut" — două tabele
  * separate ar fi rupt firul exact acolo unde e util să fie continuu.
  */
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
-}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -45,23 +29,16 @@ function formatDate(iso: string): string {
 
 export function SrlMaintenancePage() {
   const [overview, setOverview] = useState<MaintenanceOverview | null>(null)
-  const [cars, setCars] = useState<Car[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
-
-  const [reloadToken, setReloadToken] = useState(0)
-  const reload = useCallback(() => setReloadToken((token) => token + 1), [])
 
   useEffect(() => {
     let cancelled = false
 
-    Promise.all([maintenanceService.getOverview(), carsService.getMyCars()])
-      .then(([data, myCars]) => {
-        if (cancelled) return
-        setOverview(data)
-        setCars(myCars)
-        setError(null)
+    maintenanceService
+      .getOverview()
+      .then((data) => {
+        if (!cancelled) setOverview(data)
       })
       .catch(() => {
         if (!cancelled) setError('Nu am putut încărca mentenanța.')
@@ -73,16 +50,7 @@ export function SrlMaintenancePage() {
     return () => {
       cancelled = true
     }
-  }, [reloadToken])
-
-  const remove = async (id: string) => {
-    try {
-      await maintenanceService.remove(id)
-      reload()
-    } catch {
-      setError('Nu am putut șterge intervenția.')
-    }
-  }
+  }, [])
 
   if (loading) {
     return (
@@ -116,26 +84,8 @@ export function SrlMaintenancePage() {
     <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
       <PageHeader
         title="Mentenanță"
-        subtitle="Istoric service, costuri și remindere pe dată sau pe kilometraj."
-        actions={
-          <Button
-            variant="contained"
-            disableElevation
-            startIcon={<AddRoundedIcon />}
-            disabled={cars.length === 0}
-            onClick={() => setDialogOpen(true)}
-            sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
-          >
-            Adaugă intervenție
-          </Button>
-        }
+        subtitle="Istoric service, costuri și remindere. O intervenție se adaugă din pagina mașinii."
       />
-
-      {error && (
-        <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}>
-          {error}
-        </Alert>
-      )}
 
       {summary && (
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' }, gap: 2 }}>
@@ -159,16 +109,14 @@ export function SrlMaintenancePage() {
       <Panel title="Programări și istoric" subtitle="Ce urmează și ce s-a făcut, în ordine cronologică.">
         {entries.length === 0 ? (
           <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, py: 2 }}>
-            {cars.length === 0
-              ? 'Adaugă întâi o mașină în flotă — mentenanța se atașează unei mașini.'
-              : 'Nicio intervenție înregistrată. Adaugă prima ca să începi istoricul.'}
+            Nicio intervenție înregistrată. Prima se adaugă din pagina unei mașini.
           </Typography>
         ) : (
           <Box sx={responsiveTableContainerSx}>
             <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
               <Box component="thead">
                 <Box component="tr">
-                  {['Intervenție', 'Mașină', 'Data', 'Kilometraj', 'Cost', '', ''].map((h, i) => (
+                  {['Intervenție', 'Mașină', 'Data', 'Kilometraj', 'Cost', ''].map((h, i) => (
                     <Box component="th" key={h || i} sx={headSx}>
                       {h}
                     </Box>
@@ -177,36 +125,18 @@ export function SrlMaintenancePage() {
               </Box>
               <Box component="tbody">
                 {entries.map((entry) => (
-                  <EntryRow key={entry.id} entry={entry} now={now} onDelete={() => void remove(entry.id)} />
+                  <EntryRow key={entry.id} entry={entry} now={now} />
                 ))}
               </Box>
             </Box>
           </Box>
         )}
       </Panel>
-
-      <AddDialog
-        open={dialogOpen}
-        cars={cars}
-        onClose={() => setDialogOpen(false)}
-        onSaved={() => {
-          setDialogOpen(false)
-          reload()
-        }}
-      />
     </Stack>
   )
 }
 
-function EntryRow({
-  entry,
-  now,
-  onDelete,
-}: {
-  entry: MaintenanceEntry
-  now: Date
-  onDelete: () => void
-}) {
+function EntryRow({ entry, now }: { entry: MaintenanceEntry; now: Date }) {
   const scheduled = new Date(entry.performedAtUtc) > now
 
   return (
@@ -221,8 +151,20 @@ function EntryRow({
           </Typography>
         )}
       </Box>
-      <Box component="td" sx={{ ...cellSx, fontSize: '0.82rem', color: DASHBOARD_TOKENS.textMuted }}>
-        {entry.carLabel}
+      <Box component="td" sx={cellSx}>
+        <Typography
+          component={RouterLink}
+          to={srlCarPath(entry.carId)}
+          sx={{
+            fontSize: '0.82rem',
+            fontWeight: 700,
+            color: DASHBOARD_TOKENS.textMuted,
+            textDecoration: 'none',
+            '&:hover': { textDecoration: 'underline', color: DASHBOARD_TOKENS.accent },
+          }}
+        >
+          {entry.carLabel}
+        </Typography>
       </Box>
       <Box component="td" sx={{ ...cellSx, fontSize: '0.82rem', fontWeight: 700 }}>
         {formatDate(entry.performedAtUtc)}
@@ -239,16 +181,6 @@ function EntryRow({
         ) : (
           <ReminderChip entry={entry} now={now} />
         )}
-      </Box>
-      <Box component="td" sx={{ ...cellSx, textAlign: 'right' }}>
-        <IconButton
-          size="small"
-          aria-label={`Șterge intervenția ${entry.title}`}
-          onClick={onDelete}
-          sx={{ color: DASHBOARD_TOKENS.textMuted, '&:hover': { color: DASHBOARD_TOKENS.stateError } }}
-        >
-          <DeleteOutlineRoundedIcon fontSize="small" />
-        </IconButton>
       </Box>
     </Box>
   )
@@ -268,181 +200,6 @@ function ReminderChip({ entry, now }: { entry: MaintenanceEntry; now: Date }) {
   }
 
   return null
-}
-
-function AddDialog({
-  open,
-  cars,
-  onClose,
-  onSaved,
-}: {
-  open: boolean
-  cars: Car[]
-  onClose: () => void
-  onSaved: () => void
-}) {
-  // `null` = utilizatorul n-a ales încă, deci se folosește prima mașină. Un `useEffect` care ar
-  // fi scris alegerea în stare ar fi fost o sincronizare inutilă a unei valori derivabile.
-  const [pickedCarId, setPickedCarId] = useState<string | null>(null)
-  const [title, setTitle] = useState('')
-  const [notes, setNotes] = useState('')
-  const [date, setDate] = useState(todayIso())
-  const [mileage, setMileage] = useState('')
-  const [cost, setCost] = useState('')
-  const [reminderDate, setReminderDate] = useState('')
-  const [reminderMileage, setReminderMileage] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  // Prima mașină e preselectată: majoritatea flotelor mici au una singură.
-  const carId = pickedCarId ?? cars[0]?.id ?? ''
-
-  const save = async () => {
-    if (!carId || !title.trim()) {
-      setError('Alege mașina și scrie ce s-a făcut.')
-      return
-    }
-
-    setSaving(true)
-    setError(null)
-    try {
-      await maintenanceService.add({
-        carId,
-        title: title.trim(),
-        notes: notes.trim() || null,
-        // Data locală se trimite ca UTC la miezul zilei, ca fusul să n-o mute cu o zi înapoi.
-        performedAtUtc: new Date(`${date}T12:00:00Z`).toISOString(),
-        mileage: mileage ? Number(mileage) : null,
-        costBani: cost ? Math.round(Number(cost) * 100) : 0,
-        reminderDateUtc: reminderDate ? new Date(`${reminderDate}T12:00:00Z`).toISOString() : null,
-        reminderMileage: reminderMileage ? Number(reminderMileage) : null,
-      })
-      setTitle('')
-      setNotes('')
-      setMileage('')
-      setCost('')
-      setReminderDate('')
-      setReminderMileage('')
-      onSaved()
-    } catch {
-      setError('Nu am putut salva intervenția.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: 800 }}>Adaugă intervenție</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ pt: 0.5 }}>
-          {error && (
-            <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
-              {error}
-            </Alert>
-          )}
-
-          <TextField
-            select
-            label="Mașină"
-            value={carId}
-            onChange={(e) => setPickedCarId(e.target.value)}
-            fullWidth
-            size="small"
-            sx={dashboardInputSx}
-          >
-            {cars.map((car) => (
-              <MenuItem key={car.id} value={car.id}>
-                {car.brand} {car.model}, {car.year}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          <TextField
-            label="Ce s-a făcut"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            fullWidth
-            size="small"
-            sx={dashboardInputSx}
-            placeholder="Schimb filtre habitaclu"
-          />
-
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-            <DateField
-              label="Data"
-              value={date}
-              onChange={setDate}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-              helperText="O dată viitoare o marchează drept programare."
-            />
-            <TextField
-              label="Kilometraj"
-              type="number"
-              value={mileage}
-              onChange={(e) => setMileage(e.target.value)}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-            />
-            <TextField
-              label="Cost (lei)"
-              type="number"
-              value={cost}
-              onChange={(e) => setCost(e.target.value)}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-            />
-            <TextField
-              label="Reminder la km"
-              type="number"
-              value={reminderMileage}
-              onChange={(e) => setReminderMileage(e.target.value)}
-              fullWidth
-              size="small"
-              sx={dashboardInputSx}
-            />
-            <DateField
-              label="Reminder la dată"
-              value={reminderDate}
-              onChange={setReminderDate}
-              fullWidth
-              size="small"
-              sx={{ ...dashboardInputSx, gridColumn: { xs: 'auto', sm: '1 / -1' } }}
-            />
-          </Box>
-
-          <TextField
-            label="Observații"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            fullWidth
-            multiline
-            minRows={2}
-            size="small"
-            sx={dashboardInputSx}
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2.5 }}>
-        <Button onClick={onClose} sx={{ textTransform: 'none', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted }}>
-          Renunță
-        </Button>
-        <Button
-          variant="contained"
-          disableElevation
-          disabled={saving}
-          onClick={() => void save()}
-          sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
-        >
-          {saving ? 'Se salvează…' : 'Salvează'}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  )
 }
 
 const headSx = {

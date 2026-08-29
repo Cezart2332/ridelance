@@ -3,7 +3,6 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { SRL_PATHS } from '../../../config/srlNavigation'
 import { BankTab } from '../sections/BankTab'
 import { BeneficiiTab } from '../sections/BeneficiiTab'
-import { CarsAdminView } from '../sections/admin/CarsAdminView'
 import { SupportChatTab } from '../sections/SupportChatTab'
 import { InvoicesPage } from '../invoices/InvoicesPage'
 import { AddCarWizard } from '../addCar/AddCarWizard'
@@ -17,6 +16,7 @@ import { SrlFiscalPage } from './pages/SrlFiscalPage'
 import { SrlProfilePage } from './pages/SrlProfilePage'
 import { SrlServicesPage } from './pages/SrlServicesPage'
 import { SrlCarPage } from './pages/SrlCarPage'
+import { SrlCarsPage } from './pages/SrlCarsPage'
 import { SrlSettingsPage } from './pages/SrlSettingsPage'
 
 /**
@@ -44,7 +44,7 @@ export function SrlRoutes() {
       <Route index element={<SrlHomePage />} />
 
       {/* ── Flotă ── */}
-      <Route path={rel(SRL_PATHS.cars)} element={<CarsAdminView variant="poster" posterSection="manage" />} />
+      <Route path={rel(SRL_PATHS.cars)} element={<SrlCarsPage />} />
       {/* Adăugarea are rută proprie, nu dialog: șase pași într-un modal n-ar avea unde încăpea,
           iar un refresh la jumătatea completării ar fi pierdut tot. */}
       <Route path={rel(SRL_PATHS.addCar)} element={<AddCarRoute />} />
