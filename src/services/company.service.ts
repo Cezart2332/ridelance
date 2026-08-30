@@ -15,6 +15,81 @@ export interface PublicVisibility {
   location: boolean
 }
 
+/** O cheie de iconiță pentru avantaje. Sincronizată cu `CompanyPageIcons` de pe server. */
+export type HighlightIconKey =
+  | 'check'
+  | 'shield'
+  | 'clock'
+  | 'wallet'
+  | 'car'
+  | 'phone'
+  | 'star'
+  | 'wrench'
+  | 'map'
+  | 'bolt'
+
+/** Culorile mini-site-ului. Control complet — serverul verifică doar că sunt hex-uri valide. */
+export interface CompanyPageTheme {
+  accent: string
+  background: string
+  surface: string
+  text: string
+  buttonText: string
+  heroOverlay: string
+  /** 0..90. 100 ar ascunde complet fotografia de cover. */
+  heroOverlayOpacity: number
+}
+
+export interface CompanyPageHighlight {
+  iconKey: HighlightIconKey
+  title: string
+  text: string
+}
+
+export interface CompanyPageScheduleRow {
+  day: string
+  hours: string
+}
+
+export interface CompanyPageFaq {
+  question: string
+  answer: string
+}
+
+/**
+ * Conținutul secțiunilor proprii ale mini-site-ului.
+ *
+ * Fără comutatoare de vizibilitate: o secțiune apare dacă are conținut. Vezi `sections.ts`.
+ */
+export interface CompanyPageContent {
+  highlights: CompanyPageHighlight[]
+  schedule: CompanyPageScheduleRow[]
+  coverageAreas: string[]
+  coverageNote: string | null
+  faq: CompanyPageFaq[]
+}
+
+/** Ce se salvează din editorul de mini-site. Identitatea juridică se salvează separat. */
+export interface CompanyPageInput {
+  tagline: string | null
+  publicDescription: string | null
+  theme: CompanyPageTheme
+  content: CompanyPageContent
+}
+
+export interface SuggestedHighlight {
+  iconKey: HighlightIconKey
+  title: string
+  text: string
+}
+
+/** Propunerile modelului. Nu se salvează nimic până nu alege omul. */
+export interface CompanyDescriptionSuggestion {
+  tagline: string | null
+  descriptions: string[]
+  highlights: SuggestedHighlight[]
+}
+
 export interface CompanyProfile {
   id: string
   ownerType: 'Pfa' | 'Srl'
@@ -29,7 +104,13 @@ export interface CompanyProfile {
   email: string | null
   website: string | null
   publicDescription: string | null
+  /** Fraza scurtă de sub denumire, în antetul mini-site-ului. */
+  tagline: string | null
   logoUrl: string | null
+  /** Fotografia de fundal a mini-site-ului. */
+  coverImageUrl: string | null
+  pageTheme: CompanyPageTheme
+  pageContent: CompanyPageContent
   /** Specimenul de semnătură al firmei, dacă a fost salvat unul. */
   signatureDocumentId: string | null
   slug: string
@@ -48,7 +129,6 @@ export interface CompanyProfileInput {
   phone: string | null
   email: string | null
   website: string | null
-  publicDescription: string | null
   showPhone: boolean
   showEmail: boolean
   showWhatsApp: boolean
@@ -60,12 +140,17 @@ export interface PublicCompany {
   legalName: string
   slug: string
   logoUrl: string | null
+  coverImageUrl: string | null
+  tagline: string | null
   publicDescription: string | null
   isVerified: boolean
   phone: string | null
   email: string | null
+  website: string | null
   whatsAppEnabled: boolean
   location: string | null
+  theme: CompanyPageTheme
+  content: CompanyPageContent
   cars: Car[]
 }
 
@@ -113,6 +198,34 @@ export const companyService = {
 
   async saveProfile(input: CompanyProfileInput): Promise<CompanyProfile> {
     const res = await api.put<CompanyProfile>('/companies/profile', input)
+    return res.data
+  },
+
+  /** Salvează tot ce ține de mini-site: slogan, descriere, culori, secțiuni. */
+  async savePage(input: CompanyPageInput): Promise<CompanyProfile> {
+    const res = await api.put<CompanyProfile>('/companies/profile/page', input)
+    return res.data
+  },
+
+  async uploadCover(file: File): Promise<string> {
+    const form = new FormData()
+    form.append('file', file)
+
+    const res = await api.post<{ coverImageUrl: string }>('/companies/profile/cover', form)
+    return res.data.coverImageUrl
+  },
+
+  async deleteCover(): Promise<void> {
+    await api.delete('/companies/profile/cover')
+  },
+
+  /**
+   * Cere modelului propuneri de text. Nu salvează nimic — alegerea rămâne a omului.
+   */
+  async suggestDescription(hints: string | null): Promise<CompanyDescriptionSuggestion> {
+    const res = await api.post<CompanyDescriptionSuggestion>('/companies/profile/page/description', {
+      hints,
+    })
     return res.data
   },
 

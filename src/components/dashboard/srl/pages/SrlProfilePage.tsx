@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { Alert, Box, Button, InputAdornment, Skeleton, Stack, Switch, TextField, Typography } from '@mui/material'
 import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded'
+import { Link as RouterLink } from 'react-router-dom'
+
+import { DEFAULT_COMPANY_THEME, EMPTY_PAGE_CONTENT } from '../../../company/companyTheme'
+import { SRL_PATHS } from '../../../../config/srlNavigation'
 
 import { NotificationPreferencesPanel } from '../../sections/profile/NotificationPreferencesPanel'
 import { PrivacyPanel } from '../../sections/profile/PrivacyPanel'
@@ -23,6 +27,10 @@ import { CompanySignaturePanel } from './CompanySignaturePanel'
  *
  * Datele de identitate trăiesc aici, nu în Setări: §3.1 cere ca Setările să rămână doar
  * preferințe operaționale, ca să nu existe două locuri de unde se editează același CUI.
+ *
+ * Textul de prezentare a plecat din pagina asta, la „Pagina firmei", unde se scrie cu
+ * previzualizarea alături. Din același motiv: un câmp editabil din două ecrane devine, în timp,
+ * două texte diferite.
  */
 
 /**
@@ -66,7 +74,11 @@ const EMPTY_PROFILE: CompanyProfile = {
   email: null,
   website: null,
   publicDescription: null,
+  tagline: null,
   logoUrl: null,
+  coverImageUrl: null,
+  pageTheme: DEFAULT_COMPANY_THEME,
+  pageContent: EMPTY_PAGE_CONTENT,
   signatureDocumentId: null,
   slug: '',
   isVerified: false,
@@ -163,7 +175,6 @@ export function SrlProfilePage() {
         phone: profile.phone,
         email: profile.email,
         website: profile.website,
-        publicDescription: profile.publicDescription,
         showPhone: profile.visibility.phone,
         showEmail: profile.visibility.email,
         showWhatsApp: profile.visibility.whatsapp,
@@ -286,23 +297,22 @@ export function SrlProfilePage() {
               }
             />
           ))}
-          <TextField
-            label="Descriere publică"
-            value={profile.publicDescription ?? ''}
-            onChange={(event) => update('publicDescription', event.target.value || null)}
-            fullWidth
-            multiline
-            minRows={3}
-            size="small"
-            sx={{ ...dashboardInputSx, gridColumn: { xs: 'auto', md: '1 / -1' } }}
-            helperText="Textul de pe mini-site și de pe anunțurile mașinilor."
-          />
         </Box>
       </Panel>
 
       <Panel
         title="Vizibilitate publică"
         subtitle="Controlezi exact ce date de contact apar pe mini-site și pe anunțuri."
+        action={
+          <Button
+            component={RouterLink}
+            to={SRL_PATHS.companyPage}
+            variant="outlined"
+            sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
+          >
+            Editează pagina publică
+          </Button>
+        }
       >
         <Stack divider={<Box sx={{ height: '1px', bgcolor: DASHBOARD_TOKENS.border }} />}>
           {VISIBILITY_ROWS.map((row) => (

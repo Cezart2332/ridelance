@@ -103,7 +103,7 @@ export const SRL_NAV: NavEntry[] = [
     icon: BusinessRoundedIcon,
     children: [
       { id: 'profile', label: 'Profil', path: SRL_PATHS.profile, hint: 'Datele și identitatea firmei' },
-      { id: 'company-page', label: 'Pagina firmei', path: SRL_PATHS.companyPage, hint: 'Linkul public al firmei' },
+      { id: 'company-page', label: 'Pagina firmei', path: SRL_PATHS.companyPage, hint: 'Mini-site-ul public: text, culori, secțiuni' },
       { id: 'company-documents', label: 'Documente societate', path: SRL_PATHS.companyDocuments, hint: 'Actele firmei' },
       { id: 'services', label: 'Servicii', path: SRL_PATHS.services, hint: 'Ce poți cumpăra prin RIDElance' },
     ],
