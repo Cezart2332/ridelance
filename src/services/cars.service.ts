@@ -1,14 +1,12 @@
 import { api } from '../lib/axios';
 import { SRL_ROOT } from '../config/srlNavigation';
+import { uploadUrl } from '../lib/api';
 import { currentSource } from '../lib/trafficSource';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-export const getCarImageUrl = (path: string | undefined) => {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  return `${BASE_URL}${path}`;
-};
+/** Aceeași regulă ca pentru orice fișier încărcat; păstrat ca nume pentru apelurile existente. */
+export const getCarImageUrl = (path: string | undefined) => uploadUrl(path);
 
 export interface CarImage {
   id: string;
@@ -333,7 +331,7 @@ const carsService = {
   },
 
   async getLeads(carId?: string, status?: string): Promise<CarLead[]> {
-    const params: any = {};
+    const params: Record<string, string> = {};
     if (carId) params.carId = carId;
     if (status) params.status = status;
     const res = await api.get<CarLead[]>('/cars/leads', { params });

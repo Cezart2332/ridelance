@@ -1,6 +1,7 @@
 import { Avatar } from '@mui/material'
 import type { SxProps, Theme } from '@mui/material/styles'
 
+import { uploadUrl } from '../../lib/api'
 import { AVATAR_PALETTE, DASHBOARD_TOKENS } from '../dashboard/dashboardTheme'
 
 /**
@@ -41,7 +42,11 @@ function avatarColorFor(name: string): string {
 export interface OwnerAvatarProps {
   /** Denumirea proprietarului. Sursa inițialelor și a culorii de fallback. */
   name: string
-  /** Logo-ul încărcat. Lipsa lui nu e o eroare — e cazul obișnuit. */
+  /**
+   * Logo-ul încărcat, ca și cale relativă întoarsă de API. Lipsa lui nu e o eroare — e cazul
+   * obișnuit. Originea o adaugă componenta: pusă direct în `src`, calea s-ar rezolva față de
+   * pagina curentă și fișierul ar fi cerut de la frontend, unde nu există.
+   */
   logoUrl?: string | null
   /** Diametrul în px. 28 pe cardul de mașină, 32 pe pagina de detaliu (spec §4.1). */
   size?: number
@@ -53,7 +58,7 @@ export function OwnerAvatar({ name, logoUrl, size = 34, sx }: OwnerAvatarProps) 
 
   return (
     <Avatar
-      src={logoUrl ?? undefined}
+      src={uploadUrl(logoUrl) || undefined}
       // Numele e mereu scris lângă avatar, deci alt-ul l-ar dubla pentru un screen reader.
       alt=""
       aria-hidden
