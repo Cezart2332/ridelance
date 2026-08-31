@@ -24,6 +24,10 @@ const AboutPage = lazyWithRetry(() => import('../../pages/AboutPage').then((m) =
 const CalculatorPage = lazyWithRetry(() => import('../../pages/CalculatorPage').then((m) => ({ default: m.CalculatorPage })))
 const PricingPage = lazyWithRetry(() => import('../../pages/PricingPage').then((m) => ({ default: m.PricingPage })))
 const PartnersPage = lazyWithRetry(() => import('../../pages/PartnersPage').then((m) => ({ default: m.PartnersPage })))
+// Pagina de acoperire își aduce harta și cele trei logouri; se încarcă doar când e cerută.
+const RidesharingCitiesPage = lazyWithRetry(() =>
+  import('../../pages/RidesharingCitiesPage').then((m) => ({ default: m.RidesharingCitiesPage })),
+)
 const ContactPage = lazyWithRetry(() => import('../../pages/ContactPage').then((m) => ({ default: m.ContactPage })))
 const TermsPage = lazyWithRetry(() => import('../../pages/TermsPage').then((m) => ({ default: m.TermsPage })))
 const PrivacyPolicyPage = lazyWithRetry(() =>
@@ -416,6 +420,7 @@ export function AppLayout() {
             <Route path="/fiscal" element={<CalculatorPage />} />
             <Route path="/calculator-taxe" element={<Navigate to="/fiscal" replace />} />
             <Route path="/abonamente-preturi" element={<PricingPage />} />
+            <Route path="/orase-ridesharing" element={<RidesharingCitiesPage />} />
             <Route path="/parteneri" element={<PartnersPage />} />
             <Route path="/parteneri/bcr/oferte" element={<Navigate to="/parteneri/bcr" replace />} />
             <Route path="/parteneri/:slug" element={<PartnersPage />} />

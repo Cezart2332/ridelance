@@ -5,6 +5,7 @@ import { reloadOnceOnChunkError } from '../../../utils/lazyWithRetry'
 import { TOKENS } from '../../../constants/tokens'
 import type { FleetMap as FleetMapType } from './FleetMap'
 import type { PinPicker as PinPickerType } from './PinPicker'
+import type { PlaceMap as PlaceMapType } from './PlaceMap'
 
 /**
  * Hărțile, încărcate abia când se văd.
@@ -22,6 +23,10 @@ const FleetMapLazy = lazy(() =>
 
 const PinPickerLazy = lazy(() =>
   import('./PinPicker').then((m) => ({ default: m.PinPicker })).catch(reloadOnceOnChunkError),
+)
+
+const PlaceMapLazy = lazy(() =>
+  import('./PlaceMap').then((m) => ({ default: m.PlaceMap })).catch(reloadOnceOnChunkError),
 )
 
 function MapSkeleton({ height }: { height: number | string }) {
@@ -45,6 +50,14 @@ export function PinPicker(props: ComponentProps<typeof PinPickerType>) {
   return (
     <Suspense fallback={<MapSkeleton height={props.height ?? 300} />}>
       <PinPickerLazy {...props} />
+    </Suspense>
+  )
+}
+
+export function PlaceMap(props: ComponentProps<typeof PlaceMapType>) {
+  return (
+    <Suspense fallback={<MapSkeleton height={props.height ?? 280} />}>
+      <PlaceMapLazy {...props} />
     </Suspense>
   )
 }

@@ -5,6 +5,7 @@ import UploadRoundedIcon from '@mui/icons-material/UploadRounded'
 import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded'
 
 import { OwnerAvatar } from '../../../common/OwnerAvatar'
+import { prepareLogoImage } from '../../../../lib/imageProcessing'
 import { companyService } from '../../../../services/company.service'
 import { DASHBOARD_TOKENS } from '../../dashboardTheme'
 import { Panel } from '../../ui'
@@ -18,14 +19,15 @@ import { Panel } from '../../ui'
  * publicul. Cele trei împreună sunt argumentul pentru care uploaderul cere explicit un logo, nu
  * o fotografie.
  *
- * Validarea din browser dublează pe cea de pe server. Nu e redundanță inutilă: o eroare
- * afișată înainte de a urca 2 MB e o eroare pe care o vezi imediat, nu după așteptare.
+ * Un logo prea mic nu se refuză, se mărește — la fel ca fotografia de antet. „Găsește altă
+ * imagine" e un răspuns pe care nimeni nu-l urmează: ori renunță la logo, ori pune orice altceva
+ * are la îndemână, iar cercul de 28 px de pe cardul de mașină rămâne tot gol.
  */
 
-const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml']
-const ACCEPT_ATTR = '.png,.jpg,.jpeg,.webp,.svg'
-const MAX_BYTES = 2 * 1024 * 1024
-const MIN_EDGE = 256
+const ACCEPT_ATTR = 'image/*'
+
+/** Plafon pe fișierul *ales*. Ce se trimite e mereu mic, fiindcă îl reîncodăm noi. */
+const MAX_SOURCE_BYTES = 25 * 1024 * 1024
 
 interface CompanyLogoPanelProps {
   companyName: string
@@ -34,38 +36,6 @@ interface CompanyLogoPanelProps {
   /** Logo-ul se atașează unui profil existent, deci prima salvare trebuie să fi avut loc. */
   hasProfile: boolean
   onLogoChange: (url: string | null) => void
-}
-
-/** Validările din §3.1: tip, dimensiune de fișier, latură minimă. */
-async function validate(file: File): Promise<string | null> {
-  if (!ACCEPTED.includes(file.type)) {
-    return 'Format acceptat: PNG, JPG, WEBP sau SVG.'
-  }
-  if (file.size > MAX_BYTES) {
-    return 'Fișierul depășește 2 MB.'
-  }
-  // SVG-ul e vectorial: „minim 256×256" nu înseamnă nimic pentru el.
-  if (file.type === 'image/svg+xml') return null
-
-  const dimensions = await new Promise<{ width: number; height: number } | null>((resolve) => {
-    const image = new Image()
-    const url = URL.createObjectURL(file)
-    image.onload = () => {
-      resolve({ width: image.naturalWidth, height: image.naturalHeight })
-      URL.revokeObjectURL(url)
-    }
-    image.onerror = () => {
-      resolve(null)
-      URL.revokeObjectURL(url)
-    }
-    image.src = url
-  })
-
-  if (!dimensions) return 'Nu am putut citi imaginea.'
-  if (dimensions.width < MIN_EDGE || dimensions.height < MIN_EDGE) {
-    return `Imaginea are ${dimensions.width}×${dimensions.height} px. Minimul este ${MIN_EDGE}×${MIN_EDGE}.`
-  }
-  return null
 }
 
 export function CompanyLogoPanel({
@@ -77,6 +47,7 @@ export function CompanyLogoPanel({
 }: CompanyLogoPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
+  const [note, setNote] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const objectUrlRef = useRef<string | null>(null)
 
@@ -91,24 +62,35 @@ export function CompanyLogoPanel({
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return
-    const problem = await validate(file)
-    if (problem) {
-      setError(problem)
+
+    if (!file.type.startsWith('image/')) {
+      setError('Alege o imagine.')
+      return
+    }
+    if (file.size > MAX_SOURCE_BYTES) {
+      setError('Fișierul depășește 25 MB.')
       return
     }
 
     setError(null)
+    setNote(null)
     setUploading(true)
     try {
-      const url = await companyService.uploadLogo(file)
+      const prepared = await prepareLogoImage(file)
+      const url = await companyService.uploadLogo(prepared.file)
       // Previzualizarea locală nu mai e necesară odată ce serverul a răspuns cu calea reală.
       if (objectUrlRef.current) {
         URL.revokeObjectURL(objectUrlRef.current)
         objectUrlRef.current = null
       }
       onLogoChange(url)
-    } catch {
-      setError('Nu am putut încărca logo-ul. Încearcă din nou.')
+      setNote(prepared.note)
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof Error && uploadError.message === 'decode'
+          ? 'Nu am putut citi imaginea. Formatul HEIC de pe iPhone nu e acceptat — exportă-o ca PNG.'
+          : 'Nu am putut încărca logo-ul. Încearcă din nou.',
+      )
     } finally {
       setUploading(false)
     }
@@ -119,7 +101,7 @@ export function CompanyLogoPanel({
   return (
     <Panel
       title="Logo firmă"
-      subtitle="Recomandat: logo-ul firmei, nu o fotografie personală. PNG, JPG, WEBP sau SVG, maximum 2 MB, minimum 256×256 px."
+      subtitle="Recomandat: logo-ul firmei, nu o fotografie personală. Orice imagine — o pregătim noi pentru cele trei locuri de mai jos."
     >
       <Stack spacing={2.5}>
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 1.5 }}>
@@ -133,7 +115,7 @@ export function CompanyLogoPanel({
               onClick={() => inputRef.current?.click()}
               sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
             >
-              {uploading ? 'Se încarcă…' : logoUrl ? 'Schimbă logo-ul' : 'Încarcă logo'}
+              {uploading ? 'Se pregătește…' : logoUrl ? 'Schimbă logo-ul' : 'Încarcă logo'}
             </Button>
           </Stack>
           <input
@@ -152,6 +134,12 @@ export function CompanyLogoPanel({
         {!hasProfile && (
           <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>
             Salvează întâi datele firmei — logo-ul se atașează profilului.
+          </Typography>
+        )}
+
+        {note && (
+          <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', fontWeight: 600 }}>
+            {note}
           </Typography>
         )}
 

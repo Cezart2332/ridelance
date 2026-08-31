@@ -4,23 +4,26 @@ import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
 import UploadRoundedIcon from '@mui/icons-material/UploadRounded'
 
 import { uploadUrl } from '../../../../../lib/api'
+import { prepareCoverImage } from '../../../../../lib/imageProcessing'
 import { companyService } from '../../../../../services/company.service'
 import { DASHBOARD_TOKENS } from '../../../dashboardTheme'
 
 /**
  * Fotografia din antetul mini-site-ului.
  *
- * Validarea din browser dublează pe cea de pe server, ca la logo: o eroare arătată înainte de a
- * urca cinci megaocteți e o eroare pe care o vezi imediat, nu după așteptare.
+ * Nu se refuză nicio imagine pentru că e prea mică. Se aduce ea la dimensiunea de care are
+ * nevoie antetul, aici în browser, înainte de upload — vezi `lib/imageProcessing.ts`. Ce urcă
+ * pe server e întotdeauna o imagine lată de cel puțin 1920 px, indiferent cu ce a pornit omul.
  *
  * Fără SVG, spre deosebire de logo — asta e o fotografie panoramică, nu o marcă vectorială.
  */
 
-const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp']
-const ACCEPT_ATTR = '.png,.jpg,.jpeg,.webp'
-const MAX_BYTES = 5 * 1024 * 1024
-const MIN_WIDTH = 1600
-const MIN_HEIGHT = 600
+// Orice format pe care îl decodează browserul: oricum reîncodăm noi rezultatul, deci tipul
+// fișierului ales nu mai contează pentru server.
+const ACCEPT_ATTR = 'image/*'
+
+/** Plafon pe fișierul *ales*, nu pe cel trimis: cel trimis e mereu mic, după procesare. */
+const MAX_SOURCE_BYTES = 25 * 1024 * 1024
 
 interface CompanyCoverPanelProps {
   coverUrl: string | null
@@ -29,56 +32,39 @@ interface CompanyCoverPanelProps {
   onCoverChange: (url: string | null) => void
 }
 
-async function validate(file: File): Promise<string | null> {
-  if (!ACCEPTED.includes(file.type)) {
-    return 'Format acceptat: PNG, JPG sau WEBP.'
-  }
-  if (file.size > MAX_BYTES) {
-    return 'Fișierul depășește 5 MB.'
-  }
-
-  const dimensions = await new Promise<{ width: number; height: number } | null>((resolve) => {
-    const image = new Image()
-    const url = URL.createObjectURL(file)
-    image.onload = () => {
-      resolve({ width: image.naturalWidth, height: image.naturalHeight })
-      URL.revokeObjectURL(url)
-    }
-    image.onerror = () => {
-      resolve(null)
-      URL.revokeObjectURL(url)
-    }
-    image.src = url
-  })
-
-  if (!dimensions) return 'Nu am putut citi imaginea.'
-  if (dimensions.width < MIN_WIDTH || dimensions.height < MIN_HEIGHT) {
-    // Antetul se întinde pe toată lățimea ecranului: sub pragul ăsta se vede pixelată exact acolo
-    // unde e primul lucru pe care îl vede vizitatorul.
-    return `Imaginea are ${dimensions.width}×${dimensions.height} px. Minimul este ${MIN_WIDTH}×${MIN_HEIGHT}.`
-  }
-  return null
-}
-
 export function CompanyCoverPanel({ coverUrl, hasProfile, onCoverChange }: CompanyCoverPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
+  const [note, setNote] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return
-    const problem = await validate(file)
-    if (problem) {
-      setError(problem)
+
+    if (!file.type.startsWith('image/')) {
+      setError('Alege o imagine.')
+      return
+    }
+    if (file.size > MAX_SOURCE_BYTES) {
+      setError('Fișierul depășește 25 MB.')
       return
     }
 
     setError(null)
+    setNote(null)
     setBusy(true)
     try {
-      onCoverChange(await companyService.uploadCover(file))
-    } catch {
-      setError('Nu am putut încărca fotografia. Încearcă din nou.')
+      const prepared = await prepareCoverImage(file)
+      onCoverChange(await companyService.uploadCover(prepared.file))
+      setNote(prepared.note)
+    } catch (uploadError) {
+      // Procesarea și uploadul eșuează din motive diferite, iar omul are nevoie să știe care:
+      // la prima poate schimba fișierul, la a doua doar să mai încerce.
+      setError(
+        uploadError instanceof Error && uploadError.message === 'decode'
+          ? 'Nu am putut citi imaginea. Formatul HEIC de pe iPhone nu e acceptat — exportă-o ca JPG.'
+          : 'Nu am putut încărca fotografia. Încearcă din nou.',
+      )
     } finally {
       setBusy(false)
     }
@@ -87,6 +73,7 @@ export function CompanyCoverPanel({ coverUrl, hasProfile, onCoverChange }: Compa
   const removeCover = async () => {
     setBusy(true)
     setError(null)
+    setNote(null)
     try {
       await companyService.deleteCover()
       onCoverChange(null)
@@ -128,7 +115,7 @@ export function CompanyCoverPanel({ coverUrl, hasProfile, onCoverChange }: Compa
           onClick={() => inputRef.current?.click()}
           sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
         >
-          {busy ? 'Se încarcă…' : coverUrl ? 'Schimbă fotografia' : 'Încarcă fotografia'}
+          {busy ? 'Se pregătește…' : coverUrl ? 'Schimbă fotografia' : 'Încarcă fotografia'}
         </Button>
         {coverUrl && (
           <Button
@@ -156,9 +143,15 @@ export function CompanyCoverPanel({ coverUrl, hasProfile, onCoverChange }: Compa
       </Stack>
 
       <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.82rem' }}>
-        PNG, JPG sau WEBP, maximum 5 MB, minimum {MIN_WIDTH}×{MIN_HEIGHT} px. Se salvează imediat,
-        separat de restul paginii.
+        Orice fotografie — o mărim și o pregătim noi pentru antet. Se salvează imediat, separat
+        de restul paginii.
       </Typography>
+
+      {note && (
+        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.82rem', fontWeight: 600 }}>
+          {note}
+        </Typography>
+      )}
 
       {!hasProfile && (
         <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>

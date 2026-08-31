@@ -13,7 +13,8 @@ import {
   type PartnerBenefit,
 } from '../../../data/benefits'
 import { PARTNER_LOGO } from '../../../data/partnerLogo'
-import { BCR_OFFERS, BCR_ONBOARDING_URL } from '../../../data/partners'
+import { BCR_ONBOARDING_URL } from '../../../data/partners'
+import { BcrOffer } from '../../partners/BcrOffer'
 import { EldriveOffer } from '../../partners/EldriveOffer'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { PageHeader } from '../ui'
@@ -296,7 +297,7 @@ function PartnerPanel({
             </Box>
           )}
 
-          {partner.showBcrOffers && <BcrOffers />}
+          {partner.showBcrOffers && <BcrOffer tokens={DASHBOARD_TOKENS} />}
 
           {partner.slug === 'eldrive' && (
             <EldriveOffer tokens={DASHBOARD_TOKENS} title="Oferta Eldrive pentru RIDElance" />
@@ -322,48 +323,6 @@ function PartnerPanel({
         </Stack>
       </Box>
     </Paper>
-  )
-}
-
-/** Cele două variante BCR + comparativul. Singurul partener cu ofertă pe planuri. */
-function BcrOffers() {
-  return (
-    <Box>
-      <Typography sx={{ fontWeight: 850, fontSize: '1.05rem', color: DASHBOARD_TOKENS.ink }}>
-        Oferta BCR pentru PFA Ridesharing
-      </Typography>
-      <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', mt: 0.3, mb: 2.5 }}>
-        Două variante, în funcție de vechimea PFA-ului tău.
-      </Typography>
-
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-          gap: 2.5,
-          alignItems: 'stretch',
-        }}
-      >
-        {BCR_OFFERS.map((offer) => (
-          <Box key={offer.title} sx={cardSx}>
-            <Chip label={offer.chip} size="small" sx={badgeSx} />
-            <Typography sx={{ fontWeight: 850, fontSize: '1rem', color: DASHBOARD_TOKENS.ink }}>
-              {offer.title}
-            </Typography>
-            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.82rem', mt: 0.3, mb: 2 }}>
-              {offer.note}
-            </Typography>
-
-            <Stack spacing={1.4}>
-              {offer.benefits.map((benefit) => (
-                <Check key={benefit.title} label={benefit.title} />
-              ))}
-              <Check label="Bonus RIDElance: +100 lei" />
-            </Stack>
-          </Box>
-        ))}
-      </Box>
-    </Box>
   )
 }
 

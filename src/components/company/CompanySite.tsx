@@ -4,19 +4,21 @@ import { Box, Button, Container, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import EmailRoundedIcon from '@mui/icons-material/EmailRounded'
 import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded'
+import DirectionsRoundedIcon from '@mui/icons-material/DirectionsRounded'
 import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded'
 import PhoneRoundedIcon from '@mui/icons-material/PhoneRounded'
 import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded'
 import WhatsAppIcon from '@mui/icons-material/WhatsApp'
 
 import CarListCard from '../cars/CarListCard'
+import { PlaceMap } from '../cars/map/LazyMaps'
 import { OwnerAvatar } from '../common/OwnerAvatar'
 import { uploadUrl } from '../../lib/api'
 import { TOKENS } from '../../constants/tokens'
 import type { PublicCompany } from '../../services/company.service'
 import { normalizeContent, normalizeTheme, themeVars, withAlpha } from './companyTheme'
 import { highlightIcon } from './highlightIcons'
-import { visibleSections, type SectionId } from './sections'
+import { hasPin, visibleSections, type SectionId } from './sections'
 
 /**
  * Mini-site-ul public al unei firme.
@@ -317,6 +319,12 @@ export function CompanySite({ company, preview = false }: CompanySiteProps) {
                   </Box>
                 ))}
               </Stack>
+            </Section>
+          )}
+
+          {sections.some((s) => s.id === 'locatie') && (
+            <Section id="locatie" title="Unde ne găsiți" preview={preview}>
+              <PickupBlock company={company} accent={theme.accent} preview={preview} />
             </Section>
           )}
 
@@ -692,6 +700,117 @@ function ContactButtons({ company }: { company: PublicCompany }) {
       )}
     </Stack>
   )
+}
+
+/**
+ * Adresa firmei, cu harta lângă ea.
+ *
+ * Harta e ilustrația unei adrese, nu o unealtă de navigat: butonul „Deschide în hărți" stă sub
+ * ea, fiindcă nimeni nu conduce după o hartă încastrată într-o pagină — o deschide în aplicația
+ * pe care o are deja pe telefon.
+ *
+ * Fără pin nu dispare secțiunea: rămân adresa și indicația scrise de om. „București, Sector 3"
+ * e tot un răspuns la întrebarea din titlu.
+ */
+function PickupBlock({
+  company,
+  accent,
+  preview,
+}: {
+  company: PublicCompany
+  accent: string
+  preview: boolean
+}) {
+  const { pickup } = company
+  const pinned = hasPin(pickup)
+
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', md: pinned ? '1fr 1fr' : '1fr' },
+        gap: { xs: 2.5, md: 3.5 },
+        alignItems: 'start',
+      }}
+    >
+      <Stack spacing={2}>
+        {pickup.address && (
+          <Stack direction="row" spacing={1.2} sx={{ alignItems: 'flex-start' }}>
+            <LocationOnRoundedIcon sx={{ fontSize: 20, color: 'var(--cs-accent)', mt: '2px' }} />
+            <Typography sx={{ fontSize: '1rem', fontWeight: 700, lineHeight: 1.5 }}>
+              {pickup.address}
+            </Typography>
+          </Stack>
+        )}
+
+        {pickup.note && (
+          <Typography
+            sx={{
+              color: 'var(--cs-text-muted)',
+              fontSize: '0.95rem',
+              lineHeight: 1.7,
+              whiteSpace: 'pre-line',
+            }}
+          >
+            {pickup.note}
+          </Typography>
+        )}
+
+        {pinned && !preview && (
+          <Box>
+            <Button
+              variant="outlined"
+              startIcon={<DirectionsRoundedIcon />}
+              href={directionsUrl(pickup.latitude!, pickup.longitude!)}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                textTransform: 'none',
+                fontWeight: 700,
+                borderRadius: `${TOKENS.radius.lg}px`,
+                color: 'var(--cs-text)',
+                borderColor: 'var(--cs-border)',
+                '&:hover': { borderColor: 'var(--cs-accent)', bgcolor: 'var(--cs-accent-soft)' },
+              }}
+            >
+              Deschide în hărți
+            </Button>
+          </Box>
+        )}
+      </Stack>
+
+      {pinned && (
+        <Box
+          sx={{
+            borderRadius: `${TOKENS.radius.xl}px`,
+            overflow: 'hidden',
+            border: '1px solid var(--cs-border)',
+          }}
+        >
+          <PlaceMap
+            latitude={pickup.latitude!}
+            longitude={pickup.longitude!}
+            accent={accent}
+            height={preview ? 200 : 300}
+            // În previzualizare harta stă locului: panoul de editor se derulează, iar o hartă
+            // care prinde rotița sub cursor ar fi blocat derularea paginii.
+            interactive={!preview}
+          />
+        </Box>
+      )}
+    </Box>
+  )
+}
+
+/**
+ * Link către aplicația de hărți a dispozitivului.
+ *
+ * `google.com/maps/search/?api=1&query=` e forma pe care Android o predă aplicației Google Maps,
+ * iOS o deschide în Apple Maps prin redirecționare, iar un desktop o arată în browser. Un link
+ * `geo:` ar fi fost mai curat, dar nu face nimic pe desktop.
+ */
+function directionsUrl(latitude: number, longitude: number): string {
+  return `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
 }
 
 /** Un website scris „firma.ro" e tot un website; fără schemă, browserul l-ar lua ca rută internă. */

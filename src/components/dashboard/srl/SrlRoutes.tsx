@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 
-import { SRL_PATHS } from '../../../config/srlNavigation'
+import { SRL_LEGACY_ACCOUNTING_SEGMENT, SRL_PATHS } from '../../../config/srlNavigation'
 import { BankTab } from '../sections/BankTab'
 import { BeneficiiTab } from '../sections/BeneficiiTab'
 import { SupportChatTab } from '../sections/SupportChatTab'
@@ -12,7 +12,6 @@ import { SrlConnectionsPage } from './pages/SrlConnectionsPage'
 import { SrlHomePage } from './pages/SrlHomePage'
 import { SrlMaintenancePage } from './pages/SrlMaintenancePage'
 import { SrlRentalsPage } from './pages/SrlRentalsPage'
-import { SrlFiscalPage } from './pages/SrlFiscalPage'
 import { SrlProfilePage } from './pages/SrlProfilePage'
 import { SrlServicesPage } from './pages/SrlServicesPage'
 import { SrlCarPage } from './pages/SrlCarPage'
@@ -59,13 +58,30 @@ export function SrlRoutes() {
       <Route path={rel(SRL_PATHS.companyDocuments)} element={<SrlCompanyDocumentsPage />} />
       <Route path={rel(SRL_PATHS.services)} element={<SrlServicesPage />} />
 
-      {/* ── Contabilitate ── */}
-      <Route path={rel(SRL_PATHS.accounting)} element={<Navigate to={SRL_PATHS.bankAccount} replace />} />
+      {/* ── Financiar ── */}
+      {/* Fără pagină de fiscal și fără chat de contabil: SRL-ul nu are contabil în platformă, iar
+          declarațiile și regimul fiscal le ține contabilul firmei. Ce rămâne aici sunt unelte pe
+          care firma le folosește singură. */}
+      <Route path={rel(SRL_PATHS.finance)} element={<Navigate to={SRL_PATHS.bankAccount} replace />} />
       {/* Aceeași componentă ca la PFA, fără nicio ramificație pe tip de cont (spec §3.3). */}
       <Route path={rel(SRL_PATHS.bankAccount)} element={<BankTab />} />
       {/* Aceeași pagină ca la PFA — spec §3.3.1 cere una singură, nu două. */}
       <Route path={rel(SRL_PATHS.invoices)} element={<InvoicesPage />} />
-      <Route path={rel(SRL_PATHS.fiscal)} element={<SrlFiscalPage />} />
+      {/* Segmentul vechi, de dinainte de redenumire. Paginile care au supraviețuit își păstrează
+          destinația — un link către facturi trebuie să ajungă la facturi, nu în capul grupului.
+          Restul, `contabilitate/fiscal` inclusiv, n-are unde ajunge și cade pe contul bancar. */}
+      <Route
+        path={`${SRL_LEGACY_ACCOUNTING_SEGMENT}/cont-bancar`}
+        element={<Navigate to={SRL_PATHS.bankAccount} replace />}
+      />
+      <Route
+        path={`${SRL_LEGACY_ACCOUNTING_SEGMENT}/facturi`}
+        element={<Navigate to={SRL_PATHS.invoices} replace />}
+      />
+      <Route
+        path={`${SRL_LEGACY_ACCOUNTING_SEGMENT}/*`}
+        element={<Navigate to={SRL_PATHS.bankAccount} replace />}
+      />
 
       {/* ── Platformă ── */}
       <Route path={rel(SRL_PATHS.connections)} element={<SrlConnectionsPage />} />

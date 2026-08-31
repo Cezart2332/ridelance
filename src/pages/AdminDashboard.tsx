@@ -27,12 +27,14 @@ import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded'
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded'
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
+import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import { validateRomanianCIF } from '../utils/validation'
 import { formatRegistrationType } from '../utils/formatters'
 
 import { AdminChatView } from '../components/dashboard/sections/AdminChatView'
 import { CarsAdminView } from '../components/dashboard/sections/admin/CarsAdminView'
+import { CompanyPagesAdminView } from '../components/dashboard/sections/admin/CompanyPagesAdminView'
 import { ServicesAdminView } from '../components/dashboard/sections/admin/ServicesAdminView'
 import { OfficeCalendarAdminView } from '../components/dashboard/sections/admin/OfficeCalendarAdminView'
 import { InsuranceTab } from '../components/dashboard/sections/InsuranceTab'
@@ -501,6 +503,8 @@ export function AdminDashboard() {
     { id: 'pfa', label: 'Cereri PFA', icon: <PeopleAltRoundedIcon /> },
     { id: 'pfa_inrolate', label: 'PFA-uri înrolate', icon: <HowToRegRoundedIcon /> },
     { id: 'masini', label: 'Mașini Ridesharing', icon: <DirectionsCarFilledRoundedIcon /> },
+    // Lângă mașini, nu lângă setări: e tot moderare de conținut public, doar că a firmei.
+    { id: 'pagini_firme', label: 'Pagini firme', icon: <LanguageRoundedIcon /> },
     { id: 'servicii', label: 'Servicii', icon: <ShoppingCartRoundedIcon /> },
     { id: 'facturare', label: 'Facturare Oblio', icon: <ReceiptLongRoundedIcon /> },
     { id: 'reduceri', label: 'Coduri reducere', icon: <LocalOfferRoundedIcon /> },
@@ -989,6 +993,7 @@ export function AdminDashboard() {
       case 'pfa':
       case 'pfa_inrolate': return renderPfaList()
       case 'masini': return <CarsAdminView />
+      case 'pagini_firme': return <CompanyPagesAdminView />
       case 'servicii': return <ServicesAdminView />
       case 'facturare': return <OblioAdminView />
       case 'reduceri': return <DiscountsAdminView />

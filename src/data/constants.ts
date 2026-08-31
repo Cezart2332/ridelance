@@ -21,6 +21,9 @@ export const loremLongText =
 export const navItems = [
   { label: 'Servicii', path: '/servicii' },
   { label: 'Mașini', path: '/masini' },
+  // Lângă Mașini, nu la Despre: e o întrebare pe care și-o pune cineva înainte să se înscrie —
+  // „merg platformele în orașul meu?" — nu una despre noi.
+  { label: 'Orașe', path: '/orase-ridesharing' },
   { label: 'Abonamente', path: '/abonamente-preturi' },
   { label: 'Fiscal', path: '/fiscal' },
   { label: 'Parteneri', path: '/parteneri' },

@@ -75,33 +75,6 @@ export interface Integration {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Fiscal (§3.3.2)
-// ──────────────────────────────────────────────────────────────────────────────
-
-export type TaxRegime = 'Micro' | 'Profit'
-
-export type DeclarationCode = 'D100' | 'D101' | 'D300' | 'D394' | 'D112'
-
-export interface FiscalDeclaration {
-  code: DeclarationCode
-  label: string
-  /** Termenul legal de depunere, ISO. */
-  dueDateUtc: string
-  period: string
-}
-
-export interface SrlFiscalOverview {
-  regime: TaxRegime
-  vatPayer: boolean
-  /** `null` când firma nu e plătitoare de TVA. */
-  vatPeriodicity: 'Lunar' | 'Trimestrial' | null
-  declarations: FiscalDeclaration[]
-  /** Impozitul estimat pe trimestrul curent, în bani. */
-  estimatedQuarterlyTaxBani: number
-  quarterLabel: string
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
 // Scor de anunț (§5.2)
 // ──────────────────────────────────────────────────────────────────────────────
 

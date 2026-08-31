@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   ButtonBase,
-  Chip,
   Container,
   Divider,
   Paper,
@@ -12,43 +11,17 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
-import QrCode2RoundedIcon from '@mui/icons-material/QrCode2Rounded'
 import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
 import { pageFrameSx } from '../constants/layout'
 import { InsuranceLinksGrid } from '../components/insurance/InsuranceLinksGrid'
+import { BcrOffer } from '../components/partners/BcrOffer'
 import { EldriveOffer } from '../components/partners/EldriveOffer'
 import { PartnerBenefitBlocks } from '../components/partners/PartnerBenefitBlocks'
 import { getPartnerBenefit } from '../data/benefits'
-import {
-  BCR_GEORGE_MESSAGE,
-  BCR_OFFERS,
-  BCR_ONBOARDING_URL,
-  BCR_QR_CODES,
-  getPartnerBySlug,
-  partners,
-  type Partner,
-} from '../data/partners'
+import { BCR_GEORGE_MESSAGE, getPartnerBySlug, partners, type Partner } from '../data/partners'
 import { PARTNER_LOGO } from '../data/partnerLogo'
-
-const ctaButtonSx = {
-  px: 4,
-  py: 1.3,
-  fontSize: '1rem',
-  fontWeight: 750,
-  color: '#fff',
-  backgroundColor: TOKENS.primary,
-  borderRadius: TOKENS.radius.full,
-  boxShadow: 'none',
-  textTransform: 'none',
-  '&:hover': {
-    backgroundColor: TOKENS.primaryStrong,
-    boxShadow: 'none',
-    transform: 'translateY(-2px)',
-  },
-} as const
 
 const tabItems = partners.map(({ slug, name, image }) => ({ slug, name, image }))
 
@@ -126,155 +99,24 @@ function PartnerTabs({ activeSlug }: { activeSlug: string }) {
   )
 }
 
+/**
+ * Pagina BCR: prezentarea partenerului, apoi oferta de campanie.
+ *
+ * Oferta propriu-zisă e aceeași componentă ca în Beneficii (`BcrOffer`), cu tokenii publici.
+ * Erau două randări diferite ale acelorași cifre — una aici, una în dashboard — și au apucat deja
+ * să se contrazică o dată.
+ *
+ * Codul QR nu se mai desenează aici: îl aduce oferta, lângă butonul de deschidere a contului.
+ * Două QR-uri pe același ecran, către același link, arată a greșeală.
+ */
 function BcrPanelContent() {
   return (
     <Stack spacing={4}>
-      {/* Panou unificat: mesaj + CTA în stânga, QR în dreapta */}
-      <Box
-        sx={{
-          p: { xs: 2.5, md: 3.5 },
-          borderRadius: TOKENS.radius.lg,
-          border: `1px solid ${alpha(TOKENS.primary, 0.3)}`,
-          backgroundColor: alpha(TOKENS.primary, 0.04),
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: '1fr 230px' },
-          gap: { xs: 3, lg: 4 },
-          alignItems: 'center',
-        }}
-      >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          <Typography sx={{ color: TOKENS.ink, fontSize: '1rem', lineHeight: 1.8, fontWeight: 550 }}>
-            {BCR_GEORGE_MESSAGE}
-          </Typography>
-          <Button
-            variant="contained"
-            component="a"
-            href={BCR_ONBOARDING_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            endIcon={<OpenInNewRoundedIcon />}
-            sx={{ ...ctaButtonSx, alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
-          >
-            Deschide contul George
-          </Button>
-        </Box>
+      <Typography sx={{ color: TOKENS.ink, fontSize: '1rem', lineHeight: 1.85 }}>
+        {BCR_GEORGE_MESSAGE}
+      </Typography>
 
-        {BCR_QR_CODES.map((qr) => (
-          <Box
-            key={qr.image}
-            sx={{
-              p: 2,
-              borderRadius: TOKENS.radius.lg,
-              border: `1px solid ${TOKENS.border}`,
-              backgroundColor: TOKENS.paper,
-              boxShadow: TOKENS.shadow.sm,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 1.2,
-              justifySelf: { xs: 'center', lg: 'stretch' },
-              width: { xs: 230, lg: 'auto' },
-            }}
-          >
-            <Box
-              component="img"
-              src={qr.image}
-              alt={qr.label}
-              sx={{ width: '100%', maxWidth: 180, height: 'auto', borderRadius: TOKENS.radius.md }}
-            />
-            <Stack direction="row" spacing={0.7} sx={{ alignItems: 'flex-start' }}>
-              <QrCode2RoundedIcon sx={{ fontSize: 16, color: TOKENS.textMuted, mt: 0.2 }} />
-              <Typography
-                sx={{ color: TOKENS.textMuted, fontSize: '0.78rem', fontWeight: 650, textAlign: 'center' }}
-              >
-                {qr.label}
-              </Typography>
-            </Stack>
-          </Box>
-        ))}
-      </Box>
-
-      {/* Ofertele, direct în pagina partenerului */}
-      <Box>
-        <Typography sx={{ fontWeight: 850, fontSize: '1.25rem', color: TOKENS.ink }}>
-          Oferta BCR pentru PFA Ridesharing
-        </Typography>
-        <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.5, mb: 3 }}>
-          Două variante, în funcție de vechimea PFA-ului tău.
-        </Typography>
-
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' },
-            gap: 3,
-            alignItems: 'stretch',
-          }}
-        >
-          {BCR_OFFERS.map((offer) => (
-            <Box
-              key={offer.title}
-              sx={{
-                p: { xs: 2.5, md: 3 },
-                borderRadius: TOKENS.radius.lg,
-                border: `1px solid ${TOKENS.border}`,
-                backgroundColor: TOKENS.paper,
-                boxShadow: TOKENS.shadow.sm,
-                display: 'flex',
-                flexDirection: 'column',
-                transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-                '&:hover': {
-                  boxShadow: TOKENS.shadow.md,
-                  borderColor: alpha(TOKENS.primary, 0.4),
-                },
-              }}
-            >
-              <Chip
-                label={offer.chip}
-                size="small"
-                sx={{
-                  alignSelf: 'flex-start',
-                  fontWeight: 800,
-                  backgroundColor: alpha(TOKENS.primary, 0.12),
-                  color: TOKENS.primaryStrong,
-                  borderRadius: TOKENS.radius.full,
-                  mb: 1.5,
-                }}
-              />
-              <Typography sx={{ fontWeight: 850, fontSize: '1.12rem', color: TOKENS.ink }}>
-                {offer.title}
-              </Typography>
-              <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.88rem', mt: 0.4, mb: 2.5 }}>
-                {offer.note}
-              </Typography>
-
-              <Stack spacing={2}>
-                {offer.benefits.map((benefit) => (
-                  <Stack key={benefit.title} direction="row" spacing={1.3}>
-                    <CheckCircleRoundedIcon
-                      sx={{ fontSize: 20, color: TOKENS.primaryStrong, mt: 0.2, flexShrink: 0 }}
-                    />
-                    <Box>
-                      <Typography
-                        sx={{ fontWeight: 750, fontSize: '0.94rem', color: TOKENS.ink, lineHeight: 1.45 }}
-                      >
-                        {benefit.title}
-                      </Typography>
-                      {benefit.text && (
-                        <Typography
-                          sx={{ color: TOKENS.textMuted, fontSize: '0.86rem', lineHeight: 1.6, mt: 0.4 }}
-                        >
-                          {benefit.text}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Stack>
-                ))}
-              </Stack>
-            </Box>
-          ))}
-        </Box>
-      </Box>
+      <BcrOffer tokens={TOKENS} />
     </Stack>
   )
 }

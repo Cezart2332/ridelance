@@ -2,7 +2,6 @@ import type {
   CompanyProfile,
   Integration,
   ListingScore,
-  SrlFiscalOverview,
 } from '../types'
 
 /**
@@ -71,28 +70,6 @@ export const integrationsMock: Integration[] = [
     details: [],
   },
 ]
-
-/**
- * TODO: confirm SRL fiscal rules.
- *
- * Valorile de mai jos sunt un exemplu de formă, nu un calcul. Spec §3.3.2 e marcat drept
- * asumpție neconfirmată și cere explicit să nu se inventeze formule fiscale — deci pagina
- * afișează ce primește și nu derivă nimic.
- */
-export const fiscalOverviewMock: SrlFiscalOverview = {
-  regime: 'Micro',
-  vatPayer: true,
-  vatPeriodicity: 'Trimestrial',
-  quarterLabel: 'Trimestrul III 2026',
-  estimatedQuarterlyTaxBani: 4_18000,
-  declarations: [
-    { code: 'D300', label: 'Decont de TVA', period: 'Trim. III 2026', dueDateUtc: '2026-10-25T00:00:00Z' },
-    { code: 'D394', label: 'Declarație informativă livrări/achiziții', period: 'Trim. III 2026', dueDateUtc: '2026-10-30T00:00:00Z' },
-    { code: 'D100', label: 'Obligații de plată la bugetul de stat', period: 'Trim. III 2026', dueDateUtc: '2026-10-25T00:00:00Z' },
-    { code: 'D112', label: 'Contribuții și impozit pe venit', period: 'August 2026', dueDateUtc: '2026-09-25T00:00:00Z' },
-    { code: 'D101', label: 'Impozit pe profit anual', period: '2026', dueDateUtc: '2027-03-25T00:00:00Z' },
-  ],
-}
 
 /** Scorurile de anunț, pe id de mașină. §5.2: scorul brut se vede doar de proprietar. */
 export const listingScoresMock: Record<string, ListingScore> = {

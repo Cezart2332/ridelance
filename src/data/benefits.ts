@@ -66,10 +66,13 @@ export const partnerBenefits: PartnerBenefit[] = [
     website: 'https://www.bcr.ro',
     intro:
       'Dacă ești șofer Uber sau Bolt, contul George pentru afacerea ta îți oferă administrarea afacerii direct din telefon, încasări și plăți electronice fără comisioane, card Business inclus și, dacă ești la început de drum, 12 luni fără comision de administrare.',
+    // Sumele sunt cele din campania BCR × RIDElance (`data/bcrOffer.ts`), nu un al doilea bonus.
+    // Scria „+100 lei" și stătea deasupra unei secțiuni care spune 300 lei — pe același ecran,
+    // două cifre diferite pentru același beneficiu.
     highlight: {
-      amount: '+100 lei',
-      title: 'Bonus RIDElance la cont deschis prin noi',
-      note: 'beneficiu suplimentar față de oferta standard',
+      amount: '−50 lei',
+      title: 'Reducere lunară la abonamentul RIDElance, 6 luni',
+      note: 'până la 300 lei economie, pentru cont deschis prin RIDElance',
     },
     showBcrOffers: true,
     blocks: [],

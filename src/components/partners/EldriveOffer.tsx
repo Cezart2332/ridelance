@@ -7,6 +7,7 @@ import {
   ELDRIVE_NETWORK,
   ELDRIVE_TARIFFS,
 } from '../../data/eldrive'
+import type { OfferTokens } from './offerTokens'
 
 /**
  * Oferta Eldrive, aceeași componentă în pagina publică de Parteneri și în Beneficii.
@@ -17,18 +18,6 @@ import {
  * Accentul de culoare stă doar pe tarifele mici. Cele trei sume nu sunt trei opțiuni între care
  * alegi: sunt același preț la ore diferite, iar culoarea spune când merită încărcat.
  */
-
-interface OfferTokens {
-  ink: string
-  primary: string
-  primaryStrong: string
-  paper: string
-  surface: string
-  border: string
-  textMuted: string
-  textSubtle: string
-  radius: { md: number; lg: number; xl: number; full: number }
-}
 
 interface EldriveOfferProps {
   tokens: OfferTokens

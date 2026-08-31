@@ -1,7 +1,6 @@
 import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded'
 import BuildRoundedIcon from '@mui/icons-material/BuildRounded'
 import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded'
-import CalculateRoundedIcon from '@mui/icons-material/CalculateRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded'
 import HeadsetMicRoundedIcon from '@mui/icons-material/HeadsetMicRounded'
@@ -35,6 +34,12 @@ export const SRL_ROOT = '/app/dashboard-srl'
 /** Ruta de dinainte de mutarea sub `/app`. Rămâne ca redirect — sesiuni deschise, linkuri trimise. */
 export const SRL_LEGACY_ROOT = '/poster'
 
+/**
+ * Segmentul de dinainte de redenumirea „Contabilitate" → „Financiar". Rămâne ca redirect, ca
+ * linkurile deja salvate în bara de adrese să nu ducă în gol.
+ */
+export const SRL_LEGACY_ACCOUNTING_SEGMENT = 'contabilitate'
+
 const at = (segment: string) => `${SRL_ROOT}/${segment}`
 
 export const SRL_PATHS = {
@@ -55,10 +60,15 @@ export const SRL_PATHS = {
   services: at('servicii'),
 
   // ── Financiar ──
-  accounting: at('contabilitate'),
-  bankAccount: at('contabilitate/cont-bancar'),
-  invoices: at('contabilitate/facturi'),
-  fiscal: at('contabilitate/fiscal'),
+  //
+  // Nu „Contabilitate": SRL-ul n-are contabil în platformă, spre deosebire de PFA. Ce rămâne aici
+  // sunt unelte pe care firma le folosește singură — contul din care se încasează chiriile și
+  // facturile emise prin Oblio. Termenele declarative, regimul fiscal și chatul cu contabilul au
+  // fost scoase: le ține contabilul firmei, iar o pagină care le arată aici promite un serviciu
+  // care nu există.
+  finance: at('financiar'),
+  bankAccount: at('financiar/cont-bancar'),
+  invoices: at('financiar/facturi'),
 
   // ── Platformă ──
   connections: at('conexiuni'),
@@ -111,13 +121,12 @@ export const SRL_NAV: NavEntry[] = [
 
   {
     kind: 'group',
-    id: 'accounting',
-    label: 'Contabilitate',
-    icon: CalculateRoundedIcon,
+    id: 'finance',
+    label: 'Financiar',
+    icon: AccountBalanceRoundedIcon,
     children: [
       { id: 'bank-account', label: 'Cont bancar', path: SRL_PATHS.bankAccount, hint: 'Cont conectat și tranzacții' },
       { id: 'invoices', label: 'Facturi', path: SRL_PATHS.invoices, hint: 'Emise prin Oblio' },
-      { id: 'fiscal', label: 'Fiscal', path: SRL_PATHS.fiscal, hint: 'Regim fiscal și termene' },
     ],
   },
 
@@ -172,7 +181,6 @@ export const SRL_LEAF_ICONS: Record<string, typeof HomeRoundedIcon> = {
   [SRL_PATHS.services]: GridViewRoundedIcon,
   [SRL_PATHS.bankAccount]: AccountBalanceRoundedIcon,
   [SRL_PATHS.invoices]: ReceiptLongRoundedIcon,
-  [SRL_PATHS.fiscal]: CalculateRoundedIcon,
 }
 
 export const SRL_NAV_CONFIG: DashboardNavConfig = {

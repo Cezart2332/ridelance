@@ -311,7 +311,7 @@ dashboard-ul SRL e MUI, ca PFA, nu shadcn.
 
 | # | Întrebare | Răspuns din cod |
 |---|---|---|
-| 1 | Ce se schimbă la Contabilitate SRL? | Nu se poate deduce — decizie de business. Rămâne blocant pentru §3.3.2. |
+| 1 | Ce se schimbă la Contabilitate SRL? | **Răspuns de business, primit:** SRL-ul nu are contabil în platformă, spre deosebire de PFA. Grupul s-a redenumit „Financiar" și a rămas cu Cont bancar + Facturi. Pagina Fiscal (§3.3.2 — regim, impozit estimat, termene declarative) a fost ștearsă, împreună cu tipurile și mock-ul ei: declarațiile le ține contabilul firmei, iar o pagină care le arată aici promite un serviciu care nu există. Segmentul vechi `contabilitate/*` a rămas ca redirect. |
 | 2 | Facturi există la PFA? | **Nu.** `ComingSoon`. De construit o dată, în comun. |
 | 3 | Serviciile PFA se aplică la SRL? | Cele 4 sunt Mașini, Abonamente, Servicii individuale, Asigurări. „Abonamente" e PFA-only în forma actuală (planurile Solo/Start/Pro din `StripeCatalog`); restul se aplică. |
 | 4 | „Flotă verificată" e manuală sau are flux? | Niciuna — nu există câmp de verificare în BE. |

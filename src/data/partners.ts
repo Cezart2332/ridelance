@@ -40,60 +40,14 @@ export const BCR_ACCOUNT = {
 
 export const BCR_ONBOARDING_URL = BCR_ACCOUNT.url
 
-export const BCR_QR_CODES = [{ label: BCR_ACCOUNT.qrLabel, image: BCR_ACCOUNT.qrImage }]
-
-export const BCR_OFFERS = [
-  {
-    chip: 'Varianta A',
-    title: 'PFA Ridesharing Start-Up',
-    note: 'Pentru PFA-uri cu vechime de înființare sub 12 luni',
-    benefits: [
-      {
-        title: '12 luni fără comision de administrare',
-        text: '',
-      },
-      {
-        title: 'Deschidere cont 100% online în maxim 30 minute',
-        text: 'Poți deschide contul fără deplasări la bancă, direct de pe telefon sau laptop.',
-      },
-      {
-        title: 'Încasări și plăți electronice fără comisioane',
-        text: 'Toate încasările și plățile electronice efectuate prin George sunt fără comisioane.',
-      },
-      {
-        title: 'Control complet din telefon',
-        text: 'Acces instant la George Internet și Mobile Banking, cu posibilitatea de a urmări încasările din platformele de ridesharing și cheltuielile zilnice (combustibil, service, taxe).',
-      },
-      {
-        title: 'Card Business inclus',
-        text: 'Primești card de debit Business fără costuri de emitere, reînnoire și administrare anuală.',
-      },
-    ],
-  },
-  {
-    chip: 'Varianta B',
-    title: 'PFA Ridesharing cu vechime',
-    note: 'Pentru PFA-uri cu vechime de înființare de peste 1 an',
-    benefits: [
-      {
-        title: 'Reducere de până la 50% la comisionul de administrare',
-        text: 'Șoferii care încasează constant prin cont și au și cont de persoană fizică la BCR pot beneficia de o reducere totală de până la 50% din comisionul standard.',
-      },
-      {
-        title: 'Toate încasările din activitate fără comisioane',
-        text: 'Încasările în conturile BCR și plățile efectuate prin George sunt fără comisioane, inclusiv plățile în euro prin SEPA.',
-      },
-      {
-        title: 'Costuri predictibile',
-        text: 'Există un singur comision pentru pachet și acesta poate fi redus în funcție de utilizarea digitală a contului.',
-      },
-      {
-        title: 'Administrarea simplă a fluxului de numerar',
-        text: 'Ideal pentru șoferii care au încasări zilnice și multiple tranzacții, deoarece toate operațiunile sunt centralizate în George.',
-      },
-    ],
-  },
-]
+/**
+ * Ce se vede pe pagina de parteneri și în Beneficii nu mai stă aici.
+ *
+ * Grila de comisioane, perioadele fără comision, condițiile de reducere și campania de 50 lei/lună
+ * sunt în `data/bcrOffer.ts`, randate de `components/partners/BcrOffer.tsx` pe ambele suprafețe.
+ * Aici rămâne doar identitatea partenerului și linkul de deschidere a contului, de care are nevoie
+ * și onboardingul.
+ */
 
 const partnersUnordered: Partner[] = [
   {

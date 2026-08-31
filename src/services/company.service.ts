@@ -69,12 +69,37 @@ export interface CompanyPageContent {
   faq: CompanyPageFaq[]
 }
 
+/**
+ * Locul de unde se preiau mașinile.
+ *
+ * Separat de sediul social: sediul e o adresă juridică, de multe ori a contabilului, și e supus
+ * comutatorului de vizibilitate din Profil. Ăsta e locul unde omul chiar vine după mașină, iar
+ * completarea lui e chiar actul de a-l publica.
+ *
+ * Coordonatele pot lipsi când s-a scris doar adresa: secțiunea arată atunci textul, fără hartă.
+ */
+export interface PickupLocation {
+  address: string | null
+  latitude: number | null
+  longitude: number | null
+  /** Indicația practică de lângă hartă: „intrarea din spate", „lângă benzinărie". */
+  note: string | null
+}
+
+export const EMPTY_PICKUP: PickupLocation = {
+  address: null,
+  latitude: null,
+  longitude: null,
+  note: null,
+}
+
 /** Ce se salvează din editorul de mini-site. Identitatea juridică se salvează separat. */
 export interface CompanyPageInput {
   tagline: string | null
   publicDescription: string | null
   theme: CompanyPageTheme
   content: CompanyPageContent
+  pickup: PickupLocation
 }
 
 export interface SuggestedHighlight {
@@ -88,6 +113,40 @@ export interface CompanyDescriptionSuggestion {
   tagline: string | null
   descriptions: string[]
   highlights: SuggestedHighlight[]
+}
+
+/**
+ * Unde a ajuns mini-site-ul în drumul lui către public.
+ *
+ * `Approved` nu înseamnă că ciorna din editor e cea live: după orice salvare, pagina redevine
+ * `Pending`, dar versiunea aprobată anterior rămâne vizibilă. `publishedAtUtc` e cel care spune
+ * dacă publicul chiar vede ceva.
+ */
+export type CompanyPageReviewStatus = 'Draft' | 'Pending' | 'Approved' | 'Rejected'
+
+/** Secțiunile pe care administrarea le poate opri. Sincronizată cu `CompanyPageSections` de pe server. */
+export type BlockableSectionId = 'despre' | 'avantaje' | 'program' | 'intrebari' | 'locatie'
+
+export interface CompanyPageModeration {
+  status: CompanyPageReviewStatus
+  /** Oprite de RIDElance. Proprietarul nu le poate reactiva singur. */
+  blockedSections: BlockableSectionId[]
+  /** Motivul scris de administrare, când există unul. */
+  note: string | null
+  submittedAtUtc: string | null
+  reviewedAtUtc: string | null
+  /** Când a fost aprobată versiunea live. `null` = pagina n-a fost publicată niciodată. */
+  publishedAtUtc: string | null
+}
+
+/** Starea unui cont care încă n-a salvat nimic: nimic scris, deci nimic de verificat. */
+export const EMPTY_PAGE_MODERATION: CompanyPageModeration = {
+  status: 'Draft',
+  blockedSections: [],
+  note: null,
+  submittedAtUtc: null,
+  reviewedAtUtc: null,
+  publishedAtUtc: null,
 }
 
 export interface CompanyProfile {
@@ -111,11 +170,14 @@ export interface CompanyProfile {
   coverImageUrl: string | null
   pageTheme: CompanyPageTheme
   pageContent: CompanyPageContent
+  pickup: PickupLocation
   /** Specimenul de semnătură al firmei, dacă a fost salvat unul. */
   signatureDocumentId: string | null
   slug: string
   isVerified: boolean
   visibility: PublicVisibility
+  /** Verdictul administrării asupra paginii publice. Ce e mai sus e ciorna, nu ce se vede afară. */
+  pageModeration: CompanyPageModeration
 }
 
 /** Ce se poate edita. `slug`, `isVerified` și `logoUrl` nu sunt aici: nu le stabilește clientul. */
@@ -151,6 +213,7 @@ export interface PublicCompany {
   location: string | null
   theme: CompanyPageTheme
   content: CompanyPageContent
+  pickup: PickupLocation
   cars: Car[]
 }
 
@@ -201,7 +264,12 @@ export const companyService = {
     return res.data
   },
 
-  /** Salvează tot ce ține de mini-site: slogan, descriere, culori, secțiuni. */
+  /**
+   * Salvează tot ce ține de mini-site: slogan, descriere, culori, secțiuni.
+   *
+   * Salvarea e și cererea de verificare — profilul se întoarce cu `pageModeration.status`
+   * `Pending`. Versiunea aprobată anterior, dacă există, rămâne live până la noul verdict.
+   */
   async savePage(input: CompanyPageInput): Promise<CompanyProfile> {
     const res = await api.put<CompanyProfile>('/companies/profile/page', input)
     return res.data

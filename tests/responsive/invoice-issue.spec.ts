@@ -3,7 +3,7 @@ import { test, expect, type Page, type Route } from '@playwright/test'
 import { mockSession } from './fixtures/srlSession'
 
 const API = 'http://localhost:5000'
-const INVOICES = '/app/dashboard-srl/contabilitate/facturi'
+const INVOICES = '/app/dashboard-srl/financiar/facturi'
 
 /**
  * Emiterea unei facturi din RIDElance, fără a intra în Oblio.

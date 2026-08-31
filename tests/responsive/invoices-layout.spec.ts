@@ -3,7 +3,7 @@ import { test, expect, type Page, type Route } from '@playwright/test'
 import { mockSession } from './fixtures/srlSession'
 
 const API = 'http://localhost:5000'
-const INVOICES = '/app/dashboard-srl/contabilitate/facturi'
+const INVOICES = '/app/dashboard-srl/financiar/facturi'
 
 /**
  * Pagina de facturi se strivea singură: `Panel` purta `height: 100%` ca să egaleze cardurile

@@ -12,7 +12,13 @@ import { SecurityPanel } from '../../sections/profile/SecurityPanel'
 import { PhoneVerificationPanel } from '../../sections/profile/PhoneVerificationPanel'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
 import { PageHeader, Panel, StatusChip } from '../../ui'
-import { companyService, type CompanyProfile, type PublicVisibility } from '../../../../services/company.service'
+import {
+  companyService,
+  EMPTY_PAGE_MODERATION,
+  EMPTY_PICKUP,
+  type CompanyProfile,
+  type PublicVisibility,
+} from '../../../../services/company.service'
 import { useCompanyProfile } from '../useCompanyProfile'
 import { CompanyLogoPanel } from './CompanyLogoPanel'
 import { CompanySignaturePanel } from './CompanySignaturePanel'
@@ -79,10 +85,12 @@ const EMPTY_PROFILE: CompanyProfile = {
   coverImageUrl: null,
   pageTheme: DEFAULT_COMPANY_THEME,
   pageContent: EMPTY_PAGE_CONTENT,
+  pickup: EMPTY_PICKUP,
   signatureDocumentId: null,
   slug: '',
   isVerified: false,
   visibility: { phone: true, email: true, whatsapp: true, location: true },
+  pageModeration: EMPTY_PAGE_MODERATION,
 }
 
 export function SrlProfilePage() {

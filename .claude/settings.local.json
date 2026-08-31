@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./node_modules/.bin/tsc -b --noEmit)",
+      "Bash(./node_modules/.bin/eslint src/components/dashboard/sections/admin/CarsAdminView.tsx src/pages/CarPosterDashboard.tsx src/components/auth/ImpersonationBanner.tsx src/components/auth/ProtectedRoute.tsx src/components/auth/RegisterPfaPage.tsx src/pages/AdminDashboard.tsx src/pages/ContabilDashboard.tsx src/components/contabil/PfaMonthlyIncomeForm.tsx src/components/contabil/ContabilClientWorkspace.tsx src/components/pfa/PfaFiscalSettingsPanel.tsx src/components/dashboard/sections/ProfileTab.tsx src/components/dashboard/sections/RecurringDocumentationPanel.tsx src/components/dashboard/sections/admin/AdminOverviewView.tsx src/store/authSlice.ts src/services/auth.service.ts src/services/pfa.service.ts src/utils/formatters.ts src/constants/recurringDocumentationItems.ts src/components/layout/DashboardLayout.tsx)",
+      "Bash(./node_modules/.bin/eslint src/components/dashboard/sections/admin/CarsAdminView.tsx src/pages/CarPosterDashboard.tsx src/components/auth/ImpersonationBanner.tsx src/components/auth/ProtectedRoute.tsx src/components/auth/RegisterPfaPage.tsx src/pages/AdminDashboard.tsx src/pages/ContabilDashboard.tsx src/components/contabil/PfaMonthlyIncomeForm.tsx src/components/contabil/ContabilClientWorkspace.tsx src/components/pfa/PfaFiscalSettingsPanel.tsx src/components/dashboard/sections/ProfileTab.tsx src/components/dashboard/sections/RecurringDocumentationPanel.tsx src/components/dashboard/sections/admin/AdminOverviewView.tsx src/store/authSlice.ts src/services/auth.service.ts src/services/pfa.service.ts src/utils/formatters.ts src/constants/recurringDocumentationItems.ts src/components/layout/DashboardLayout.tsx --format unix)",
+      "Bash(grep -v \"^$\")",
+      "Bash(git stash *)",
+      "Bash(./node_modules/.bin/eslint src/components/dashboard/sections/admin/CarsAdminView.tsx src/pages/CarPosterDashboard.tsx src/pages/AdminDashboard.tsx src/pages/ContabilDashboard.tsx src/components/layout/DashboardLayout.tsx src/components/auth/RegisterPfaPage.tsx src/components/pfa/PfaFiscalSettingsPanel.tsx)",
+      "Bash(./node_modules/.bin/eslint src/components/dashboard/sections/admin/CarsAdminView.tsx src/pages/AdminDashboard.tsx src/pages/ContabilDashboard.tsx src/components/layout/DashboardLayout.tsx src/components/auth/RegisterPfaPage.tsx src/components/pfa/PfaFiscalSettingsPanel.tsx src/pages/CarPosterDashboard.tsx)",
+      "Bash(./node_modules/.bin/eslint src/components/auth/RegisterPfaPage.tsx src/components/dashboard/sections/admin/CarsAdminView.tsx src/pages/CarPosterDashboard.tsx)",
+      "Bash(grep -n \"public .* { get; set; }\\\\|^public sealed class\\\\|^public enum\\\\|    [A-Za-z]* = [0-9]*,\" Domain/PfaRegistrations/PfaFiscalProfile.cs Domain/PfaRegistrations/PfaFiscalEnums.cs Domain/PfaRegistrations/PfaPlatformAccount.cs Domain/PfaRegistrations/PfaFleetConsent.cs Domain/PfaRegistrations/PfaMonthlyIncome.cs)",
+      "Bash(xargs -I{} sh -c 'echo \"--- {}\"; cat {}')",
+      "Bash(npm run *)"
+    ]
+  }
+}

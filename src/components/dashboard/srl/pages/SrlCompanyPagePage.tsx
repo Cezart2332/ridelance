@@ -19,9 +19,11 @@ import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import { SRL_PATHS } from '../../../../config/srlNavigation'
 import {
   companyService,
+  EMPTY_PICKUP,
   type CompanyPageContent,
   type CompanyPageTheme,
   type CompanyProfile,
+  type PickupLocation,
   type PublicCompany,
 } from '../../../../services/company.service'
 import { CompanySite } from '../../../company/CompanySite'
@@ -32,12 +34,15 @@ import {
   normalizeTheme,
   THEME_PRESETS,
 } from '../../../company/companyTheme'
+import { BLOCKABLE_SECTIONS, withoutBlockedSections } from '../../../company/sections'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
 import { PageHeader, Panel, StatusChip } from '../../ui'
 import { useCompanyProfile } from '../useCompanyProfile'
 import { AiDescriptionDialog } from './companyPage/AiDescriptionDialog'
 import { ColorField } from './companyPage/ColorField'
 import { CompanyCoverPanel } from './companyPage/CompanyCoverPanel'
+import { PageLocationPanel } from './companyPage/PageLocationPanel'
+import { PageModerationBanner } from './companyPage/PageModerationBanner'
 import { PageSectionsPanel } from './companyPage/PageSectionsPanel'
 
 /**
@@ -54,12 +59,13 @@ import { PageSectionsPanel } from './companyPage/PageSectionsPanel'
  * acolo: sunt despre ce date are voie lumea să vadă, nu despre cum arată pagina.
  */
 
-type TabId = 'identitate' | 'aspect' | 'sectiuni'
+type TabId = 'identitate' | 'aspect' | 'sectiuni' | 'locatie'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'identitate', label: 'Text' },
   { id: 'aspect', label: 'Aspect' },
   { id: 'sectiuni', label: 'Secțiuni' },
+  { id: 'locatie', label: 'Locație' },
 ]
 
 /** Sub raportul ăsta, textul devine greu de citit (pragul AA din WCAG pentru text normal). */
@@ -73,6 +79,7 @@ interface Draft {
   publicDescription: string
   theme: CompanyPageTheme
   content: CompanyPageContent
+  pickup: PickupLocation
 }
 
 export function SrlCompanyPagePage() {
@@ -139,6 +146,7 @@ function CompanyPageEditor({
     publicDescription: profile.publicDescription ?? '',
     theme: normalizeTheme(profile.pageTheme),
     content: normalizeContent(profile.pageContent),
+    pickup: profile.pickup ?? EMPTY_PICKUP,
   }))
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -179,6 +187,7 @@ function CompanyPageEditor({
         publicDescription: draft.publicDescription.trim() || null,
         theme: draft.theme,
         content: draft.content,
+        pickup: draft.pickup,
       })
       onProfileChange(updated)
       setDirty(false)
@@ -194,7 +203,9 @@ function CompanyPageEditor({
     ([key, value]) => key !== 'heroOverlayOpacity' && !isHex(value as string),
   )
 
-  const preview: PublicCompany = {
+  const blocked = profile.pageModeration.blockedSections
+
+  const draftPreview: PublicCompany = {
     legalName: profile.legalName,
     slug: profile.slug,
     logoUrl: profile.logoUrl,
@@ -211,10 +222,16 @@ function CompanyPageEditor({
     location: profile.visibility.location ? profile.registeredOffice : null,
     theme: draft.theme,
     content: draft.content,
+    pickup: draft.pickup,
     // Mașinile nu se aduc în editor: pagina reală le are, iar aici întrebarea e cum arată
     // secțiunile pe care le scrii, nu câte mașini ai.
     cars: [],
   }
+
+  // Secțiunile oprite de RIDElance lipsesc și din previzualizare. Altfel panoul ar fi arătat un
+  // „De ce noi" pe care vizitatorul nu-l vede — adică exact minciuna pe care previzualizarea
+  // trebuie s-o excludă. Banda de deasupra spune care sunt și de ce.
+  const preview = withoutBlockedSections(draftPreview, blocked)
 
   const editor = (
     <Stack spacing={2.5}>
@@ -444,6 +461,10 @@ function CompanyPageEditor({
           <PageSectionsPanel content={draft.content} onChange={(content) => update({ content })} />
         )}
 
+        {tab === 'locatie' && (
+          <PageLocationPanel pickup={draft.pickup} onChange={(pickup) => update({ pickup })} />
+        )}
+
         <Stack
           direction="row"
           spacing={1.5}
@@ -456,12 +477,23 @@ function CompanyPageEditor({
             onClick={() => void save()}
             sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}
           >
-            {saving ? 'Se salvează…' : 'Salvează pagina'}
+            {/* Nu „Publică": butonul ăsta trimite o ciornă. A-l numi altfel ar fi promis ceva ce
+                nu se întâmplă până când nu se uită cineva peste pagină. */}
+            {saving ? 'Se salvează…' : 'Salvează și trimite la verificare'}
           </Button>
           {invalidColor && (
             <StatusChip label="O culoare nu e validă" tone="warning" size="sm" outlined />
           )}
-          {saved && !dirty && <StatusChip label="Salvat" tone="active" size="sm" outlined />}
+          {saved && !dirty && (
+            <StatusChip
+              label={
+                profile.pageModeration.status === 'Pending' ? 'Trimis la verificare' : 'Salvat'
+              }
+              tone="active"
+              size="sm"
+              outlined
+            />
+          )}
         </Stack>
 
         {saveError && (
@@ -496,6 +528,10 @@ function CompanyPageEditor({
       </Box>
       <Typography sx={{ mt: 1.5, fontSize: '0.8rem', color: DASHBOARD_TOKENS.textMuted }}>
         Mașinile lipsesc din previzualizare — pe pagina reală apar sub „Flota”.
+        {blocked.length > 0 &&
+          ` Secțiunile oprite de RIDElance (${blocked
+            .map((id) => BLOCKABLE_SECTIONS.find((section) => section.id === id)?.label ?? id)
+            .join(', ')}) lipsesc și ele, ca aici.`}
       </Typography>
     </Panel>
   )
@@ -506,6 +542,10 @@ function CompanyPageEditor({
         title="Pagina firmei"
         subtitle="Mini-site-ul public al flotei. Datele de identitate și ce contacte se văd rămân în Profil."
       />
+
+      {/* Deasupra tuturor taburilor, nu într-unul: e valabilă pentru tot ce se editează dedesubt,
+          iar cine intră să schimbe o culoare trebuie să afle din prima că salvarea nu publică. */}
+      <PageModerationBanner moderation={profile.pageModeration} dirty={dirty} />
 
       {splitLayout ? (
         <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 2.5, alignItems: 'start' }}>
