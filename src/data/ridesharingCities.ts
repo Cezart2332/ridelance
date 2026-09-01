@@ -151,5 +151,7 @@ export const COVERAGE_DISCLAIMER =
 
 export const EXTRA_SOURCE = {
   url: 'https://www.economica.net/uber-se-extinde-intr-un-nou-oras-din-romania_951697.html',
-  label: 'Uber — confirmarea listei de orașe',
+  // Numele publicației, nu o descriere: în rândul compact de la subsol stă lângă „Uber", „Bolt",
+  // „Blue", iar o frază întreagă acolo ar fi fost singura care iese în evidență.
+  label: 'economica.net',
 }

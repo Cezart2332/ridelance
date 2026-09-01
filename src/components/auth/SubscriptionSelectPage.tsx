@@ -20,6 +20,7 @@ import { canAccessDashboard } from '../../utils/clientOnboarding'
 import { ANNUAL_DISCOUNT, type BillingCycle } from '../../data/plans'
 import { Switcher } from '../pricing/Switcher'
 import { BcrDiscountCheckbox } from '../pricing/BcrDiscountCheckbox'
+import { PlanPrice } from '../pricing/PlanPrice'
 import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../../data/bcrDiscount'
 import { TermsAcceptance } from '../common/TermsAcceptance'
 import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
@@ -283,15 +284,12 @@ export default function SubscriptionSelectPage() {
                     >
                       {plan.title}
                     </Typography>
-                    <Typography
-                      sx={{
-                        fontWeight: 800,
-                        fontSize: '1.4rem',
-                        color: TOKENS.primaryStrong,
-                      }}
-                    >
-                      {plan.price}
-                    </Typography>
+                    <PlanPrice
+                      monthlyLei={plan.monthlyLei}
+                      unit={plan.priceUnit}
+                      discounted={bcrDiscount}
+                      size="md"
+                    />
                     <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.78rem', mt: 0.5, fontStyle: 'italic' }}>
                       {plan.priceNote}
                     </Typography>

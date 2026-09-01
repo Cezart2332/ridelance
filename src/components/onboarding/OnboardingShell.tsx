@@ -34,6 +34,7 @@ import { RightRail } from './rail/RightRail'
 import { StepRail } from './rail/StepRail'
 import { SidebarSupportBlock } from './shell/SidebarSupportBlock'
 import { OnboardingTopBar } from './shell/OnboardingTopBar'
+import { StepIntroCard } from './shell/StepIntroCard'
 import { StepProgressRing } from './shell/StepProgressRing'
 import { firstActionableStep, stepEstimate, type StepView } from './stepModel'
 import { OnboardingSupportContext, type OnboardingSupportValue } from './supportContext'
@@ -398,6 +399,20 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
                 exit={{ opacity: 0, y: -8 }}
                 transition={stepMotion}
               >
+                {/* Deasupra cardului cu întrebări, nu în el: cardul arată o singură întrebare, iar
+                    antetul spune la ce pas ești și ce se cere în mare. Aici, în shell, fiindcă
+                    datele pasului sunt deja calculate — în runner ar fi trebuit deduse din rută.
+
+                    Doar pe ecranul principal al pasului. Sub-paginile lui — datele personale,
+                    sediul, consimțământul de la înființarea PFA — au titlul lor și ar fi ajuns cu
+                    două antete unul peste altul. */}
+                <StepIntroCard
+                  stepKey={location.pathname === currentStepView?.path ? activeKey : null}
+                  position={Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)}
+                  total={Math.max(steps.length, 1)}
+                  label={currentStepView?.label ?? null}
+                  estimate={stepEstimate(currentStepView)}
+                />
                 <Outlet />
               </motion.div>
             </AnimatePresence>

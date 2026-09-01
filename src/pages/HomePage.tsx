@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Box, Button, Card, CardContent, Container, Paper, Stack, Typography } from '@mui/material'
 import { ROUTES } from '../constants/routes'
 import { alpha } from '@mui/material/styles'
@@ -15,8 +16,10 @@ import {
   partnerLogos,
 } from '../data/constants'
 import { PARTNER_LOGO } from '../data/partnerLogo'
-import { priceFor } from '../data/plans'
 import { PlanFeatureItem } from '../components/pricing/PlanFeatureItem'
+import { BcrDiscountCheckbox } from '../components/pricing/BcrDiscountCheckbox'
+import { PlanPrice } from '../components/pricing/PlanPrice'
+import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../data/bcrDiscount'
 
 import motto from '../assets/motto.svg'
 import heroSticker from '../assets/hero-sticker.png'
@@ -32,6 +35,10 @@ import { InsuranceLinksGrid, LANDING_INSURANCE_SLUGS } from '../components/insur
 export function HomePage() {
   const navigate = useNavigate()
   const { accessToken, isInitialized } = useAppSelector((s) => s.auth)
+
+  // Aceeași bifă ca pe pagina de Abonamente, aceeași sesiune: cine o pune aici o găsește pusă și
+  // acolo, și la alegerea planului. O stare pentru toate cardurile — reducerea nu ține de plan.
+  const [bcrDiscount, setBcrDiscount] = useState(readBcrDiscountIntent)
 
   const handleStart = () => {
     if (!isInitialized) return
@@ -425,7 +432,7 @@ export function HomePage() {
                   gap: 2.5,
                 }}
               >
-                <Box sx={{ minHeight: { xs: 'auto', md: 105 } }}>
+                <Box sx={{ minHeight: { xs: 'auto', md: 180 } }}>
                   <Typography
                     variant="h5"
                     sx={{
@@ -436,16 +443,12 @@ export function HomePage() {
                   >
                     {item.title}
                   </Typography>
-                  <Typography
-                    sx={{
-                      color: TOKENS.primaryStrong,
-                      fontWeight: 800,
-                      fontSize: '1.25rem',
-                      mt: 0.5,
-                    }}
-                  >
-                    {priceFor(item, 'monthly').amount} lei / lună
-                  </Typography>
+                  <PlanPrice
+                    monthlyLei={item.pricing.monthlyLei}
+                    unit="/ lună"
+                    discounted={bcrDiscount}
+                    size="md"
+                  />
                   <Typography
                     sx={{
                       color: TOKENS.textMuted,
@@ -456,6 +459,17 @@ export function HomePage() {
                   >
                     {item.noteMonthly}
                   </Typography>
+
+                  {/* Bifa lipsea de pe landing, deși aici ajunge lumea întâi: cine compara
+                      prețurile aici nu afla niciodată de reducerea BCR. Starea e aceeași ca pe
+                      pagina de Abonamente, prin `sessionStorage`, deci decizia nu se ia de două ori. */}
+                  <BcrDiscountCheckbox
+                    checked={bcrDiscount}
+                    onChange={(next) => {
+                      setBcrDiscount(next)
+                      writeBcrDiscountIntent(next)
+                    }}
+                  />
                 </Box>
 
                 <Typography
@@ -488,6 +502,10 @@ export function HomePage() {
                     <PlanFeatureItem
                       key={`${feature.strong ?? ''}-${feature.text ?? ''}-${featureIndex}`}
                       feature={feature}
+                      // Pe landing, numele partenerului se scrie cu litere. Logourile veneau din
+                      // fișiere de forme și calități diferite și, înghesuite în rândurile listei,
+                      // rupeau ritmul textului. Banda de parteneri de mai jos le arată cum trebuie.
+                      showPartnerLogo={false}
                     />
                   ))}
                 </Box>

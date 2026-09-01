@@ -6,14 +6,22 @@ import { TOKENS } from '../../constants/tokens'
 import { BCR_DISCOUNT_INFO, BCR_DISCOUNT_LABEL } from '../../data/bcrDiscount'
 
 /**
+ * Înălțimea unui rând de etichetă, în pixeli.
+ *
+ * Toate cele trei elemente o primesc, ca să se alinieze pe prima linie chiar și când textul se
+ * rupe pe două rânduri. Scrisă o dată, nu ghicită de trei ori cu marginile negative.
+ */
+const ROW = 18
+
+/**
  * Bifa pentru reducerea BCR, sub prețul fiecărui plan.
  *
  * Aceeași stare pe toate cardurile: reducerea nu ține de plan, e aceeași sumă oriunde. O bifă
  * separată per card ar fi sugerat că se poate cere doar pentru unul.
  *
- * Prețul afișat rămâne neatins când se bifează. Reducerea pornește abia după confirmarea BCR,
- * deci o cifră tăiată aici ar fi fost o promisiune pe care plata de a doua zi n-o respectă. Ce se
- * întâmplă și când se întâmplă stă în „i", nu în preț.
+ * Caseta, textul și „i" stau pe aceeași linie prin construcție: toate trei primesc înălțimea unui
+ * rând de text (`ROW`). Fără asta, caseta MUI vine cu padding propriu și o cutie de 26 px, iar
+ * glifa se centrează în ea — adică vizibil mai jos decât prima linie a etichetei.
  */
 
 interface BcrDiscountCheckboxProps {
@@ -33,7 +41,7 @@ export function BcrDiscountCheckbox({
   return (
     <Stack
       direction="row"
-      spacing={0.3}
+      spacing={0.7}
       onClick={stopPropagation ? (event) => event.stopPropagation() : undefined}
       sx={{
         alignItems: 'flex-start',
@@ -48,10 +56,15 @@ export function BcrDiscountCheckbox({
         onChange={(event) => onChange(event.target.checked)}
         slotProps={{ input: { 'aria-label': BCR_DISCOUNT_LABEL } }}
         sx={{
-          p: 0.4,
-          mt: '-2px',
+          // Fără padding și cu glifa exact cât rândul: atât cutia, cât și semnul din ea ajung la
+          // înălțimea primei linii de text, deci `flex-start` le pune cu adevărat pe aceeași linie.
+          p: 0,
+          width: ROW,
+          height: ROW,
+          flexShrink: 0,
           color: alpha(TOKENS.ink, 0.35),
           '&.Mui-checked': { color: TOKENS.primaryStrong },
+          '& .MuiSvgIcon-root': { fontSize: ROW },
         }}
       />
 
@@ -60,7 +73,9 @@ export function BcrDiscountCheckbox({
         sx={{
           fontSize: '0.76rem',
           fontWeight: 650,
-          lineHeight: 1.45,
+          // În pixeli, nu ca multiplu: aceeași valoare ca înălțimea casetei, altfel cele două se
+          // despart din nou la prima schimbare de mărime a fontului.
+          lineHeight: `${ROW}px`,
           color: TOKENS.textMuted,
           cursor: 'default',
         }}
@@ -80,7 +95,9 @@ export function BcrDiscountCheckbox({
             display: 'inline-flex',
             alignItems: 'center',
             flexShrink: 0,
-            mt: '1px',
+            // Aceeași înălțime de rând ca celelalte două: iconița de 15px se centrează în ea și
+            // cade pe mijlocul primei linii, fără margine ghicită.
+            height: ROW,
             cursor: 'help',
             color: TOKENS.textSubtle,
             '&:hover, &:focus-visible': { color: TOKENS.primaryStrong },

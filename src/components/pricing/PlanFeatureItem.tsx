@@ -8,7 +8,7 @@ import { TOKENS } from '../../constants/tokens'
 /**
  * O linie din lista unui plan.
  *
- * Când linia e despre un partener, logoul ține locul numelui scris — „BCR: 100 lei bonus" devine
+ * Când linia e despre un partener, logoul ține locul numelui scris — „BCR: 50 lei/lună reducere" devine
  * logoul urmat de restul frazei. Numele rămâne în `alt`, ca linia să se citească întreagă cu un
  * cititor de ecran.
  *
@@ -16,7 +16,7 @@ import { TOKENS } from '../../constants/tokens'
  * propoziție, nu o decorație lângă ea.
  *
  * Cu `showPartnerLogo` stins, numele se scrie cu litere. Nu se șterge pur și simplu: logoul e
- * subiectul frazei, iar fără el ar rămâne „100 lei bonus la deschiderea contului" — un bonus fără
+ * subiectul frazei, iar fără el ar rămâne „50 lei/lună reducere la abonament" — o reducere fără
  * bancă.
  */
 export function PlanFeatureItem({

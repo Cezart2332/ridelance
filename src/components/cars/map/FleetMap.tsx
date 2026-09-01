@@ -5,7 +5,10 @@ import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 import { DEFAULT_CENTER, DEFAULT_ZOOM, MAPBOX_AVAILABLE, MAPBOX_STYLE, MAPBOX_TOKEN } from '../../../lib/mapbox'
+import { alpha } from '@mui/material/styles'
+
 import { TOKENS } from '../../../constants/tokens'
+import { spreadOffsets } from './spreadOverlapping'
 import { MapUnavailable } from './MapUnavailable'
 import { CarMapCard } from './CarMapCard'
 import { applyBrandTint, attachMapDiagnostics, mapContainerSx } from './mapRuntime'
@@ -130,6 +133,46 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
     }
   }, [popupHost])
 
+  /**
+   * Desface pinurile care s-ar suprapune, la zoomul curent.
+   *
+   * Se ține într-un ref, nu într-un efect propriu: o cheamă și bucla care creează markerele, și
+   * ascultătorul de zoom. Gruparea se face în pixeli, deci se schimbă la fiecare apropiere —
+   * mașinile din aceeași curte rămân desfăcute doar cât timp chiar se calcă pe picioare.
+   */
+  const applySpreadRef = useRef<() => void>(() => {})
+
+  useEffect(() => {
+    applySpreadRef.current = () => {
+      const map = mapRef.current
+      if (!map) return
+
+      const offsets = spreadOffsets(points, (lngLat) => map.project(lngLat))
+
+      for (const [id, offset] of offsets) {
+        const marker = markersRef.current.get(id)
+        if (!marker) continue
+
+        marker.setOffset(offset)
+        // Pinurile desfăcute se leagă vizual între ele: fără semnul ăsta, evantaiul arată ca patru
+        // mașini în patru locuri apropiate, nu ca patru mașini în același loc.
+        marker.getElement().dataset.spread = offset[0] === 0 && offset[1] === 0 ? 'false' : 'true'
+      }
+    }
+  }, [points])
+
+  // Zoomul schimbă distanțele pe ecran, deci și ce se suprapune.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    const onZoom = () => applySpreadRef.current()
+    map.on('zoomend', onZoom)
+    return () => {
+      map.off('zoomend', onZoom)
+    }
+  }, [])
+
   // Marker-ele se refac la fiecare schimbare a listei filtrate.
   useEffect(() => {
     const map = mapRef.current
@@ -160,6 +203,9 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
 
       markersRef.current.set(point.id, marker)
     })
+
+    // Deplasările se calculează după ce toate markerele există: gruparea le compară între ele.
+    applySpreadRef.current()
 
     // Încadrarea se face doar cât timp utilizatorul n-a mișcat harta singur; altfel i-am muta
     // vederea de sub degete la fiecare schimbare de filtru.
@@ -232,7 +278,16 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
             transition: 'transform 140ms ease, box-shadow 140ms ease',
             whiteSpace: 'nowrap',
           },
-          '.fleet-marker:hover': { transform: 'translateY(-2px)' },
+          '.fleet-marker:hover': { transform: 'translateY(-2px)', zIndex: 3 },
+          /*
+           * Pinurile desfăcute dintr-un loc comun.
+           *
+           * Inelul subțire spune că pastila a fost mutată din locul ei exact — altfel evantaiul
+           * s-ar citi ca mașini aflate în locuri diferite, adică fix minciuna pe care o repară.
+           */
+          '.fleet-marker[data-spread="true"]': {
+            boxShadow: `0 0 0 2px ${TOKENS.paper}, 0 0 0 3px ${alpha(TOKENS.primary, 0.55)}, 0 4px 14px rgba(0,0,0,0.35)`,
+          },
           // Pe fondul întunecat, starea activă nu mai poate fi ink: ar fi însemnat să stingem
           // pinul selectat în hartă. Trece pe albastrul brandului, singura culoare din paletă
           // care iese și din negru, și din albul celorlalte pastile.

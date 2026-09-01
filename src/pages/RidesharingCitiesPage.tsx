@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { Box, Container, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import NorthEastRoundedIcon from '@mui/icons-material/NorthEastRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 
 import { TOKENS } from '../constants/tokens'
@@ -473,54 +472,50 @@ function MapLegend() {
   )
 }
 
-/** Sursele, ca rând de linkuri. Închid pagina, fiindcă sunt ce o face verificabilă. */
+/**
+ * Sursele, ca notă de subsol.
+ *
+ * Trebuie să existe — ele fac lista verificabilă — dar nu sunt motivul pentru care intră cineva pe
+ * pagină. Aveau titlu de secțiune, linkuri de 0,84rem și săgeți colorate, adică greutatea unui
+ * capitol. Acum sunt un singur rând mic și gri, la subsol: se găsesc când sunt căutate și nu se
+ * bagă în seamă când nu.
+ *
+ * Rămân linkuri adevărate, nu text: o sursă pe care n-o poți deschide nu e o sursă.
+ */
 function Sources() {
   const sources = [
-    ...PLATFORMS.map((platform) => ({ url: platform.sourceUrl, label: platform.sourceLabel })),
+    ...PLATFORMS.map((platform) => ({ url: platform.sourceUrl, label: platform.name })),
     EXTRA_SOURCE,
   ]
 
   return (
-    <Box sx={{ mt: { xs: 6, md: 9 }, pt: 3, borderTop: `1px solid ${TOKENS.border}` }}>
+    <Box sx={{ mt: { xs: 5, md: 7 }, pt: 2, borderTop: `1px solid ${TOKENS.border}` }}>
       <Typography
-        sx={{
-          fontSize: '0.74rem',
-          fontWeight: 850,
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          color: TOKENS.textSubtle,
-          mb: 1.8,
-        }}
+        component="p"
+        sx={{ fontSize: '0.72rem', lineHeight: 1.7, color: TOKENS.textSubtle }}
       >
-        Surse
-      </Typography>
-
-      <Stack direction="row" spacing={3} sx={{ flexWrap: 'wrap', rowGap: 1.4 }}>
-        {sources.map((source) => (
-          <Stack
-            key={source.url}
-            component="a"
-            href={source.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            direction="row"
-            spacing={0.6}
-            sx={{
-              alignItems: 'center',
-              color: TOKENS.textMuted,
-              textDecoration: 'none',
-              transition: `color ${TOKENS.duration} ${TOKENS.easing}`,
-              '&:hover': { color: TOKENS.ink },
-            }}
-          >
-            <Typography sx={{ fontSize: '0.84rem', fontWeight: 600 }}>{source.label}</Typography>
-            <NorthEastRoundedIcon sx={{ fontSize: 13, color: TOKENS.primaryStrong }} />
-          </Stack>
+        {COVERAGE_DISCLAIMER} Surse:{' '}
+        {sources.map((source, index) => (
+          <Box component="span" key={source.url}>
+            {index > 0 && ', '}
+            <Box
+              component="a"
+              href={source.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                color: 'inherit',
+                textDecoration: 'underline',
+                textDecorationColor: alpha(TOKENS.ink, 0.2),
+                textUnderlineOffset: '2px',
+                '&:hover': { color: TOKENS.textMuted },
+              }}
+            >
+              {source.label}
+            </Box>
+          </Box>
         ))}
-      </Stack>
-
-      <Typography sx={{ mt: 2.5, fontSize: '0.8rem', lineHeight: 1.6, color: TOKENS.textSubtle, maxWidth: 640 }}>
-        {COVERAGE_DISCLAIMER}
+        .
       </Typography>
     </Box>
   )

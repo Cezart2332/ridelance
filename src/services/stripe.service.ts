@@ -59,6 +59,15 @@ export interface PlanInfo {
   key: PlanKey
   title: string
   price: string
+  /**
+   * Prețul lunar ca număr, pe lângă textul gata format.
+   *
+   * Ecranul de alegere a planului scade din el reducerea BCR când e bifată. Din șirul `price` n-ar
+   * fi avut din ce: „199 lei / lună" e text, nu o sumă cu care se poate face aritmetică.
+   */
+  monthlyLei: number
+  /** Ce urmează după sumă — „/ lună". Separat, ca reducerea să poată reface șirul. */
+  priceUnit: string
   priceNote: string
   summary: string
   intro?: string
@@ -112,6 +121,11 @@ const toPlanInfo = (plan: Plan, cycle: BillingCycle): PlanInfo => {
     key: plan.key as PlanKey,
     title: plan.title,
     price: `${amount} lei ${unit}`,
+    monthlyLei:
+      cycle === 'annual' && plan.pricing.annualMonthlyLei != null
+        ? plan.pricing.annualMonthlyLei
+        : plan.pricing.monthlyLei,
+    priceUnit: unit,
     // Pe ciclul anual, nota utilă e totalul facturat o dată pe an — nu textul generic.
     priceNote: annual ?? note,
     summary: plan.summary,

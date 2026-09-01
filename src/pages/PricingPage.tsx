@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { ROUTES } from '../constants/routes'
 import { TOKENS } from '../constants/tokens'
 import { BcrDiscountCheckbox } from '../components/pricing/BcrDiscountCheckbox'
+import { PlanPrice } from '../components/pricing/PlanPrice'
 import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../data/bcrDiscount'
 import { SectionHeader } from '../components/common/SectionHeader'
 import { PlanFeatureItem } from '../components/pricing/PlanFeatureItem'
@@ -222,14 +223,14 @@ function PlanCard({
             {plan.title}
           </Typography>
 
-          <Stack direction="row" spacing={0.6} sx={{ justifyContent: 'center', alignItems: 'baseline', mt: 0.5 }}>
-            <Typography sx={{ color: TOKENS.primaryStrong, fontWeight: 900, fontSize: '1.9rem', lineHeight: 1.1 }}>
-              {price.amount} lei
-            </Typography>
-            <Typography sx={{ color: TOKENS.textMuted, fontWeight: 700, fontSize: '0.9rem' }}>
-              {price.unit}
-            </Typography>
-          </Stack>
+          <PlanPrice
+            monthlyLei={cycle === 'annual' && plan.pricing.annualMonthlyLei != null
+              ? plan.pricing.annualMonthlyLei
+              : plan.pricing.monthlyLei}
+            unit={price.unit}
+            discounted={bcrDiscount === true}
+            align="center"
+          />
 
           {annual && (
             <Typography sx={{ color: TOKENS.primaryStrong, fontSize: '0.8rem', fontWeight: 700, mt: 0.4 }}>

@@ -1,14 +1,28 @@
 /**
  * Reducerea pentru clienții care își deschid cont BCR prin RIDElance.
  *
- * Sumele sunt aceleași cu `Pricing.BcrDiscount` din backend. Nu se calculează nimic din ele în
- * interfață: bifa nu schimbă prețul afișat, pentru că nu schimbă nici suma încasată. Reducerea
- * pornește abia după ce BCR confirmă contul, iar până atunci clientul plătește întreg.
+ * Sumele sunt aceleași cu `Pricing.BcrDiscount` din backend.
+ *
+ * Bifa **scade** prețul afișat, dar numai pe cel din primele șase luni — atât ține reducerea.
+ * Prețul întreg rămâne pe ecran, tăiat, iar sub el scrie de când se revine la el. Varianta veche
+ * lăsa cifra neatinsă, ca să nu promită ceva ce plata de a doua zi n-ar fi respectat; problema era
+ * că nimeni nu vedea reducerea pentru care bifase. Aici se văd amândouă: cât plătești la început
+ * și cât plătești după.
  */
 
 export const BCR_DISCOUNT = {
   monthlyLei: 50,
   months: 6,
+}
+
+/**
+ * Cât rămâne dintr-un preț lunar după reducere.
+ *
+ * Nu coboară sub zero: un plan mai ieftin decât reducerea n-ar avea preț negativ, ar fi gratuit.
+ * Azi nu există unul, dar cifra vine din date, iar datele se schimbă fără să treacă pe aici.
+ */
+export function bcrDiscountedLei(monthlyLei: number): number {
+  return Math.max(0, monthlyLei - BCR_DISCOUNT.monthlyLei)
 }
 
 /** Textul de lângă bifă. Într-un singur loc: apare pe pagina publică și în aplicație. */

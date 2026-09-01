@@ -20,7 +20,7 @@ export type BillingCycle = 'monthly' | 'annual'
 /**
  * O linie din lista unui plan.
  *
- * `partner` înlocuiește numele scris cu logoul: „BCR: 100 lei bonus" devine logoul BCR urmat de
+ * `partner` înlocuiește numele scris cu logoul: „BCR: 50 lei/lună reducere" devine logoul BCR urmat de
  * restul frazei. Numele partenerului scris lângă logoul lui e aceeași informație de două ori.
  */
 export interface PlanFeature {
@@ -98,7 +98,7 @@ export function partnerLogoFor(slug: string): string | null {
 
 /**
  * Numele partenerului, scris. Ține locul logoului acolo unde acesta nu se afișează — fără el,
- * „100 lei bonus la deschiderea contului" n-ar mai spune de la cine vine.
+ * „50 lei/lună reducere la abonament" n-ar mai spune de la cine vine.
  */
 export function partnerNameFor(slug: string): string | null {
   return getPartnerBenefit(slug)?.name ?? null
@@ -134,7 +134,7 @@ export const PFA_PLANS: Plan[] = [
       },
       {
         partner: 'bcr',
-        text: '100 lei bonus la deschiderea contului prin RIDElance + 12 luni fără comisioane',
+        text: '50 lei/lună reducere la abonament, 6 luni, pentru contul deschis prin RIDElance + 12 luni fără comisioane bancare',
       },
       { partner: 'mol', text: 'reduceri la combustibil și spălătorii' },
       {
@@ -188,7 +188,7 @@ export const PFA_PLANS: Plan[] = [
       },
     ],
     footnote:
-      'Deschiderea PFA este GRATUITĂ. Bonusul BCR este de 100 lei + 12 luni fără comisioane, pentru conturile eligibile deschise prin RIDElance.',
+      'Deschiderea PFA este GRATUITĂ. Beneficiul BCR este de 50 lei/lună reducere la abonament timp de 6 luni, plus 12 luni fără comisioane bancare, pentru conturile eligibile deschise prin RIDElance.',
     cta: 'Începe cu Start',
   },
   {
