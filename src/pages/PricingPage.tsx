@@ -121,9 +121,10 @@ export function PricingPage() {
                 cycle={cycle}
                 single={plans.length === 1}
                 onStart={handleStart}
-                // Doar planurile PFA: contul BCR e pentru afacerea unei persoane fizice
-                // autorizate, iar abonamentul de flotă nu are cum să-l primească.
-                bcrDiscount={audience === 'pfa' ? bcrDiscount : null}
+                // Și pe flotă, nu doar pe PFA. Campania BCR e scrisă pentru ambele forme de
+                // activitate („Disponibilă atât pentru PFA, cât și pentru SRL"), iar pagina
+                // partenerului o spune deja — bifa ascunsă aici era singurul loc care o contrazicea.
+                bcrDiscount={bcrDiscount}
                 onBcrDiscountChange={(next) => {
                   setBcrDiscount(next)
                   writeBcrDiscountIntent(next)

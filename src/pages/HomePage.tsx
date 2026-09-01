@@ -11,7 +11,6 @@ import {
   homeSec3,
   homeSec6,
   homeSec9,
-  pricingCards,
   economyComparison,
   partnerLogos,
 } from '../data/constants'
@@ -19,6 +18,8 @@ import { PARTNER_LOGO } from '../data/partnerLogo'
 import { PlanFeatureItem } from '../components/pricing/PlanFeatureItem'
 import { BcrDiscountCheckbox } from '../components/pricing/BcrDiscountCheckbox'
 import { PlanPrice } from '../components/pricing/PlanPrice'
+import { Switcher } from '../components/pricing/Switcher'
+import { plansFor, type Audience } from '../data/plans'
 import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../data/bcrDiscount'
 
 import motto from '../assets/motto.svg'
@@ -39,6 +40,19 @@ export function HomePage() {
   // Aceeași bifă ca pe pagina de Abonamente, aceeași sesiune: cine o pune aici o găsește pusă și
   // acolo, și la alegerea planului. O stare pentru toate cardurile — reducerea nu ține de plan.
   const [bcrDiscount, setBcrDiscount] = useState(readBcrDiscountIntent)
+
+  /**
+   * PFA sau flotă, ca pe pagina de Abonamente.
+   *
+   * Landingul arăta doar planurile PFA, deci cine caută un abonament de flotă pleca de aici
+   * convins că nu există. Comutatorul e același component ca acolo, ca aceeași alegere să arate
+   * la fel în ambele locuri.
+   *
+   * Ciclul lunar/anual rămâne doar pe pagina dedicată: aici cardurile sunt un rezumat, iar al
+   * doilea comutator ar fi cerut o a doua decizie înainte ca prima să fie înțeleasă.
+   */
+  const [audience, setAudience] = useState<Audience>('pfa')
+  const plans = plansFor(audience)
 
   const handleStart = () => {
     if (!isInitialized) return
@@ -363,18 +377,35 @@ export function HomePage() {
           title="Abonamente"
           subtitle="Alege planul potrivit pentru tine"
         />
+        <Stack sx={{ alignItems: 'center', mt: -2, mb: { xs: 4, md: 5 } }}>
+          <Switcher
+            value={audience}
+            onChange={setAudience}
+            options={[
+              { value: 'pfa', label: 'PFA' },
+              { value: 'srl', label: 'Flotă / SRL' },
+            ]}
+          />
+        </Stack>
+
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
+            // Grila urmează numărul de planuri: flota are unul singur, iar trei coloane fixe l-ar
+            // fi lăsat lipit de marginea din stânga, cu două goluri lângă el.
+            gridTemplateColumns: {
+              xs: '1fr',
+              md: plans.length === 1 ? 'minmax(0, 560px)' : `repeat(${plans.length}, 1fr)`,
+            },
+            justifyContent: 'center',
             gap: 4,
             maxWidth: 1200,
             mx: 'auto',
           }}
         >
-          {pricingCards.map((item, index) => (
+          {plans.map((item) => (
             <Card
-              key={index}
+              key={item.key}
               elevation={0}
               sx={{
                 display: 'flex',
@@ -384,24 +415,24 @@ export function HomePage() {
                 backgroundColor: TOKENS.paper,
                 position: 'relative',
                 border:
-                  index === 2
+                  item.recommended
                     ? `1.5px solid ${TOKENS.primaryStrong}`
                     : `1px solid ${alpha(TOKENS.ink, 0.06)}`,
                 boxShadow:
-                  index === 2
+                  item.recommended
                     ? '0 16px 40px rgba(92,203,245,0.14)'
                     : '0 4px 20px rgba(0,0,0,0.01)',
                 transition: `all 0.3s cubic-bezier(0.16, 1, 0.3, 1)`,
                 '&:hover': {
                   boxShadow:
-                    index === 2
+                    item.recommended
                       ? '0 24px 50px rgba(92,203,245,0.22)'
                       : '0 16px 36px rgba(0,0,0,0.04)',
                   transform: 'translateY(-4px)',
                 },
               }}
             >
-              {index === 2 && (
+              {item.recommended && (
                 <Box
                   sx={{
                     position: 'absolute',
@@ -524,7 +555,7 @@ export function HomePage() {
 
                 <Button
                   onClick={handleStart}
-                  variant={index === 2 ? 'contained' : 'outlined'}
+                  variant={item.recommended ? 'contained' : 'outlined'}
                   fullWidth
                   size="large"
                   sx={{
@@ -535,10 +566,10 @@ export function HomePage() {
                     borderRadius: TOKENS.radius.lg,
                     boxShadow: 'none',
                     transition: 'all 0.2s ease',
-                    color: index === 2 ? '#fff' : TOKENS.ink,
-                    borderColor: index === 2 ? 'transparent' : alpha(TOKENS.ink, 0.12),
+                    color: item.recommended ? '#fff' : TOKENS.ink,
+                    borderColor: item.recommended ? 'transparent' : alpha(TOKENS.ink, 0.12),
                     '&:hover':
-                      index === 2
+                      item.recommended
                         ? {
                           backgroundColor: TOKENS.primaryStrong,
                           boxShadow: 'none',

@@ -7,7 +7,6 @@ import eldrive from '../assets/partners/eldrive.png'
 import oblio from '../assets/partners/oblio.png'
 import simplifi from '../assets/partners/simplifi.png'
 import { sortByPartnerOrder } from './benefits'
-import { PFA_PLANS } from './plans'
 import character2 from '../assets/Stickers/character 2.png'
 import scene1 from '../assets/Stickers/scene 1.png'
 import scene4 from '../assets/Stickers/scene 4.png'
@@ -43,14 +42,6 @@ export const faqItems = [
   { title: 'De ce documente am nevoie?', text: loremLongText },
 ]
 
-/**
- * Cardurile de abonament de pe landing.
- *
- * Derivate din `plans.ts`, nu scrise a doua oară: erau o copie a acelorași planuri și ajunseseră
- * să anunțe alte prețuri decât pagina de Abonamente. Landingul arată doar varianta lunară pentru
- * PFA — comparația lunar/anual și planul de flotă stau pe pagina dedicată.
- */
-export const pricingCards = PFA_PLANS
 
 /**
  * Logourile de pe pagina publică. Ordinea vine din `benefits.ts`, ca peste tot: aici era scrisă
