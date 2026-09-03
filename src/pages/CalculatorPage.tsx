@@ -22,6 +22,13 @@ export function CalculatorPage() {
   const [realCAS, setRealCAS] = useState(0)
   const [realCASS, setRealCASS] = useState(0)
   const [netIncomeRealSystem, setNetIncomeRealSystem] = useState(0)
+  /**
+   * Baza de impozitare, ținută ca rezultat, nu recalculată la afișare.
+   *
+   * Rândul din rezumat o refăcea din venitul curent și din CAS/CASS vechi, deci după o schimbare
+   * de venit fără reapăsarea butonului amesteca intrări noi cu rezultate vechi.
+   */
+  const [realTaxableIncome, setRealTaxableIncome] = useState(0)
 
   const computeTaxes = useCallback(() => {
     // 2026 Logic
@@ -47,9 +54,19 @@ export function CalculatorPage() {
       CASS = 0.1 * (GROSS_SALARY * 72) // Maximum cap (72 salaries in 2024+)
     }
 
-    // Impozit pe venit (10% on profit after deducting CAS and CASS)
-    // Both CAS and CASS are fully deductible from the taxable base
-    const taxableIncome = Math.max(0, profit - CAS - CASS)
+    /*
+     * Impozit pe venit: 10% din ce rămâne după contribuțiile deductibile.
+     *
+     * CAS se scade întreg. CASS **nu**: deductibilă e doar partea calculată pe venitul net real,
+     * iar diferența plătită până la plafonul de 6 salarii nu e cheltuială deductibilă. Sub 24.300
+     * lei venit net, cele două sume diferă — acolo baza ieșea prea mică și impozitul sub cel
+     * datorat (la 15.000 lei venit net: 1.257 în loc de 1.350).
+     *
+     * `min` acoperă toate cele trei benzi: sub plafon ia 10% din venit, în banda din mijloc cele
+     * două sunt egale, iar peste plafonul de 72 de salarii ia CASS-ul plafonat, deductibil întreg.
+     */
+    const deductibleCASS = Math.min(CASS, 0.1 * profit)
+    const taxableIncome = Math.max(0, profit - CAS - deductibleCASS)
     incomeTax = 0.1 * taxableIncome
 
     // Venit net PFA (What's left from your bank account = Income - Expenses - Taxes)
@@ -58,6 +75,7 @@ export function CalculatorPage() {
     setRealCAS(roundToInt(CAS))
     setRealCASS(roundToInt(CASS))
     setRealIncomeTax(roundToInt(incomeTax))
+    setRealTaxableIncome(roundToInt(taxableIncome))
     setNetIncomeRealSystem(roundToInt(netIncomeAfterTaxes))
   }, [anualIncome, deductibleExpenses])
 
@@ -168,7 +186,7 @@ export function CalculatorPage() {
                 <Stack component="div" spacing={2.2}>
                   <TaxRow
                     label="Venit impozabil"
-                    value={`${Math.max(0, roundToInt(anualIncome - deductibleExpenses - realCAS - realCASS)).toLocaleString()} lei`}
+                    value={`${realTaxableIncome.toLocaleString()} lei`}
                   />
                   <TaxRow
                     label="Contributii CAS"
