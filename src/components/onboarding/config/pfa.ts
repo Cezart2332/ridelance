@@ -46,6 +46,28 @@ const field = (c: MicroStepContext, stepId: string, key: string): string => {
 
 export const pfaMicroSteps: MicroStepDef[] = [
   {
+    /*
+     * Avansul, primul ecran — înaintea întrebării „ai deja PFA?".
+     *
+     * Nu depinde de ce urmează să aleagă omul: e o lună de RIDElance Start plătită mai devreme,
+     * aceeași sumă pe ambele ramuri. Stătea pe ramura „Nu am PFA", ca ecran care înlocuia tot
+     * runnerul, deci se cerea după alegere și doar de la jumătate din clienți.
+     *
+     * Dispare de îndată ce plata e confirmată; dosarul se deschide abia la ecranul următor.
+     */
+    id: 'avans',
+    macroStep: 'pfa',
+    kind: 'info',
+    eyebrow: EYEBROW,
+    icon: 'idCard',
+    railLabel: 'Avans',
+    title: 'Începem înrolarea',
+    lines: () => [],
+    slot: 'onboardingAdvance',
+    visibleWhen: (c) => c.state?.hasPaidInfiintare !== true,
+    isDone: (c) => c.state?.hasPaidInfiintare === true,
+  },
+  {
     id: 'has_pfa',
     macroStep: 'pfa',
     kind: 'question',

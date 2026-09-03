@@ -18,21 +18,15 @@ import { TOKENS, tabularSx } from '../onboardingTheme'
 import { PanelCard } from '../PanelCard'
 
 /**
- * Ce se primește pe avans, pe fiecare ramură. Scris o dată, ca ecranul să nu promită altceva
- * decât livrăm: cine are deja PFA nu cumpără o înființare, deci lista aia i-ar fi fost falsă.
+ * Ce se primește pe avans. O singură listă, deliberat: ecranul vine ÎNAINTEA întrebării „ai deja
+ * PFA?", deci în momentul ăsta nu se știe pe ce ramură merge omul. Punctele sunt cele valabile
+ * pe amândouă — înființarea apare condiționat, ca singurul lucru care chiar diferă.
  */
-const INCLUDED_NEW_PFA = [
-  'Rezervarea denumirii și pregătirea dosarului pentru ONRC',
-  'Depunerea dosarului și urmărirea lui până la eliberare',
-  'Certificatul de înregistrare și certificatul constatator',
-  'Înregistrarea la ANAF și deschiderea dosarului fiscal',
-]
-
-const INCLUDED_HAS_PFA = [
+const INCLUDED = [
+  'Înființarea PFA-ului, dacă nu ai deja unul: dosar ONRC, certificate și înregistrarea la ANAF',
   'Autorizația de transport alternativ și copia conformă, cu dosarul pregătit de noi',
   'Deschiderea conturilor de flotă Uber și Bolt pe numele tău',
-  'Contul de facturare Oblio, administrat de noi',
-  'Împuternicirile și contractele, pregătite pentru semnat o singură dată',
+  'Contul de facturare Oblio și împuternicirile, administrate de noi',
 ]
 
 /**
@@ -61,28 +55,18 @@ export function CompanyFormationSummary({
   const [acknowledged, setAcknowledged] = useState(false)
 
   const amount = lei(state.onboardingAdvanceBani)
-  // Avansul se cere pe ambele ramuri, dar nu cumpără același lucru: pentru unul deschidem PFA-ul,
-  // pentru celălalt continuăm de la PFA-ul lui. Ecranul spune ce primește fiecare.
-  const opensNewPfa = state.registrationType === 'NuAmPfa'
-  const included = opensNewPfa ? INCLUDED_NEW_PFA : INCLUDED_HAS_PFA
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography sx={{ fontWeight: 800, fontSize: '1.35rem', color: TOKENS.ink }}>
-          {opensNewPfa ? 'Îți deschidem PFA-ul' : 'Începem înrolarea'}
-        </Typography>
-        {/*
-          Ecranul vine ÎNAINTEA dosarului, nu după: se plătește serviciul, apoi începem lucrul
-          la el. Deci aici nu e nimic de recapitulat — nu s-a completat încă nimic — ci de
-          arătat ce se cumpără și ce urmează după plată.
-        */}
-        <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.5 }}>
-          {opensNewPfa
-            ? 'După confirmarea plății îți deschidem dosarul de înființare și completezi datele.'
-            : 'După confirmarea plății continuăm cu documentele PFA-ului tău.'}
-        </Typography>
-      </Box>
+      {/*
+        Fără titlu propriu: componenta trăiește într-un `OnboardingCard`, care are deja unul, iar
+        două titluri unul sub altul se citesc ca două ecrane lipite. Ecranul vine ÎNAINTEA oricărei
+        alegeri — se plătește, apoi începem lucrul — deci nu e nimic de recapitulat aici, ci de
+        arătat ce se cumpără și ce urmează după plată.
+      */}
+      <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem' }}>
+        După confirmarea plății te întrebăm dacă ai deja un PFA și continuăm de acolo.
+      </Typography>
 
       {state.paymentStatus === 'FAILED' && (
         <Alert severity="warning" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
@@ -92,7 +76,7 @@ export function CompanyFormationSummary({
 
       <PanelCard title="Ce include">
         <Stack spacing={1}>
-          {included.map((item) => (
+          {INCLUDED.map((item) => (
             <Stack key={item} direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
               <CheckRoundedIcon sx={{ fontSize: 18, color: TOKENS.success, mt: '2px' }} />
               <Typography sx={{ fontSize: '0.88rem', color: TOKENS.ink }}>{item}</Typography>
@@ -110,9 +94,8 @@ export function CompanyFormationSummary({
           .
         </Typography>
         <Typography sx={{ fontSize: '0.92rem', color: TOKENS.ink, lineHeight: 1.6, mt: 1.5 }}>
-          {opensNewPfa
-            ? 'Ne ocupăm de deschiderea PFA-ului, de obținerea documentelor necesare și de setarea conturilor pentru desfășurarea activității independente.'
-            : 'Ne ocupăm de autorizația de transport, de conturile de flotă și de setarea contabilității pentru activitatea ta.'}
+          Ne ocupăm de documentele necesare, de autorizația de transport și de setarea conturilor
+          pentru desfășurarea activității independente.
         </Typography>
 
         {/*

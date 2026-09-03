@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { getErrorMessage } from '../../../utils/errorHandler'
 import { currentAutosave } from '../autosaveStore'
-import { BLOCKING_SLOTS, type MicroStepContext } from '../microStepTypes'
+import { BLOCKING_SLOTS, BLOCKING_SLOT_REASONS, type MicroStepContext } from '../microStepTypes'
 import { useMotionTokens } from '../motion'
 import { useMicroSteps } from '../useMicroSteps'
 import { useOnboarding } from '../useOnboarding'
@@ -276,7 +276,7 @@ export function OnboardingRunner() {
         return (
           <CardFooter
             disabled={submitting || blocked}
-            reasons={['Generează dosarul, descarcă-l și marchează depunerea ca să poți continua.']}
+            reasons={def.slot ? [BLOCKING_SLOT_REASONS[def.slot] ?? ''] : []}
             onContinue={() => void advance()}
           />
         )

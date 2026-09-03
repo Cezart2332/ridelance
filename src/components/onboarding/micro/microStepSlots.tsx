@@ -1,16 +1,19 @@
-import { Box, Typography } from '@mui/material'
-import type { ReactNode } from 'react'
+import { Alert, Box, Stack, Typography } from '@mui/material'
+import { useState, type ReactNode } from 'react'
 
 import {
   onboardingService,
   type ArrState,
   type VehicleState,
 } from '../../../services/onboarding.service'
+import { stripeService } from '../../../services/stripe.service'
+import { getErrorMessage } from '../../../utils/errorHandler'
 import { canonicalCounty } from '../../../data/counties'
 import { BankAccountCta } from '../../common/BankAccountCta'
 import { InsuranceLinksGrid } from '../../insurance/InsuranceLinksGrid'
 import { ArrPaymentDetailsCard } from '../arr/ArrPaymentDetailsCard'
 import { DossierPanel } from '../arr/DossierPanel'
+import { CompanyFormationSummary } from '../companyFormation/CompanyFormationSummary'
 import type { MicroStepContext, MicroStepSlot } from '../microStepTypes'
 import { TOKENS } from '../onboardingTheme'
 import { useOnboarding } from '../useOnboarding'
@@ -47,6 +50,8 @@ export function MicroStepSlotContent({
       return <ArrDossierSlot />
     case 'vehicleDossier':
       return <VehicleDossierSlot />
+    case 'onboardingAdvance':
+      return <OnboardingAdvanceSlot />
     case 'rcaOffer':
       return (
         <InsuranceOffer
@@ -62,6 +67,51 @@ export function MicroStepSlotContent({
         />
       )
   }
+}
+
+/**
+ * Plata avansului, ca ecran de onboarding.
+ *
+ * Înainte, ecranul înlocuia tot runnerul din pagina pasului PFA, deci putea sta doar DUPĂ
+ * întrebarea „ai deja PFA?" — adică plata venea după alegere. Ca slot, e un micro-pas ca oricare
+ * altul și poate sta primul, între eligibilitate și PFA: cerem banii înainte, indiferent de ce
+ * urmează să aleagă.
+ */
+function OnboardingAdvanceSlot() {
+  const { state } = useOnboarding()
+  const [paying, setPaying] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  if (!state) return null
+
+  const startPayment = async () => {
+    setError(null)
+    setPaying(true)
+    try {
+      const origin = window.location.origin
+      // Eticheta de preț se formatează din starea serverului, nu se scrie în cod.
+      await stripeService.redirectToInfiintarePfa(
+        `${origin}/onboarding?pfa_setup_paid=1&session_id={{CHECKOUT_SESSION_ID}}`,
+        `${origin}/onboarding/pfa`,
+        `${(state.onboardingAdvanceBani / 100).toLocaleString('ro-RO')} lei`,
+      )
+    } catch (err) {
+      // 422 = plata nu poate fi deschisă acum. Mesajul serverului spune exact de ce.
+      setError(getErrorMessage(err, 'Nu am putut deschide plata. Încearcă din nou.'))
+      setPaying(false)
+    }
+  }
+
+  return (
+    <Stack spacing={2}>
+      {error && (
+        <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+          {error}
+        </Alert>
+      )}
+      <CompanyFormationSummary state={state} onPay={() => void startPayment()} paying={paying} />
+    </Stack>
+  )
 }
 
 /**

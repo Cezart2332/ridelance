@@ -223,6 +223,8 @@ export type MicroStepSlot =
   /** Dosarul generat: previzualizare, descărcare și starea „descărcat cel puțin o dată". */
   | 'arrDossier'
   | 'vehicleDossier'
+  /** Avansul de plătit, cu ce include și butonul care deschide checkoutul Stripe. */
+  | 'onboardingAdvance'
   /** Oferta asigurari.ro pentru RCA, deasupra uploadului poliței. */
   | 'rcaOffer'
   /** Oferta asigurari.ro pentru asigurarea călătorilor. */
@@ -236,7 +238,19 @@ export type MicroStepSlot =
  * la bancă, iar cardul cu contul ARR e informativ. Un ecran care așteaptă la infinit o confirmare
  * pe care n-o poate primi e o fundătură.
  */
-export const BLOCKING_SLOTS = new Set<MicroStepSlot>(['arrDossier', 'vehicleDossier'])
+export const BLOCKING_SLOTS = new Set<MicroStepSlot>([
+  'arrDossier',
+  'vehicleDossier',
+  // Plata nu se sare: tot ce urmează e lucru pe care îl începem după ce e achitată.
+  'onboardingAdvance',
+])
+
+/** De ce nu se poate continua de pe un ecran cu slot blocant, pe fiecare slot. */
+export const BLOCKING_SLOT_REASONS: Record<string, string> = {
+  arrDossier: 'Generează dosarul, descarcă-l și marchează depunerea ca să poți continua.',
+  vehicleDossier: 'Generează dosarul, descarcă-l și marchează depunerea ca să poți continua.',
+  onboardingAdvance: 'Achită avansul ca să putem începe.',
+}
 
 /** Un micro-pas filtrat, cu poziția lui în parcursul real al utilizatorului. */
 export interface MicroStepView {
