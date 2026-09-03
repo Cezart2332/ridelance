@@ -56,7 +56,7 @@ export const STEP_INTRO: Record<string, StepIntro> = {
   platforms: {
     lead: 'Conectează',
     accent: 'Uber și Bolt.',
-    subtitle: 'Conturile de flotă pe care le folosești ca șofer.',
+    subtitle: 'Contul de flotă, pe care îl administrăm noi, și contul tău de șofer.',
     tags: ['Fără parole partajate'],
   },
   vehicle: {

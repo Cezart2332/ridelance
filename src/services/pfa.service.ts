@@ -66,12 +66,20 @@ export interface PfaPlatformAccount {
   pfaRegistrationId: string;
   provider: 'Uber' | 'Bolt' | string;
   kind: 'Driver' | 'Fleet' | string;
+  /**
+   * Contul de FLOTĂ (operator). Pe linia de tip Driver sunt credențialele contului deschis de
+   * RIDElance — onboardingul ține ambele conturi ale unei platforme pe același rând.
+   */
   email: string | null;
   phone: string | null;
   fullName: string | null;
   status: string;
   configuredAtUtc: string | null;
   updatedAtUtc: string | null;
+  /** Contul de ȘOFER, cel cu care se conduce efectiv. Alt cont, alte coloane. */
+  driverEmail: string | null;
+  driverPhone: string | null;
+  driverFullName: string | null;
 }
 
 export interface PfaFleetConsent {

@@ -7,10 +7,11 @@ import type { MicroStepContext, MicroStepDef } from '../microStepTypes'
 /**
  * Pasul 4 — Autorizația de transport alternativ, ca ecrane.
  *
- * Județul agenției se alege PRIMUL, înaintea documentelor. Nu e o preferință de ordine: ecranul
- * „Dovada plății tarifului ARR" arată contul de trezorerie al agenției, iar contul se alege după
- * județ. Cu întrebarea la coadă, ecranul ăla cerea dovada unei plăți fără să poată spune unde se
- * plătește — afișa „alege întâi județul", pentru un județ pe care fluxul nu-l ceruse încă.
+ * Documentele întâi, apoi „Unde depui", apoi dovada plății. Județul se alegea la început, ca
+ * ecranul de plată să știe ce cont de trezorerie afișeze — dar întrebarea venea înainte ca omul să
+ * fi strâns un singur act, deci nu avea de unde ști dacă județul ales e și cel unde ajunge să
+ * depună. Acum ordinea urmează realitatea: aduni actele, spui unde le duci, apoi plătești acolo.
+ * Contul de trezorerie e cunoscut la fel de bine, fiindcă plata rămâne DUPĂ alegerea județului.
  *
  * Documentele se cer unul câte unul, în ordinea în care le cere ARR. Cele preluate din pașii
  * anteriori (certificat, atestat) apar tot ca ecran, dar deja bifate — userul vede că sunt
@@ -49,12 +50,15 @@ const HINTS: Record<string, string> = {
   DovadaPlataArr: 'Chitanța sau ordinul de plată al tarifului ARR, în contul de trezorerie de mai sus.',
 }
 
-/** Documentele cerute de ARR, minus autorizația însăși — aia vine la final, de la ei. */
+/**
+ * Documentele cerute de ARR, minus autorizația însăși (vine la final, de la ei) și minus dovada
+ * plății, care are ecranul ei DUPĂ alegerea județului — altfel n-ar avea ce cont să afișeze.
+ */
 const ARR_DOCUMENTS = requirementsOf('arr').filter(
   (req) => req.category !== 'AutorizatieTransportAlternativ',
 )
 
-const documentSteps: MicroStepDef[] = ARR_DOCUMENTS.map((req) => ({
+const documentStepFor = (req: { category: string; label: string; alsoAccepts?: string[] }): MicroStepDef => ({
   id: `arr_${req.category}`,
   macroStep: 'arr',
   kind: 'upload' as const,
@@ -67,13 +71,23 @@ const documentSteps: MicroStepDef[] = ARR_DOCUMENTS.map((req) => ({
     label: req.label,
     hint: HINTS[req.category] ?? 'Fotografie sau PDF, cu textul lizibil.',
   },
-  // Contul de trezorerie apare exact pe ecranul unde e nevoie de el: cel în care se cere dovada
-  // plății. Pe ecranul de agenție era prea devreme (nu ai ce plăti încă), iar pe cel de generare
-  // a dosarului prea târziu — plata era deja făcută sau uitată.
-  ...(req.category === 'DovadaPlataArr'
-    ? { slot: 'arrPaymentDetails' as const, slotBeforeBody: true }
-    : {}),
   isDone: (c: MicroStepContext) => hasDocument(c, [req.category, ...(req.alsoAccepts ?? [])]),
+})
+
+const documentSteps: MicroStepDef[] = ARR_DOCUMENTS.filter(
+  (req) => req.category !== 'DovadaPlataArr',
+).map(documentStepFor)
+
+/**
+ * Dovada plății, separat: contul de trezorerie pe care îl arată slotul se alege după județ, deci
+ * ecranul vine după „Unde depui", nu în rândul celorlalte documente.
+ */
+const paymentProofSteps: MicroStepDef[] = ARR_DOCUMENTS.filter(
+  (req) => req.category === 'DovadaPlataArr',
+).map((req) => ({
+  ...documentStepFor(req),
+  slot: 'arrPaymentDetails' as const,
+  slotBeforeBody: true,
 }))
 
 /** Județul agenției: alegerea din sesiune, apoi ce s-a salvat, apoi sediul social. */
@@ -84,6 +98,7 @@ const agencyCounty = (c: MicroStepContext): string =>
   ''
 
 export const arrMicroSteps: MicroStepDef[] = [
+  ...documentSteps,
   {
     id: 'arr_agentie',
     macroStep: 'arr',
@@ -97,10 +112,11 @@ export const arrMicroSteps: MicroStepDef[] = [
         key: 'county',
         label: 'Agenție ARR (județ)',
         options: COUNTIES.map((county) => ({ value: county, title: county })),
-        helper: 'Precompletat din adresa ta. Poți alege alt județ.',
-        // Sursa precompletării e starea serverului: sediul social, altfel domiciliul citit din
-        // buletin. Se trece prin forma canonică fiindcă OCR-ul întoarce „CLUJ" sau
-        // „Bistrita-Nasaud", iar selectul cere exact valoarea din listă.
+        helper: 'Precompletat din certificatul de înregistrare. Poți alege alt județ.',
+        // Sursa precompletării e starea serverului: județul de pe certificatul de înregistrare,
+        // altfel cel de pe cazier, altfel domiciliul din buletin. Se trece prin forma canonică
+        // fiindcă OCR-ul întoarce „CLUJ" sau „Bistrita-Nasaud", iar selectul cere exact valoarea
+        // din listă.
         initialValue: (c) => canonicalCounty(c.state?.primaryCounty) ?? '',
       },
       {
@@ -131,7 +147,7 @@ export const arrMicroSteps: MicroStepDef[] = [
     },
     isDone: (c) => agencyCounty(c) !== '',
   },
-  ...documentSteps,
+  ...paymentProofSteps,
   {
     id: 'arr_dosar',
     macroStep: 'arr',

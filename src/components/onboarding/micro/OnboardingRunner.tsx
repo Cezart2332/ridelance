@@ -121,7 +121,7 @@ export function OnboardingRunner() {
     // nu avansa niciodată. `flush` nu trimite nimic când nu e nimic în așteptare.
     const autosave = currentAutosave()
 
-    if (def.kind === 'text' && autosave?.dirty === true && textStepIssues(def, answers).length === 0) {
+    if (def.kind === 'text' && autosave?.dirty === true && textStepIssues(def, answers, context).length === 0) {
       setSubmitting(true)
       try {
         if (!(await autosave.flush())) {
@@ -134,6 +134,21 @@ export function OnboardingRunner() {
         await refresh()
       } catch (err) {
         setError(getErrorMessage(err, 'Nu am putut salva datele.'))
+        setSubmitting(false)
+        return
+      }
+      setSubmitting(false)
+    }
+
+    // Alegerile care nu încap într-un `string` — bifele de platforme, de pildă. Aceeași regulă ca
+    // la `submit`: dacă salvarea eșuează, rămânem pe ecran cu eroarea, nu plecăm peste ea.
+    if (def.commit) {
+      setSubmitting(true)
+      try {
+        await def.commit(context)
+        await refresh()
+      } catch (err) {
+        setError(getErrorMessage(err, 'Nu am putut salva alegerea.'))
         setSubmitting(false)
         return
       }
@@ -227,9 +242,14 @@ export function OnboardingRunner() {
       ) : null
     }
 
+    // Aceeași regulă ca mai sus, pentru ecranele cu buton propriu: fără ieșire înainte, butonul
+    // dispare. Cât timp `text` și `multi` nu se uitau la `deadEnd`, butonul lor arăta activ și
+    // făcea turul `/onboarding` → înapoi pe același pas — fundătura tăcută de la Uber/Bolt.
+    if (deadEnd) return null
+
     switch (def.kind) {
       case 'text': {
-        const issues = textStepIssues(def, answers)
+        const issues = textStepIssues(def, answers, context)
         return (
           <CardFooter
             disabled={submitting || issues.length > 0}
@@ -249,7 +269,6 @@ export function OnboardingRunner() {
         )
       }
       case 'info': {
-        if (deadEnd) return null
         // Un ecran cu slot blocant are ceva de dus la capăt în el (dosarul generat, descărcat și
         // marcat ca depus): se continuă abia când serverul confirmă. Sloturile informative —
         // contul băncii, contul ARR — nu blochează pe nimeni.
@@ -263,7 +282,7 @@ export function OnboardingRunner() {
         )
       }
       case 'summary':
-        return deadEnd ? null : (
+        return (
           <CardFooter
             disabled={submitting}
             label="Continuă către pasul următor"

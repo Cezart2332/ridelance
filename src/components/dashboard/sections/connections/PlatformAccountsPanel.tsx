@@ -48,7 +48,6 @@ export function PlatformAccountsPanel({ provider }: { provider: Provider }) {
   const [loading, setLoading] = useState(true)
   const [draft, setDraft] = useState<DriverDraft>(emptyDraft)
   const [saving, setSaving] = useState(false)
-  const [consentLoading, setConsentLoading] = useState(false)
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
@@ -65,10 +64,12 @@ export function PlatformAccountsPanel({ provider }: { provider: Provider }) {
         const account = data?.fiscalSettings?.platformAccounts.find(
           (a) => a.provider === provider && a.kind === 'Driver',
         )
+        // Câmpurile `driver*`, nu `email`/`phone`: pe același rând stau și credențialele contului
+        // de flotă, iar cardul ăsta arăta contul nostru de operator sub titlul „Cont șofer".
         setDraft({
-          email: account?.email ?? '',
-          phone: account?.phone ?? '',
-          fullName: account?.fullName ?? '',
+          email: account?.driverEmail ?? '',
+          phone: account?.driverPhone ?? '',
+          fullName: account?.driverFullName ?? '',
         })
       })
       .catch(console.error)
@@ -85,7 +86,7 @@ export function PlatformAccountsPanel({ provider }: { provider: Provider }) {
 
   const accountStatusLabel = (account?: PfaPlatformAccount) => {
     if (!account) return 'Neconfigurat'
-    if (account.kind === 'Driver') return account.email ? 'Completat' : 'Necompletat'
+    if (account.kind === 'Driver') return account.driverEmail ? 'Completat' : 'Necompletat'
     switch (account.status) {
       case 'Configured':
         return 'Configurat'
@@ -123,24 +124,6 @@ export function PlatformAccountsPanel({ provider }: { provider: Provider }) {
     }
   }
 
-  const handleAcceptConsent = async (type: 'fleet' | 'bolt') => {
-    if (!summary?.pfaRegistrationId) return
-    setConsentLoading(true)
-    try {
-      const nextConsent = await pfaService.acceptFleetConsent(summary.pfaRegistrationId, {
-        fleetAccountsAccepted:
-          type === 'fleet' ? true : Boolean(summary.fiscalSettings?.fleetConsent.fleetAccountsAccepted),
-        boltApiAccepted: type === 'bolt' ? true : Boolean(summary.fiscalSettings?.fleetConsent.boltApiAccepted),
-      })
-      setSummary((current) =>
-        current && current.fiscalSettings
-          ? { ...current, fiscalSettings: { ...current.fiscalSettings, fleetConsent: nextConsent } }
-          : current,
-      )
-    } finally {
-      setConsentLoading(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -151,10 +134,21 @@ export function PlatformAccountsPanel({ provider }: { provider: Provider }) {
   }
 
   const driverAccount = findAccount('Driver')
-  const fleetAccount = findAccount('Fleet')
+  // Contul de flotă are rândul lui doar când l-a creat un operator din admin. Onboardingul îl
+  // scrie pe linia Driver, în `email`/`phone` — de acolo se citește când linia Fleet lipsește.
+  const fleetAccount = findAccount('Fleet') ?? driverAccount
+  const consent = summary?.fiscalSettings?.fleetConsent
   const fleetRows = [
     { label: 'Email', value: fleetAccount?.email ?? '—' },
     { label: 'Nr telefon', value: fleetAccount?.phone ?? '—' },
+    {
+      label: 'Permisiune conturi fleet',
+      value: consent?.fleetAccountsAccepted ? 'Acceptată' : 'Neacceptată',
+    },
+    // Integrarea API e specifică Bolt — Uber nu are așa ceva.
+    ...(provider === 'Bolt'
+      ? [{ label: 'Bolt Fleet API', value: consent?.boltApiAccepted ? 'Acceptat' : 'Neacceptat' }]
+      : []),
   ]
 
   return (
@@ -180,8 +174,8 @@ export function PlatformAccountsPanel({ provider }: { provider: Provider }) {
               sx={{
                 fontWeight: 700,
                 borderRadius: DASHBOARD_TOKENS.radius.full,
-                color: driverAccount?.email ? DASHBOARD_TOKENS.stateActive : DASHBOARD_TOKENS.textMuted,
-                backgroundColor: driverAccount?.email
+                color: driverAccount?.driverEmail ? DASHBOARD_TOKENS.stateActive : DASHBOARD_TOKENS.textMuted,
+                backgroundColor: driverAccount?.driverEmail
                   ? alpha(DASHBOARD_TOKENS.stateActive, 0.1)
                   : alpha(DASHBOARD_TOKENS.ink, 0.06),
               }}
@@ -282,31 +276,16 @@ export function PlatformAccountsPanel({ provider }: { provider: Provider }) {
             </Stack>
           ))}
 
-          <Stack spacing={1.2} sx={{ mt: 2 }}>
-            <Button
-              variant={summary?.fiscalSettings?.fleetConsent.fleetAccountsAccepted ? 'outlined' : 'contained'}
-              disabled={consentLoading || summary?.fiscalSettings?.fleetConsent.fleetAccountsAccepted}
-              onClick={() => handleAcceptConsent('fleet')}
-              sx={{ fontWeight: 750, textTransform: 'none', borderRadius: DASHBOARD_TOKENS.radius.full }}
-            >
-              {summary?.fiscalSettings?.fleetConsent.fleetAccountsAccepted
-                ? 'Permisiune conturi fleet acceptată'
-                : 'Accept permisiunea pentru conturile fleet'}
-            </Button>
-            {/* Consimțământul pentru API e specific Bolt — Uber nu are integrare API. */}
-            {provider === 'Bolt' && (
-              <Button
-                variant={summary?.fiscalSettings?.fleetConsent.boltApiAccepted ? 'outlined' : 'contained'}
-                disabled={consentLoading || summary?.fiscalSettings?.fleetConsent.boltApiAccepted}
-                onClick={() => handleAcceptConsent('bolt')}
-                sx={{ fontWeight: 750, textTransform: 'none', borderRadius: DASHBOARD_TOKENS.radius.full }}
-              >
-                {summary?.fiscalSettings?.fleetConsent.boltApiAccepted
-                  ? 'Bolt Fleet API acceptat'
-                  : 'Accept integrarea Bolt Fleet API'}
-              </Button>
-            )}
-          </Stack>
+          {/*
+            Permisiunile se cer în onboarding, la pasul Uber & Bolt, lângă conturile la care se
+            referă. Aici rămân doar de citit: butoanele erau într-un ecran la care se ajunge abia
+            după înrolare, adică după ce conturile fuseseră deja deschise.
+          */}
+          {!consent?.fleetAccountsAccepted && (
+            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.82rem', mt: 2 }}>
+              Permisiunile se acordă în onboarding, la pasul Uber &amp; Bolt.
+            </Typography>
+          )}
         </Paper>
       </Box>
 

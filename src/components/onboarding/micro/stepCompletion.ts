@@ -1,4 +1,4 @@
-import type { MicroStepAnswers, MicroStepDef } from '../microStepTypes'
+import type { MicroStepAnswers, MicroStepContext, MicroStepDef } from '../microStepTypes'
 
 /**
  * Când e „Continuă" activ, pe tipurile de ecran care nu au un răspuns unic — și, mai important,
@@ -13,16 +13,31 @@ import type { MicroStepAnswers, MicroStepDef } from '../microStepTypes'
  */
 
 /** Câmpurile obligatorii ale unui ecran `text` sunt completate și valide. */
-export function textStepComplete(def: MicroStepDef, answers: MicroStepAnswers): boolean {
-  return textStepIssues(def, answers).length === 0
+export function textStepComplete(
+  def: MicroStepDef,
+  answers: MicroStepAnswers,
+  context?: MicroStepContext,
+): boolean {
+  return textStepIssues(def, answers, context).length === 0
 }
 
 /**
  * Ce mai lipsește dintr-un ecran `text`, în cuvinte: `Parola contului: minim 8 caractere`.
  * Câmpurile opționale contează doar dacă au fost completate greșit.
+ *
+ * `context` e opțional, dar când e dat schimbă tratamentul câmpurilor GOALE: dacă serverul zice
+ * deja că ecranul e rezolvat (`isDone`), un câmp gol nu mai e o lipsă. Contează pentru valorile pe
+ * care serverul nu le trimite înapoi — parola contului de flotă, de pildă, n-are `initialValue`
+ * fiindcă răspunsul poartă doar `hasPassword`. După un refresh, câmpul revenea gol și „Continuă"
+ * rămânea blocat pe un ecran deja salvat. Un câmp completat GREȘIT rămâne o problemă oricum.
  */
-export function textStepIssues(def: MicroStepDef, answers: MicroStepAnswers): string[] {
+export function textStepIssues(
+  def: MicroStepDef,
+  answers: MicroStepAnswers,
+  context?: MicroStepContext,
+): string[] {
   const issues: string[] = []
+  const savedOnServer = context !== undefined && def.isDone(context)
 
   for (const field of def.fields ?? []) {
     const stored = answers[`${def.id}.${field.key}`]
@@ -30,7 +45,7 @@ export function textStepIssues(def: MicroStepDef, answers: MicroStepAnswers): st
     const filled = value.trim() !== ''
 
     if (!filled) {
-      if (!field.optional) issues.push(`Completează: ${field.label}`)
+      if (!field.optional && !savedOnServer) issues.push(`Completează: ${field.label}`)
       continue
     }
 

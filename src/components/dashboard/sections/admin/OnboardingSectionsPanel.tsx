@@ -33,9 +33,11 @@ import {
   onboardingService,
   type OnboardingSectionStatus,
   type OnboardingState,
+  type PlatformOnboardingState,
+  type PlatformOnboardingStatus,
+  type PlatformProvider,
 } from '../../../../services/onboarding.service'
 import { formatDocumentCategory } from '../../../../utils/formatters'
-import { DateField } from '../../../common/DateField'
 
 interface OnboardingSectionsPanelProps {
   pfaId: string
@@ -106,8 +108,8 @@ const ADMIN_STEPS: AdminStep[] = [
   },
   {
     key: 'fiscal', order: 2, label: 'Fiscal, bancă & semnături',
-    categories: ['ExtrasBancar', 'DecontTvaIntracomunitar', 'DecontTaxaNerezident', 'CertificatTvaIntracomunitar'],
-    guidedNote: 'TVA, cont bancar și cont Oblio le completează clientul. Pachetul de semnături îl aloci tu, mai jos — pasul nu se închide fără asta.',
+    categories: ['ExtrasBancar', 'DecontTvaIntracomunitar', 'DecontTaxaNerezident', 'CertificatTvaIntracomunitar', 'DocumenteSemnate'],
+    guidedNote: 'TVA, cont bancar și cont Oblio le completează clientul. Pachetul de semnături îl trimiți în afara aplicației; clientul îl încarcă semnat mai sus, la documente. Pasul se închide când validezi secțiunea, mai jos.',
   },
   {
     key: 'arr', order: 3, label: 'Autorizație transport (ARR)',
@@ -117,7 +119,7 @@ const ADMIN_STEPS: AdminStep[] = [
   {
     key: 'platforms', order: 4, label: 'Uber & Bolt',
     categories: [],
-    guidedNote: 'Selecția platformelor și conturile de operator — flux ghidat, avans manual din admin.',
+    guidedNote: 'Pasul n-are documente: clientul completează conturile de flotă și de șofer, iar avansul până la „Activ" îl faci tu, mai jos.',
   },
   {
     key: 'vehicle', order: 5, label: 'Vehicul, copie conformă & ecusoane',
@@ -170,6 +172,195 @@ function docStatusLabel(status: string): string {
   return 'Respins'
 }
 
+/** Statusurile de onboarding ale unui cont de platformă, în ordinea în care se parcurg. */
+const PLATFORM_STATUSES: { value: PlatformOnboardingStatus; label: string }[] = [
+  { value: 'NotStarted', label: 'Neînceput' },
+  { value: 'Selected', label: 'Selectat' },
+  { value: 'AccountLinked', label: 'Cont legat' },
+  { value: 'ContractSigned', label: 'Contract semnat' },
+  { value: 'Active', label: 'Activ' },
+  { value: 'Skipped', label: 'Sărit' },
+]
+
+const EXISTING_ACCOUNT_LABELS: Record<string, string> = {
+  HasOperatorAccount: 'Are deja cont de operator',
+  None: 'Nu are cont',
+  DriverOnly: 'Are doar cont de șofer',
+  Unknown: 'Nu știe',
+}
+
+/**
+ * Ce a completat clientul la pasul Uber & Bolt.
+ *
+ * Pasul e singurul din onboarding fără documente, deci grupul lui arăta „Niciun document încărcat"
+ * și atât — adminul nu vedea nici platformele alese, nici conturile, deși totul era salvat de mult.
+ * Tot de aici se face și avansul manual: endpointul exista, dar nu-l apela nimeni.
+ */
+function PlatformAccountsReview({
+  pfaId,
+  busy,
+  onSnackbar,
+}: {
+  pfaId: string
+  busy: boolean
+  onSnackbar: (message: string, severity: 'success' | 'error') => void
+}) {
+  const [platforms, setPlatforms] = useState<PlatformOnboardingState | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState<string | null>(null)
+
+  // Starea se scrie doar din lanțul de promisiuni, niciodată sincron în efect: un `setState`
+  // direct în corpul efectului declanșează randări în cascadă (regula react-hooks din proiect).
+  useEffect(() => {
+    let cancelled = false
+    onboardingService
+      .getPlatformOnboardingForRegistration(pfaId)
+      .then((data) => {
+        if (!cancelled) setPlatforms(data)
+      })
+      .catch(() => {
+        if (!cancelled) setPlatforms(null)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [pfaId])
+
+  const advance = async (provider: PlatformProvider, status: PlatformOnboardingStatus) => {
+    setSaving(provider)
+    try {
+      await onboardingService.advancePlatformOnboarding(pfaId, provider, status)
+      setPlatforms(await onboardingService.getPlatformOnboardingForRegistration(pfaId))
+      onSnackbar(`Contul ${provider} a fost mutat pe „${status}".`, 'success')
+    } catch {
+      onSnackbar(`Nu am putut schimba statusul contului ${provider}.`, 'error')
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Box sx={{ px: 2.5, pb: 2 }}>
+        <CircularProgress size={20} />
+      </Box>
+    )
+  }
+
+  const chosen = (platforms?.platforms ?? []).filter((p) => p.isSelectedByUser)
+
+  if (chosen.length === 0) {
+    return (
+      <Box sx={{ px: 2.5, pb: 2 }}>
+        <Alert severity="info">Clientul nu a ales încă nicio platformă.</Alert>
+      </Box>
+    )
+  }
+
+  return (
+    <Box sx={{ px: 2.5, pb: 2 }}>
+      <Stack spacing={2}>
+        {chosen.map((account) => {
+          const rows: { label: string; value: string }[] = [
+            {
+              label: 'Are cont?',
+              value: EXISTING_ACCOUNT_LABELS[account.existingAccountAnswer ?? ''] ?? '—',
+            },
+            { label: 'Email flotă', value: account.email ?? '—' },
+            { label: 'Telefon flotă', value: account.phone ?? '—' },
+            { label: 'Parolă flotă', value: account.hasPassword ? 'Salvată' : 'Lipsește' },
+            { label: 'ID operator', value: account.operatorAccountId ?? '—' },
+            { label: 'Nume șofer', value: account.driverFullName ?? '—' },
+            { label: 'Email șofer', value: account.driverEmail ?? '—' },
+            { label: 'Telefon șofer', value: account.driverPhone ?? '—' },
+          ]
+
+          return (
+            <Box key={account.provider}>
+              <Stack direction="row" sx={{ alignItems: 'center', gap: 1, mb: 1 }}>
+                <Typography variant="caption" sx={{ fontWeight: 800, color: TOKENS.ink }}>
+                  {account.provider}
+                </Typography>
+                <Chip
+                  label={
+                    PLATFORM_STATUSES.find((s) => s.value === account.onboardingStatus)?.label ??
+                    account.onboardingStatus
+                  }
+                  size="small"
+                  sx={{
+                    fontSize: '0.62rem',
+                    fontWeight: 700,
+                    bgcolor: alpha(account.onboardingStatus === 'Active' ? '#10b981' : '#f59e0b', 0.1),
+                    color: account.onboardingStatus === 'Active' ? '#10b981' : '#f59e0b',
+                  }}
+                />
+              </Stack>
+
+              {rows.map((row) => (
+                <Stack
+                  key={row.label}
+                  direction="row"
+                  sx={{ justifyContent: 'space-between', gap: 2, py: 0.5 }}
+                >
+                  <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
+                    {row.label}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 700, wordBreak: 'break-word' }}>
+                    {row.value}
+                  </Typography>
+                </Stack>
+              ))}
+
+              <TextField
+                select
+                size="small"
+                label="Status onboarding"
+                value={account.onboardingStatus}
+                disabled={busy || saving === account.provider}
+                onChange={(e) =>
+                  void advance(account.provider, e.target.value as PlatformOnboardingStatus)
+                }
+                slotProps={{ select: { native: true } }}
+                sx={{ mt: 1.5, minWidth: 200 }}
+              >
+                {PLATFORM_STATUSES.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </TextField>
+            </Box>
+          )
+        })}
+
+        <Stack direction="row" spacing={1}>
+          <Chip
+            size="small"
+            label={
+              platforms?.fleetAccountsAccepted
+                ? 'Permisiune conturi fleet: acceptată'
+                : 'Permisiune conturi fleet: lipsă'
+            }
+            sx={{ fontSize: '0.62rem', fontWeight: 700 }}
+          />
+          {chosen.some((p) => p.provider === 'Bolt') && (
+            <Chip
+              size="small"
+              label={
+                platforms?.boltApiAccepted ? 'Bolt Fleet API: acceptat' : 'Bolt Fleet API: lipsă'
+              }
+              sx={{ fontSize: '0.62rem', fontWeight: 700 }}
+            />
+          )}
+        </Stack>
+      </Stack>
+    </Box>
+  )
+}
+
 /**
  * RL-02 — pasul fiscal nu poate fi închis de client: pachetul de împuterniciri îl alocăm noi.
  * Blocul ăsta e singurul loc din care pasul se finalizează sau se întoarce la client.
@@ -187,10 +378,6 @@ function SignaturePacketReview({
   onDone: () => Promise<void>
   onSnackbar: (message: string, severity: 'success' | 'error') => void
 }) {
-  const [packageName, setPackageName] = useState('')
-  const [signatureCount, setSignatureCount] = useState('')
-  const [expiresAt, setExpiresAt] = useState('')
-  const [adminNote, setAdminNote] = useState('')
   const [rejectOpen, setRejectOpen] = useState(false)
   const [reason, setReason] = useState('')
   const [saving, setSaving] = useState(false)
@@ -198,14 +385,17 @@ function SignaturePacketReview({
   const complete = async () => {
     setSaving(true)
     try {
+      // Fără niciun câmp: pachetul se pregătește și se trimite în afara aplicației, iar tot ce
+      // ținea formularul (denumire, număr de semnături, expirare) era retranscris de mână din
+      // altă unealtă — informație duplicată, care se învechea aici prima.
       await onboardingService.completeSignaturePacket(pfaId, {
         provider: 'EasyStreamTransSped',
-        packageName: packageName.trim() || null,
-        signatureCount: signatureCount ? Number(signatureCount) : null,
-        expiresAtUtc: expiresAt ? new Date(expiresAt).toISOString() : null,
-        adminNote: adminNote.trim() || null,
+        packageName: null,
+        signatureCount: null,
+        expiresAtUtc: null,
+        adminNote: null,
       })
-      onSnackbar('Pachetul a fost alocat. Pasul următor al clientului este deblocat.', 'success')
+      onSnackbar('Secțiunea a fost validată. Pasul următor al clientului este deblocat.', 'success')
       await onDone()
     } catch {
       onSnackbar('Nu am putut finaliza pasul. Încearcă din nou.', 'error')
@@ -218,7 +408,7 @@ function SignaturePacketReview({
     if (!reason.trim()) return
     setSaving(true)
     try {
-      await onboardingService.rejectSignaturePacket(pfaId, reason.trim(), adminNote.trim() || null)
+      await onboardingService.rejectSignaturePacket(pfaId, reason.trim(), null)
       onSnackbar('Pasul a fost întors clientului, cu motivul specificat.', 'success')
       setRejectOpen(false)
       setReason('')
@@ -233,7 +423,7 @@ function SignaturePacketReview({
   if (stepState === 'completed') {
     return (
       <Box sx={{ px: 2.5, pb: 2 }}>
-        <Alert severity="success">Pachetul de semnături a fost alocat, pasul e finalizat.</Alert>
+        <Alert severity="success">Secțiunea e validată, pasul e finalizat.</Alert>
       </Box>
     )
   }
@@ -260,45 +450,15 @@ function SignaturePacketReview({
 
       {stepState === 'rejected' && (
         <Alert severity="warning" sx={{ mb: 1.5 }}>
-          Pasul e la client, cu observațiile trimise. Îl poți finaliza oricum, dacă s-a rezolvat pe alt canal.
+          Pasul e la client, cu observațiile trimise. Îl poți valida oricum, dacă s-a rezolvat pe alt canal.
         </Alert>
       )}
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 1.5 }}>
-        <TextField
-          size="small"
-          label="Pachet alocat"
-          value={packageName}
-          onChange={(e) => setPackageName(e.target.value)}
-          fullWidth
-        />
-        <TextField
-          size="small"
-          label="Nr. semnături"
-          type="number"
-          value={signatureCount}
-          onChange={(e) => setSignatureCount(e.target.value)}
-          sx={{ minWidth: 140 }}
-        />
-        <DateField
-          size="small"
-          label="Expiră la"
-          value={expiresAt}
-          onChange={setExpiresAt}
-          sx={{ minWidth: 170 }}
-        />
-      </Stack>
-
-      <TextField
-        size="small"
-        label="Note interne (nu se văd de client)"
-        value={adminNote}
-        onChange={(e) => setAdminNote(e.target.value)}
-        fullWidth
-        multiline
-        minRows={2}
-        sx={{ mb: 1.5 }}
-      />
+      <Alert severity="info" sx={{ mb: 1.5 }}>
+        Pachetul se pregătește și se trimite clientului în afara aplicației. Clientul îl semnează și
+        încarcă documentele semnate la „Pachetul de semnături, semnat", mai sus. Verifică-le, apoi
+        validează secțiunea — asta îi deblochează pasul ARR.
+      </Alert>
 
       <Stack direction="row" spacing={1.5}>
         <Button
@@ -309,7 +469,7 @@ function SignaturePacketReview({
           disabled={disabled}
           sx={{ fontWeight: 700, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: 'none' }}
         >
-          Finalizează pasul
+          Validează secțiunea
         </Button>
         <Button
           size="small"
@@ -681,6 +841,11 @@ export function OnboardingSectionsPanel({
                   onDone={loadState}
                   onSnackbar={onSnackbar}
                 />
+              )}
+
+              {/* Pasul 5 — conturile Uber/Bolt și avansul lor manual */}
+              {group.key === 'platforms' && (
+                <PlatformAccountsReview pfaId={pfaId} busy={actionBusy} onSnackbar={onSnackbar} />
               )}
 
               {/* Secțiuni de documente care se validează (declanșează înrolarea) */}

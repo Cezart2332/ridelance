@@ -208,6 +208,9 @@ export const vehicleMicroSteps: MicroStepDef[] = [
       label: 'RCA',
       hint: 'Data expirării trebuie să fie lizibilă — te anunțăm înainte să expire.',
     },
+    // Oferta partenerului deasupra uploadului: ecranul cerea o poliță fără să spună de unde se ia.
+    slot: 'rcaOffer',
+    slotBeforeBody: true,
     visibleWhen: hasVehicle,
     isDone: (c) => hasDocument(c, ['RCA']),
   },
@@ -224,6 +227,8 @@ export const vehicleMicroSteps: MicroStepDef[] = [
       label: 'Asigurare călători și bagaje',
       hint: 'O cere ARR pentru transportul alternativ.',
     },
+    slot: 'travelInsuranceOffer',
+    slotBeforeBody: true,
     visibleWhen: hasVehicle,
     isDone: (c) => hasDocument(c, ['AsigurareCalatori']),
   },

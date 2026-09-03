@@ -22,6 +22,7 @@ import { Switcher } from '../pricing/Switcher'
 import { BcrDiscountCheckbox } from '../pricing/BcrDiscountCheckbox'
 import { PlanPrice } from '../pricing/PlanPrice'
 import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../../data/bcrDiscount'
+import { advanceCreditFor, ONBOARDING_ADVANCE_LEI } from '../../data/onboardingAdvance'
 import { TermsAcceptance } from '../common/TermsAcceptance'
 import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
 import { TOKENS as GLOBAL_TOKENS } from '../../constants/tokens'
@@ -55,6 +56,13 @@ export default function SubscriptionSelectPage() {
   const isSuspendedAccount = searchParams.get('reason') === 'suspended'
   const [gateChecking, setGateChecking] = useState(true)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  /**
+   * Avansul din onboarding e plătit, deci primul abonament vine cu reducere.
+   *
+   * Se citește din același răspuns ca poarta de mai jos — nu dintr-un al doilea apel — ca pagina
+   * să nu poată afișa o reducere pe care backendul n-o va aplica la checkout.
+   */
+  const [advancePaid, setAdvancePaid] = useState(false)
   // Pornește de la ce a bifat omul pe pagina publică, dacă a trecut pe acolo în sesiunea asta.
   const [bcrDiscount, setBcrDiscount] = useState(readBcrDiscountIntent)
 
@@ -71,6 +79,7 @@ export default function SubscriptionSelectPage() {
           navigate('/app/dashboard', { replace: true })
           return
         }
+        setAdvancePaid(sub?.hasPaidInfiintare === true)
         setGateChecking(false)
       })
       .catch(() => setGateChecking(false))
@@ -166,8 +175,13 @@ export default function SubscriptionSelectPage() {
           >
             <InfoOutlinedIcon sx={{ color: TOKENS.primaryStrong, fontSize: 20, flexShrink: 0 }} />
             <Typography sx={{ color: TOKENS.ink, fontSize: '0.88rem', lineHeight: 1.6 }}>
-              Abonamentul se activează imediat după plată — nu mai aștepți nimic. Îl poți anula
-              oricând din contul tău.
+              {/*
+                Banda spune de unde vine reducerea de pe carduri. Fără ea, prețurile de început ar
+                fi arătat ca o promoție oarecare, nu ca banii pe care omul i-a dat deja la început.
+              */}
+              {advancePaid
+                ? `Avansul de ${ONBOARDING_ADVANCE_LEI} lei plătit la înrolare se scade din primul abonament — vezi pe fiecare plan cât plătești la început. Din luna următoare, prețul e cel normal.`
+                : 'Abonamentul se activează imediat după plată — nu mai aștepți nimic. Îl poți anula oricând din contul tău.'}
             </Typography>
           </Paper>
 
@@ -289,6 +303,13 @@ export default function SubscriptionSelectPage() {
                       unit={plan.priceUnit}
                       discounted={bcrDiscount}
                       size="md"
+                      // Doar pe plata lunară: reducerea se aplică pe primele facturi, iar la plata
+                      // anuală „prima lună" nu e o factură separată — ar fi o promisiune ambiguă.
+                      advanceNote={
+                        advancePaid && cycle === 'monthly'
+                          ? (advanceCreditFor(plan.key, plan.monthlyLei)?.note ?? undefined)
+                          : undefined
+                      }
                     />
                     <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.78rem', mt: 0.5, fontStyle: 'italic' }}>
                       {plan.priceNote}

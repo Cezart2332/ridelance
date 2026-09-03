@@ -29,6 +29,9 @@ const selectedPlatforms = (c: MicroStepContext): string[] => {
     .map((p) => p.provider)
 }
 
+/** Integrarea API e specifică Bolt: Uber n-are așa ceva, deci n-are rost cerută. */
+const needsBoltApi = (c: MicroStepContext): boolean => selectedPlatforms(c).includes('Bolt')
+
 const field = (c: MicroStepContext, stepId: string, key: string): string => {
   const value = c.answers[`${stepId}.${key}`]
   return typeof value === 'string' ? value.trim() : ''
@@ -131,12 +134,16 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
       password: values.password || null,
       driverEmail: values.driverEmail || field(c, driverId, 'driverEmail') || saved?.driverEmail || null,
       driverPhone: values.driverPhone || field(c, driverId, 'driverPhone') || saved?.driverPhone || null,
-      driverExternalId:
-        values.driverExternalId ||
-        field(c, driverId, 'driverExternalId') ||
-        saved?.driverExternalId ||
-        null,
+      driverFullName:
+        values.driverFullName || field(c, driverId, 'driverFullName') || saved?.driverFullName || null,
     })
+  }
+
+  /** Are deja cont de operator — din sesiune dacă tocmai a răspuns, altfel din ce s-a salvat. */
+  const ownsAccount = (c: MicroStepContext): boolean => {
+    const answer = c.answers[answerId]
+    if (typeof answer === 'string') return answer === 'HasOperatorAccount'
+    return accountOf(c, provider)?.existingAccountAnswer === 'HasOperatorAccount'
   }
 
   return [
@@ -154,6 +161,16 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
         { value: 'HasOperatorAccount', title: 'Da' },
         { value: 'None', title: 'Nu' },
       ],
+      // Răspunsul pleacă pe loc, nu abia la primul `persist` de pe ecranul următor. Cât timp
+      // trăia doar în sesiune, un refresh între ecrane îl pierdea — iar fără el pasul nu se putea
+      // închide niciodată, fiindcă `UserPartComplete` îl cere.
+      submit: async (value) => {
+        await onboardingService.submitPlatformAccount({
+          provider,
+          hasExistingAccount: value === 'HasOperatorAccount',
+          existingAccountAnswer: value as ExistingAccountAnswer,
+        })
+      },
       visibleWhen: isChosen,
       isDone: (c) =>
         c.answers[answerId] !== undefined || accountOf(c, provider)?.existingAccountAnswer != null,
@@ -171,9 +188,14 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
           key: 'email',
           label: 'Email',
           type: 'email',
-          // Vine din fișa clientului: e contul RIDElance, nu unul pe care îl alegi aici.
-          initialValue: (c) => c.state?.contactEmail ?? '',
-          lockedWhenPrefilled: true,
+          // Când îl deschidem noi, contul e pe emailul RIDElance și nu se alege de aici. Când îl
+          // are deja, e aproape sigur pe alt email — acolo trebuie să-l poată corecta, altfel
+          // legăm contul greșit. Serverul aplică aceeași distincție la salvare.
+          initialValue: (c) =>
+            (ownsAccount(c) ? accountOf(c, provider)?.email : null) ?? c.state?.contactEmail ?? '',
+          lockedWhenPrefilled: (c) => !ownsAccount(c),
+          helper: (c) =>
+            ownsAccount(c) ? 'Emailul cu care intri în contul existent.' : undefined,
           validate: validateEmail,
         },
         {
@@ -237,10 +259,11 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
           validate: validatePhone,
         },
         {
-          key: 'driverExternalId',
-          label: 'ID șofer',
-          optional: true,
-          initialValue: (c) => accountOf(c, provider)?.driverExternalId ?? '',
+          // „ID șofer" era un identificator pe care aproape nimeni nu-l știe pe de rost, deci
+          // câmpul rămânea gol. Numele e ce caută oricum operatorul când leagă contul.
+          key: 'driverFullName',
+          label: 'Nume și prenume',
+          initialValue: (c) => accountOf(c, provider)?.driverFullName ?? '',
         },
       ],
       persist: async (values, c) => {
@@ -270,36 +293,72 @@ export const platformsMicroSteps: MicroStepDef[] = [
     railLabel: 'Platforme',
     title: 'Pe ce platforme vrei să lucrezi?',
     choices: [
-      { value: 'Uber', title: 'Uber Fleet' },
-      { value: 'Bolt', title: 'Bolt Fleet' },
+      { value: 'Uber', title: 'Uber' },
+      { value: 'Bolt', title: 'Bolt' },
     ],
-    // Alegerea se trimite pe ecranul următor, care o și confirmă.
-    isDone: (c) => selectedPlatforms(c).length > 0,
-  },
-  {
-    id: 'platforme_confirm',
-    macroStep: 'platforms',
-    kind: 'action',
-    eyebrow: EYEBROW,
-    icon: 'checkCircle',
-    railLabel: 'Confirmă platformele',
-    title: 'Confirmă platformele alese',
-    lines: (c) => {
-      const chosen = selectedPlatforms(c).map((p) => FLEET_LABELS[p as PlatformProvider] ?? p)
-      return chosen.length > 0
-        ? [`Îți deschidem conturile de operator pentru: ${chosen.join(' și ')}.`]
-        : ['Alege întâi cel puțin o platformă.']
-    },
-    action: {
-      label: 'Confirmă',
-      busyLabel: 'Se salvează...',
-      run: async (c) => {
-        const chosen = selectedPlatforms(c)
-        await onboardingService.selectPlatforms(chosen.includes('Uber'), chosen.includes('Bolt'))
-      },
+    /*
+     * Alegerea pleacă de pe ecranul ei, la „Continuă".
+     *
+     * Avea un al doilea ecran care nu făcea altceva decât să apese butonul ăsta — o confirmare
+     * pentru o alegere pe care userul tocmai o făcuse, cu aceleași cuvinte. `commit` există exact
+     * ca ecranele `multi` să-și poată trimite singure răspunsul.
+     */
+    commit: async (c) => {
+      const chosen = selectedPlatforms(c)
+      await onboardingService.selectPlatforms(chosen.includes('Uber'), chosen.includes('Bolt'))
     },
     isDone: (c) => (platformsOf(c)?.platforms ?? []).some((p) => p.isSelectedByUser),
   },
   ...platformSteps('Uber'),
   ...platformSteps('Bolt'),
+  {
+    /*
+     * Permisiunile de flotă, aici și nu în Dashboard.
+     *
+     * Stăteau în Conexiuni, adică într-un ecran la care se ajunge abia după înrolare — deci se
+     * cereau după ce conturile fuseseră deja deschise, iar între timp nimeni nu avea voie să le
+     * administreze. Locul lor e lângă conturile la care se referă.
+     */
+    id: 'permisiuni_fleet',
+    macroStep: 'platforms',
+    kind: 'action',
+    eyebrow: EYEBROW,
+    icon: 'shield',
+    railLabel: 'Permisiuni',
+    title: 'Permisiunile pentru conturile de flotă',
+    lines: (c) => {
+      const lines = [
+        'Ca să îți administrăm conturile de operator — să adăugăm mașina, să legăm contul de șofer și să scoatem rapoartele de încasări — avem nevoie de permisiunea ta.',
+      ]
+
+      if (needsBoltApi(c)) {
+        lines.push(
+          'Pentru Bolt e nevoie și de integrarea Bolt Fleet API: de acolo vin automat cursele și încasările, fără să le încarci tu lună de lună.',
+        )
+      }
+
+      lines.push('Nu îți schimbăm setările contului și nu acceptăm curse în locul tău.')
+      return lines
+    },
+    action: {
+      label: 'Accept permisiunile',
+      busyLabel: 'Se salvează...',
+      run: async (c) => {
+        const pfaId = platformsOf(c)?.pfaRegistrationId ?? c.state?.pfaRegistrationId
+        // Nu trecem tăcut peste: fără dosar, consimțământul n-are unde să se salveze, iar
+        // ecranul s-ar marca „rezolvat" pentru ceva ce nu s-a întâmplat.
+        if (!pfaId) throw new Error('Dosarul PFA nu e încă disponibil. Reîncarcă pagina.')
+        await onboardingService.acceptFleetConsent(pfaId, {
+          fleetAccountsAccepted: true,
+          boltApiAccepted: needsBoltApi(c),
+        })
+      },
+    },
+    visibleWhen: (c) => selectedPlatforms(c).length > 0,
+    isDone: (c) => {
+      const platforms = platformsOf(c)
+      if (!platforms?.fleetAccountsAccepted) return false
+      return !needsBoltApi(c) || platforms.boltApiAccepted
+    },
+  },
 ]

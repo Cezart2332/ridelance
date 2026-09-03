@@ -7,6 +7,7 @@ import { documentService, type DocumentSummary } from '../../../services/documen
 import { getErrorMessage } from '../../../utils/errorHandler'
 import { buildUploadFile } from '../../../utils/imagesToPdf'
 import { CertificateReadout } from '../CertificateReadout'
+import { CardFooter } from '../micro/CardFooter'
 import { TOKENS } from '../onboardingTheme'
 import { UploadField } from '../UploadField'
 
@@ -95,10 +96,16 @@ export function PfaPendingCard({
   documents,
   pfaRegistrationId,
   onRefresh,
+  onContinue,
 }: {
   documents: DocumentSummary[]
   pfaRegistrationId?: string | null
   onRefresh: () => Promise<unknown>
+  /**
+   * Mai departe, cât timp noi validăm. Lipsește doar când pasul următor chiar e blocat de altceva
+   * — altfel ecranul ăsta ar fi din nou o cameră fără ușă, exact bugul pentru care a fost deschis.
+   */
+  onContinue?: () => void
 }) {
   const rejectedDocs = rejectedPfaDocs(documents)
   const newestOf = (category: string) =>
@@ -137,6 +144,11 @@ export function PfaPendingCard({
       <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: TOKENS.ink, mb: 1 }}>
         Dosarul tău PFA este în validare
       </Typography>
+      <Typography sx={{ fontSize: '0.9rem', color: TOKENS.textMuted }}>
+        {onContinue
+          ? 'Nu trebuie să aștepți aici — poți continua cu pasul următor. Te anunțăm când dosarul e validat.'
+          : 'Te anunțăm pe email și în aplicație imediat ce e gata.'}
+      </Typography>
 
       {certificate && (
         <Box sx={{ mt: 3, textAlign: 'left' }}>
@@ -165,6 +177,12 @@ export function PfaPendingCard({
             />
           ))}
         </Stack>
+      )}
+
+      {onContinue && (
+        <Box sx={{ mt: 4 }}>
+          <CardFooter label="Continuă către pasul următor" onContinue={onContinue} />
+        </Box>
       )}
     </Paper>
   )

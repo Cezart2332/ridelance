@@ -154,6 +154,8 @@ interface RawPfa {
   createdAtUtc: string
   lastActivityAtUtc?: string | null
   documentCount?: number | null
+  /** Onboarding complet: toți pașii validați. Nu e același lucru cu dosarul PFA aprobat. */
+  onboardingCompletedAtUtc?: string | null
 }
 
 interface RawCar {
@@ -354,8 +356,10 @@ async function buildFallbackOverview(filters: AdminOverviewFilters): Promise<Adm
     .sort((a, b) => new Date(b.dateUtc).getTime() - new Date(a.dateUtc).getTime())
     .slice(0, 8)
 
+  // Înrolat = onboarding complet, ca pe server. „Dosar aprobat" e alt lucru: dosarul se aprobă la
+  // pasul 2 din 6, deci lista număra oameni aflați încă în mijlocul înrolării.
   const enrolledPfas = pfas
-    .filter((pfa) => pfa.status?.toLowerCase() === 'approved')
+    .filter((pfa) => pfa.onboardingCompletedAtUtc != null)
     .map(makePfaCard)
 
   return {

@@ -75,6 +75,8 @@ interface PfaSummary {
   documentCount: number
   /** Dosarul așteaptă o acțiune de admin (dosar PFA, secțiune sau pachet de semnături). */
   awaitingAdminAction: boolean
+  /** Onboarding complet: toți pașii validați. Nu e același lucru cu dosarul PFA aprobat. */
+  onboardingCompletedAtUtc: string | null
   createdAtUtc: string
   lastActivityAtUtc: string | null
 }
@@ -103,6 +105,7 @@ function normalizePfaSummary(item: any): PfaSummary {
     cui: item.cui ?? null,
     documentCount: item.documentCount,
     awaitingAdminAction: Boolean(item.awaitingAdminAction),
+    onboardingCompletedAtUtc: item.onboardingCompletedAtUtc ?? null,
     createdAtUtc: item.createdAtUtc,
     lastActivityAtUtc: item.lastActivityAtUtc,
   }
@@ -430,6 +433,8 @@ export function AdminDashboard() {
       documentCount: 0,
       // Cardul din overview nu poartă semnalul; oricum se citește doar de filtrul din listă.
       awaitingAdminAction: false,
+      // Cardul din overview e deja filtrat pe înrolare; data exactă nu se transmite.
+      onboardingCompletedAtUtc: new Date().toISOString(),
       createdAtUtc: new Date().toISOString(),
       lastActivityAtUtc: pfa.lastActivityAtUtc,
     })
@@ -500,7 +505,7 @@ export function AdminDashboard() {
 
   const navItems = [
     { id: 'overview', label: 'Acasă', icon: <HomeRoundedIcon /> },
-    { id: 'pfa', label: 'Cereri PFA', icon: <PeopleAltRoundedIcon /> },
+    { id: 'pfa', label: 'Onboarding', icon: <PeopleAltRoundedIcon /> },
     { id: 'pfa_inrolate', label: 'PFA-uri înrolate', icon: <HowToRegRoundedIcon /> },
     { id: 'masini', label: 'Mașini Ridesharing', icon: <DirectionsCarFilledRoundedIcon /> },
     // Lângă mașini, nu lângă setări: e tot moderare de conținut public, doar că a firmei.
@@ -520,10 +525,12 @@ export function AdminDashboard() {
   )
 
   const displayPfas = filteredPfas
+    // Înrolat = onboarding complet, nu „dosar PFA aprobat": un dosar aprobat poate avea încă
+    // patru pași de parcurs, iar tabul de onboarding e chiar locul unde se urmăresc.
     .filter(p =>
       activeTab === 'pfa_inrolate'
-        ? p.status.toLowerCase() === 'approved'
-        : p.status.toLowerCase() !== 'approved'
+        ? p.onboardingCompletedAtUtc !== null
+        : p.onboardingCompletedAtUtc === null
     )
     // Filtrul rapid din spec: dosarele la care mingea e la noi, nu la client.
     .filter(p => !onlyAwaitingAdmin || p.awaitingAdminAction)

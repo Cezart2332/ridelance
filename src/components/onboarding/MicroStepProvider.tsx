@@ -98,19 +98,26 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
    * despre deblocare, care putea să nu coincidă cu a serverului. Acum sursa e `currentStep`:
    * exact pasul pe care backendul acceptă scrieri.
    */
+  const currentStep = state?.currentStep ?? null
+
   const forwardTarget = useMemo(() => {
     const order = steps.findIndex((s) => s.key === activeKey)
     if (order < 0) return null
 
-    if (state?.currentStep && state.currentStep !== activeKey) {
-      const serverTarget = steps.find((s) => s.key === state.currentStep)
-      if (serverTarget && serverTarget.state !== 'locked') return serverTarget
+    // Ținta serverului contează doar dacă e ÎNAINTE. De când pașii se deblochează pe partea
+    // userului, nu pe validarea adminului, `currentStep` poate rămâne în urmă (un pas predat spre
+    // validare, dar nefinalizat) — iar „Continuă" l-ar fi trimis înapoi exact în pasul din care
+    // tocmai ieșise.
+    if (currentStep && currentStep !== activeKey) {
+      const serverIndex = steps.findIndex((s) => s.key === currentStep)
+      const serverTarget = steps[serverIndex]
+      if (serverIndex > order && serverTarget.state !== 'locked') return serverTarget
     }
 
     // Următorul pas mare deblocat — inclusiv când serverul încă marchează pasul curent ca activ
     // (ex. conturile fleet sunt completate, dar adminul nu le-a activat încă).
     return steps.slice(order + 1).find((s) => s.state !== 'locked') ?? null
-  }, [steps, activeKey, state?.currentStep])
+  }, [steps, activeKey, currentStep])
 
   const leave = useCallback(
     (direction: 1 | -1) => {

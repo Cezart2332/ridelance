@@ -1,3 +1,4 @@
+import { Box, Typography } from '@mui/material'
 import type { ReactNode } from 'react'
 
 import {
@@ -7,9 +8,11 @@ import {
 } from '../../../services/onboarding.service'
 import { canonicalCounty } from '../../../data/counties'
 import { BankAccountCta } from '../../common/BankAccountCta'
+import { InsuranceLinksGrid } from '../../insurance/InsuranceLinksGrid'
 import { ArrPaymentDetailsCard } from '../arr/ArrPaymentDetailsCard'
 import { DossierPanel } from '../arr/DossierPanel'
 import type { MicroStepContext, MicroStepSlot } from '../microStepTypes'
+import { TOKENS } from '../onboardingTheme'
 import { useOnboarding } from '../useOnboarding'
 
 /**
@@ -44,7 +47,38 @@ export function MicroStepSlotContent({
       return <ArrDossierSlot />
     case 'vehicleDossier':
       return <VehicleDossierSlot />
+    case 'rcaOffer':
+      return (
+        <InsuranceOffer
+          note="N-ai încă poliță? O poți face prin asigurari.ro, la tarifele negociate pentru RIDElance."
+          slugs={['rca', 'casco_econom']}
+        />
+      )
+    case 'travelInsuranceOffer':
+      return (
+        <InsuranceOffer
+          note="O cere ARR și se face separat de RCA. Prin asigurari.ro o ai la tarif de partener."
+          slugs={['accidents_traveler', 'travel']}
+        />
+      )
   }
+}
+
+/**
+ * Oferta partenerului, deasupra uploadului.
+ *
+ * Ecranele astea cereau o poliță pe care șoferul o are „de undeva", fără să spună de unde — deși
+ * avem un partener și tarife negociate, ascunse într-un tab din Dashboard la care se ajunge abia
+ * după înrolare. Linkurile vin din catalogul unic (`InsuranceLinksGrid`), ca URL-ul de afiliere
+ * să nu ajungă scris în două locuri.
+ */
+function InsuranceOffer({ note, slugs }: { note: string; slugs: readonly string[] }) {
+  return (
+    <Box>
+      <Typography sx={{ fontSize: '0.85rem', color: TOKENS.textMuted, mb: 1.5 }}>{note}</Typography>
+      <InsuranceLinksGrid compact only={slugs} />
+    </Box>
+  )
 }
 
 /**

@@ -17,12 +17,22 @@ import type { OnboardingState } from '../../../services/onboarding.service'
 import { TOKENS, tabularSx } from '../onboardingTheme'
 import { PanelCard } from '../PanelCard'
 
-/** Ce intră în taxa de înființare — scris o dată, ca ecranul să nu promită altceva decât livrăm. */
-const INCLUDED = [
+/**
+ * Ce se primește pe avans, pe fiecare ramură. Scris o dată, ca ecranul să nu promită altceva
+ * decât livrăm: cine are deja PFA nu cumpără o înființare, deci lista aia i-ar fi fost falsă.
+ */
+const INCLUDED_NEW_PFA = [
   'Rezervarea denumirii și pregătirea dosarului pentru ONRC',
   'Depunerea dosarului și urmărirea lui până la eliberare',
   'Certificatul de înregistrare și certificatul constatator',
   'Înregistrarea la ANAF și deschiderea dosarului fiscal',
+]
+
+const INCLUDED_HAS_PFA = [
+  'Autorizația de transport alternativ și copia conformă, cu dosarul pregătit de noi',
+  'Deschiderea conturilor de flotă Uber și Bolt pe numele tău',
+  'Contul de facturare Oblio, administrat de noi',
+  'Împuternicirile și contractele, pregătite pentru semnat o singură dată',
 ]
 
 /**
@@ -51,12 +61,16 @@ export function CompanyFormationSummary({
   const [acknowledged, setAcknowledged] = useState(false)
 
   const amount = lei(state.onboardingAdvanceBani)
+  // Avansul se cere pe ambele ramuri, dar nu cumpără același lucru: pentru unul deschidem PFA-ul,
+  // pentru celălalt continuăm de la PFA-ul lui. Ecranul spune ce primește fiecare.
+  const opensNewPfa = state.registrationType === 'NuAmPfa'
+  const included = opensNewPfa ? INCLUDED_NEW_PFA : INCLUDED_HAS_PFA
 
   return (
     <Stack spacing={3}>
       <Box>
         <Typography sx={{ fontWeight: 800, fontSize: '1.35rem', color: TOKENS.ink }}>
-          Îți deschidem PFA-ul
+          {opensNewPfa ? 'Îți deschidem PFA-ul' : 'Începem înrolarea'}
         </Typography>
         {/*
           Ecranul vine ÎNAINTEA dosarului, nu după: se plătește serviciul, apoi începem lucrul
@@ -64,7 +78,9 @@ export function CompanyFormationSummary({
           arătat ce se cumpără și ce urmează după plată.
         */}
         <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.92rem', mt: 0.5 }}>
-          După confirmarea plății îți deschidem dosarul de înființare și completezi datele.
+          {opensNewPfa
+            ? 'După confirmarea plății îți deschidem dosarul de înființare și completezi datele.'
+            : 'După confirmarea plății continuăm cu documentele PFA-ului tău.'}
         </Typography>
       </Box>
 
@@ -76,7 +92,7 @@ export function CompanyFormationSummary({
 
       <PanelCard title="Ce include">
         <Stack spacing={1}>
-          {INCLUDED.map((item) => (
+          {included.map((item) => (
             <Stack key={item} direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
               <CheckRoundedIcon sx={{ fontSize: 18, color: TOKENS.success, mt: '2px' }} />
               <Typography sx={{ fontSize: '0.88rem', color: TOKENS.ink }}>{item}</Typography>
@@ -94,8 +110,23 @@ export function CompanyFormationSummary({
           .
         </Typography>
         <Typography sx={{ fontSize: '0.92rem', color: TOKENS.ink, lineHeight: 1.6, mt: 1.5 }}>
-          Ne ocupăm de deschiderea PFA-ului, de obținerea documentelor necesare și de setarea
-          conturilor pentru desfășurarea activității independente.
+          {opensNewPfa
+            ? 'Ne ocupăm de deschiderea PFA-ului, de obținerea documentelor necesare și de setarea conturilor pentru desfășurarea activității independente.'
+            : 'Ne ocupăm de autorizația de transport, de conturile de flotă și de setarea contabilității pentru activitatea ta.'}
+        </Typography>
+
+        {/*
+          Partea care schimbă natura sumei: nu e un cost în plus, e prima lună de abonament
+          plătită mai devreme. Fără rândul ăsta, ecranul cerea 399 de lei pentru „ceva", iar
+          reducerea de la final apărea ca o surpriză nelegată de plata asta.
+        */}
+        <Typography sx={{ fontSize: '0.92rem', color: TOKENS.ink, lineHeight: 1.6, mt: 1.5 }}>
+          Suma se întoarce integral la finalul înrolării, ca reducere pe primul abonament:{' '}
+          <Box component="strong" sx={{ fontWeight: 800 }}>
+            Solo — două luni gratuite, Start — o lună gratuită, Pro — {amount} lei reducere în
+            prima lună
+          </Box>
+          . Din luna următoare, prețul e cel normal.
         </Typography>
 
         <Stack
@@ -134,7 +165,8 @@ export function CompanyFormationSummary({
           label={
             <Typography sx={{ fontSize: '0.88rem', color: TOKENS.ink, lineHeight: 1.5 }}>
               Am înțeles că suma de {amount} lei reprezintă plata în avans a abonamentului
-              RIDElance Start și este nerambursabilă.
+              RIDElance Start, că nu se returnează în bani și că se recuperează integral ca
+              reducere la primul abonament.
             </Typography>
           }
         />

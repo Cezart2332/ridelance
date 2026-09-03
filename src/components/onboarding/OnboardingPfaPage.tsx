@@ -47,7 +47,7 @@ function redirectToInfiintarePayment(priceLabel: string): Promise<void> {
 
 export default function OnboardingPfaPage() {
   const navigate = useNavigate()
-  const { state, documents, refresh } = useOnboarding()
+  const { state, steps, documents, refresh } = useOnboarding()
 
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -111,11 +111,17 @@ export default function OnboardingPfaPage() {
   }
 
   if (state?.pfaStatus === 'Pending') {
+    // Validarea e a noastră și durează zile; șoferul nu mai stă după ea. Butonul apare doar dacă
+    // pasul următor chiar e deschis — serverul deblochează pe dosarul depus, nu pe verdict.
+    const pfaOrder = steps.findIndex((s) => s.key === 'pfa')
+    const nextStep = steps.slice(pfaOrder + 1).find((s) => s.state !== 'locked')
+
     return (
       <PfaPendingCard
         documents={documents}
         pfaRegistrationId={state.pfaRegistrationId}
         onRefresh={refresh}
+        onContinue={nextStep ? () => navigate(nextStep.path) : undefined}
       />
     )
   }

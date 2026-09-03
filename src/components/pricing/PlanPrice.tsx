@@ -25,6 +25,14 @@ interface PlanPriceProps {
   align?: 'left' | 'center'
   /** Landingul scrie prețul mai mic decât pagina de Abonamente. */
   size?: 'md' | 'lg'
+  /**
+   * Ce se întâmplă cu primele facturi, când avansul din onboarding a fost plătit.
+   *
+   * Separat de `discounted`: reducerea BCR schimbă prețul recurent, asta schimbă doar prima lună
+   * (sau primele două). Cifra mare rămâne prețul planului — altfel cine compară planurile ar
+   * compara oferte de început, nu ce plătește din luna a treia.
+   */
+  advanceNote?: string
 }
 
 const formatLei = (value: number) =>
@@ -36,6 +44,7 @@ export function PlanPrice({
   discounted,
   align = 'left',
   size = 'lg',
+  advanceNote,
 }: PlanPriceProps) {
   const amount = discounted ? bcrDiscountedLei(monthlyLei) : monthlyLei
   const big = size === 'lg' ? '1.9rem' : '1.25rem'
@@ -96,6 +105,20 @@ export function PlanPrice({
           }}
         >
           primele {BCR_DISCOUNT.months} luni, apoi {formatLei(monthlyLei)} lei
+        </Typography>
+      )}
+
+      {advanceNote && (
+        <Typography
+          sx={{
+            color: TOKENS.primaryStrong,
+            fontSize: '0.78rem',
+            fontWeight: 700,
+            mt: 0.4,
+            textAlign: align === 'center' ? 'center' : 'left',
+          }}
+        >
+          {advanceNote}
         </Typography>
       )}
     </>

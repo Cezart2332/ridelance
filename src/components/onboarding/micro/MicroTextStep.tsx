@@ -93,7 +93,10 @@ export function MicroTextStep({ def, context }: { def: MicroStepDef; context: Mi
 
         // Câmp venit din fișa clientului: se vede, nu se scrie. Serverul îl re-hidratează la
         // salvare, deci blocarea de aici e comoditate, nu control de acces.
-        const locked = field.lockedWhenPrefilled === true && value !== ''
+        const lockRule = field.lockedWhenPrefilled
+        const lockedByRule =
+          typeof lockRule === 'function' ? lockRule(context) : lockRule === true
+        const locked = lockedByRule && value !== ''
 
         return (
           <Box key={field.key}>

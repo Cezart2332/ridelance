@@ -285,12 +285,18 @@ export interface PlatformAccount {
   /** Contul de ȘOFER de pe aceeași platformă — alt cont decât cel de flotă. */
   driverEmail: string | null
   driverPhone: string | null
+  driverFullName: string | null
+  /** Istoric: nu se mai cere în onboarding, dar dosarele vechi îl au. */
   driverExternalId: string | null
 }
 
 export interface PlatformOnboardingState {
   pfaRegistrationId: string | null
   platforms: PlatformAccount[]
+  /** Permisiunea de administrare a conturilor de flotă, cerută tot la pasul 5. */
+  fleetAccountsAccepted: boolean
+  /** Integrarea Bolt Fleet API. Doar Bolt o are. */
+  boltApiAccepted: boolean
 }
 
 // --- Pasul 5: vehicul, copie conformă & ecusoane ---
@@ -374,9 +380,29 @@ export const onboardingService = {
     password?: string | null
     driverEmail?: string | null
     driverPhone?: string | null
+    driverFullName?: string | null
     driverExternalId?: string | null
   }): Promise<PlatformOnboardingState> {
     const { data } = await api.post<PlatformOnboardingState>('/onboarding/platforms/account', payload)
+    return data
+  },
+
+  /**
+   * Permisiunile de flotă, acceptate din onboarding (pasul 5).
+   *
+   * Aceeași rută ca în Dashboard: consimțământul e al proprietarului dosarului, iar serverul
+   * verifică asta oricum. Nu se poate „retrage" de aici — cine acceptă rămâne acceptat.
+   */
+  async acceptFleetConsent(
+    pfaId: string,
+    consent: { fleetAccountsAccepted: boolean; boltApiAccepted: boolean },
+  ): Promise<void> {
+    await api.post(`/pfa-registrations/${pfaId}/fleet-consent`, consent)
+  },
+
+  /** Admin — ce a completat șoferul la pasul 5. Pasul n-are documente, deci nu se vede altfel. */
+  async getPlatformOnboardingForRegistration(pfaId: string): Promise<PlatformOnboardingState> {
+    const { data } = await api.get<PlatformOnboardingState>(`/pfa-registrations/${pfaId}/platforms`)
     return data
   },
 

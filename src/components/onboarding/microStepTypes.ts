@@ -106,8 +106,12 @@ export interface FieldDef {
    * Câmpul e al contului RIDElance, nu al pasului: vine din fișa clientului și nu se editează
    * aici. `readOnly` + `disabled`, fără text explicativ — se vede din stare că nu se scrie în el.
    * Schimbarea trece prin suport, iar serverul îl re-hidratează oricum la salvare.
+   *
+   * Predicat, nu doar boolean: emailul contului de flotă e al nostru când îl deschidem noi, dar
+   * al șoferului când îl are deja — și atunci trebuie să-l poată corecta, fiindcă e aproape sigur
+   * altul decât cel de RIDElance. Serverul aplică exact aceeași regulă la salvare.
    */
-  lockedWhenPrefilled?: boolean
+  lockedWhenPrefilled?: boolean | ((c: MicroStepContext) => boolean)
 }
 
 export interface MicroStepDef {
@@ -163,6 +167,15 @@ export interface MicroStepDef {
    */
   submit?: (value: string) => Promise<unknown>
 
+  /**
+   * Ce trimite ecranul la „Continuă", când răspunsul nu e un singur șir.
+   *
+   * `submit` primește doar `string`, deci un ecran `multi` n-avea cum să-și trimită alegerea —
+   * de asta selecția platformelor avea nevoie de un al doilea ecran, doar ca să apese un buton.
+   * Rulează înaintea navigării; dacă aruncă, ecranul rămâne pe loc cu eroarea.
+   */
+  commit?: (c: MicroStepContext) => Promise<unknown>
+
   /** `kind === 'upload'` — categoria e una reală din `DocumentCategory.cs`. */
   document?: {
     category: string
@@ -210,6 +223,10 @@ export type MicroStepSlot =
   /** Dosarul generat: previzualizare, descărcare și starea „descărcat cel puțin o dată". */
   | 'arrDossier'
   | 'vehicleDossier'
+  /** Oferta asigurari.ro pentru RCA, deasupra uploadului poliței. */
+  | 'rcaOffer'
+  /** Oferta asigurari.ro pentru asigurarea călătorilor. */
+  | 'travelInsuranceOffer'
 
 /**
  * Sloturile care ȚIN pasul pe loc: ecranul nu se poate părăsi până când serverul nu confirmă că

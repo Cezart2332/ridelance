@@ -163,9 +163,10 @@ export function buildStepViews(
 }
 
 /**
- * Pasul pe care îl deschidem la revenire. Fluxul fiind liniar, serverul îl numește direct în
- * `currentStep` — îl folosim pe ăla când există, ca frontendul să nu ajungă la altă concluzie
- * decât poarta care oricum respinge scrierile.
+ * Pasul pe care îl deschidem la revenire. Serverul îl numește direct în `currentStep` — primul la
+ * care șoferul mai are ceva de făcut, nu primul nefinalizat. Diferența contează de când pașii se
+ * deblochează pe partea userului: un pas predat spre validare rămâne nefinalizat săptămâni, iar
+ * revenirea în aplicație l-ar fi aruncat înapoi în el în loc să-l ducă unde a rămas.
  */
 export function firstActionableStep(steps: StepView[], currentStepKey?: string | null): StepView | null {
   return (
