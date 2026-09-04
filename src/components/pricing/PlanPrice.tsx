@@ -1,7 +1,9 @@
 import { Stack, Typography } from '@mui/material'
+import type { ReactNode } from 'react'
 
 import { TOKENS } from '../../constants/tokens'
 import { BCR_DISCOUNT, bcrDiscountedLei } from '../../data/bcrDiscount'
+import type { AdvanceCredit } from '../../data/onboardingAdvance'
 
 /**
  * Prețul unui plan, cu reducerea BCR aplicată când e bifată.
@@ -28,11 +30,14 @@ interface PlanPriceProps {
   /**
    * Ce se întâmplă cu primele facturi, când avansul din onboarding a fost plătit.
    *
-   * Separat de `discounted`: reducerea BCR schimbă prețul recurent, asta schimbă doar prima lună
-   * (sau primele două). Cifra mare rămâne prețul planului — altfel cine compară planurile ar
-   * compara oferte de început, nu ce plătește din luna a treia.
+   * Când există, cifra mare devine cât se plătește ACUM, iar prețul întreg rămâne tăiat lângă
+   * ea. O propoziție sub preț nu ținea locul: cardul continua să strige „199 lei", iar reducerea
+   * pe care omul o cumpărase deja se citea ca o notă de subsol.
+   *
+   * Separat de `discounted`: reducerea BCR schimbă prețul recurent, asta doar primele facturi.
+   * Se compun — de aceea creditul se calculează pe suma deja redusă, la apelant.
    */
-  advanceNote?: string
+  advanceCredit?: AdvanceCredit | null
 }
 
 const formatLei = (value: number) =>
@@ -44,10 +49,15 @@ export function PlanPrice({
   discounted,
   align = 'left',
   size = 'lg',
-  advanceNote,
+  advanceCredit,
 }: PlanPriceProps) {
-  const amount = discounted ? bcrDiscountedLei(monthlyLei) : monthlyLei
+  /** Ce se plătește recurent, după ce se consumă avansul. Reducerea BCR ține de el, nu de prima lună. */
+  const recurring = discounted ? bcrDiscountedLei(monthlyLei) : monthlyLei
+  /** Ce se plătește ACUM. Asta e cifra mare — restul e context. */
+  const amount = advanceCredit ? advanceCredit.firstMonthLei : recurring
   const big = size === 'lg' ? '1.9rem' : '1.25rem'
+  // Tăiem prețul întreg de câte ori cifra mare diferă de el, indiferent care reducere a produs-o.
+  const struck = amount !== monthlyLei
 
   return (
     <>
@@ -62,7 +72,7 @@ export function PlanPrice({
           mt: 0.5,
         }}
       >
-        {discounted && (
+        {struck && (
           <Typography
             component="s"
             sx={{
@@ -92,35 +102,43 @@ export function PlanPrice({
         </Typography>
       </Stack>
 
-      {discounted && (
-        // Cifra de mai sus e adevărată o jumătate de an. Cât ține și ce urmează după se scriu aici,
-        // nu într-un asterisc: e diferența dintre o reducere și o schimbare de preț.
-        <Typography
-          sx={{
-            color: TOKENS.primaryStrong,
-            fontSize: '0.78rem',
-            fontWeight: 700,
-            mt: 0.4,
-            textAlign: align === 'center' ? 'center' : 'left',
-          }}
-        >
-          primele {BCR_DISCOUNT.months} luni, apoi {formatLei(monthlyLei)} lei
-        </Typography>
+      {/*
+        Cifra de mai sus e adevărată o vreme. Cât ține și ce urmează după se scriu aici, nu
+        într-un asterisc: e diferența dintre o reducere și o schimbare de preț. Când se suprapun
+        avansul și reducerea BCR, rândurile spun secvența în ordine — întâi cât ține prima cifră,
+        apoi ce rămâne după ea.
+      */}
+      {advanceCredit && (
+        <Note align={align}>
+          {advanceCredit.freeMonths >= 2 ? `primele ${advanceCredit.freeMonths} luni` : 'prima lună'}
+          , apoi {formatLei(recurring)} lei
+        </Note>
       )}
 
-      {advanceNote && (
-        <Typography
-          sx={{
-            color: TOKENS.primaryStrong,
-            fontSize: '0.78rem',
-            fontWeight: 700,
-            mt: 0.4,
-            textAlign: align === 'center' ? 'center' : 'left',
-          }}
-        >
-          {advanceNote}
-        </Typography>
+      {discounted && (
+        <Note align={align}>
+          {advanceCredit
+            ? `reducerea BCR ține ${BCR_DISCOUNT.months} luni, apoi ${formatLei(monthlyLei)} lei`
+            : `primele ${BCR_DISCOUNT.months} luni, apoi ${formatLei(monthlyLei)} lei`}
+        </Note>
       )}
     </>
+  )
+}
+
+/** Rândul de sub preț. Aceeași formă pentru toate reducerile, ca să se citească drept listă. */
+function Note({ align, children }: { align: 'left' | 'center'; children: ReactNode }) {
+  return (
+    <Typography
+      sx={{
+        color: TOKENS.primaryStrong,
+        fontSize: '0.78rem',
+        fontWeight: 700,
+        mt: 0.4,
+        textAlign: align === 'center' ? 'center' : 'left',
+      }}
+    >
+      {children}
+    </Typography>
   )
 }

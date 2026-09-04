@@ -33,13 +33,17 @@ export interface AdvanceCredit {
   freeMonths: number
   /** Cât se plătește pe prima factură, în lei. */
   firstMonthLei: number
-  /** Rândul de sub preț, gata scris. */
-  note: string
+  /** Peste câte facturi se întinde reducerea, indiferent dacă le duce la zero sau nu. */
+  months: number
 }
 
 /**
  * Ce se întâmplă cu primul abonament pentru un plan, sau `null` dacă planul n-are reducere
  * (flota nu trece prin onboardingul PFA, deci n-a plătit avansul).
+ *
+ * `monthlyLei` e prețul chiar facturat, nu cel de listă: când e bifată și reducerea BCR, cuponul
+ * avansului se aplică peste suma deja redusă, deci pe ea trebuie calculat — altfel cardul ar
+ * anunța o primă lună mai scumpă decât cea încasată.
  */
 export function advanceCreditFor(planKey: string, monthlyLei: number): AdvanceCredit | null {
   const shape = SHAPES[planKey.toLowerCase()]
@@ -49,12 +53,5 @@ export function advanceCreditFor(planKey: string, monthlyLei: number): AdvanceCr
   // O lună e „gratuită" doar dacă reducerea o acoperă integral; altfel se plătește diferența.
   const freeMonths = firstMonthLei === 0 ? shape.months : 0
 
-  const note =
-    freeMonths >= 2
-      ? `Primele ${freeMonths} luni sunt gratuite — ai plătit avansul.`
-      : freeMonths === 1
-        ? 'Prima lună e gratuită — ai plătit avansul.'
-        : `Prima lună: ${firstMonthLei.toLocaleString('ro-RO')} lei — avansul se scade din ea.`
-
-  return { freeMonths, firstMonthLei, note }
+  return { freeMonths, firstMonthLei, months: shape.months }
 }

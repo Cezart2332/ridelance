@@ -21,7 +21,7 @@ import { ANNUAL_DISCOUNT, type BillingCycle } from '../../data/plans'
 import { Switcher } from '../pricing/Switcher'
 import { BcrDiscountCheckbox } from '../pricing/BcrDiscountCheckbox'
 import { PlanPrice } from '../pricing/PlanPrice'
-import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../../data/bcrDiscount'
+import { bcrDiscountedLei, readBcrDiscountIntent, writeBcrDiscountIntent } from '../../data/bcrDiscount'
 import { advanceCreditFor, ONBOARDING_ADVANCE_LEI } from '../../data/onboardingAdvance'
 import { TermsAcceptance } from '../common/TermsAcceptance'
 import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
@@ -305,10 +305,16 @@ export default function SubscriptionSelectPage() {
                       size="md"
                       // Doar pe plata lunară: reducerea se aplică pe primele facturi, iar la plata
                       // anuală „prima lună" nu e o factură separată — ar fi o promisiune ambiguă.
-                      advanceNote={
+                      //
+                      // Calculat pe suma chiar facturată: cu bifa BCR pusă, cuponul avansului se
+                      // aplică peste prețul deja redus, deci pe el trebuie socotit.
+                      advanceCredit={
                         advancePaid && cycle === 'monthly'
-                          ? (advanceCreditFor(plan.key, plan.monthlyLei)?.note ?? undefined)
-                          : undefined
+                          ? advanceCreditFor(
+                              plan.key,
+                              bcrDiscount ? bcrDiscountedLei(plan.monthlyLei) : plan.monthlyLei,
+                            )
+                          : null
                       }
                     />
                     <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.78rem', mt: 0.5, fontStyle: 'italic' }}>
