@@ -179,7 +179,11 @@ test('revenirea de la Stripe nu acordă singură acces', async ({ page }) => {
   ).toHaveCount(0)
 })
 
-test('confirmarea de pe server afișează recapitularea și accesul', async ({
+/**
+ * Confirmarea de pe server duce direct în dashboard. Recapitularea cu buton „Intră în dashboard"
+ * cerea un click în plus fix după singurul lucru pe care omul tocmai îl făcuse — plata.
+ */
+test('confirmarea de pe server duce direct în dashboardul de flotă', async ({
   page,
 }) => {
   const state = fixture(7)
@@ -187,9 +191,5 @@ test('confirmarea de pe server afișează recapitularea și accesul', async ({
   state.dashboardAllowed = true
   await backend(page, state)
   await page.goto('/onboarding-srl?payment=returned')
-  await expect(page.getByText('Totul este pregătit.')).toBeVisible()
-  await expect(
-    page.getByRole('link', { name: 'Intră în dashboard' }),
-  ).toBeVisible()
-  await expect(page.getByText('Oblio · De configurat')).toBeVisible()
+  await expect(page).toHaveURL(/dashboard-srl/)
 })

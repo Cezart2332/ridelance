@@ -35,7 +35,6 @@ import {
 import { getErrorMessage } from '../../../utils/errorHandler'
 import { authService } from '../../../services/auth.service'
 import { ROUTES } from '../../../constants/routes'
-import { CardFooter } from '../micro/CardFooter'
 import { OnboardingCard } from '../micro/OnboardingCard'
 import type { MicroStepIcon } from '../microStepTypes'
 import { onboardingMuiTheme } from '../onboardingMuiTheme'
@@ -117,6 +116,20 @@ export default function FleetOnboardingPage() {
     }, 4000)
     return () => window.clearInterval(timer)
   }, [params, state?.dashboardAllowed, refresh])
+  /*
+   * Plata confirmată de server ⇒ direct în dashboard.
+   *
+   * Configurarea nu mai are ce cere: contul e complet și abonamentul activ. Ecranul de dinainte
+   * era o recapitulare cu un buton „Intră în dashboard" — un click în plus după singurul lucru
+   * pe care omul tocmai îl făcuse. Merge și la o revenire pe /onboarding-srl: dacă totul e gata,
+   * pagina n-are niciun rol.
+   *
+   * Fără buclă cu `FleetAccessGate`: ambele citesc același `dashboardAllowed`, din același
+   * răspuns, deci nu se pot contrazice.
+   */
+  useEffect(() => {
+    if (state?.dashboardAllowed) navigate(SRL_ROOT, { replace: true })
+  }, [state?.dashboardAllowed, navigate])
   const save = async (input: FleetInput) => {
     setBusy(true)
     setError('')
@@ -197,28 +210,14 @@ export default function FleetOnboardingPage() {
             </Stack>
           )
         ) : state.dashboardAllowed ? (
-          <OnboardingCard
-            eyebrow="GATA"
-            icon="checkCircle"
-            tone="success"
-            title="Totul este pregătit."
-            footer={
-              <CardFooter label="Intră în dashboard" href={SRL_ROOT} />
-            }
-          >
-            <Stack spacing={1}>
-              <Typography>Contul companiei tale RIDElance a fost configurat cu succes.</Typography>
-              <Typography>✓ Firmă configurată</Typography>
-              <Typography>✓ Profil administrator configurat</Typography>
-              <Typography>✓ Abonament activ</Typography>
-              <Typography>
-                {state.bankConnected ? '✓ Cont bancar conectat' : 'Cont bancar · De configurat'}
-              </Typography>
-              <Typography>
-                {state.oblioConnected ? '✓ Oblio conectat' : 'Oblio · De configurat'}
-              </Typography>
-            </Stack>
-          </OnboardingCard>
+          // Efectul de mai sus tocmai a cerut navigarea; ecranul ăsta se vede o clipă, între
+          // confirmarea plății și dashboard. Nu e o recapitulare — e continuarea așteptării.
+          <Stack spacing={2} sx={{ alignItems: 'center', py: 8 }}>
+            <CircularProgress sx={{ color: TOKENS.primary }} />
+            <Typography sx={{ color: TOKENS.textMuted, fontWeight: 600 }}>
+              Plata e confirmată. Te ducem în dashboard...
+            </Typography>
+          </Stack>
         ) : (
           <>
             <StepIntroCard
