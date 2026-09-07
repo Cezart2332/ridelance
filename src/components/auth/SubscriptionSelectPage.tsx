@@ -11,8 +11,6 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
-import StarRoundedIcon from '@mui/icons-material/StarRounded'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import { subscriptionPlansFor, type PlanKey, stripeService } from '../../services/stripe.service'
@@ -20,6 +18,7 @@ import { canAccessDashboard } from '../../utils/clientOnboarding'
 import { ANNUAL_DISCOUNT, type BillingCycle } from '../../data/plans'
 import { Switcher } from '../pricing/Switcher'
 import { BcrDiscountCheckbox } from '../pricing/BcrDiscountCheckbox'
+import { PlanCard } from '../pricing/PlanCard'
 import { PlanPrice } from '../pricing/PlanPrice'
 import { bcrDiscountedLei, readBcrDiscountIntent, writeBcrDiscountIntent } from '../../data/bcrDiscount'
 import { advanceCreditFor, ONBOARDING_ADVANCE_LEI } from '../../data/onboardingAdvance'
@@ -204,194 +203,52 @@ export default function SubscriptionSelectPage() {
               width: '100%',
             }}
           >
-            {plans.map((plan) => {
-              const isSelected = selected === plan.key
-              const isHighlighted = plan.highlighted
-
-              return (
-                <Paper
-                  key={plan.key}
-                  elevation={0}
-                  onClick={() => handleSelect(plan.key)}
-                  sx={{
-                    p: { xs: 3, md: 4 },
-                    borderRadius: TOKENS.radius.xl,
-                    cursor: 'pointer',
-                    border: isSelected
-                      ? `2px solid ${TOKENS.primary}`
-                      : isHighlighted
-                      ? `2px solid ${alpha(TOKENS.primary, 0.35)}`
-                      : `1px solid ${TOKENS.border}`,
-                    boxShadow: isSelected
-                      ? TOKENS.shadow.proGlow
-                      : isHighlighted
-                      ? TOKENS.shadow.glow
-                      : TOKENS.shadow.sm,
-                    backgroundColor: isSelected
-                      ? alpha(TOKENS.primary, 0.04)
-                      : TOKENS.paper,
-                    transition: 'all 0.2s ease',
-                    position: 'relative',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                    '&:hover': {
-                      boxShadow: TOKENS.shadow.glow,
-                      borderColor: TOKENS.primary,
-                      transform: 'translateY(-3px)',
-                    },
-                  }}
-                >
-                  {/* Popular badge */}
-                  {isHighlighted && (
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: -12,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        px: 2,
-                        py: 0.5,
-                        borderRadius: TOKENS.radius.full,
-                        backgroundColor: TOKENS.primary,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                      }}
-                    >
-                      <StarRoundedIcon sx={{ fontSize: 13, color: '#fff' }} />
-                      <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '0.75rem' }}>
-                        Cel mai popular
-                      </Typography>
-                    </Box>
-                  )}
-
-                  {/* Selected indicator */}
-                  {isSelected && (
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 14,
-                        right: 14,
-                        width: 24,
-                        height: 24,
-                        borderRadius: '50%',
-                        backgroundColor: TOKENS.primary,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <CheckCircleOutlineRoundedIcon sx={{ fontSize: 16, color: '#fff' }} />
-                    </Box>
-                  )}
-
-                  {/* Title & Price */}
-                  <Box>
-                    <Typography
-                      sx={{
-                        fontWeight: 800,
-                        fontSize: '1.2rem',
-                        color: TOKENS.ink,
-                        mb: 0.5,
-                      }}
-                    >
-                      {plan.title}
-                    </Typography>
-                    <PlanPrice
-                      monthlyLei={plan.monthlyLei}
-                      unit={plan.priceUnit}
-                      discounted={bcrDiscount}
-                      size="md"
-                      // Doar pe plata lunară: reducerea se aplică pe primele facturi, iar la plata
-                      // anuală „prima lună" nu e o factură separată — ar fi o promisiune ambiguă.
-                      //
-                      // Calculat pe suma chiar facturată: cu bifa BCR pusă, cuponul avansului se
-                      // aplică peste prețul deja redus, deci pe el trebuie socotit.
-                      advanceCredit={
-                        advancePaid && cycle === 'monthly'
-                          ? advanceCreditFor(
-                              plan.key,
-                              bcrDiscount ? bcrDiscountedLei(plan.monthlyLei) : plan.monthlyLei,
-                            )
-                          : null
-                      }
-                    />
-                    <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.78rem', mt: 0.5, fontStyle: 'italic' }}>
-                      {plan.priceNote}
-                    </Typography>
-
-                    <BcrDiscountCheckbox
-                      checked={bcrDiscount}
-                      onChange={(next) => {
-                        setBcrDiscount(next)
-                        writeBcrDiscountIntent(next)
-                      }}
-                      stopPropagation
-                    />
-                  </Box>
-
-                  {/* Summary */}
-                  <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem', lineHeight: 1.65 }}>
-                    {plan.summary}
-                  </Typography>
-
-                  {/* Intro */}
-                  {plan.intro && (
-                    <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: TOKENS.ink }}>
-                      {plan.intro}
-                    </Typography>
-                  )}
-
-                  {/* Feature List */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2, flexGrow: 1 }}>
-                    {plan.list.map((point) => (
-                      <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.2, alignItems: 'flex-start' }} key={point}>
-                        <CheckCircleOutlineRoundedIcon
-                          sx={{ color: TOKENS.primary, fontSize: 17, flexShrink: 0, mt: 0.15 }}
-                        />
-                        <Typography sx={{ fontSize: '0.88rem', color: alpha(TOKENS.ink, 0.82), lineHeight: 1.55 }}>
-                          {point}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-
-                  {plan.footnote && (
-                    <Typography sx={{ fontSize: '0.78rem', color: TOKENS.textMuted, fontStyle: 'italic' }}>
-                      {plan.footnote}
-                    </Typography>
-                  )}
-
-                  {/* Select button */}
-                  <Button
-                    variant={isSelected ? 'contained' : 'outlined'}
-                    fullWidth
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleSelect(plan.key)
+            {plans.map((plan) => (
+              <PlanCard
+                key={plan.key}
+                title={plan.title}
+                selected={selected === plan.key}
+                highlighted={plan.highlighted}
+                onSelect={() => handleSelect(plan.key)}
+                price={
+                  <PlanPrice
+                    monthlyLei={plan.monthlyLei}
+                    unit={plan.priceUnit}
+                    discounted={bcrDiscount}
+                    size="md"
+                    // Doar pe plata lunară: reducerea se aplică pe primele facturi, iar la plata
+                    // anuală „prima lună" nu e o factură separată — ar fi o promisiune ambiguă.
+                    //
+                    // Calculat pe suma chiar facturată: cu bifa BCR pusă, cuponul avansului se
+                    // aplică peste prețul deja redus, deci pe el trebuie socotit.
+                    advanceCredit={
+                      advancePaid && cycle === 'monthly'
+                        ? advanceCreditFor(
+                            plan.key,
+                            bcrDiscount ? bcrDiscountedLei(plan.monthlyLei) : plan.monthlyLei,
+                          )
+                        : null
+                    }
+                  />
+                }
+                priceNote={plan.priceNote}
+                belowPrice={
+                  <BcrDiscountCheckbox
+                    checked={bcrDiscount}
+                    onChange={(next) => {
+                      setBcrDiscount(next)
+                      writeBcrDiscountIntent(next)
                     }}
-                    sx={{
-                      mt: 1,
-                      py: 1.2,
-                      fontWeight: 700,
-                      fontSize: '0.95rem',
-                      borderRadius: TOKENS.radius.md,
-                      borderColor: isSelected ? 'transparent' : TOKENS.borderHover,
-                      color: isSelected ? '#fff' : TOKENS.ink,
-                      backgroundColor: isSelected ? TOKENS.primary : 'transparent',
-                      '&:hover': {
-                        backgroundColor: isSelected ? TOKENS.primaryStrong : alpha(TOKENS.primary, 0.06),
-                        borderColor: TOKENS.primary,
-                        color: isSelected ? '#fff' : TOKENS.primary,
-                      },
-                    }}
-                  >
-                    {isSelected ? '✓ Selectat' : plan.cta}
-                  </Button>
-                </Paper>
-              )
-            })}
+                    stopPropagation
+                  />
+                }
+                summary={plan.summary}
+                intro={plan.intro}
+                features={plan.list}
+                footnote={plan.footnote}
+                cta={plan.cta}
+              />
+            ))}
           </Box>
 
           {/* Continue CTA */}

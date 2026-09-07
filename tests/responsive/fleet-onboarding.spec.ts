@@ -111,11 +111,11 @@ test('firma, administrator, flotă zero și integrări amânate până la plată
   await page
     .getByRole('button', { name: 'Configurează mai târziu', exact: true })
     .click()
-  await page.getByRole('button', { name: 'Anual −10%' }).click()
+  await page.getByRole('button', { name: /Anual/ }).click()
   await expect(
     page.getByText('3.229,2', { exact: false }).first(),
   ).toBeVisible()
-  await page.getByRole('button', { name: 'Alege Fleet' }).click()
+  await page.getByRole('button', { name: 'Începe acum' }).click()
   await expect(
     page.getByRole('button', { name: 'Plătește și intră în RIDElance' }),
   ).toBeDisabled()
@@ -145,11 +145,11 @@ test('beneficiul BCR reduce prețul afișat lunar și anual', async ({
   await backend(page, state)
   await page.goto('/onboarding-srl')
   await expect(page.getByText('249', { exact: false }).first()).toBeVisible()
-  await expect(page.getByText('299 lei / lună', { exact: true })).toHaveCSS(
+  await expect(page.getByText('299', { exact: true })).toHaveCSS(
     'text-decoration-line',
     'line-through',
   )
-  await page.getByRole('button', { name: 'Anual −10%' }).click()
+  await page.getByRole('button', { name: /Anual/ }).click()
   await expect(
     page.getByText('2.929,2', { exact: false }).first(),
   ).toBeVisible()

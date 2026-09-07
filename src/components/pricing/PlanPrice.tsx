@@ -38,6 +38,16 @@ interface PlanPriceProps {
    * Se compun — de aceea creditul se calculează pe suma deja redusă, la apelant.
    */
   advanceCredit?: AdvanceCredit | null
+  /**
+   * Cifra mare, când nu se poate deriva din reducerile standard.
+   *
+   * Flota o primește de pe server: beneficiul ei BCR e o eligibilitate confirmată de admin, cu
+   * altă formă pe lunar (−50/lună, 6 luni) față de anual (−300 o singură dată). Fără asta,
+   * pasul ei ar fi trebuit să-și deseneze din nou blocul de preț — adică exact ce am scos.
+   */
+  amountLei?: number
+  /** Rândul de sub preț, când nu se poate compune din reducerile standard. */
+  note?: string
 }
 
 const formatLei = (value: number) =>
@@ -50,11 +60,13 @@ export function PlanPrice({
   align = 'left',
   size = 'lg',
   advanceCredit,
+  amountLei,
+  note,
 }: PlanPriceProps) {
   /** Ce se plătește recurent, după ce se consumă avansul. Reducerea BCR ține de el, nu de prima lună. */
   const recurring = discounted ? bcrDiscountedLei(monthlyLei) : monthlyLei
   /** Ce se plătește ACUM. Asta e cifra mare — restul e context. */
-  const amount = advanceCredit ? advanceCredit.firstMonthLei : recurring
+  const amount = amountLei ?? (advanceCredit ? advanceCredit.firstMonthLei : recurring)
   const big = size === 'lg' ? '1.9rem' : '1.25rem'
   // Tăiem prețul întreg de câte ori cifra mare diferă de el, indiferent care reducere a produs-o.
   const struck = amount !== monthlyLei
@@ -108,6 +120,8 @@ export function PlanPrice({
         avansul și reducerea BCR, rândurile spun secvența în ordine — întâi cât ține prima cifră,
         apoi ce rămâne după ea.
       */}
+      {note && <Note align={align}>{note}</Note>}
+
       {advanceCredit && (
         <Note align={align}>
           {advanceCredit.freeMonths >= 2 ? `primele ${advanceCredit.freeMonths} luni` : 'prima lună'}

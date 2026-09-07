@@ -23,7 +23,10 @@ import {
 } from '@stripe/react-stripe-js'
 import { useAppSelector } from '../../../store/hooks'
 import { SRL_ROOT } from '../../../config/srlNavigation'
-import { SRL_PLANS } from '../../../data/plans'
+import { ANNUAL_DISCOUNT, SRL_PLANS } from '../../../data/plans'
+import { PlanCard } from '../../pricing/PlanCard'
+import { PlanPrice } from '../../pricing/PlanPrice'
+import { Switcher } from '../../pricing/Switcher'
 import {
   fleetOnboardingService,
   type FleetInput,
@@ -36,7 +39,7 @@ import { CardFooter } from '../micro/CardFooter'
 import { OnboardingCard } from '../micro/OnboardingCard'
 import type { MicroStepIcon } from '../microStepTypes'
 import { onboardingMuiTheme } from '../onboardingMuiTheme'
-import { displaySx, TOKENS } from '../onboardingTheme'
+import { TOKENS } from '../onboardingTheme'
 import { OnboardingChrome } from '../shell/OnboardingChrome'
 import { StepIntroCard } from '../shell/StepIntroCard'
 import type { StepView } from '../stepModel'
@@ -306,7 +309,7 @@ function FleetStep({ step, state, busy, save, refresh }: StepProps) {
   const [other, setOther] = useState(p.position ?? '')
   const [platforms, setPlatforms] = useState(p.platforms)
   const [count, setCount] = useState(String(p.vehicleCount))
-  const [cycle, setCycle] = useState(p.cycle || 'Monthly')
+  const [cycle, setCycle] = useState<'Monthly' | 'Annual'>(p.cycle === 'Annual' ? 'Annual' : 'Monthly')
   const company = searching ? null : (p.pendingCompany ?? p.company)
   if (step === 1)
     return (
@@ -522,75 +525,93 @@ function FleetStep({ step, state, busy, save, refresh }: StepProps) {
       <FleetOblioStep state={state} busy={busy} save={save} refresh={refresh} />
     )
   if (step === 6)
-    return (
-      <Stack spacing={3}>
-        <Stack direction="row" spacing={1}>
-          {(['Monthly', 'Annual'] as const).map((value) => (
-            <Button
-              key={value}
-              variant={cycle === value ? 'contained' : 'outlined'}
-              onClick={() => setCycle(value)}
-            >
-              {value === 'Annual' ? 'Anual −10%' : 'Lunar'}
-            </Button>
-          ))}
-        </Stack>
-        <Typography variant="h5">RIDElance Fleet</Typography>
-        {p.bcrEligibleAtUtc && (
-          <Typography
-            sx={{ textDecoration: 'line-through', color: 'text.secondary' }}
-          >
-            {cycle === 'Annual' ? '3.229,20 lei / an' : '299 lei / lună'}
-          </Typography>
-        )}
-        <Typography variant="h3" sx={displaySx}>
-          {money(
-            cycle === 'Annual'
-              ? state.annualAmountBani
-              : state.monthlyAmountBani,
-          )}{' '}
-          <Typography component="span">
-            lei / {cycle === 'Annual' ? 'an' : 'lună'}
-          </Typography>
-        </Typography>
-        {cycle === 'Annual' && (
-          <Typography>
-            269,10 lei/lună echivalent, înainte de beneficiul BCR.
-          </Typography>
-        )}
-        {p.bcrEligibleAtUtc && (
-          <Alert severity="success">
-            Beneficiu BCR activ ·{' '}
-            {cycle === 'Annual'
-              ? '300 lei reducere din prima factură anuală, apoi 3.229,20 lei/an.'
-              : '−50 lei/lună în primele 6 luni, apoi 299 lei/lună.'}
-          </Alert>
-        )}
-        {p.bcrRequested && !p.bcrEligibleAtUtc && (
-          <Alert severity="info">
-            Beneficiul BCR se aplică după confirmarea eligibilității.
-          </Alert>
-        )}
-        <Stack spacing={1}>
-          {SRL_PLANS[0].features.map((feature, index) => (
-            <Typography key={index}>
-              ✓{' '}
-              {[feature.prefix, feature.strong, feature.text]
-                .filter(Boolean)
-                .join(' ')}
-            </Typography>
-          ))}
-        </Stack>
-        <Button
-          variant="contained"
-          disabled={busy}
-          onClick={() => void save({ step: 6, cycle })}
-        >
-          Alege Fleet
-        </Button>
-      </Stack>
-    )
+    return <FleetPlanStep state={state} busy={busy} cycle={cycle} onCycle={setCycle} save={save} />
+
   return <FleetPayment state={state} refresh={refresh} />
+}
+
+/**
+ * Pasul de abonament, cu exact cardul de la alegerea planului PFA.
+ *
+ * Flota își desena propriul card — alt titlu, alt preț, altă listă — deci același pas arăta
+ * diferit în funcție de tipul de cont. Diferența reală e doar prețul: PFA are trei planuri cu
+ * reduceri care se compun, flota unul singur cu două cicluri, iar sumele vin de pe server.
+ */
+function FleetPlanStep({
+  state,
+  busy,
+  cycle,
+  onCycle,
+  save,
+}: {
+  state: FleetState
+  busy: boolean
+  cycle: 'Monthly' | 'Annual'
+  onCycle: (value: 'Monthly' | 'Annual') => void
+  save: (input: FleetInput) => Promise<boolean>
+}) {
+  const p = state.progress
+  const plan = SRL_PLANS[0]
+  const annual = cycle === 'Annual'
+  const listPriceLei = annual ? plan.pricing.annualTotalLei! : plan.pricing.monthlyLei
+  const billedLei = (annual ? state.annualAmountBani : state.monthlyAmountBani) / 100
+  const bcrActive = p.bcrEligibleAtUtc != null
+
+  return (
+    <Stack spacing={3}>
+      {/* Același comutator ca pe pagina publică de Abonamente și la alegerea planului PFA. */}
+      <Stack sx={{ alignItems: 'center' }}>
+        <Switcher
+          value={annual ? 'Annual' : 'Monthly'}
+          onChange={onCycle}
+          options={[
+            { value: 'Monthly', label: 'Lunar' },
+            { value: 'Annual', label: 'Anual', badge: `-${Math.round(ANNUAL_DISCOUNT * 100)}%` },
+          ]}
+        />
+      </Stack>
+
+      <PlanCard
+        title={plan.title}
+        selected={p.cycle === cycle && p.completedStep >= 6}
+        onSelect={() => void save({ step: 6, cycle })}
+        disabled={busy}
+        price={
+          <PlanPrice
+            monthlyLei={listPriceLei}
+            unit={annual ? '/ an' : '/ lună'}
+            // Reducerea vine de pe server, nu din bifa BCR a fluxului PFA: la flotă e o
+            // eligibilitate confirmată de admin, cu altă formă pe lunar față de anual.
+            discounted={false}
+            amountLei={billedLei}
+            note={
+              bcrActive
+                ? annual
+                  ? `beneficiu BCR: 300 lei din prima factură, apoi ${plan.pricing.annualTotalLei!.toLocaleString('ro-RO')} lei/an`
+                  : `beneficiu BCR: primele 6 luni, apoi ${plan.pricing.monthlyLei} lei/lună`
+                : undefined
+            }
+            size="md"
+          />
+        }
+        priceNote={annual ? plan.noteAnnual : plan.noteMonthly}
+        belowPrice={
+          p.bcrRequested && !bcrActive ? (
+            <Alert severity="info" sx={{ mt: 1.5 }}>
+              Beneficiul BCR se aplică după confirmarea eligibilității.
+            </Alert>
+          ) : undefined
+        }
+        summary={plan.summary}
+        intro={plan.intro}
+        features={plan.features.map((f) =>
+          [f.prefix, f.strong, f.text].filter(Boolean).join(' '),
+        )}
+        footnote={plan.footnote}
+        cta={plan.cta}
+      />
+    </Stack>
+  )
 }
 
 function FleetPayment({
@@ -624,39 +645,42 @@ function FleetPayment({
       setBusy(false)
     }
   }
+  const annual = state.progress.cycle === 'Annual'
+  const discounted = state.amountDueBani < state.regularAmountBani
+
   return (
     <Stack spacing={3}>
-      <Typography variant="h5">RIDElance Fleet</Typography>
-      <Typography>
-        {state.progress.cycle === 'Annual'
-          ? 'Abonament anual'
-          : 'Abonament lunar'}{' '}
-        · {state.progress.company?.name}
-      </Typography>
-      {state.amountDueBani < state.regularAmountBani && (
-        <>
-          <Typography sx={{ textDecoration: 'line-through' }}>
-            {money(state.regularAmountBani)} lei
-          </Typography>
-          <Alert severity="success">
-            Beneficiu BCR · −
-            {money(state.regularAmountBani - state.amountDueBani)} lei
-          </Alert>
-        </>
-      )}
+      {/*
+        Prețul prin `PlanPrice`, ca peste tot în produs. Aici era scris de mână, cu fontul de
+        titlu (`displaySx`) și o scară proprie — singurul loc din onboarding unde apărea alt font
+        în interiorul unui card.
+      */}
       <Box>
-        <Typography color="text.secondary">De plată astăzi</Typography>
-        <Typography variant="h3" sx={displaySx}>
-          {money(state.amountDueBani)} lei
+        <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem' }}>
+          RIDElance Fleet · {annual ? 'abonament anual' : 'abonament lunar'} ·{' '}
+          {state.progress.company?.name}
         </Typography>
+        <PlanPrice
+          monthlyLei={state.regularAmountBani / 100}
+          unit={annual ? '/ an' : '/ lună'}
+          discounted={false}
+          amountLei={state.amountDueBani / 100}
+          note={
+            annual
+              ? `reînnoire anuală la ${money(state.regularAmountBani)} lei`
+              : discounted
+                ? '249 lei/lună în primele 6 luni, apoi 299 lei/lună'
+                : 'reînnoire lunară la 299 lei'
+          }
+          size="md"
+        />
       </Box>
-      <Typography variant="body2" color="text.secondary">
-        {state.progress.cycle === 'Annual'
-          ? `Reînnoire anuală la ${money(state.regularAmountBani)} lei.`
-          : state.amountDueBani < state.regularAmountBani
-            ? '249 lei/lună în primele 6 luni, apoi 299 lei/lună.'
-            : 'Reînnoire lunară la 299 lei.'}
-      </Typography>
+
+      {discounted && (
+        <Alert severity="success">
+          Beneficiu BCR · −{money(state.regularAmountBani - state.amountDueBani)} lei
+        </Alert>
+      )}
       {!secret ? (
         <>
           <FormControlLabel
