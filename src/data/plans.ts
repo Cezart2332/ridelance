@@ -14,7 +14,7 @@ import { getPartnerBenefit } from './benefits'
 /** Cine cumpără. Slider-ul de pe pagină comută între cele două. */
 export type Audience = 'pfa' | 'srl'
 
-/** Cum se plătește. Doar planurile PFA au și variantă anuală. */
+/** Cum se plătește abonamentul. */
 export type BillingCycle = 'monthly' | 'annual'
 
 /**
@@ -234,7 +234,8 @@ export const SRL_PLANS: Plan[] = [
     key: 'fleet',
     audience: 'srl',
     title: 'RIDElance Fleet',
-    pricing: { monthlyLei: 299 },
+      pricing: { monthlyLei: 299, annualMonthlyLei: 269.1, annualTotalLei: 3229.2 },
+      noteAnnual: '3.229,20 lei facturați anual, cu reînnoire automată și 10% reducere.',
     noteMonthly:
       'Abonament lunar, cu 10 anunțuri active incluse și administrare completă pentru flota ta.',
     summary:

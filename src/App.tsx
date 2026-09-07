@@ -14,6 +14,7 @@ import { ROUTES } from './constants/routes'
 import RegistrationSuccessPage from './components/auth/RegistrationSuccessPage'
 import SubscriptionSelectPage from './components/auth/SubscriptionSelectPage'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import { FleetAccessGate } from './components/onboarding/fleet/FleetAccessGate'
 import RoleRedirect from './components/auth/RoleRedirect'
 import { SRL_ROOT } from './config/srlNavigation'
 import { DocumentViewerHost } from './components/common/documentViewerHost'
@@ -47,6 +48,7 @@ const AppLayout = lazyWithRetry(() =>
 const CheckoutPage = lazyWithRetry(() => import('./pages/CheckoutPage'))
 
 // Onboarding (fără acces la panel până la validarea completă)
+const FleetOnboardingPage = lazyWithRetry(() => import('./components/onboarding/fleet/FleetOnboardingPage'))
 const OnboardingShell = lazyWithRetry(() => import('./components/onboarding/OnboardingShell'))
 const OnboardingRedirect = lazyWithRetry(() =>
   import('./components/onboarding/OnboardingShell').then((m) => ({ default: m.OnboardingRedirect })),
@@ -96,6 +98,7 @@ function App() {
 
           {/* ── Protected routes ── */}
           <Route element={<ProtectedRoute />}>
+            <Route path="/onboarding-srl" element={<FleetOnboardingPage />} />
             <Route path="/app" element={<RoleRedirect />} />
             {/* Un singur shell pentru toți cei 6 pași: rail-ul, datele și poll-ul trăiesc aici,
                 deci schimbarea pasului nu remontează nimic. */}
@@ -119,7 +122,7 @@ function App() {
             <Route path="/app/dashboard/*" element={<DashboardPage />} />
             <Route path="/contabil/*" element={<ContabilDashboard />} />
             <Route path="/admin/*" element={<AdminDashboard />} />
-            <Route path={`${SRL_ROOT}/*`} element={<CarPosterDashboard />} />
+            <Route path={`${SRL_ROOT}/*`} element={<FleetAccessGate><CarPosterDashboard /></FleetAccessGate>} />
             <Route path="/poster/*" element={<LegacySrlRedirect />} />
           </Route>
 

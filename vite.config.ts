@@ -26,6 +26,10 @@ function configureServiceWorkerBuild(inlineConfig: InlineConfig) {
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    // Buildurile .NET rescriu executabile blocate de Windows; nu sunt surse frontend.
+    watch: { ignored: ['**/backend/**'] },
+  },
   resolve: {
     alias: {
       'es-toolkit/compat/range': path.resolve('src/compat-shims/range.ts'),

@@ -26,6 +26,7 @@ import { TOKENS } from '../../../../constants/tokens'
 import { getErrorMessage } from '../../../../utils/errorHandler'
 import { discountsService, type DiscountCode } from '../../../../services/discounts.service'
 import { DateField } from '../../../common/DateField'
+import { FleetBcrRequests } from './FleetBcrRequests'
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
@@ -179,6 +180,7 @@ export function DiscountsAdminView() {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 2, md: 3 } }}>
+      <FleetBcrRequests />
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 1 }}>
         <LocalOfferRoundedIcon sx={{ color: TOKENS.primaryStrong }} />
         <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: TOKENS.ink }}>

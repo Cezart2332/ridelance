@@ -26,6 +26,7 @@ import {
   type IntegrationStatus,
 } from '../../../../services/connections.service'
 import { usePendingBackend } from '../pendingBackendContext'
+import { OwnerOblioConnectionPanel } from '../../invoices/OwnerOblioConnectionPanel'
 
 /**
  * Conexiunile SRL (spec §3.4): Oblio, bancă și eldrive, ca grid de carduri.
@@ -150,7 +151,8 @@ export function SrlConnectionsPage() {
       />
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
-        {data.map((integration) => (
+        <OwnerOblioConnectionPanel />
+        {data.filter(integration => integration.provider !== 'Oblio').map((integration) => (
           <IntegrationCard
             key={integration.provider}
             integration={integration}
