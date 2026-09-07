@@ -10,6 +10,8 @@ export interface Notification {
   type: string;
   isRead: boolean;
   createdAtUtc: string;
+  relatedUserId?: string | null;
+  sectionKey?: string | null;
 }
 
 export interface RecurringDocumentationEnsureResult {
@@ -25,6 +27,9 @@ export interface AdminTestRecurringDocumentationResult {
 }
 
 export const notificationService = {
+  dismiss: async (id: string): Promise<void> => {
+    await api.delete(`/notifications/${encodeURIComponent(id)}`);
+  },
   getAll: async (): Promise<Notification[]> => {
     const response = await api.get<Notification[]>('/notifications');
     return response.data;

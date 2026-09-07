@@ -21,7 +21,7 @@ export default function AppHeader({
   nav,
   title,
   showNotifications,
-  onOpenRecurringDocumentation,
+
   onOpenMenu,
 }: AppHeaderProps) {
   const theme = useTheme();
@@ -79,7 +79,7 @@ export default function AppHeader({
 
       <Stack direction="row" spacing={1.5}>
         {showNotifications && (
-          <NotificationsBell onOpenRecurringDocumentation={onOpenRecurringDocumentation} />
+          <NotificationsBell />
         )}
       </Stack>
     </Paper>

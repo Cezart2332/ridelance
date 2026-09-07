@@ -620,6 +620,7 @@ function FleetPayment({
   state: FleetState
   refresh: () => Promise<void>
 }) {
+  const navigate = useNavigate()
   const [terms, setTerms] = useState(false)
   const [privacy, setPrivacy] = useState(false)
   const [secret, setSecret] = useState('')
@@ -735,7 +736,7 @@ function FleetPayment({
       ) : (
         <EmbeddedCheckoutProvider
           stripe={stripePromise}
-          options={{ clientSecret: secret }}
+          options={{ clientSecret: secret, onComplete: () => navigate('/onboarding-srl?payment=returned', { replace: true }) }}
         >
           <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>

@@ -21,12 +21,11 @@ import {
   invoicesService,
   type Invoice,
   type InvoicesOverview,
-  type InvoiceStatus,
+  type InvoiceSpvStatus,
 } from '../../../services/invoices.service'
 import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '../dashboardTheme'
-import { Amount, PageHeader, Panel, StatusChip } from '../ui'
+import { Amount, PageHeader, Panel } from '../ui'
 import { NewInvoiceDialog } from './NewInvoiceDialog'
-import type { StatusTone } from '../ui'
 import { OblioConnectPanel } from './OblioConnectPanel'
 
 /**
@@ -39,18 +38,20 @@ import { OblioConnectPanel } from './OblioConnectPanel'
  * fiindcă acolo îl schimbă și contabilul, direct din interfața lor.
  */
 
-const STATUS: Record<InvoiceStatus, { label: string; tone: StatusTone }> = {
-  paid: { label: 'Încasată', tone: 'active' },
-  partial: { label: 'Parțial', tone: 'warning' },
-  unpaid: { label: 'Neîncasată', tone: 'neutral' },
-  canceled: { label: 'Anulată', tone: 'error' },
+const SPV_STATUS: Record<InvoiceSpvStatus, { label: string; color: string }> = {
+  sent: { label: 'În SPV', color: '#2CB67D' },
+  processing: { label: 'În curs de trimitere', color: '#F79009' },
+  error: { label: 'Eroare SPV', color: DASHBOARD_TOKENS.stateError },
+  not_sent: { label: 'Netrimisă în SPV', color: DASHBOARD_TOKENS.textSubtle },
+  unknown: { label: 'Status SPV indisponibil', color: DASHBOARD_TOKENS.textSubtle },
 }
 
 const TABS = [
   { id: 'all', label: 'Toate' },
-  { id: 'unpaid', label: 'Neîncasate' },
-  { id: 'paid', label: 'Încasate' },
-  { id: 'canceled', label: 'Anulate' },
+  { id: 'sent', label: 'În SPV' },
+  { id: 'processing', label: 'În curs' },
+  { id: 'error', label: 'Erori' },
+  { id: 'not_sent', label: 'Netrimise' },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
@@ -105,12 +106,7 @@ export function InvoicesPage() {
     const query = search.trim().toLowerCase()
 
     return invoices.filter((invoice) => {
-      const matchesTab =
-        tab === 'all'
-          ? true
-          : tab === 'unpaid'
-            ? invoice.status === 'unpaid' || invoice.status === 'partial'
-            : invoice.status === tab
+      const matchesTab = tab === 'all' || invoice.spvStatus === tab
 
       const matchesQuery =
         !query ||
@@ -242,6 +238,8 @@ export function InvoicesPage() {
             subtitle="Intervalul implicit e luna trecută și cea curentă."
             action={
               <Tabs
+                variant="scrollable"
+                scrollButtons="auto"
                 value={tab}
                 onChange={(_, value: TabId) => setTab(value)}
                 sx={{
@@ -288,7 +286,7 @@ export function InvoicesPage() {
                 <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', minWidth: 780 }}>
                   <Box component="thead">
                     <Box component="tr">
-                      {['Factură', 'Client', 'Emisă', 'Scadență', 'Total', 'Încasat', 'Status', ''].map((h, i) => (
+                      {['Factură', 'Client', 'Emisă', 'Scadență', 'Total', 'Încasat', 'Status SPV', ''].map((h, i) => (
                         <Box component="th" key={h || i} sx={headSx}>
                           {h}
                         </Box>
@@ -298,6 +296,7 @@ export function InvoicesPage() {
                   <Box component="tbody">
                     {visible.map((invoice) => {
                       const key = `${invoice.seriesName}-${invoice.number}`
+                      const spv = SPV_STATUS[invoice.spvStatus ?? 'unknown'] ?? SPV_STATUS.unknown
                       return (
                         <Box component="tr" key={key}>
                           <Box component="td" sx={{ ...cellSx, fontWeight: 800, fontSize: '0.86rem' }}>
@@ -321,7 +320,6 @@ export function InvoicesPage() {
                             sx={{
                               ...cellSx,
                               fontSize: '0.82rem',
-                              // Scadența depășită e singurul loc din rând unde culoarea spune ceva.
                               color: invoice.overdue ? DASHBOARD_TOKENS.stateError : 'inherit',
                               fontWeight: invoice.overdue ? 800 : 400,
                             }}
@@ -335,12 +333,15 @@ export function InvoicesPage() {
                             <Amount value={invoice.collectedBani / 100} unit="lei" size="row" decimals={2} />
                           </Box>
                           <Box component="td" sx={cellSx}>
-                            <StatusChip
-                              label={STATUS[invoice.status].label}
-                              tone={STATUS[invoice.status].tone}
-                              size="sm"
-                              outlined
-                            />
+                            <Tooltip title={spv.label}>
+                              <Box
+                                component="span"
+                                role="img"
+                                aria-label={spv.label}
+                                tabIndex={0}
+                                sx={{ display: 'inline-block', width: 12, height: 12, borderRadius: '50%', bgcolor: spv.color, verticalAlign: 'middle' }}
+                              />
+                            </Tooltip>
                           </Box>
                           <Box component="td" sx={{ ...cellSx, textAlign: 'right', whiteSpace: 'nowrap' }}>
                             {invoice.link && (

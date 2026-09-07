@@ -46,6 +46,7 @@ const AppLayout = lazyWithRetry(() =>
   import('./components/layout/AppLayout').then((m) => ({ default: m.AppLayout })),
 )
 const CheckoutPage = lazyWithRetry(() => import('./pages/CheckoutPage'))
+const NotificationOpenPage = lazyWithRetry(() => import('./components/notifications/NotificationOpenPage'))
 
 // Onboarding (fără acces la panel până la validarea completă)
 const FleetOnboardingPage = lazyWithRetry(() => import('./components/onboarding/fleet/FleetOnboardingPage'))
@@ -98,6 +99,7 @@ function App() {
 
           {/* ── Protected routes ── */}
           <Route element={<ProtectedRoute />}>
+            <Route path="/app/notificari/:id" element={<NotificationOpenPage />} />
             <Route path="/onboarding-srl" element={<FleetOnboardingPage />} />
             <Route path="/app" element={<RoleRedirect />} />
             {/* Un singur shell pentru toți cei 6 pași: rail-ul, datele și poll-ul trăiesc aici,

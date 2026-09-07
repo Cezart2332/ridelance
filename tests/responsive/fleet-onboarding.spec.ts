@@ -193,3 +193,15 @@ test('confirmarea de pe server duce direct în dashboardul de flotă', async ({
   await page.goto('/onboarding-srl?payment=returned')
   await expect(page).toHaveURL(/dashboard-srl/)
 })
+
+
+test('revenirea din Stripe așteaptă confirmarea și deschide dashboardul SRL', async ({ page }) => {
+  const state = fixture(7)
+  await backend(page, state)
+  await page.goto('/onboarding-srl?payment=returned')
+  await expect(page.getByText('Așteptăm confirmarea plății.', { exact: true })).toBeVisible()
+  await expect(page).toHaveURL(/onboarding-srl/)
+  state.dashboardAllowed = true
+  state.progress.completedAtUtc = '2026-09-07T10:00:00Z'
+  await expect(page).toHaveURL(/\/app\/dashboard-srl$/)
+})

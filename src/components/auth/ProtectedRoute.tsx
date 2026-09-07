@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { ROUTES } from '../../constants/routes'
 import { CircularProgress, Box } from '@mui/material'
 import { NotificationPermissionPrompt } from '../notifications/NotificationPermissionPrompt'
@@ -12,6 +12,7 @@ import { useAppSelector } from '../../store/hooks'
  * - Valid session: renders children.
  */
 export default function ProtectedRoute() {
+  const location = useLocation()
   const { accessToken, isInitialized } = useAppSelector((s) => s.auth)
 
   if (!isInitialized) {
@@ -23,7 +24,7 @@ export default function ProtectedRoute() {
   }
 
   if (!accessToken) {
-    return <Navigate to={ROUTES.login} replace />
+    return <Navigate to={ROUTES.login} state={{ returnTo: location.pathname + location.search + location.hash }} replace />
   }
 
   return (

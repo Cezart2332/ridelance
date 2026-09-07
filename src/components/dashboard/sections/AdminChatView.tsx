@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import {
   Box, Paper, Typography, TextField, IconButton, Stack, CircularProgress, Avatar, Divider
@@ -18,7 +19,9 @@ interface AdminChatViewProps {
 }
 
 export function AdminChatView({ pfas }: AdminChatViewProps) {
-  const [selectedPfa, setSelectedPfa] = useState<any | null>(null)
+  const [manualPfa, setSelectedPfa] = useState<any | null>(null)
+  const [params, setParams] = useSearchParams()
+  const selectedPfa = params.get('user') ? pfas.find((pfa) => pfa.userId === params.get('user')) ?? null : manualPfa
   const [roomId, setRoomId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessageDto[]>([])
   const [chatMessage, setChatMessage] = useState('')
@@ -95,7 +98,7 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
           {pfas.map(pfa => (
             <Box
               key={pfa.id}
-              onClick={() => setSelectedPfa(pfa)}
+              onClick={() => { setParams({ tab: 'chat' }); setSelectedPfa(pfa) }}
               sx={{
                 p: 1.5,
                 mb: 0.5,

@@ -2,6 +2,7 @@ import { api } from '../lib/axios'
 
 /** Statusul e derivat pe server din sumele venite din Oblio; frontendul nu îl recalculează. */
 export type InvoiceStatus = 'paid' | 'partial' | 'unpaid' | 'canceled'
+export type InvoiceSpvStatus = 'sent' | 'processing' | 'error' | 'not_sent' | 'unknown'
 
 export interface OblioConnection {
   connected: boolean
@@ -24,6 +25,7 @@ export interface Invoice {
   collectedBani: number
   link: string | null
   status: InvoiceStatus
+  spvStatus?: InvoiceSpvStatus
   /** Neîncasată și trecută de scadență. Calculat pe server, cu aceeași zi de referință. */
   overdue: boolean
 }

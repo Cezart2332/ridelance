@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Box, Button, Checkbox, FormControlLabel, Link, Stack, TextField, Typography } from '@mui/material'
-import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import { AuthLayout } from './shell/AuthLayout'
 import { AuthFormHeader } from './shell/AuthFormHeader'
@@ -16,6 +16,7 @@ import { TOKENS } from '../../constants/tokens'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [touched, setTouched] = useState({ email: false, password: false })
@@ -37,7 +38,8 @@ export default function LoginPage() {
     setIsLoading(true)
     try {
       await authService.login(email.trim(), password)
-      navigate('/app')
+      const returnTo = location.state?.returnTo
+      navigate(typeof returnTo === 'string' && /^\/(app|onboarding-srl|onboarding|admin|contabil)(\/|\?|#|$)/.test(returnTo) && !returnTo.includes('\\') ? returnTo : '/app', { replace: true })
     } catch (err) {
       setServerError(mapAuthError(err, 'login'))
     } finally {

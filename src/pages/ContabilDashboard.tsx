@@ -1,3 +1,5 @@
+import { useSearchParams } from 'react-router-dom'
+import { NotificationsInbox } from '../components/notifications/NotificationsPanel'
 import { useState, useEffect } from 'react'
 import { ROUTES } from '../constants/routes'
 import {
@@ -19,7 +21,7 @@ import { alpha } from '@mui/material/styles'
 import { DashboardLayout } from '../components/layout/DashboardLayout'
 import { TOKENS } from '../constants/tokens'
 import { pfaService } from '../services/pfa.service'
-import { notificationService, type Notification } from '../services/notification.service'
+
 import { userService, type UserProfile } from '../services/user.service'
 import { authService } from '../services/auth.service'
 import { useNavigate } from 'react-router-dom'
@@ -77,9 +79,13 @@ const ROMANIAN_MONTHS = [
 ]
 
 export function ContabilDashboard() {
+  const [notificationParams] = useSearchParams()
+
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('dashboard')
-  const [selectedPfaId, setSelectedPfaId] = useState<string | null>(null)
+  const [manualTab, setActiveTab] = useState('dashboard')
+  const linkedTab = notificationParams.get('tab') ?? ''
+  const activeTab = ['clients', 'notificari'].includes(linkedTab) ? linkedTab : manualTab
+  const [manualPfaId, setSelectedPfaId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
 
   const handleLogout = async () => {
@@ -88,12 +94,9 @@ export function ContabilDashboard() {
   }
 
   const [clients, setClients] = useState<ClientSummary[]>([])
+  const selectedPfaId = notificationParams.get('user') ? clients.find((client) => client.userId === notificationParams.get('user'))?.id ?? null : manualPfaId
   const [clientsLoading, setClientsLoading] = useState(false)
   const [clientsError, setClientsError] = useState<string | null>(null)
-
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [notifsLoading, setNotifsLoading] = useState(false)
-  const [notifsError, setNotifsError] = useState<string | null>(null)
 
   const [profile, setProfile] = useState<UserProfile | null>(null)
 
@@ -168,15 +171,6 @@ export function ContabilDashboard() {
   }, [activeTab])
 
   // Load notifications when on that tab
-  useEffect(() => {
-    if (activeTab !== 'notificari') return
-    setNotifsLoading(true)
-    setNotifsError(null)
-    notificationService.getAll()
-      .then(setNotifications)
-      .catch(() => setNotifsError('Nu s-au putut încărca notificările.'))
-      .finally(() => setNotifsLoading(false))
-  }, [activeTab])
 
   const navItems = [
     { id: 'dashboard', label: 'Acasă', icon: <HomeRoundedIcon /> },
@@ -542,6 +536,7 @@ export function ContabilDashboard() {
       <ContabilClientWorkspace
         client={clientInfo}
         onBack={() => {
+          navigate('/contabil')
           setSelectedPfaId(null)
           void loadStats() // Refresh stats when returning from a client workspace
         }}
@@ -552,78 +547,7 @@ export function ContabilDashboard() {
     )
   }
 
-  const renderNotifications = () => (
-    <Stack spacing={1.5} sx={{ maxWidth: 600 }}>
-      {notifsLoading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-          <CircularProgress size={28} sx={{ color: TOKENS.primary }} />
-        </Box>
-      )}
-      {notifsError && (
-        <Alert severity="error" sx={{ borderRadius: TOKENS.radius.md }}>{notifsError}</Alert>
-      )}
-      {!notifsLoading && !notifsError && notifications.length === 0 && (
-        <Box sx={{ py: 8, textAlign: 'center' }}>
-          <Typography variant="body1" sx={{ color: TOKENS.textMuted }}>
-            Nu ai notificări momentan.
-          </Typography>
-        </Box>
-      )}
-      {!notifsLoading && !notifsError && notifications.map((n) => (
-        <Paper
-          key={n.id}
-          elevation={0}
-          onClick={() => {
-            if (!n.isRead) {
-              notificationService.markAsRead(n.id).then(() => {
-                setNotifications((prev) =>
-                  prev.map((item) => (item.id === n.id ? { ...item, isRead: true } : item)),
-                )
-              })
-            }
-          }}
-          sx={{
-            p: 2,
-            display: 'flex',
-            gap: 2,
-            alignItems: 'center',
-            borderRadius: TOKENS.radius.md,
-            border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
-            bgcolor: n.isRead ? alpha(TOKENS.paper, 0.86) : alpha(TOKENS.primary, 0.04),
-            boxShadow: TOKENS.shadow.sm,
-            cursor: n.isRead ? 'default' : 'pointer',
-            '&:hover': { borderColor: alpha(TOKENS.primary, 0.28), bgcolor: TOKENS.paper },
-          }}
-        >
-          <Box
-            sx={{
-              width: 36,
-              height: 36,
-              borderRadius: TOKENS.radius.sm,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: alpha(TOKENS.primary, 0.08),
-              color: TOKENS.primaryStrong,
-            }}
-          >
-            <NotificationsActiveRoundedIcon sx={{ fontSize: 20 }} />
-          </Box>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: n.isRead ? 600 : 800, color: TOKENS.ink, fontSize: '0.85rem' }}>
-              {n.text}
-            </Typography>
-            <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontSize: '0.75rem' }}>
-              {relativeTime(n.createdAtUtc)}
-            </Typography>
-          </Box>
-          {!n.isRead && (
-            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: TOKENS.primary, flexShrink: 0 }} />
-          )}
-        </Paper>
-      ))}
-    </Stack>
-  )
+  const renderNotifications = () => <NotificationsInbox />
 
   const userName = profile ? displayName(profile) : '...'
 
@@ -632,6 +556,7 @@ export function ContabilDashboard() {
       navItems={navItems}
       activeId={activeTab}
       onNavClick={(id) => {
+        navigate('/contabil')
         setActiveTab(id)
         if (id !== 'clients') setSelectedPfaId(null)
       }}

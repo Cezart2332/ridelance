@@ -44,26 +44,36 @@ self.addEventListener('push', (event) => {
     body: data.body || 'Ai primit o notificare nouă.',
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',
-    data: data.url || '/',
+    data: data.url || '/app',
     ...data.options
   };
 
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    Promise.all([
+      self.registration.showNotification(title, options),
+      clients.matchAll({ type: 'window' }).then((windows) => windows.forEach((client) => client.postMessage({ type: 'notifications-changed' }))),
+    ])
   );
 });
 
 // Notification Click Handling
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const urlToOpen = event.notification.data || '/';
+  let target;
+  try {
+    target = new URL(event.notification.data || '/app', self.location.origin);
+  } catch {
+    target = new URL('/app', self.location.origin);
+  }
+  if (target.origin !== self.location.origin) target = new URL('/app', self.location.origin);
+  const urlToOpen = target.href;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
       // If a tab is already open with the URL, focus it
       for (let client of windowClients) {
-        if (client.url === urlToOpen && 'focus' in client) {
-          return client.focus();
+        if (new URL(client.url).origin === target.origin && 'focus' in client) {
+          return client.navigate(urlToOpen).then((updated) => (updated || client).focus());
         }
       }
       // Otherwise open a new tab

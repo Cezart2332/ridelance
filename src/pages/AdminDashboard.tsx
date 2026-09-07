@@ -1,3 +1,5 @@
+import { useSearchParams } from 'react-router-dom'
+import { NotificationsInbox } from '../components/notifications/NotificationsPanel'
 import { useState, useEffect, useCallback } from 'react'
 import { ROUTES } from '../constants/routes'
 import {
@@ -10,7 +12,7 @@ import { useNavigate } from 'react-router-dom'
 import { TOKENS } from '../constants/tokens'
 import { DashboardLayout } from '../components/layout/DashboardLayout'
 import { pfaService } from '../services/pfa.service'
-import { notificationService, type Notification } from '../services/notification.service'
+import { notificationService } from '../services/notification.service'
 import { userService, type UserProfile } from '../services/user.service'
 import { documentService, type DocumentSummary } from '../services/document.service'
 import { authService } from '../services/auth.service'
@@ -174,8 +176,12 @@ const inputSx = {
 }
 
 export function AdminDashboard() {
+  const [notificationParams] = useSearchParams()
+
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('overview')
+  const [manualTab, setActiveTab] = useState('overview')
+  const linkedTab = notificationParams.get('tab') ?? ''
+  const activeTab = ['pfa', 'chat', 'notificari'].includes(linkedTab) ? linkedTab : manualTab
   const [search, setSearch] = useState('')
   const [onlyAwaitingAdmin, setOnlyAwaitingAdmin] = useState(false)
 
@@ -185,7 +191,8 @@ export function AdminDashboard() {
   const [pfasError, setPfasError] = useState<string | null>(null)
 
   // PFA detail
-  const [selectedPfa, setSelectedPfa] = useState<PfaSummary | null>(null)
+  const [manualPfa, setSelectedPfa] = useState<PfaSummary | null>(null)
+  const selectedPfa = notificationParams.get('user') && activeTab === 'pfa' ? pfas.find((pfa) => pfa.userId === notificationParams.get('user')) ?? null : manualPfa
   const [documents, setDocuments] = useState<DocumentSummary[]>([])
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
@@ -219,9 +226,6 @@ export function AdminDashboard() {
   const [inviteLoading, setInviteLoading] = useState(false)
 
   // Notifications
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [notifsLoading, setNotifsLoading] = useState(false)
-  const [notifsError, setNotifsError] = useState<string | null>(null)
   const [testNotifLoading, setTestNotifLoading] = useState(false)
 
   // Profile
@@ -268,16 +272,6 @@ export function AdminDashboard() {
       .catch(() => setPfaDetailError('Nu am putut încărca detaliile extinse. Afișez datele existente pentru acest PFA.'))
       .finally(() => setPfaDetailLoading(false))
   }, [selectedPfa])
-
-  useEffect(() => {
-    if (activeTab !== 'notificari') return
-    setNotifsLoading(true)
-    setNotifsError(null)
-    notificationService.getAll()
-      .then(setNotifications)
-      .catch(() => setNotifsError('Nu s-au putut încărca notificările.'))
-      .finally(() => setNotifsLoading(false))
-  }, [activeTab])
 
   const handleDownload = useCallback(async (doc: DocumentSummary) => {
     setDownloadingId(doc.id)
@@ -491,10 +485,7 @@ export function AdminDashboard() {
         message: `Test trimis: ${result.inAppCreated} notificări în app, ${result.pushSent} push-uri către ${result.usersNotified} utilizatori.`,
         severity: 'success',
       })
-      if (activeTab === 'notificari') {
-        const updated = await notificationService.getAll()
-        setNotifications(updated)
-      }
+      window.dispatchEvent(new Event('ridelance:notifications-changed'))
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Trimiterea notificărilor de test a eșuat.'
       setSnackbar({ open: true, message: msg, severity: 'error' })
@@ -620,10 +611,10 @@ export function AdminDashboard() {
             ['Documente lunare lipsă', String(active?.missingMonthlyDocuments ?? 0)],
             ['Documente de verificat', String(active?.documentsToReview ?? pfa.documentCount)],
           ]}
-          onBack={() => setSelectedPfa(null)}
+          onBack={() => { navigate('/admin'); setSelectedPfa(null) }}
           onImpersonate={() => handleImpersonate(pfa.userId, pfa.userName || pfa.fullName || pfa.userEmail)}
           onOpenAction={openDetailAction}
-          onOpenChat={() => { setSelectedPfa(null); setActiveTab('chat') }}
+          onOpenChat={() => { navigate('/admin?tab=chat&user=' + pfa.userId); setSelectedPfa(null); setActiveTab('chat') }}
           onApprove={() => handleOpenStatusDialog('Approved')}
           onReject={() => handleOpenStatusDialog('Rejected')}
           onUpdateDocStatus={handleUpdateDocStatus}
@@ -968,23 +959,7 @@ export function AdminDashboard() {
         </Button>
       </Paper>
 
-      {notifsLoading && <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress size={28} sx={{ color: TOKENS.primary }} /></Box>}
-      {notifsError && <Alert severity="error" sx={{ borderRadius: TOKENS.radius.md }}>{notifsError}</Alert>}
-      {!notifsLoading && !notifsError && notifications.length === 0 && (
-        <Box sx={{ py: 8, textAlign: 'center' }}><Typography variant="body1" sx={{ color: TOKENS.textMuted }}>Nu ai notificări momentan.</Typography></Box>
-      )}
-      {!notifsLoading && !notifsError && notifications.map((n) => (
-        <Paper key={n.id} elevation={0} sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center', borderRadius: TOKENS.radius.md, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, bgcolor: n.isRead ? alpha(TOKENS.paper, 0.86) : alpha(TOKENS.primary, 0.04), boxShadow: TOKENS.shadow.sm, transition: '0.2s', '&:hover': { borderColor: alpha(TOKENS.primary, 0.28), bgcolor: TOKENS.paper } }}>
-          <Box sx={{ width: 36, height: 36, borderRadius: TOKENS.radius.sm, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: alpha(TOKENS.primary, 0.08), color: TOKENS.primaryStrong }}>
-            <NotificationsActiveRoundedIcon sx={{ fontSize: 20 }} />
-          </Box>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: n.isRead ? 600 : 800, color: TOKENS.ink, fontSize: '0.85rem' }}>{n.text}</Typography>
-            <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontSize: '0.75rem' }}>{relativeTime(n.createdAtUtc)}</Typography>
-          </Box>
-          {!n.isRead && <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: TOKENS.primary, flexShrink: 0 }} />}
-        </Paper>
-      ))}
+      <NotificationsInbox />
     </Stack>
   )
 
@@ -1019,7 +994,7 @@ export function AdminDashboard() {
     <DashboardLayout
       navItems={navItems}
       activeId={activeTab}
-      onNavClick={(id) => { setActiveTab(id); setSelectedPfa(null) }}
+      onNavClick={(id) => { navigate('/admin'); setActiveTab(id); setSelectedPfa(null) }}
       onLogout={handleLogout}
       userName={userName}
       userRole="Admin"
