@@ -433,11 +433,10 @@ function FleetStep({ step, state, busy, save, refresh }: StepProps) {
             !firstName.trim() ||
             !lastName.trim() ||
             !position ||
-            // Confirmarea contactelor blochează doar când serverul o cere. Cât timp emailul și
-            // SMS-ul nu sunt configurate, codul n-are cum să ajungă — iar butonul ar fi rămas gri
-            // fără nicio cale de deblocare.
-            (state.contactVerificationRequired &&
-              (!state.emailVerified || !state.phoneVerified))
+            // Doar telefonul: emailul e adresa contului, confirmată la înregistrare. Și el
+            // blochează numai când serverul o cere — cât timp SMS-ul nu e configurat, codul
+            // n-are cum să ajungă, iar butonul ar rămâne gri fără nicio cale de deblocare.
+            (state.contactVerificationRequired && !state.phoneVerified)
           }
           variant="contained"
           onClick={() =>

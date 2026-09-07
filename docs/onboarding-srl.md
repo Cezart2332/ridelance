@@ -5,7 +5,7 @@ Ruta autentificată: `/onboarding-srl`. Conturile `CarPoster` create după lansa
 ## Flux
 
 1. CUI → rezultat ANAF salvat pe server → confirmare fără editare manuală. Profilul firmei se creează din copia confirmată. După confirmare nu se schimbă firma din onboarding.
-2. Prenume, nume, funcție. Email și telefon se pot confirma prin cod, dar confirmarea **nu** blochează pasul cât timp `Onboarding:RequireContactVerification` e fals — furnizorii de email și SMS nu sunt configurați, iar un cod nelivrabil ar opri înrolarea. Se aprinde din configurație, pe backend, iar interfața citește starea din răspuns (`contactVerificationRequired`). Fără documente personale sau aprobare administrativă.
+2. Prenume, nume, funcție. Emailul se afișează blocat: e adresa contului, confirmată la înregistrare — nu se editează aici și nu se mai confirmă a doua oară. Telefonul se poate confirma prin SMS, dar confirmarea **nu** blochează pasul cât timp `Onboarding:RequireContactVerification` e fals: furnizorul de SMS nu e configurat, iar un cod nelivrabil ar opri înrolarea. Se aprinde din configurație, pe backend, iar interfața citește starea din răspuns (`contactVerificationRequired`). Fără documente personale sau aprobare administrativă.
 3. Platforme și număr de mașini (inclusiv zero). „Niciuna” exclude celelalte opțiuni. Nu conectează platformele.
 4. Banca prin integrarea existentă, oferta BCR și QR. Conexiunea poate fi amânată; după revenirea de la provider se verifică starea. Intenția BCR din pagina publică se păstrează.
 5. Oblio: email, token API, CIF confirmat, serie opțională. Cheia este tratată de integrarea existentă și nu se salvează în progres. Configurarea poate fi amânată.

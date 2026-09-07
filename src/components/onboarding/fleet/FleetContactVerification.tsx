@@ -1,10 +1,19 @@
 import { useState } from 'react'
 import { Alert, Button, Stack, TextField, Typography } from '@mui/material'
-import { authService } from '../../../services/auth.service'
 import { userService } from '../../../services/user.service'
 import type { FleetState } from '../../../services/fleetOnboarding.service'
 import { getErrorMessage } from '../../../utils/errorHandler'
 
+/**
+ * Datele de contact ale administratorului.
+ *
+ * Emailul se arată, nu se editează și nu se mai confirmă aici: e adresa contului, confirmată la
+ * înregistrare, iar o a doua confirmare în onboarding cerea încă un cod pentru ceva deja dovedit.
+ * Schimbarea ei trece prin suport, nu printr-un câmp de pe un pas de configurare.
+ *
+ * Rămâne telefonul, care chiar e nou față de cont — și acela opțional cât timp furnizorul de SMS
+ * nu e configurat.
+ */
 export function FleetContactVerification({
   state,
   refresh,
@@ -12,7 +21,6 @@ export function FleetContactVerification({
   state: FleetState
   refresh: () => Promise<void>
 }) {
-  const [emailCode, setEmailCode] = useState('')
   const [phoneCode, setPhoneCode] = useState('')
   const [phone, setPhone] = useState(state.phone ?? '')
   const [busy, setBusy] = useState(false)
@@ -31,61 +39,28 @@ export function FleetContactVerification({
       setBusy(false)
     }
   }
-  // Când serverul nu cere confirmarea, ecranul trebuie s-o spună: altfel două câmpuri „de
-  // confirmat" care nu blochează nimic arată ca un pas neterminat, iar omul așteaptă un cod.
+  // Când serverul nu cere confirmarea, ecranul trebuie s-o spună: un câmp „de confirmat" care nu
+  // blochează nimic arată ca un pas neterminat, iar omul așteaptă un cod care nu vine.
   const optional = !state.contactVerificationRequired
 
   return (
     <Stack spacing={2}>
       {optional && (
         <Alert severity="info">
-          Confirmarea emailului și a telefonului e opțională deocamdată — poți continua fără ea.
+          Confirmarea telefonului e opțională deocamdată — poți continua fără ea.
         </Alert>
       )}
+
+      {/* `disabled` pe lângă `readOnly`: fără el câmpul arată exact ca unul editabil și invită
+          la tastat, deși nu primește nimic. */}
       <TextField
         label="Email"
         value={state.email}
+        disabled
         slotProps={{ input: { readOnly: true } }}
-        helperText={
-          state.emailVerified
-            ? '✓ Verificat'
-            : optional
-              ? 'Confirmarea e opțională'
-              : 'Confirmă adresa de email'
-        }
+        helperText="Adresa contului. Se schimbă prin suport."
       />
-      {!state.emailVerified && (
-        <Stack spacing={1}>
-          <Button
-            disabled={busy}
-            onClick={() =>
-              void run(
-                () => authService.resendVerification(state.email),
-                'Codul a fost trimis pe email.',
-              )
-            }
-          >
-            Trimite codul pe email
-          </Button>
-          <TextField
-            label="Cod email"
-            value={emailCode}
-            onChange={(e) => setEmailCode(e.target.value)}
-            autoComplete="one-time-code"
-          />
-          <Button
-            disabled={busy || emailCode.length !== 6}
-            onClick={() =>
-              void run(
-                () => authService.verifyEmail(state.email, emailCode),
-                'Email verificat.',
-              )
-            }
-          >
-            Confirmă emailul
-          </Button>
-        </Stack>
-      )}
+
       <TextField
         label="Telefon"
         value={state.phoneVerified ? (state.phone ?? '') : phone}
