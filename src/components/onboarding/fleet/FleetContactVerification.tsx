@@ -31,14 +31,27 @@ export function FleetContactVerification({
       setBusy(false)
     }
   }
+  // Când serverul nu cere confirmarea, ecranul trebuie s-o spună: altfel două câmpuri „de
+  // confirmat" care nu blochează nimic arată ca un pas neterminat, iar omul așteaptă un cod.
+  const optional = !state.contactVerificationRequired
+
   return (
     <Stack spacing={2}>
+      {optional && (
+        <Alert severity="info">
+          Confirmarea emailului și a telefonului e opțională deocamdată — poți continua fără ea.
+        </Alert>
+      )}
       <TextField
         label="Email"
         value={state.email}
         slotProps={{ input: { readOnly: true } }}
         helperText={
-          state.emailVerified ? '✓ Verificat' : 'Confirmă adresa de email'
+          state.emailVerified
+            ? '✓ Verificat'
+            : optional
+              ? 'Confirmarea e opțională'
+              : 'Confirmă adresa de email'
         }
       />
       {!state.emailVerified && (
@@ -79,7 +92,11 @@ export function FleetContactVerification({
         onChange={(e) => setPhone(e.target.value)}
         slotProps={{ input: { readOnly: state.phoneVerified } }}
         helperText={
-          state.phoneVerified ? '✓ Verificat' : 'Confirmă numărul prin SMS'
+          state.phoneVerified
+            ? '✓ Verificat'
+            : optional
+              ? 'Confirmarea e opțională'
+              : 'Confirmă numărul prin SMS'
         }
       />
       {!state.phoneVerified && (

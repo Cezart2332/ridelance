@@ -1,7 +1,7 @@
 import { Box, Paper, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 
-import { STEP_INTRO } from '../config/stepIntro'
+import { STEP_INTRO, type StepIntro } from '../config/stepIntro'
 import { displaySx, TOKENS } from '../onboardingTheme'
 
 /**
@@ -25,10 +25,23 @@ interface StepIntroCardProps {
   label: string | null
   /** Estimarea de completare, dacă mai e ceva de completat. Vine din `stepEstimate`. */
   estimate: string | null
+  /**
+   * Catalogul din care se citește antetul. Implicit cel al PFA-ului; înrolarea de flotă are
+   * pașii ei, cu alte chei, dar același antet — de aceea catalogul e un parametru, nu un import
+   * fix. Fără el, al doilea flux ar fi avut nevoie de o a doua componentă aproape identică.
+   */
+  intros?: Record<string, StepIntro>
 }
 
-export function StepIntroCard({ stepKey, position, total, label, estimate }: StepIntroCardProps) {
-  const intro = stepKey ? STEP_INTRO[stepKey] : undefined
+export function StepIntroCard({
+  stepKey,
+  position,
+  total,
+  label,
+  estimate,
+  intros = STEP_INTRO,
+}: StepIntroCardProps) {
+  const intro = stepKey ? intros[stepKey] : undefined
   if (!intro) return null
 
   // Durata stă prima: e întrebarea pe care și-o pune oricine deschide un pas nou.

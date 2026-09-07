@@ -16,7 +16,6 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 
-import logo from '../../assets/logo.svg'
 import { authService } from '../../services/auth.service'
 import { onboardingService } from '../../services/onboarding.service'
 import { getErrorMessage } from '../../utils/errorHandler'
@@ -27,13 +26,11 @@ import { MicroStepProvider } from './MicroStepProvider'
 import { useMotionTokens } from './motion'
 import { onboardingMuiTheme } from './onboardingMuiTheme'
 import { OnboardingProvider } from './OnboardingProvider'
-import { displaySx, TOKENS } from './onboardingTheme'
-import { SHELL, SHELL_LAYOUT } from './shellTokens'
-import { MobileStepBar, MOBILE_BAR_HEIGHT } from './rail/MobileStepBar'
+import { TOKENS } from './onboardingTheme'
+import { SHELL } from './shellTokens'
 import { RightRail } from './rail/RightRail'
-import { StepRail } from './rail/StepRail'
 import { SidebarSupportBlock } from './shell/SidebarSupportBlock'
-import { OnboardingTopBar } from './shell/OnboardingTopBar'
+import { OnboardingChrome } from './shell/OnboardingChrome'
 import { StepIntroCard } from './shell/StepIntroCard'
 import { StepProgressRing } from './shell/StepProgressRing'
 import { firstActionableStep, stepEstimate, type StepView } from './stepModel'
@@ -41,7 +38,6 @@ import { OnboardingSupportContext, type OnboardingSupportValue } from './support
 import { useMicroSteps } from './useMicroSteps'
 import { useOnboarding } from './useOnboarding'
 
-const RAIL_WIDTH = 280
 
 /** Pasul căruia îi aparține ruta curentă — `/onboarding/pfa/sediu` ține tot de pasul PFA. */
 function activeKeyFor(pathname: string, steps: StepView[]): string | null {
@@ -161,17 +157,6 @@ function MobileMicroBar({
   )
 }
 
-/** Brandul din capul rail-ului. */
-function SidebarBrand() {
-  return (
-    <Stack spacing={0.25} sx={{ px: 1.5, pb: 1 }}>
-      <Box component="img" src={logo} alt="RIDElance" sx={{ height: 24, width: 'auto', mb: 0.5 }} />
-      <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>
-        Onboarding PFA ridesharing
-      </Typography>
-    </Stack>
-  )
-}
 
 /**
  * Corpul shell-ului. Are nevoie de micro-pași (topbar, rail-ul din dreapta, sub-pașii din stânga),
@@ -280,32 +265,29 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
 
   const currentStepView = steps.find((s) => s.key === activeKey) ?? null
 
-  const rail = (
-    <StepRail
-      steps={steps}
-      activeKey={activeKey}
-      onSelect={goToStep}
-      estimate={stepEstimate(currentStepView)}
-    />
-  )
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: SHELL.bg.app }}>
+    <>
       {/*
         Bannerul de mod dev și panoul flotant. În build-ul de producție componenta se reduce la
         `null` — vezi `OnboardingDevTools` (spec fix-uri §13.1/§13.6).
       */}
       <OnboardingDevTools />
 
-      {isMobile ? (
-        <>
-          <MobileStepBar
-            steps={steps}
-            activeKey={activeKey}
-            onSelect={goToStep}
-          />
-          {/* Spacer pentru bara fixed — sticky nu funcționează (overflow-x: hidden pe #root). */}
-          <Box sx={{ height: MOBILE_BAR_HEIGHT + 3 }} />
+      <OnboardingChrome
+        steps={steps}
+        activeKey={activeKey}
+        onSelectStep={goToStep}
+        estimate={stepEstimate(currentStepView)}
+        stepPosition={Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)}
+        stepTotal={Math.max(steps.length, 1)}
+        stepLabel={steps.find((s) => s.key === activeKey)?.label ?? null}
+        canGoBack={micro.canGoBack}
+        onBack={micro.back}
+        onLogout={handleLogout}
+        brandCaption="Onboarding PFA ridesharing"
+        banner={<TestSkipBanner />}
+        mobileExtra={
           <MobileMicroBar
             position={micro.position}
             total={micro.total}
@@ -313,71 +295,13 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
             canGoBack={micro.canGoBack}
             onBack={micro.back}
           />
-        </>
-      ) : (
+        }
+        support={<SidebarSupportBlock />}
+        rightRail={<RightRail step={currentStepView} loading={loading} />}
+        showRightRail={showRightRail}
+        isMobile={isMobile}
+      >
         <>
-          <Box sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 3 }}>
-            <OnboardingTopBar
-              stepPosition={Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)}
-              stepTotal={Math.max(steps.length, 1)}
-              stepLabel={steps.find((s) => s.key === activeKey)?.label ?? null}
-              canGoBack={micro.canGoBack}
-              onBack={micro.back}
-              onLogout={handleLogout}
-            />
-            <TestSkipBanner />
-          </Box>
-          <Box sx={{ height: SHELL_LAYOUT.topbarHeight }} />
-        </>
-      )}
-
-      <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-        {!isMobile && (
-          <>
-            {/* Rail fix + spacer, din același motiv: position: sticky e rupt în acest proiect. */}
-            <Stack
-              component="nav"
-              aria-label="Pașii înrolării"
-              sx={{
-                position: 'fixed',
-                top: SHELL_LAYOUT.topbarHeight,
-                bottom: 0,
-                left: 0,
-                width: RAIL_WIDTH,
-                borderRight: `1px solid ${SHELL.border.subtle}`,
-                backgroundColor: SHELL.bg.surface,
-                pt: 2.5,
-              }}
-            >
-              <Box sx={{ px: 2 }}>
-                <SidebarBrand />
-              </Box>
-
-              {/* Doar lista de pași scrolează. Ajutorul nu are voie să dispară sub fold — e exact
-                  ce caută cineva blocat la un pas lung. */}
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: 2, py: 1 }}>{rail}</Box>
-
-              {/* Fără divider: cardul de ajutor se separă singur de listă. */}
-              <Box sx={{ px: 2, pt: 1, pb: 2, backgroundColor: SHELL.bg.surface }}>
-                <SidebarSupportBlock />
-              </Box>
-            </Stack>
-            <Box sx={{ width: RAIL_WIDTH, flexShrink: 0 }} />
-          </>
-        )}
-
-        <Box
-          sx={{
-            flex: 1,
-            minWidth: 0,
-            px: { xs: 2, md: 4 },
-            py: { xs: 2.5, md: 6 },
-            // Cardul central își păstrează lățimea: diferența pentru rail-ul dreapta se absoarbe
-            // din gutter-ele exterioare, nu din conținut.
-            maxWidth: SHELL_LAYOUT.contentMaxWidth + 128,
-            mx: 'auto',
-          }}
-        >
           {error && (
             <Alert severity="error" sx={{ mb: 2, maxWidth: 720, mx: 'auto' }}>
               {error}
@@ -417,64 +341,8 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
               </motion.div>
             </AnimatePresence>
           )}
-
-          {!showRightRail && (
-            <Box sx={{ mt: 4 }}>
-              <RightRail step={currentStepView} loading={loading} />
-            </Box>
-          )}
-        </Box>
-
-        {showRightRail && (
-          <>
-            {/* Fix + spacer, ca și rail-ul stâng: `sticky` e rupt de overflow-x: hidden pe #root. */}
-            <Box
-              component="aside"
-              aria-label="Progresul pasului curent"
-              sx={{
-                position: 'fixed',
-                top: SHELL_LAYOUT.topbarHeight,
-                bottom: 0,
-                right: 0,
-                width: { md: SHELL_LAYOUT.rightRailNarrow, xl: SHELL_LAYOUT.rightRail },
-                overflowY: 'auto',
-                borderLeft: `1px solid ${SHELL.border.subtle}`,
-                backgroundColor: SHELL.bg.app,
-                px: 2,
-                py: 2.5,
-              }}
-            >
-              <RightRail step={currentStepView} loading={loading} />
-            </Box>
-            <Box
-              sx={{
-                width: { md: SHELL_LAYOUT.rightRailNarrow, xl: SHELL_LAYOUT.rightRail },
-                flexShrink: 0,
-              }}
-            />
-          </>
-        )}
-      </Box>
-
-      {/* Pe mobil, ajutorul nu are unde sta în rail — rămâne ancorat sub conținut. */}
-      {isMobile && (
-        <Box sx={{ px: 2, pb: 4, textAlign: 'center' }}>
-          <Box
-            component="a"
-            href="mailto:contact@ridelance.ro"
-            sx={{
-              ...displaySx,
-              fontSize: '0.85rem',
-              color: TOKENS.textMuted,
-              fontWeight: 600,
-              textDecoration: 'none',
-              '&:hover': { textDecoration: 'underline' },
-            }}
-          >
-            contact@ridelance.ro
-          </Box>
-        </Box>
-      )}
+        </>
+      </OnboardingChrome>
 
       <Snackbar
         open={rejectionAlert !== null}
@@ -499,7 +367,7 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
           {lockedNotice}
         </Alert>
       </Snackbar>
-    </Box>
+    </>
   )
 }
 

@@ -1,28 +1,26 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Navigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Alert,
   Box,
   Button,
   Checkbox,
-  Chip,
   CircularProgress,
   FormControlLabel,
-  LinearProgress,
   Link,
   MenuItem,
-  Paper,
   Stack,
   TextField,
   ThemeProvider,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { loadStripe } from '@stripe/stripe-js'
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
 } from '@stripe/react-stripe-js'
-import logo from '../../../assets/logo.svg'
 import { useAppSelector } from '../../../store/hooks'
 import { SRL_ROOT } from '../../../config/srlNavigation'
 import { SRL_PLANS } from '../../../data/plans'
@@ -32,30 +30,33 @@ import {
   type FleetState,
 } from '../../../services/fleetOnboarding.service'
 import { getErrorMessage } from '../../../utils/errorHandler'
+import { authService } from '../../../services/auth.service'
+import { ROUTES } from '../../../constants/routes'
+import { CardFooter } from '../micro/CardFooter'
+import { OnboardingCard } from '../micro/OnboardingCard'
+import type { MicroStepIcon } from '../microStepTypes'
 import { onboardingMuiTheme } from '../onboardingMuiTheme'
 import { displaySx, TOKENS } from '../onboardingTheme'
+import { OnboardingChrome } from '../shell/OnboardingChrome'
+import { StepIntroCard } from '../shell/StepIntroCard'
+import type { StepView } from '../stepModel'
+import { FLEET_STEPS, FLEET_STEP_INTRO, fleetStepViews } from './fleetSteps'
 import { FleetContactVerification } from './FleetContactVerification'
 import { FleetBankStep, FleetOblioStep } from './FleetConnections'
 
 const stripePromise = loadStripe(import.meta.env.VITE_PUBLIC_STRIPE || '')
-const steps = [
-  'Firma ta',
-  'Administrator',
-  'Despre flotă',
-  'Cont bancar',
-  'Oblio',
-  'Abonament',
-  'Plată',
-]
-const titles = [
-  'Hai să configurăm firma ta',
-  'Cine va administra contul RIDElance?',
-  'Spune-ne câteva lucruri despre flota ta',
-  'Contul bancar al firmei',
-  'Conectează programul de facturare',
-  'Alege abonamentul potrivit flotei tale',
-  'Finalizează configurarea',
-]
+
+/** Iconița din capul cardului, pe pas. Aceleași chei ca la PFA, ca ecranele să se citească la fel. */
+const FLEET_STEP_ICONS: Record<string, MicroStepIcon> = {
+  firma: 'folder',
+  administrator: 'user',
+  flota: 'car',
+  banca: 'idCard',
+  oblio: 'shield',
+  abonament: 'checkCircle',
+  plata: 'checkCircle',
+}
+
 const positions = [
   'Administrator',
   'Asociat',
@@ -72,6 +73,10 @@ const money = (bani: number) =>
 
 export default function FleetOnboardingPage() {
   const role = useAppSelector((s) => s.auth.role)
+  const navigate = useNavigate()
+  const theme = useTheme()
+  // Aceeași ruptură ca la PFA: sub 900px rail-ul devine bara mobilă de pași.
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [params] = useSearchParams()
   const [state, setState] = useState<FleetState | null>(null)
   const [step, setStep] = useState(0)
@@ -127,239 +132,153 @@ export default function FleetOnboardingPage() {
   }
   if (role !== 'CarPoster') return <Navigate to="/app" replace />
   if (state?.legacyAccount) return <Navigate to={SRL_ROOT} replace />
+
+  // Navigarea prin rail se închide când nu mai are ce muta: la checkout deschis sau după acces.
+  const navigationLocked =
+    busy || !state || state.dashboardAllowed || !!state.progress.checkoutAttemptId
+  const stepViews = fleetStepViews(
+    step || 1,
+    state?.progress.completedStep ?? 0,
+    navigationLocked,
+  )
+  const def = FLEET_STEPS[Math.max(0, (step || 1) - 1)]
+  const goToStep = (target: StepView) => {
+    const index = FLEET_STEPS.findIndex((s) => s.key === target.key)
+    if (index < 0) return
+    setStep(index + 1)
+    setError('')
+  }
+  const canGoBack =
+    step > 1 && !state?.progress.checkoutAttemptId && !params.has('payment')
+  const goBack = () => {
+    if (!canGoBack) return
+    setStep(step - 1)
+    setError('')
+  }
+  const handleLogout = () => {
+    authService.logout()
+    navigate(ROUTES.login)
+  }
+
   return (
     <ThemeProvider theme={onboardingMuiTheme}>
-      <Box
-        sx={{
-          minHeight: '100vh',
-          bgcolor: TOKENS.surface,
-          color: TOKENS.ink,
-          '& .MuiPaper-root': {
-            borderRadius: '16px',
-            border: '1px solid',
-            borderColor: TOKENS.border,
-          },
-          '& .MuiAlert-root': { color: TOKENS.ink },
-          '& .MuiButton-containedPrimary': { color: TOKENS.ink },
-          '& .MuiButton-textPrimary, & .MuiButton-outlinedPrimary, & .MuiLink-root':
-            { color: '#146581' },
-          '& .MuiTypography-h3': { fontSize: { xs: 36, md: 48 } },
-        }}
+      <OnboardingChrome
+        steps={stepViews}
+        activeKey={def?.key ?? null}
+        onSelectStep={goToStep}
+        stepPosition={step || 1}
+        stepTotal={FLEET_STEPS.length}
+        stepLabel={def?.label ?? null}
+        canGoBack={canGoBack}
+        onBack={goBack}
+        onLogout={handleLogout}
+        brandCaption="Onboarding flotă SRL"
+        isMobile={isMobile}
       >
-        <Box
-          component="header"
-          sx={{
-            px: { xs: 2, md: 5 },
-            py: 2,
-            bgcolor: 'white',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Box component="img" src={logo} alt="RIDElance" sx={{ width: 140 }} />
-          <Typography variant="body2" color="text.secondary">
-            Configurare flotă
-          </Typography>
-        </Box>
-        <Box
-          sx={{
-            maxWidth: 1160,
-            mx: 'auto',
-            p: { xs: 2, md: 5 },
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '220px minmax(0, 1fr)' },
-            gap: { xs: 3, md: 5 },
-          }}
-        >
-          <Box component="nav" aria-label="Etape configurare flotă">
-            <Typography sx={{ ...displaySx, fontSize: 24, mb: 2 }}>
-              Flota ta, organizată.
-            </Typography>
-            <Stack spacing={1} sx={{ display: { xs: 'none', md: 'flex' } }}>
-              {steps.map((label, index) => (
-                <Button
-                  key={label}
-                  disabled={
-                    busy ||
-                    !state ||
-                    index > state.progress.completedStep ||
-                    state.dashboardAllowed ||
-                    !!state.progress.checkoutAttemptId
-                  }
-                  onClick={() => {
-                    setStep(index + 1)
-                    setError('')
-                  }}
-                  aria-current={step === index + 1 ? 'step' : undefined}
-                  sx={{
-                    justifyContent: 'flex-start',
-                    gap: 1.5,
-                    py: 1.5,
-                    bgcolor:
-                      step === index + 1 ? TOKENS.primarySoft : 'transparent',
-                  }}
-                >
-                  <Box
-                    component="span"
-                    sx={{
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: '50%',
-                      width: 28,
-                      height: 28,
-                      display: 'grid',
-                      placeItems: 'center',
-                    }}
-                  >
-                    {state && index < state.progress.completedStep
-                      ? '✓'
-                      : index + 1}
-                  </Box>
-                  {label}
-                </Button>
-              ))}
-            </Stack>
-            <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                Pasul {step || 1} din 7 · {steps[(step || 1) - 1]}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2, maxWidth: 720, mx: 'auto' }}>
+            {error}
+            {!state && (
+              <Button onClick={() => window.location.reload()}>Reîncearcă</Button>
+            )}
+          </Alert>
+        )}
+
+        {!state ? (
+          !error && (
+            <Stack spacing={2} sx={{ alignItems: 'center', py: 8 }}>
+              <CircularProgress sx={{ color: TOKENS.primary }} />
+              <Typography sx={{ color: TOKENS.textMuted, fontWeight: 600 }}>
+                Se încarcă...
               </Typography>
-              <LinearProgress variant="determinate" value={(step / 7) * 100} />
-            </Box>
-          </Box>
-          <Stack spacing={2.5} sx={{ minWidth: 0 }}>
-            {error && (
-              <Alert severity="error">
-                {error}
-                {!state && (
-                  <Button onClick={() => window.location.reload()}>
-                    Reîncearcă
-                  </Button>
-                )}
-              </Alert>
-            )}
-            {!state ? (
-              !error && <CircularProgress />
-            ) : state.dashboardAllowed ? (
-              <Paper sx={{ p: { xs: 3, md: 5 } }}>
-                <Stack spacing={3}>
-                  <Chip
-                    label="✓ Configurare finalizată"
-                    color="success"
-                    sx={{ alignSelf: 'flex-start' }}
-                  />
-                  <Typography variant="h4" sx={displaySx}>
-                    Totul este pregătit.
+            </Stack>
+          )
+        ) : state.dashboardAllowed ? (
+          <OnboardingCard
+            eyebrow="GATA"
+            icon="checkCircle"
+            tone="success"
+            title="Totul este pregătit."
+            footer={
+              <CardFooter label="Intră în dashboard" href={SRL_ROOT} />
+            }
+          >
+            <Stack spacing={1}>
+              <Typography>Contul companiei tale RIDElance a fost configurat cu succes.</Typography>
+              <Typography>✓ Firmă configurată</Typography>
+              <Typography>✓ Profil administrator configurat</Typography>
+              <Typography>✓ Abonament activ</Typography>
+              <Typography>
+                {state.bankConnected ? '✓ Cont bancar conectat' : 'Cont bancar · De configurat'}
+              </Typography>
+              <Typography>
+                {state.oblioConnected ? '✓ Oblio conectat' : 'Oblio · De configurat'}
+              </Typography>
+            </Stack>
+          </OnboardingCard>
+        ) : (
+          <>
+            <StepIntroCard
+              stepKey={def?.key ?? null}
+              position={step || 1}
+              total={FLEET_STEPS.length}
+              label={def?.label ?? null}
+              estimate={null}
+              intros={FLEET_STEP_INTRO}
+            />
+
+            {params.has('payment') && !state.progress.completedAtUtc ? (
+              <OnboardingCard
+                eyebrow="PLATĂ"
+                icon="checkCircle"
+                title="Așteptăm confirmarea plății."
+              >
+                <Stack spacing={2}>
+                  <Typography sx={{ color: TOKENS.textMuted }}>
+                    Accesul se activează automat după confirmare.
                   </Typography>
-                  <Typography>
-                    Contul companiei tale RIDElance a fost configurat cu succes.
-                  </Typography>
-                  <Stack spacing={1}>
-                    <Typography>✓ Firmă configurată</Typography>
-                    <Typography>✓ Profil administrator configurat</Typography>
-                    <Typography>✓ Abonament activ</Typography>
-                    <Typography>
-                      {state.bankConnected
-                        ? '✓ Cont bancar conectat'
-                        : 'Cont bancar · De configurat'}
-                    </Typography>
-                    <Typography>
-                      {state.oblioConnected
-                        ? '✓ Oblio conectat'
-                        : 'Oblio · De configurat'}
-                    </Typography>
+                  <Stack direction="row" spacing={1.5}>
+                    <Button
+                      onClick={() =>
+                        void refresh().catch((e) =>
+                          setError(getErrorMessage(e, 'Nu am putut verifica plata.')),
+                        )
+                      }
+                    >
+                      Verifică plata
+                    </Button>
+                    <Button onClick={() => window.location.assign('/onboarding-srl')}>
+                      Revino la configurare
+                    </Button>
                   </Stack>
-                  <Button variant="contained" href={SRL_ROOT}>
-                    Intră în dashboard
-                  </Button>
                 </Stack>
-              </Paper>
+              </OnboardingCard>
             ) : (
-              <>
-                <Paper
-                  sx={{
-                    p: { xs: 3, md: 4 },
-                    borderTop: `3px solid ${TOKENS.primary}`,
-                  }}
-                >
-                  <Typography variant="overline" color="text.secondary">
-                    RIDElance Fleet · {steps[step - 1]}
-                  </Typography>
-                  <Typography
-                    component="h1"
-                    sx={{ ...displaySx, fontSize: { xs: 26, md: 34 }, mt: 1 }}
-                  >
-                    {titles[step - 1]}
-                  </Typography>
-                  <Typography color="text.secondary" sx={{ mt: 1.5 }}>
-                    {step <= 3
-                      ? 'Câteva detalii pentru un cont pregătit pentru firma ta.'
-                      : step <= 5
-                        ? 'Poți reveni la această configurare și din dashboard.'
-                        : 'Un singur loc pentru mașini, închirieri și documente.'}
-                  </Typography>
-                </Paper>
-                <Paper sx={{ p: { xs: 2.5, md: 4 } }}>
-                  {params.has('payment') && !state.progress.completedAtUtc ? (
-                    <Stack spacing={3}>
-                      <Alert severity="info">
-                        Așteptăm confirmarea plății. Accesul se activează
-                        automat după confirmare.
-                      </Alert>
-                      <Button
-                        onClick={() =>
-                          void refresh().catch((e) =>
-                            setError(
-                              getErrorMessage(e, 'Nu am putut verifica plata.'),
-                            ),
-                          )
-                        }
-                      >
-                        Verifică plata
-                      </Button>
-                      <Button
-                        onClick={() =>
-                          window.location.assign('/onboarding-srl')
-                        }
-                      >
-                        Revino la configurare
-                      </Button>
-                    </Stack>
-                  ) : (
-                    <FleetStep
-                      key={step}
-                      step={step}
-                      state={state}
-                      busy={busy}
-                      save={save}
-                      refresh={refresh}
-                    />
-                  )}
-                  {step > 1 &&
-                    !state.progress.checkoutAttemptId &&
-                    !params.has('payment') && (
-                      <Button
-                        sx={{ mt: 3 }}
-                        disabled={busy}
-                        onClick={() => {
-                          setStep(step - 1)
-                          setError('')
-                        }}
-                      >
-                        ← Înapoi
-                      </Button>
-                    )}
-                </Paper>
-                <Typography variant="caption" color="text.secondary">
-                  Progresul se salvează la fiecare pas. Poți reveni oricând.
-                </Typography>
-              </>
+              <OnboardingCard
+                eyebrow={def?.eyebrow ?? 'FLOTĂ'}
+                icon={FLEET_STEP_ICONS[def?.key ?? ''] ?? 'folder'}
+                title={def?.title ?? ''}
+              >
+                <FleetStep
+                  key={step}
+                  step={step}
+                  state={state}
+                  busy={busy}
+                  save={save}
+                  refresh={refresh}
+                />
+              </OnboardingCard>
             )}
-          </Stack>
-        </Box>
-      </Box>
+
+            <Typography
+              variant="caption"
+              sx={{ display: 'block', mt: 2, textAlign: 'center', color: TOKENS.textMuted }}
+            >
+              Progresul se salvează la fiecare pas. Poți reveni oricând.
+            </Typography>
+          </>
+        )}
+      </OnboardingChrome>
     </ThemeProvider>
   )
 }
@@ -514,8 +433,11 @@ function FleetStep({ step, state, busy, save, refresh }: StepProps) {
             !firstName.trim() ||
             !lastName.trim() ||
             !position ||
-            !state.emailVerified ||
-            !state.phoneVerified
+            // Confirmarea contactelor blochează doar când serverul o cere. Cât timp emailul și
+            // SMS-ul nu sunt configurate, codul n-are cum să ajungă — iar butonul ar fi rămas gri
+            // fără nicio cale de deblocare.
+            (state.contactVerificationRequired &&
+              (!state.emailVerified || !state.phoneVerified))
           }
           variant="contained"
           onClick={() =>

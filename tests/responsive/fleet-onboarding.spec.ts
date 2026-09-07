@@ -35,6 +35,8 @@ function fixture(step = 0): FleetState {
     },
     dashboardAllowed: false,
     legacyAccount: false,
+    // Furnizorii de email și SMS nu sunt configurați, deci poarta e stinsă — ca în producție.
+    contactVerificationRequired: false,
     email: 'manager@example.test',
     phone: '0712345678',
     emailVerified: true,

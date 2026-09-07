@@ -46,6 +46,14 @@ export interface FleetState {
   monthlyAmountBani: number
   annualAmountBani: number
   legacyAccount: boolean
+  /**
+   * Confirmarea emailului și a telefonului blochează pasul.
+   *
+   * Fals cât timp furnizorii de email și SMS nu sunt configurați: un cod care nu poate fi livrat
+   * nu verifică nimic, doar oprește înrolarea. Serverul decide, nu pagina — altfel butonul ar
+   * putea fi activ pentru o poartă pe care API-ul o aplică oricum.
+   */
+  contactVerificationRequired: boolean
 }
 export interface FleetInput {
   step: number

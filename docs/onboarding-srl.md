@@ -5,7 +5,7 @@ Ruta autentificată: `/onboarding-srl`. Conturile `CarPoster` create după lansa
 ## Flux
 
 1. CUI → rezultat ANAF salvat pe server → confirmare fără editare manuală. Profilul firmei se creează din copia confirmată. După confirmare nu se schimbă firma din onboarding.
-2. Email și telefon confirmate prin cod, prenume, nume, funcție. Fără documente personale sau aprobare administrativă.
+2. Prenume, nume, funcție. Email și telefon se pot confirma prin cod, dar confirmarea **nu** blochează pasul cât timp `Onboarding:RequireContactVerification` e fals — furnizorii de email și SMS nu sunt configurați, iar un cod nelivrabil ar opri înrolarea. Se aprinde din configurație, pe backend, iar interfața citește starea din răspuns (`contactVerificationRequired`). Fără documente personale sau aprobare administrativă.
 3. Platforme și număr de mașini (inclusiv zero). „Niciuna” exclude celelalte opțiuni. Nu conectează platformele.
 4. Banca prin integrarea existentă, oferta BCR și QR. Conexiunea poate fi amânată; după revenirea de la provider se verifică starea. Intenția BCR din pagina publică se păstrează.
 5. Oblio: email, token API, CIF confirmat, serie opțională. Cheia este tratată de integrarea existentă și nu se salvează în progres. Configurarea poate fi amânată.
@@ -13,6 +13,10 @@ Ruta autentificată: `/onboarding-srl`. Conturile `CarPoster` create după lansa
 7. Documente juridice și Stripe Embedded Checkout. Acceptarea se păstrează cu dată și versiune. Accesul se acordă exclusiv după webhookul de plată confirmat.
 
 Progresul se salvează la continuarea fiecărui pas. Datele nesalvate din formular nu se păstrează la refresh.
+
+## Interfață
+
+Fluxul folosește același cadru ca înrolarea PFA: `shell/OnboardingChrome` (bara de sus, rail-ul de pași, coloana de conținut), `shell/StepIntroCard` pentru antetul pasului și `micro/OnboardingCard` cu `micro/CardFooter` pentru cardul central. Pașii, etichetele și antetele stau în `fleet/fleetSteps.ts`, în forma cerută de rail. Cadrul e o singură definiție pentru ambele fluxuri, deci nu poate diverge la următoarea modificare.
 
 ## Prețuri și BCR
 
