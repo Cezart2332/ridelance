@@ -139,7 +139,20 @@ export const eligibilityMicroSteps: MicroStepDef[] = [
     icon: 'checkCircle',
     railLabel: 'Rezumat',
     title: 'Verifică datele înainte să mergi mai departe',
-    // Ultimul ecran al pasului: se închide când serverul confirmă eligibilitatea.
-    isDone: (c) => c.eligibility?.status === 'Eligible',
+    /*
+     * Se închide pe documente, nu pe verdict.
+     *
+     * Verdictul îl dă serverul din ce reușește OCR-ul să citească, iar asta durează și uneori nu
+     * reușește deloc. Legat de el, ecranul ăsta ținea pe loc un dosar cu toate actele la locul lor
+     * — omul vedea trei bife verzi și un buton care nu face nimic. Verificarea merge mai departe
+     * în fundal, iar dacă e ceva de refăcut primește notificare.
+     *
+     * Un refuz ferm rămâne blocant: acolo chiar nu are rost să continue.
+     */
+    isDone: (c) =>
+      c.eligibility?.status !== 'Ineligible' &&
+      hasDocument(c, CI) &&
+      hasDocument(c, PERMIS) &&
+      hasDocument(c, ATESTAT),
   },
 ]

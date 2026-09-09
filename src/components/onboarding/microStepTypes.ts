@@ -229,8 +229,6 @@ export type MicroStepSlot =
   | 'onboardingAdvance'
   /** Oferta asigurari.ro pentru RCA, deasupra uploadului poliței. */
   | 'rcaOffer'
-  /** Oferta asigurari.ro pentru asigurarea călătorilor. */
-  | 'travelInsuranceOffer'
 
 /**
  * Sloturile care ȚIN pasul pe loc: ecranul nu se poate părăsi până când serverul nu confirmă că

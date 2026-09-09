@@ -176,7 +176,6 @@ export const fiscalMicroSteps: MicroStepDef[] = [
             'Cu banca legată, IBAN-ul și titularul vin direct de la ea și nu mai e nevoie de extrasul de cont. Dacă preferi, poți sări peste și încărca extrasul.',
           ],
     slot: 'bankConnect',
-    visibleWhen: (c) => c.answers.cont_bancar !== 'no' || hasDocument(c, EXTRAS) || bankLinked(c),
     // Informativ, nu blocant: conectarea e drumul recomandat, extrasul rămâne varianta de rezervă.
     isDone: () => true,
   },
@@ -286,9 +285,13 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     eyebrow: EYEBROW,
     icon: 'checkCircle',
     railLabel: 'Trimite la verificare',
-    title: 'Trimite dosarul ca să pregătim semnăturile',
+    title: 'Urmează pachetul de semnături',
+    // Ecranul de după Oblio. Spune tot ce urmează ÎNAINTE de apăsare, nu după: altfel omul
+    // rămâne cu ultimul lucru pe care l-a apăsat pe ecran și pare că s-a blocat acolo.
     lines: () => [
-      'Pregătim împuternicirile și contractele pe care le semnezi o singură dată, apoi deblocăm pasul următor.',
+      'Mai departe pregătim pachetul de semnături: împuternicirile cu care depunem dosarele în numele tău — la ARR și la ANAF — plus contractul de servicii și acordul GDPR.',
+      'Îți ajunge pe email, îl semnezi o singură dată și îl încarci înapoi aici. Durează de obicei 1–2 zile lucrătoare.',
+      'Apasă mai jos ca să începem pregătirea lui.',
     ],
     action: {
       label: 'Trimite pentru verificare',

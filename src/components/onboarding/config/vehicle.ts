@@ -227,8 +227,8 @@ export const vehicleMicroSteps: MicroStepDef[] = [
       label: 'Asigurare călători și bagaje',
       hint: 'O cere ARR pentru transportul alternativ.',
     },
-    slot: 'travelInsuranceOffer',
-    slotBeforeBody: true,
+    // Fără ofertă de partener aici: asigurarea de călători se face de obicei odată cu RCA-ul, iar
+    // a doua reclamă pe același pas transforma un upload într-un ecran de vânzare.
     visibleWhen: hasVehicle,
     isDone: (c) => hasDocument(c, ['AsigurareCalatori']),
   },

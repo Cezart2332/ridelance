@@ -63,13 +63,6 @@ export function MicroStepSlotContent({
           slugs={['rca', 'casco_econom']}
         />
       )
-    case 'travelInsuranceOffer':
-      return (
-        <InsuranceOffer
-          note="O cere ARR și se face separat de RCA. Prin asigurari.ro o ai la tarif de partener."
-          slugs={['accidents_traveler', 'travel']}
-        />
-      )
   }
 }
 
