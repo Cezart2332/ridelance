@@ -322,7 +322,7 @@ export const fiscalMicroSteps: MicroStepDef[] = [
       return [
         'Pachetul conține împuternicirile cu care depunem dosarele în numele tău — la ARR și la ANAF — plus contractul de servicii și acordul GDPR.',
         'Îl pregătim noi și ți-l trimitem pe email. Durează de obicei 1–2 zile lucrătoare; te anunțăm și în aplicație când ajunge.',
-        'Nu ai nimic de încărcat aici: pachetul semnat se întoarce la noi tot pe email. Te anunțăm imediat ce l-am primit.',
+        'Nu ai nimic de încărcat aici: îl semnezi și ni-l trimiți înapoi tot pe email. După ce îl primim, îți validăm pasul și se deschide următorul.',
       ]
     },
     visibleWhen: (c) => isAtAdmin(c) || Boolean(step2Of(c)?.signature?.rejectionReason),

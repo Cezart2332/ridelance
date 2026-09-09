@@ -109,7 +109,7 @@ const ADMIN_STEPS: AdminStep[] = [
   {
     key: 'fiscal', order: 2, label: 'Fiscal, bancă & semnături',
     categories: ['ExtrasBancar', 'DecontTvaIntracomunitar', 'DecontTaxaNerezident', 'CertificatTvaIntracomunitar', 'DocumenteSemnate'],
-    guidedNote: 'TVA, cont bancar și cont Oblio le completează clientul. Pachetul de semnături îl trimiți în afara aplicației; clientul îl încarcă semnat mai sus, la documente. Pasul se închide când validezi secțiunea, mai jos.',
+    guidedNote: 'TVA, cont bancar și cont Oblio le completează clientul. Pachetul de semnături îl trimiți și îl primești înapoi semnat pe email — clientul nu mai are ce încărca aici. Pasul se închide când validezi secțiunea, mai jos.',
   },
   {
     key: 'arr', order: 3, label: 'Autorizație transport (ARR)',
@@ -455,9 +455,9 @@ function SignaturePacketReview({
       )}
 
       <Alert severity="info" sx={{ mb: 1.5 }}>
-        Pachetul se pregătește și se trimite clientului în afara aplicației. Clientul îl semnează și
-        încarcă documentele semnate la „Pachetul de semnături, semnat", mai sus. Verifică-le, apoi
-        validează secțiunea — asta îi deblochează pasul ARR.
+        Pachetul se pregătește și se trimite clientului pe email; tot pe email îl primești înapoi,
+        semnat. Clientul n-are ce încărca în aplicație. După ce l-ai primit, validează secțiunea —
+        asta îi închide pasul și îi deblochează ARR-ul.
       </Alert>
 
       <Stack direction="row" spacing={1.5}>
@@ -772,7 +772,9 @@ export function OnboardingSectionsPanel({
               }}
             >
               <Box sx={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: alpha(color, 0.12), color, fontWeight: 800, fontSize: '0.8rem', flexShrink: 0 }}>
-                {group.order}
+                {/* Pașii se numără de la 1, ca în onboardingul clientului: „pasul 0" nu există
+                    în nicio conversație cu el. `order` rămâne indexul intern. */}
+                {group.order + 1}
               </Box>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="body2" sx={{ fontWeight: 800, color: TOKENS.ink }}>
