@@ -377,6 +377,54 @@ test.describe('pasul 2 — am deja PFA', () => {
     await expect(page).toHaveURL(/\/onboarding\/pfa/)
   })
 
+  /**
+   * A doua jumătate a aceleiași regresii: `pfaStatus` e statusul DOSARULUI, iar el e `Pending`
+   * din secunda în care dosarul se deschide — adică imediat după numărul de telefon. Cât timp
+   * pagina punea cardul „în validare" pe semnalul ăsta, certificatele și rezumatul rămâneau în
+   * rail fără să se mai poată ajunge la ele.
+   */
+  test('dosarul deschis nu aduce ecranul de așteptare peste certificate', async ({ page }) => {
+    await stubBackend(page, [uploadedDoc('CertificatInregistrare', 'certificat.pdf')], {
+      state: amPfaState({ pfaStatus: 'Pending' }),
+    })
+    await page.goto('/onboarding/pfa', { waitUntil: 'networkidle' })
+
+    await expect(
+      page.getByRole('heading', { name: 'Încarcă certificatul constatator' }),
+    ).toBeVisible()
+    await expect(page.getByText('Dosarul tău PFA este în validare')).toBeHidden()
+  })
+
+  /** Iar când chiar e predat, ecranul de așteptare vine după rezumat — nu în locul lui. */
+  test('predat spre validare: rezumatul întâi, apoi ecranul de așteptare', async ({ page }) => {
+    await stubBackend(
+      page,
+      [
+        uploadedDoc('CertificatInregistrare', 'certificat.pdf'),
+        uploadedDoc('CertificatConstatator', 'constatator.pdf'),
+      ],
+      {
+        state: amPfaState({
+          pfaStatus: 'Pending',
+          steps: steps.map((step) =>
+            step.key === 'pfa'
+              ? { ...step, status: 'AwaitingValidation', state: 'pending_admin', userPartDone: true }
+              : step,
+          ),
+        }),
+      },
+    )
+    await page.goto('/onboarding/pfa', { waitUntil: 'networkidle' })
+
+    await expect(
+      page.getByRole('heading', { name: 'Verifică datele înainte să trimitem dosarul' }),
+    ).toBeVisible()
+
+    await page.getByRole('button', { name: 'Continuă către pasul următor' }).click()
+
+    await expect(page.getByText('Dosarul tău PFA este în validare')).toBeVisible()
+  })
+
   test('cu ambele certificate, rezumatul rămâne accesibil', async ({ page }) => {
     await stubBackend(
       page,

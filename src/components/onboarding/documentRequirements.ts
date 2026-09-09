@@ -81,11 +81,6 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
       label: 'Certificat de TVA intracomunitar sau decizia ANAF',
       originStep: 'fiscal',
     },
-    {
-      category: 'DocumenteSemnate',
-      label: 'Pachetul de semnături, semnat',
-      originStep: 'fiscal',
-    },
   ],
   arr: [
     {

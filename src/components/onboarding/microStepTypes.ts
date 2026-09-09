@@ -229,6 +229,8 @@ export type MicroStepSlot =
   | 'onboardingAdvance'
   /** Oferta asigurari.ro pentru RCA, deasupra uploadului poliței. */
   | 'rcaOffer'
+  /** Dosarul PFA e la noi: ce am citit din certificate și cât mai durează validarea. */
+  | 'pfaPending'
 
 /**
  * Sloturile care ȚIN pasul pe loc: ecranul nu se poate părăsi până când serverul nu confirmă că

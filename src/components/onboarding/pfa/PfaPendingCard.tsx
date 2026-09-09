@@ -7,13 +7,16 @@ import { documentService, type DocumentSummary } from '../../../services/documen
 import { getErrorMessage } from '../../../utils/errorHandler'
 import { buildUploadFile } from '../../../utils/imagesToPdf'
 import { CertificateReadout } from '../CertificateReadout'
-import { CardFooter } from '../micro/CardFooter'
 import { TOKENS } from '../onboardingTheme'
 import { UploadField } from '../UploadField'
 
 /**
- * Dosarul PFA e la admin. Nu e un ecran de întrebări, deci nu e un micro-pas: userul n-are nimic
- * de răspuns aici, doar de așteptat — și, dacă ceva a fost respins, de reîncărcat.
+ * Dosarul PFA e la admin: ce am citit din certificate și cât mai durează.
+ *
+ * Se randează prin slotul `pfaPending`, ca ultim ecran al pasului — nu ca pagină care înlocuiește
+ * pasul. Cât timp înlocuia pagina, apărea din secunda în care dosarul exista, adică imediat după
+ * numărul de telefon: certificatele și rezumatul rămâneau în rail, dar nu se mai putea ajunge la
+ * ele. Butonul „mai departe" e al runnerului, ca la orice alt ecran.
  */
 
 /**
@@ -96,16 +99,10 @@ export function PfaPendingCard({
   documents,
   pfaRegistrationId,
   onRefresh,
-  onContinue,
 }: {
   documents: DocumentSummary[]
   pfaRegistrationId?: string | null
   onRefresh: () => Promise<unknown>
-  /**
-   * Mai departe, cât timp noi validăm. Lipsește doar când pasul următor chiar e blocat de altceva
-   * — altfel ecranul ăsta ar fi din nou o cameră fără ușă, exact bugul pentru care a fost deschis.
-   */
-  onContinue?: () => void
 }) {
   const rejectedDocs = rejectedPfaDocs(documents)
   const newestOf = (category: string) =>
@@ -145,9 +142,7 @@ export function PfaPendingCard({
         Dosarul tău PFA este în validare
       </Typography>
       <Typography sx={{ fontSize: '0.9rem', color: TOKENS.textMuted }}>
-        {onContinue
-          ? 'Nu trebuie să aștepți aici — poți continua cu pasul următor. Te anunțăm când dosarul e validat.'
-          : 'Te anunțăm pe email și în aplicație imediat ce e gata.'}
+        Nu trebuie să aștepți aici. Te anunțăm pe email și în aplicație imediat ce e gata.
       </Typography>
 
       {certificate && (
@@ -177,12 +172,6 @@ export function PfaPendingCard({
             />
           ))}
         </Stack>
-      )}
-
-      {onContinue && (
-        <Box sx={{ mt: 4 }}>
-          <CardFooter label="Continuă către pasul următor" onContinue={onContinue} />
-        </Box>
       )}
     </Paper>
   )

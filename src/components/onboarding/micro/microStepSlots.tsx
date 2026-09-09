@@ -16,6 +16,7 @@ import { InsuranceLinksGrid } from '../../insurance/InsuranceLinksGrid'
 import { ArrPaymentDetailsCard } from '../arr/ArrPaymentDetailsCard'
 import { DossierPanel } from '../arr/DossierPanel'
 import { CompanyFormationSummary } from '../companyFormation/CompanyFormationSummary'
+import { PfaPendingCard } from '../pfa/PfaPendingCard'
 import type { MicroStepContext, MicroStepSlot } from '../microStepTypes'
 import { TOKENS } from '../onboardingTheme'
 import { useOnboarding } from '../useOnboarding'
@@ -56,6 +57,8 @@ export function MicroStepSlotContent({
       return <VehicleDossierSlot />
     case 'onboardingAdvance':
       return <OnboardingAdvanceSlot />
+    case 'pfaPending':
+      return <PfaPendingSlot />
     case 'rcaOffer':
       return (
         <InsuranceOffer
@@ -86,6 +89,28 @@ function BankConnectSlot({ context }: { context: MicroStepContext }) {
   const connection = (context.resources.bank as BankConnectionDto | null | undefined) ?? null
 
   return <BankConnectPanel connection={connection} onRefresh={refresh} hideHeader />
+}
+
+/**
+ * Dosarul PFA e la noi, ca ecran al pasului — nu ca pagină care înlocuiește pasul.
+ *
+ * Cât timp înlocuia pagina, apărea de îndată ce dosarul exista, adică imediat după numărul de
+ * telefon: certificatele și rezumatul rămâneau în listă, dar nu se mai putea ajunge la ele. Ca
+ * micro-pas, stă unde îi e locul — după rezumat — și lasă rail-ul să ducă înapoi la certificate
+ * cât timp validarea nu s-a încheiat.
+ *
+ * Fără `onContinue`: butonul „mai departe" e al runnerului, ca la orice alt ecran.
+ */
+function PfaPendingSlot() {
+  const { state, documents, refresh } = useOnboarding()
+
+  return (
+    <PfaPendingCard
+      documents={documents}
+      pfaRegistrationId={state?.pfaRegistrationId}
+      onRefresh={refresh}
+    />
+  )
 }
 
 function OnboardingAdvanceSlot() {

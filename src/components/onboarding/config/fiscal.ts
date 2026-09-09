@@ -66,7 +66,6 @@ const OBLIO_CONSENTS = [
 
 const TVA_PROOF = ['CertificatTvaIntracomunitar']
 const EXTRAS = ['ExtrasBancar']
-const SIGNED_PACKET = ['DocumenteSemnate']
 
 export const fiscalMicroSteps: MicroStepDef[] = [
   // ── TVA ──
@@ -290,7 +289,7 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     // rămâne cu ultimul lucru pe care l-a apăsat pe ecran și pare că s-a blocat acolo.
     lines: () => [
       'Mai departe pregătim pachetul de semnături: împuternicirile cu care depunem dosarele în numele tău — la ARR și la ANAF — plus contractul de servicii și acordul GDPR.',
-      'Îți ajunge pe email, îl semnezi o singură dată și îl încarci înapoi aici. Durează de obicei 1–2 zile lucrătoare.',
+      'Îți ajunge pe email, îl semnezi o singură dată și ni-l trimiți înapoi tot pe email. Durează de obicei 1–2 zile lucrătoare.',
       'Apasă mai jos ca să începem pregătirea lui.',
     ],
     action: {
@@ -312,7 +311,10 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     lines: (c) => {
       const reason = step2Of(c)?.signature?.rejectionReason
       if (reason) {
-        return [`Am întors dosarul: ${reason}`, 'Corectează și trimite-l din nou.']
+        return [
+          `Am întors dosarul: ${reason}`,
+          'Retrimite-l semnat corect, pe emailul de pe care l-ai primit. Nu ai ce încărca aici.',
+        ]
       }
 
       // Fără detalii despre pachet (denumire, număr de semnături, expirare): nu le mai completează
@@ -320,38 +322,11 @@ export const fiscalMicroSteps: MicroStepDef[] = [
       return [
         'Pachetul conține împuternicirile cu care depunem dosarele în numele tău — la ARR și la ANAF — plus contractul de servicii și acordul GDPR.',
         'Îl pregătim noi și ți-l trimitem pe email. Durează de obicei 1–2 zile lucrătoare; te anunțăm și în aplicație când ajunge.',
-        'Până atunci nu ai nimic de făcut aici. După ce îl semnezi, încarcă-l pe ecranul următor.',
+        'Nu ai nimic de încărcat aici: pachetul semnat se întoarce la noi tot pe email. Te anunțăm imediat ce l-am primit.',
       ]
     },
     visibleWhen: (c) => isAtAdmin(c) || Boolean(step2Of(c)?.signature?.rejectionReason),
     isDone: (c) => step2Of(c)?.signature?.status === 'Completed',
-  },
-  {
-    /*
-     * Documentele semnate se întorc la noi.
-     *
-     * Pasul se închide pe pachetul marcat `Completed` de admin, dar șoferul n-avea unde pune ce
-     * semnase — trimiterea se făcea pe email sau nu se făcea deloc, iar pasul rămânea deschis
-     * fără ca nimeni să știe de ce.
-     */
-    id: 'documente_semnate',
-    macroStep: 'fiscal',
-    kind: 'upload',
-    eyebrow: EYEBROW,
-    icon: 'folder',
-    railLabel: 'Documente semnate',
-    title: 'Încarcă documentele semnate',
-    document: {
-      category: 'DocumenteSemnate',
-      label: 'Pachetul semnat',
-      hint: 'Toate paginile, într-un singur PDF sau ca fotografii. Semnăturile trebuie să se vadă.',
-    },
-    // Vizibil cât timp dosarul e la noi — aceeași fereastră ca ecranul de așteptare de dinainte.
-    // NU pe `status === 'Sent'`: statusul ăla îl mai punea doar vechiul formular din admin, iar de
-    // când adminul doar validează secțiunea nu-l mai setează nimeni, deci ecranul n-ar apărea
-    // niciodată. Rămâne vizibil și după respingere, ca documentul corectat să aibă unde intra.
-    visibleWhen: (c) => isAtAdmin(c) || Boolean(step2Of(c)?.signature?.rejectionReason),
-    isDone: (c) => hasDocument(c, SIGNED_PACKET),
   },
 ]
 

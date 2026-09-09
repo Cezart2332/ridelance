@@ -38,6 +38,17 @@ const answeredYes = (c: MicroStepContext) =>
 const answeredNo = (c: MicroStepContext) =>
   c.answers.has_pfa === 'no' || registeredAs(c, 'NuAmPfa')
 
+/**
+ * Dosarul e predat spre validare.
+ *
+ * Se citește din statusul pasului, nu din `pfaStatus`: acela e statusul dosarului
+ * (`Pending` din secunda în care e creat), iar pe el ecranul de așteptare apărea imediat după
+ * numărul de telefon. Statusul pasului îl derivă serverul și trece pe `pending_admin` abia când
+ * șoferul și-a încărcat amândouă certificatele.
+ */
+const laValidare = (c: MicroStepContext) =>
+  c.state?.steps.find((s) => s.key === 'pfa')?.state === 'pending_admin'
+
 /** Textul din `answers` pentru un câmp al unui ecran `text`. */
 const field = (c: MicroStepContext, stepId: string, key: string): string => {
   const value = c.answers[`${stepId}.${key}`]
@@ -193,5 +204,26 @@ export const pfaMicroSteps: MicroStepDef[] = [
     },
     visibleWhen: answeredNo,
     isDone: (c) => c.state?.pfaRegistrationId != null,
+  },
+  {
+    /*
+     * Ultimul ecran al pasului: dosarul e la noi.
+     *
+     * Stă DUPĂ rezumat, nu în locul lui. Înainte era o pagină care înlocuia tot runnerul de
+     * îndată ce dosarul exista — deci imediat după numărul de telefon: certificatele și rezumatul
+     * rămâneau în rail, dar nu se mai putea ajunge la ele.
+     */
+    id: 'dosar_la_validare',
+    macroStep: 'pfa',
+    kind: 'info',
+    eyebrow: EYEBROW,
+    icon: 'checkCircle',
+    railLabel: 'În validare',
+    title: 'Dosarul tău e la noi',
+    lines: () => [],
+    slot: 'pfaPending',
+    // Pe ambele ramuri: „Nu am PFA" ajunge aici după ce semnează dosarul de înființare.
+    visibleWhen: laValidare,
+    isDone: (c) => c.state?.pfaStatus === 'Approved',
   },
 ]
