@@ -7,9 +7,11 @@ import {
   type VehicleState,
 } from '../../../services/onboarding.service'
 import { stripeService } from '../../../services/stripe.service'
+import type { BankConnectionDto } from '../../../services/bank.service'
 import { getErrorMessage } from '../../../utils/errorHandler'
 import { canonicalCounty } from '../../../data/counties'
 import { BankAccountCta } from '../../common/BankAccountCta'
+import { BankConnectPanel } from '../../banking/BankConnectPanel'
 import { InsuranceLinksGrid } from '../../insurance/InsuranceLinksGrid'
 import { ArrPaymentDetailsCard } from '../arr/ArrPaymentDetailsCard'
 import { DossierPanel } from '../arr/DossierPanel'
@@ -36,6 +38,8 @@ export function MicroStepSlotContent({
   switch (slot) {
     case 'bankAccountCta':
       return <BankAccountCta />
+    case 'bankConnect':
+      return <BankConnectSlot context={context} />
     case 'arrPaymentDetails': {
       const isVehicle = context.state?.currentStep === 'vehicle'
       return (
@@ -77,6 +81,20 @@ export function MicroStepSlotContent({
  * altul și poate sta primul, între eligibilitate și PFA: cerem banii înainte, indiferent de ce
  * urmează să aleagă.
  */
+/**
+ * Conectarea băncii, în interiorul unui micro-pas.
+ *
+ * Conexiunea o citește `MICRO_RESOURCES.fiscal`, ca și restul stării pasului, deci `refresh()`-ul
+ * global e și cel care aduce vestea că omul s-a întors de la bancă. Panoul își face oricum
+ * pollingul lui cât timp așteaptă — de aici primește doar cum se reîmprospătează contextul.
+ */
+function BankConnectSlot({ context }: { context: MicroStepContext }) {
+  const { refresh } = useOnboarding()
+  const connection = (context.resources.bank as BankConnectionDto | null | undefined) ?? null
+
+  return <BankConnectPanel connection={connection} onRefresh={refresh} hideHeader />
+}
+
 function OnboardingAdvanceSlot() {
   const { state } = useOnboarding()
   const [paying, setPaying] = useState(false)

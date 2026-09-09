@@ -240,7 +240,7 @@ test.describe('navigație PFA', () => {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ link: 'https://fintable.io/api-link/test', expiresAtUtc: null }),
+          body: JSON.stringify({ link: 'https://banca.example/authorize/test', expiresAtUtc: null }),
         })
       }
 
@@ -251,7 +251,7 @@ test.describe('navigație PFA', () => {
           linkRequested
             ? {
                 status: 'Created',
-                institutionId: 'bcr',
+                institutionId: 'BCR',
                 institutionName: '',
                 institutionLogo: null,
                 consentExpiresAtUtc: null,
@@ -260,7 +260,6 @@ test.describe('navigație PFA', () => {
                 errorMessage: null,
                 accounts: [],
                 linkExpiresAtUtc: new Date(Date.now() + 600_000).toISOString(),
-                candidates: [],
               }
             : null,
         ),
@@ -271,22 +270,80 @@ test.describe('navigație PFA', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify([{ id: 'bcr', name: 'BCR', logo: null }]),
+        body: JSON.stringify([
+          { id: 'BCR', name: 'BCR', logo: null, requiresPsuId: false, requiresPsuIdType: false, requiresIban: false },
+          { id: 'BRD', name: 'BRD', logo: null, requiresPsuId: true, requiresPsuIdType: true, requiresIban: false },
+        ]),
       }),
     )
 
     // Linkul se deschide în tab nou; îl interceptăm ca să nu plece testul la Fintable.
-    await page.context().route('https://fintable.io/**', (route: Route) =>
+    await page.context().route('https://banca.example/**', (route: Route) =>
       route.fulfill({ status: 200, contentType: 'text/html', body: '<html></html>' }),
     )
 
     await page.goto(`${ROOT}/contabilitate/cont-bancar`, { waitUntil: 'networkidle' })
     const main = page.getByRole('main')
 
+    await main.getByRole('checkbox').check()
     await main.getByText('BCR', { exact: true }).click()
 
     await expect(main.getByText('Se așteaptă confirmarea de la bancă')).toBeVisible()
     expect(linkRequested).toBe(true)
+  })
+
+  test('banca cere date în plus: cerem exact ce cere ea, înainte de autorizare', async ({ page }) => {
+    // BRD, ProCredit și Intesa cer numele de utilizator de la bancă înainte de consimțământ, iar
+    // API-ul ne spune per bancă ce lipsește. Fără ecranul ăsta, omul ar ajunge la bancă și ar fi
+    // întors cu o eroare a furnizorului, în engleză, după ce a apăsat.
+    let posted: Record<string, unknown> | null = null
+
+    await page.route(`${API}/bank/connection`, (route: Route) => {
+      if (route.request().method() === 'POST') {
+        posted = route.request().postDataJSON()
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ link: 'https://banca.example/authorize/test', expiresAtUtc: null }),
+        })
+      }
+
+      return route.fulfill({ status: 200, contentType: 'application/json', body: 'null' })
+    })
+
+    await page.route(`${API}/bank/institutions`, (route: Route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { id: 'BRD', name: 'BRD', logo: null, requiresPsuId: true, requiresPsuIdType: true, requiresIban: false },
+        ]),
+      }),
+    )
+
+    await page.context().route('https://banca.example/**', (route: Route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: '<html></html>' }),
+    )
+
+    await page.goto(`${ROOT}/contabilitate/cont-bancar`, { waitUntil: 'networkidle' })
+    const main = page.getByRole('main')
+
+    await main.getByText('BRD', { exact: true }).click()
+
+    // Ecranul de date suplimentare, nu autorizarea: butonul refuză până sunt completate.
+    const continua = main.getByRole('button', { name: 'Continuă la bancă' })
+    await expect(continua).toBeDisabled()
+
+    await main.getByLabel('Utilizatorul tău la bancă').fill('13333330')
+    await main.getByLabel('Tipul contului').click()
+    await page.getByRole('option', { name: 'Persoană fizică' }).click()
+    await main.getByRole('checkbox').check()
+
+    await expect(continua).toBeEnabled()
+    await continua.click()
+
+    await expect.poll(() => posted).not.toBeNull()
+    expect(posted).toMatchObject({ bankCode: 'BRD', psuId: '13333330', psuIdType: 'PF', tcAccepted: true })
   })
 
   test('popup blocat: nu pretindem că s-a deschis o filă, ci oferim linkul', async ({ page }) => {
@@ -303,7 +360,7 @@ test.describe('navigație PFA', () => {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ link: 'https://fintable.io/api-link/test', expiresAtUtc: null }),
+          body: JSON.stringify({ link: 'https://banca.example/authorize/test', expiresAtUtc: null }),
         })
       }
 
@@ -314,7 +371,7 @@ test.describe('navigație PFA', () => {
           linkRequested
             ? {
                 status: 'Created',
-                institutionId: 'bcr',
+                institutionId: 'BCR',
                 institutionName: '',
                 institutionLogo: null,
                 consentExpiresAtUtc: null,
@@ -323,7 +380,6 @@ test.describe('navigație PFA', () => {
                 errorMessage: null,
                 accounts: [],
                 linkExpiresAtUtc: new Date(Date.now() + 600_000).toISOString(),
-                candidates: [],
               }
             : null,
         ),
@@ -334,55 +390,25 @@ test.describe('navigație PFA', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify([{ id: 'bcr', name: 'BCR', logo: null }]),
+        body: JSON.stringify([
+          { id: 'BCR', name: 'BCR', logo: null, requiresPsuId: false, requiresPsuIdType: false, requiresIban: false },
+          { id: 'BRD', name: 'BRD', logo: null, requiresPsuId: true, requiresPsuIdType: true, requiresIban: false },
+        ]),
       }),
     )
 
     await page.goto(`${ROOT}/contabilitate/cont-bancar`, { waitUntil: 'networkidle' })
     const main = page.getByRole('main')
 
+    await main.getByRole('checkbox').check()
     await main.getByText('BCR', { exact: true }).click()
 
     await expect(main.getByText('Deschide pagina băncii')).toBeVisible()
     await expect(main.getByRole('link', { name: 'Continuă la bancă' })).toHaveAttribute(
       'href',
-      'https://fintable.io/api-link/test',
+      'https://banca.example/authorize/test',
     )
     await expect(main.getByText('Termină conectarea în fila care s-a deschis')).toHaveCount(0)
-  })
-
-  test('alegerea manuală apare când revendicarea e ambiguă', async ({ page }) => {
-    // Cu un singur cont de provider pentru toți clienții, două conectări simultane fac
-    // atribuirea ambiguă. Regula e să nu ghicim, ci să întrebăm.
-    await page.route(`${API}/bank/connection`, (route: Route) =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          status: 'Pending',
-          institutionId: '',
-          institutionName: '',
-          institutionLogo: null,
-          consentExpiresAtUtc: null,
-          linkedAtUtc: null,
-          lastSyncedAtUtc: null,
-          errorMessage: null,
-          accounts: [],
-          linkExpiresAtUtc: new Date(Date.now() + 600_000).toISOString(),
-          candidates: [
-            { providerConnectionId: 'conn_1', institutionName: 'BCR', institutionLogo: null, createdAtUtc: '2026-08-15T10:00:00Z' },
-            { providerConnectionId: 'conn_2', institutionName: 'ING', institutionLogo: null, createdAtUtc: '2026-08-15T10:01:00Z' },
-          ],
-        }),
-      }),
-    )
-
-    await page.goto(`${ROOT}/contabilitate/cont-bancar`, { waitUntil: 'networkidle' })
-    const main = page.getByRole('main')
-
-    await expect(main.getByText('Care dintre conexiuni este a ta?')).toBeVisible()
-    await expect(main.getByText('BCR', { exact: true })).toBeVisible()
-    await expect(main.getByText('ING', { exact: true })).toBeVisible()
   })
 
   test('chatul contabil a plecat din Suport și trimite către Contabilitate', async ({ page }) => {

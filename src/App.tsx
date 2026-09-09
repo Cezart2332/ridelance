@@ -46,6 +46,7 @@ const AppLayout = lazyWithRetry(() =>
   import('./components/layout/AppLayout').then((m) => ({ default: m.AppLayout })),
 )
 const CheckoutPage = lazyWithRetry(() => import('./pages/CheckoutPage'))
+const BankReturnPage = lazyWithRetry(() => import('./pages/BankReturnPage'))
 const NotificationOpenPage = lazyWithRetry(() => import('./components/notifications/NotificationOpenPage'))
 
 // Onboarding (fără acces la panel până la validarea completă)
@@ -96,6 +97,7 @@ function App() {
           <Route path="/inregistrare/abonament" element={<SubscriptionSelectPage />} />
           <Route path="/inregistrare/succes" element={<RegistrationSuccessPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/banca/retur" element={<BankReturnPage />} />
 
           {/* ── Protected routes ── */}
           <Route element={<ProtectedRoute />}>

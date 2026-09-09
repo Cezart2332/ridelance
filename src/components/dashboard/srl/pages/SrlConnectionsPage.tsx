@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Alert,
   Box,
@@ -13,6 +13,8 @@ import {
   Typography,
 } from '@mui/material'
 
+import { BankConnectPanel } from '../../../banking/BankConnectPanel'
+import { bankService, type BankConnectionDto } from '../../../../services/bank.service'
 import { PARTNER_LOGO } from '../../../../data/partnerLogo'
 import eldriveLogo from '../../../../assets/partners/eldrive.png'
 import oblioLogo from '../../../../assets/partners/oblio.png'
@@ -290,6 +292,50 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 function ConnectDialog({ provider, onClose }: { provider: IntegrationProvider | null; onClose: () => void }) {
   const notifyPending = usePendingBackend()
   const copy = provider ? PROVIDER_COPY[provider] : null
+  const [connection, setConnection] = useState<BankConnectionDto | null>(null)
+
+  const loadConnection = useCallback(async () => {
+    const data = await bankService.getConnection()
+    setConnection(data)
+    return data
+  }, [])
+
+  useEffect(() => {
+    if (provider !== 'Bank') return
+
+    let cancelled = false
+
+    bankService
+      .getConnection()
+      .then((data) => {
+        if (!cancelled) setConnection(data)
+      })
+      .catch(() => {
+        // Panoul de dedesubt oferă conectarea oricum; o citire eșuată nu blochează nimic.
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [provider])
+
+  // Banca chiar se conectează, spre deosebire de restul integrărilor din pagina asta: dialogul ei
+  // are formularul real, nu câmpuri de decor peste un „în curând".
+  if (provider === 'Bank') {
+    return (
+      <Dialog open onClose={onClose} fullWidth maxWidth="md">
+        <DialogTitle sx={{ fontWeight: 800 }}>Conectează banca</DialogTitle>
+        <DialogContent>
+          <BankConnectPanel connection={connection} onRefresh={loadConnection} />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <Button onClick={onClose} sx={{ textTransform: 'none', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted }}>
+            Închide
+          </Button>
+        </DialogActions>
+      </Dialog>
+    )
+  }
 
   return (
     <Dialog open={provider !== null} onClose={onClose} fullWidth maxWidth="xs">

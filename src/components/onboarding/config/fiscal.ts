@@ -1,3 +1,4 @@
+import type { BankConnectionDto } from '../../../services/bank.service'
 import type { DocumentSummary } from '../../../services/document.service'
 import { onboardingService, type Step2State } from '../../../services/onboarding.service'
 import type { MicroStepContext, MicroStepDef } from '../microStepTypes'
@@ -20,6 +21,16 @@ function hasDocument(c: MicroStepContext, categories: string[]): boolean {
 }
 
 const step2Of = (c: MicroStepContext) => (c.resources.step2 as Step2State | undefined) ?? null
+
+/**
+ * Banca e conectată prin open banking?
+ *
+ * De asta atârnă tot ce urmează în zona bancară: cu conexiunea făcută, IBAN-ul, titularul și
+ * numele băncii vin de la bancă, semnate de ea, iar extrasul de cont — o poză din care încercam
+ * să citim aceleași lucruri — nu mai are ce adăuga.
+ */
+const bankLinked = (c: MicroStepContext): boolean =>
+  (c.resources.bank as BankConnectionDto | null | undefined)?.status === 'Linked'
 
 const field = (c: MicroStepContext, stepId: string, key: string): string => {
   const value = c.answers[`${stepId}.${key}`]
@@ -144,8 +155,30 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     slot: 'bankAccountCta',
     visibleWhen: (c) => c.answers.cont_bancar === 'no',
     // Deschiderea contului se întâmplă la bancă, nu la noi: ecranul nu are cum să afle singur.
-    // Trece mai departe de îndată ce apare extrasul.
-    isDone: (c) => hasDocument(c, EXTRAS),
+    // Trece mai departe de îndată ce contul dă semne de viață — conectat sau cu extrasul încărcat.
+    isDone: (c) => bankLinked(c) || hasDocument(c, EXTRAS),
+  },
+  {
+    id: 'conectare_banca',
+    macroStep: 'fiscal',
+    kind: 'info',
+    eyebrow: EYEBROW,
+    icon: 'idCard',
+    railLabel: 'Conectează banca',
+    title: 'Conectează contul bancar',
+    lines: (c) =>
+      bankLinked(c)
+        ? [
+            'Contul e conectat. Citim de acum tranzacțiile direct de la bancă, deci nu mai trebuie să încarci extrasul.',
+          ]
+        : [
+            'Te ducem pe pagina băncii tale, unde autorizezi accesul de citire. Nu vedem și nu păstrăm parola ta de bancă, iar accesul se poate retrage oricând.',
+            'Cu banca legată, IBAN-ul și titularul vin direct de la ea și nu mai e nevoie de extrasul de cont. Dacă preferi, poți sări peste și încărca extrasul.',
+          ],
+    slot: 'bankConnect',
+    visibleWhen: (c) => c.answers.cont_bancar !== 'no' || hasDocument(c, EXTRAS) || bankLinked(c),
+    // Informativ, nu blocant: conectarea e drumul recomandat, extrasul rămâne varianta de rezervă.
+    isDone: () => true,
   },
   {
     id: 'extras_bancar',
@@ -160,6 +193,9 @@ export const fiscalMicroSteps: MicroStepDef[] = [
       label: 'Extras de cont',
       hint: 'IBAN-ul și titularul trebuie să fie lizibile — de acolo citim contul.',
     },
+    // Cu banca legată, ecranul dispare: aceleași date le avem deja de la bancă, iar a mai cere o
+    // poză după ce omul tocmai a autorizat accesul ar fi o formalitate goală.
+    visibleWhen: (c) => !bankLinked(c),
     isDone: (c) => hasDocument(c, EXTRAS),
   },
   {
@@ -181,6 +217,7 @@ export const fiscalMicroSteps: MicroStepDef[] = [
       if (!values.bankName) return
       await onboardingService.submitBankDeclaration({ bankName: values.bankName })
     },
+    visibleWhen: (c) => !bankLinked(c),
     isDone: (c) => Boolean(step2Of(c)?.bank?.bankName) || field(c, 'banca', 'bankName') !== '',
   },
 

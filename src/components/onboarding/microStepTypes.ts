@@ -218,6 +218,8 @@ export type MicroStepIcon = 'user' | 'idCard' | 'car' | 'shield' | 'checkCircle'
 export type MicroStepSlot =
   /** Butonul de deschidere cont la bancă + codul QR cu același link. */
   | 'bankAccountCta'
+  /** Conectarea contului prin open banking: alegerea băncii, datele cerute de ea, autorizarea. */
+  | 'bankConnect'
   /** Contul de trezorerie ARR pentru județul ales, cu butoane de copiere. */
   | 'arrPaymentDetails'
   /** Dosarul generat: previzualizare, descărcare și starea „descărcat cel puțin o dată". */

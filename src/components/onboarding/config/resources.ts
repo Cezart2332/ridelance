@@ -1,3 +1,4 @@
+import { bankService } from '../../../services/bank.service'
 import { onboardingService } from '../../../services/onboarding.service'
 
 /**
@@ -12,7 +13,12 @@ export interface MicroResource {
 }
 
 export const MICRO_RESOURCES: Record<string, MicroResource[]> = {
-  fiscal: [{ key: 'step2', fetch: () => onboardingService.getStep2State() }],
+  fiscal: [
+    { key: 'step2', fetch: () => onboardingService.getStep2State() },
+    // Conexiunea bancară decide dacă mai cerem extrasul de cont: cu banca legată, IBAN-ul și
+    // titularul vin de la ea, semnate, iar poza extrasului n-ar mai adăuga nimic.
+    { key: 'bank', fetch: () => bankService.getConnection() },
+  ],
   arr: [{ key: 'arr', fetch: () => onboardingService.getArrState() }],
   platforms: [{ key: 'platforms', fetch: () => onboardingService.getPlatformOnboarding() }],
   vehicle: [

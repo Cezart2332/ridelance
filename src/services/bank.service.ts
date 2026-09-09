@@ -1,9 +1,16 @@
 import { api } from '../lib/axios';
 
 export interface BankInstitutionDto {
+  /** Codul băncii la furnizor („BT", „BCR", …), nu un identificator de-al nostru. */
   id: string;
   name: string;
   logo: string | null;
+  /** Banca cere numele de utilizator pe care clientul îl folosește la ea. */
+  requiresPsuId: boolean;
+  /** Banca cere să spunem dacă e cont de persoană fizică sau de firmă. */
+  requiresPsuIdType: boolean;
+  /** Banca cere IBAN-ul contului pentru care se dă acordul. */
+  requiresIban: boolean;
 }
 
 export type BankConnectionStatus = 'Created' | 'Pending' | 'Linked' | 'Expired' | 'Error' | 'Revoked';
@@ -12,19 +19,6 @@ export interface BankAccountDto {
   ibanMasked: string | null;
   currency: string | null;
   ownerName: string | null;
-}
-
-/**
- * O conexiune apărută la provider pe care nu am putut-o atribui fără echivoc.
- *
- * Apare doar când revendicarea a refuzat să ghicească — două conexiuni noi, sau două conectări
- * în curs în același timp. Utilizatorul spune care e a lui.
- */
-export interface BankConnectionCandidateDto {
-  providerConnectionId: string;
-  institutionName: string | null;
-  institutionLogo: string | null;
-  createdAtUtc: string | null;
 }
 
 export interface BankConnectionDto {
@@ -37,9 +31,8 @@ export interface BankConnectionDto {
   lastSyncedAtUtc: string | null;
   errorMessage: string | null;
   accounts: BankAccountDto[];
-  /** Linkul de conectare e de unică folosință; după el, așteptarea se oprește. */
+  /** Autorizarea la bancă are termen; după el, așteptarea se oprește. */
   linkExpiresAtUtc: string | null;
-  candidates: BankConnectionCandidateDto[];
 }
 
 export interface BankTransactionDto {
@@ -62,8 +55,19 @@ export interface BankTransactionsDto {
 }
 
 export interface InitiateConnectionDto {
+  /** Adresa băncii, unde utilizatorul autorizează accesul. */
   link: string;
   expiresAtUtc: string | null;
+}
+
+/** Ce trimite ecranul de conectare. Câmpurile opționale sunt cerute doar de anumite bănci. */
+export interface InitiateConnectionInput {
+  bankCode: string;
+  psuId?: string | null;
+  psuIdType?: string | null;
+  psuCorporateId?: string | null;
+  iban?: string | null;
+  tcAccepted: boolean;
 }
 
 export const bankService = {
@@ -73,22 +77,17 @@ export const bankService = {
   },
 
   /**
-   * Citirea stării e și momentul în care se face revendicarea: providerul nu ne anunță când
-   * cineva a terminat conectarea, deci aflăm exact când întrebăm.
+   * Citirea stării e și momentul finalizării: furnizorul nu ne sună înapoi când cineva termină
+   * autorizarea la bancă, deci aflăm exact când întrebăm.
    */
   getConnection: async (): Promise<BankConnectionDto | null> => {
     const response = await api.get<BankConnectionDto | null>('/bank/connection');
     return response.data;
   },
 
-  /** `institutionId` null lasă alegerea băncii în ecranul providerului. */
-  initiateConnection: async (institutionId: string | null): Promise<InitiateConnectionDto> => {
-    const response = await api.post<InitiateConnectionDto>('/bank/connection', { institutionId });
-    return response.data;
-  },
-
-  chooseConnection: async (providerConnectionId: string): Promise<BankConnectionDto> => {
-    const response = await api.post<BankConnectionDto>('/bank/connection/choose', { providerConnectionId });
+  /** Deschide consimțământul și întoarce adresa băncii unde se autorizează. */
+  initiateConnection: async (input: InitiateConnectionInput): Promise<InitiateConnectionDto> => {
+    const response = await api.post<InitiateConnectionDto>('/bank/connection', input);
     return response.data;
   },
 

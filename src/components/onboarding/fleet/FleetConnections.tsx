@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material'
 import {
   bankService,
   type BankConnectionDto,
 } from '../../../services/bank.service'
 import { invoicesService } from '../../../services/invoices.service'
+import { BankConnectPanel } from '../../banking/BankConnectPanel'
 import { BCR_ONBOARDING_URL } from '../../../data/partners'
 import { readBcrDiscountIntent } from '../../../data/bcrDiscount'
 import { getErrorMessage } from '../../../utils/errorHandler'
@@ -25,28 +26,41 @@ export function FleetBankStep({ state, busy, save, refresh }: Props) {
     state.bankConnected ? true : null,
   )
   const [connection, setConnection] = useState<BankConnectionDto | null>(null)
-  const [link, setLink] = useState('')
-  const [working, setWorking] = useState(false)
   const [requested, setRequested] = useState(
     () => state.progress.bcrRequested || readBcrDiscountIntent(),
   )
   const [error, setError] = useState('')
-  const run = async (fn: () => Promise<void>) => {
-    setWorking(true)
-    setError('')
-    try {
-      await fn()
-    } catch (e) {
-      setError(
-        getErrorMessage(
-          e,
-          'Conectarea nu a reușit. Poți configura banca mai târziu.',
-        ),
-      )
-    } finally {
-      setWorking(false)
+
+  /**
+   * Starea conexiunii, citită de la server. E și momentul finalizării: furnizorul nu ne sună
+   * înapoi, deci abia întrebarea asta află că omul a autorizat la bancă.
+   */
+  const loadConnection = useCallback(async () => {
+    const data = await bankService.getConnection()
+    setConnection(data)
+    await refresh()
+    return data
+  }, [refresh])
+
+  // Prima citire, la intrarea în pas. Scrisă ca lanț de promisiuni, nu ca `await`: starea se
+  // atinge doar din callback, iar un pas părăsit între timp nu mai scrie în componenta demontată.
+  useEffect(() => {
+    let cancelled = false
+
+    bankService
+      .getConnection()
+      .then((data) => {
+        if (!cancelled) setConnection(data)
+      })
+      .catch(() => {
+        // O citire eșuată nu e o eroare de arătat aici: panoul de dedesubt oferă oricum conectarea.
+      })
+
+    return () => {
+      cancelled = true
     }
-  }
+  }, [])
+
   return (
     <Stack spacing={2.5}>
       <Typography>Ai deja un cont bancar pentru această firmă?</Typography>
@@ -73,60 +87,16 @@ export function FleetBankStep({ state, busy, save, refresh }: Props) {
               {connection?.accounts[0]?.ibanMasked}
             </Alert>
           ) : (
-            <>
-              <Button
-                disabled={working}
-                variant="contained"
-                onClick={() =>
-                  void run(async () => {
-                    const result = await bankService.initiateConnection(null)
-                    setLink(result.link)
-                  })
-                }
-              >
-                Conectează contul bancar
-              </Button>
-              {link && (
-                <Button
-                  component="a"
-                  href={link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Continuă la bancă ↗
-                </Button>
-              )}
-            </>
+            // Același panou ca în dashboard: alegi banca, îi dai datele pe care le cere ea și te
+            // întorci. Înainte, pasul ăsta conecta „orb" — fără alegere de bancă — și cerea apoi
+            // apăsarea manuală a unui buton de verificare.
+            <BankConnectPanel
+              connection={connection}
+              onRefresh={loadConnection}
+              onNotify={setError}
+              hideHeader
+            />
           )}
-          <Button
-            disabled={working}
-            onClick={() =>
-              void run(async () => {
-                setConnection(await bankService.getConnection())
-                await refresh()
-              })
-            }
-          >
-            Verifică starea conexiunii
-          </Button>
-          {connection?.candidates.map((candidate) => (
-            <Button
-              key={candidate.providerConnectionId}
-              disabled={working}
-              onClick={() =>
-                void run(async () => {
-                  setConnection(
-                    await bankService.chooseConnection(
-                      candidate.providerConnectionId,
-                    ),
-                  )
-                  await refresh()
-                })
-              }
-            >
-              Confirmă conexiunea {candidate.institutionName}
-            </Button>
-          ))}
         </>
       )}
       {hasAccount === false && (
@@ -176,14 +146,14 @@ export function FleetBankStep({ state, busy, save, refresh }: Props) {
       {state.bankConnected && (
         <Button
           variant="contained"
-          disabled={busy || working}
+          disabled={busy}
           onClick={() => void save({ step: 4, bcrRequested: requested })}
         >
           Continuă
         </Button>
       )}
       <Button
-        disabled={busy || working}
+        disabled={busy}
         onClick={() =>
           void save({ step: 4, deferred: true, bcrRequested: requested })
         }
