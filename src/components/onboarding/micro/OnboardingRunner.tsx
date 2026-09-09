@@ -173,6 +173,31 @@ export function OnboardingRunner() {
     pickTimer.current = window.setTimeout(() => void advance(choice), AUTO_ADVANCE_MS)
   }
 
+  /**
+   * Documentul a intrat. Dacă ecranul mai are ceva de spus serverului pe lângă fișier, se spune
+   * acum.
+   *
+   * Avansul automat al uploadurilor pleacă direct la `next`, nu prin `advance`, deci un
+   * `commit` pe un ecran de încărcare n-ar rula niciodată pe drumul obișnuit — doar dacă
+   * utilizatorul s-ar întoarce pe ecran din rail și ar apăsa „Continuă". Așa a rămas nespus
+   * răspunsul „Da" la TVA, pe care serverul îl acceptă abia după ce vede certificatul.
+   */
+  const commitThenArm = async () => {
+    if (def.commit) {
+      setSubmitting(true)
+      try {
+        await def.commit(context)
+        await refresh()
+      } catch (err) {
+        setError(getErrorMessage(err, 'Nu am putut salva răspunsul.'))
+        setSubmitting(false)
+        return
+      }
+      setSubmitting(false)
+    }
+    setArmedId(def.id)
+  }
+
   const body = (): ReactNode => {
     switch (def.kind) {
       case 'question':
@@ -192,7 +217,7 @@ export function OnboardingRunner() {
         return (
           <MicroUploadStep
             def={def}
-            onUploaded={() => setArmedId(def.id)}
+            onUploaded={() => void commitThenArm()}
             // §6 — dacă utilizatorul înlocuiește fișierul cât ține tranziția, avansarea se
             // oprește: altfel ecranul ar pleca de sub el în mijlocul unei corecturi.
             onReplaceStarted={() => setArmedId(null)}

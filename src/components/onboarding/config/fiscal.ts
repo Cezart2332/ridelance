@@ -94,6 +94,18 @@ export const fiscalMicroSteps: MicroStepDef[] = [
       hint: 'Certificatul emis de ANAF sau decizia de înregistrare. Codul trebuie să fie lizibil.',
     },
     visibleWhen: (c) => c.answers.tva === 'yes' || step2Of(c)?.fiscal?.vatAnswer === 'Yes',
+    /*
+     * Aici se trimite „Da" — nu la întrebare.
+     *
+     * Serverul refuză răspunsul afirmativ fără certificat (`VatProofMissing`), deci ecranul
+     * întrebării nu are ce trimite. Cât timp nimeni nu-l trimitea nici după încărcare, profilul
+     * fiscal rămânea fără răspuns, iar pentru `FiscalUserPartComplete` pasul nu era terminat:
+     * butonul „Trimite pentru verificare" nu apărea niciodată și pasul 3 rămânea blocat cu toate
+     * bifele puse. Ramura „Nu" nu trece pe aici — ea se trimite din întrebare.
+     */
+    commit: async (c) => {
+      if (hasDocument(c, TVA_PROOF)) await onboardingService.submitVat('Yes')
+    },
     isDone: (c) => hasDocument(c, TVA_PROOF),
   },
 
