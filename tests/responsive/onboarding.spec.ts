@@ -14,6 +14,9 @@ const steps = [
     key: 'eligibility',
     label: 'Eligibilitate',
     status: 'Completed',
+    state: 'completed',
+    ownedBy: 'user',
+    userPartDone: true,
     blockReason: null,
     path: '/onboarding/eligibility',
   },
@@ -22,6 +25,9 @@ const steps = [
     key: 'pfa',
     label: 'PFA',
     status: 'AwaitingValidation',
+    state: 'pending_admin',
+    ownedBy: 'admin',
+    userPartDone: true,
     blockReason: null,
     path: '/onboarding/pfa',
   },
@@ -30,6 +36,9 @@ const steps = [
     key: 'fiscal',
     label: 'Fiscal, bancă & semnături',
     status: 'InProgress',
+    state: 'in_progress',
+    ownedBy: 'admin',
+    userPartDone: false,
     blockReason: null,
     path: '/onboarding/step2',
   },
@@ -38,6 +47,9 @@ const steps = [
     key: 'arr',
     label: 'Autorizație transport',
     status: 'InProgress',
+    state: 'available',
+    ownedBy: 'admin',
+    userPartDone: false,
     blockReason: null,
     path: '/onboarding/arr',
   },
@@ -46,6 +58,9 @@ const steps = [
     key: 'platforms',
     label: 'Uber & Bolt',
     status: 'InProgress',
+    state: 'available',
+    ownedBy: 'admin',
+    userPartDone: false,
     blockReason: null,
     path: '/onboarding/platforms',
   },
@@ -54,6 +69,9 @@ const steps = [
     key: 'vehicle',
     label: 'Vehicul, copie conformă & ecusoane',
     status: 'Locked',
+    state: 'locked',
+    ownedBy: 'user',
+    userPartDone: false,
     blockReason: 'Finalizează întâi pasul „Autorizație transport”.',
     path: '/onboarding/vehicle',
   },
@@ -103,11 +121,15 @@ const uploadedDoc = (category: string, fileName: string) => ({
   aiDetectedType: null,
   aiExtractedExpiresAtUtc: null,
   aiRequiresManualReview: false,
+  // RL-07: provider-ul filtrează pe câmpul ăsta, deci fără el niciun document nu ajunge în ecrane.
+  isUserFacing: true,
 })
 
 /** Aceeași listă, dar cu pasul 1 încă în lucru — punctul de plecare al micro-pașilor. */
 const eligibilityInProgress = steps.map((step) =>
-  step.key === 'eligibility' ? { ...step, status: 'InProgress' } : step,
+  step.key === 'eligibility'
+    ? { ...step, status: 'InProgress', state: 'in_progress', userPartDone: false }
+    : step,
 )
 
 /** Profilul de eligibilitate, exact cum îl întoarce `GET /onboarding/eligibility`. */
@@ -182,13 +204,15 @@ test.describe('onboarding rail', () => {
     const railSteps = page.locator('ol > li')
     await expect(railSteps).toHaveCount(steps.length)
 
-    // Pasul curent e marcat pentru cititoarele de ecran.
-    await expect(page.locator('[aria-current="step"]')).toHaveCount(1)
+    // Pasul curent e marcat pentru cititoarele de ecran — o dată în lista de pași. Marcajul apare
+    // și în panoul de progres din dreapta, deci se caută în listă, nu în toată pagina. Pe telefon
+    // lista stă în sheet, sub alt landmark decât rail-ul de desktop, deci se caută pe `ol`.
+    await expect(page.locator('ol [aria-current="step"]')).toHaveCount(1)
 
-    // Stările se citesc din text, nu doar din culoare.
-    await expect(page.getByText('În verificare').first()).toBeVisible()
-    await expect(page.getByText('Blocat').first()).toBeVisible()
-    await expect(page.getByText('Validat').first()).toBeVisible()
+    // Stările nu se citesc doar din culoare: fiecare pas le poartă în numele lui accesibil.
+    for (const label of ['În verificare', 'Blocat', 'Validat']) {
+      await expect(railSteps.getByRole('button', { name: new RegExp(label) }).first()).toBeAttached()
+    }
 
     // Sheet-ul se închide complet înainte de captură, altfel screenshot-ul prinde animația.
     if (mobile) {
@@ -221,23 +245,23 @@ test.describe('onboarding rail', () => {
   })
 
   test('documentele din pașii anteriori apar deja încărcate', async ({ page }) => {
+    // De când pasul e spart în micro-pași, documentul se vede pe ecranul care îl cere, nu într-o
+    // listă a întregului pas — deci ecranul se deschide direct, prin `?pas`.
     await stubBackend(page, [
       // Încărcat la pasul PFA, cerut din nou la ARR.
       uploadedDoc('CertificatInregistrare', 'certificat.pdf'),
       // Încărcat la eligibilitate; la ARR cerința se numește „AtestatTransport", categorie echivalentă.
       uploadedDoc('AtestatSofer', 'atestat.pdf'),
     ])
-    await page.goto('/onboarding/arr', { waitUntil: 'networkidle' })
 
+    await page.goto('/onboarding/arr?pas=arr_CertificatInregistrare', { waitUntil: 'networkidle' })
     await expect(page.getByText('certificat.pdf')).toBeVisible()
     await expect(page.getByText(/de la .PFA./)).toBeVisible()
 
     // Categoria echivalentă contează: atestatul urcat la eligibilitate satisface cerința de la ARR.
+    await page.goto('/onboarding/arr?pas=arr_AtestatTransport', { waitUntil: 'networkidle' })
     await expect(page.getByText('atestat.pdf')).toBeVisible()
     await expect(page.getByText(/de la .Eligibilitate./)).toBeVisible()
-
-    // Cerințele acoperite nu mai cer upload; cele neacoperite, da.
-    await expect(page.getByRole('button', { name: 'Alege fișier' })).toHaveCount(4)
   })
 })
 
@@ -261,12 +285,12 @@ test.describe('pasul 1 pe micro-pași', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
 
     await page.getByRole('radio', { name: 'Da' }).click()
-    await page.getByRole('button', { name: /Continuă/ }).click()
 
-    // Ecranul următor e uploadul aferent — și doar el.
+    // Ecranul următor e uploadul aferent — și doar el. Fără „Continuă": alegerea avansează singură.
     await expect(page.getByRole('heading', { name: 'Încarcă cartea de identitate' })).toBeVisible()
     await expect(page.getByRole('radio')).toHaveCount(0)
-    await expect(page.getByText(/Pasul 2 din \d+/).first()).toBeVisible()
+    // Contorul din topbar numără pașii mari, nu ecranele: rămâne pe „Pasul 1 din 6" tot pasul 1.
+    await expect(page.getByText(/Pasul 1 din \d+/).first()).toBeVisible()
   })
 
   test('micro-pasul curent trăiește în URL, deci refresh-ul revine pe același ecran', async ({ page }) => {
@@ -307,7 +331,6 @@ test.describe('pasul 1 pe micro-pași', () => {
     await page.goto('/onboarding/eligibility?pas=attestation', { waitUntil: 'networkidle' })
 
     await page.getByRole('radio', { name: 'Nu' }).click()
-    await page.getByRole('button', { name: /Continuă/ }).click()
 
     await expect(
       page.getByRole('heading', { name: /nu îndeplinești condițiile de eligibilitate/i }),
@@ -318,5 +341,56 @@ test.describe('pasul 1 pe micro-pași', () => {
     // Nu e o fundătură: rail-ul rămâne întreg și se poate reveni.
     await expect(page.getByRole('button', { name: 'Înapoi la pasul anterior' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Suport' }).first()).toBeVisible()
+  })
+})
+
+test.describe('pasul 2 — am deja PFA', () => {
+  /**
+   * Regresia raportată: după certificatul de înregistrare, fluxul sărea direct la pasul 3, deși
+   * certificatul constatator și rezumatul erau acolo, în listă.
+   *
+   * Cauza era pe server — pasul trecea în „așteaptă validarea" de îndată ce dosarul se deschidea,
+   * iar de acolo pagina punea cardul de așteptare în locul runnerului. Testul păzește partea de
+   * frontend a contractului: cu pasul încă al șoferului, ecranele lui rămân parcurgibile.
+   */
+  const amPfaState = (overrides: Record<string, unknown> = {}) => ({
+    ...onboardingState,
+    pfaStatus: 'InProgress',
+    steps: steps.map((step) =>
+      step.key === 'pfa'
+        ? { ...step, status: 'InProgress', state: 'in_progress', userPartDone: false }
+        : step,
+    ),
+    ...overrides,
+  })
+
+  test('certificatul de înregistrare nu închide pasul: urmează constatatorul', async ({ page }) => {
+    await stubBackend(page, [uploadedDoc('CertificatInregistrare', 'certificat.pdf')], {
+      state: amPfaState(),
+    })
+    await page.goto('/onboarding/pfa', { waitUntil: 'networkidle' })
+
+    // Primul ecran nerezolvat e chiar constatatorul — nu pasul următor.
+    await expect(
+      page.getByRole('heading', { name: 'Încarcă certificatul constatator' }),
+    ).toBeVisible()
+    await expect(page).toHaveURL(/\/onboarding\/pfa/)
+  })
+
+  test('cu ambele certificate, rezumatul rămâne accesibil', async ({ page }) => {
+    await stubBackend(
+      page,
+      [
+        uploadedDoc('CertificatInregistrare', 'certificat.pdf'),
+        uploadedDoc('CertificatConstatator', 'constatator.pdf'),
+      ],
+      { state: amPfaState() },
+    )
+    await page.goto('/onboarding/pfa', { waitUntil: 'networkidle' })
+
+    await expect(
+      page.getByRole('heading', { name: 'Verifică datele înainte să trimitem dosarul' }),
+    ).toBeVisible()
+    await expect(page).toHaveURL(/\/onboarding\/pfa/)
   })
 })
