@@ -111,12 +111,14 @@ export function FleetCarCard({
         display: 'flex',
         flexDirection: 'column',
         borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
-        border: `1px solid ${DASHBOARD_TOKENS.border}`,
+        // Același contur albastru ca pe anunțurile publice, în varianta blândă a accentului:
+        // într-o grilă de flotă un chenar plin ar ține ochiul pe margini, nu pe mașini.
+        border: `1px solid ${DASHBOARD_TOKENS.accentSoft}`,
         bgcolor: DASHBOARD_TOKENS.paper,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,
         overflow: 'hidden',
         transition: 'border-color 160ms ease, box-shadow 160ms ease',
-        '&:hover': { borderColor: DASHBOARD_TOKENS.borderHover, boxShadow: DASHBOARD_TOKENS.shadow.md },
+        '&:hover': { borderColor: DASHBOARD_TOKENS.accent, boxShadow: DASHBOARD_TOKENS.shadow.md },
         // O mașină scoasă din flotă rămâne vizibilă, dar nu mai trage atenția.
         opacity: archived ? 0.7 : 1,
       }}

@@ -83,7 +83,10 @@ export default function CarListCard({ car, newTab = false, companySlug }: CarLis
         height: '100%',
         cursor: 'pointer',
         backgroundColor: TOKENS.paper,
-        border: `1px solid ${TOKENS.border}`,
+        // Contur albastru, nu gri: pe fundalul cu tenta din logo un chenar de 6% negru se pierdea,
+        // iar anunțurile păreau lipite unul de altul. Albastrul deschis desenează marginea fără să
+        // concureze cu poza; la hover trece pe varianta tare, ca să se vadă care card e sub cursor.
+        border: `1px solid ${TOKENS.primary}`,
         borderRadius: `${TOKENS.radius.xl}px`,
         // Poza urcă până în marginea cardului; colțurile ei le dă cardul, prin `overflow`.
         overflow: 'hidden',
@@ -92,7 +95,7 @@ export default function CarListCard({ car, newTab = false, companySlug }: CarLis
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: TOKENS.shadow.xl,
-          borderColor: alpha(TOKENS.primary, 0.35),
+          borderColor: TOKENS.primaryStrong,
         },
         '&:hover .car-card-cover img': { transform: 'scale(1.04)' },
         '&:hover .car-card-title': { textDecoration: 'underline' },
