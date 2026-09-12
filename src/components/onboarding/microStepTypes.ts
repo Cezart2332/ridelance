@@ -245,6 +245,9 @@ export const BLOCKING_SLOTS = new Set<MicroStepSlot>([
   'vehicleDossier',
   // Plata nu se sare: tot ce urmează e lucru pe care îl începem după ce e achitată.
   'onboardingAdvance',
+  // Nici conectarea băncii: de când extrasul de cont a ieșit din flux, ea e singura cale prin care
+  // contabilul vede mișcările din cont. Se deblochează singură când banca confirmă autorizarea.
+  'bankConnect',
 ])
 
 /** De ce nu se poate continua de pe un ecran cu slot blocant, pe fiecare slot. */
@@ -252,6 +255,7 @@ export const BLOCKING_SLOT_REASONS: Record<string, string> = {
   arrDossier: 'Generează dosarul, descarcă-l și marchează depunerea ca să poți continua.',
   vehicleDossier: 'Generează dosarul, descarcă-l și marchează depunerea ca să poți continua.',
   onboardingAdvance: 'Achită avansul ca să putem începe.',
+  bankConnect: 'Conectează contul bancar și așteaptă confirmarea băncii.',
 }
 
 /** Un micro-pas filtrat, cu poziția lui în parcursul real al utilizatorului. */

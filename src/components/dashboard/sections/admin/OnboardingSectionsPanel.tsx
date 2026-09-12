@@ -109,7 +109,7 @@ const ADMIN_STEPS: AdminStep[] = [
   {
     key: 'fiscal', order: 2, label: 'Fiscal, bancă & semnături',
     categories: ['ExtrasBancar', 'DecontTvaIntracomunitar', 'DecontTaxaNerezident', 'CertificatTvaIntracomunitar', 'DocumenteSemnate'],
-    guidedNote: 'TVA, cont bancar și cont Oblio le completează clientul. Pachetul de semnături îl trimiți și îl primești înapoi semnat pe email — clientul nu mai are ce încărca aici. Pasul se închide când validezi secțiunea, mai jos.',
+    guidedNote: 'TVA, contul bancar conectat prin open banking și contul Oblio le face clientul. Pachetul de semnături îl trimiți și îl primești înapoi semnat pe email — clientul nu mai are ce încărca aici. Pasul se închide când validezi secțiunea, mai jos.',
   },
   {
     key: 'arr', order: 3, label: 'Autorizație transport (ARR)',

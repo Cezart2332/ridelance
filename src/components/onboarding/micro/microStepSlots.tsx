@@ -1,5 +1,5 @@
 import { Alert, Box, Stack, Typography } from '@mui/material'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 import {
   onboardingService,
@@ -7,7 +7,7 @@ import {
   type VehicleState,
 } from '../../../services/onboarding.service'
 import { stripeService } from '../../../services/stripe.service'
-import type { BankConnectionDto } from '../../../services/bank.service'
+import { bankService, type BankConnectionDto, type BankTransactionDto } from '../../../services/bank.service'
 import { getErrorMessage } from '../../../utils/errorHandler'
 import { canonicalCounty } from '../../../data/counties'
 import { BankAccountCta } from '../../common/BankAccountCta'
@@ -88,7 +88,133 @@ function BankConnectSlot({ context }: { context: MicroStepContext }) {
   const { refresh } = useOnboarding()
   const connection = (context.resources.bank as BankConnectionDto | null | undefined) ?? null
 
-  return <BankConnectPanel connection={connection} onRefresh={refresh} hideHeader />
+  return (
+    <>
+      <BankConnectPanel connection={connection} onRefresh={refresh} hideHeader />
+      {connection?.status === 'Linked' && <BankFirstTransactions />}
+    </>
+  )
+}
+
+/**
+ * Primele tranzacții citite de la bancă, imediat după autorizare.
+ *
+ * E dovada, nu decorul: „conectat" e un cuvânt, iar omul tocmai a fost pe pagina băncii și s-a
+ * întors fără să vadă nimic schimbat. Câteva mișcări din contul lui, cu sume și date reale, spun
+ * fără dubiu că legătura chiar funcționează — și, de când extrasul de cont a ieșit din flux, exact
+ * astea sunt datele pe care le va vedea contabilul.
+ *
+ * Lista goală nu e o eroare: prima sincronizare durează câteva momente, iar un cont nou chiar
+ * poate să n-aibă nimic.
+ */
+function BankFirstTransactions() {
+  const [transactions, setTransactions] = useState<BankTransactionDto[] | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    bankService
+      .getTransactions({ page: 1, pageSize: 5 })
+      .then((page) => {
+        if (!cancelled) setTransactions(page.items)
+      })
+      .catch(() => {
+        if (!cancelled) setTransactions([])
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  if (transactions === null) {
+    return null
+  }
+
+  return (
+    <Box
+      sx={{
+        mt: 2.5,
+        borderRadius: `${TOKENS.radius.md}px`,
+        border: `1px solid ${TOKENS.border}`,
+        overflow: 'hidden',
+      }}
+    >
+      <Typography
+        sx={{
+          px: 2,
+          py: 1.25,
+          fontSize: '0.78rem',
+          fontWeight: 800,
+          color: TOKENS.textMuted,
+          borderBottom: `1px solid ${TOKENS.border}`,
+        }}
+      >
+        {transactions.length > 0
+          ? 'ULTIMELE MIȘCĂRI CITITE DIN CONT'
+          : 'CONT CONECTAT'}
+      </Typography>
+
+      {transactions.length === 0 ? (
+        <Typography sx={{ px: 2, py: 1.5, fontSize: '0.85rem', color: TOKENS.textMuted }}>
+          Încă nu s-a citit nicio tranzacție. Prima sincronizare durează câteva momente.
+        </Typography>
+      ) : (
+        transactions.map((transaction) => (
+          <Stack
+            key={transaction.id}
+            direction="row"
+            spacing={1.5}
+            sx={{
+              alignItems: 'center',
+              px: 2,
+              py: 1.1,
+              borderBottom: `1px solid ${TOKENS.border}`,
+              '&:last-of-type': { borderBottom: 'none' },
+            }}
+          >
+            <Typography sx={{ fontSize: '0.78rem', color: TOKENS.textMuted, width: 74, flexShrink: 0 }}>
+              {transaction.bookingDate
+                ? new Date(transaction.bookingDate).toLocaleDateString('ro-RO', {
+                    day: '2-digit',
+                    month: '2-digit',
+                  })
+                : '—'}
+            </Typography>
+            <Typography
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                color: TOKENS.ink,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {transaction.counterpartyName || transaction.remittanceInfo || 'Tranzacție'}
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: '0.85rem',
+                fontWeight: 800,
+                flexShrink: 0,
+                color: transaction.amount >= 0 ? TOKENS.success : TOKENS.ink,
+              }}
+            >
+              {transaction.amount >= 0 ? '+' : ''}
+              {new Intl.NumberFormat('ro-RO', {
+                style: 'currency',
+                currency: transaction.currency || 'RON',
+                maximumFractionDigits: 2,
+              }).format(transaction.amount)}
+            </Typography>
+          </Stack>
+        ))
+      )}
+    </Box>
+  )
 }
 
 /**

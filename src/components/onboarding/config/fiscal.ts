@@ -39,21 +39,6 @@ const field = (c: MicroStepContext, stepId: string, key: string): string => {
 
 const EYEBROW = 'FISCAL'
 
-const BANKS = [
-  'BCR',
-  'Banca Transilvania',
-  'BRD',
-  'ING Bank',
-  'Raiffeisen Bank',
-  'UniCredit Bank',
-  'CEC Bank',
-  'Alpha Bank',
-  'OTP Bank',
-  'First Bank',
-  'Libra Internet Bank',
-  'Revolut',
-]
-
 /** Cele șase acorduri cerute de Oblio, exact ca înainte — doar ambalajul s-a schimbat. */
 const OBLIO_CONSENTS = [
   { value: 'accountCreationConsent', title: 'Crearea unui cont Oblio pe numele meu' },
@@ -65,7 +50,6 @@ const OBLIO_CONSENTS = [
 ]
 
 const TVA_PROOF = ['CertificatTvaIntracomunitar']
-const EXTRAS = ['ExtrasBancar']
 
 export const fiscalMicroSteps: MicroStepDef[] = [
   // ── TVA ──
@@ -147,7 +131,7 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     title: 'Îți deschidem contul la BCR',
     lines: () => [
       'Beneficiezi de oferta dedicată parteneriatului RIDElance–BCR: contul îl poți folosi pentru încasările de la platforme, plata taxelor și administrarea activității PFA.',
-      'Poți alege și altă bancă. După ce contul e activ, revino aici și încarcă extrasul.',
+      'Poți alege și altă bancă. După ce contul e activ, revino aici și conectează-l.',
     ],
     // Butonul ȘI codul QR, din aceeași componentă: pe desktop QR-ul e singura cale rezonabilă
     // de a continua pe telefon, unde onboardingul BCR chiar se face (spec fix-uri §4).
@@ -155,7 +139,7 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     visibleWhen: (c) => c.answers.cont_bancar === 'no',
     // Deschiderea contului se întâmplă la bancă, nu la noi: ecranul nu are cum să afle singur.
     // Trece mai departe de îndată ce contul dă semne de viață — conectat sau cu extrasul încărcat.
-    isDone: (c) => bankLinked(c) || hasDocument(c, EXTRAS),
+    isDone: (c) => bankLinked(c),
   },
   {
     id: 'conectare_banca',
@@ -167,58 +151,17 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     title: 'Conectează contul bancar',
     lines: (c) =>
       bankLinked(c)
-        ? [
-            'Contul e conectat. Citim de acum tranzacțiile direct de la bancă, deci nu mai trebuie să încarci extrasul.',
-          ]
+        ? ['Contul e conectat. De acum citim tranzacțiile direct de la bancă.']
         : [
             'Te ducem pe pagina băncii tale, unde autorizezi accesul de citire. Nu vedem și nu păstrăm parola ta de bancă, iar accesul se poate retrage oricând.',
-            'Cu banca legată, IBAN-ul și titularul vin direct de la ea și nu mai e nevoie de extrasul de cont. Dacă preferi, poți sări peste și încărca extrasul.',
+            'De acolo vin IBAN-ul, titularul și mișcările din cont — informațiile pe care contabilul le citea altfel din extrasul lunar.',
           ],
     slot: 'bankConnect',
-    // Informativ, nu blocant: conectarea e drumul recomandat, extrasul rămâne varianta de rezervă.
-    isDone: () => true,
+    // Blocant, nu informativ: fără conexiune nu mai există nicio altă cale prin care contabilul să
+    // vadă mișcările din cont, de când extrasul a ieșit din flux. Pasul se închide singur când
+    // banca confirmă autorizarea — pagina întreabă din patru în patru secunde.
+    isDone: bankLinked,
   },
-  {
-    id: 'extras_bancar',
-    macroStep: 'fiscal',
-    kind: 'upload',
-    eyebrow: EYEBROW,
-    icon: 'folder',
-    railLabel: 'Extras de cont',
-    title: 'Încarcă extrasul de cont',
-    document: {
-      category: 'ExtrasBancar',
-      label: 'Extras de cont',
-      hint: 'IBAN-ul și titularul trebuie să fie lizibile — de acolo citim contul.',
-    },
-    // Cu banca legată, ecranul dispare: aceleași date le avem deja de la bancă, iar a mai cere o
-    // poză după ce omul tocmai a autorizat accesul ar fi o formalitate goală.
-    visibleWhen: (c) => !bankLinked(c),
-    isDone: (c) => hasDocument(c, EXTRAS),
-  },
-  {
-    id: 'banca',
-    macroStep: 'fiscal',
-    kind: 'text',
-    eyebrow: EYEBROW,
-    icon: 'idCard',
-    railLabel: 'Banca',
-    title: 'La ce bancă e contul?',
-    fields: [
-      {
-        key: 'bankName',
-        label: 'Bancă',
-        options: BANKS.map((bank) => ({ value: bank, title: bank })),
-      },
-    ],
-    persist: async (values) => {
-      if (!values.bankName) return
-      await onboardingService.submitBankDeclaration({ bankName: values.bankName })
-    },
-    visibleWhen: (c) => !bankLinked(c),
-    isDone: (c) => Boolean(step2Of(c)?.bank?.bankName) || field(c, 'banca', 'bankName') !== '',
-  },
-
   // ── Oblio ──
   {
     id: 'oblio_email',

@@ -1,11 +1,6 @@
 /** Monthly recurring documentation — aligned with backend DocumentCategory */
 export const RECURRING_DOCUMENTATION_ITEMS = [
   {
-    id: 'extras-bancar',
-    label: 'Extrase bancare (toate conturile)',
-    category: 'ExtrasBancar',
-  },
-  {
     id: 'raport-uber',
     label: 'Raport venituri Uber',
     category: 'RaportUber',

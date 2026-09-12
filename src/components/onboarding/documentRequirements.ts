@@ -72,11 +72,6 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
   ],
   fiscal: [
     {
-      category: 'ExtrasBancar',
-      label: 'Extras de cont',
-      originStep: 'fiscal',
-    },
-    {
       category: 'CertificatTvaIntracomunitar',
       label: 'Certificat de TVA intracomunitar sau decizia ANAF',
       originStep: 'fiscal',
