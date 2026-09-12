@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material'
 
+import { BankActivityPanel } from '../../../banking/BankActivityPanel'
 import { BankConnectPanel } from '../../../banking/BankConnectPanel'
 import { bankService, type BankConnectionDto } from '../../../../services/bank.service'
 import { PARTNER_LOGO } from '../../../../data/partnerLogo'
@@ -327,6 +328,13 @@ function ConnectDialog({ provider, onClose }: { provider: IntegrationProvider | 
         <DialogTitle sx={{ fontWeight: 800 }}>Conectează banca</DialogTitle>
         <DialogContent>
           <BankConnectPanel connection={connection} onRefresh={loadConnection} />
+          {/* Cu banca legată, dialogul nu mai e doar de conectat: aici se văd mișcările din cont,
+              pe aceleași patru trepte de perioadă ca la PFA și la contabil. */}
+          {connection?.status === 'Linked' && (
+            <Box sx={{ mt: 3 }}>
+              <BankActivityPanel />
+            </Box>
+          )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
           <Button onClick={onClose} sx={{ textTransform: 'none', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted }}>

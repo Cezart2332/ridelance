@@ -32,6 +32,7 @@ import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded'
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded'
 import RateReviewRoundedIcon from '@mui/icons-material/RateReviewRounded'
 import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded'
+import SavingsRoundedIcon from '@mui/icons-material/SavingsRounded'
 
 import { TOKENS } from '../../constants/tokens'
 import { documentService, type DocumentSummary } from '../../services/document.service'
@@ -40,6 +41,7 @@ import { PfaMonthlyIncomeForm } from './PfaMonthlyIncomeForm'
 import { RecurringDocumentationPanel } from '../dashboard/sections/RecurringDocumentationPanel'
 import { DeductibleExpensesPanel } from '../dashboard/sections/DeductibleExpensesPanel'
 import { PfaFiscalSettingsPanel } from '../pfa/PfaFiscalSettingsPanel'
+import { BankActivityPanel } from '../banking/BankActivityPanel'
 
 export interface ContabilClientInfo {
   id: string
@@ -354,6 +356,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
               <Tab icon={<TrendingUpRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Venituri" />
               <Tab icon={<AccountBalanceRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Profil fiscal" />
               <Tab icon={<EventNoteRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Doc. lunară" />
+              <Tab icon={<SavingsRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Bancă" />
               <Tab icon={<ReceiptLongRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Cheltuieli" />
               <Tab icon={<HistoryRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Note & Istoric" />
             </Tabs>
@@ -373,7 +376,10 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
                   onSnackbar={showSnackbar}
                 />
               )}
-              {tab === 3 && (
+              {/* Mișcările din contul clientului, prin open banking — ce se citea înainte din
+                  extrasul de cont, încărcat lună de lună. */}
+              {tab === 3 && <BankActivityPanel userId={client.userId} />}
+              {tab === 4 && (
                 <DeductibleExpensesPanel
                   year={selectedYear}
                   month={selectedMonth}
@@ -386,7 +392,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
                   onChanged={loadDocuments}
                 />
               )}
-              {tab === 4 && (
+              {tab === 5 && (
                 <Box sx={{ mt: 1 }}>
                   <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.2fr 1fr' }, gap: 3 }}>
                     <Box>

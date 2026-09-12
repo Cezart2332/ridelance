@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import {
   Alert,
@@ -11,11 +11,9 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  Pagination,
   Paper,
   Snackbar,
   Stack,
-  TextField,
   Tooltip,
   Typography,
 } from '@mui/material'
@@ -26,18 +24,12 @@ import LinkOffRoundedIcon from '@mui/icons-material/LinkOffRounded'
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded'
 import VerifiedUserRoundedIcon from '@mui/icons-material/VerifiedUserRounded'
 import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded'
-import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 
+import { BankActivityPanel } from '../../banking/BankActivityPanel'
 import { BankConnectPanel } from '../../banking/BankConnectPanel'
-import { DASHBOARD_TOKENS as T, responsiveTableContainerSx } from '../dashboardTheme'
+import { DASHBOARD_TOKENS as T } from '../dashboardTheme'
 import { PageHeader } from '../ui'
-import {
-  bankService,
-  type BankConnectionDto,
-  type BankTransactionsDto,
-} from '../../../services/bank.service'
-
-const PAGE_SIZE = 25
+import { bankService, type BankConnectionDto } from '../../../services/bank.service'
 
 const cardSx = {
   p: { xs: 2.5, md: 3 },
@@ -47,29 +39,8 @@ const cardSx = {
   backgroundColor: T.paper,
 }
 
-const formatMoney = (amount: number, currency: string) =>
-  new Intl.NumberFormat('ro-RO', {
-    style: 'currency',
-    currency: currency || 'RON',
-    maximumFractionDigits: 2,
-  }).format(amount)
-
 const formatDate = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
-
-const monthOptions = () => {
-  const options: { label: string; year: number; month: number }[] = []
-  const now = new Date()
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    options.push({
-      label: d.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' }),
-      year: d.getFullYear(),
-      month: d.getMonth() + 1,
-    })
-  }
-  return options
-}
 
 interface BankTabProps {
   onNavigate?: (section: string) => void
@@ -81,13 +52,6 @@ export function BankTab({ onNavigate }: BankTabProps) {
   const [connection, setConnection] = useState<BankConnectionDto | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [snackbar, setSnackbar] = useState<string | null>(null)
-
-  // Transactions
-  const [transactions, setTransactions] = useState<BankTransactionsDto | null>(null)
-  const [txLoading, setTxLoading] = useState(false)
-  const months = useMemo(monthOptions, [])
-  const [monthIndex, setMonthIndex] = useState(0)
-  const [page, setPage] = useState(1)
 
   const [confirmDisconnect, setConfirmDisconnect] = useState(false)
 
@@ -128,17 +92,6 @@ export function BankTab({ onNavigate }: BankTabProps) {
   }, [])
 
   const isLinked = connection?.status === 'Linked'
-
-  useEffect(() => {
-    if (!isLinked) return
-    setTxLoading(true)
-    const m = months[monthIndex]
-    bankService
-      .getTransactions({ year: m?.year, month: m?.month, page, pageSize: PAGE_SIZE })
-      .then(setTransactions)
-      .catch(() => setTransactions(null))
-      .finally(() => setTxLoading(false))
-  }, [isLinked, monthIndex, page, months])
 
   const handleDisconnect = async () => {
     setConfirmDisconnect(false)
@@ -297,194 +250,7 @@ export function BankTab({ onNavigate }: BankTabProps) {
             </Stack>
           </Paper>
 
-          <Paper elevation={0} sx={{ ...cardSx, p: 0, overflow: 'hidden' }}>
-            {/* Toolbar tranzacții */}
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              spacing={1.5}
-              sx={{
-                alignItems: { sm: 'center' },
-                justifyContent: 'space-between',
-                p: { xs: 2, md: 2.5 },
-                borderBottom: `1px solid ${T.border}`,
-              }}
-            >
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                <ReceiptLongRoundedIcon sx={{ fontSize: 20, color: T.primaryStrong }} />
-                <Typography sx={{ fontWeight: 800, color: T.ink, fontSize: 15.5 }}>
-                  Tranzacții
-                </Typography>
-              </Stack>
-
-              <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-                {transactions && (
-                  <>
-                    <Chip
-                      size="small"
-                      label={`Încasări: ${formatMoney(transactions.totalIn, 'RON')}`}
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: 12,
-                        color: T.accent,
-                        backgroundColor: alpha(T.accent, 0.1),
-                      }}
-                    />
-                    <Chip
-                      size="small"
-                      label={`Cheltuieli: ${formatMoney(transactions.totalOut, 'RON')}`}
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: 12,
-                        color: T.textMuted,
-                        backgroundColor: alpha(T.ink, 0.06),
-                      }}
-                    />
-                  </>
-                )}
-                <TextField
-                  select
-                  size="small"
-                  value={monthIndex}
-                  onChange={(e) => {
-                    setMonthIndex(Number(e.target.value))
-                    setPage(1)
-                  }}
-                  slotProps={{ select: { native: true } }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: `${T.radius.full}px`,
-                      backgroundColor: T.surface,
-                      fontSize: 13.5,
-                      fontWeight: 600,
-                    },
-                  }}
-                >
-                  {months.map((m, idx) => (
-                    <option key={m.label} value={idx}>
-                      {m.label.charAt(0).toUpperCase() + m.label.slice(1)}
-                    </option>
-                  ))}
-                </TextField>
-              </Stack>
-            </Stack>
-
-            {/* Listă tranzacții */}
-            {txLoading ? (
-              <Stack sx={{ alignItems: 'center', py: 6 }}>
-                <CircularProgress size={28} sx={{ color: T.primary }} />
-              </Stack>
-            ) : !transactions || transactions.items.length === 0 ? (
-              <Stack spacing={1} sx={{ alignItems: 'center', py: 6, px: 2, textAlign: 'center' }}>
-                <ReceiptLongRoundedIcon sx={{ fontSize: 36, color: T.textSubtle }} />
-                <Typography sx={{ color: T.textMuted, fontSize: 14 }}>
-                  Nicio tranzacție în luna selectată.
-                </Typography>
-                <Typography sx={{ color: T.textSubtle, fontSize: 12.5 }}>
-                  Prima sincronizare poate dura câteva minute după conectare.
-                </Typography>
-              </Stack>
-            ) : (
-              <Box sx={responsiveTableContainerSx}>
-                <Box sx={{ minWidth: { xs: 0, sm: 560 } }}>
-                  {transactions.items.map((tx) => {
-                    const isCredit = tx.amount >= 0
-                    return (
-                      <Stack
-                        key={tx.id}
-                        direction="row"
-                        spacing={1.5}
-                        sx={{
-                          alignItems: 'center',
-                          px: { xs: 2, md: 2.5 },
-                          py: 1.5,
-                          borderBottom: `1px solid ${T.border}`,
-                          '&:last-of-type': { borderBottom: 'none' },
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            width: { xs: 70, sm: 84 },
-                            flexShrink: 0,
-                            fontSize: { xs: 12, sm: 13 },
-                            color: T.textMuted,
-                            fontVariantNumeric: 'tabular-nums',
-                          }}
-                        >
-                          {formatDate(tx.bookingDate)}
-                        </Typography>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography
-                            sx={{
-                              fontWeight: 650,
-                              fontSize: 14,
-                              color: T.ink,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {tx.counterpartyName || tx.remittanceInfo || 'Tranzacție'}
-                          </Typography>
-                          {tx.counterpartyName && tx.remittanceInfo && (
-                            <Typography
-                              sx={{
-                                fontSize: 12.5,
-                                color: T.textSubtle,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {tx.remittanceInfo}
-                            </Typography>
-                          )}
-                        </Box>
-                        {tx.isPending && (
-                          <Chip
-                            size="small"
-                            label="În procesare"
-                            sx={{
-                              height: 20,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              color: T.textMuted,
-                              backgroundColor: alpha(T.ink, 0.06),
-                              flexShrink: 0,
-                              display: { xs: 'none', sm: 'inline-flex' },
-                            }}
-                          />
-                        )}
-                        <Typography
-                          sx={{
-                            flexShrink: 0,
-                            fontWeight: 750,
-                            fontSize: 14,
-                            fontVariantNumeric: 'tabular-nums',
-                            // Semnul distinge intrarea de ieșire; culoarea rămâne în paletă.
-                            color: isCredit ? T.accent : T.ink,
-                          }}
-                        >
-                          {isCredit ? '+' : ''}
-                          {formatMoney(tx.amount, tx.currency)}
-                        </Typography>
-                      </Stack>
-                    )
-                  })}
-                </Box>
-              </Box>
-            )}
-
-            {transactions && transactions.totalCount > PAGE_SIZE && (
-              <Stack sx={{ alignItems: 'center', py: 2, borderTop: `1px solid ${T.border}` }}>
-                <Pagination
-                  count={Math.ceil(transactions.totalCount / PAGE_SIZE)}
-                  page={page}
-                  onChange={(_, value) => setPage(value)}
-                  size="small"
-                />
-              </Stack>
-            )}
-          </Paper>
+          <BankActivityPanel />
         </>
       )}
 
@@ -493,8 +259,8 @@ export function BankTab({ onNavigate }: BankTabProps) {
         <DialogTitle sx={{ fontWeight: 800 }}>Deconectezi banca?</DialogTitle>
         <DialogContent>
           <Typography sx={{ color: T.textMuted, fontSize: 14 }}>
-            Sincronizarea automată a tranzacțiilor se oprește, iar extrasul de cont va trebui
-            încărcat din nou manual. Tranzacțiile deja sincronizate rămân vizibile.
+            Sincronizarea automată se oprește, iar contabilul nu mai vede mișcările noi din cont.
+            Tranzacțiile deja sincronizate rămân vizibile.
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>

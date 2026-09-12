@@ -54,6 +54,33 @@ export interface BankTransactionsDto {
   totalOut: number;
 }
 
+/** O coloană din grafic: cât a intrat și cât a ieșit într-o felie de timp. */
+export interface BankActivityBucketDto {
+  start: string;
+  in: number;
+  out: number;
+  count: number;
+}
+
+export interface BankActivityAccountDto {
+  id: string;
+  ibanMasked: string | null;
+  currency: string | null;
+  ownerName: string | null;
+  lastSyncedAtUtc: string | null;
+}
+
+export interface BankActivityDto {
+  from: string;
+  to: string;
+  bucket: string;
+  totalIn: number;
+  totalOut: number;
+  transactionCount: number;
+  buckets: BankActivityBucketDto[];
+  accounts: BankActivityAccountDto[];
+}
+
 export interface InitiateConnectionDto {
   /** Adresa băncii, unde utilizatorul autorizează accesul. */
   link: string;
@@ -91,13 +118,29 @@ export const bankService = {
     return response.data;
   },
 
+  /**
+   * Tranzacțiile dintr-un interval. `userId` e pentru contabil, care își vede clientul; dreptul
+   * se verifică pe server, pe legătura client–contabil, nu aici.
+   */
   getTransactions: async (params: {
-    year: number;
-    month: number;
+    from?: string;
+    to?: string;
     page: number;
     pageSize: number;
+    userId?: string;
   }): Promise<BankTransactionsDto> => {
     const response = await api.get<BankTransactionsDto>('/bank/transactions', { params });
+    return response.data;
+  },
+
+  /** Totalurile și coloanele de grafic pentru același interval. */
+  getActivity: async (params: {
+    from: string;
+    to: string;
+    bucket: string;
+    userId?: string;
+  }): Promise<BankActivityDto> => {
+    const response = await api.get<BankActivityDto>('/bank/activity', { params });
     return response.data;
   },
 
