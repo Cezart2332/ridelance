@@ -1,11 +1,13 @@
 import docs from '../assets/docs.svg'
-import ace from '../assets/partners/ace.png'
 import mol from '../assets/partners/mol.png'
 import asigurari from '../assets/partners/asigurari.png'
 import consulto from '../assets/partners/consulto.png'
 import eldrive from '../assets/partners/eldrive.png'
 import oblio from '../assets/partners/oblio.png'
 import simplifi from '../assets/partners/simplifi.png'
+import smartfintech from '../assets/partners/smartfintech.png'
+import fiscallink from '../assets/partners/Fiscallink.svg'
+import constalaris from '../assets/partners/constalaris.png'
 import { sortByPartnerOrder } from './benefits'
 import character2 from '../assets/Stickers/character 2.png'
 import scene1 from '../assets/Stickers/scene 1.png'
@@ -49,7 +51,6 @@ export const faqItems = [
  */
 export const partnerLogos: { slug: string; name: string; image: string; href?: string }[] =
   sortByPartnerOrder([
-    { slug: 'ace', name: 'ACE', image: ace },
     { slug: 'mol', name: 'MOL', image: mol },
     { slug: 'asigurari-ro', name: 'asigurari.ro', image: asigurari },
     { slug: 'bcr', name: 'BCR', image: '/logobcr.jpeg' },
@@ -57,6 +58,9 @@ export const partnerLogos: { slug: string; name: string; image: string; href?: s
     { slug: 'eldrive', name: 'eldrive', image: eldrive },
     { slug: 'consulto', name: 'Consulto', image: consulto },
     { slug: 'simplifi', name: 'Simplifi', image: simplifi },
+    { slug: 'smart-fintech', name: 'Smart Fintech', image: smartfintech },
+    { slug: 'fiscallink', name: 'FiscalLink', image: fiscallink },
+    { slug: 'constalaris', name: 'Constalaris', image: constalaris },
   ])
 
 export const homeSec2 = [

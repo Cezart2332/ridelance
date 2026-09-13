@@ -119,6 +119,12 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
     return steps.slice(order + 1).find((s) => s.state !== 'locked') ?? null
   }, [steps, activeKey, currentStep])
 
+  /**
+   * Șoferul și-a făcut partea peste tot: de pe ultimul pas se merge la ecranul de final. Fără asta,
+   * ultimul ecran al vehiculului n-avea ieșire înainte și rămânea fără buton.
+   */
+  const canFinish = state != null && currentStep === null && steps.length > 0 && !state.allSectionsValidated
+
   const leave = useCallback(
     (direction: 1 | -1) => {
       const order = steps.findIndex((s) => s.key === activeKey)
@@ -191,12 +197,12 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
       next,
       back,
       canGoBack,
-      canGoForward: forwardTarget !== null,
+      canGoForward: forwardTarget !== null || canFinish,
       position,
       total,
       percent: Math.round((position / total) * 100),
     }),
-    [views, current, answers, answer, goTo, next, back, canGoBack, forwardTarget, position, total],
+    [views, current, answers, answer, goTo, next, back, canGoBack, forwardTarget, canFinish, position, total],
   )
 
   return <MicroStepsContext.Provider value={value}>{children}</MicroStepsContext.Provider>

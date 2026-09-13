@@ -291,11 +291,11 @@ export function AdminDashboard() {
     }
   }, [])
 
-  const handleUpdateDocStatus = async (id: string, status: 'Verified' | 'Rejected') => {
+  const handleUpdateDocStatus = async (id: string, status: 'Verified' | 'Rejected', note?: string) => {
     setStatusUpdatingDocId(id)
     try {
-      await documentService.updateStatus(id, status)
-      setDocuments(docs => docs.map(d => d.id === id ? { ...d, status } : d))
+      await documentService.updateStatus(id, status, note)
+      setDocuments(docs => docs.map(d => d.id === id ? { ...d, status, reviewNote: status === 'Rejected' ? note ?? null : null } : d))
       setSnackbar({ open: true, message: `Documentul a fost ${status === 'Verified' ? 'aprobat' : 'respins'} cu succes.`, severity: 'success' })
     } catch {
       setSnackbar({ open: true, message: 'Nu am putut actualiza statusul documentului. Te rugăm să încerci din nou.', severity: 'error' })

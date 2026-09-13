@@ -42,9 +42,12 @@ export const onboardingMuiTheme = createTheme({
     background: { default: TOKENS.surface, paper: TOKENS.paper },
     text: { primary: TOKENS.ink, secondary: TOKENS.textMuted, disabled: TOKENS.textSubtle },
     divider: TOKENS.border,
-    success: { main: TOKENS.success, light: 'rgba(46, 125, 50, 0.10)' },
-    warning: { main: TOKENS.pending, light: 'rgba(237, 108, 2, 0.12)' },
-    error: { main: TOKENS.danger, light: 'rgba(211, 47, 47, 0.10)' },
+    // `light` trebuie să fie o culoare opacă. MUI derivă din ea textul și fundalul `Alert`-ului
+    // (`darken(light, 0.6)`), iar cu valorile transparente de dinainte textul ieșea la 10% opacitate:
+    // mesajele de eroare arătau doar iconița roșie, cu textul alb pe alb.
+    success: { main: TOKENS.success, light: '#4caf50' },
+    warning: { main: TOKENS.pending, light: '#ff9800' },
+    error: { main: TOKENS.danger, light: '#ef5350' },
   },
 
   shadows,
@@ -138,6 +141,36 @@ export const onboardingMuiTheme = createTheme({
     },
     MuiAlert: {
       styleOverrides: { root: { borderRadius: TOKENS.radius.lg, fontSize: 14 } },
+      // Culorile stărilor, scrise explicit: textul nu mai atârnă de cum calculează MUI din paletă.
+      variants: [
+        {
+          props: { variant: 'standard', severity: 'error' },
+          style: {
+            color: TOKENS.danger,
+            backgroundColor: 'rgba(211, 47, 47, 0.08)',
+            border: '1px solid rgba(211, 47, 47, 0.2)',
+            '& .MuiAlert-icon': { color: TOKENS.dangerBase },
+          },
+        },
+        {
+          props: { variant: 'standard', severity: 'warning' },
+          style: {
+            color: TOKENS.pending,
+            backgroundColor: 'rgba(237, 108, 2, 0.08)',
+            border: '1px solid rgba(237, 108, 2, 0.22)',
+            '& .MuiAlert-icon': { color: TOKENS.pendingBase },
+          },
+        },
+        {
+          props: { variant: 'standard', severity: 'success' },
+          style: {
+            color: TOKENS.success,
+            backgroundColor: 'rgba(46, 125, 50, 0.08)',
+            border: '1px solid rgba(46, 125, 50, 0.2)',
+            '& .MuiAlert-icon': { color: TOKENS.success },
+          },
+        },
+      ],
     },
   },
 })

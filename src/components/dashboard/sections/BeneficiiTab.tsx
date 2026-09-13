@@ -181,16 +181,18 @@ function PartnerPanel({
         <Box sx={{ flex: 1, minWidth: 0 }}>
           {/* Numele nu se mai scrie: logo-ul de alături îl spune, iar dublarea lui făcea antetul
               să repete aceeași informație de două ori. Rămâne în `alt`, pentru cititoarele de ecran. */}
-          <Typography
-            sx={{
-              color: DASHBOARD_TOKENS.ink,
-              fontSize: { xs: '1rem', md: '1.1rem' },
-              fontWeight: 700,
-              lineHeight: 1.5,
-            }}
-          >
-            {partner.tagline}
-          </Typography>
+          {partner.tagline && (
+            <Typography
+              sx={{
+                color: DASHBOARD_TOKENS.ink,
+                fontSize: { xs: '1rem', md: '1.1rem' },
+                fontWeight: 700,
+                lineHeight: 1.5,
+              }}
+            >
+              {partner.tagline}
+            </Typography>
+          )}
         </Box>
 
         {partner.website && (

@@ -70,6 +70,7 @@ const OnboardingStep2Page = lazyWithRetry(() => import('./components/onboarding/
 const OnboardingArrPage = lazyWithRetry(() => import('./components/onboarding/OnboardingArrPage'))
 const OnboardingPlatformsPage = lazyWithRetry(() => import('./components/onboarding/OnboardingPlatformsPage'))
 const OnboardingVehiclePage = lazyWithRetry(() => import('./components/onboarding/OnboardingVehiclePage'))
+const OnboardingDonePage = lazyWithRetry(() => import('./components/onboarding/OnboardingDonePage'))
 const OnboardingSubscriptionsPage = lazyWithRetry(
   () => import('./components/onboarding/OnboardingSubscriptionsPage'),
 )
@@ -119,6 +120,7 @@ function App() {
               <Route path="platforms" element={<OnboardingPlatformsPage />} />
               <Route path="vehicle" element={<OnboardingVehiclePage />} />
               {/* Anunțată în rail cu lacăt; conținutul se definește separat. */}
+              <Route path="finalizat" element={<OnboardingDonePage />} />
               <Route path="abonamente" element={<OnboardingSubscriptionsPage />} />
               {/* Rutele vechi pe secțiuni au dispărut — un singur onboarding, pe cei 6 pași. */}
               <Route path="sections/*" element={<Navigate to="/onboarding" replace />} />

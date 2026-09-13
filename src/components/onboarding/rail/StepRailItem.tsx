@@ -25,6 +25,9 @@ export function StepRailItem({
   onSelect: (step: StepView) => void
 }) {
   const locked = step.state === 'locked'
+  // Motivul respingerii se scrie pe rând. Ca tooltip nu-l vedea nimeni: pe telefon nu există
+  // hover, iar pe desktop cercul roșu nu spunea că ar fi ceva de citit sub cursor.
+  const showReasonInline = step.state === 'rejected' && Boolean(step.reason)
 
   const row = (
     <ButtonBase
@@ -49,19 +52,27 @@ export function StepRailItem({
         '&:hover': locked || active ? {} : { backgroundColor: SHELL.bg.surface2 },
       }}
     >
-      <Stack direction="row" sx={{ alignItems: 'center', gap: 1.25 }}>
+      <Stack direction="row" sx={{ alignItems: showReasonInline ? 'flex-start' : 'center', gap: 1.25 }}>
         <StepStatusIcon state={step.state} order={step.order} />
-        <Typography
-          noWrap
-          sx={{
-            fontWeight: active ? 600 : 500,
-            fontSize: 14,
-            color: active ? SHELL.text.primary : SHELL.text.secondary,
-            lineHeight: 1.3,
-          }}
-        >
-          {step.label}
-        </Typography>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography
+            noWrap
+            sx={{
+              fontWeight: active ? 600 : 500,
+              fontSize: 14,
+              color: active ? SHELL.text.primary : SHELL.text.secondary,
+              lineHeight: 1.3,
+              pt: showReasonInline ? '5px' : 0,
+            }}
+          >
+            {step.label}
+          </Typography>
+          {showReasonInline && (
+            <Typography sx={{ fontSize: 12, lineHeight: 1.4, color: SHELL.neg, fontWeight: 500, mt: 0.25 }}>
+              {step.reason}
+            </Typography>
+          )}
+        </Box>
 
         {/* Un pas sărit în modul dev nu are voie să arate ca unul parcurs corect (§13.6). */}
         {step.skippedInDev && (
@@ -77,7 +88,7 @@ export function StepRailItem({
 
   return (
     <Box component="li" aria-current={active ? 'step' : undefined} sx={{ listStyle: 'none' }}>
-      {step.reason ? (
+      {step.reason && !showReasonInline ? (
         <Tooltip title={step.reason} placement="right">
           {/* Tooltip are nevoie de un element care primește evenimente; butonul poate fi disabled. */}
           <Box>{row}</Box>

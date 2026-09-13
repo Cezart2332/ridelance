@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Box, IconButton, InputAdornment, LinearProgress, TextField, Typography } from '@mui/material'
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
 import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded'
-import { authInputSx } from './authShellSx'
+import { AUTH_COLORS, authInputSx } from './authShellSx'
 import { passwordStrength, type StrengthTone } from '../authValidation'
 import { TOKENS } from '../../../constants/tokens'
 
@@ -14,8 +14,9 @@ const TONE_COLOR: Record<StrengthTone, 'error' | 'warning' | 'success'> = {
 }
 
 interface PasswordFieldProps {
+  /** Numele accesibil al câmpului. Designul nu are etichete vizibile, doar placeholder. */
   label: string
-  placeholder?: string
+  placeholder: string
   value: string
   onChange: (value: string) => void
   onBlur: () => void
@@ -23,7 +24,7 @@ interface PasswordFieldProps {
   disabled?: boolean
   /** `current-password` la login, `new-password` la înregistrare. */
   autoComplete: 'current-password' | 'new-password'
-  /** Indicatorul de putere ocupă slotul de `helperText`, deci nu adaugă înălțime. */
+  /** Indicatorul de putere ocupă slotul de `helperText`. */
   showStrength?: boolean
 }
 
@@ -44,8 +45,7 @@ export function PasswordField({
   return (
     <TextField
       fullWidth
-      required
-      label={label}
+      hiddenLabel
       placeholder={placeholder}
       type={visible ? 'text' : 'password'}
       value={value}
@@ -56,6 +56,7 @@ export function PasswordField({
       error={Boolean(error)}
       sx={authInputSx}
       slotProps={{
+        htmlInput: { 'aria-label': label, 'aria-required': true },
         input: {
           endAdornment: (
             <InputAdornment position="end">
@@ -67,7 +68,7 @@ export function PasswordField({
                 aria-label={visible ? 'Ascunde parola' : 'Arată parola'}
                 onClick={() => setVisible((current) => !current)}
               >
-                {visible ? <VisibilityOffRoundedIcon /> : <VisibilityRoundedIcon />}
+                {visible ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}
               </IconButton>
             </InputAdornment>
           ),
@@ -79,19 +80,8 @@ export function PasswordField({
       helperText={
         error ? (
           error
-        ) : showStrength ? (
-          // Slotul rămâne rezervat și când câmpul e gol — altfel apariția barei ar împinge
-          // formularul în jos exact când utilizatorul începe să tasteze.
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              mt: 0.5,
-              opacity: value ? 1 : 0,
-              transition: 'opacity 200ms',
-            }}
-          >
+        ) : showStrength && value ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
             <LinearProgress
               variant="determinate"
               value={strength.score * 25}
@@ -99,13 +89,13 @@ export function PasswordField({
                 flex: 1,
                 height: 4,
                 borderRadius: `${TOKENS.radius.xs}px`,
-                backgroundColor: TOKENS.border,
+                backgroundColor: AUTH_COLORS.border,
                 '& .MuiLinearProgress-bar': {
                   backgroundColor: (t) => t.palette[TONE_COLOR[strength.tone]].main,
                 },
               }}
             />
-            <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>
+            <Typography variant="caption" sx={{ color: AUTH_COLORS.textMuted }}>
               {strength.label}
             </Typography>
           </Box>

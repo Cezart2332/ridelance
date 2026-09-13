@@ -1,9 +1,12 @@
 import asigurari from '../assets/partners/asigurari.png'
+import constalaris from '../assets/partners/constalaris.png'
 import consulto from '../assets/partners/consulto.png'
 import eldrive from '../assets/partners/eldrive.png'
+import fiscallink from '../assets/partners/Fiscallink.svg'
 import mol from '../assets/partners/mol.png'
 import oblio from '../assets/partners/oblio.png'
 import simplifi from '../assets/partners/simplifi.png'
+import smartfintech from '../assets/partners/smartfintech.png'
 
 /**
  * Beneficiile de partener, așa cum le vede un client în dashboard.
@@ -47,7 +50,8 @@ export interface PartnerBenefit {
   slug: string
   name: string
   image: string
-  tagline: string
+  /** Lipsește la partenerii pentru care n-avem încă textul lor. */
+  tagline?: string
   website?: string
   intro?: string
   /** Cutia de bonus din capul panoului. Doar unde există chiar un bonus în bani. */
@@ -204,6 +208,25 @@ export const partnerBenefits: PartnerBenefit[] = [
     // vine din `EldriveOffer`, aceeași componentă ca în pagina publică de Parteneri.
     blocks: [],
   },
+  {
+    slug: 'smart-fintech',
+    name: 'Smart Fintech',
+    image: smartfintech,
+    website: 'https://www.smartfintech.eu',
+    blocks: [],
+  },
+  {
+    slug: 'fiscallink',
+    name: 'FiscalLink',
+    image: fiscallink,
+    blocks: [],
+  },
+  {
+    slug: 'constalaris',
+    name: 'Constalaris',
+    image: constalaris,
+    blocks: [],
+  },
 ]
 
 export const getPartnerBenefit = (slug: string) =>
@@ -220,8 +243,8 @@ export const getPartnerBenefit = (slug: string) =>
 export const partnerOrder = partnerBenefits.map((partner) => partner.slug)
 
 /**
- * Așază o listă de parteneri în ordinea de mai sus. Cine nu are pagină de beneficii — ACE, de
- * exemplu — rămâne la coadă, în ordinea în care a fost scris.
+ * Așază o listă de parteneri în ordinea de mai sus. Cine nu are pagină de beneficii rămâne la
+ * coadă, în ordinea în care a fost scris.
  */
 export function sortByPartnerOrder<T extends { slug: string }>(items: readonly T[]): T[] {
   const rank = (slug: string) => {

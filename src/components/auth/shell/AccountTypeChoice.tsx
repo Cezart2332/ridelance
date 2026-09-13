@@ -1,15 +1,10 @@
-import { Box, ButtonBase, Typography } from '@mui/material'
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
+import { Box, ButtonBase } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import { AUTH_COLORS } from './authShellSx'
 import { TOKENS } from '../../../constants/tokens'
 
 export type AccountType = 'Client' | 'CarPoster'
 
-/**
- * Doar numele formei juridice. Inițiala din pastilă („P", „S") repeta prima literă a cuvântului
- * de lângă ea, iar descrierile explicau ceva ce alegătorul știe deja despre propria firmă —
- * două rânduri de text pentru o alegere între două cuvinte.
- */
 const OPTIONS = [
   { value: 'Client' as const, title: 'PFA' },
   { value: 'CarPoster' as const, title: 'SRL' },
@@ -23,67 +18,54 @@ interface AccountTypeChoiceProps {
 
 /**
  * Tipul de cont se alege obligatoriu aici, nu în onboarding: onboardingul există doar pentru PFA,
- * iar un cont de SRL nu trece prin el niciodată. E singura ramificație reală dinainte de crearea
- * contului, fiindcă decide și rolul (`UserRole`) și dashboardul unde aterizezi.
+ * iar un cont de SRL nu trece prin el niciodată. Decide și rolul (`UserRole`) și dashboardul unde
+ * aterizezi.
+ *
+ * Arată ca un comutator cu două poziții, pe rândul câmpurilor, ca să nu rupă ritmul formularului.
  */
 export function AccountTypeChoice({ value, onChange, disabled = false }: AccountTypeChoiceProps) {
   return (
-    <Box>
-      <Typography
-        component="p"
-        variant="body2"
-        sx={{ mb: 1, fontWeight: 600, color: TOKENS.ink }}
-        id="account-type-label"
-      >
-        Cum vei folosi RIDElance?
-      </Typography>
-
-      <Box
-        role="radiogroup"
-        aria-labelledby="account-type-label"
-        sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}
-      >
-        {OPTIONS.map((option) => {
-          const active = option.value === value
-          return (
-            <ButtonBase
-              key={option.value}
-              role="radio"
-              aria-checked={active}
-              disabled={disabled}
-              onClick={() => onChange(option.value)}
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 18px',
-                alignItems: 'center',
-                gap: 1,
-                p: 1.25,
-                textAlign: 'left',
-                borderRadius: `${TOKENS.radius.lg}px`,
-                backgroundColor: active ? alpha(TOKENS.primary, 0.08) : TOKENS.paper,
-                border: `1px solid ${active ? alpha(TOKENS.primary, 0.5) : TOKENS.border}`,
-                transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
-                '&:hover': { borderColor: active ? alpha(TOKENS.primary, 0.5) : TOKENS.borderHover },
-              }}
-            >
-              <Typography
-                sx={{ minWidth: 0, fontSize: '0.875rem', fontWeight: 700, color: TOKENS.ink }}
-              >
-                {option.title}
-              </Typography>
-
-              <CheckRoundedIcon
-                sx={{
-                  fontSize: 18,
-                  color: TOKENS.primaryStrong,
-                  opacity: active ? 1 : 0,
-                  transition: `opacity ${TOKENS.duration} ${TOKENS.easing}`,
-                }}
-              />
-            </ButtonBase>
-          )
-        })}
-      </Box>
+    <Box
+      role="radiogroup"
+      aria-label="Tipul contului"
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 0.5,
+        p: 0.5,
+        borderRadius: `${TOKENS.radius.md + 2}px`,
+        backgroundColor: AUTH_COLORS.input,
+        border: `1px solid ${AUTH_COLORS.border}`,
+      }}
+    >
+      {OPTIONS.map((option) => {
+        const active = option.value === value
+        return (
+          <ButtonBase
+            key={option.value}
+            role="radio"
+            aria-checked={active}
+            disabled={disabled}
+            onClick={() => onChange(option.value)}
+            sx={{
+              minHeight: 40,
+              borderRadius: `${TOKENS.radius.md}px`,
+              fontSize: '0.95rem',
+              fontWeight: 700,
+              letterSpacing: '0.02em',
+              color: active ? AUTH_COLORS.onPrimary : AUTH_COLORS.textMuted,
+              backgroundColor: active ? AUTH_COLORS.primary : 'transparent',
+              transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
+              '&:hover': {
+                color: active ? AUTH_COLORS.onPrimary : AUTH_COLORS.text,
+                backgroundColor: active ? AUTH_COLORS.primary : alpha('#fff', 0.04),
+              },
+            }}
+          >
+            {option.title}
+          </ButtonBase>
+        )
+      })}
     </Box>
   )
 }

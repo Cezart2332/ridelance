@@ -27,14 +27,26 @@ export function validateNewPassword(value: string): string | null {
   return null
 }
 
+export function validatePasswordConfirmation(password: string, confirmation: string): string | null {
+  if (!confirmation) return 'Repetă parola.'
+  if (confirmation !== password) return 'Parolele nu coincid.'
+  return null
+}
+
 /**
- * Numele e obligatoriu la înregistrare: onboardingul, care l-ar fi citit din buletin prin OCR,
- * există doar pentru PFA — un cont de flotă nu ajunge niciodată acolo.
+ * Număr de mobil românesc, scris oricum: „07…", „+407…", „00407…", cu spații sau puncte.
+ * Aceeași regulă ca `RomanianPhoneNumber` din backend, care îl aduce la forma `+407…`.
  */
-export function validateFullName(value: string): string | null {
+export function validatePhone(value: string): string | null {
   const trimmed = value.trim()
-  if (!trimmed) return 'Introdu numele tău.'
-  if (trimmed.length < 3) return 'Numele pare prea scurt.'
+  if (!trimmed) return 'Introdu numărul de telefon.'
+
+  let digits = trimmed.replace(/\D/g, '')
+  if (digits.startsWith('0040')) digits = digits.slice(4)
+  else if (digits.startsWith('40')) digits = digits.slice(2)
+  else if (digits.startsWith('0')) digits = digits.slice(1)
+
+  if (!/^7\d{8}$/.test(digits)) return 'Număr de mobil invalid. Exemplu: 0722 123 456.'
   return null
 }
 

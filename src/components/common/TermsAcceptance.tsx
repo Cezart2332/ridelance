@@ -11,13 +11,13 @@ interface TermsAcceptanceProps {
    * ecranul de înregistrare. Apelanții existenți rămân pe textul lung, cu un singur link.
    */
   withPrivacy?: boolean
+  /** `dark` pe ecranele de autentificare, care au fond închis. */
+  tone?: 'light' | 'dark'
 }
 
-const linkSx = {
-  color: TOKENS.primaryStrong,
-  fontWeight: 700,
-  textDecorationColor: alpha(TOKENS.primaryStrong, 0.35),
-  '&:hover': { textDecorationColor: TOKENS.primaryStrong },
+const TONES = {
+  light: { text: TOKENS.textMuted, box: alpha(TOKENS.ink, 0.28), link: TOKENS.primaryStrong },
+  dark: { text: 'rgba(238, 242, 247, 0.62)', box: 'rgba(238, 242, 247, 0.35)', link: TOKENS.primary },
 }
 
 export function TermsAcceptance({
@@ -25,7 +25,16 @@ export function TermsAcceptance({
   onChange,
   disabled = false,
   withPrivacy = false,
+  tone = 'light',
 }: TermsAcceptanceProps) {
+  const colors = TONES[tone]
+  const linkSx = {
+    color: colors.link,
+    fontWeight: 700,
+    textDecorationColor: alpha(colors.link, 0.35),
+    '&:hover': { textDecorationColor: colors.link },
+  }
+
   return (
     <FormControlLabel
       sx={{
@@ -42,14 +51,14 @@ export function TermsAcceptance({
           disabled={disabled}
           onChange={(event) => onChange(event.target.checked)}
           sx={{
-            color: alpha(TOKENS.ink, 0.28),
+            color: colors.box,
             p: 0.25,
             '&.Mui-checked': { color: TOKENS.primary },
           }}
         />
       }
       label={
-        <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.86rem', lineHeight: 1.55 }}>
+        <Typography sx={{ color: colors.text, fontSize: '0.86rem', lineHeight: 1.55 }}>
           {withPrivacy ? (
             <>
               Sunt de acord cu{' '}

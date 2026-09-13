@@ -49,7 +49,17 @@ export async function mockSession(page: Page) {
         scheduledMaintenance: 0,
         attention: [],
         activeRentalRows: [],
+        listingQuota: { included: 10, used: 0, remaining: 10 },
       }),
+    }),
+  )
+
+  // Anunțurile incluse în abonament: toate libere.
+  await page.route(`${API}/cars/mine/listing-quota`, (route: Route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ included: 10, used: 0, remaining: 10 }),
     }),
   )
 

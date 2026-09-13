@@ -2,71 +2,81 @@ import type { SxProps, Theme } from '@mui/material/styles'
 import { TOKENS } from '../../../constants/tokens'
 
 /**
- * Ecranul de auth trebuie să încapă într-un singur viewport, fără scroll. Viewportul critic nu e
- * telefonul, ci laptopul de 1366×768: după bara de titlu, tab-uri și bara de adrese rămân ~610px.
+ * Culorile ecranelor de autentificare: alb și albastrul platformei.
  *
- * De aici cele două trepte de spațiere de mai jos. Valorile trăiesc doar aici — dacă ajung
- * duplicate prin componente, prima ajustare de buget le desincronizează.
+ * Fondul paginii e o tentă de albastru foarte deschisă, ca albul cardului să se desprindă de el.
  */
-export const DENSE = '@media (max-height:720px)'
+export const AUTH_COLORS = {
+  page: '#EAF6FC',
+  card: TOKENS.paper,
+  input: TOKENS.surface,
+  inputHover: TOKENS.surfaceAlt,
+  border: 'rgba(26, 26, 46, 0.09)',
+  borderStrong: 'rgba(26, 26, 46, 0.18)',
+  text: TOKENS.ink,
+  textMuted: TOKENS.textMuted,
+  textSubtle: TOKENS.textSubtle,
+  primary: TOKENS.primary,
+  primaryStrong: TOKENS.primaryStrong,
+  /** Text pe butonul albastru, ca pe restul site-ului. */
+  onPrimary: '#FFFFFF',
+} as const
 
 /**
- * Peste pragul ăsta e loc și pentru textele explicative de sub opțiunile de tip cont. Sub el cad
- * primele: la 1440×900 formularul de înregistrare încape la fix, iar cele două rânduri de
- * `caption` l-ar împinge înapoi în derulare.
- */
-export const ROOMY = '@media (max-height:940px)'
-
-/** Sub pragul ăsta se ascunde trust row-ul și alert-ul trece pe varianta compactă. */
-export const SHORT = '@media (max-height:640px)'
-
-/** Sub pragul ăsta dispare și subtitlul formularului. */
-export const VERY_SHORT = '@media (max-height:560px)'
-
-export const AUTH_DENSITY = {
-  /**
-   * Padding vertical al panoului drept. Pe mobil e mai strâns din start: acolo nu există panou
-   * de brand care să ceară aer, iar taburile plus linkul „Înapoi la site" consumă deja din buget.
-   */
-  formPanel: { py: { xs: 3, md: 6 }, [DENSE]: { py: 4 } },
-  /** Titlu → subtitlu. */
-  titleToSubtitle: { mt: 1, [DENSE]: { mt: 1 } },
-  /** Blocul de header → primul câmp. */
-  headerToFields: { mb: 4, [DENSE]: { mb: 3 } },
-  /** Între câmpuri. */
-  betweenFields: { gap: 2.5, [DENSE]: { gap: 2 } },
-  /** Ultimul câmp → rândul de meta (ține-mă minte / ai uitat parola). */
-  fieldsToMeta: { mt: 2, [DENSE]: { mt: 1.5 } },
-  /** Meta row → CTA. */
-  metaToCta: { mt: 3, [DENSE]: { mt: 2 } },
-  /** CTA → divider. */
-  ctaToDivider: { mt: 3, [DENSE]: { mt: 2 } },
-  /** Divider → link secundar. */
-  dividerToAlt: { mt: 2, [DENSE]: { mt: 1.5 } },
-} satisfies Record<string, SxProps<Theme>>
-
-/**
- * 16px pe input e obligatoriu: sub atât, Safari pe iOS face zoom automat la focus și rupe layoutul.
- * Înălțimea de 52px vine din padding, nu din `height` fix, ca label-ul flotant să rămână corect.
+ * Câmpurile din design: umplute, fără contur vizibil și fără etichetă flotantă — doar placeholder.
+ * Numele accesibil vine din `aria-label`, pus de fiecare câmp.
+ *
+ * 16px pe input e obligatoriu: sub atât, Safari pe iOS face zoom la focus.
  */
 export const authInputSx: SxProps<Theme> = {
   '& .MuiOutlinedInput-root': {
     borderRadius: `${TOKENS.radius.md}px`,
-    backgroundColor: TOKENS.paper,
+    backgroundColor: AUTH_COLORS.input,
+    color: AUTH_COLORS.text,
+    transition: `background-color ${TOKENS.duration} ${TOKENS.easing}`,
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: AUTH_COLORS.border },
+    '&:hover:not(.Mui-focused):not(.Mui-error) .MuiOutlinedInput-notchedOutline': {
+      borderColor: AUTH_COLORS.borderStrong,
+    },
+    '&:hover': { backgroundColor: AUTH_COLORS.inputHover },
+    '&.Mui-focused:not(.Mui-error) .MuiOutlinedInput-notchedOutline': {
+      borderColor: AUTH_COLORS.primary,
+      borderWidth: 1,
+    },
   },
   '& .MuiOutlinedInput-input': {
-    py: 1.75,
+    py: 1.5,
     fontSize: '1rem',
   },
   '& .MuiInputBase-input::placeholder': {
-    color: TOKENS.textSubtle,
+    color: AUTH_COLORS.textSubtle,
     opacity: 1,
   },
+  '& .MuiInputAdornment-root .MuiIconButton-root': { color: AUTH_COLORS.textSubtle },
+  '& .MuiFormHelperText-root': { mx: 0.25 },
 }
 
-/** Înălțimea CTA-ului, din bugetul vertical. */
-export const AUTH_CTA_HEIGHT = 48
+/** Butonul principal: plin, albastru, pe toată lățimea. */
+export const authPrimaryButtonSx = {
+  minHeight: 48,
+  borderRadius: `${TOKENS.radius.md}px`,
+  backgroundColor: AUTH_COLORS.primary,
+  color: AUTH_COLORS.onPrimary,
+  fontWeight: 750,
+  fontSize: '0.98rem',
+  boxShadow: '0 8px 20px rgba(69, 184, 226, 0.25)',
+  '&:hover': { backgroundColor: AUTH_COLORS.primaryStrong, boxShadow: '0 8px 20px rgba(69, 184, 226, 0.3)' },
+  '&.Mui-disabled': { backgroundColor: 'rgba(92, 203, 245, 0.45)', color: AUTH_COLORS.onPrimary },
+} satisfies SxProps<Theme>
 
-/** Lățimea coloanei formularului și a conținutului ei. */
-export const AUTH_FORM_COLUMN = 480
-export const AUTH_FORM_CONTENT = 400
+/** Spațierea formularului, într-un singur loc. */
+export const AUTH_DENSITY = {
+  headerToFields: { mb: 3.5 },
+  betweenFields: { gap: 1.75 },
+  fieldsToMeta: { mt: 2 },
+  metaToCta: { mt: 3 },
+  ctaToFooter: { mt: 3 },
+} satisfies Record<string, SxProps<Theme>>
+
+/** Lățimea conținutului formularului, în jumătatea dreaptă a cardului. */
+export const AUTH_FORM_CONTENT = 440

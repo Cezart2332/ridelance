@@ -19,6 +19,7 @@ import { CompanyFormationAdminPanel } from '../../components/pfa/CompanyFormatio
 import { PfaFiscalSettingsPanel } from '../../components/pfa/PfaFiscalSettingsPanel'
 import { OnboardingSectionsPanel } from '../../components/dashboard/sections/admin/OnboardingSectionsPanel'
 import { UberImportAdminPanel } from '../../components/dashboard/sections/admin/UberImportAdminPanel'
+import { DocumentRejectDialog } from '../../components/dashboard/sections/admin/DocumentRejectDialog'
 import type { DocumentSummary } from '../../services/document.service'
 import { onboardingService, type OnboardingState } from '../../services/onboarding.service'
 import type { AdminPfaDetail } from '../../services/adminOverview.service'
@@ -64,7 +65,7 @@ export interface PfaDetailViewProps {
   onOpenChat: () => void
   onApprove: () => void
   onReject: () => void
-  onUpdateDocStatus: (id: string, status: 'Verified' | 'Rejected') => void
+  onUpdateDocStatus: (id: string, status: 'Verified' | 'Rejected', note?: string) => void
   onOpenDocument: (doc: DocumentSummary) => void
   onDownload: (doc: DocumentSummary) => void
   onSnackbar: (message: string, severity: 'success' | 'error') => void
@@ -136,6 +137,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
   } = props
 
   const [tab, tabsElement] = usePageTabs({ tabs: TABS })
+  const [docRejectTarget, setDocRejectTarget] = useState<DocumentSummary | null>(null)
 
   const isPending = pfa.status.toLowerCase() === 'pending'
   const isSuspended = (detail?.accountStatus ?? pfa.accountStatus).toLowerCase().includes('suspend')
@@ -304,9 +306,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
                             onApprove={
                               isPendingDoc ? () => onUpdateDocStatus(doc.id, 'Verified') : undefined
                             }
-                            onReject={
-                              isPendingDoc ? () => onUpdateDocStatus(doc.id, 'Rejected') : undefined
-                            }
+                            onReject={isPendingDoc ? () => setDocRejectTarget(doc) : undefined}
                             onOpen={() => onOpenDocument(doc)}
                             onDownload={() => onDownload(doc)}
                             updatingStatus={statusUpdatingDocId === doc.id}
@@ -489,6 +489,16 @@ export function PfaDetailView(props: PfaDetailViewProps) {
           </Box>
         </Stack>
       </Box>
+
+      <DocumentRejectDialog
+        key={docRejectTarget?.id ?? 'none'}
+        document={docRejectTarget}
+        onClose={() => setDocRejectTarget(null)}
+        onConfirm={(doc, note) => {
+          onUpdateDocStatus(doc.id, 'Rejected', note)
+          setDocRejectTarget(null)
+        }}
+      />
     </ThemeProvider>
   )
 }

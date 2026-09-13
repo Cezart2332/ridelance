@@ -7,6 +7,7 @@ import type {
   OnboardingState,
   OnboardingStep,
 } from '../../services/onboarding.service'
+import { formatDocumentCategory } from '../../utils/formatters'
 import { categoriesOfStep } from './documentRequirements'
 
 /**
@@ -87,6 +88,9 @@ function rejectionOf(
   eligibility: EligibilityProfile | null,
 ): string | null {
   if (step.key === 'eligibility' && eligibility) {
+    if (eligibility.adminReviewNote) {
+      return eligibility.adminReviewNote
+    }
     if (eligibility.status === 'Ineligible' || eligibility.status === 'NeedsReview') {
       return eligibility.reasons.join(' ') || 'Datele de eligibilitate necesită o verificare.'
     }
@@ -103,7 +107,18 @@ function rejectionOf(
 
   const rejectedDoc = newestPerCategory(documents, categoriesOfStep(step.key)).find(isRejectedDoc)
   if (rejectedDoc) {
-    return rejectedDoc.aiSummary ?? 'Un document a fost respins. Reîncarcă-l mai jos.'
+    // Motivul scris de om bate verdictul automat; eticheta documentului spune care anume e.
+    const why = rejectedDoc.reviewNote ?? rejectedDoc.aiSummary
+    const label = formatDocumentCategory(rejectedDoc.category)
+    return why
+      ? `„${label}” a fost respins: ${why}`
+      : `„${label}” a fost respins. Reîncarcă-l mai jos.`
+  }
+
+  // Pasul fiscal se respinge pe pachetul de semnături, al cărui motiv nu stă în starea de pas:
+  // îl arată ecranul pasului, deci trimitem acolo în loc să pretindem că e vorba de documente.
+  if (step.key === 'fiscal') {
+    return 'Echipa a întors pasul cu observații. Deschide pasul ca să le vezi.'
   }
 
   return null
@@ -137,7 +152,9 @@ export function toStepView(
     return {
       ...base,
       state: 'rejected',
-      reason: rejectionOf(step, state, documents, eligibility) ?? 'Documentele au fost respinse. Reîncarcă-le mai jos.',
+      reason:
+        rejectionOf(step, state, documents, eligibility) ??
+        'Echipa a întors pasul cu observații. Deschide pasul și verifică documentele marcate.',
     }
   }
 

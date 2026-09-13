@@ -34,15 +34,10 @@ const LISTING_STATE: Record<string, { label: string; tone: StatusTone }> = {
   Archived: { label: 'Scoasă din flotă', tone: 'neutral' },
 }
 
-/** Doar stările care cer ceva. „Aprobat" și „nu necesită plată" nu se anunță. */
+/** Doar stările care cer ceva. „Aprobat" nu se anunță. Plata nu mai există: anunțurile sunt în abonament. */
 const APPROVAL_WARNINGS: Record<string, { label: string; tone: StatusTone }> = {
   Pending: { label: 'În validare', tone: 'warning' },
   Rejected: { label: 'Respins', tone: 'error' },
-}
-
-const PAYMENT_WARNINGS: Record<string, { label: string; tone: StatusTone }> = {
-  Pending: { label: 'Necesită plată', tone: 'warning' },
-  PastDue: { label: 'Plată eșuată', tone: 'error' },
 }
 
 const formatDate = (iso: string): string =>
@@ -75,7 +70,8 @@ export interface FleetCarCardProps {
   onEdit: () => void
   onTogglePublish: () => void
   onArchive: () => void
-  onPay: () => void
+  /** Toate anunțurile incluse în abonament sunt folosite: un anunț nepublicat nu mai poate fi publicat. */
+  noListingsLeft?: boolean
 }
 
 export function FleetCarCard({
@@ -88,7 +84,7 @@ export function FleetCarCard({
   onEdit,
   onTogglePublish,
   onArchive,
-  onPay,
+  noListingsLeft = false,
 }: FleetCarCardProps) {
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
   const closeMenu = () => setMenuAnchor(null)
@@ -99,7 +95,6 @@ export function FleetCarCard({
 
   const listing = LISTING_STATE[car.listingStatus] ?? { label: car.listingStatus, tone: 'neutral' as StatusTone }
   const approval = APPROVAL_WARNINGS[car.approvalStatus]
-  const payment = PAYMENT_WARNINGS[car.paymentStatus]
   const archived = car.listingStatus === 'Archived'
   const cover = getCarImageUrl(car.images[0]?.imageUrl)
   const identity = [car.details?.plateNumber, formatKm(car.details?.mileage)].filter(Boolean).join(' · ')
@@ -150,7 +145,6 @@ export function FleetCarCard({
         >
           <StatusChip label={listing.label} tone={listing.tone} size="sm" />
           {approval && <StatusChip label={approval.label} tone={approval.tone} size="sm" />}
-          {payment && <StatusChip label={payment.label} tone={payment.tone} size="sm" />}
         </Stack>
 
         <IconButton
@@ -276,12 +270,20 @@ export function FleetCarCard({
         >
           Vezi anunțul public
         </MenuItem>
-        <MenuItem onClick={run(onTogglePublish)} disabled={archived} sx={menuItemSx}>
-          {car.listingStatus === 'Published' ? 'Retrage anunțul' : 'Publică anunțul'}
-        </MenuItem>
-        {payment && (
-          <MenuItem onClick={run(onPay)} sx={menuItemSx}>
-            Plătește anunțul
+        {car.listingStatus === 'Published' ? (
+          <MenuItem onClick={run(onTogglePublish)} sx={menuItemSx}>
+            Retrage anunțul
+          </MenuItem>
+        ) : (
+          <MenuItem onClick={run(onTogglePublish)} disabled={archived || noListingsLeft} sx={menuItemSx}>
+            <Box>
+              Publică anunțul
+              {noListingsLeft && !archived && (
+                <Typography sx={{ fontSize: '0.74rem', fontWeight: 600, color: DASHBOARD_TOKENS.textMuted }}>
+                  Nu mai ai anunțuri libere în abonament
+                </Typography>
+              )}
+            </Box>
           </MenuItem>
         )}
         <MenuItem onClick={run(onArchive)} disabled={archived} sx={{ ...menuItemSx, color: DASHBOARD_TOKENS.stateError }}>

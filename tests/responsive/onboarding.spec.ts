@@ -442,3 +442,162 @@ test.describe('pasul 2 — am deja PFA', () => {
     await expect(page).toHaveURL(/\/onboarding\/pfa/)
   })
 })
+
+test.describe('finalul onboardingului', () => {
+  /**
+   * Partea șoferului e gata peste tot, iar validarea e la noi. Înainte nu exista un ecran pentru
+   * asta: revenirea îl trimitea în primul pas nevalidat, deci onboardingul părea că nu se termină.
+   */
+  const doneState = {
+    ...onboardingState,
+    currentStep: null,
+    allSectionsValidated: false,
+    steps: steps.map((step) =>
+      step.key === 'eligibility'
+        ? step
+        : step.key === 'arr'
+          ? {
+              ...step,
+              status: 'InProgress',
+              state: 'rejected',
+              userPartDone: false,
+              blockReason: null,
+            }
+          : { ...step, status: 'AwaitingValidation', state: 'pending_admin', userPartDone: true, blockReason: null },
+    ),
+  }
+
+  test('fără nimic de completat, rădăcina duce la ecranul de final', async ({ page }, testInfo) => {
+    await stubBackend(page, [], { state: { ...doneState, steps: doneState.steps.map((s) => s.key === 'arr' ? { ...s, status: 'AwaitingValidation', state: 'pending_admin', userPartDone: true } : s) } })
+    await page.goto('/onboarding', { waitUntil: 'networkidle' })
+
+    await expect(page).toHaveURL(/\/onboarding\/finalizat/)
+    await expect(page.getByRole('heading', { name: 'Ai terminat onboardingul' })).toBeVisible()
+    await expect(page.getByText('Un om din echipa RIDElance se uită acum')).toBeVisible()
+    await expect(page.getByText('1 din 6 pași validați')).toBeVisible()
+    // Captura după tranziția de intrare a pasului, nu în mijlocul ei.
+    await page.waitForTimeout(800)
+
+    const dir = `test-results/responsive/screenshots/${testInfo.project.name}`
+    mkdirSync(dir, { recursive: true })
+    await page.screenshot({ path: `${dir}/onboarding-finalizat.png`, fullPage: true })
+  })
+
+  test('un pas respins are drum direct înapoi în el', async ({ page }) => {
+    await stubBackend(page, [], { state: doneState })
+    await page.goto('/onboarding/finalizat', { waitUntil: 'networkidle' })
+
+    await page.getByRole('button', { name: 'Corectează' }).click()
+    await expect(page).toHaveURL(/\/onboarding\/arr/)
+  })
+})
+
+test.describe('pas respins', () => {
+  /**
+   * Bugul raportat: cercul roșu cu semnul exclamării apărea fără nicio explicație. Motivul era
+   * doar într-un tooltip, iar documentele respinse din admin nici nu aveau unul.
+   */
+  test('motivul se vede pe rândul pasului și deasupra lui', async ({ page }, testInfo) => {
+    const mobile = testInfo.project.name === 'mobile'
+    const rejectedCazier = {
+      ...uploadedDoc('CazierJudiciar', 'cazier.pdf'),
+      status: 'Rejected',
+      aiSummary: null,
+      reviewNote: 'Cazierul e mai vechi de 6 luni.',
+    }
+    const arrRejected = {
+      ...onboardingState,
+      currentStep: 'arr',
+      steps: steps.map((step) =>
+        step.key === 'arr' ? { ...step, status: 'InProgress', state: 'rejected', userPartDone: false } : step,
+      ),
+    }
+
+    await page.setViewportSize(mobile ? { width: 375, height: 812 } : { width: 1440, height: 1000 })
+    await stubBackend(page, [rejectedCazier], { state: arrRejected })
+    await page.goto('/onboarding/arr', { waitUntil: 'networkidle' })
+
+    // Banner deasupra pasului, pe orice dispozitiv.
+    await expect(page.getByRole('alert').filter({ hasText: 'Cazierul e mai vechi de 6 luni.' })).toBeVisible()
+
+    if (!mobile) {
+      // Și pe rândul din rail, fără hover.
+      await expect(
+        page.getByRole('listitem').filter({ hasText: 'Autorizație transport' }).getByText(/Cazierul e mai vechi/),
+      ).toBeVisible()
+    }
+
+    await page.waitForTimeout(800)
+    const dir = `test-results/responsive/screenshots/${testInfo.project.name}`
+    mkdirSync(dir, { recursive: true })
+    await page.screenshot({ path: `${dir}/onboarding-pas-respins.png` })
+  })
+})
+
+test.describe('pasul fiscal — banca conectată', () => {
+  /**
+   * După autorizarea la bancă, ecranul arăta din nou lista de bănci. Acum arată banca, contul
+   * citit de la ea și ultimele mișcări.
+   */
+  test('arată banca, contul și ultimele tranzacții', async ({ page }, testInfo) => {
+    const fiscalActive = {
+      ...onboardingState,
+      currentStep: 'fiscal',
+      steps: steps.map((step) =>
+        step.key === 'fiscal' ? { ...step, status: 'InProgress', state: 'in_progress' } : step,
+      ),
+    }
+    await stubBackend(page, [], { state: fiscalActive })
+
+    const origin = async (route: Route) => (await route.request().headerValue('origin')) ?? '*'
+    const json = (body: unknown) => async (route: Route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': await origin(route), 'Access-Control-Allow-Credentials': 'true' },
+        body: JSON.stringify(body),
+      })
+
+    await page.route(
+      `${API}/bank/connection`,
+      json({
+        status: 'Linked',
+        institutionId: 'BT',
+        institutionName: 'Banca Transilvania',
+        institutionLogo: null,
+        consentExpiresAtUtc: '2026-12-10T00:00:00Z',
+        linkedAtUtc: '2026-09-12T10:00:00Z',
+        lastSyncedAtUtc: '2026-09-13T08:00:00Z',
+        errorMessage: null,
+        accounts: [{ ibanMasked: 'RO49 **** **** 1234', currency: 'RON', ownerName: 'POPESCU ION PFA' }],
+        linkExpiresAtUtc: null,
+      }),
+    )
+    await page.route(
+      `${API}/bank/transactions**`,
+      json({
+        items: [
+          { id: 't1', bookingDate: '2026-09-12', amount: 1250.5, currency: 'RON', counterpartyName: 'Bolt Operations', remittanceInfo: null, isPending: false },
+          { id: 't2', bookingDate: '2026-09-11', amount: -320, currency: 'RON', counterpartyName: 'OMV Petrom', remittanceInfo: null, isPending: false },
+        ],
+        totalCount: 2,
+        page: 1,
+        pageSize: 5,
+        totalIn: 1250.5,
+        totalOut: -320,
+      }),
+    )
+
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await page.goto('/onboarding/step2?pas=conectare_banca', { waitUntil: 'networkidle' })
+
+    await expect(page.getByText('Banca Transilvania')).toBeVisible()
+    await expect(page.getByText('RO49 **** **** 1234')).toBeVisible()
+    await expect(page.getByText('Bolt Operations')).toBeVisible()
+    await expect(page.getByPlaceholder(/caută/i)).toHaveCount(0)
+
+    const dir = `test-results/responsive/screenshots/${testInfo.project.name}`
+    mkdirSync(dir, { recursive: true })
+    await page.screenshot({ path: `${dir}/onboarding-banca-conectata.png`, fullPage: true })
+  })
+})

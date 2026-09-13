@@ -52,6 +52,13 @@ export function OnboardingRedirect() {
   const { steps, state, loading } = useOnboarding()
 
   if (loading) return null
+
+  // Partea șoferului e gata peste tot, iar validarea e la noi: ecranul de final, nu primul pas
+  // încă nevalidat — acolo n-ar mai avea nimic de făcut.
+  if (state && state.currentStep === null && steps.length > 0 && !state.allSectionsValidated) {
+    return <Navigate to="/onboarding/finalizat" replace />
+  }
+
   const target = firstActionableStep(steps, state?.currentStep)
   return <Navigate to={target?.path ?? '/onboarding/eligibility'} replace />
 }
@@ -264,6 +271,11 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
   }
 
   const currentStepView = steps.find((s) => s.key === activeKey) ?? null
+  // Ecranul de final nu ține de niciun pas: altfel antetul ar scrie „Pasul 1 din 6" peste el.
+  const onDoneScreen = location.pathname === '/onboarding/finalizat'
+  const stepPosition = onDoneScreen
+    ? Math.max(steps.length, 1)
+    : Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)
 
 
   return (
@@ -279,9 +291,9 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
         activeKey={activeKey}
         onSelectStep={goToStep}
         estimate={stepEstimate(currentStepView)}
-        stepPosition={Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)}
+        stepPosition={stepPosition}
         stepTotal={Math.max(steps.length, 1)}
-        stepLabel={steps.find((s) => s.key === activeKey)?.label ?? null}
+        stepLabel={onDoneScreen ? 'În verificare' : (steps.find((s) => s.key === activeKey)?.label ?? null)}
         canGoBack={micro.canGoBack}
         onBack={micro.back}
         onLogout={handleLogout}
@@ -330,6 +342,16 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
                     Doar pe ecranul principal al pasului. Sub-paginile lui — datele personale,
                     sediul, consimțământul de la înființarea PFA — au titlul lor și ar fi ajuns cu
                     două antete unul peste altul. */}
+                {/* Pasul respins spune de ce, sus, pe orice ecran al lui — nu doar în rail, unde pe
+                    telefon lista e ascunsă într-un sheet. */}
+                {currentStepView?.state === 'rejected' && currentStepView.reason && (
+                  <Alert severity="error" sx={{ mb: 2, maxWidth: 720, mx: 'auto' }}>
+                    <Box component="span" sx={{ fontWeight: 700 }}>
+                      Pasul „{currentStepView.label}” are observații:
+                    </Box>{' '}
+                    {currentStepView.reason}
+                  </Alert>
+                )}
                 <StepIntroCard
                   stepKey={location.pathname === currentStepView?.path ? activeKey : null}
                   position={Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)}

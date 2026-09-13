@@ -2,8 +2,7 @@ import { Stack, Typography } from '@mui/material'
 import LockRoundedIcon from '@mui/icons-material/LockRounded'
 import PublicRoundedIcon from '@mui/icons-material/PublicRounded'
 import VerifiedUserRoundedIcon from '@mui/icons-material/VerifiedUserRounded'
-import { SHORT } from './authShellSx'
-import { TOKENS } from '../../../constants/tokens'
+import { AUTH_COLORS, AUTH_DENSITY } from './authShellSx'
 
 const ITEMS = [
   { Icon: LockRoundedIcon, label: 'Conexiune securizată' },
@@ -11,29 +10,25 @@ const ITEMS = [
   { Icon: VerifiedUserRoundedIcon, label: 'Acces protejat' },
 ]
 
-/**
- * O singură apariție, sub CTA. Dacă bugetul vertical se epuizează, rândul ăsta se taie primul —
- * de aici `display: none` sub 640px înălțime, în loc de scroll.
- */
+/** Rândul de sub buton, cu linia de separare deasupra. */
 export function TrustRow() {
   return (
     <Stack
       direction="row"
       spacing={2}
       sx={{
-        mt: 3,
-        pt: 2.25,
-        borderTop: `1px solid ${TOKENS.border}`,
+        ...AUTH_DENSITY.ctaToFooter,
+        pt: 2.5,
+        borderTop: `1px solid ${AUTH_COLORS.border}`,
         flexWrap: 'wrap',
         justifyContent: 'center',
         rowGap: 1,
-        [SHORT]: { display: 'none' },
       }}
     >
       {ITEMS.map(({ Icon, label }) => (
         <Stack key={label} direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-          <Icon sx={{ fontSize: 16, color: TOKENS.textMuted }} />
-          <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>
+          <Icon sx={{ fontSize: 15, color: AUTH_COLORS.textSubtle }} />
+          <Typography variant="caption" sx={{ color: AUTH_COLORS.textSubtle }}>
             {label}
           </Typography>
         </Stack>

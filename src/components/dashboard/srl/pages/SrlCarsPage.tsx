@@ -28,6 +28,8 @@ import { Amount, PageHeader, Panel, pillToggleSx, StatCard, StatusChip } from '.
 import { CarDocumentsDialog } from '../CarDocumentsDialog'
 import { CarEditDialog } from '../CarEditDialog'
 import { FleetCarCard } from '../FleetCarCard'
+import { ListingQuotaCard } from '../ListingQuotaCard'
+import { getErrorMessage } from '../../../../utils/errorHandler'
 import { NewRentalDialog } from '../NewRentalDialog'
 
 /**
@@ -92,6 +94,8 @@ export function SrlCarsPage() {
   const [leads, setLeads] = useState<CarLead[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  /** Câte anunțuri active include abonamentul. Cele folosite se numără din `cars`, ca să se schimbe odată cu ele. */
+  const [includedListings, setIncludedListings] = useState<number | null>(null)
 
   const [tab, setTab] = useState<TabId>('masini')
   const [filter, setFilter] = useState<FilterId>('toate')
@@ -107,12 +111,18 @@ export function SrlCarsPage() {
   useEffect(() => {
     let cancelled = false
 
-    Promise.all([carsService.getMyCars(), rentalsService.getOverview(), carsService.getLeads()])
-      .then(([myCars, overview, myLeads]) => {
+    Promise.all([
+      carsService.getMyCars(),
+      rentalsService.getOverview(),
+      carsService.getLeads(),
+      carsService.getListingQuota(),
+    ])
+      .then(([myCars, overview, myLeads, quota]) => {
         if (cancelled) return
         setCars(myCars)
         setRentals(overview.rentals)
         setLeads(myLeads)
+        setIncludedListings(quota.included)
         setError(null)
       })
       .catch(() => {
@@ -154,8 +164,9 @@ export function SrlCarsPage() {
     try {
       const next = await carsService.toggleActive(id)
       setCars((prev) => prev.map((car) => (car.id === id ? { ...car, ...next } : car)))
-    } catch {
-      setError('Nu am putut schimba starea anunțului.')
+    } catch (err) {
+      // Serverul spune de ce: de obicei, că s-au terminat anunțurile incluse în abonament.
+      setError(getErrorMessage(err, 'Nu am putut schimba starea anunțului.'))
     }
   }
 
@@ -171,14 +182,6 @@ export function SrlCarsPage() {
     }
   }
 
-  const pay = async (id: string) => {
-    try {
-      await carsService.redirectToListingPayment(id)
-    } catch {
-      setError('Nu am putut porni plata pentru anunț.')
-    }
-  }
-
   const setLeadStatus = async (id: string, label: string) => {
     try {
       await carsService.updateLeadStatus(id, LEAD_STATUS_TO_API[label] ?? label)
@@ -190,7 +193,12 @@ export function SrlCarsPage() {
 
   const rentedCount = cars.filter((car) => currentRentals.has(car.id)).length
   const publishedCount = cars.filter((car) => car.active).length
-  const needsPayment = cars.filter((car) => car.paymentStatus === 'Pending' || car.paymentStatus === 'PastDue').length
+  // Aceeași regulă ca pe server (`ListingQuota`): un loc e ocupat de un anunț publicat.
+  const usedListings = cars.filter((car) => car.listingStatus === 'Published').length
+  const quota =
+    includedListings === null
+      ? null
+      : { included: includedListings, used: usedListings, remaining: Math.max(0, includedListings - usedListings) }
 
   const documentsCar = cars.find((car) => car.id === documentsFor?.carId) ?? null
   const documentsIntent = documentsFor ? DOCUMENT_INTENTS[documentsFor.intent] : null
@@ -235,7 +243,7 @@ export function SrlCarsPage() {
         <StatCard label="Mașini în flotă" value={String(cars.length)} helper={`${publishedCount} vizibile în piață`} variant="accent" />
         <StatCard label="Închiriate acum" value={String(rentedCount)} helper={`${cars.length - rentedCount} libere`} />
         <StatCard label="Solicitări" value={String(leads.length)} helper={`${leads.filter((l) => l.status === 'Nou').length} necitite`} />
-        <StatCard label="Anunțuri de plătit" value={String(needsPayment)} helper={needsPayment > 0 ? 'nu se văd până la plată' : 'toate la zi'} />
+        {quota && <ListingQuotaCard quota={quota} />}
       </Box>
 
       <Tabs
@@ -326,7 +334,7 @@ export function SrlCarsPage() {
                   onEdit={() => setEditing(car)}
                   onTogglePublish={() => void togglePublish(car.id)}
                   onArchive={() => void archive(car.id)}
-                  onPay={() => void pay(car.id)}
+                  noListingsLeft={quota?.remaining === 0}
                 />
               ))}
             </Box>

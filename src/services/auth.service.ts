@@ -31,28 +31,20 @@ export const authService = {
   },
 
   /**
-   * Numele se cere la înregistrare fiindcă onboardingul — singurul loc care îl putea deduce din
-   * buletin prin OCR — există doar pentru PFA. Un cont `CarPoster` nu trece prin el niciodată,
-   * deci fără câmpul ăsta ar rămâne fără nume.
-   *
-   * Backendul primește `FirstName`/`LastName` separat, deci tăiem la primul spațiu: restul intră
-   * în nume de familie, ca numele compuse să nu se piardă.
+   * Numele nu se mai cere la înregistrare: backendul îl are opțional (RL-05). Telefonul se salvează
+   * pe cont așa cum l-a scris omul; forma `+407…` se calculează la trimiterea SMS-ului.
    */
   register: async (
     email: string,
     password: string,
     role: string = 'Client',
-    fullName?: string
+    phoneNumber?: string
   ): Promise<string> => {
-    const trimmed = fullName?.trim()
-    const separator = trimmed ? trimmed.indexOf(' ') : -1
-
     const response = await authAxios.post<string>('/users/register', {
       email,
       password,
       role,
-      firstName: separator === -1 ? trimmed : trimmed!.slice(0, separator),
-      lastName: separator === -1 ? undefined : trimmed!.slice(separator + 1).trim(),
+      phoneNumber: phoneNumber?.trim() || undefined,
     })
     return response.data
   },

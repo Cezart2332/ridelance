@@ -1,12 +1,14 @@
 // Logourile de partener trăiesc în `src/assets`, nu în `public`: așa trec prin build, primesc hash
 // și nu pot rămâne în cache-ul browserului cu o versiune veche după o înlocuire.
-import ace from '../assets/partners/ace.png'
 import asigurari from '../assets/partners/asigurari.png'
+import constalaris from '../assets/partners/constalaris.png'
 import consulto from '../assets/partners/consulto.png'
 import eldrive from '../assets/partners/eldrive.png'
+import fiscallink from '../assets/partners/Fiscallink.svg'
 import mol from '../assets/partners/mol.png'
 import oblio from '../assets/partners/oblio.png'
 import simplifi from '../assets/partners/simplifi.png'
+import smartfintech from '../assets/partners/smartfintech.png'
 import { sortByPartnerOrder } from './benefits'
 
 export interface Partner {
@@ -68,14 +70,6 @@ const partnersUnordered: Partner[] = [
     website: 'https://www.asigurari.ro',
   },
   {
-    slug: 'ace',
-    name: 'ACE',
-    image: ace,
-    tagline: 'Partener RIDElance.',
-    description:
-      'ACE este unul dintre partenerii RIDElance. Detaliile complete despre beneficiile colaborării vor fi publicate în curând.',
-  },
-  {
     slug: 'mol',
     name: 'MOL',
     image: mol,
@@ -108,9 +102,25 @@ const partnersUnordered: Partner[] = [
       'Beneficiu dedicat șoferilor și flotelor RIDElance care folosesc mașini electrice. În platformă vezi direct stațiile incluse în ofertă, tariful de zi și de noapte, plus acces rapid către navigare.',
     website: 'https://eldrive.eu',
   },
+  {
+    slug: 'smart-fintech',
+    name: 'Smart Fintech',
+    image: smartfintech,
+    website: 'https://www.smartfintech.eu',
+  },
+  {
+    slug: 'fiscallink',
+    name: 'FiscalLink',
+    image: fiscallink,
+  },
+  {
+    slug: 'constalaris',
+    name: 'Constalaris',
+    image: constalaris,
+  },
 ]
 
-/** Ordinea e cea din Beneficii; ACE, care n-are pagină de beneficii, rămâne la coadă. */
+/** Ordinea e cea din Beneficii; cine n-are pagină de beneficii rămâne la coadă. */
 export const partners: Partner[] = sortByPartnerOrder(partnersUnordered)
 
 export const getPartnerBySlug = (slug: string) =>

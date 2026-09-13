@@ -1,4 +1,5 @@
 import { api } from '../lib/axios'
+import type { ListingQuota } from './cars.service'
 
 /** Severitatea e decisă pe server, ca UI-ul să nu-și inventeze propriile praguri. */
 export type AttentionSeverity = 'danger' | 'warning' | 'info'
@@ -33,6 +34,8 @@ export interface SrlHome {
   scheduledMaintenance: number
   attention: AttentionItem[]
   activeRentalRows: ActiveRentalRow[]
+  /** Anunțurile active incluse în abonament și câte mai sunt libere. */
+  listingQuota: ListingQuota
 }
 
 export const srlHomeService = {

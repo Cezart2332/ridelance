@@ -12,6 +12,8 @@ export interface DocumentSummary {
   /** Prevalidarea AI: None | Queued | Processing | Passed | Failed | Error */
   aiStatus: string;
   aiSummary?: string | null;
+  /** Motivul respingerii scris de admin/contabil, cât timp documentul e respins. */
+  reviewNote?: string | null;
   aiDetectedType?: string | null;
   aiExtractedExpiresAtUtc?: string | null;
   /**
@@ -179,8 +181,9 @@ export const documentService = {
   },
 
   /** Update the status of a document (Admin/Contabil only) */
-  updateStatus: async (id: string, status: string): Promise<void> => {
-    await api.put(`/documents/${id}/status`, { status });
+  /** `note` e motivul respingerii — ajunge la șofer lângă document și în notificare. */
+  updateStatus: async (id: string, status: string, note?: string | null): Promise<void> => {
+    await api.put(`/documents/${id}/status`, { status, note: note ?? null });
   },
 
   /** Câmpurile extrase prin OCR pentru un document (ecran de confirmare). */

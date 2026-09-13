@@ -16,6 +16,7 @@ import {
 } from '../../../../services/srlHome.service'
 import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardTheme'
 import { Amount, PageHeader, Panel, SplitBar, StatCard, StatusChip } from '../../ui'
+import { ListingQuotaCard } from '../ListingQuotaCard'
 
 /**
  * Acasă în dashboardul SRL.
@@ -67,8 +68,8 @@ export function SrlHomePage() {
     return (
       <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
         <Skeleton variant="rounded" height={72} />
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(5, 1fr)' }, gap: 2 }}>
-          {[0, 1, 2, 3, 4].map((i) => (
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
             <Skeleton key={i} variant="rounded" height={110} />
           ))}
         </Box>
@@ -120,13 +121,15 @@ export function SrlHomePage() {
         }
       />
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(5, 1fr)' }, gap: 2 }}>
+      {/* Șase cifre: trei pe rând pe desktop, ca fiecare să aibă loc de etichetă. */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, gap: 2 }}>
         <StatCard
           label="Mașini în flotă"
           value={String(data.fleetSize)}
           helper={`${data.publishedCount} publicate`}
           variant="accent"
         />
+        <ListingQuotaCard quota={data.listingQuota} />
         <StatCard
           label="Închirieri active"
           value={String(data.activeRentals)}

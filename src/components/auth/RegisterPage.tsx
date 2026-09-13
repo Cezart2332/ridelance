@@ -1,20 +1,19 @@
 import { useState, type FormEvent } from 'react'
 import { Box, Button, FormHelperText, Link, Stack, TextField } from '@mui/material'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
-import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import { AuthLayout } from './shell/AuthLayout'
 import { AuthFormHeader } from './shell/AuthFormHeader'
-import { AuthTabs } from './shell/AuthTabs'
-import { AuthAltAction } from './shell/AuthAltAction'
+import { AuthSwitchLink } from './shell/AuthSwitchLink'
 import { PasswordField } from './shell/PasswordField'
 import { TrustRow } from './shell/TrustRow'
-import { AUTH_CTA_HEIGHT, AUTH_DENSITY, authInputSx } from './shell/authShellSx'
+import { AUTH_DENSITY, authInputSx, authPrimaryButtonSx } from './shell/authShellSx'
 import { AccountTypeChoice, type AccountType } from './shell/AccountTypeChoice'
 import {
   mapAuthError,
   validateEmail,
-  validateFullName,
   validateNewPassword,
+  validatePasswordConfirmation,
+  validatePhone,
   validateTerms,
   type AuthErrorInfo,
 } from './authValidation'
@@ -24,49 +23,48 @@ import { ROUTES } from '../../constants/routes'
 import { SRL_ROOT } from '../../config/srlNavigation'
 
 interface RegisterPageProps {
-  /**
-   * `CarPoster` e servit de `/inregistrare/anunturi`. Restul lumii ajunge pe `/inregistrare` și
-   * primește rolul implicit — tipul de PFA și restul datelor se decid în onboarding, nu aici.
-   */
+  /** `CarPoster` e servit de `/inregistrare/anunturi`; ruta doar preselectează SRL. */
   role?: 'Client' | 'CarPoster'
 }
 
+const EMPTY_TOUCHED = { email: false, phone: false, password: false, confirmation: false, terms: false }
+
+/**
+ * Contul nou: tipul (PFA sau SRL), email, telefon și parola de două ori. Fără nume — la PFA vine
+ * din buletin, în onboarding. Emailul și telefonul se confirmă cu coduri imediat după creare, pe
+ * pagina de confirmare.
+ */
 export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
   const navigate = useNavigate()
-  // Ruta doar preselectează; alegerea rămâne a utilizatorului, vizibilă în formular.
   const [accountType, setAccountType] = useState<AccountType>(role)
-  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmation, setConfirmation] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
-  const [touched, setTouched] = useState({ fullName: false, email: false, password: false, terms: false })
+  const [touched, setTouched] = useState(EMPTY_TOUCHED)
   const [serverError, setServerError] = useState<AuthErrorInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  /**
-   * Numele se cere doar pentru conturile de flotă.
-   *
-   * PFA-ul încarcă buletinul la primul pas al onboardingului, iar OCR-ul completează numele pe
-   * cont de acolo (`ExtractedFieldApplier.ApplyToUserAsync`). Cerut și aici, ar fi al doilea loc
-   * din care poate veni aceeași informație — adică exact sursa de adevăr dublă pe care fluxul
-   * document-first o desființează. Flota nu are buletin de încărcat, deci acolo rămâne.
-   */
-  const needsFullName = accountType === 'CarPoster'
+  const touch = (field: keyof typeof EMPTY_TOUCHED) => () =>
+    setTouched((current) => ({ ...current, [field]: true }))
 
-  const fullNameError = needsFullName && touched.fullName ? validateFullName(fullName) : null
   const emailError = touched.email ? validateEmail(email) : null
+  const phoneError = touched.phone ? validatePhone(phone) : null
   const passwordError = touched.password ? validateNewPassword(password) : null
+  const confirmationError = touched.confirmation ? validatePasswordConfirmation(password, confirmation) : null
   const termsError = touched.terms ? validateTerms(termsAccepted) : null
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    setTouched({ fullName: true, email: true, password: true, terms: true })
+    setTouched({ email: true, phone: true, password: true, confirmation: true, terms: true })
     setServerError(null)
 
     if (
-      (needsFullName && validateFullName(fullName)) ||
       validateEmail(email) ||
+      validatePhone(phone) ||
       validateNewPassword(password) ||
+      validatePasswordConfirmation(password, confirmation) ||
       validateTerms(termsAccepted)
     ) {
       return
@@ -75,18 +73,18 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
     setIsLoading(true)
     try {
       const trimmedEmail = email.trim()
-      await authService.register(
-        trimmedEmail,
-        password,
-        accountType,
-        needsFullName ? fullName : undefined,
-      )
+      const trimmedPhone = phone.trim()
+      await authService.register(trimmedEmail, password, accountType, trimmedPhone)
       await authService.login(trimmedEmail, password)
-      // Confirmarea adresei se cere înaintea oricărui alt pas. Destinația de după ea se decide
-      // aici, unde se știe tipul de cont: flota merge în dashboardul ei, PFA-ul în onboarding.
+      // Confirmarea se cere înaintea oricărui alt pas. Destinația de după ea se decide aici, unde
+      // se știe tipul de cont: SRL-ul merge în dashboardul lui, PFA-ul în onboarding.
       navigate(ROUTES.verifyEmail, {
         replace: true,
-        state: { email: trimmedEmail, next: accountType === 'CarPoster' ? SRL_ROOT : '/app' },
+        state: {
+          email: trimmedEmail,
+          phone: trimmedPhone,
+          next: accountType === 'CarPoster' ? SRL_ROOT : '/app',
+        },
       })
     } catch (err) {
       setServerError(mapAuthError(err, 'register'))
@@ -98,8 +96,8 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
   return (
     <AuthLayout>
       <AuthFormHeader
-        title="Creează-ți contul."
-        subtitle="Alege tipul de cont, iar RIDElance îți pregătește experiența potrivită."
+        title="Creează-ți contul"
+        subtitle={<AuthSwitchLink prompt="Ai deja un cont?" linkLabel="Autentifică-te" to={ROUTES.login} />}
         error={
           serverError && (
             <>
@@ -117,58 +115,73 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
         }
       />
 
-      <AuthTabs active="register" />
-
       <Box component="form" onSubmit={handleSubmit} noValidate>
         <Stack sx={AUTH_DENSITY.betweenFields}>
           <AccountTypeChoice value={accountType} onChange={setAccountType} disabled={isLoading} />
 
-          {needsFullName && (
-            <TextField
-              fullWidth
-              required
-              autoFocus
-              label="Nume complet"
-              placeholder="Numele tău"
-              autoComplete="name"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-              onBlur={() => setTouched((current) => ({ ...current, fullName: true }))}
-              disabled={isLoading}
-              error={Boolean(fullNameError)}
-              helperText={fullNameError}
-              sx={authInputSx}
-            />
-          )}
-
           <TextField
             fullWidth
-            required
-            autoFocus={!needsFullName}
+            hiddenLabel
+            autoFocus
             type="email"
-            label="Email"
-            placeholder="nume@email.ro"
+            placeholder="Email"
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            onBlur={() => setTouched((current) => ({ ...current, email: true }))}
+            onBlur={touch('email')}
             disabled={isLoading}
             error={Boolean(emailError)}
             helperText={emailError}
+            slotProps={{ htmlInput: { 'aria-label': 'Email', 'aria-required': true } }}
             sx={authInputSx}
           />
 
-          <PasswordField
-            label="Parolă"
-            placeholder="Introdu parola"
-            autoComplete="new-password"
-            value={password}
-            onChange={setPassword}
-            onBlur={() => setTouched((current) => ({ ...current, password: true }))}
+          <TextField
+            fullWidth
+            hiddenLabel
+            type="tel"
+            placeholder="Telefon"
+            autoComplete="tel"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            onBlur={touch('phone')}
             disabled={isLoading}
-            error={passwordError}
-            showStrength
+            error={Boolean(phoneError)}
+            helperText={phoneError}
+            slotProps={{ htmlInput: { 'aria-label': 'Telefon', 'aria-required': true, inputMode: 'tel' } }}
+            sx={authInputSx}
           />
+
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+              gap: 1.75,
+              alignItems: 'start',
+            }}
+          >
+            <PasswordField
+              label="Parolă"
+              placeholder="Parola"
+              autoComplete="new-password"
+              value={password}
+              onChange={setPassword}
+              onBlur={touch('password')}
+              disabled={isLoading}
+              error={passwordError}
+              showStrength
+            />
+            <PasswordField
+              label="Repetă parola"
+              placeholder="Repetă parola"
+              autoComplete="new-password"
+              value={confirmation}
+              onChange={setConfirmation}
+              onBlur={touch('confirmation')}
+              disabled={isLoading}
+              error={confirmationError}
+            />
+          </Box>
         </Stack>
 
         <Box sx={AUTH_DENSITY.fieldsToMeta}>
@@ -187,17 +200,13 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
         <Button
           type="submit"
           variant="contained"
-          size="large"
           fullWidth
           loading={isLoading}
-          endIcon={<ArrowForwardRoundedIcon />}
-          sx={{ ...AUTH_DENSITY.metaToCta, minHeight: AUTH_CTA_HEIGHT }}
+          sx={{ ...AUTH_DENSITY.metaToCta, ...authPrimaryButtonSx }}
         >
           Creează contul
         </Button>
       </Box>
-
-      <AuthAltAction prompt="Ai deja un cont?" linkLabel="Autentifică-te" to={ROUTES.login} />
 
       <TrustRow />
     </AuthLayout>

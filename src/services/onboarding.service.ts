@@ -128,6 +128,8 @@ export interface OnboardingStep {
   state: OnboardingStepState
   /** Cine face tranziția finală a pasului. Un pas `admin` nu poate fi închis de șofer. */
   ownedBy: 'user' | 'admin'
+  /** Șoferul și-a făcut partea din pas, indiferent dacă adminul a validat-o. */
+  userPartDone: boolean
   /** Ce mai lipsește. Populat doar pe pasul curent; `null` în rest. */
   checklist: OnboardingChecklistItem[] | null
 }
@@ -145,6 +147,8 @@ export interface EligibilityProfile {
   driverCertificateExpiresOn: string | null
   status: EligibilityStatus
   reasons: string[]
+  /** Motivul respingerii din admin, cât timp respingerea e în vigoare. */
+  adminReviewNote?: string | null
 }
 
 export interface EligibilityPayload {
@@ -669,6 +673,16 @@ export const onboardingService = {
   async getForRegistration(pfaId: string): Promise<OnboardingState> {
     const { data } = await api.get<OnboardingState>(`/pfa-registrations/${pfaId}/onboarding`)
     return data
+  },
+
+  /** Adminul validează pasul de eligibilitate. Singurul lucru care îl bifează. */
+  async validateEligibility(pfaId: string): Promise<void> {
+    await api.put(`/pfa-registrations/${pfaId}/eligibility/validate`)
+  },
+
+  /** Adminul respinge pasul de eligibilitate, cu motiv obligatoriu. */
+  async rejectEligibility(pfaId: string, note: string): Promise<void> {
+    await api.put(`/pfa-registrations/${pfaId}/eligibility/reject`, { note })
   },
 
   /** Adminul validează o secțiune. */

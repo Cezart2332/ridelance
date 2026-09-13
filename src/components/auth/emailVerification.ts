@@ -18,3 +18,13 @@ export const EMAIL_VERIFICATION = {
   codeLength: 6,
   resendCooldownSeconds: 60,
 } as const
+
+/**
+ * Același comutator pentru telefon, cu valorile din `Domain/Users/PhoneVerification.cs`: pauza
+ * dintre SMS-uri e mai lungă, fiindcă fiecare costă. Nici aici serverul nu impune confirmarea.
+ */
+export const PHONE_VERIFICATION = {
+  required: false,
+  codeLength: 6,
+  resendCooldownSeconds: 90,
+} as const

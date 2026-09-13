@@ -1,18 +1,15 @@
 import { useState, type FormEvent } from 'react'
 import { Box, Button, Checkbox, FormControlLabel, Link, Stack, TextField, Typography } from '@mui/material'
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom'
-import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import { AuthLayout } from './shell/AuthLayout'
 import { AuthFormHeader } from './shell/AuthFormHeader'
-import { AuthTabs } from './shell/AuthTabs'
-import { AuthAltAction } from './shell/AuthAltAction'
+import { AuthSwitchLink } from './shell/AuthSwitchLink'
 import { PasswordField } from './shell/PasswordField'
 import { TrustRow } from './shell/TrustRow'
-import { AUTH_CTA_HEIGHT, AUTH_DENSITY, authInputSx } from './shell/authShellSx'
+import { AUTH_COLORS, AUTH_DENSITY, authInputSx, authPrimaryButtonSx } from './shell/authShellSx'
 import { mapAuthError, validateEmail, validateLoginPassword, type AuthErrorInfo } from './authValidation'
 import { authService } from '../../services/auth.service'
 import { ROUTES } from '../../constants/routes'
-import { TOKENS } from '../../constants/tokens'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -50,22 +47,19 @@ export default function LoginPage() {
   return (
     <AuthLayout>
       <AuthFormHeader
-        title="Bine ai revenit."
-        subtitle="Autentifică-te pentru a continua în RIDElance."
+        title="Bine ai revenit"
+        subtitle={<AuthSwitchLink prompt="Nu ai încă un cont?" linkLabel="Creează cont" to={ROUTES.register} />}
         error={serverError?.message}
       />
-
-      <AuthTabs active="login" />
 
       <Box component="form" onSubmit={handleSubmit} noValidate>
         <Stack sx={AUTH_DENSITY.betweenFields}>
           <TextField
             fullWidth
-            required
+            hiddenLabel
             autoFocus
             type="email"
-            label="Email"
-            placeholder="nume@email.ro"
+            placeholder="Email"
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -73,12 +67,13 @@ export default function LoginPage() {
             disabled={isLoading}
             error={Boolean(emailError)}
             helperText={emailError}
+            slotProps={{ htmlInput: { 'aria-label': 'Email', 'aria-required': true } }}
             sx={authInputSx}
           />
 
           <PasswordField
             label="Parolă"
-            placeholder="Introdu parola"
+            placeholder="Parola"
             autoComplete="current-password"
             value={password}
             onChange={setPassword}
@@ -97,9 +92,15 @@ export default function LoginPage() {
             devine reală când `Login.cs` primește un `MaxAge` variabil.
           */}
           <FormControlLabel
-            control={<Checkbox size="small" disabled={isLoading} />}
+            control={
+              <Checkbox
+                size="small"
+                disabled={isLoading}
+                sx={{ p: 0.25, color: AUTH_COLORS.textSubtle, '&.Mui-checked': { color: AUTH_COLORS.primary } }}
+              />
+            }
             label={
-              <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
+              <Typography variant="body2" sx={{ color: AUTH_COLORS.textMuted }}>
                 Ține-mă minte
               </Typography>
             }
@@ -110,7 +111,7 @@ export default function LoginPage() {
             to={ROUTES.forgotPassword}
             underline="hover"
             variant="body2"
-            sx={{ fontWeight: 600 }}
+            sx={{ fontWeight: 600, color: AUTH_COLORS.primary }}
           >
             Ai uitat parola?
           </Link>
@@ -119,17 +120,13 @@ export default function LoginPage() {
         <Button
           type="submit"
           variant="contained"
-          size="large"
           fullWidth
           loading={isLoading}
-          endIcon={<ArrowForwardRoundedIcon />}
-          sx={{ ...AUTH_DENSITY.metaToCta, minHeight: AUTH_CTA_HEIGHT }}
+          sx={{ ...AUTH_DENSITY.metaToCta, ...authPrimaryButtonSx }}
         >
           Intră în RIDElance
         </Button>
       </Box>
-
-      <AuthAltAction prompt="Nu ai încă un cont?" linkLabel="Creează cont" to={ROUTES.register} />
 
       <TrustRow />
     </AuthLayout>

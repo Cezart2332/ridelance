@@ -88,11 +88,107 @@ function BankConnectSlot({ context }: { context: MicroStepContext }) {
   const { refresh } = useOnboarding()
   const connection = (context.resources.bank as BankConnectionDto | null | undefined) ?? null
 
+  // Conectat: banca, contul și mișcările. Panoul de conectare nu mai are ce face aici — pentru
+  // o conexiune legată arăta din nou lista de bănci, de parcă nu s-ar fi întâmplat nimic.
+  if (connection?.status === 'Linked') {
+    return (
+      <>
+        <BankConnectedCard connection={connection} />
+        <BankFirstTransactions />
+      </>
+    )
+  }
+
+  return <BankConnectPanel connection={connection} onRefresh={refresh} hideHeader />
+}
+
+const formatMoney = (value: number) =>
+  new Intl.NumberFormat('ro-RO', { style: 'currency', currency: 'RON', maximumFractionDigits: 2 }).format(value)
+
+const formatDate = (iso: string | null) =>
+  iso ? new Date(iso).toLocaleDateString('ro-RO', { day: '2-digit', month: 'long', year: 'numeric' }) : '—'
+
+/** Banca la care e conectat omul, cu contul citit de la ea. */
+function BankConnectedCard({ connection }: { connection: BankConnectionDto }) {
+  const rows: { label: string; value: string }[] = [
+    ...connection.accounts.flatMap((account, index) => {
+      const suffix = connection.accounts.length > 1 ? ` ${index + 1}` : ''
+      return [
+        { label: `IBAN${suffix}`, value: account.ibanMasked ?? '—' },
+        { label: `Titular${suffix}`, value: account.ownerName ?? '—' },
+        { label: `Monedă${suffix}`, value: account.currency ?? '—' },
+      ]
+    }),
+    { label: 'Conectat la', value: formatDate(connection.linkedAtUtc) },
+    { label: 'Ultima sincronizare', value: formatDate(connection.lastSyncedAtUtc) },
+    { label: 'Acordul expiră la', value: formatDate(connection.consentExpiresAtUtc) },
+  ]
+
   return (
-    <>
-      <BankConnectPanel connection={connection} onRefresh={refresh} hideHeader />
-      {connection?.status === 'Linked' && <BankFirstTransactions />}
-    </>
+    <Box
+      sx={{
+        borderRadius: `${TOKENS.radius.md}px`,
+        border: `1px solid ${TOKENS.border}`,
+        overflow: 'hidden',
+      }}
+    >
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{ alignItems: 'center', px: 2, py: 1.5, borderBottom: `1px solid ${TOKENS.border}` }}
+      >
+        {connection.institutionLogo ? (
+          <Box
+            component="img"
+            src={connection.institutionLogo}
+            alt=""
+            sx={{ width: 40, height: 40, objectFit: 'contain', borderRadius: `${TOKENS.radius.sm}px`, flexShrink: 0 }}
+          />
+        ) : (
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: `${TOKENS.radius.sm}px`,
+              display: 'grid',
+              placeItems: 'center',
+              bgcolor: TOKENS.surface,
+              fontWeight: 800,
+              color: TOKENS.ink,
+              flexShrink: 0,
+            }}
+          >
+            {connection.institutionName.slice(0, 2).toUpperCase()}
+          </Box>
+        )}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={{ fontWeight: 800, color: TOKENS.ink }}>{connection.institutionName}</Typography>
+          <Typography sx={{ fontSize: '0.8rem', color: TOKENS.success, fontWeight: 700 }}>
+            Cont conectat prin open banking
+          </Typography>
+        </Box>
+      </Stack>
+
+      {rows.map((row) => (
+        <Stack
+          key={row.label}
+          direction="row"
+          spacing={2}
+          sx={{
+            justifyContent: 'space-between',
+            px: 2,
+            py: 1,
+            borderBottom: `1px solid ${TOKENS.border}`,
+            '&:last-of-type': { borderBottom: 'none' },
+          }}
+        >
+          <Typography sx={{ fontSize: '0.85rem', color: TOKENS.textMuted }}>{row.label}</Typography>
+          <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: TOKENS.ink, textAlign: 'right', wordBreak: 'break-word' }}>
+            {row.value}
+          </Typography>
+        </Stack>
+      ))}
+    </Box>
   )
 }
 
@@ -109,6 +205,7 @@ function BankConnectSlot({ context }: { context: MicroStepContext }) {
  */
 function BankFirstTransactions() {
   const [transactions, setTransactions] = useState<BankTransactionDto[] | null>(null)
+  const [totals, setTotals] = useState<{ in: number; out: number; count: number } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -116,7 +213,9 @@ function BankFirstTransactions() {
     bankService
       .getTransactions({ page: 1, pageSize: 5 })
       .then((page) => {
-        if (!cancelled) setTransactions(page.items)
+        if (cancelled) return
+        setTransactions(page.items)
+        setTotals({ in: page.totalIn, out: page.totalOut, count: page.totalCount })
       })
       .catch(() => {
         if (!cancelled) setTransactions([])
@@ -154,6 +253,30 @@ function BankFirstTransactions() {
           ? 'ULTIMELE MIȘCĂRI CITITE DIN CONT'
           : 'CONT CONECTAT'}
       </Typography>
+
+      {totals && totals.count > 0 && (
+        <Stack
+          direction="row"
+          spacing={3}
+          sx={{ px: 2, py: 1.25, borderBottom: `1px solid ${TOKENS.border}`, flexWrap: 'wrap', rowGap: 0.5 }}
+        >
+          <Typography sx={{ fontSize: '0.8rem', color: TOKENS.textMuted }}>
+            {totals.count} {totals.count === 1 ? 'tranzacție citită' : 'tranzacții citite'}
+          </Typography>
+          <Typography sx={{ fontSize: '0.8rem', color: TOKENS.textMuted }}>
+            Intrări{' '}
+            <Box component="span" sx={{ fontWeight: 800, color: TOKENS.success }}>
+              {formatMoney(totals.in)}
+            </Box>
+          </Typography>
+          <Typography sx={{ fontSize: '0.8rem', color: TOKENS.textMuted }}>
+            Ieșiri{' '}
+            <Box component="span" sx={{ fontWeight: 800, color: TOKENS.ink }}>
+              {formatMoney(Math.abs(totals.out))}
+            </Box>
+          </Typography>
+        </Stack>
+      )}
 
       {transactions.length === 0 ? (
         <Typography sx={{ px: 2, py: 1.5, fontSize: '0.85rem', color: TOKENS.textMuted }}>

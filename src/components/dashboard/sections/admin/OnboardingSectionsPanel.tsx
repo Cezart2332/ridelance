@@ -28,6 +28,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ONBOARDING_SECTIONS } from '../../../../constants/documentSections'
 import { TOKENS } from '../../../../constants/tokens'
 import AdminExtractedFields from './AdminExtractedFields'
+import { DocumentRejectDialog } from './DocumentRejectDialog'
 import type { DocumentSummary } from '../../../../services/document.service'
 import {
   onboardingService,
@@ -46,7 +47,7 @@ interface OnboardingSectionsPanelProps {
   statusUpdatingDocId: string | null
   openingId: string | null
   downloadingId: string | null
-  onUpdateDocStatus: (id: string, status: 'Verified' | 'Rejected') => void
+  onUpdateDocStatus: (id: string, status: 'Verified' | 'Rejected', note?: string) => void
   onOpenDocument: (doc: DocumentSummary) => void
   onDownload: (doc: DocumentSummary) => void
   onOpenPfaApproveDialog: () => void
@@ -77,6 +78,9 @@ function sectionStatusColor(status: OnboardingSectionStatus): string {
   }
 }
 
+/** Cheia pseudo-secțiunii de eligibilitate: n-are rând de secțiune pe server, are endpoint propriu. */
+const ELIGIBILITY_KEY = 'Eligibility'
+
 /** Sub-secțiune de documente care se validează de admin (cheie de secțiune server). */
 interface AdminStepSection {
   key: string
@@ -99,7 +103,8 @@ const ADMIN_STEPS: AdminStep[] = [
   {
     key: 'eligibility', order: 0, label: 'Eligibilitate',
     categories: ['Buletin', 'CarteIdentitate', 'PermisConducere', 'AtestatSofer', 'AtestatTransport'],
-    guidedNote: 'Documentele de eligibilitate (CI, permis, atestat). Verificarea automată + de admin se face la nivel de document. Avizele medical și psihologic se cer la pasul ARR.',
+    guidedNote: 'Documentele de eligibilitate (CI, permis, atestat). Datele extrase sunt doar ajutor: pasul se bifează la client abia când îl validezi aici. Avizele medical și psihologic se cer la pasul ARR.',
+    sections: [{ key: ELIGIBILITY_KEY }],
   },
   {
     key: 'pfa', order: 1, label: 'PFA',
@@ -135,8 +140,27 @@ function pfaSectionStatus(pfaStatus: string): OnboardingSectionStatus {
   return 'AwaitingValidation'
 }
 
-/** Statusul de afișat pe capul pasului: agregat din secțiunile server (dacă are), altfel din pasul derivat pe server. */
+/** Starea fină a pasului, derivată pe server → vocabularul panoului. */
+const STEP_STATE_TO_SECTION: Record<string, OnboardingSectionStatus> = {
+  completed: 'Validated',
+  pending_admin: 'AwaitingValidation',
+  rejected: 'Rejected',
+  locked: 'Locked',
+  in_progress: 'InProgress',
+  available: 'InProgress',
+}
+
+/**
+ * Statusul de afișat pe capul pasului.
+ *
+ * Vine din pasul derivat pe server — același pe care îl vede clientul. Înainte se agrega din
+ * secțiuni, iar cele două surse puteau să nu se potrivească: adminul vedea „Validat" pe o
+ * secțiune, clientul vedea pasul încă deschis. Agregarea din secțiuni rămâne doar ca rezervă.
+ */
 function aggregateStepStatus(group: AdminStep, state: OnboardingState | null, pfaStatus: string): OnboardingSectionStatus {
+  const serverState = state?.steps.find((s) => s.key === group.key)?.state
+  if (serverState && STEP_STATE_TO_SECTION[serverState]) return STEP_STATE_TO_SECTION[serverState]
+
   const statuses: OnboardingSectionStatus[] = []
   if (group.pfa) statuses.push(pfaSectionStatus(pfaStatus))
   for (const s of group.sections ?? []) {
@@ -199,10 +223,12 @@ const EXISTING_ACCOUNT_LABELS: Record<string, string> = {
 function PlatformAccountsReview({
   pfaId,
   busy,
+  onDone,
   onSnackbar,
 }: {
   pfaId: string
   busy: boolean
+  onDone: () => Promise<void>
   onSnackbar: (message: string, severity: 'success' | 'error') => void
 }) {
   const [platforms, setPlatforms] = useState<PlatformOnboardingState | null>(null)
@@ -229,12 +255,32 @@ function PlatformAccountsReview({
     }
   }, [pfaId])
 
+  /** Validarea pasului: toate conturile alese devin active. Asta bifează pasul la client. */
+  const validateAll = async () => {
+    setSaving('all')
+    try {
+      for (const account of (platforms?.platforms ?? []).filter((p) => p.isSelectedByUser)) {
+        if (account.onboardingStatus !== 'Active') {
+          await onboardingService.advancePlatformOnboarding(pfaId, account.provider, 'Active')
+        }
+      }
+      setPlatforms(await onboardingService.getPlatformOnboardingForRegistration(pfaId))
+      onSnackbar('Pasul Uber & Bolt a fost validat. Conturile sunt active.', 'success')
+      await onDone()
+    } catch {
+      onSnackbar('Nu am putut valida pasul. Încearcă din nou.', 'error')
+    } finally {
+      setSaving(null)
+    }
+  }
+
   const advance = async (provider: PlatformProvider, status: PlatformOnboardingStatus) => {
     setSaving(provider)
     try {
       await onboardingService.advancePlatformOnboarding(pfaId, provider, status)
       setPlatforms(await onboardingService.getPlatformOnboardingForRegistration(pfaId))
       onSnackbar(`Contul ${provider} a fost mutat pe „${status}".`, 'success')
+      await onDone()
     } catch {
       onSnackbar(`Nu am putut schimba statusul contului ${provider}.`, 'error')
     } finally {
@@ -335,6 +381,23 @@ function PlatformAccountsReview({
             </Box>
           )
         })}
+
+        {chosen.some((p) => p.onboardingStatus !== 'Active') ? (
+          <Box>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<CheckCircleRoundedIcon />}
+              onClick={() => void validateAll()}
+              disabled={busy || saving !== null}
+              sx={{ fontWeight: 700, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: 'none' }}
+            >
+              Validează secțiunea (activează conturile)
+            </Button>
+          </Box>
+        ) : (
+          <Alert severity="success">Secțiunea e validată, conturile sunt active.</Alert>
+        )}
 
         <Stack direction="row" spacing={1}>
           <Chip
@@ -587,6 +650,8 @@ export function OnboardingSectionsPanel({
   const [confirmValidate, setConfirmValidate] = useState<string | null>(null)
   const [rejectDialog, setRejectDialog] = useState<string | null>(null)
   const [rejectNote, setRejectNote] = useState('')
+  /** Documentul pe care îl respingi acum — motivul ajunge la client lângă document. */
+  const [docRejectTarget, setDocRejectTarget] = useState<DocumentSummary | null>(null)
 
   const loadState = useCallback(async () => {
     try {
@@ -625,7 +690,8 @@ export function OnboardingSectionsPanel({
   const handleValidate = async (key: string) => {
     setActionBusy(true)
     try {
-      await onboardingService.validateSection(pfaId, key)
+      if (key === ELIGIBILITY_KEY) await onboardingService.validateEligibility(pfaId)
+      else await onboardingService.validateSection(pfaId, key)
       onSnackbar('Secțiunea a fost validată. Următorul pas al clientului este deblocat.', 'success')
       setConfirmValidate(null)
       await loadState()
@@ -640,7 +706,8 @@ export function OnboardingSectionsPanel({
     if (!rejectNote.trim()) return
     setActionBusy(true)
     try {
-      await onboardingService.rejectSection(pfaId, key, rejectNote.trim())
+      if (key === ELIGIBILITY_KEY) await onboardingService.rejectEligibility(pfaId, rejectNote.trim())
+      else await onboardingService.rejectSection(pfaId, key, rejectNote.trim())
       onSnackbar('Secțiunea a fost respinsă. Clientul a fost notificat.', 'success')
       setRejectDialog(null)
       setRejectNote('')
@@ -696,7 +763,7 @@ export function OnboardingSectionsPanel({
           </IconButton>
           <IconButton
             size="small"
-            onClick={() => onUpdateDocStatus(doc.id, 'Rejected')}
+            onClick={() => setDocRejectTarget(doc)}
             disabled={statusUpdatingDocId === doc.id}
             sx={{ color: '#ef4444', '&:hover': { bgcolor: alpha('#ef4444', 0.1) } }}
             title="Respinge document"
@@ -847,14 +914,19 @@ export function OnboardingSectionsPanel({
 
               {/* Pasul 5 — conturile Uber/Bolt și avansul lor manual */}
               {group.key === 'platforms' && (
-                <PlatformAccountsReview pfaId={pfaId} busy={actionBusy} onSnackbar={onSnackbar} />
+                <PlatformAccountsReview pfaId={pfaId} busy={actionBusy} onDone={loadState} onSnackbar={onSnackbar} />
               )}
 
               {/* Secțiuni de documente care se validează (declanșează înrolarea) */}
               {group.sections?.map((sec) => {
                 const secState = state?.sections.find((s) => s.key === sec.key)
-                const secStatus: OnboardingSectionStatus = secState?.status ?? 'Locked'
-                const canAct = secStatus === 'AwaitingValidation' || secStatus === 'InProgress' || secStatus === 'Rejected'
+                // Eligibilitatea n-are rând de secțiune: statusul ei e al pasului.
+                const secStatus: OnboardingSectionStatus =
+                  sec.key === ELIGIBILITY_KEY ? status : (secState?.status ?? 'Locked')
+                // Validarea e verdictul adminului, deci se poate da din orice stare care nu e deja
+                // validată — inclusiv „Blocat": rândul secțiunii apare doar când îl validezi, iar
+                // fără buton pe „Blocat" pasul ARR sau vehiculul nu se putea închide deloc.
+                const canAct = secStatus !== 'Validated'
 
                 return (
                   <Box key={sec.key} sx={{ px: 2.5, pb: 2 }}>
@@ -878,7 +950,9 @@ export function OnboardingSectionsPanel({
                         <Button
                           size="small"
                           variant="contained"
-                          disabled={actionBusy || secStatus === 'Rejected'}
+                          // Pe o secțiune respinsă, validarea rămâne activă: clientul a corectat
+                          // documentele, iar respingerea n-are altă ieșire.
+                          disabled={actionBusy}
                           startIcon={<CheckCircleRoundedIcon />}
                           onClick={() => setConfirmValidate(sec.key)}
                           sx={{ fontWeight: 700, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: 'none' }}
@@ -925,7 +999,7 @@ export function OnboardingSectionsPanel({
         <DialogTitle sx={{ fontWeight: 800 }}>Validează secțiunea</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
-            Secțiunea va fi marcată ca validată și clientului i se deblochează pasul următor.
+            Secțiunea va fi marcată ca validată, iar clientul vede pasul bifat. Când toți pașii sunt validați, e trimis la alegerea abonamentului.
           </Typography>
           {confirmValidate && (() => {
             const cfg = ONBOARDING_SECTIONS.find((s) => s.key === confirmValidate)
@@ -950,6 +1024,17 @@ export function OnboardingSectionsPanel({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Respingere document cu motiv — fără el, clientul vedea doar un cerc roșu */}
+      <DocumentRejectDialog
+        key={docRejectTarget?.id ?? 'none'}
+        document={docRejectTarget}
+        onClose={() => setDocRejectTarget(null)}
+        onConfirm={(doc, note) => {
+          onUpdateDocStatus(doc.id, 'Rejected', note)
+          setDocRejectTarget(null)
+        }}
+      />
 
       {/* Respingere secțiune cu motiv */}
       <Dialog open={!!rejectDialog} onClose={() => setRejectDialog(null)} maxWidth="xs" fullWidth>
