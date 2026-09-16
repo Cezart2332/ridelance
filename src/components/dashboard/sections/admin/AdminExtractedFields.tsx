@@ -116,9 +116,9 @@ export default function AdminExtractedFields({ documentId }: { documentId: strin
   }
 
   return (
-    <Accordion disableGutters sx={{ mx: 2, mb: 2, border: 0, bgcolor: 'grey.50', '&:before': { display: 'none' } }}>
+    <Accordion defaultExpanded disableGutters sx={{ mx: 2, mb: 2, border: 0, bgcolor: 'grey.50', '&:before': { display: 'none' } }}>
       <AccordionSummary expandIcon={<ExpandMoreRoundedIcon fontSize="small" />}>
-        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>Date extrase automat · {fields.length} câmpuri</Typography>
+        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>Date citite din document · {fields.length} câmpuri</Typography>
       </AccordionSummary>
       <AccordionDetails>
         {fields.map((f) => (

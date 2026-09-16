@@ -1,35 +1,47 @@
 import { useEffect, useState } from 'react'
-import { Box, ButtonBase, Link, Typography } from '@mui/material'
+import { Box, ButtonBase, Link } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { Link as RouterLink } from 'react-router-dom'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import { TOKENS } from '../../../constants/tokens'
+import login1 from '../../../assets/auth/login-1.webp'
+import login2 from '../../../assets/auth/login-2.webp'
+import login3 from '../../../assets/auth/login-3.webp'
 
 interface AuthSlide {
-  /** Imaginea de fundal. Cât lipsește, slide-ul are un gradient din culorile platformei. */
-  image: string | null
-  caption: [string, string]
+  image: string
+  /** Textul din imagine, pentru cititoarele de ecran — pe slide e desenat în poză. */
+  caption: string
 }
 
 /**
- * Cele trei slide-uri din stânga cardului.
+ * Cele trei slide-uri din stânga cardului: platforma, PFA, SRL și flote.
  *
- * Imaginile vin separat, în formatul panoului (portret, cam 4:5). Până atunci `image` e `null`,
- * iar fiecare slide are un gradient propriu, ca trecerea de la unul la altul să se vadă.
+ * Titlurile sunt desenate în imagini, deci peste ele nu se mai pune text și nici vălul întunecat
+ * care îi dădea contrast. Imaginile sunt portret (2:3) și se așază întregi (`contain`) pe un fundal
+ * cu nuanța marginilor lor: tăiate (`cover`) își pierdeau fie ilustrația, fie titlul, după cât de
+ * înalt iese formularul din dreapta.
  */
 const SLIDES: AuthSlide[] = [
-  { image: null, caption: ['Tot businessul tău de ridesharing.', 'Într-un singur loc.'] },
-  { image: null, caption: ['Pentru șoferi PFA și flote.', 'Simplu, dintr-un singur dashboard.'] },
-  { image: null, caption: ['Independent.', 'Dar nu singur.'] },
+  { image: login1, caption: 'Platforma ta. Tot businessul tău. Într-un singur loc.' },
+  { image: login2, caption: 'Pentru PFA. PFA-ul tău. Mai simplu, zi de zi.' },
+  { image: login3, caption: 'Pentru SRL și flote. Flota ta. Totul sub control.' },
 ]
 
-const PLACEHOLDER_GRADIENTS = [
-  `linear-gradient(165deg, #C9EEFC 0%, ${TOKENS.primary} 55%, ${TOKENS.primaryStrong} 100%)`,
-  `linear-gradient(200deg, #DDF4FD 0%, #8BDCF8 45%, ${TOKENS.primaryStrong} 100%)`,
-  `linear-gradient(145deg, #B5E7FA 0%, ${TOKENS.primary} 50%, #2E9FCB 100%)`,
-]
+/** Nuanțele marginilor imaginilor, de sus în jos. */
+const SLIDE_BACKGROUND = 'linear-gradient(180deg, #DEF1FE 0%, #F6FBFE 50%, #F2F9FE 72%, #D8EFFE 100%)'
 
 const INTERVAL_MS = 6000
+
+/** Ascuns vizual, citit de cititoarele de ecran. */
+const visuallyHidden = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  whiteSpace: 'nowrap',
+} as const
 
 export function AuthSlider() {
   const [active, setActive] = useState(0)
@@ -49,7 +61,7 @@ export function AuthSlider() {
         position: 'relative',
         overflow: 'hidden',
         borderRadius: `${TOKENS.radius.xl}px`,
-        backgroundColor: TOKENS.primary,
+        background: SLIDE_BACKGROUND,
         minHeight: 560,
         height: '100%',
       }}
@@ -64,22 +76,20 @@ export function AuthSlider() {
             opacity: index === active ? 1 : 0,
             transform: index === active ? 'scale(1)' : 'scale(1.04)',
             transition: `opacity 700ms ${TOKENS.easing}, transform 1200ms ${TOKENS.easing}`,
-            background: slide.image
-              ? `center / cover no-repeat url(${slide.image})`
-              : PLACEHOLDER_GRADIENTS[index % PLACEHOLDER_GRADIENTS.length],
           }}
-        />
+        >
+          {/* Marginile pozei se topesc în fundal: altfel laturile lăsate libere de `contain` se
+              vedeau ca două benzi. */}
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              background: `center / contain no-repeat url(${slide.image})`,
+              maskImage: 'linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%)',
+            }}
+          />
+        </Box>
       ))}
-
-      {/* Văl jos, sub text: pe o fotografie deschisă, albul n-ar mai avea contrast. */}
-      <Box
-        aria-hidden
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          background: `linear-gradient(180deg, transparent 0%, transparent 50%, ${alpha('#0E5A7A', 0.55)} 100%)`,
-        }}
-      />
 
       <Link
         component={RouterLink}
@@ -109,33 +119,12 @@ export function AuthSlider() {
         <ArrowForwardRoundedIcon sx={{ fontSize: 16 }} />
       </Link>
 
-      <Box sx={{ position: 'absolute', left: 0, right: 0, bottom: 36, px: 4, textAlign: 'center' }}>
-        <Box sx={{ position: 'relative', minHeight: 64 }}>
-          {SLIDES.map((slide, index) => (
-            <Typography
-              key={index}
-              aria-hidden={index !== active}
-              sx={{
-                position: index === 0 ? 'relative' : 'absolute',
-                inset: 0,
-                color: '#fff',
-                fontSize: { md: '1.45rem', lg: '1.6rem' },
-                fontWeight: 500,
-                lineHeight: 1.3,
-                letterSpacing: '-0.01em',
-                opacity: index === active ? 1 : 0,
-                transform: index === active ? 'translateY(0)' : 'translateY(8px)',
-                transition: `opacity 500ms ${TOKENS.easing}, transform 500ms ${TOKENS.easing}`,
-              }}
-            >
-              {slide.caption[0]}
-              <br />
-              {slide.caption[1]}
-            </Typography>
-          ))}
-        </Box>
+      <Box component="p" sx={visuallyHidden}>
+        {SLIDES[active].caption}
+      </Box>
 
-        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
+      <Box sx={{ position: 'absolute', left: 0, right: 0, bottom: 16, textAlign: 'center' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
           {SLIDES.map((_, index) => (
             <ButtonBase
               key={index}
@@ -149,7 +138,7 @@ export function AuthSlider() {
                   width: index === active ? 36 : 22,
                   height: 4,
                   borderRadius: `${TOKENS.radius.full}px`,
-                  backgroundColor: index === active ? '#fff' : alpha('#fff', 0.35),
+                  backgroundColor: index === active ? TOKENS.primaryStrong : alpha(TOKENS.ink, 0.15),
                   transition: `all 300ms ${TOKENS.easing}`,
                 }}
               />
