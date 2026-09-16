@@ -203,6 +203,18 @@ export type BankDeclarationStatus = 'Pending' | 'Verified' | 'Rejected'
 export type OblioIntegrationStatus = 'Pending' | 'Requested' | 'Active'
 export type SignaturePacketStatus = 'Draft' | 'Sent' | 'Completed' | 'Rejected'
 
+/** Pasul 3 văzut din admin: ce a făcut clientul, cu IBAN-ul declarat întreg. */
+export interface AdminFiscalReview {
+  step2: Step2State
+  bank: {
+    status: string
+    institutionName: string | null
+    linkedAtUtc: string | null
+    accounts: { ibanMasked: string | null; currency: string | null; ownerName: string | null }[]
+  } | null
+  declaredIban: string | null
+}
+
 export interface Step2State {
   pfaRegistrationId: string | null
   fiscal: { vatAnswer: VatAnswer; vatRegistrationKind: VatRegistrationKind } | null
@@ -686,6 +698,12 @@ export const onboardingService = {
   },
 
   /** Adminul validează o secțiune. */
+  /** Ce a făcut clientul la pasul 3 — TVA, banca legată, Oblio — ca adminul să vadă ce validează. */
+  async getFiscalReview(pfaId: string): Promise<AdminFiscalReview> {
+    const { data } = await api.get<AdminFiscalReview>(`/admin/onboarding/${pfaId}/steps/fiscal`)
+    return data
+  },
+
   async validateSection(pfaId: string, key: string): Promise<void> {
     await api.put(`/pfa-registrations/${pfaId}/sections/${key}/validate`)
   },

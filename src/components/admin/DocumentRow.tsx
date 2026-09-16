@@ -3,7 +3,7 @@ import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
-import { CircularProgress, IconButton, ListItem, ListItemIcon, Stack, Tooltip, Typography } from '@mui/material'
+import { Alert, Box, Button, CircularProgress, IconButton, ListItem, Stack, Tooltip, Typography } from '@mui/material'
 
 import { StatusBadge, type StatusTone } from './StatusBadge'
 
@@ -40,7 +40,7 @@ function RowAction({
  * Un rând de document: nume, meta pe rândul doi, status, apoi aceleași acțiuni ca în panoul de
  * onboarding — bifă, respinge, deschide, descarcă — vizibile direct, nu ascunse într-un „⋯".
  *
- * Bifa și X-ul apar doar cât documentul e în așteptare; pe unul deja verificat n-ar avea ce face.
+ * Acțiunile sunt etichetate explicit și se așază pe un rând separat pe ecrane înguste.
  */
 export function DocumentRow({
   name,
@@ -54,12 +54,14 @@ export function DocumentRow({
   updatingStatus = false,
   opening = false,
   downloading = false,
+  reviewNote,
+  extra,
 }: {
   name: string
   meta: string
   statusLabel?: string
   statusTone?: StatusTone
-  /** Lipsesc când documentul nu mai e în așteptare. */
+  /** Disponibilitatea este decisă de ecranul care folosește rândul. */
   onApprove?: () => void
   onReject?: () => void
   onOpen: () => void
@@ -67,45 +69,24 @@ export function DocumentRow({
   updatingStatus?: boolean
   opening?: boolean
   downloading?: boolean
+  reviewNote?: string | null
+  extra?: React.ReactNode
 }) {
   return (
-    <ListItem divider sx={{ minHeight: 44, px: 2.5, gap: 1.5 }}>
-      <ListItemIcon sx={{ minWidth: 0 }}>
-        <InsertDriveFileOutlinedIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
-      </ListItemIcon>
-
-      <Stack sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="subtitle2" noWrap>
-          {name}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" noWrap>
-          {meta}
-        </Typography>
+    <ListItem component="article" aria-label={name} divider sx={{ display: 'block', px: { xs: 2, sm: 2.5 }, py: 2 }}>
+      <Stack direction="row" sx={{ gap: 1.5, alignItems: 'flex-start' }}>
+        <Box sx={{ display: 'grid', placeItems: 'center', width: 36, height: 40, borderRadius: 1.5, bgcolor: 'grey.50', flexShrink: 0 }}>
+          <InsertDriveFileOutlinedIcon sx={{ fontSize: 21, color: 'text.secondary' }} />
+        </Box>
+        <Stack sx={{ flex: 1, minWidth: 0, gap: 0.5 }}>
+          <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>{name}</Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{meta}</Typography>
+        </Stack>
       </Stack>
-
-      {statusLabel && <StatusBadge label={statusLabel} tone={statusTone} />}
-
-      <Stack direction="row" sx={{ flexShrink: 0 }}>
-        {onApprove && (
-          <RowAction
-            title="Aprobă document"
-            color="success.main"
-            busy={updatingStatus}
-            onClick={onApprove}
-          >
-            <CheckCircleRoundedIcon sx={{ fontSize: 18 }} />
-          </RowAction>
-        )}
-        {onReject && (
-          <RowAction
-            title="Respinge document"
-            color="error.main"
-            busy={updatingStatus}
-            onClick={onReject}
-          >
-            <CancelRoundedIcon sx={{ fontSize: 18 }} />
-          </RowAction>
-        )}
+      <Stack direction="row" sx={{ alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
+        {statusLabel && <StatusBadge label={statusLabel} tone={statusTone} />}
+        {extra}
+        <Box sx={{ flex: 1 }} />
         <RowAction title="Deschide" color="primary.dark" busy={opening} onClick={onOpen}>
           <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />
         </RowAction>
@@ -113,6 +94,16 @@ export function DocumentRow({
           <FileDownloadRoundedIcon sx={{ fontSize: 18 }} />
         </RowAction>
       </Stack>
+      {(onApprove || onReject) && <Stack direction="row" sx={{ gap: 1, mt: 1, flexWrap: 'wrap' }}>
+        {onApprove && (
+          <Button size="small" variant="outlined" disabled={updatingStatus} onClick={onApprove} startIcon={<CheckCircleRoundedIcon />}>Aprobă document</Button>
+        )}
+        {onReject && (
+          <Button size="small" color="error" disabled={updatingStatus} onClick={onReject} startIcon={<CancelRoundedIcon />}>Respinge document</Button>
+        )}
+        {updatingStatus && <CircularProgress size={18} aria-label="Se salvează statusul" />}
+      </Stack>}
+      {reviewNote && <Alert severity="error" icon={false} sx={{ mt: 1.5, overflowWrap: 'anywhere' }}><strong>Motivul respingerii:</strong> {reviewNote}</Alert>}
     </ListItem>
   )
 }

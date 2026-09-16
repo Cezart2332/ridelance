@@ -43,12 +43,12 @@ export function PageHeader({
         ← {backLabel}
       </Link>
 
-      <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-        <Avatar sx={{ width: 40, height: 40, bgcolor: 'grey.100', color: 'text.secondary' }}>
+      <Stack direction="row" sx={{ gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+        <Avatar variant="rounded" sx={{ width: 48, height: 48, bgcolor: 'primary.light', color: 'text.primary' }}>
           {avatarText}
         </Avatar>
 
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box sx={{ flex: 1, minWidth: 180, overflowWrap: 'anywhere' }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
             <Typography variant="h1">{title}</Typography>
             {status}

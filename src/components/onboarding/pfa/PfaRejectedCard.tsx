@@ -19,7 +19,7 @@ export function PfaRejectedCard({
       elevation={0}
       sx={{
         p: { xs: 3, sm: 4 },
-        borderRadius: `${TOKENS.radius.xl}px`,
+        borderRadius: `${TOKENS.radius.md}px`,
         border: `1px solid ${alpha('#d32f2f', 0.25)}`,
         backgroundColor: TOKENS.paper,
       }}

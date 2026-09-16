@@ -1,3 +1,4 @@
+import { usePageTabs } from '../../../admin'
 import { useCallback, useEffect, useState } from 'react'
 import {
   Alert,
@@ -31,7 +32,7 @@ import { FleetBcrRequests } from './FleetBcrRequests'
 const inputSx = {
   '& .MuiOutlinedInput-root': {
     backgroundColor: alpha(TOKENS.paper, 0.92),
-    borderRadius: TOKENS.radius.md,
+    borderRadius: `${TOKENS.radius.md}px`,
     '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.08) },
     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.16) },
     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.primary, 0.6), borderWidth: 2 },
@@ -94,6 +95,9 @@ function statusChip(code: DiscountCode) {
 }
 
 export function DiscountsAdminView() {
+  const [view, tabs] = usePageTabs({ paramName: 'view', tabs: [
+    { value: 'coduri', label: 'Coduri existente' }, { value: 'nou', label: 'Creează un cod' }, { value: 'bcr', label: 'Solicitări BCR' },
+  ] })
   const [codes, setCodes] = useState<DiscountCode[]>([])
   const [loading, setLoading] = useState(true)
   const [listError, setListError] = useState<string | null>(null)
@@ -179,11 +183,10 @@ export function DiscountsAdminView() {
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 2, md: 3 } }}>
-      <FleetBcrRequests />
+    <Box>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 1 }}>
         <LocalOfferRoundedIcon sx={{ color: TOKENS.primaryStrong }} />
-        <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: TOKENS.ink }}>
+        <Typography variant="h1">
           Coduri de reducere
         </Typography>
       </Stack>
@@ -192,25 +195,27 @@ export function DiscountsAdminView() {
         serviciilor individuale.
       </Typography>
 
+      <Box sx={{ mb: 3 }}>{tabs}</Box>
+      {view === 'bcr' && <FleetBcrRequests />}
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: '380px 1fr' },
+          gridTemplateColumns: 'minmax(0, 1fr)',
           gap: 3,
           alignItems: 'start',
         }}
       >
         {/* ── Cod nou ── */}
-        <Paper
+        {view === 'nou' && <Paper
           elevation={0}
           sx={{
             p: 3,
-            borderRadius: TOKENS.radius.xl,
+            borderRadius: `${TOKENS.radius.xl}px`,
             border: `1px solid ${TOKENS.border}`,
             boxShadow: TOKENS.shadow.sm,
           }}
         >
-          <Typography sx={{ fontWeight: 800, color: TOKENS.ink, mb: 2 }}>Cod nou</Typography>
+          <Typography variant="h2" sx={{ mb: 2 }}>Cod nou</Typography>
 
           <Stack spacing={2}>
             <TextField
@@ -233,7 +238,7 @@ export function DiscountsAdminView() {
                 '& .MuiToggleButton-root': {
                   fontWeight: 700,
                   textTransform: 'none',
-                  borderRadius: TOKENS.radius.md,
+                  borderRadius: `${TOKENS.radius.md}px`,
                   borderColor: alpha(TOKENS.ink, 0.08),
                 },
                 '& .Mui-selected': {
@@ -289,7 +294,7 @@ export function DiscountsAdminView() {
             </TextField>
 
             {formResult && (
-              <Alert severity={formResult.ok ? 'success' : 'error'} sx={{ borderRadius: TOKENS.radius.md }}>
+              <Alert severity={formResult.ok ? 'success' : 'error'} sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
                 {formResult.message}
               </Alert>
             )}
@@ -303,27 +308,27 @@ export function DiscountsAdminView() {
                 textTransform: 'none',
                 bgcolor: TOKENS.primary,
                 boxShadow: 'none',
-                borderRadius: TOKENS.radius.md,
+                borderRadius: `${TOKENS.radius.md}px`,
                 '&:hover': { bgcolor: TOKENS.primaryStrong, boxShadow: 'none' },
               }}
             >
               {submitting ? <CircularProgress size={22} sx={{ color: '#fff' }} /> : 'Creează codul'}
             </Button>
           </Stack>
-        </Paper>
+        </Paper>}
 
         {/* ── Coduri existente ── */}
-        <Paper
+        {view === 'coduri' && <Paper
           elevation={0}
           sx={{
             p: 3,
-            borderRadius: TOKENS.radius.xl,
+            borderRadius: `${TOKENS.radius.xl}px`,
             border: `1px solid ${TOKENS.border}`,
             boxShadow: TOKENS.shadow.sm,
           }}
         >
           <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <Typography sx={{ fontWeight: 800, color: TOKENS.ink }}>Coduri existente</Typography>
+            <Typography sx={{ fontWeight: 650, color: TOKENS.ink }}>Coduri existente</Typography>
             <Button
               size="small"
               startIcon={<RefreshRoundedIcon />}
@@ -336,7 +341,7 @@ export function DiscountsAdminView() {
           </Stack>
 
           {listError && (
-            <Alert severity="error" sx={{ borderRadius: TOKENS.radius.md, mb: 2 }}>
+            <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px`, mb: 2 }}>
               {listError}
             </Alert>
           )}
@@ -354,19 +359,19 @@ export function DiscountsAdminView() {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 800 }}>Cod</TableCell>
-                    <TableCell sx={{ fontWeight: 800 }}>Reducere</TableCell>
-                    <TableCell sx={{ fontWeight: 800 }}>Utilizări</TableCell>
-                    <TableCell sx={{ fontWeight: 800 }}>Abonamente</TableCell>
-                    <TableCell sx={{ fontWeight: 800 }}>Expiră</TableCell>
-                    <TableCell sx={{ fontWeight: 800 }}>Status</TableCell>
+                    <TableCell sx={{ fontWeight: 650 }}>Cod</TableCell>
+                    <TableCell sx={{ fontWeight: 650 }}>Reducere</TableCell>
+                    <TableCell sx={{ fontWeight: 650 }}>Utilizări</TableCell>
+                    <TableCell sx={{ fontWeight: 650 }}>Abonamente</TableCell>
+                    <TableCell sx={{ fontWeight: 650 }}>Expiră</TableCell>
+                    <TableCell sx={{ fontWeight: 650 }}>Status</TableCell>
                     <TableCell />
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {codes.map((c) => (
                     <TableRow key={c.id} hover>
-                      <TableCell sx={{ fontWeight: 800, letterSpacing: 0.4 }}>{c.code}</TableCell>
+                      <TableCell sx={{ fontWeight: 650, letterSpacing: 0.4 }}>{c.code}</TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>{formatReduction(c)}</TableCell>
                       <TableCell>
                         {c.timesRedeemed} / {c.maxRedemptions ?? '∞'}
@@ -393,7 +398,7 @@ export function DiscountsAdminView() {
               </Table>
             </TableContainer>
           )}
-        </Paper>
+        </Paper>}
       </Box>
     </Box>
   )

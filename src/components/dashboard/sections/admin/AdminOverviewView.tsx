@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   Alert,
   Avatar,
   Box,
   Button,
   Chip,
-  CircularProgress,
   Divider,
   MenuItem,
   Paper,
@@ -19,6 +21,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
+import { usePageTabs, SectionSkeleton } from '../../../admin'
 import { alpha } from '@mui/material/styles'
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
@@ -49,7 +53,7 @@ interface AdminOverviewViewProps {
 const inputSx = {
   '& .MuiOutlinedInput-root': {
     backgroundColor: alpha(TOKENS.paper, 0.92),
-    borderRadius: TOKENS.radius.md,
+    borderRadius: `${TOKENS.radius.md}px`,
     '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.08) },
     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.16) },
     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.primary, 0.6), borderWidth: 2 },
@@ -98,7 +102,7 @@ function StatusChip({ status }: { status: string }) {
       label={status}
       size="small"
       sx={{
-        fontWeight: 800,
+        fontWeight: 650,
         fontSize: '0.68rem',
         color,
         bgcolor: alpha(color, 0.1),
@@ -111,7 +115,7 @@ function StatusChip({ status }: { status: string }) {
 function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <Box>
-      <Typography variant="h6" sx={{ fontWeight: 900, color: TOKENS.ink, lineHeight: 1.2 }}>
+      <Typography variant="h6" sx={{ fontWeight: 650, color: TOKENS.ink, lineHeight: 1.2 }}>
         {title}
       </Typography>
       {subtitle && (
@@ -141,19 +145,19 @@ function MetricCard({
       elevation={0}
       sx={{
         p: 2.25,
-        borderRadius: TOKENS.radius.lg,
+        borderRadius: `${TOKENS.radius.lg}px`,
         border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
-        boxShadow: TOKENS.shadow.sm,
+        boxShadow: 'none',
         bgcolor: TOKENS.paper,
         minWidth: 0,
       }}
     >
       <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 850, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 650, letterSpacing: 0 }}>
             {label}
           </Typography>
-          <Typography variant="h5" sx={{ color: TOKENS.ink, fontWeight: 950, mt: 0.7, wordBreak: 'break-word' }}>
+          <Typography variant="h5" sx={{ color: TOKENS.ink, fontWeight: 650, mt: 0.7, wordBreak: 'break-word' }}>
             {value}
           </Typography>
           {helper && (
@@ -166,7 +170,7 @@ function MetricCard({
           sx={{
             width: 40,
             height: 40,
-            borderRadius: TOKENS.radius.md,
+            borderRadius: `${TOKENS.radius.md}px`,
             display: 'grid',
             placeItems: 'center',
             flexShrink: 0,
@@ -189,15 +193,15 @@ function SmallStatList({ items }: { items: Array<{ label: string; value: number;
           key={item.label}
           sx={{
             p: 1.4,
-            borderRadius: TOKENS.radius.md,
+            borderRadius: `${TOKENS.radius.md}px`,
             bgcolor: alpha(TOKENS.surface, 0.75),
             border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
           }}
         >
-          <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 650 }}>
             {item.label}
           </Typography>
-          <Typography variant="h6" sx={{ color: TOKENS.ink, fontWeight: 950, lineHeight: 1.2 }}>
+          <Typography variant="h6" sx={{ color: TOKENS.ink, fontWeight: 650, lineHeight: 1.2 }}>
             {item.value.toLocaleString('ro-RO')}
           </Typography>
           {item.helper && (
@@ -228,7 +232,7 @@ function PaymentsTable({ rows, failedOnly = false }: { rows: AdminPaymentRow[]; 
         <TableHead>
           <TableRow sx={{ bgcolor: alpha(TOKENS.surface, 0.7) }}>
             {['Client', 'Produs / serviciu', 'Tip plată', 'Sumă', 'Status', 'Data', 'Metodă plată'].map((header) => (
-              <TableCell key={header} sx={{ fontWeight: 850, color: TOKENS.textMuted }}>
+              <TableCell key={header} sx={{ fontWeight: 650, color: TOKENS.textMuted }}>
                 {header}
               </TableCell>
             ))}
@@ -237,10 +241,10 @@ function PaymentsTable({ rows, failedOnly = false }: { rows: AdminPaymentRow[]; 
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id} sx={{ '&:hover': { bgcolor: alpha(TOKENS.primary, 0.03) } }}>
-              <TableCell sx={{ fontWeight: 750 }}>{row.client}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{row.client}</TableCell>
               <TableCell>{row.productOrService}</TableCell>
               <TableCell>{row.paymentType}</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>{formatLei(row.amountBani)}</TableCell>
+              <TableCell sx={{ fontWeight: 650 }}>{formatLei(row.amountBani)}</TableCell>
               <TableCell><StatusChip status={row.status} /></TableCell>
               <TableCell>{formatDate(row.dateUtc)}</TableCell>
               <TableCell>{row.paymentMethod}</TableCell>
@@ -267,7 +271,7 @@ function ServicesTable({ rows }: { rows: AdminServiceSaleRow[] }) {
         <TableHead>
           <TableRow sx={{ bgcolor: alpha(TOKENS.surface, 0.7) }}>
             {['Client', 'Serviciu', 'Preț', 'Status plată', 'Status livrare', 'Responsabil', 'Data comandă'].map((header) => (
-              <TableCell key={header} sx={{ fontWeight: 850, color: TOKENS.textMuted }}>
+              <TableCell key={header} sx={{ fontWeight: 650, color: TOKENS.textMuted }}>
                 {header}
               </TableCell>
             ))}
@@ -276,9 +280,9 @@ function ServicesTable({ rows }: { rows: AdminServiceSaleRow[] }) {
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id} sx={{ '&:hover': { bgcolor: alpha(TOKENS.primary, 0.03) } }}>
-              <TableCell sx={{ fontWeight: 750 }}>{row.client}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{row.client}</TableCell>
               <TableCell>{row.service}</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>{formatLei(row.priceBani)}</TableCell>
+              <TableCell sx={{ fontWeight: 650 }}>{formatLei(row.priceBani)}</TableCell>
               <TableCell><StatusChip status={row.paymentStatus} /></TableCell>
               <TableCell><StatusChip status={row.deliveryStatus} /></TableCell>
               <TableCell>{row.responsible}</TableCell>
@@ -296,9 +300,9 @@ function DataPaper({ children }: { children: React.ReactNode }) {
     <Paper
       elevation={0}
       sx={{
-        borderRadius: TOKENS.radius.lg,
+        borderRadius: `${TOKENS.radius.lg}px`,
         border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
-        boxShadow: TOKENS.shadow.sm,
+        boxShadow: 'none',
         overflow: 'hidden',
         bgcolor: TOKENS.paper,
       }}
@@ -309,6 +313,12 @@ function DataPaper({ children }: { children: React.ReactNode }) {
 }
 
 export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOverviewViewProps) {
+  const [view, viewTabs] = usePageTabs({ paramName: 'view', tabs: [
+    { value: 'sinteza', label: 'Sinteză operațională' },
+    { value: 'venituri', label: 'Venituri și abonamente' },
+    { value: 'plati', label: 'Tranzacții și servicii' },
+    { value: 'clienti', label: 'Clienți' },
+  ] })
   const [filters, setFilters] = useState<AdminOverviewFilters>(initialFilters)
   const [data, setData] = useState<AdminOverviewData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -378,31 +388,31 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3.5 },
-          borderRadius: TOKENS.radius.xl,
+          borderRadius: `${TOKENS.radius.xl}px`,
           border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
-          boxShadow: TOKENS.shadow.sm,
-          background: `linear-gradient(135deg, ${TOKENS.paper} 0%, ${alpha(TOKENS.primary, 0.08)} 100%)`,
+          boxShadow: 'none',
+          bgcolor: 'background.paper',
         }}
       >
         <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', lg: 'flex-end' } }}>
           <Box sx={{ maxWidth: 620 }}>
-            <Typography variant="h4" sx={{ fontWeight: 950, color: TOKENS.ink, mb: 1, fontSize: { xs: '1.5rem', md: '1.8rem' } }}>
+            <Typography variant="h4" sx={{ fontWeight: 650, color: TOKENS.ink, mb: 1, fontSize: { xs: '1.5rem', md: '1.8rem' } }}>
               Privire de ansamblu
             </Typography>
             <Typography variant="body2" sx={{ color: TOKENS.textMuted, maxWidth: 560 }}>
-              Finanțe, abonamente, servicii și alerte importante într-un singur ecran.
+              Situația platformei, organizată pe activitate, venituri și clienți.
             </Typography>
           </Box>
 
           {data && !loading && (
-            <Box sx={{ minWidth: { xs: '100%', sm: 360 }, p: 2.2, borderRadius: TOKENS.radius.lg, bgcolor: alpha(TOKENS.paper, 0.82), border: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
+            <Box sx={{ minWidth: { xs: '100%', sm: 360 }, p: 2.2, borderRadius: `${TOKENS.radius.lg}px`, bgcolor: alpha(TOKENS.paper, 0.82), border: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
               <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 1 }}>
-                <Box sx={{ width: 42, height: 42, borderRadius: TOKENS.radius.md, display: 'grid', placeItems: 'center', bgcolor: alpha('#0f766e', 0.1), color: '#0f766e' }}>
+                <Box sx={{ width: 42, height: 42, borderRadius: `${TOKENS.radius.md}px`, display: 'grid', placeItems: 'center', bgcolor: alpha('#0f766e', 0.1), color: '#0f766e' }}>
                   <AccountBalanceWalletRoundedIcon />
                 </Box>
                 <Box>
-                  <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 850 }}>Venit luna curentă</Typography>
-                  <Typography variant="h4" sx={{ color: TOKENS.ink, fontWeight: 950, fontVariantNumeric: 'tabular-nums' }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 650 }}>Venit luna curentă</Typography>
+                  <Typography variant="h4" sx={{ color: TOKENS.ink, fontWeight: 650, fontVariantNumeric: 'tabular-nums' }}>
                     {formatLei(data.financialKpis.totalCurrentMonthRevenueBani)}
                   </Typography>
                 </Box>
@@ -413,9 +423,9 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                   ['One-time', formatLei(data.financialKpis.oneTimeCurrentMonthRevenueBani)],
                   ['Comisioane', formatLei(data.financialKpis.partnerCommissionsBani)],
                 ].map(([label, value]) => (
-                  <Box key={label} sx={{ p: 1, borderRadius: TOKENS.radius.sm, bgcolor: alpha(TOKENS.surface, 0.7) }}>
-                    <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 800 }}>{label}</Typography>
-                    <Typography variant="caption" sx={{ display: 'block', color: TOKENS.ink, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{value}</Typography>
+                  <Box key={label} sx={{ p: 1, borderRadius: `${TOKENS.radius.sm}px`, bgcolor: alpha(TOKENS.surface, 0.7) }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 650 }}>{label}</Typography>
+                    <Typography variant="caption" sx={{ display: 'block', color: TOKENS.ink, fontWeight: 650, fontVariantNumeric: 'tabular-nums' }}>{value}</Typography>
                   </Box>
                 ))}
               </Box>
@@ -424,14 +434,19 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
         </Stack>
       </Paper>
 
-      <Paper elevation={0} sx={{ p: 1.5, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.06)}`, boxShadow: TOKENS.shadow.sm, bgcolor: alpha(TOKENS.paper, 0.88) }}>
+      {viewTabs}
+      <Accordion disableGutters sx={{ '&:before': { display: 'none' } }}>
+        <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+          <Box><Typography variant="subtitle2">Filtrează datele</Typography><Typography variant="caption" color="text.secondary">Perioadă, produs, plan și statusul plății · {Object.values(filters).filter(Boolean).length - 1} filtre suplimentare</Typography></Box>
+        </AccordionSummary>
+        <AccordionDetails>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(4, minmax(0, 1fr))' }, gap: 1.5 }}>
           <TextField select size="small" label="Perioadă" value={filters.periodPreset} onChange={(e) => updateFilter('periodPreset', e.target.value as AdminOverviewFilters['periodPreset'])} sx={inputSx}>
             <MenuItem value="today">Azi</MenuItem>
             <MenuItem value="7d">7 zile</MenuItem>
             <MenuItem value="current_month">Luna curentă</MenuItem>
             <MenuItem value="last_month">Luna trecută</MenuItem>
-            <MenuItem value="custom">Custom</MenuItem>
+            <MenuItem value="custom">Interval personalizat</MenuItem>
           </TextField>
           {filters.periodPreset === 'custom' && (
             <>
@@ -468,27 +483,26 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
           <TextField size="small" label="Oraș" value={filters.city ?? ''} onChange={(e) => updateFilter('city', e.target.value)} sx={inputSx} />
           <TextField size="small" label="Partener" value={filters.partner ?? ''} onChange={(e) => updateFilter('partner', e.target.value)} sx={inputSx} />
         </Box>
-      </Paper>
+        </AccordionDetails>
+      </Accordion>
 
       {loading && (
-        <Stack sx={{ py: 8, alignItems: 'center' }}>
-          <CircularProgress size={34} sx={{ color: TOKENS.primary }} />
-        </Stack>
+        <Paper sx={{ p: 2 }}><SectionSkeleton rows={5} /></Paper>
       )}
       {error && <Alert severity="error">{error}</Alert>}
       {data && !loading && (
         <>
           {data.isFallback && (
-            <Alert severity="info" sx={{ borderRadius: TOKENS.radius.md }}>
-              Endpointul dedicat `/admin/overview` nu este disponibil încă. Afișez un overview parțial din endpointurile existente.
+            <Alert severity="info" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+              Unele statistici nu sunt disponibile momentan. Datele de mai jos oferă o situație parțială.
             </Alert>
           )}
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(4, minmax(0, 1fr))' }, gap: 1.5 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(4, minmax(0, 1fr))' }, gap: 1.5 }}>
             {operationalCards.map((card) => <MetricCard key={card.label} {...card} />)}
           </Box>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
+          {view === 'venituri' && <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
             <DataPaper>
               <Box sx={{ p: 2.5 }}>
                 <SectionTitle title="Venituri pe categorii" subtitle="Sursele principale de bani din platformă." />
@@ -496,14 +510,14 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                   {data.revenueCategories.map((category) => (
                     <Box key={category.label}>
                       <Stack direction="row" sx={{ justifyContent: 'space-between', mb: 0.7 }}>
-                        <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 800 }}>{category.label}</Typography>
-                        <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 900 }}>{formatLei(category.amountBani)}</Typography>
+                        <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 650 }}>{category.label}</Typography>
+                        <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 650 }}>{formatLei(category.amountBani)}</Typography>
                       </Stack>
-                      <Box sx={{ height: 8, borderRadius: TOKENS.radius.full, bgcolor: alpha(TOKENS.ink, 0.06), overflow: 'hidden' }}>
+                      <Box sx={{ height: 8, borderRadius: `${TOKENS.radius.full}px`, bgcolor: alpha(TOKENS.ink, 0.06), overflow: 'hidden' }}>
                         <Box sx={{ width: `${Math.min(100, Math.max(3, category.amountBani / Math.max(1, data.financialKpis.totalCurrentMonthRevenueBani) * 100))}%`, height: '100%', bgcolor: TOKENS.primaryStrong }} />
                       </Box>
                       {category.count != null && (
-                        <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>{category.count.toLocaleString('ro-RO')} elemente</Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>{category.count.toLocaleString('ro-RO')} elemente</Typography>
                       )}
                     </Box>
                   ))}
@@ -515,15 +529,15 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
               <Box sx={{ p: 2.5 }}>
                 <SectionTitle title="Abonamente active" subtitle="PFA-uri recurente și anunțuri auto lunare." />
                 <Divider sx={{ my: 2 }} />
-                <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 1 }}>PFA-uri</Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 650, mb: 1 }}>PFA-uri</Typography>
                 <SmallStatList items={data.pfaSubscriptions} />
-                <Typography variant="subtitle2" sx={{ fontWeight: 900, mt: 2, mb: 1 }}>Anunțuri auto</Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 650, mt: 2, mb: 1 }}>Anunțuri auto</Typography>
                 <SmallStatList items={data.carSubscriptions} />
               </Box>
             </DataPaper>
-          </Box>
+          </Box>}
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
+          {view === 'sinteza' && <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
             <DataPaper>
               <Box sx={{ p: 2.5 }}>
                 <SectionTitle title="Mașini și lead-uri" subtitle="Doar ce contează pentru venitul recurent auto." />
@@ -537,7 +551,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                   ].map(([label, value]) => (
                     <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
                       <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{label}</Typography>
-                      <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{value}</Typography>
+                      <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 650, fontVariantNumeric: 'tabular-nums' }}>{value}</Typography>
                     </Stack>
                   ))}
                 </Stack>
@@ -558,14 +572,15 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                   ].map(([label, value]) => (
                     <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
                       <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{label}</Typography>
-                      <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{value}</Typography>
+                      <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 650, fontVariantNumeric: 'tabular-nums' }}>{value}</Typography>
                     </Stack>
                   ))}
                 </Stack>
               </Box>
             </DataPaper>
-          </Box>
+          </Box>}
 
+          {view === 'plati' && <>
           <DataPaper>
             <Box sx={{ p: 2.5, borderBottom: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
               <SectionTitle title="Plăți recente" subtitle="Ultimele tranzacții din platformă." />
@@ -587,18 +602,19 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
             <ServicesTable rows={data.serviceSales} />
           </DataPaper>
 
-          <Box>
+          </>}
+          {view === 'clienti' && <Box>
             <SectionTitle title="PFA-uri înrolate" subtitle="Cardurile operaționale pentru clienții PFA activi sau în lucru." />
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' }, gap: 2, mt: 2 }}>
               {data.enrolledPfas.map((pfa) => (
-                <Paper key={pfa.id} elevation={0} sx={{ p: 2.25, borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.07)}`, boxShadow: 'none', bgcolor: TOKENS.paper, '&:hover': { borderColor: alpha(TOKENS.primary, 0.35), boxShadow: TOKENS.shadow.sm } }}>
+                <Paper key={pfa.id} elevation={0} sx={{ p: 2.25, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${alpha(TOKENS.ink, 0.07)}`, boxShadow: 'none', bgcolor: TOKENS.paper, '&:hover': { borderColor: alpha(TOKENS.primary, 0.35), boxShadow: 'none' } }}>
                   <Stack spacing={1.4}>
                     <Stack direction="row" spacing={1.4} sx={{ alignItems: 'flex-start' }}>
-                      <Avatar variant="rounded" sx={{ width: 40, height: 40, borderRadius: TOKENS.radius.md, bgcolor: alpha(TOKENS.primary, 0.12), color: TOKENS.primaryStrong, fontWeight: 900 }}>
+                      <Avatar variant="rounded" sx={{ width: 40, height: 40, borderRadius: `${TOKENS.radius.md}px`, bgcolor: alpha(TOKENS.primary, 0.12), color: TOKENS.primaryStrong, fontWeight: 650 }}>
                         {pfa.companyName.slice(0, 1).toUpperCase()}
                       </Avatar>
                       <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography sx={{ fontWeight: 950, color: TOKENS.ink, lineHeight: 1.2 }} noWrap title={pfa.companyName}>
+                        <Typography sx={{ fontWeight: 650, color: TOKENS.ink, lineHeight: 1.2 }} noWrap title={pfa.companyName}>
                           {pfa.companyName}
                         </Typography>
                         <Typography variant="caption" sx={{ color: TOKENS.textMuted, display: 'block' }} noWrap title={pfa.holderName}>
@@ -613,7 +629,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                           key={label}
                           label={label}
                           size="small"
-                          sx={{ height: 24, borderRadius: TOKENS.radius.sm, bgcolor: alpha(TOKENS.ink, 0.04), color: TOKENS.ink, fontSize: '0.68rem', fontWeight: 800 }}
+                          sx={{ height: 24, borderRadius: `${TOKENS.radius.sm}px`, bgcolor: alpha(TOKENS.ink, 0.04), color: TOKENS.ink, fontSize: '0.68rem', fontWeight: 650 }}
                         />
                       ))}
                     </Stack>
@@ -628,8 +644,8 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                         ['Activitate', pfa.lastActivityLabel],
                       ].map(([label, value]) => (
                         <Box key={label} sx={{ minWidth: 0 }}>
-                          <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 750 }}>{label}</Typography>
-                          <Typography variant="caption" sx={{ display: 'block', color: TOKENS.ink, fontWeight: 850, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={value}>
+                          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>{label}</Typography>
+                          <Typography variant="caption" sx={{ display: 'block', color: TOKENS.ink, fontWeight: 650, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={value}>
                             {value}
                           </Typography>
                         </Box>
@@ -637,7 +653,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                     </Box>
 
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      <Button fullWidth variant="contained" onClick={() => onOpenPfaDetails(pfa)} endIcon={<OpenInNewRoundedIcon />} sx={{ boxShadow: 'none', bgcolor: TOKENS.primary, fontWeight: 850 }}>
+                      <Button fullWidth variant="contained" onClick={() => onOpenPfaDetails(pfa)} endIcon={<OpenInNewRoundedIcon />} sx={{ boxShadow: 'none', bgcolor: TOKENS.primary, fontWeight: 650 }}>
                         Vezi detalii
                       </Button>
                       <Button fullWidth variant="outlined" onClick={() => onImpersonate(pfa.userId, pfa.holderName || pfa.companyName)} startIcon={<LoginRoundedIcon />}>
@@ -648,12 +664,12 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                 </Paper>
               ))}
               {data.enrolledPfas.length === 0 && (
-                <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: TOKENS.radius.lg, border: `1px dashed ${alpha(TOKENS.ink, 0.16)}` }}>
+                <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: `${TOKENS.radius.lg}px`, border: `1px dashed ${alpha(TOKENS.ink, 0.16)}` }}>
                   <Typography sx={{ color: TOKENS.textMuted }}>Nu există PFA-uri înrolate pentru filtrul curent.</Typography>
                 </Paper>
               )}
             </Box>
-          </Box>
+          </Box>}
         </>
       )}
 

@@ -116,7 +116,7 @@ export function PfaPendingCard({
       elevation={0}
       sx={{
         p: { xs: 3, sm: 5 },
-        borderRadius: `${TOKENS.radius.xl}px`,
+        borderRadius: `${TOKENS.radius.md}px`,
         border: `1px solid ${TOKENS.border}`,
         boxShadow: TOKENS.shadow.md,
         backgroundColor: TOKENS.paper,

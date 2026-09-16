@@ -352,6 +352,16 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
                     {currentStepView.reason}
                   </Alert>
                 )}
+                {/* Fiecare pas se deschide doar pe validarea adminului: fără mesajul ăsta clientul
+                    rămâne pe ultimul ecran fără buton și fără să știe că așteaptă pe cineva. */}
+                {currentStepView?.state === 'pending_review' && (
+                  <Alert severity="info" sx={{ mb: 2, maxWidth: 720, mx: 'auto' }}>
+                    <Box component="span" sx={{ fontWeight: 700 }}>
+                      Pasul „{currentStepView.label}” e în verificare.
+                    </Box>{' '}
+                    Echipa verifică documentele; pasul următor se deschide automat după validare.
+                  </Alert>
+                )}
                 <StepIntroCard
                   stepKey={location.pathname === currentStepView?.path ? activeKey : null}
                   position={Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)}

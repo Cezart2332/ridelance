@@ -205,7 +205,7 @@ export function OfficeCalendarAdminView() {
   return (
     <Box>
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 900, color: TOKENS.ink }}>
+        <Typography variant="h4" sx={{ fontWeight: 650, color: TOKENS.ink }}>
           Calendar birou
         </Typography>
         <Typography variant="body2" sx={{ color: TOKENS.textMuted, fontWeight: 600, mt: 0.5 }}>
@@ -215,9 +215,9 @@ export function OfficeCalendarAdminView() {
 
       <Paper
         elevation={0}
-        sx={{ mb: 3, borderRadius: TOKENS.radius.lg, border: `1px solid ${TOKENS.border}`, overflow: 'hidden' }}
+        sx={{ mb: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}`, overflow: 'hidden' }}
       >
-        <Tabs
+        <Tabs variant="scrollable" allowScrollButtonsMobile
           value={activeTab}
           onChange={(_, v: number) => setActiveTab(v)}
           sx={{ px: 2, borderBottom: `1px solid ${TOKENS.border}`, '& .MuiTab-root': { fontWeight: 700, py: 2 } }}
@@ -239,7 +239,7 @@ export function OfficeCalendarAdminView() {
             >
               <Box>
                 <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography sx={{ fontWeight: 850, color: TOKENS.ink }}>
+                  <Typography sx={{ fontWeight: 650, color: TOKENS.ink }}>
                     {ROMANIAN_MONTHS[viewMonth]} {viewYear}
                   </Typography>
                   <Stack direction="row" spacing={0.5}>
@@ -270,7 +270,7 @@ export function OfficeCalendarAdminView() {
 
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0.5, mb: 0.5 }}>
                   {WEEKDAYS_SHORT.map((d) => (
-                    <Typography key={d} sx={{ textAlign: 'center', fontSize: '0.7rem', fontWeight: 800, color: TOKENS.textSubtle }}>
+                    <Typography key={d} sx={{ textAlign: 'center', fontSize: '0.7rem', fontWeight: 650, color: 'text.secondary' }}>
                       {d}
                     </Typography>
                   ))}
@@ -302,7 +302,7 @@ export function OfficeCalendarAdminView() {
                               display: 'grid',
                               placeItems: 'center',
                               position: 'relative',
-                              borderRadius: TOKENS.radius.md,
+                              borderRadius: `${TOKENS.radius.md}px`,
                               fontSize: '0.85rem',
                               fontFamily: 'inherit',
                               fontWeight: isSelected ? 850 : 650,
@@ -355,7 +355,7 @@ export function OfficeCalendarAdminView() {
                   sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', mb: 2 }}
                 >
                   <Box>
-                    <Typography sx={{ fontWeight: 850, color: TOKENS.ink }}>
+                    <Typography sx={{ fontWeight: 650, color: TOKENS.ink }}>
                       {formatDateRo(selectedDate)}
                     </Typography>
                     {day?.isOpen && day.openTime && (
@@ -371,7 +371,7 @@ export function OfficeCalendarAdminView() {
                       color="error"
                       startIcon={<EventBusyRoundedIcon />}
                       onClick={() => handleBlockSlot(null)}
-                      sx={{ fontWeight: 750, flexShrink: 0 }}
+                      sx={{ fontWeight: 600, flexShrink: 0 }}
                     >
                       Blochează toată ziua
                     </Button>
@@ -395,7 +395,7 @@ export function OfficeCalendarAdminView() {
                           color="inherit"
                           size="small"
                           onClick={() => handleUnblock(day.wholeDayBlockId!)}
-                          sx={{ fontWeight: 750 }}
+                          sx={{ fontWeight: 600 }}
                         >
                           Deblochează ziua
                         </Button>
@@ -422,19 +422,19 @@ export function OfficeCalendarAdminView() {
                           sx={{
                             alignItems: 'center',
                             p: 1.2,
-                            borderRadius: TOKENS.radius.md,
+                            borderRadius: `${TOKENS.radius.md}px`,
                             border: `1px solid ${TOKENS.border}`,
                             bgcolor: style.bg,
                             minWidth: 0,
                           }}
                         >
-                          <Typography sx={{ fontWeight: 850, fontVariantNumeric: 'tabular-nums', color: TOKENS.ink }}>
+                          <Typography sx={{ fontWeight: 650, fontVariantNumeric: 'tabular-nums', color: TOKENS.ink }}>
                             {slot.time}
                           </Typography>
                           <Chip
                             label={style.label}
                             size="small"
-                            sx={{ height: 20, fontSize: '0.66rem', fontWeight: 800, color: style.color, bgcolor: '#fff' }}
+                            sx={{ height: 20, fontSize: '0.66rem', fontWeight: 650, color: style.color, bgcolor: '#fff' }}
                           />
                           <Box sx={{ minWidth: 0, flex: 1 }}>
                             {slot.status === 'booked' && (
@@ -505,13 +505,13 @@ export function OfficeCalendarAdminView() {
                     sx={{
                       alignItems: { md: 'center' },
                       p: 2,
-                      borderRadius: TOKENS.radius.md,
+                      borderRadius: `${TOKENS.radius.md}px`,
                       border: `1px solid ${TOKENS.border}`,
                       opacity: a.status === 'Cancelled' ? 0.55 : 1,
                     }}
                   >
                     <Box sx={{ minWidth: 150 }}>
-                      <Typography sx={{ fontWeight: 850, color: TOKENS.ink, fontVariantNumeric: 'tabular-nums' }}>
+                      <Typography sx={{ fontWeight: 650, color: TOKENS.ink, fontVariantNumeric: 'tabular-nums' }}>
                         {formatDateRo(a.date)}
                       </Typography>
                       <Typography sx={{ fontSize: '0.82rem', color: TOKENS.textMuted, fontWeight: 700 }}>
@@ -519,7 +519,7 @@ export function OfficeCalendarAdminView() {
                       </Typography>
                     </Box>
                     <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Typography sx={{ fontWeight: 800, color: TOKENS.ink }}>{a.fullName}</Typography>
+                      <Typography sx={{ fontWeight: 650, color: TOKENS.ink }}>{a.fullName}</Typography>
                       <Typography noWrap sx={{ fontSize: '0.82rem', color: TOKENS.textMuted }}>
                         {a.email} · {a.phone}
                       </Typography>
@@ -534,7 +534,7 @@ export function OfficeCalendarAdminView() {
                         label={a.status === 'Confirmed' ? 'Confirmată' : 'Anulată'}
                         size="small"
                         sx={{
-                          fontWeight: 800,
+                          fontWeight: 650,
                           color: a.status === 'Confirmed' ? '#047857' : '#b91c1c',
                           bgcolor: a.status === 'Confirmed' ? alpha('#10b981', 0.1) : alpha('#ef4444', 0.08),
                         }}
@@ -544,7 +544,7 @@ export function OfficeCalendarAdminView() {
                           size="small"
                           color="error"
                           onClick={() => handleCancelAppointment(a.id)}
-                          sx={{ fontWeight: 750 }}
+                          sx={{ fontWeight: 600 }}
                         >
                           Anulează
                         </Button>
@@ -578,12 +578,12 @@ export function OfficeCalendarAdminView() {
                         sx={{
                           alignItems: 'center',
                           p: 1.5,
-                          borderRadius: TOKENS.radius.md,
+                          borderRadius: `${TOKENS.radius.md}px`,
                           border: `1px solid ${TOKENS.border}`,
                           bgcolor: row.isOpen ? 'transparent' : alpha(TOKENS.ink, 0.025),
                         }}
                       >
-                        <Typography sx={{ fontWeight: 800, color: TOKENS.ink, width: 92, flexShrink: 0 }}>
+                        <Typography sx={{ fontWeight: 650, color: TOKENS.ink, width: 92, flexShrink: 0 }}>
                           {WEEKDAYS_FULL[uiIndex]}
                         </Typography>
                         <Switch
@@ -628,7 +628,7 @@ export function OfficeCalendarAdminView() {
                   variant="contained"
                   onClick={handleSaveSchedule}
                   disabled={scheduleSaving}
-                  sx={{ mt: 2.5, fontWeight: 800, bgcolor: TOKENS.primary, color: '#fff' }}
+                  sx={{ mt: 2.5, fontWeight: 650, bgcolor: TOKENS.primary, color: '#fff' }}
                 >
                   {scheduleSaving ? 'Se salvează…' : 'Salvează programul'}
                 </Button>
@@ -644,7 +644,7 @@ export function OfficeCalendarAdminView() {
         onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity={snackbar.severity} sx={{ borderRadius: TOKENS.radius.md, fontWeight: 600 }}>
+        <Alert severity={snackbar.severity} sx={{ borderRadius: `${TOKENS.radius.md}px`, fontWeight: 600 }}>
           {snackbar.message}
         </Alert>
       </Snackbar>

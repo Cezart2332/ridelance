@@ -380,7 +380,7 @@ export default function CompanyFormationOfficePage() {
                     disabled={disabled}
                   />
                 }
-                label="Înțeleg că actele vor fi transmise ulterior către Consulto."
+                label="Înțeleg că actele sunt transmise către Consulto de echipa RideLance."
               />
               {needsOwners && (
                 <FormControlLabel
@@ -400,7 +400,7 @@ export default function CompanyFormationOfficePage() {
                 />
               )}
               <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.85rem', pl: 4 }}>
-                Nu încărca nimic acum — primești instrucțiunile pe e-mail după validare.
+                Nu ai nimic de încărcat: documentele sunt transmise către Consulto, iar actele PFA rezultate le adăugăm noi în dosarul tău.
               </Typography>
             </Stack>
           </PanelCard>

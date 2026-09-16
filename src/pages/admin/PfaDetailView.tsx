@@ -1,8 +1,7 @@
-import { Alert, Box, Button, Divider, LinearProgress, List, Paper, Stack, ThemeProvider, Typography } from '@mui/material'
+import { Alert, Box, Button, Divider, LinearProgress, Paper, Stack, ThemeProvider, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 
 import {
-  DocumentRow,
   EmptyState,
   FieldGrid,
   MetaBar,
@@ -13,7 +12,6 @@ import {
   usePageTabs,
   type ActionMenuItem,
   type FieldSpec,
-  type StatusTone,
 } from '../../components/admin'
 import { CompanyFormationAdminPanel } from '../../components/pfa/CompanyFormationAdminPanel'
 import { PfaFiscalSettingsPanel } from '../../components/pfa/PfaFiscalSettingsPanel'
@@ -24,7 +22,7 @@ import type { DocumentSummary } from '../../services/document.service'
 import { onboardingService, type OnboardingState } from '../../services/onboarding.service'
 import type { AdminPfaDetail } from '../../services/adminOverview.service'
 import { adminTheme } from '../../theme/adminTheme'
-import { formatDocumentCategory } from '../../utils/formatters'
+import { DocumentLibrary } from '../../components/admin/DocumentLibrary'
 
 export interface PfaDetailSubject {
   id: string
@@ -65,10 +63,12 @@ export interface PfaDetailViewProps {
   onOpenChat: () => void
   onApprove: () => void
   onReject: () => void
-  onUpdateDocStatus: (id: string, status: 'Verified' | 'Rejected', note?: string) => void
+  onUpdateDocStatus: (id: string, status: 'Verified' | 'Rejected', note?: string) => Promise<boolean>
   onOpenDocument: (doc: DocumentSummary) => void
   onDownload: (doc: DocumentSummary) => void
   onSnackbar: (message: string, severity: 'success' | 'error') => void
+  /** Reîncarcă documentele clientului — după un act încărcat din admin. */
+  onDocumentsChanged: () => Promise<void>
   onboardingRefreshKey: number
   /** Id-urile operațiunilor în curs, pentru indicatorii per document din panoul de secțiuni. */
   statusUpdatingDocId: string | null
@@ -77,26 +77,15 @@ export interface PfaDetailViewProps {
 }
 
 const TABS = [
-  { value: 'onboarding', label: 'Onboarding' },
+  { value: 'onboarding', label: 'Verificare dosar' },
   { value: 'documente', label: 'Documente' },
   { value: 'client', label: 'Date client' },
+  { value: 'plati', label: 'Abonament și plăți' },
+  { value: 'contabilitate', label: 'Contabilitate' },
   { value: 'dosar', label: 'Dosar înființare' },
   { value: 'rapoarte', label: 'Rapoarte Uber' },
+  { value: 'activitate', label: 'Activitate' },
 ]
-
-const DOC_TONES: Record<string, StatusTone> = {
-  verified: 'success',
-  approved: 'success',
-  rejected: 'error',
-  pending: 'warning',
-}
-
-const formatBytes = (bytes: number) =>
-  bytes >= 1024 * 1024
-    ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-    : `${Math.max(1, Math.round(bytes / 1024))} KB`
-
-const formatDay = (iso: string) => new Date(iso).toLocaleDateString('ro-RO')
 
 /**
  * Fișa unui client din admin.
@@ -130,13 +119,14 @@ export function PfaDetailView(props: PfaDetailViewProps) {
     onOpenDocument,
     onDownload,
     onSnackbar,
+    onDocumentsChanged,
     onboardingRefreshKey,
     statusUpdatingDocId,
     openingId,
     downloadingId,
   } = props
 
-  const [tab, tabsElement] = usePageTabs({ tabs: TABS })
+  const [tab, tabsElement] = usePageTabs({ tabs: TABS, paramName: 'section' })
   const [docRejectTarget, setDocRejectTarget] = useState<DocumentSummary | null>(null)
 
   const isPending = pfa.status.toLowerCase() === 'pending'
@@ -185,9 +175,8 @@ export function PfaDetailView(props: PfaDetailViewProps) {
     ? { label: 'Aprobă dosarul', onClick: onApprove }
     : { label: 'Autentificare ca utilizator', onClick: onImpersonate }
 
-  const headerMenu: ActionMenuItem[] = isPending
-    ? [{ key: 'reject', label: 'Respinge dosarul', onClick: onReject, destructive: true }]
-    : [
+  const headerMenu: ActionMenuItem[] = [
+        ...(isPending ? [{ key: 'reject', label: 'Respinge dosarul', onClick: onReject, destructive: true }] : []),
         { key: 'plan', label: 'Schimbă plan', onClick: () => onOpenAction('plan') },
         { key: 'discount', label: 'Aplică discount', onClick: () => onOpenAction('discount') },
         { key: 'chat', label: 'Deschide chat', onClick: onOpenChat },
@@ -211,9 +200,9 @@ export function PfaDetailView(props: PfaDetailViewProps) {
   return (
     <ThemeProvider theme={adminTheme}>
       <Box sx={{ bgcolor: 'background.default', color: 'text.primary' }}>
-        <Stack spacing={2} sx={{ maxWidth: 1200, mx: 'auto' }}>
+        <Stack spacing={2} sx={{ maxWidth: 1400, mx: 'auto' }}>
           <PageHeader
-            backLabel="PFA-uri înrolate"
+            backLabel="Înapoi la clienți"
             onBack={onBack}
             avatarText={pfa.userName.charAt(0)}
             title={detail?.companyName ?? pfa.userName}
@@ -239,7 +228,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
             menuItems={headerMenu}
           />
 
-          <Box sx={{ mx: -2.5 }}>
+          <Box>
             <MetaBar
               items={[
                 { label: 'Plan', value: meta.plan },
@@ -258,17 +247,20 @@ export function PfaDetailView(props: PfaDetailViewProps) {
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 2fr) minmax(0, 1fr)' },
+              gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) 264px' },
               gap: 2,
               alignItems: 'start',
             }}
           >
             {/* ── Coloana primară ── */}
             <Stack spacing={2} sx={{ minWidth: 0 }}>
-              {tab === 'onboarding' && (
+              {tab === 'onboarding' && docsError && <Alert severity="error">{docsError}</Alert>}
+              {tab === 'onboarding' && docsLoading && <SectionSkeleton rows={4} />}
+              {tab === 'onboarding' && !docsLoading && (
                 <OnboardingSectionsPanel
                   pfaId={pfa.id}
                   pfaStatus={pfa.status}
+                  clientUserId={pfa.userId}
                   documents={documents}
                   statusUpdatingDocId={statusUpdatingDocId}
                   openingId={openingId}
@@ -277,47 +269,18 @@ export function PfaDetailView(props: PfaDetailViewProps) {
                   onOpenDocument={onOpenDocument}
                   onDownload={onDownload}
                   onOpenPfaApproveDialog={onApprove}
-                  onOpenPfaRejectDialog={onReject}
                   onSnackbar={onSnackbar}
+                  onDocumentsChanged={onDocumentsChanged}
                   refreshKey={onboardingRefreshKey}
+                  onStateChange={setOnboarding}
                 />
               )}
 
               {tab === 'documente' && (
-                <Section title={`Documente (${documents.length})`} flush>
-                  {docsError && <Alert severity="error" sx={{ m: 2.5 }}>{docsError}</Alert>}
-                  {docsLoading ? (
-                    <SectionSkeleton rows={4} />
-                  ) : documents.length === 0 ? (
-                    <Box sx={{ px: 2.5 }}>
-                      <EmptyState title="Clientul nu a încărcat niciun document." />
-                    </Box>
-                  ) : (
-                    <List disablePadding>
-                      {documents.map((doc) => {
-                        const isPendingDoc = doc.status.toLowerCase() === 'pending'
-                        return (
-                          <DocumentRow
-                            key={doc.id}
-                            name={doc.originalFileName}
-                            meta={`${formatDocumentCategory(doc.category)} · ${formatBytes(doc.fileSize)} · ${formatDay(doc.uploadedAtUtc)}`}
-                            statusLabel={doc.status}
-                            statusTone={DOC_TONES[doc.status.toLowerCase()] ?? 'neutral'}
-                            onApprove={
-                              isPendingDoc ? () => onUpdateDocStatus(doc.id, 'Verified') : undefined
-                            }
-                            onReject={isPendingDoc ? () => setDocRejectTarget(doc) : undefined}
-                            onOpen={() => onOpenDocument(doc)}
-                            onDownload={() => onDownload(doc)}
-                            updatingStatus={statusUpdatingDocId === doc.id}
-                            opening={openingId === doc.id}
-                            downloading={downloadingId === doc.id}
-                          />
-                        )
-                      })}
-                    </List>
-                  )}
-                </Section>
+                <DocumentLibrary documents={documents} loading={docsLoading} error={docsError}
+                  busy={statusUpdatingDocId !== null} openingId={openingId} downloadingId={downloadingId}
+                  onApprove={(doc) => { void onUpdateDocStatus(doc.id, 'Verified') }} onReject={setDocRejectTarget}
+                  onOpen={onOpenDocument} onDownload={onDownload} />
               )}
 
               {tab === 'client' && (
@@ -326,7 +289,12 @@ export function PfaDetailView(props: PfaDetailViewProps) {
                     {detailLoading ? <SectionSkeleton rows={2} /> : <FieldGrid fields={clientFields} />}
                   </Section>
 
-                  <Section title="Abonament & plăți">
+                </>
+              )}
+              {tab === 'plati' && (
+                <>
+                  <Stack direction="row" spacing={1}><Button variant="outlined" onClick={() => onOpenAction('plan')}>Schimbă planul</Button><Button variant="text" onClick={() => onOpenAction('discount')}>Aplică discount</Button></Stack>
+                  <Section title="Abonament și plăți">
                     {detailLoading ? (
                       <SectionSkeleton rows={3} />
                     ) : (
@@ -337,7 +305,11 @@ export function PfaDetailView(props: PfaDetailViewProps) {
                     )}
                   </Section>
 
-                  <Section title="Contabilitate">
+                </>
+              )}
+              {tab === 'contabilitate' && (
+                <>
+                  <Section title="Situație contabilă">
                     {detailLoading ? (
                       <SectionSkeleton rows={2} />
                     ) : (
@@ -350,6 +322,21 @@ export function PfaDetailView(props: PfaDetailViewProps) {
 
                   <PfaFiscalSettingsPanel pfaId={pfa.id} editable clientUserId={pfa.userId} />
                 </>
+              )}
+
+              {tab === 'activitate' && (
+                <Section title="Istoricul activității">
+                  {detailLoading ? <SectionSkeleton rows={4} /> : detail?.activityLog?.length ? (
+                    <Stack spacing={2.5} divider={<Divider />}>
+                      {detail.activityLog.map((event) => (
+                        <Box key={event.id}>
+                          <Typography variant="body1">{event.description}</Typography>
+                          <Typography variant="caption" color="text.secondary">{event.performedBy} · {new Date(event.createdAtUtc).toLocaleString('ro-RO')}</Typography>
+                        </Box>
+                      ))}
+                    </Stack>
+                  ) : <EmptyState title="Nu există activitate înregistrată." />}
+                </Section>
               )}
 
               {tab === 'dosar' && <CompanyFormationAdminPanel key={pfa.id} pfaId={pfa.id} />}
@@ -368,7 +355,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
             </Stack>
 
             {/* ── Coloana secundară ── */}
-            <Paper sx={{ position: { lg: 'sticky' }, top: 96, alignSelf: 'start' }}>
+            <Paper component="aside" sx={{ position: { lg: 'sticky' }, top: 96, alignSelf: 'start' }}>
               <Box sx={{ p: 2.5 }}>
                 <Typography variant="h2" sx={{ mb: 1.5 }}>
                   Progres onboarding
@@ -385,7 +372,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
                       sx={{ height: 4, borderRadius: 2 }}
                     />
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      {completed} din {steps.length} secțiuni validate
+                      {completed} din {steps.length} pași validați
                     </Typography>
                   </>
                 )}
@@ -393,78 +380,12 @@ export function PfaDetailView(props: PfaDetailViewProps) {
 
               <Divider />
 
-              <Stack sx={{ p: 1 }}>
-                {!isPending && (
-                  <Button
-                    variant="text"
-                    fullWidth
-                    onClick={onImpersonate}
-                    sx={{ justifyContent: 'flex-start' }}
-                  >
-                    Autentificare ca utilizator
-                  </Button>
-                )}
-                <Button
-                  variant="text"
-                  fullWidth
-                  onClick={() => onOpenAction('plan')}
-                  sx={{ justifyContent: 'flex-start' }}
-                >
-                  Schimbă plan
-                </Button>
-                <Button
-                  variant="text"
-                  fullWidth
-                  onClick={() => onOpenAction('discount')}
-                  sx={{ justifyContent: 'flex-start' }}
-                >
-                  Aplică discount
-                </Button>
-                <Button
-                  variant="text"
-                  fullWidth
-                  onClick={onOpenChat}
-                  sx={{ justifyContent: 'flex-start' }}
-                >
-                  Deschide chat
-                </Button>
-
-                <Divider sx={{ my: 0.5 }} />
-
-                <Button
-                  variant="text"
-                  fullWidth
-                  color="error"
-                  onClick={() => onOpenAction(isSuspended ? 'reactivate' : 'suspend')}
-                  sx={{ justifyContent: 'flex-start' }}
-                >
-                  {isSuspended ? 'Reactivează cont' : 'Suspendă cont'}
-                </Button>
-              </Stack>
-
-              <Divider />
-
               <Box sx={{ p: 2.5 }}>
-                <Typography variant="h2" sx={{ mb: 1.5 }}>
-                  Activitate
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Ultima activitate: {meta.activity}
-                </Typography>
-                {detail?.activityLog?.length ? (
-                  <Stack spacing={1} sx={{ mt: 1.5 }}>
-                    {detail.activityLog.slice(0, 3).map((event) => (
-                      <Box key={event.id}>
-                        <Typography variant="body2">{event.description}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {event.performedBy}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Stack>
-                ) : null}
+                <Typography variant="h2" sx={{ mb: 1 }}>Contact și suport</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, overflowWrap: 'anywhere' }}>{pfa.userEmail}</Typography>
+                <Button variant="outlined" fullWidth onClick={onOpenChat}>Deschide conversația</Button>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>Ultima activitate: {meta.activity}</Typography>
               </Box>
-
               <Divider />
 
               <Box sx={{ p: 2.5 }}>
@@ -494,10 +415,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
         key={docRejectTarget?.id ?? 'none'}
         document={docRejectTarget}
         onClose={() => setDocRejectTarget(null)}
-        onConfirm={(doc, note) => {
-          onUpdateDocStatus(doc.id, 'Rejected', note)
-          setDocRejectTarget(null)
-        }}
+        onConfirm={(doc, note) => onUpdateDocStatus(doc.id, 'Rejected', note)}
       />
     </ThemeProvider>
   )

@@ -3,14 +3,15 @@ import { NotificationsInbox } from '../components/notifications/NotificationsPan
 import { useState, useEffect, useCallback } from 'react'
 import { ROUTES } from '../constants/routes'
 import {
-  Box, Paper, Stack, TextField, Typography, Card, CardContent,
+  Box, Paper, Stack, TextField, Typography, Avatar,
   CircularProgress, Alert, Chip, Button,
-  Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Snackbar,
+  Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Snackbar, ThemeProvider,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
 import { TOKENS } from '../constants/tokens'
-import { DashboardLayout } from '../components/layout/DashboardLayout'
+import { AdminLayout } from '../components/admin/AdminLayout'
+import { adminTheme } from '../theme/adminTheme'
 import { pfaService } from '../services/pfa.service'
 import { notificationService } from '../services/notification.service'
 import { userService, type UserProfile } from '../services/user.service'
@@ -168,7 +169,7 @@ function getApiErrorMessage(error: unknown, fallback: string) {
 const inputSx = {
   '& .MuiOutlinedInput-root': {
     backgroundColor: alpha(TOKENS.paper, 0.92),
-    borderRadius: TOKENS.radius.md,
+    borderRadius: `${TOKENS.radius.md}px`,
     '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.08) },
     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.16) },
     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.primary, 0.6), borderWidth: 2 },
@@ -181,7 +182,7 @@ export function AdminDashboard() {
   const navigate = useNavigate()
   const [manualTab, setActiveTab] = useState('overview')
   const linkedTab = notificationParams.get('tab') ?? ''
-  const activeTab = ['pfa', 'chat', 'notificari'].includes(linkedTab) ? linkedTab : manualTab
+  const activeTab = ['overview', 'pfa', 'pfa_inrolate', 'masini', 'pagini_firme', 'servicii', 'facturare', 'reduceri', 'asigurari', 'calendar', 'chat', 'contabili', 'notificari'].includes(linkedTab) ? linkedTab : manualTab
   const [search, setSearch] = useState('')
   const [onlyAwaitingAdmin, setOnlyAwaitingAdmin] = useState(false)
 
@@ -192,7 +193,7 @@ export function AdminDashboard() {
 
   // PFA detail
   const [manualPfa, setSelectedPfa] = useState<PfaSummary | null>(null)
-  const selectedPfa = notificationParams.get('user') && activeTab === 'pfa' ? pfas.find((pfa) => pfa.userId === notificationParams.get('user')) ?? null : manualPfa
+  const selectedPfa = notificationParams.get('user') && ['pfa', 'pfa_inrolate'].includes(activeTab) ? pfas.find((pfa) => pfa.userId === notificationParams.get('user')) ?? manualPfa : manualPfa
   const [documents, setDocuments] = useState<DocumentSummary[]>([])
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
@@ -297,8 +298,11 @@ export function AdminDashboard() {
       await documentService.updateStatus(id, status, note)
       setDocuments(docs => docs.map(d => d.id === id ? { ...d, status, reviewNote: status === 'Rejected' ? note ?? null : null } : d))
       setSnackbar({ open: true, message: `Documentul a fost ${status === 'Verified' ? 'aprobat' : 'respins'} cu succes.`, severity: 'success' })
+      setOnboardingRefreshKey((key) => key + 1)
+      return true
     } catch {
       setSnackbar({ open: true, message: 'Nu am putut actualiza statusul documentului. Te rugăm să încerci din nou.', severity: 'error' })
+      return false
     } finally {
       setStatusUpdatingDocId(null)
     }
@@ -433,6 +437,7 @@ export function AdminDashboard() {
       lastActivityAtUtc: pfa.lastActivityAtUtc,
     })
     setActiveTab('pfa_inrolate')
+    navigate(`/admin?tab=pfa_inrolate&user=${pfa.userId}`)
   }
 
   const openDetailAction = (action: DetailAction) => {
@@ -495,20 +500,20 @@ export function AdminDashboard() {
   }
 
   const navItems = [
-    { id: 'overview', label: 'Acasă', icon: <HomeRoundedIcon /> },
-    { id: 'pfa', label: 'Onboarding', icon: <PeopleAltRoundedIcon /> },
-    { id: 'pfa_inrolate', label: 'PFA-uri înrolate', icon: <HowToRegRoundedIcon /> },
-    { id: 'masini', label: 'Mașini Ridesharing', icon: <DirectionsCarFilledRoundedIcon /> },
+    { id: 'overview', label: 'Privire de ansamblu', group: 'Spațiu de lucru', icon: <HomeRoundedIcon /> },
+    { id: 'pfa', label: 'În curs de înrolare', group: 'Clienți', icon: <PeopleAltRoundedIcon /> },
+    { id: 'pfa_inrolate', label: 'Clienți înrolați', group: 'Clienți', icon: <HowToRegRoundedIcon /> },
+    { id: 'chat', label: 'Conversații', group: 'Clienți', icon: <ChatRoundedIcon /> },
+    { id: 'masini', label: 'Mașini ridesharing', group: 'Activitate comercială', icon: <DirectionsCarFilledRoundedIcon /> },
     // Lângă mașini, nu lângă setări: e tot moderare de conținut public, doar că a firmei.
-    { id: 'pagini_firme', label: 'Pagini firme', icon: <LanguageRoundedIcon /> },
-    { id: 'servicii', label: 'Servicii', icon: <ShoppingCartRoundedIcon /> },
-    { id: 'facturare', label: 'Facturare Oblio', icon: <ReceiptLongRoundedIcon /> },
-    { id: 'reduceri', label: 'Coduri reducere', icon: <LocalOfferRoundedIcon /> },
-    { id: 'asigurari', label: 'Asigurări', icon: <ShieldRoundedIcon /> },
-    { id: 'calendar', label: 'Calendar birou', icon: <EventAvailableRoundedIcon /> },
-    { id: 'chat', label: 'Chat Clienți', icon: <ChatRoundedIcon /> },
-    { id: 'contabili', label: 'Înrolare Contabili', icon: <SupervisedUserCircleRoundedIcon /> },
-    { id: 'notificari', label: 'Notificări', icon: <NotificationsActiveRoundedIcon /> },
+    { id: 'pagini_firme', label: 'Pagini firme', group: 'Activitate comercială', icon: <LanguageRoundedIcon /> },
+    { id: 'servicii', label: 'Servicii', group: 'Activitate comercială', icon: <ShoppingCartRoundedIcon /> },
+    { id: 'asigurari', label: 'Asigurări', group: 'Activitate comercială', icon: <ShieldRoundedIcon /> },
+    { id: 'facturare', label: 'Facturare Oblio', group: 'Finanțe', icon: <ReceiptLongRoundedIcon /> },
+    { id: 'reduceri', label: 'Coduri de reducere', group: 'Finanțe', icon: <LocalOfferRoundedIcon /> },
+    { id: 'calendar', label: 'Calendar birou', group: 'Administrare', icon: <EventAvailableRoundedIcon /> },
+    { id: 'contabili', label: 'Echipa de contabili', group: 'Administrare', icon: <SupervisedUserCircleRoundedIcon /> },
+    { id: 'notificari', label: 'Notificări', group: 'Administrare', icon: <NotificationsActiveRoundedIcon /> },
   ]
 
   const filteredPfas = pfas.filter(
@@ -580,6 +585,7 @@ export function AdminDashboard() {
     return (
       <>
         <PfaDetailView
+          key={pfa.id}
           pfa={pfa}
           detail={active}
           detailLoading={pfaDetailLoading}
@@ -611,12 +617,16 @@ export function AdminDashboard() {
             ['Documente lunare lipsă', String(active?.missingMonthlyDocuments ?? 0)],
             ['Documente de verificat', String(active?.documentsToReview ?? pfa.documentCount)],
           ]}
-          onBack={() => { navigate('/admin'); setSelectedPfa(null) }}
+          onBack={() => { navigate(`/admin?tab=${activeTab}`); setSelectedPfa(null) }}
           onImpersonate={() => handleImpersonate(pfa.userId, pfa.userName || pfa.fullName || pfa.userEmail)}
           onOpenAction={openDetailAction}
           onOpenChat={() => { navigate('/admin?tab=chat&user=' + pfa.userId); setSelectedPfa(null); setActiveTab('chat') }}
           onApprove={() => handleOpenStatusDialog('Approved')}
           onReject={() => handleOpenStatusDialog('Rejected')}
+          onDocumentsChanged={async () => {
+            // Un act încărcat din admin trebuie să apară imediat în pasul lui, fără reîncărcarea paginii.
+            setDocuments(await documentService.getByUser(pfa.userId))
+          }}
           onUpdateDocStatus={handleUpdateDocStatus}
           onOpenDocument={handleOpenDocument}
           onDownload={handleDownload}
@@ -629,7 +639,7 @@ export function AdminDashboard() {
 
         {/* Status update confirm dialog */}
         <Dialog open={statusDialog.open} onClose={() => setStatusDialog({ open: false, action: null })} maxWidth="xs" fullWidth>
-          <DialogTitle sx={{ fontWeight: 800 }}>
+          <DialogTitle sx={{ fontWeight: 650 }}>
             {statusDialog.action === 'Approved' ? 'Confirmare aprobare' : 'Confirmare respingere'}
           </DialogTitle>
           <DialogContent>
@@ -650,11 +660,11 @@ export function AdminDashboard() {
                   required
                 />
                 <Box>
-                  <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 700, mb: 0.5, display: 'block' }} component="p">
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, mb: 0.5, display: 'block' }} component="p">
                     CERTIFICAT DE ÎNREGISTRARE {existingCertificate ? '' : '*'}
                   </Typography>
                   {existingCertificate && !certificatFile && (
-                    <Alert severity="success" sx={{ mb: 1, borderRadius: TOKENS.radius.md }}>
+                    <Alert severity="success" sx={{ mb: 1, borderRadius: `${TOKENS.radius.md}px` }}>
                       Clientul a încărcat deja certificatul ({existingCertificate.originalFileName}). Se
                       folosește acesta — atașează unul nou doar dacă vrei să-l înlocuiești.
                     </Alert>
@@ -666,9 +676,9 @@ export function AdminDashboard() {
                     startIcon={<AttachFileRoundedIcon />}
                     sx={{
                       height: 56,
-                      borderRadius: TOKENS.radius.md,
+                      borderRadius: `${TOKENS.radius.md}px`,
                       border: `1px dashed ${alpha(TOKENS.ink, 0.2)}`,
-                      color: TOKENS.textSubtle,
+                      color: 'text.secondary',
                       justifyContent: 'flex-start',
                       px: 2,
                       '&:hover': {
@@ -726,7 +736,7 @@ export function AdminDashboard() {
         </Dialog>
 
         <Dialog open={Boolean(detailAction)} onClose={() => setDetailAction(null)} maxWidth="xs" fullWidth>
-          <DialogTitle sx={{ fontWeight: 900 }}>
+          <DialogTitle sx={{ fontWeight: 650 }}>
             {{
               plan: 'Schimbă plan',
               discount: 'Aplică discount',
@@ -779,7 +789,7 @@ export function AdminDashboard() {
               variant="contained"
               disabled={detailActionLoading}
               onClick={submitDetailAction}
-              sx={{ boxShadow: 'none', bgcolor: TOKENS.primary, fontWeight: 800 }}
+              sx={{ boxShadow: 'none', bgcolor: TOKENS.primary, fontWeight: 650 }}
             >
               {detailActionLoading ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Salvează'}
             </Button>
@@ -792,10 +802,14 @@ export function AdminDashboard() {
   // ─── PFA List ────────────────────────────────────────────────────────────────
   const renderPfaList = () => (
     <Stack spacing={3}>
+      <Box>
+        <Typography variant="h1">{activeTab === 'pfa_inrolate' ? 'Clienți înrolați' : 'În curs de înrolare'}</Typography>
+        <Typography color="text.secondary" variant="body1" sx={{ mt: 1 }}>Găsește un client, verifică documentele și urmărește progresul dosarului.</Typography>
+      </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <SearchRoundedIcon sx={{ color: TOKENS.textSubtle, mr: 1, fontSize: 20 }} />
-          <TextField variant="outlined" size="small" placeholder="Caută PFA..." value={search} onChange={(e) => setSearch(e.target.value)} sx={{ width: { xs: '100%', sm: 300 }, maxWidth: '100%', ...inputSx }} />
+          <SearchRoundedIcon sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} />
+          <TextField variant="outlined" size="small" label="Caută după nume sau email" value={search} onChange={(e) => setSearch(e.target.value)} sx={{ width: { xs: '100%', sm: 300 }, maxWidth: '100%', ...inputSx }} />
         </Box>
         <Chip
           label={`Așteaptă acțiune admin${awaitingAdminCount > 0 ? ` (${awaitingAdminCount})` : ''}`}
@@ -812,75 +826,42 @@ export function AdminDashboard() {
       </Box>
 
       {pfasLoading && <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress size={32} sx={{ color: TOKENS.primary }} /></Box>}
-      {pfasError && <Alert severity="error" sx={{ borderRadius: TOKENS.radius.md }}>{pfasError}</Alert>}
+      {pfasError && <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>{pfasError}</Alert>}
       {!pfasLoading && !pfasError && displayPfas.length === 0 && (
         <Box sx={{ py: 8, textAlign: 'center' }}>
           <Typography variant="body1" sx={{ color: TOKENS.textMuted }}>{search ? 'Nicio înregistrare găsită.' : 'Nu există înregistrări PFA.'}</Typography>
         </Box>
       )}
       {!pfasLoading && !pfasError && displayPfas.length > 0 && (
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
-          {displayPfas.map((pfa) => {
-            const isApproved = pfa.status.toLowerCase() === 'approved'
-            const lastActivity = pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : 'Fără activitate'
-
-            return (
-            <Card key={pfa.id} elevation={0} sx={{ border: `1px solid ${alpha(TOKENS.ink, 0.07)}`, borderRadius: TOKENS.radius.lg, boxShadow: 'none', bgcolor: TOKENS.paper, transition: 'all 0.2s', '&:hover': { borderColor: alpha(TOKENS.primary, 0.35), boxShadow: TOKENS.shadow.sm } }}>
-              <CardContent sx={{ p: 2.25 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5, gap: 1.5 }}>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 900, color: TOKENS.ink, lineHeight: 1.2 }} noWrap title={pfa.userName}>
-                      {pfa.userName || pfa.fullName || 'PFA fără nume'}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: TOKENS.textMuted, display: 'block', mt: 0.35 }} noWrap title={pfa.fullName || pfa.userEmail}>
-                      {pfa.fullName || pfa.userEmail}
-                    </Typography>
-                  </Box>
-                  <Chip label={statusLabel(pfa.status)} size="small" sx={{ fontWeight: 800, fontSize: '0.68rem', bgcolor: alpha(statusColor(pfa.status), 0.1), color: statusColor(pfa.status), border: `1px solid ${alpha(statusColor(pfa.status), 0.2)}` }} />
+        <Paper sx={{ overflow: 'hidden' }}>
+          <Box sx={{ px: 2.5, py: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+            <Typography variant="body2" color="text.secondary">{displayPfas.length} clienți afișați</Typography>
+          </Box>
+          {displayPfas.map((pfa) => (
+            <Box component="article" key={pfa.id} sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'minmax(220px, 1.6fr) minmax(160px, 1fr) minmax(180px, 1fr) auto' }, gap: 2, p: 2.5, alignItems: 'center', borderBottom: 1, borderColor: 'divider', '&:last-child': { borderBottom: 0 }, '&:hover': { bgcolor: 'grey.50' } }}>
+              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', minWidth: 0 }}>
+                <Avatar variant="rounded" sx={{ width: 40, height: 40, bgcolor: 'primary.light', color: 'text.primary', fontSize: 16 }}>{(pfa.userName || pfa.fullName || '?').charAt(0)}</Avatar>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>{pfa.userName || pfa.fullName || 'PFA fără nume'}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{pfa.userEmail}</Typography>
+                  {pfa.phone && <Typography variant="caption" color="text.secondary">{pfa.phone}</Typography>}
                 </Box>
-
-                <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', rowGap: 0.75, mb: 1.6 }}>
-                  {[pfaPlanLabel(pfa), subscriptionStatusLabel(pfa.subscriptionStatus)].map((label) => (
-                    <Chip
-                      key={label}
-                      label={label}
-                      size="small"
-                      sx={{ height: 24, borderRadius: TOKENS.radius.sm, bgcolor: alpha(TOKENS.ink, 0.04), color: TOKENS.ink, fontSize: '0.68rem', fontWeight: 800 }}
-                    />
-                  ))}
-                </Stack>
-
-                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 1.8 }}>
-                  {[
-                    ['Email', pfa.userEmail],
-                    ['Telefon', pfa.phone || '—'],
-                    ['Documente', pfa.documentCount.toString()],
-                    ['Activitate', lastActivity],
-                  ].map(([label, value]) => (
-                    <Box key={label} sx={{ minWidth: 0 }}>
-                      <Typography variant="caption" sx={{ color: TOKENS.textSubtle, fontWeight: 750 }}>{label}</Typography>
-                      <Typography variant="caption" sx={{ display: 'block', color: TOKENS.ink, fontWeight: 850, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={value}>
-                        {value}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                  <Button fullWidth variant="contained" size="small" onClick={() => setSelectedPfa(pfa)}
-                    sx={{ bgcolor: TOKENS.primary, boxShadow: 'none', color: TOKENS.ink, fontWeight: 850, '&:hover': { bgcolor: TOKENS.primaryStrong, boxShadow: 'none' } }}>
-                    Vezi detalii
-                  </Button>
-                  <Button fullWidth variant="outlined" size="small" disabled={!isApproved} onClick={() => handleImpersonate(pfa.userId, pfa.userName || pfa.fullName || pfa.userEmail)}
-                    sx={{ borderColor: alpha(TOKENS.ink, 0.14), color: TOKENS.ink, fontWeight: 800, '&:hover': { bgcolor: alpha(TOKENS.primary, 0.08), borderColor: alpha(TOKENS.primary, 0.42) } }}>
-                    Intră în dashboard client
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
-            )
-          })}
-        </Box>
+              </Stack>
+              <Box>
+                <Chip label={pfa.awaitingAdminAction ? 'Necesită verificare' : statusLabel(pfa.status)} size="small" sx={{ bgcolor: alpha(statusColor(pfa.status), 0.08), color: statusColor(pfa.status) }} />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>{pfa.documentCount} documente · {pfaPlanLabel(pfa)}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="body2">{subscriptionStatusLabel(pfa.subscriptionStatus)}</Typography>
+                <Typography variant="caption" color="text.secondary">{pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : 'Fără activitate'}</Typography>
+              </Box>
+              <Stack direction={{ xs: 'row', lg: 'column' }} sx={{ gap: 0.5, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                <Button variant="outlined" size="small" onClick={() => { setSelectedPfa(pfa); navigate('/admin?tab=' + activeTab + '&user=' + pfa.userId) }}>Deschide dosarul</Button>
+                <Button size="small" disabled={pfa.status.toLowerCase() !== 'approved'} onClick={() => handleImpersonate(pfa.userId, pfa.userName || pfa.userEmail)}>Intră în contul clientului</Button>
+              </Stack>
+            </Box>
+          ))}
+        </Paper>
       )}
     </Stack>
   )
@@ -888,8 +869,8 @@ export function AdminDashboard() {
   // ─── Enroll Contabil ─────────────────────────────────────────────────────────
   const renderContabili = () => (
     <Box sx={{ maxWidth: 600, py: 4 }}>
-      <Paper elevation={0} sx={{ p: 4, borderRadius: TOKENS.radius.xl, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm, background: `linear-gradient(165deg, ${alpha(TOKENS.primary, 0.06)} 0%, ${TOKENS.paper} 35%)` }}>
-        <Typography variant="h6" sx={{ mb: 1, fontWeight: 800 }}>Înrolează Contabil Nou</Typography>
+      <Paper elevation={0} sx={{ p: 4, borderRadius: `${TOKENS.radius.xl}px`, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm, background: `linear-gradient(165deg, ${alpha(TOKENS.primary, 0.06)} 0%, ${TOKENS.paper} 35%)` }}>
+        <Typography variant="h6" sx={{ mb: 1, fontWeight: 650 }}>Înrolează Contabil Nou</Typography>
         <Typography variant="body2" sx={{ mb: 4, color: TOKENS.textMuted }}>Trimite o invitație pe email unui contabil pentru a-i oferi acces la platformă.</Typography>
         <Stack spacing={3}>
           <TextField 
@@ -931,13 +912,13 @@ export function AdminDashboard() {
         elevation={0}
         sx={{
           p: 2.5,
-          borderRadius: TOKENS.radius.lg,
+          borderRadius: `${TOKENS.radius.lg}px`,
           border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
           boxShadow: TOKENS.shadow.sm,
           bgcolor: alpha(TOKENS.primary, 0.04),
         }}
       >
-        <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 650, mb: 2 }}>
           Documentație recurentă (lunar)
         </Typography>
         <Button
@@ -991,13 +972,13 @@ export function AdminDashboard() {
   const userName = profile ? displayName(profile) : '...'
 
   return (
-    <DashboardLayout
+    <ThemeProvider theme={adminTheme}>
+    <AdminLayout
       navItems={navItems}
       activeId={activeTab}
-      onNavClick={(id) => { navigate('/admin'); setActiveTab(id); setSelectedPfa(null) }}
+      onNavClick={(id) => { navigate(`/admin?tab=${id}`); setActiveTab(id); setSelectedPfa(null); setSearch(''); setOnlyAwaitingAdmin(false) }}
       onLogout={handleLogout}
       userName={userName}
-      userRole="Admin"
     >
       {renderContent()}
       <Snackbar
@@ -1006,10 +987,11 @@ export function AdminDashboard() {
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity={snackbar.severity} sx={{ width: '100%', borderRadius: TOKENS.radius.md, fontWeight: 600 }}>
+        <Alert severity={snackbar.severity} sx={{ width: '100%', borderRadius: `${TOKENS.radius.md}px`, fontWeight: 600 }}>
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </DashboardLayout>
+    </AdminLayout>
+    </ThemeProvider>
   )
 }

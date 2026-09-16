@@ -25,7 +25,7 @@ export function Section({
     <>
       <Stack
         direction="row"
-        sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 2, px: flush ? 2.5 : 0, pt: flush ? 2 : 0, pb: flush ? 1.5 : 1.5 }}
+        sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, px: 2.5, pt: 2.5, pb: 2 }}
       >
         <Typography variant="h2">{title}</Typography>
         {action}
@@ -43,5 +43,5 @@ export function Section({
     </>
   )
 
-  return bare ? <Box>{body}</Box> : <Paper>{body}</Paper>
+  return bare ? <Box component="section">{body}</Box> : <Paper component="section">{body}</Paper>
 }

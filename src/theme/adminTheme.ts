@@ -37,10 +37,10 @@ export const adminTheme = createTheme({
       main: TOKENS.primary,
       dark: TOKENS.primaryStrong,
       light: 'rgba(92, 203, 245, 0.10)',
-      contrastText: '#FFFFFF',
+      contrastText: TOKENS.ink,
     },
-    background: { default: TOKENS.surface, paper: TOKENS.paper },
-    text: { primary: TOKENS.ink, secondary: TOKENS.textMuted, disabled: TOKENS.textSubtle },
+    background: { default: '#F5F7FA', paper: TOKENS.paper },
+    text: { primary: TOKENS.ink, secondary: '#626B7A', disabled: '#77808E' },
     divider: TOKENS.border,
     // Scara neutră a platformei: aceleași suprafețe (`surfaceAlt`) și aceleași borduri
     // translucide, ca fundalurile discrete să se așeze peste orice, nu doar peste alb.
@@ -86,12 +86,16 @@ export const adminTheme = createTheme({
     fontFamily: fontStack,
     // Corpurile de text urcă în greutate față de MUI implicit, ca în restul platformei; ce
     // rămâne specific adminului sunt dimensiunile mici și `line-height`-urile strânse.
-    h1: { fontSize: 22, fontWeight: 750, lineHeight: 1.25, letterSpacing: '-0.02em' },
-    h2: { fontSize: 15, fontWeight: 700, lineHeight: 1.35, letterSpacing: '-0.01em' },
+    h1: { fontSize: 28, fontWeight: 700, lineHeight: 1.25, letterSpacing: '-0.035em' },
+    h2: { fontSize: 17, fontWeight: 650, lineHeight: 1.4, letterSpacing: '-0.015em' },
+    h3: { fontSize: 24, fontWeight: 700, lineHeight: 1.3, letterSpacing: '-0.025em' },
+    h4: { fontSize: 28, fontWeight: 700, lineHeight: 1.3, letterSpacing: '-0.035em' },
+    h5: { fontSize: 22, fontWeight: 650, lineHeight: 1.35 },
+    h6: { fontSize: 17, fontWeight: 650, lineHeight: 1.4 },
     subtitle2: { fontSize: 14, fontWeight: 600, lineHeight: 1.4 },
-    body1: { fontSize: 14, fontWeight: 450, lineHeight: 1.5 },
-    body2: { fontSize: 13, fontWeight: 450, lineHeight: 1.5 },
-    caption: { fontSize: 13, fontWeight: 450, lineHeight: 1.4 },
+    body1: { fontSize: 14, fontWeight: 450, lineHeight: 1.65 },
+    body2: { fontSize: 13, fontWeight: 450, lineHeight: 1.6 },
+    caption: { fontSize: 12, fontWeight: 450, lineHeight: 1.5 },
     // UPPERCASE-ul implicit de pe Button e cel mai vizibil semn de „temă MUI neatinsă".
     button: { fontSize: 14, fontWeight: 650, textTransform: 'none' },
   },
@@ -99,7 +103,7 @@ export const adminTheme = createTheme({
   components: {
     MuiPaper: {
       defaultProps: { elevation: 0, variant: 'outlined' },
-      styleOverrides: { root: { backgroundImage: 'none', borderRadius: TOKENS.radius.lg } },
+      styleOverrides: { root: { backgroundImage: 'none', borderRadius: TOKENS.radius.md } },
     },
     MuiCard: { defaultProps: { elevation: 0, variant: 'outlined' } },
     MuiButton: {
@@ -111,14 +115,26 @@ export const adminTheme = createTheme({
           '&:active': { transform: 'scale(0.98)' },
           '&.Mui-focusVisible': { boxShadow: '0 0 0 3px rgba(92, 203, 245, 0.35)' },
           '&.MuiButton-containedPrimary:hover': { backgroundColor: TOKENS.primaryStrong },
+          '&.MuiButton-text.MuiButton-colorPrimary': { color: TOKENS.ink },
+          '&.MuiButton-outlined.MuiButton-colorPrimary': { color: TOKENS.ink, borderColor: TOKENS.borderHover },
         },
-        sizeMedium: { paddingBlock: 6, paddingInline: 12 },
+        sizeMedium: { paddingBlock: 9, paddingInline: 16 },
       },
     },
     MuiTab: {
-      styleOverrides: { root: { minHeight: 44, padding: '0 12px', fontSize: 14, fontWeight: 650 } },
+      styleOverrides: { root: { minHeight: 48, padding: '0 16px', fontSize: 13, fontWeight: 600, textTransform: 'none', '&.Mui-selected': { color: TOKENS.ink } } },
     },
-    MuiTabs: { styleOverrides: { indicator: { height: 2 } } },
+    MuiTabs: { styleOverrides: { root: { minHeight: 48 }, indicator: { height: 3, borderRadius: '3px 3px 0 0' } } },
+    MuiTextField: { defaultProps: { size: 'small' } },
+    MuiOutlinedInput: { styleOverrides: { root: { backgroundColor: TOKENS.paper, fontSize: 14 } } },
+    MuiTableCell: { styleOverrides: {
+      root: { borderColor: TOKENS.border, padding: '16px 20px', fontVariantNumeric: 'tabular-nums' },
+      head: { backgroundColor: '#F8FAFC', color: '#626B7A', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap' },
+    } },
+    MuiTableRow: { styleOverrides: { root: { '&:last-child td': { borderBottom: 0 } } } },
+    MuiDialogTitle: { styleOverrides: { root: { fontWeight: 650, fontSize: 20, padding: '24px 24px 16px' } } },
+    MuiDialogActions: { styleOverrides: { root: { padding: '16px 24px 24px', gap: 8 } } },
+    MuiAlert: { styleOverrides: { root: { borderRadius: 10, alignItems: 'center' } } },
     MuiListItemButton: { styleOverrides: { root: { minHeight: 44 } } },
     MuiChip: {
       styleOverrides: { root: { borderRadius: TOKENS.radius.sm, height: 22, fontSize: 12 } },

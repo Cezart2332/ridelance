@@ -93,7 +93,7 @@ export function UberImportAdminPanel({ pfaRegistrationId, clientName }: UberImpo
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
+        borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
         border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,
       }}
@@ -109,7 +109,7 @@ export function UberImportAdminPanel({ pfaRegistrationId, clientName }: UberImpo
               width: 38,
               height: 38,
               flexShrink: 0,
-              borderRadius: DASHBOARD_TOKENS.radius.md,
+              borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
               display: 'grid',
               placeItems: 'center',
               color: DASHBOARD_TOKENS.accent,
@@ -119,7 +119,7 @@ export function UberImportAdminPanel({ pfaRegistrationId, clientName }: UberImpo
             <LocalTaxiRoundedIcon />
           </Box>
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 850, color: DASHBOARD_TOKENS.ink }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 650, color: DASHBOARD_TOKENS.ink }}>
               Import raport Uber
             </Typography>
             <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>
@@ -141,7 +141,7 @@ export function UberImportAdminPanel({ pfaRegistrationId, clientName }: UberImpo
             variant="outlined"
             startIcon={<CloudUploadRoundedIcon />}
             onClick={() => inputRef.current?.click()}
-            sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, fontWeight: 800, textTransform: 'none' }}
+            sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 650, textTransform: 'none' }}
           >
             Alege CSV
           </Button>
@@ -150,8 +150,8 @@ export function UberImportAdminPanel({ pfaRegistrationId, clientName }: UberImpo
             disabled={selectedFiles.length === 0 || uploading}
             onClick={handleUpload}
             sx={{
-              borderRadius: DASHBOARD_TOKENS.radius.md,
-              fontWeight: 800,
+              borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
+              fontWeight: 650,
               textTransform: 'none',
               bgcolor: DASHBOARD_TOKENS.primary,
               boxShadow: 'none',
@@ -205,15 +205,15 @@ export function UberImportAdminPanel({ pfaRegistrationId, clientName }: UberImpo
                   key={item.label}
                   sx={{
                     p: 1.5,
-                    borderRadius: DASHBOARD_TOKENS.radius.md,
+                    borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                     bgcolor: DASHBOARD_TOKENS.surface,
                     border: `1px solid ${DASHBOARD_TOKENS.border}`,
                   }}
                 >
-                  <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <Typography sx={{ color: 'text.secondary', fontSize: '0.72rem', fontWeight: 650, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     {item.label}
                   </Typography>
-                  <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 850, fontVariantNumeric: 'tabular-nums', mt: 0.3 }}>
+                  <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 650, fontVariantNumeric: 'tabular-nums', mt: 0.3 }}>
                     {item.value}
                   </Typography>
                 </Box>
@@ -232,16 +232,16 @@ export function UberImportAdminPanel({ pfaRegistrationId, clientName }: UberImpo
                     gap: 1.5,
                     alignItems: 'center',
                     p: 1.2,
-                    borderRadius: DASHBOARD_TOKENS.radius.md,
+                    borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                     border: `1px solid ${DASHBOARD_TOKENS.border}`,
                   }}
                 >
                   <Typography
-                    sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 650, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                   >
                     {item.fileName}
                   </Typography>
-                  <Chip label={item.fileType} size="small" sx={{ fontWeight: 800, justifySelf: 'start' }} />
+                  <Chip label={item.fileType} size="small" sx={{ fontWeight: 650, justifySelf: 'start' }} />
                   <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontWeight: 700, display: { xs: 'none', md: 'block' } }}>
                     {item.month}/{item.year}
                   </Typography>

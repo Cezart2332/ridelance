@@ -22,7 +22,7 @@ import { serviceOrdersService, type ServiceOrder } from '../../../../services/se
 const inputSx = {
   '& .MuiOutlinedInput-root': {
     backgroundColor: alpha(TOKENS.paper, 0.92),
-    borderRadius: TOKENS.radius.md,
+    borderRadius: `${TOKENS.radius.md}px`,
     '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.08) },
     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.16) },
     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.primary, 0.6), borderWidth: 2 },
@@ -72,8 +72,8 @@ export function ServicesAdminView() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5" sx={{ fontWeight: 800, mb: 0.5 }}>
-          Comenzi servicii (landing)
+        <Typography variant="h1" sx={{ fontWeight: 650, mb: 0.5 }}>
+          Comenzi de servicii
         </Typography>
         <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
           Plăți fără cont — contactul furnizat de client și serviciul ales.
@@ -107,11 +107,12 @@ export function ServicesAdminView() {
       {!loading && !error && orders.length > 0 && (
         <TableContainer
           sx={{
+            bgcolor: 'background.paper',
             overflowX: 'auto',
             WebkitOverflowScrolling: 'touch',
             width: '100%',
             maxWidth: '100%',
-            borderRadius: TOKENS.radius.lg,
+            borderRadius: `${TOKENS.radius.lg}px`,
             border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
             boxShadow: TOKENS.shadow.sm,
           }}
@@ -119,22 +120,22 @@ export function ServicesAdminView() {
           <Table size="small">
             <TableHead>
               <TableRow sx={{ bgcolor: alpha(TOKENS.surface, 0.7) }}>
-                <TableCell sx={{ fontWeight: 800 }}>Client</TableCell>
-                <TableCell sx={{ fontWeight: 800 }}>Serviciu</TableCell>
-                <TableCell sx={{ fontWeight: 800 }}>Sumă</TableCell>
-                <TableCell sx={{ fontWeight: 800 }}>Data</TableCell>
-                <TableCell sx={{ fontWeight: 800 }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 650 }}>Client</TableCell>
+                <TableCell sx={{ fontWeight: 650 }}>Serviciu</TableCell>
+                <TableCell sx={{ fontWeight: 650 }}>Sumă</TableCell>
+                <TableCell sx={{ fontWeight: 650 }}>Data</TableCell>
+                <TableCell sx={{ fontWeight: 650 }}>Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {orders.map((order) => (
                 <TableRow key={order.id} sx={{ '&:hover': { bgcolor: alpha(TOKENS.primary, 0.03) } }}>
                   <TableCell>
-                    <Typography sx={{ fontWeight: 800 }}>{order.customerName}</Typography>
-                    <Typography variant="caption" sx={{ color: TOKENS.textSubtle, display: 'block' }}>
+                    <Typography sx={{ fontWeight: 650 }}>{order.customerName}</Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
                       {order.customerEmail}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                       {order.customerPhone}
                     </Typography>
                   </TableCell>

@@ -128,7 +128,7 @@ export function CompanyPagesAdminView() {
   return (
     <Stack spacing={2.5}>
       <Box>
-        <Typography sx={{ fontWeight: 800, fontSize: '1.3rem', color: TOKENS.ink }}>
+        <Typography sx={{ fontWeight: 650, fontSize: '1.3rem', color: TOKENS.ink }}>
           Pagini firme
         </Typography>
         <Typography sx={{ mt: 0.4, fontSize: '0.9rem', color: alpha(TOKENS.ink, 0.62) }}>
@@ -141,7 +141,7 @@ export function CompanyPagesAdminView() {
         elevation={0}
         sx={{
           p: 2,
-          borderRadius: TOKENS.radius.lg,
+          borderRadius: `${TOKENS.radius.lg}px`,
           border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
         }}
       >
@@ -196,7 +196,7 @@ export function CompanyPagesAdminView() {
       </Paper>
 
       {error && (
-        <Alert severity="error" sx={{ borderRadius: TOKENS.radius.md, fontWeight: 600 }}>
+        <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px`, fontWeight: 600 }}>
           {error}
         </Alert>
       )}
@@ -206,7 +206,7 @@ export function CompanyPagesAdminView() {
           <CircularProgress />
         </Box>
       ) : visible.length === 0 ? (
-        <Alert severity="success" sx={{ borderRadius: TOKENS.radius.md, fontWeight: 600 }}>
+        <Alert severity="success" sx={{ borderRadius: `${TOKENS.radius.md}px`, fontWeight: 600 }}>
           {filter === 'Pending'
             ? 'Nicio pagină nu așteaptă verificarea.'
             : 'Nicio pagină care să corespundă filtrului.'}
@@ -215,13 +215,13 @@ export function CompanyPagesAdminView() {
         <TableContainer
           component={Paper}
           elevation={0}
-          sx={{ borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}` }}
+          sx={{ borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${alpha(TOKENS.ink, 0.08)}` }}
         >
           <Table size="small">
             <TableHead>
               <TableRow>
                 {['Firmă', 'Adresă publică', 'Stare', 'Secțiuni oprite', 'Trimisă', ''].map((heading, index) => (
-                  <TableCell key={heading || index} sx={{ fontWeight: 800, fontSize: '0.75rem' }}>
+                  <TableCell key={heading || index} sx={{ fontWeight: 650, fontSize: '0.75rem' }}>
                     {heading}
                   </TableCell>
                 ))}

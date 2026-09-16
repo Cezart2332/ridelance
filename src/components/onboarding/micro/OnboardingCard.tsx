@@ -40,7 +40,7 @@ export function OnboardingCard({ eyebrow, icon, title, tone = 'accent', children
         width: '100%',
         maxWidth: 720,
         mx: 'auto',
-        borderRadius: `${TOKENS.radius.xl}px`,
+        borderRadius: `${TOKENS.radius.md}px`,
         border: `1px solid ${TOKENS.border}`,
         backgroundColor: TOKENS.paper,
         p: { xs: 2.5, sm: 4, md: 5 },
@@ -51,7 +51,7 @@ export function OnboardingCard({ eyebrow, icon, title, tone = 'accent', children
         sx={{
           width: 48,
           height: 48,
-          borderRadius: `${TOKENS.radius.lg}px`,
+          borderRadius: `${TOKENS.radius.md}px`,
           backgroundColor: colors.bg,
           display: 'grid',
           placeItems: 'center',
