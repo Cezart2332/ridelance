@@ -7,6 +7,7 @@ import {
   ELDRIVE_NETWORK,
   ELDRIVE_TARIFFS,
 } from '../../data/eldrive'
+import { EldriveStations } from './eldrive/EldriveStations'
 import type { OfferTokens } from './offerTokens'
 
 /**
@@ -143,6 +144,9 @@ export function EldriveOffer({ tokens, title }: EldriveOfferProps) {
           </Box>
         ))}
       </Box>
+
+      {/* Harta stațiilor, sub ofertă: aceeași în Parteneri și în Beneficii. */}
+      <EldriveStations tokens={tokens} />
     </Stack>
   )
 }

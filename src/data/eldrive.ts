@@ -61,13 +61,11 @@ export const ELDRIVE_NETWORK = {
   area: 'București + Ilfov',
 }
 
-/** Textele secțiunii de hartă. Se afișează doar când există stații — vezi `ELDRIVE_STATIONS`. */
+/** Textele secțiunii de hartă, sub oferta Eldrive. */
 export const ELDRIVE_MAP_SECTION = {
-  title: 'Harta stațiilor Eldrive incluse în ofertă',
-  text:
-    'Secțiune dedicată în pagina de Parteneri. Poți vedea toate stațiile eligibile, lista completă ' +
-    'în stânga, detalii despre putere și conectori, plus navigare rapidă din telefon.',
-  facts: ['17 locații', 'București + Ilfov', 'Tarife RIDElance'],
+  kicker: 'Stații incluse',
+  title: 'Unde încarci la tarif RIDElance',
+  text: 'Alege stația din listă sau de pe hartă, verifică tariful și pornește navigarea direct din telefon.',
 }
 
 /** Ce vezi în platformă pentru fiecare stație. */
@@ -86,25 +84,48 @@ export const ELDRIVE_CAPABILITIES = [
   },
 ]
 
+/** Cum se taxează o stație: zi și noapte diferit, sau același tarif la orice oră. */
+export type EldriveStationTariff = 'daynight' | 'nonstop'
+
 export interface EldriveStation {
+  id: string
   name: string
   address: string
+  tariff: EldriveStationTariff
   latitude: number
   longitude: number
-  /** Putere în kW, dacă e cunoscută. */
-  powerKw?: number
-  connectors?: string[]
+  /**
+   * Punctul e la nivel de stradă, nu la numărul exact: geocodarea n-a găsit adresa întreagă.
+   * Navigarea merge oricum pe adresa scrisă, nu pe coordonate, deci șoferul ajunge unde trebuie.
+   */
+  approximate?: boolean
 }
 
 /**
- * Stațiile eligibile, pentru harta din pagina de Parteneri.
+ * Stațiile eligibile, din harta primită de la partener.
  *
- * Goală deocamdată: materialul de la partener numără 17 stații în București și Ilfov, dar fișierul
- * cu adresele și coordonatele lor n-a ajuns la noi. Nu se inventează — o stație pusă la o adresă
- * greșită trimite un șofer cu bateria goală în locul nepotrivit.
- *
- * Interfața se comportă corect cu lista goală: secțiunea de hartă pur și simplu nu se randează, iar
- * numărul din text vine din `ELDRIVE_NETWORK`, care e o cifră comunicată, nu una derivată din listă.
- * Când vin datele, se completează aici și restul merge singur.
+ * Coordonatele sunt calculate o singură dată, din adrese, cu geocodarea Mapbox — nu la fiecare
+ * deschidere a paginii, cum făcea materialul partenerului (17 cereri înainte să apară un pin).
+ * Snagov Plaza e căutată după nume: adresa ei („Intersecția Snagov, DN1”) cădea pe același punct
+ * ca Cosmoville. Bragadiru 1 și 2 sunt vecine pe aceeași stradă și au același punct; harta le
+ * desface vizual.
  */
-export const ELDRIVE_STATIONS: EldriveStation[] = []
+export const ELDRIVE_STATIONS: EldriveStation[] = [
+  { id: 'pipera-plaza', name: 'Pipera Plaza', address: 'Șoseaua București Nord nr. 14, Voluntari, Ilfov', tariff: 'daynight', latitude: 44.490276, longitude: 26.126937 },
+  { id: 'afi-palace-cotroceni', name: 'AFI Palace Cotroceni', address: 'Bulevardul General Paul Teodorescu nr. 4, București', tariff: 'daynight', latitude: 44.429233, longitude: 26.053527 },
+  { id: 'cosmoville-balotesti', name: 'Cosmoville Balotești', address: 'Calea București nr. 1M, Balotești, Ilfov', tariff: 'daynight', latitude: 44.623312, longitude: 26.069422, approximate: true },
+  { id: 'lemon-retail-park', name: 'Lemon Retail Park', address: 'Strada Popasului nr. 110, Voluntari, Ilfov', tariff: 'daynight', latitude: 44.490696, longitude: 26.153835 },
+  { id: 'la-strada-popesti-leordeni', name: 'La Strada Popești-Leordeni', address: 'Strada Amurgului nr. 34, Popești-Leordeni, Ilfov', tariff: 'daynight', latitude: 44.370639, longitude: 26.150814 },
+  { id: 'la-strada-bragadiru-1', name: 'La Strada Bragadiru 1', address: 'Strada Cristalului nr. 3, Bragadiru, Ilfov', tariff: 'daynight', latitude: 44.388265, longitude: 26.010378 },
+  { id: 'la-strada-bragadiru-2', name: 'La Strada Bragadiru 2', address: 'Strada Cristalului nr. 1, Bragadiru, Ilfov', tariff: 'daynight', latitude: 44.388265, longitude: 26.010378 },
+  { id: 'la-strada-militari-est', name: 'La Strada Militari Est', address: 'Strada Rezervelor nr. 59, Roșu, Chiajna, Ilfov', tariff: 'daynight', latitude: 44.447273, longitude: 25.987112 },
+  { id: 'la-strada-militari-vest', name: 'La Strada Militari Vest', address: 'Strada Sergent Ilie Petre nr. 57, Chiajna, Ilfov', tariff: 'daynight', latitude: 44.450848, longitude: 25.975295, approximate: true },
+  { id: 'la-strada-otopeni', name: 'La Strada Otopeni', address: 'Strada 23 August nr. 204, Otopeni, Ilfov', tariff: 'daynight', latitude: 44.554653, longitude: 26.093587 },
+  { id: 'vitantis-shopping-center', name: 'Vitantis Shopping Center', address: 'Șoseaua Vitan-Bârzești nr. 7A, București', tariff: 'daynight', latitude: 44.39862, longitude: 26.143321 },
+  { id: 'oto-street-mall', name: 'OTO Street Mall', address: 'Strada Drumul Odăii nr. 42, Otopeni, Ilfov', tariff: 'daynight', latitude: 44.536209, longitude: 26.061332 },
+  { id: 'snagov-plaza', name: 'Snagov Plaza', address: 'Intersecția Snagov, Șoseaua București–Ploiești DN1, Vlădiceasca, Ilfov', tariff: 'daynight', latitude: 44.668255, longitude: 26.075225 },
+  { id: 'centrul-comercial-esplanada', name: 'Centrul Comercial Esplanada', address: 'Șoseaua Vergului nr. 20, București', tariff: 'daynight', latitude: 44.439651, longitude: 26.183422 },
+  { id: 'm-park-titan', name: 'M Park Titan', address: 'Strada Ilioara nr. 54C, Sector 3, București', tariff: 'daynight', latitude: 44.406871, longitude: 26.162588 },
+  { id: 'mega-mall', name: 'Mega Mall', address: 'Bulevardul Pierre de Coubertin nr. 3–5, București', tariff: 'nonstop', latitude: 44.441169, longitude: 26.150352 },
+  { id: 'unirea-shopping-center', name: 'Unirea Shopping Center', address: 'Piața Unirii nr. 1, București', tariff: 'nonstop', latitude: 44.428016, longitude: 26.104234 },
+]
