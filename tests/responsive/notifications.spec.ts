@@ -13,7 +13,7 @@ async function mock(page: Page, role: string) {
   let notifications = items()
   await page.route('**/users/refresh-token', (route) => route.fulfill({ json: { accessToken: 'test', userId: 'owner', role } }))
   await page.route('**/users/profile', (route) => route.fulfill({ json: { firstName: 'Ion', lastName: 'Pop', email: 'ion@example.test', role } }))
-  await page.route('**/pfa-registrations', (route) => route.fulfill({ json: { items: [] } }))
+  await page.route(/\/pfa-registrations(\?.*)?$/, (route) => route.fulfill({ json: { items: [] } }))
   await page.route(/\/notifications(?:\/.*)?$/, async (route) => {
     const path = new URL(route.request().url()).pathname
     if (path.includes('/src/')) { await route.fallback(); return }

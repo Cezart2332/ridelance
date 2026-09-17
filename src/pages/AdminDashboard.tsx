@@ -80,6 +80,11 @@ interface PfaSummary {
   awaitingAdminAction: boolean
   /** Onboarding complet: toți pașii validați. Nu e același lucru cu dosarul PFA aprobat. */
   onboardingCompletedAtUtc: string | null
+  /**
+   * Fals pentru un client care n-a ajuns la pasul 2, unde se creează dosarul PFA. Atunci `id` e
+   * id-ul contului, iar acțiunile care cer un dosar (aprobare, plan, discount) nu au sens.
+   */
+  hasRegistration: boolean
   createdAtUtc: string
   lastActivityAtUtc: string | null
 }
@@ -109,6 +114,7 @@ function normalizePfaSummary(item: any): PfaSummary {
     documentCount: item.documentCount,
     awaitingAdminAction: Boolean(item.awaitingAdminAction),
     onboardingCompletedAtUtc: item.onboardingCompletedAtUtc ?? null,
+    hasRegistration: item.hasRegistration !== false,
     createdAtUtc: item.createdAtUtc,
     lastActivityAtUtc: item.lastActivityAtUtc,
   }
@@ -429,6 +435,8 @@ export function AdminDashboard() {
       isOwner: false,
       cui: null,
       documentCount: 0,
+      // Cardurile din overview vin din dosare.
+      hasRegistration: true,
       // Cardul din overview nu poartă semnalul; oricum se citește doar de filtrul din listă.
       awaitingAdminAction: false,
       // Cardul din overview e deja filtrat pe înrolare; data exactă nu se transmite.

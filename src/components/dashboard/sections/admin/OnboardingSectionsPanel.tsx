@@ -57,6 +57,8 @@ interface OnboardingSectionsPanelProps {
   pfaStatus: string
   /** Contul clientului: actele încărcate din admin ajung în dosarul lui. */
   clientUserId: string
+  /** Fals cât clientul n-a ajuns la pasul 2: `pfaId` e atunci id-ul contului, nu al unui dosar. */
+  hasRegistration?: boolean
   documents: DocumentSummary[]
   statusUpdatingDocId: string | null
   openingId: string | null
@@ -661,6 +663,7 @@ export function OnboardingSectionsPanel({
   pfaId,
   pfaStatus,
   clientUserId,
+  hasRegistration = true,
   documents,
   statusUpdatingDocId,
   openingId,
@@ -937,7 +940,7 @@ export function OnboardingSectionsPanel({
                 )}
 
                 {/* Pasul PFA: actele puse de echipă în dosar */}
-                {group.pfa && (
+                {group.pfa && hasRegistration && (
                   <Box>
                     <Subheading>Adaugă acte PFA în dosarul clientului</Subheading>
                     <Typography variant="body2" sx={{ color: TOKENS.textMuted, mb: 1.5 }}>

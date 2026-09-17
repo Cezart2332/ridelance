@@ -26,6 +26,8 @@ import { DocumentLibrary } from '../../components/admin/DocumentLibrary'
 
 export interface PfaDetailSubject {
   id: string
+  /** Fals cât clientul n-are încă dosar PFA; `id` e atunci id-ul contului. */
+  hasRegistration?: boolean
   userId: string
   userEmail: string
   userName: string
@@ -130,6 +132,8 @@ export function PfaDetailView(props: PfaDetailViewProps) {
   const [docRejectTarget, setDocRejectTarget] = useState<DocumentSummary | null>(null)
 
   const isPending = pfa.status.toLowerCase() === 'pending'
+  // Cont fără dosar PFA încă: e la pasul de eligibilitate. Rămân doar acțiunile de cont.
+  const hasRegistration = pfa.hasRegistration !== false
   const isSuspended = (detail?.accountStatus ?? pfa.accountStatus).toLowerCase().includes('suspend')
 
   // Progresul de onboarding pentru coloana din dreapta. Aceeași sursă pe care o citește și
@@ -175,7 +179,9 @@ export function PfaDetailView(props: PfaDetailViewProps) {
     ? { label: 'Aprobă dosarul', onClick: onApprove }
     : { label: 'Autentificare ca utilizator', onClick: onImpersonate }
 
-  const headerMenu: ActionMenuItem[] = [
+  const headerMenu: ActionMenuItem[] = !hasRegistration
+    ? [{ key: 'chat', label: 'Deschide chat', onClick: onOpenChat }]
+    : [
         ...(isPending ? [{ key: 'reject', label: 'Respinge dosarul', onClick: onReject, destructive: true }] : []),
         { key: 'plan', label: 'Schimbă plan', onClick: () => onOpenAction('plan') },
         { key: 'discount', label: 'Aplică discount', onClick: () => onOpenAction('discount') },
@@ -221,7 +227,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
             status={
               <StatusBadge
                 label={detail?.accountStatus ?? pfa.accountStatus}
-                tone={isPending ? 'warning' : isSuspended ? 'error' : 'success'}
+                tone={isPending || !hasRegistration ? 'warning' : isSuspended ? 'error' : 'success'}
               />
             }
             primaryAction={primaryAction}
@@ -260,6 +266,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
                 <OnboardingSectionsPanel
                   pfaId={pfa.id}
                   pfaStatus={pfa.status}
+                  hasRegistration={hasRegistration}
                   clientUserId={pfa.userId}
                   documents={documents}
                   statusUpdatingDocId={statusUpdatingDocId}

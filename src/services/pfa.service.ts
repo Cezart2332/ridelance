@@ -169,7 +169,9 @@ export const pfaService = {
   },
 
   getAll: async () => {
-    const response = await api.get('/pfa-registrations');
+    // Lista întreagă: fără `pageSize`, serverul întorcea doar primele 20, iar un client nou putea
+    // rămâne pe pagina a doua, pe care adminul n-o cere niciodată.
+    const response = await api.get('/pfa-registrations', { params: { pageSize: 1000 } });
     return response.data;
   },
   
