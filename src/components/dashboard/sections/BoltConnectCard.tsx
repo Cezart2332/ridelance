@@ -55,7 +55,7 @@ export function BoltConnectCard() {
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
@@ -71,7 +71,7 @@ export function BoltConnectCard() {
                 width: 40,
                 height: 40,
                 flexShrink: 0,
-                borderRadius: DASHBOARD_TOKENS.radius.md,
+                borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                 display: 'grid',
                 placeItems: 'center',
                 color: DASHBOARD_TOKENS.accent,
@@ -105,7 +105,7 @@ export function BoltConnectCard() {
             onClick={() => setDialogOpen(true)}
             sx={{
               flexShrink: 0,
-              borderRadius: DASHBOARD_TOKENS.radius.md,
+              borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
               fontWeight: 800,
               textTransform: 'none',
               ...(isConnected
@@ -126,7 +126,7 @@ export function BoltConnectCard() {
         slotProps={{
           paper: {
             sx: {
-              borderRadius: DASHBOARD_TOKENS.radius.xl,
+              borderRadius: `${DASHBOARD_TOKENS.radius.xl}px`,
               overflow: 'hidden',
               bgcolor: DASHBOARD_TOKENS.paper,
             },

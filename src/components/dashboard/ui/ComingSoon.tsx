@@ -28,7 +28,7 @@ export function ComingSoon({ title, description, upcoming, icon }: ComingSoonPro
         sx={{
           px: { xs: 3, md: 5 },
           py: { xs: 5, md: 7 },
-          borderRadius: DASHBOARD_TOKENS.radius.xl,
+          borderRadius: `${DASHBOARD_TOKENS.radius.xl}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
           bgcolor: DASHBOARD_TOKENS.paper,
@@ -39,7 +39,7 @@ export function ComingSoon({ title, description, upcoming, icon }: ComingSoonPro
             sx={{
               width: 56,
               height: 56,
-              borderRadius: DASHBOARD_TOKENS.radius.lg,
+              borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
               display: 'grid',
               placeItems: 'center',
               color: DASHBOARD_TOKENS.primaryStrong,
@@ -87,7 +87,7 @@ export function ComingSoon({ title, description, upcoming, icon }: ComingSoonPro
                       width: 6,
                       height: 6,
                       flexShrink: 0,
-                      borderRadius: DASHBOARD_TOKENS.radius.full,
+                      borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                       bgcolor: DASHBOARD_TOKENS.accentSoft,
                     }}
                   />

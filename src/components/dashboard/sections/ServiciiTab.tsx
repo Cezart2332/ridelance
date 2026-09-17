@@ -72,7 +72,7 @@ export function ServiciiTab({ ownerType = 'Pfa' }: ServiciiTabProps) {
           elevation={0}
           sx={{
             p: { xs: 3, md: 4 },
-            borderRadius: T.radius.xl,
+            borderRadius: `${T.radius.xl}px`,
             border: `1px solid ${T.border}`,
             backgroundColor: T.paper,
             textAlign: 'center',
@@ -105,7 +105,7 @@ export function ServiciiTab({ ownerType = 'Pfa' }: ServiciiTabProps) {
               elevation={0}
               sx={{
                 p: { xs: 3, md: 3.5 },
-                borderRadius: T.radius.xl,
+                borderRadius: `${T.radius.xl}px`,
                 border: `1px solid ${T.border}`,
                 backgroundColor: T.paper,
                 boxShadow: T.shadow.sm,
@@ -126,7 +126,7 @@ export function ServiciiTab({ ownerType = 'Pfa' }: ServiciiTabProps) {
                   sx={{
                     width: 48,
                     height: 48,
-                    borderRadius: T.radius.lg,
+                    borderRadius: `${T.radius.lg}px`,
                     backgroundColor: alpha(T.primary, 0.08),
                     display: 'flex',
                     alignItems: 'center',
@@ -145,7 +145,7 @@ export function ServiciiTab({ ownerType = 'Pfa' }: ServiciiTabProps) {
                       fontSize: '0.72rem',
                       color: badge.color,
                       backgroundColor: badge.bg,
-                      borderRadius: T.radius.full,
+                      borderRadius: `${T.radius.full}px`,
                     }}
                   />
                 )}
@@ -199,7 +199,7 @@ export function ServiciiTab({ ownerType = 'Pfa' }: ServiciiTabProps) {
                 disabled={!paymentPolicyAccepted}
                 onClick={() => handleBuy(svc.key)}
                 sx={{
-                  borderRadius: T.radius.full,
+                  borderRadius: `${T.radius.full}px`,
                   fontWeight: 700,
                   fontSize: '0.9rem',
                   py: 1.1,
@@ -224,7 +224,7 @@ export function ServiciiTab({ ownerType = 'Pfa' }: ServiciiTabProps) {
         sx={{
           mt: 4,
           p: 2.5,
-          borderRadius: T.radius.lg,
+          borderRadius: `${T.radius.lg}px`,
           backgroundColor: alpha(T.primary, 0.04),
           border: `1px solid ${alpha(T.primary, 0.1)}`,
         }}

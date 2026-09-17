@@ -127,7 +127,7 @@ function DocumentRow({
       elevation={0}
       sx={{
         p: { xs: 2, md: 2.5 },
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
+        borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
         border: `1px solid ${item.status === 'Expirat' ? alpha(DASHBOARD_TOKENS.stateError, 0.3) : DASHBOARD_TOKENS.border}`,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,
         bgcolor: DASHBOARD_TOKENS.paper,
@@ -208,7 +208,7 @@ function DocumentRow({
             sx={{
               textTransform: 'none',
               fontWeight: 700,
-              borderRadius: DASHBOARD_TOKENS.radius.full,
+              borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
               whiteSpace: 'nowrap',
               ...(hasDocument
                 ? {}
@@ -319,7 +319,7 @@ export function DocumentsGroupPage({ group }: { group: DocumentGroup }) {
           <CircularProgress size={28} sx={{ color: DASHBOARD_TOKENS.primary }} />
         </Stack>
       ) : error ? (
-        <Alert severity="error" sx={{ borderRadius: DASHBOARD_TOKENS.radius.md }}>
+        <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
           {error}
         </Alert>
       ) : (

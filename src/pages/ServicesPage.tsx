@@ -46,7 +46,7 @@ export function ServicesPage() {
                   elevation={0}
                   sx={{
                     p: 4,
-                    borderRadius: TOKENS.radius.lg,
+                    borderRadius: `${TOKENS.radius.lg}px`,
                     border: `1px solid ${TOKENS.border}`,
                     display: 'flex',
                     flexDirection: 'column',
@@ -126,7 +126,7 @@ export function ServicesPage() {
                     onClick={() => openPurchase(svc.serviceKey, svc.title, svc.price)}
                     sx={{
                       alignSelf: 'flex-start',
-                      borderRadius: TOKENS.radius.full,
+                      borderRadius: `${TOKENS.radius.full}px`,
                       px: 3.5,
                       py: 1,
                       fontWeight: 700,

@@ -23,7 +23,7 @@ import { displayName } from '../../../utils/displayName'
 
 const cardSx = {
   p: { xs: 2.5, md: 3 },
-  borderRadius: DASHBOARD_TOKENS.radius.lg,
+  borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
   border: `1px solid ${DASHBOARD_TOKENS.border}`,
   boxShadow: DASHBOARD_TOKENS.shadow.sm,
 } as const
@@ -110,13 +110,13 @@ export function ProfileTab() {
                   <Chip
                     label={formatRole(profile.role)}
                     size="small"
-                    sx={{ fontWeight: 750, borderRadius: DASHBOARD_TOKENS.radius.full, color: DASHBOARD_TOKENS.primaryStrong, backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.12) }}
+                    sx={{ fontWeight: 750, borderRadius: `${DASHBOARD_TOKENS.radius.full}px`, color: DASHBOARD_TOKENS.primaryStrong, backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.12) }}
                   />
                 )}
                 <Chip
                   label="Plan: RIDElance Pro"
                   size="small"
-                  sx={{ fontWeight: 750, borderRadius: DASHBOARD_TOKENS.radius.full, color: DASHBOARD_TOKENS.textMuted, backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.05) }}
+                  sx={{ fontWeight: 750, borderRadius: `${DASHBOARD_TOKENS.radius.full}px`, color: DASHBOARD_TOKENS.textMuted, backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.05) }}
                 />
               </Stack>
             </Box>
@@ -126,7 +126,7 @@ export function ProfileTab() {
             <Box
               sx={{
                 p: 2,
-                borderRadius: DASHBOARD_TOKENS.radius.md,
+                borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                 border: `1px solid ${DASHBOARD_TOKENS.border}`,
                 backgroundColor: DASHBOARD_TOKENS.paper,
                 boxShadow: DASHBOARD_TOKENS.shadow.sm,
@@ -160,7 +160,7 @@ export function ProfileTab() {
                   boxShadow: 'none',
                   bgcolor: DASHBOARD_TOKENS.primary,
                   color: DASHBOARD_TOKENS.ink,
-                  borderRadius: DASHBOARD_TOKENS.radius.full,
+                  borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                   '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong, boxShadow: 'none' },
                 }}
               >

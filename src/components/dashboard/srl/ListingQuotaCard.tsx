@@ -18,7 +18,7 @@ export function ListingQuotaCard({ quota }: { quota: ListingQuota }) {
       elevation={0}
       sx={{
         p: { xs: 2, md: 2.4 },
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
+        borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
         border: `1px solid ${DASHBOARD_TOKENS.border}`,
         bgcolor: DASHBOARD_TOKENS.paper,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,

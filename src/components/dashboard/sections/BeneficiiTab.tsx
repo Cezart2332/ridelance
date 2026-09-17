@@ -141,7 +141,7 @@ function PartnerPanel({
     <Paper
       elevation={0}
       sx={{
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
+        borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
         border: `1px solid ${DASHBOARD_TOKENS.border}`,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,
         overflow: 'hidden',
@@ -164,7 +164,7 @@ function PartnerPanel({
             flexShrink: 0,
             display: 'grid',
             placeItems: 'center',
-            borderRadius: DASHBOARD_TOKENS.radius.md,
+            borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
             backgroundColor: DASHBOARD_TOKENS.paper,
             border: `1px solid ${DASHBOARD_TOKENS.border}`,
             p: 1,
@@ -210,7 +210,7 @@ function PartnerPanel({
               whiteSpace: 'nowrap',
               color: DASHBOARD_TOKENS.accent,
               border: `1px solid ${alpha(DASHBOARD_TOKENS.primary, 0.4)}`,
-              borderRadius: DASHBOARD_TOKENS.radius.full,
+              borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
               px: 2,
               '&:hover': { backgroundColor: DASHBOARD_TOKENS.accentWash },
             }}
@@ -256,7 +256,7 @@ function PartnerPanel({
                 <Box
                   sx={{
                     p: 2.5,
-                    borderRadius: DASHBOARD_TOKENS.radius.md,
+                    borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                     border: `1px solid ${alpha(DASHBOARD_TOKENS.primary, 0.35)}`,
                     backgroundColor: DASHBOARD_TOKENS.accentWash,
                   }}
@@ -368,7 +368,7 @@ function BlockCard({
           sx={{
             mt: 2,
             border: `1px solid ${DASHBOARD_TOKENS.border}`,
-            borderRadius: DASHBOARD_TOKENS.radius.sm,
+            borderRadius: `${DASHBOARD_TOKENS.radius.sm}px`,
             overflow: 'hidden',
           }}
         >
@@ -408,7 +408,7 @@ function BlockCard({
           sx={{
             mt: 2,
             p: 1.6,
-            borderRadius: DASHBOARD_TOKENS.radius.sm,
+            borderRadius: `${DASHBOARD_TOKENS.radius.sm}px`,
             backgroundColor: DASHBOARD_TOKENS.surfaceAlt,
             border: `1px solid ${DASHBOARD_TOKENS.border}`,
           }}
@@ -482,7 +482,7 @@ function Check({ label }: { label: string }) {
 
 const cardSx = {
   p: { xs: 2, md: 2.4 },
-  borderRadius: DASHBOARD_TOKENS.radius.md,
+  borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
   border: `1px solid ${DASHBOARD_TOKENS.border}`,
   backgroundColor: DASHBOARD_TOKENS.paper,
   display: 'flex',
@@ -495,7 +495,7 @@ const badgeSx = {
   fontWeight: 800,
   fontSize: '0.7rem',
   height: 24,
-  borderRadius: DASHBOARD_TOKENS.radius.full,
+  borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
   backgroundColor: DASHBOARD_TOKENS.accentWash,
   color: DASHBOARD_TOKENS.accent,
 } as const
@@ -508,7 +508,7 @@ const primaryButtonSx = {
   textTransform: 'none',
   color: '#fff',
   backgroundColor: DASHBOARD_TOKENS.primary,
-  borderRadius: DASHBOARD_TOKENS.radius.full,
+  borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
   boxShadow: 'none',
   '&:hover': { backgroundColor: DASHBOARD_TOKENS.primaryStrong, boxShadow: 'none' },
 } as const
@@ -521,6 +521,6 @@ const quietButtonSx = {
   color: DASHBOARD_TOKENS.accent,
   backgroundColor: DASHBOARD_TOKENS.paper,
   border: `1px solid ${DASHBOARD_TOKENS.border}`,
-  borderRadius: DASHBOARD_TOKENS.radius.full,
+  borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
   '&:hover': { backgroundColor: DASHBOARD_TOKENS.accentWash },
 } as const

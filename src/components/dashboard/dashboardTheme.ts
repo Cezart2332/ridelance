@@ -82,7 +82,7 @@ export const dashboardInputSx: SxProps<Theme> = {
   '& .MuiOutlinedInput-root': {
     backgroundColor: DASHBOARD_TOKENS.surface,
     color: DASHBOARD_TOKENS.ink,
-    borderRadius: DASHBOARD_TOKENS.radius.md,
+    borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
     fontWeight: 500,
     '& .MuiOutlinedInput-notchedOutline': { borderColor: DASHBOARD_TOKENS.border },
     '&:hover .MuiOutlinedInput-notchedOutline': {

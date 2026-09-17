@@ -29,7 +29,7 @@ export function Switcher<T extends string>({
       }}
       sx={{
         backgroundColor: alpha(TOKENS.ink, 0.04),
-        borderRadius: TOKENS.radius.full,
+        borderRadius: `${TOKENS.radius.full}px`,
         p: 0.5,
         gap: 0.5,
         '& .MuiToggleButton-root': {
@@ -60,7 +60,7 @@ export function Switcher<T extends string>({
                 ml: 1,
                 px: 0.9,
                 py: 0.2,
-                borderRadius: TOKENS.radius.full,
+                borderRadius: `${TOKENS.radius.full}px`,
                 backgroundColor: alpha(TOKENS.primary, 0.18),
                 color: TOKENS.primaryStrong,
                 fontSize: '0.72rem',

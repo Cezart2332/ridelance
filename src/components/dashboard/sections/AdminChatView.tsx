@@ -90,7 +90,7 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
   return (
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '320px 1fr' }, gap: 3, height: '75vh' }}>
       {/* Sidebar with PFA List */}
-      <Paper elevation={0} sx={{ borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <Paper elevation={0} sx={{ borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Box sx={{ p: 2, borderBottom: `1px solid ${alpha(TOKENS.ink, 0.08)}`, bgcolor: alpha(TOKENS.surface, 0.5) }}>
           <Typography variant="h6" sx={{ fontWeight: 800 }}>Contacte</Typography>
         </Box>
@@ -102,7 +102,7 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
               sx={{
                 p: 1.5,
                 mb: 0.5,
-                borderRadius: TOKENS.radius.md,
+                borderRadius: `${TOKENS.radius.md}px`,
                 cursor: 'pointer',
                 bgcolor: selectedPfa?.id === pfa.id ? alpha(TOKENS.primary, 0.08) : 'transparent',
                 '&:hover': { bgcolor: alpha(TOKENS.primary, 0.04) },
@@ -140,7 +140,7 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
       </Paper>
 
       {/* Chat Area */}
-      <Paper elevation={0} sx={{ borderRadius: TOKENS.radius.lg, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <Paper elevation={0} sx={{ borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {selectedPfa ? (
           <>
             <Box sx={{ p: 2, borderBottom: `1px solid ${alpha(TOKENS.ink, 0.08)}`, bgcolor: alpha(TOKENS.surface, 0.5), display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -179,7 +179,7 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
                                 sx={{
                                   p: 1.5,
                                   maxWidth: '75%',
-                                  borderRadius: TOKENS.radius.md,
+                                  borderRadius: `${TOKENS.radius.md}px`,
                                   backgroundColor: isMe ? `rgba(92,203,245,0.12)` : TOKENS.surface,
                                   border: `1px solid ${isMe ? 'transparent' : alpha(TOKENS.ink, 0.08)}`,
                                 }}
@@ -215,7 +215,7 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
                   placeholder="Scrie un mesaj..."
                   sx={{
                     '& .MuiOutlinedInput-root': {
-                      borderRadius: TOKENS.radius.full,
+                      borderRadius: `${TOKENS.radius.md}px`,
                       bgcolor: alpha(TOKENS.surface, 0.8),
                       '& fieldset': { borderColor: 'transparent' },
                       '&:hover fieldset': { borderColor: alpha(TOKENS.ink, 0.1) },

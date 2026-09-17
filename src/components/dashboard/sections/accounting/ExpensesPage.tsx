@@ -127,7 +127,7 @@ export function ExpensesPage({ pfaRegistrationId }: { pfaRegistrationId: string 
             sx={{
               textTransform: 'none',
               fontWeight: 750,
-              borderRadius: DASHBOARD_TOKENS.radius.full,
+              borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
               px: 2.5,
               bgcolor: DASHBOARD_TOKENS.primary,
               color: DASHBOARD_TOKENS.ink,
@@ -144,7 +144,7 @@ export function ExpensesPage({ pfaRegistrationId }: { pfaRegistrationId: string 
         elevation={0}
         sx={{
           p: { xs: 2, md: 2.5 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
@@ -201,7 +201,7 @@ export function ExpensesPage({ pfaRegistrationId }: { pfaRegistrationId: string 
       </Paper>
 
       {loaded.error && (
-        <Alert severity="error" sx={{ borderRadius: DASHBOARD_TOKENS.radius.md }}>
+        <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
           {loaded.error}
         </Alert>
       )}
@@ -209,7 +209,7 @@ export function ExpensesPage({ pfaRegistrationId }: { pfaRegistrationId: string 
       <Paper
         elevation={0}
         sx={{
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
           overflow: 'hidden',

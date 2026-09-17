@@ -82,7 +82,7 @@ export function TaxesPage() {
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px dashed ${alpha(DASHBOARD_TOKENS.ink, 0.18)}`,
           bgcolor: alpha(DASHBOARD_TOKENS.ink, 0.015),
         }}
@@ -183,7 +183,7 @@ export function TaxesPage() {
             sx={{
               p: 4,
               textAlign: 'center',
-              borderRadius: DASHBOARD_TOKENS.radius.lg,
+              borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
               border: `1px solid ${DASHBOARD_TOKENS.border}`,
               bgcolor: DASHBOARD_TOKENS.paper,
             }}
@@ -203,7 +203,7 @@ export function TaxesPage() {
                 elevation={0}
                 sx={{
                   p: 2.5,
-                  borderRadius: DASHBOARD_TOKENS.radius.lg,
+                  borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
                   border: `1px solid ${obligation.isOverdue ? alpha(DASHBOARD_TOKENS.stateError, 0.35) : DASHBOARD_TOKENS.border}`,
                   boxShadow: DASHBOARD_TOKENS.shadow.sm,
                   bgcolor: DASHBOARD_TOKENS.paper,

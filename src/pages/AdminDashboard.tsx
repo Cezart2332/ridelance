@@ -509,9 +509,9 @@ export function AdminDashboard() {
 
   const navItems = [
     { id: 'overview', label: 'Privire de ansamblu', group: 'Spațiu de lucru', icon: <HomeRoundedIcon /> },
-    { id: 'pfa', label: 'În curs de înrolare', group: 'Clienți', icon: <PeopleAltRoundedIcon /> },
+    { id: 'pfa', label: 'Onboarding', group: 'Clienți', icon: <PeopleAltRoundedIcon /> },
     { id: 'pfa_inrolate', label: 'Clienți înrolați', group: 'Clienți', icon: <HowToRegRoundedIcon /> },
-    { id: 'chat', label: 'Conversații', group: 'Clienți', icon: <ChatRoundedIcon /> },
+    { id: 'chat', label: 'Chat', group: 'Clienți', icon: <ChatRoundedIcon /> },
     { id: 'masini', label: 'Mașini ridesharing', group: 'Activitate comercială', icon: <DirectionsCarFilledRoundedIcon /> },
     // Lângă mașini, nu lângă setări: e tot moderare de conținut public, doar că a firmei.
     { id: 'pagini_firme', label: 'Pagini firme', group: 'Activitate comercială', icon: <LanguageRoundedIcon /> },
@@ -811,7 +811,7 @@ export function AdminDashboard() {
   const renderPfaList = () => (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h1">{activeTab === 'pfa_inrolate' ? 'Clienți înrolați' : 'În curs de înrolare'}</Typography>
+        <Typography variant="h1">{activeTab === 'pfa_inrolate' ? 'Clienți înrolați' : 'Onboarding'}</Typography>
         <Typography color="text.secondary" variant="body1" sx={{ mt: 1 }}>Găsește un client, verifică documentele și urmărește progresul dosarului.</Typography>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5 }}>

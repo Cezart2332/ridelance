@@ -131,7 +131,7 @@ export default function CheckoutPage() {
             elevation={0}
             sx={{
               p: 4,
-              borderRadius: TOKENS.radius.lg,
+              borderRadius: `${TOKENS.radius.lg}px`,
               border: `1px solid ${TOKENS.border}`,
               boxShadow: TOKENS.shadow.md,
               textAlign: 'center',
@@ -150,7 +150,7 @@ export default function CheckoutPage() {
               sx={{
                 py: 1.4,
                 fontWeight: 700,
-                borderRadius: TOKENS.radius.md,
+                borderRadius: `${TOKENS.radius.md}px`,
                 backgroundColor: TOKENS.primary,
                 boxShadow: TOKENS.shadow.glow,
                 '&:hover': { backgroundColor: TOKENS.primaryStrong },

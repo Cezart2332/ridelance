@@ -440,7 +440,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
         elevation={0}
         sx={{
           p: 1.5,
-          borderRadius: DASHBOARD_TOKENS.radius.md,
+          borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           backgroundColor: DASHBOARD_TOKENS.surface,
           transition: 'all 0.2s',
@@ -471,14 +471,14 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
                   <Chip
                     label={statusLabel(doc.status)}
                     size="small"
-                    sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full, ...statusChipSx(doc.status) }}
+                    sx={{ fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.full}px`, ...statusChipSx(doc.status) }}
                   />
                   <Button
                     size="small"
                     startIcon={<DownloadRoundedIcon fontSize="small" />}
                     sx={{
                       minWidth: 'unset',
-                      borderRadius: DASHBOARD_TOKENS.radius.full,
+                      borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                       textTransform: 'none',
                       fontWeight: 700,
                       color: DASHBOARD_TOKENS.primaryStrong,
@@ -493,14 +493,14 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
                 <Chip
                   label="Lipsa"
                   size="small"
-                  sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full, ...statusChipSx('missing') }}
+                  sx={{ fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.full}px`, ...statusChipSx('missing') }}
                 />
               )}
               <IconButton
                 size="small"
                 aria-label="Incarca document"
                 sx={{
-                  borderRadius: DASHBOARD_TOKENS.radius.full,
+                  borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                   color: DASHBOARD_TOKENS.primaryStrong,
                   backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
                   '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
@@ -548,7 +548,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
             elevation={0}
             sx={{
               p: 1.5,
-              borderRadius: DASHBOARD_TOKENS.radius.md,
+              borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
               border: `1px solid ${DASHBOARD_TOKENS.border}`,
               backgroundColor: DASHBOARD_TOKENS.surface,
             }}
@@ -567,14 +567,14 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
                 <Chip
                   label={statusLabel(doc.status)}
                   size="small"
-                  sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full, ...statusChipSx(doc.status) }}
+                  sx={{ fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.full}px`, ...statusChipSx(doc.status) }}
                 />
                 <Button
                   size="small"
                   startIcon={<DownloadRoundedIcon fontSize="small" />}
                   sx={{
                     minWidth: 'unset',
-                    borderRadius: DASHBOARD_TOKENS.radius.full,
+                    borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                     textTransform: 'none',
                     fontWeight: 700,
                     color: DASHBOARD_TOKENS.primaryStrong,
@@ -599,7 +599,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
           display: 'flex',
@@ -634,7 +634,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
               fontWeight: 700,
               color: DASHBOARD_TOKENS.primaryStrong,
               backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
-              borderRadius: DASHBOARD_TOKENS.radius.full,
+              borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
               px: 2.5,
               py: 0.8,
               '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },
@@ -650,7 +650,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
           display: 'flex',
@@ -673,7 +673,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
           display: 'flex',
@@ -708,7 +708,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
               fontWeight: 700,
               color: DASHBOARD_TOKENS.primaryStrong,
               backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.08),
-              borderRadius: DASHBOARD_TOKENS.radius.full,
+              borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
               px: 2.5,
               py: 0.8,
               '&:hover': { backgroundColor: alpha(DASHBOARD_TOKENS.primary, 0.16) },

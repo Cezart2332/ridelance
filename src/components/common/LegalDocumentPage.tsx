@@ -68,7 +68,7 @@ export function LegalDocumentPage({
           elevation={0}
           sx={{
             p: { xs: 3, md: 6 },
-            borderRadius: TOKENS.radius.xl,
+            borderRadius: `${TOKENS.radius.xl}px`,
             border: `1px solid ${TOKENS.border}`,
             boxShadow: TOKENS.shadow.md,
             backgroundColor: TOKENS.paper,
@@ -99,7 +99,7 @@ export function LegalDocumentPage({
           </Box>
 
           {hasError && (
-            <Alert severity="error" sx={{ borderRadius: TOKENS.radius.md }}>
+            <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
               {errorMessage}
             </Alert>
           )}

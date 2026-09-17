@@ -219,7 +219,7 @@ export function ContabilDocumentReviewList({
             sx={{
               fontSize: '0.82rem',
               fontWeight: 600,
-              borderRadius: TOKENS.radius.full,
+              borderRadius: `${TOKENS.radius.full}px`,
               minWidth: 170,
               '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.12) },
               '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.primary, 0.4) },
@@ -273,7 +273,7 @@ export function ContabilDocumentReviewList({
                   display: 'flex',
                   alignItems: 'center',
                   gap: 2,
-                  borderRadius: TOKENS.radius.md,
+                  borderRadius: `${TOKENS.radius.md}px`,
                   bgcolor: alpha(TOKENS.surface, 0.5),
                   border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
                 }}
@@ -343,7 +343,7 @@ export function ContabilDocumentReviewList({
                         <OpenInNewRoundedIcon />
                       )
                     }
-                    sx={{ textTransform: 'none', borderRadius: TOKENS.radius.full, boxShadow: 'none' }}
+                    sx={{ textTransform: 'none', borderRadius: `${TOKENS.radius.full}px`, boxShadow: 'none' }}
                   >
                     Deschide
                   </Button>
@@ -359,7 +359,7 @@ export function ContabilDocumentReviewList({
                         <FileDownloadRoundedIcon />
                       )
                     }
-                    sx={{ textTransform: 'none', borderRadius: TOKENS.radius.full }}
+                    sx={{ textTransform: 'none', borderRadius: `${TOKENS.radius.full}px` }}
                   >
                     Descarcă
                   </Button>

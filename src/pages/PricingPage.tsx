@@ -168,7 +168,7 @@ function PlanCard({
         display: 'flex',
         flexDirection: 'column',
         p: { xs: 3, md: 4.5 },
-        borderRadius: TOKENS.radius.xl,
+        borderRadius: `${TOKENS.radius.xl}px`,
         backgroundColor: TOKENS.paper,
         position: 'relative',
         border: plan.recommended
@@ -196,7 +196,7 @@ function PlanCard({
             color: '#fff',
             px: 1.8,
             py: 0.5,
-            borderRadius: TOKENS.radius.sm,
+            borderRadius: `${TOKENS.radius.sm}px`,
             fontSize: '0.68rem',
             fontWeight: 800,
             letterSpacing: '0.06em',
@@ -286,7 +286,7 @@ function PlanCard({
               alignSelf: 'stretch',
               textAlign: 'left',
               p: 2,
-              borderRadius: TOKENS.radius.lg,
+              borderRadius: `${TOKENS.radius.lg}px`,
               backgroundColor: alpha(TOKENS.ink, 0.02),
               border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
             }}
@@ -323,7 +323,7 @@ function PlanCard({
             py: 1.4,
             fontWeight: 800,
             fontSize: '0.95rem',
-            borderRadius: TOKENS.radius.lg,
+            borderRadius: `${TOKENS.radius.lg}px`,
             boxShadow: 'none',
             transition: 'all 0.2s ease',
             color: plan.recommended ? '#fff' : TOKENS.ink,
@@ -369,7 +369,7 @@ function IncludedInAll() {
               spacing={1.4}
               sx={{
                 p: 2.6,
-                borderRadius: TOKENS.radius.lg,
+                borderRadius: `${TOKENS.radius.lg}px`,
                 backgroundColor: TOKENS.paper,
                 border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
               }}
@@ -378,7 +378,7 @@ function IncludedInAll() {
                 sx={{
                   width: 52,
                   height: 52,
-                  borderRadius: TOKENS.radius.md,
+                  borderRadius: `${TOKENS.radius.md}px`,
                   display: 'grid',
                   placeItems: 'center',
                   backgroundColor: alpha(TOKENS.ink, 0.03),

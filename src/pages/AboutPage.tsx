@@ -55,11 +55,11 @@ export function AboutPage() {
                   {/* MOBILE LAYOUT */}
                   <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', width: '100%', pl: '60px' }}>
                     <Box sx={{ mb: 2 }}>
-                      <Box sx={{ display: 'inline-block', px: 3, py: 1, borderRadius: TOKENS.radius.full, bgcolor: TOKENS.primary, color: '#fff', fontWeight: 650, fontSize: '0.9rem' }}>
+                      <Box sx={{ display: 'inline-block', px: 3, py: 1, borderRadius: `${TOKENS.radius.full}px`, bgcolor: TOKENS.primary, color: '#fff', fontWeight: 650, fontSize: '0.9rem' }}>
                         {sec.title}
                       </Box>
                     </Box>
-                    <Paper elevation={0} sx={{ p: { xs: 3, sm: 4 }, width: '100%', borderRadius: TOKENS.radius.lg, border: `1px solid ${TOKENS.border}`, bgcolor: TOKENS.paper, boxShadow: TOKENS.shadow.sm }}>
+                    <Paper elevation={0} sx={{ p: { xs: 3, sm: 4 }, width: '100%', borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}`, bgcolor: TOKENS.paper, boxShadow: TOKENS.shadow.sm }}>
                       <Typography sx={{ color: TOKENS.textMuted, lineHeight: 1.7, fontSize: '0.98rem' }}>{sec.text}</Typography>
                     </Paper>
                   </Box>
@@ -69,11 +69,11 @@ export function AboutPage() {
                     {/* Left Side */}
                     <Box sx={{ width: '50%', pr: 6, display: 'flex', justifyContent: 'flex-end', position: 'relative' }}>
                       {isEven ? (
-                        <Paper elevation={0} sx={{ p: 4, width: '100%', borderRadius: TOKENS.radius.lg, border: `1px solid ${TOKENS.border}`, bgcolor: TOKENS.paper, boxShadow: TOKENS.shadow.sm, transition: `all ${TOKENS.duration} ${TOKENS.easing}`, '&:hover': { borderColor: TOKENS.borderHover, boxShadow: TOKENS.shadow.md } }}>
+                        <Paper elevation={0} sx={{ p: 4, width: '100%', borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}`, bgcolor: TOKENS.paper, boxShadow: TOKENS.shadow.sm, transition: `all ${TOKENS.duration} ${TOKENS.easing}`, '&:hover': { borderColor: TOKENS.borderHover, boxShadow: TOKENS.shadow.md } }}>
                           <Typography sx={{ color: TOKENS.textMuted, lineHeight: 1.7, fontSize: '0.98rem' }}>{sec.text}</Typography>
                         </Paper>
                       ) : (
-                        <Box sx={{ px: 3, py: 1.2, borderRadius: TOKENS.radius.full, bgcolor: TOKENS.primary, color: '#fff', fontWeight: 650, fontSize: '0.95rem', boxShadow: TOKENS.shadow.sm }}>
+                        <Box sx={{ px: 3, py: 1.2, borderRadius: `${TOKENS.radius.full}px`, bgcolor: TOKENS.primary, color: '#fff', fontWeight: 650, fontSize: '0.95rem', boxShadow: TOKENS.shadow.sm }}>
                           {sec.title}
                         </Box>
                       )}
@@ -82,11 +82,11 @@ export function AboutPage() {
                     {/* Right Side */}
                     <Box sx={{ width: '50%', pl: 6, display: 'flex', justifyContent: 'flex-start' }}>
                       {!isEven ? (
-                        <Paper elevation={0} sx={{ p: 4, width: '100%', borderRadius: TOKENS.radius.lg, border: `1px solid ${TOKENS.border}`, bgcolor: TOKENS.paper, boxShadow: TOKENS.shadow.sm, transition: `all ${TOKENS.duration} ${TOKENS.easing}`, '&:hover': { borderColor: TOKENS.borderHover, boxShadow: TOKENS.shadow.md } }}>
+                        <Paper elevation={0} sx={{ p: 4, width: '100%', borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}`, bgcolor: TOKENS.paper, boxShadow: TOKENS.shadow.sm, transition: `all ${TOKENS.duration} ${TOKENS.easing}`, '&:hover': { borderColor: TOKENS.borderHover, boxShadow: TOKENS.shadow.md } }}>
                           <Typography sx={{ color: TOKENS.textMuted, lineHeight: 1.7, fontSize: '0.98rem' }}>{sec.text}</Typography>
                         </Paper>
                       ) : (
-                        <Box sx={{ px: 3, py: 1.2, borderRadius: TOKENS.radius.full, bgcolor: TOKENS.primary, color: '#fff', fontWeight: 650, fontSize: '0.95rem', boxShadow: TOKENS.shadow.sm }}>
+                        <Box sx={{ px: 3, py: 1.2, borderRadius: `${TOKENS.radius.full}px`, bgcolor: TOKENS.primary, color: '#fff', fontWeight: 650, fontSize: '0.95rem', boxShadow: TOKENS.shadow.sm }}>
                           {sec.title}
                         </Box>
                       )}
@@ -98,7 +98,7 @@ export function AboutPage() {
             })}
           </Box>
 
-          <Paper elevation={0} sx={{ mt: 2, p: { xs: 4, md: 5 }, borderRadius: TOKENS.radius.xl, border: `1px solid ${TOKENS.border}`, bgcolor: alpha(TOKENS.primary, 0.03), textAlign: 'center', maxWidth: 800, mx: 'auto' }}>
+          <Paper elevation={0} sx={{ mt: 2, p: { xs: 4, md: 5 }, borderRadius: `${TOKENS.radius.xl}px`, border: `1px solid ${TOKENS.border}`, bgcolor: alpha(TOKENS.primary, 0.03), textAlign: 'center', maxWidth: 800, mx: 'auto' }}>
             <Box component="img" src={motto} alt="Independent. Dar nu singur." sx={{ height: 28, width: 'auto', display: 'block', mx: 'auto', mb: 3 }} />
             <Typography sx={{ color: TOKENS.ink, lineHeight: 1.8, fontSize: '1.05rem', fontWeight: 500 }}>
               Acesta este principiul din spatele Ridelance: să oferi șoferului mai mult control și mai multă libertate, fără haosul administrativ care apare de obicei atunci când lucrează pe cont propriu.

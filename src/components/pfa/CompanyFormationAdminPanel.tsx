@@ -213,7 +213,7 @@ export function CompanyFormationAdminPanel({ pfaId }: { pfaId: string }) {
       elevation={0}
       sx={{
         p: 2.5,
-        borderRadius: TOKENS.radius.lg,
+        borderRadius: `${TOKENS.radius.lg}px`,
         border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
         boxShadow: TOKENS.shadow.sm,
       }}

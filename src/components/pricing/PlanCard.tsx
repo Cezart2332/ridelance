@@ -63,7 +63,7 @@ export function PlanCard({
       onClick={disabled ? undefined : onSelect}
       sx={{
         p: { xs: 3, md: 4 },
-        borderRadius: TOKENS.radius.xl,
+        borderRadius: `${TOKENS.radius.xl}px`,
         cursor: disabled ? 'default' : 'pointer',
         border: selected
           ? `2px solid ${TOKENS.primary}`
@@ -98,7 +98,7 @@ export function PlanCard({
             transform: 'translateX(-50%)',
             px: 2,
             py: 0.5,
-            borderRadius: TOKENS.radius.full,
+            borderRadius: `${TOKENS.radius.full}px`,
             backgroundColor: TOKENS.primary,
             display: 'flex',
             alignItems: 'center',
@@ -195,7 +195,7 @@ export function PlanCard({
           py: 1.2,
           fontWeight: 700,
           fontSize: '0.95rem',
-          borderRadius: TOKENS.radius.md,
+          borderRadius: `${TOKENS.radius.md}px`,
           borderColor: selected ? 'transparent' : TOKENS.borderHover,
           color: selected ? '#fff' : TOKENS.ink,
           backgroundColor: selected ? TOKENS.primary : 'transparent',

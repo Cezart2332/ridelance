@@ -238,7 +238,7 @@ export function CarsPage() {
                 sx={{ 
                   flex: { xs: '1 1 100%', md: '1 1 auto' },
                   '& .MuiOutlinedInput-root': { 
-                    borderRadius: TOKENS.radius.lg,
+                    borderRadius: `${TOKENS.radius.lg}px`,
                     bgcolor: TOKENS.paper,
                     boxShadow: TOKENS.shadow.sm
                   } 
@@ -258,7 +258,7 @@ export function CarsPage() {
                 startIcon={<FilterListRoundedIcon />}
                 onClick={() => setShowFilters(!showFilters)}
                 sx={{ 
-                  borderRadius: TOKENS.radius.lg,
+                  borderRadius: `${TOKENS.radius.lg}px`,
                   fontWeight: 700,
                   fontSize: '0.85rem',
                   whiteSpace: 'nowrap',
@@ -282,7 +282,7 @@ export function CarsPage() {
                 onClick={() => setOnlyFavorites(!onlyFavorites)}
                 aria-pressed={onlyFavorites}
                 sx={{
-                  borderRadius: TOKENS.radius.lg,
+                  borderRadius: `${TOKENS.radius.lg}px`,
                   fontWeight: 700,
                   fontSize: '0.85rem',
                   whiteSpace: 'nowrap',
@@ -314,7 +314,7 @@ export function CarsPage() {
                 minWidth: { xs: 0, md: 200 },
                 '& .MuiSelect-select': { fontSize: '0.85rem' },
                 '& .MuiOutlinedInput-root': { 
-                  borderRadius: TOKENS.radius.lg,
+                  borderRadius: `${TOKENS.radius.lg}px`,
                   bgcolor: TOKENS.paper,
                   boxShadow: TOKENS.shadow.sm
                 } 
@@ -364,7 +364,7 @@ export function CarsPage() {
                       size="small"
                       value={f.value}
                       onChange={(e) => f.setter(e.target.value)}
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: TOKENS.radius.md, bgcolor: '#fff' } }}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: `${TOKENS.radius.md}px`, bgcolor: '#fff' } }}
                     >
                       {f.options.map(opt => (
                         <MenuItem key={opt} value={opt}>{opt}</MenuItem>

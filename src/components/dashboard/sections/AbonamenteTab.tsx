@@ -132,7 +132,7 @@ export function AbonamenteTab() {
         elevation={0}
         sx={{
           p: { xs: 3, md: 4 },
-          borderRadius: T.radius.xl,
+          borderRadius: `${T.radius.xl}px`,
           border: `2px solid ${T.primary}`,
           boxShadow: T.shadow.glow,
           backgroundColor: T.paper,
@@ -162,7 +162,7 @@ export function AbonamenteTab() {
               onClick={() => setShowUpgrade((v) => !v)}
               size="small"
               sx={{
-                borderRadius: T.radius.full,
+                borderRadius: `${T.radius.full}px`,
                 fontWeight: 700,
                 fontSize: '0.82rem',
                 borderColor: alpha(T.ink, 0.15),
@@ -189,7 +189,7 @@ export function AbonamenteTab() {
           sx={{
             mt: 3,
             p: 2,
-            borderRadius: T.radius.lg,
+            borderRadius: `${T.radius.lg}px`,
             backgroundColor: alpha(T.primary, 0.05),
             border: `1px solid ${alpha(T.primary, 0.12)}`,
             display: 'flex',
@@ -246,7 +246,7 @@ export function AbonamenteTab() {
                   elevation={0}
                   sx={{
                     p: 3,
-                    borderRadius: T.radius.xl,
+                    borderRadius: `${T.radius.xl}px`,
                     border: isCurrent
                       ? `2px solid ${T.primary}`
                       : `1px solid ${T.border}`,
@@ -258,7 +258,7 @@ export function AbonamenteTab() {
                     <Box
                       sx={{
                         position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)',
-                        px: 1.5, py: 0.4, borderRadius: T.radius.full, backgroundColor: T.primary,
+                        px: 1.5, py: 0.4, borderRadius: `${T.radius.full}px`, backgroundColor: T.primary,
                         display: 'flex', alignItems: 'center', gap: 0.5,
                       }}
                     >
@@ -279,7 +279,7 @@ export function AbonamenteTab() {
                     size="small"
                     onClick={() => handleUpgrade(plan.key)}
                     sx={{
-                      borderRadius: T.radius.full,
+                      borderRadius: `${T.radius.full}px`,
                       fontWeight: 700,
                       fontSize: '0.82rem',
                       backgroundColor: isCurrent ? 'transparent' : T.primary,

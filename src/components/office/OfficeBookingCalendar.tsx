@@ -188,7 +188,7 @@ export function OfficeBookingCalendar({
         elevation={0}
         sx={{
           p: { xs: 3, md: 5 },
-          borderRadius: TOKENS.radius.xl,
+          borderRadius: `${TOKENS.radius.xl}px`,
           border: `1px solid ${TOKENS.border}`,
           textAlign: 'center',
         }}
@@ -212,7 +212,7 @@ export function OfficeBookingCalendar({
     <Paper
       elevation={0}
       sx={{
-        borderRadius: TOKENS.radius.xl,
+        borderRadius: `${TOKENS.radius.xl}px`,
         border: `1px solid ${TOKENS.border}`,
         overflow: 'hidden',
         display: 'grid',
@@ -241,7 +241,7 @@ export function OfficeBookingCalendar({
             fontWeight: 800,
             bgcolor: alpha(TOKENS.primary, 0.14),
             color: TOKENS.ink,
-            borderRadius: TOKENS.radius.full,
+            borderRadius: `${TOKENS.radius.full}px`,
             mb: 1.5,
           }}
         />
@@ -283,7 +283,7 @@ export function OfficeBookingCalendar({
             sx={{
               mt: 3,
               p: 1.8,
-              borderRadius: TOKENS.radius.md,
+              borderRadius: `${TOKENS.radius.md}px`,
               border: `1px solid ${alpha(TOKENS.primary, 0.35)}`,
               bgcolor: alpha(TOKENS.primary, 0.08),
             }}
@@ -315,7 +315,7 @@ export function OfficeBookingCalendar({
                 mb: 2,
                 p: 1.8,
                 maxWidth: 460,
-                borderRadius: TOKENS.radius.md,
+                borderRadius: `${TOKENS.radius.md}px`,
                 border: `1px solid ${alpha(TOKENS.primary, 0.35)}`,
                 bgcolor: alpha(TOKENS.primary, 0.08),
               }}
@@ -448,7 +448,7 @@ export function OfficeBookingCalendar({
                             aspectRatio: '1',
                             display: 'grid',
                             placeItems: 'center',
-                            borderRadius: TOKENS.radius.md,
+                            borderRadius: `${TOKENS.radius.md}px`,
                             fontSize: '0.85rem',
                             fontFamily: 'inherit',
                             fontWeight: isSelected ? 850 : 650,

@@ -144,7 +144,7 @@ export function ServicePurchaseModal({ open, service, onClose }: ServicePurchase
             disabled={submitting || !service || !termsAccepted || !paymentPolicyAccepted}
             sx={{
               fontWeight: 700,
-              borderRadius: TOKENS.radius.full,
+              borderRadius: `${TOKENS.radius.full}px`,
               bgcolor: TOKENS.primary,
               '&:hover': { bgcolor: TOKENS.primaryStrong },
             }}

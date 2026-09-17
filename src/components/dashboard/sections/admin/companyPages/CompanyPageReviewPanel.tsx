@@ -152,7 +152,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
             așteptare" înseamnă altceva pe o firmă publicată cândva decât pe una nouă. */}
         <Alert
           severity={live ? 'info' : 'warning'}
-          sx={{ borderRadius: TOKENS.radius.md, fontWeight: 600 }}
+          sx={{ borderRadius: `${TOKENS.radius.md}px`, fontWeight: 600 }}
         >
           {live
             ? 'Pagina e online acum, cu versiunea aprobată anterior. O aprobare o înlocuiește cu ciorna de mai jos; un refuz o scoate de tot.'
@@ -166,7 +166,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
         )}
 
         {error && (
-          <Alert severity="error" sx={{ mt: 2, borderRadius: TOKENS.radius.md, fontWeight: 600 }}>
+          <Alert severity="error" sx={{ mt: 2, borderRadius: `${TOKENS.radius.md}px`, fontWeight: 600 }}>
             {error}
           </Alert>
         )}
@@ -286,7 +286,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
                     width: 72,
                     height: 72,
                     objectFit: 'contain',
-                    borderRadius: TOKENS.radius.md,
+                    borderRadius: `${TOKENS.radius.md}px`,
                     border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
                   }}
                 />
@@ -328,7 +328,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
                     width: '100%',
                     maxHeight: 180,
                     objectFit: 'cover',
-                    borderRadius: TOKENS.radius.md,
+                    borderRadius: `${TOKENS.radius.md}px`,
                     border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
                   }}
                 />
@@ -426,7 +426,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
               maxHeight="calc(100vh - 260px)"
             />
           ) : (
-            <Alert severity="info" sx={{ borderRadius: TOKENS.radius.md, fontWeight: 600 }}>
+            <Alert severity="info" sx={{ borderRadius: `${TOKENS.radius.md}px`, fontWeight: 600 }}>
               Pagina n-a fost publicată niciodată.
             </Alert>
           )}
@@ -484,7 +484,7 @@ function Card({ children }: { children: React.ReactNode }) {
       elevation={0}
       sx={{
         p: { xs: 2, md: 2.5 },
-        borderRadius: TOKENS.radius.lg,
+        borderRadius: `${TOKENS.radius.lg}px`,
         border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
       }}
     >

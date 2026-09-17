@@ -54,7 +54,7 @@ export function ProfileSection() {
         <Paper
           elevation={0}
           sx={{
-            borderRadius: DASHBOARD_TOKENS.radius.lg,
+            borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
             border: `1px solid ${DASHBOARD_TOKENS.border}`,
             bgcolor: DASHBOARD_TOKENS.paper,
             boxShadow: DASHBOARD_TOKENS.shadow.sm,

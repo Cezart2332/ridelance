@@ -9,7 +9,7 @@ import { DASHBOARD_TOKENS } from '../dashboardTheme'
  */
 export const pillToggleSx: SxProps<Theme> = {
   bgcolor: alpha(DASHBOARD_TOKENS.ink, 0.05),
-  borderRadius: DASHBOARD_TOKENS.radius.full,
+  borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
   p: 0.4,
   '& .MuiToggleButtonGroup-grouped': {
     border: 0,

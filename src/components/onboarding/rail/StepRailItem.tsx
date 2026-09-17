@@ -42,7 +42,7 @@ export function StepRailItem({
         textAlign: 'left',
         px: 1.25,
         py: locked ? 0.9 : 1.15,
-        borderRadius: SHELL.radius.card,
+        borderRadius: `${SHELL.radius.card}px`,
         border: active ? `1px solid ${SHELL.border.subtle}` : '1px solid transparent',
         backgroundColor: active ? SHELL.bg.surface : 'transparent',
         boxShadow: active ? SHELL.shadow.card : 'none',

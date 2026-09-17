@@ -27,7 +27,7 @@ export function DeductibleExpensesList() {
         maxWidth: '1000px',
         mx: 'auto',
         bgcolor: TOKENS.paper,
-        borderRadius: TOKENS.radius.xl,
+        borderRadius: `${TOKENS.radius.xl}px`,
         border: `1px solid ${TOKENS.border}`,
         boxShadow: TOKENS.shadow.lg,
         overflow: 'hidden'
@@ -74,7 +74,7 @@ export function DeductibleExpensesList() {
                 gap: 1.5,
                 bgcolor: TOKENS.surface,
                 border: `1px solid ${TOKENS.border}`,
-                borderRadius: TOKENS.radius.md,
+                borderRadius: `${TOKENS.radius.md}px`,
                 px: 2,
                 py: 1.2,
                 transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
@@ -94,7 +94,7 @@ export function DeductibleExpensesList() {
                 color: TOKENS.primaryStrong,
                 px: 1.2,
                 py: 0.4,
-                borderRadius: TOKENS.radius.full,
+                borderRadius: `${TOKENS.radius.full}px`,
                 fontWeight: 800,
                 fontSize: '0.72rem',
                 whiteSpace: 'nowrap'

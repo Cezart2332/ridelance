@@ -25,7 +25,7 @@ export function Panel({ title, subtitle, action, fill, dense, children }: PanelP
       elevation={0}
       sx={{
         p: dense ? { xs: 1.8, md: 2.2 } : { xs: 2.2, md: 2.6 },
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
+        borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
         border: `1px solid ${DASHBOARD_TOKENS.border}`,
         bgcolor: DASHBOARD_TOKENS.paper,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,

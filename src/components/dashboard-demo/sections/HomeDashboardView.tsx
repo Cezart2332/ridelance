@@ -293,7 +293,7 @@ export function HomeDashboardView() {
           sx={{
             gridColumn: { xs: 'span 12', md: 'span 5' },
             p: 2.5,
-            borderRadius: DASHBOARD_TOKENS.radius.lg,
+            borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
             border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
             boxShadow: DASHBOARD_TOKENS.shadow.sm,
           }}
@@ -328,7 +328,7 @@ export function HomeDashboardView() {
           sx={{
             gridColumn: { xs: 'span 12', md: 'span 7' },
             p: 2.5,
-            borderRadius: DASHBOARD_TOKENS.radius.lg,
+            borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
             border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
             boxShadow: DASHBOARD_TOKENS.shadow.sm,
           }}
@@ -347,7 +347,7 @@ export function HomeDashboardView() {
                 elevation={0}
                 sx={{
                   p: 1.4,
-                  borderRadius: DASHBOARD_TOKENS.radius.md,
+                  borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                   border: `1px solid ${DASHBOARD_TOKENS.border}`,
                   backgroundColor: DASHBOARD_TOKENS.surface,
                 }}

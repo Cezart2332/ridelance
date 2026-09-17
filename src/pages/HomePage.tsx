@@ -71,7 +71,7 @@ export function HomePage() {
             alignItems: 'center',
             gap: { xs: 4, md: 6 },
             p: { xs: 3, sm: 4, md: 6 },
-            borderRadius: TOKENS.radius.xl,
+            borderRadius: `${TOKENS.radius.xl}px`,
             backgroundColor: '#ffffff',
             boxShadow: '0 10px 40px rgba(0, 0, 0, 0.03)',
             border: `1px solid ${alpha(TOKENS.ink, 0.05)}`,
@@ -149,7 +149,7 @@ export function HomePage() {
                   py: 1.6,
                   fontSize: '1.02rem',
                   fontWeight: 800,
-                  borderRadius: TOKENS.radius.lg,
+                  borderRadius: `${TOKENS.radius.lg}px`,
                   boxShadow: 'none',
                   backgroundColor: TOKENS.primary,
                   transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -171,7 +171,7 @@ export function HomePage() {
                   py: 1.6,
                   fontSize: '1.02rem',
                   fontWeight: 800,
-                  borderRadius: TOKENS.radius.lg,
+                  borderRadius: `${TOKENS.radius.lg}px`,
                   color: '#fff',
                   backgroundColor: '#303238',
                   boxShadow: 'none',
@@ -284,7 +284,7 @@ export function HomePage() {
                 elevation={0}
                 sx={{
                   height: '100%',
-                  borderRadius: TOKENS.radius.xl,
+                  borderRadius: `${TOKENS.radius.xl}px`,
                   border: `1px solid ${alpha(TOKENS.ink, 0.05)}`,
                   boxShadow: '0 4px 20px rgba(0,0,0,0.01)',
                   backgroundColor: TOKENS.paper,
@@ -411,7 +411,7 @@ export function HomePage() {
                 display: 'flex',
                 flexDirection: 'column',
                 p: { xs: 3, md: 4.5 },
-                borderRadius: TOKENS.radius.xl,
+                borderRadius: `${TOKENS.radius.xl}px`,
                 backgroundColor: TOKENS.paper,
                 position: 'relative',
                 border:
@@ -442,7 +442,7 @@ export function HomePage() {
                     color: '#fff',
                     px: 1.8,
                     py: 0.5,
-                    borderRadius: TOKENS.radius.sm,
+                    borderRadius: `${TOKENS.radius.sm}px`,
                     fontSize: '0.68rem',
                     fontWeight: 800,
                     letterSpacing: '0.06em',
@@ -563,7 +563,7 @@ export function HomePage() {
                     py: 1.4,
                     fontWeight: 800,
                     fontSize: '0.95rem',
-                    borderRadius: TOKENS.radius.lg,
+                    borderRadius: `${TOKENS.radius.lg}px`,
                     boxShadow: 'none',
                     transition: 'all 0.2s ease',
                     color: item.recommended ? '#fff' : TOKENS.ink,
@@ -619,7 +619,7 @@ export function HomePage() {
                 elevation={0}
                 sx={{
                   p: 4.5,
-                  borderRadius: TOKENS.radius.xl,
+                  borderRadius: `${TOKENS.radius.xl}px`,
                   border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
                   backgroundColor: TOKENS.paper,
                   display: 'flex',
@@ -699,7 +699,7 @@ export function HomePage() {
                   variant="outlined"
                   sx={{
                     alignSelf: 'flex-start',
-                    borderRadius: TOKENS.radius.full,
+                    borderRadius: `${TOKENS.radius.full}px`,
                     px: 3.5,
                     py: 1,
                     fontWeight: 700,
@@ -800,7 +800,7 @@ export function HomePage() {
                 py: 1.6,
                 fontSize: '1.05rem',
                 fontWeight: 700,
-                borderRadius: TOKENS.radius.full,
+                borderRadius: `${TOKENS.radius.full}px`,
                 backgroundColor: TOKENS.primary,
                 boxShadow: 'none',
                 '&:hover': {
@@ -817,7 +817,7 @@ export function HomePage() {
           <Paper
             elevation={0}
             sx={{
-              borderRadius: TOKENS.radius.xl,
+              borderRadius: `${TOKENS.radius.xl}px`,
               border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
               boxShadow: '0 10px 40px rgba(0,0,0,0.02)',
               overflow: 'hidden',
@@ -890,7 +890,7 @@ export function HomePage() {
                         textAlign: { xs: 'left', md: 'center' },
                         px: { xs: 0, md: 2 },
                         py: 0.5,
-                        borderRadius: TOKENS.radius.md,
+                        borderRadius: `${TOKENS.radius.md}px`,
                         backgroundColor: alpha(TOKENS.primary, 0.08),
                         display: 'inline-block',
                       }}
@@ -1054,7 +1054,7 @@ export function HomePage() {
                 sx={{
                   backgroundColor: TOKENS.primary,
                   color: TOKENS.ink,
-                  borderRadius: TOKENS.radius.lg,
+                  borderRadius: `${TOKENS.radius.lg}px`,
                   px: 4.5,
                   py: 1.6,
                   fontWeight: 800,
@@ -1086,7 +1086,7 @@ export function HomePage() {
                 sx={{
                   width: '100%',
                   display: 'block',
-                  borderRadius: TOKENS.radius.xl,
+                  borderRadius: `${TOKENS.radius.xl}px`,
                 }}
               />
             </Box>
@@ -1110,7 +1110,7 @@ export function HomePage() {
             size="large"
             endIcon={<ArrowForwardRoundedIcon />}
             sx={{
-              borderRadius: TOKENS.radius.lg,
+              borderRadius: `${TOKENS.radius.lg}px`,
               px: 4,
               py: 1.4,
               fontWeight: 800,
@@ -1272,7 +1272,7 @@ export function HomePage() {
               sx={{
                 px: 5,
                 py: 1.5,
-                borderRadius: TOKENS.radius.lg,
+                borderRadius: `${TOKENS.radius.lg}px`,
                 fontWeight: 800,
                 fontSize: '1.02rem',
                 boxShadow: 'none',
@@ -1294,7 +1294,7 @@ export function HomePage() {
               sx={{
                 px: 5,
                 py: 1.5,
-                borderRadius: TOKENS.radius.lg,
+                borderRadius: `${TOKENS.radius.lg}px`,
                 fontWeight: 800,
                 fontSize: '1.02rem',
                 borderColor: alpha(TOKENS.ink, 0.12),

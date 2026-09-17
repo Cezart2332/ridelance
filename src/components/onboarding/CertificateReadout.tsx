@@ -82,7 +82,7 @@ export function CertificateReadout({
         <LinearProgress
           sx={{
             height: 3,
-            borderRadius: TOKENS.radius.full,
+            borderRadius: `${TOKENS.radius.full}px`,
             backgroundColor: alpha(TOKENS.pendingBase, 0.15),
             '& .MuiLinearProgress-bar': { backgroundColor: TOKENS.pending },
           }}

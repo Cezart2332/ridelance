@@ -43,7 +43,7 @@ export function ServicePaymentSuccessDialog() {
         </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button variant="contained" onClick={handleClose} sx={{ fontWeight: 700, borderRadius: TOKENS.radius.full }}>
+        <Button variant="contained" onClick={handleClose} sx={{ fontWeight: 700, borderRadius: `${TOKENS.radius.full}px` }}>
           Am înțeles
         </Button>
       </DialogActions>

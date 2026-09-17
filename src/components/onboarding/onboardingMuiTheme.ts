@@ -100,7 +100,7 @@ export const onboardingMuiTheme = createTheme({
       defaultProps: { disableElevation: true },
       styleOverrides: {
         root: {
-          borderRadius: TOKENS.radius.button,
+          borderRadius: `${TOKENS.radius.button}px`,
           transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
           '&:active': { transform: 'scale(0.98)' },
           '&.Mui-focusVisible': { boxShadow: `0 0 0 3px ${TOKENS.primaryEdge}` },
@@ -110,13 +110,13 @@ export const onboardingMuiTheme = createTheme({
       },
     },
     MuiChip: {
-      styleOverrides: { root: { borderRadius: TOKENS.radius.md, fontWeight: 600 } },
+      styleOverrides: { root: { borderRadius: `${TOKENS.radius.md}px`, fontWeight: 600 } },
     },
     MuiDivider: { styleOverrides: { root: { borderColor: TOKENS.border } } },
     MuiLinearProgress: {
       styleOverrides: {
-        root: { borderRadius: TOKENS.radius.full, backgroundColor: TOKENS.primaryTint },
-        bar: { borderRadius: TOKENS.radius.full },
+        root: { borderRadius: `${TOKENS.radius.full}px`, backgroundColor: TOKENS.primaryTint },
+        bar: { borderRadius: `${TOKENS.radius.full}px` },
       },
     },
     MuiTooltip: {
@@ -126,21 +126,21 @@ export const onboardingMuiTheme = createTheme({
           fontSize: 12,
           fontWeight: 600,
           backgroundColor: TOKENS.ink,
-          borderRadius: TOKENS.radius.md,
+          borderRadius: `${TOKENS.radius.md}px`,
           padding: '6px 10px',
         },
       },
     },
     MuiMenu: {
       defaultProps: { slotProps: { paper: { elevation: 8 } } },
-      styleOverrides: { paper: { borderRadius: TOKENS.radius.lg } },
+      styleOverrides: { paper: { borderRadius: `${TOKENS.radius.lg}px` } },
     },
     MuiDialog: {
       defaultProps: { slotProps: { paper: { elevation: 16 } } },
-      styleOverrides: { paper: { borderRadius: TOKENS.radius.xl } },
+      styleOverrides: { paper: { borderRadius: `${TOKENS.radius.xl}px` } },
     },
     MuiAlert: {
-      styleOverrides: { root: { borderRadius: TOKENS.radius.lg, fontSize: 14 } },
+      styleOverrides: { root: { borderRadius: `${TOKENS.radius.lg}px`, fontSize: 14 } },
       // Culorile stărilor, scrise explicit: textul nu mai atârnă de cum calculează MUI din paletă.
       variants: [
         {

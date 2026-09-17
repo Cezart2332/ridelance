@@ -74,7 +74,7 @@ export function ListingScoreIndicator({ score, suggestions }: ListingScoreIndica
           aria-label="Scorul anunțului"
           sx={{
             height: 5,
-            borderRadius: DASHBOARD_TOKENS.radius.full,
+            borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
             bgcolor: alpha(DASHBOARD_TOKENS.ink, 0.08),
             overflow: 'hidden',
           }}

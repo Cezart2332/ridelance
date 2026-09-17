@@ -111,7 +111,7 @@ export function CarsView() {
               onChange={(e) => setSearch(e.target.value)}
               sx={{ 
                 '& .MuiOutlinedInput-root': { 
-                  borderRadius: DASHBOARD_TOKENS.radius.md,
+                  borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                   bgcolor: DASHBOARD_TOKENS.paper 
                 } 
               }}
@@ -130,7 +130,7 @@ export function CarsView() {
               startIcon={<FilterListRoundedIcon />}
               onClick={() => setShowFilters(!showFilters)}
               sx={{ 
-                borderRadius: DASHBOARD_TOKENS.radius.md,
+                borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                 fontWeight: 700,
                 whiteSpace: 'nowrap',
                 width: { xs: '100%', sm: 'auto' },
@@ -154,7 +154,7 @@ export function CarsView() {
             elevation={0} 
             sx={{ 
               p: 3, 
-              borderRadius: DASHBOARD_TOKENS.radius.lg, 
+              borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`, 
               border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
               bgcolor: alpha(DASHBOARD_TOKENS.surface, 0.4)
             }}
@@ -178,7 +178,7 @@ export function CarsView() {
                     size="small"
                     value={f.value}
                     onChange={(e) => f.setter(e.target.value)}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: DASHBOARD_TOKENS.radius.md, bgcolor: '#fff' } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, bgcolor: '#fff' } }}
                   >
                     {f.options.map(opt => (
                       <MenuItem key={opt} value={opt}>{opt}</MenuItem>
@@ -206,7 +206,7 @@ export function CarsView() {
             width: { xs: '100%', sm: 'auto' },
             minWidth: { sm: 180 },
             '& .MuiOutlinedInput-root': { 
-              borderRadius: DASHBOARD_TOKENS.radius.md,
+              borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
               bgcolor: DASHBOARD_TOKENS.paper 
             } 
           }}
@@ -240,7 +240,7 @@ export function CarsView() {
           ))}
         </Box>
       ) : !loading && (
-        <Paper sx={{ py: 8, textAlign: 'center', borderRadius: DASHBOARD_TOKENS.radius.xl, border: `1px dashed ${alpha(DASHBOARD_TOKENS.ink, 0.1)}` }} elevation={0}>
+        <Paper sx={{ py: 8, textAlign: 'center', borderRadius: `${DASHBOARD_TOKENS.radius.xl}px`, border: `1px dashed ${alpha(DASHBOARD_TOKENS.ink, 0.1)}` }} elevation={0}>
           <DirectionsCarFilledRoundedIcon sx={{ fontSize: 48, color: alpha(DASHBOARD_TOKENS.ink, 0.1), mb: 2 }} />
           <Typography variant="h6" sx={{ fontWeight: 800, color: DASHBOARD_TOKENS.ink }}>
             Nicio mașină găsită

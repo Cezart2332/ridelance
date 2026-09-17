@@ -103,14 +103,14 @@ export const adminTheme = createTheme({
   components: {
     MuiPaper: {
       defaultProps: { elevation: 0, variant: 'outlined' },
-      styleOverrides: { root: { backgroundImage: 'none', borderRadius: TOKENS.radius.md } },
+      styleOverrides: { root: { backgroundImage: 'none', borderRadius: `${TOKENS.radius.md}px` } },
     },
     MuiCard: { defaultProps: { elevation: 0, variant: 'outlined' } },
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {
         root: {
-          borderRadius: TOKENS.radius.md,
+          borderRadius: `${TOKENS.radius.md}px`,
           transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
           '&:active': { transform: 'scale(0.98)' },
           '&.Mui-focusVisible': { boxShadow: '0 0 0 3px rgba(92, 203, 245, 0.35)' },
@@ -137,7 +137,7 @@ export const adminTheme = createTheme({
     MuiAlert: { styleOverrides: { root: { borderRadius: 10, alignItems: 'center' } } },
     MuiListItemButton: { styleOverrides: { root: { minHeight: 44 } } },
     MuiChip: {
-      styleOverrides: { root: { borderRadius: TOKENS.radius.sm, height: 22, fontSize: 12 } },
+      styleOverrides: { root: { borderRadius: `${TOKENS.radius.sm}px`, height: 22, fontSize: 12 } },
     },
     MuiTooltip: {
       defaultProps: { arrow: false },
@@ -146,15 +146,15 @@ export const adminTheme = createTheme({
           fontSize: 12,
           fontWeight: 600,
           backgroundColor: TOKENS.ink,
-          borderRadius: TOKENS.radius.sm,
+          borderRadius: `${TOKENS.radius.sm}px`,
         },
       },
     },
     MuiDivider: { styleOverrides: { root: { borderColor: TOKENS.border } } },
     MuiLinearProgress: {
       styleOverrides: {
-        root: { borderRadius: TOKENS.radius.full },
-        bar: { borderRadius: TOKENS.radius.full },
+        root: { borderRadius: `${TOKENS.radius.full}px` },
+        bar: { borderRadius: `${TOKENS.radius.full}px` },
       },
     },
 

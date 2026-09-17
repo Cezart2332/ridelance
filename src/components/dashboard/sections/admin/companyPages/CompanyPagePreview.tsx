@@ -37,7 +37,7 @@ export function CompanyPagePreview({
   return (
     <Box
       sx={{
-        borderRadius: TOKENS.radius.md,
+        borderRadius: `${TOKENS.radius.md}px`,
         border: `1px solid rgba(0,0,0,0.08)`,
         overflow: 'hidden',
         maxHeight,

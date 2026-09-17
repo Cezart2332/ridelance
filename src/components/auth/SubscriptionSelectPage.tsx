@@ -146,13 +146,13 @@ export default function SubscriptionSelectPage() {
           </Box>
 
           {isSuspendedAccount && (
-            <Alert severity="warning" sx={{ maxWidth: 640, width: '100%', borderRadius: TOKENS.radius.lg }}>
+            <Alert severity="warning" sx={{ maxWidth: 640, width: '100%', borderRadius: `${TOKENS.radius.lg}px` }}>
               Contul tău este suspendat. Pentru reactivare, alege un abonament sau contactează suportul dacă ai nevoie de ajutor.
             </Alert>
           )}
 
           {checkoutError && (
-            <Alert severity="error" sx={{ maxWidth: 640, width: '100%', borderRadius: TOKENS.radius.lg }}>
+            <Alert severity="error" sx={{ maxWidth: 640, width: '100%', borderRadius: `${TOKENS.radius.lg}px` }}>
               {checkoutError}
             </Alert>
           )}
@@ -162,7 +162,7 @@ export default function SubscriptionSelectPage() {
             elevation={0}
             sx={{
               p: 2,
-              borderRadius: TOKENS.radius.lg,
+              borderRadius: `${TOKENS.radius.lg}px`,
               backgroundColor: alpha(TOKENS.primary, 0.06),
               border: `1px solid ${alpha(TOKENS.primary, 0.15)}`,
               display: 'flex',
@@ -266,7 +266,7 @@ export default function SubscriptionSelectPage() {
                 py: 1.6,
                 fontWeight: 700,
                 fontSize: '1.05rem',
-                borderRadius: TOKENS.radius.md,
+                borderRadius: `${TOKENS.radius.md}px`,
                 backgroundColor: TOKENS.primary,
                 boxShadow: TOKENS.shadow.glow,
                 '&:hover': {

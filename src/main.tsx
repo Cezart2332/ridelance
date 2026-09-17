@@ -192,7 +192,7 @@ const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: TOKENS.radius.md, // 8px for standard buttons
+          borderRadius: `${TOKENS.radius.md}px`, // 8px for standard buttons
           transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
           // Calm interactions: no hover "jump" (nav items are buttons too),
           // just a gentle press and a visible keyboard-focus ring.
@@ -211,7 +211,7 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: TOKENS.radius.lg, // 12px for cards
+          borderRadius: `${TOKENS.radius.lg}px`, // 12px for cards
           border: `1px solid ${TOKENS.border}`,
           boxShadow: TOKENS.shadow.sm,
           transition: `border-color ${TOKENS.duration} ${TOKENS.easing}, box-shadow ${TOKENS.duration} ${TOKENS.easing}`,
@@ -225,7 +225,7 @@ const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: TOKENS.radius.lg, // 12px for paper containers
+          borderRadius: `${TOKENS.radius.lg}px`, // 12px for paper containers
           backgroundImage: 'none',
           transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
         },
@@ -266,7 +266,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: TOKENS.radius.md, // 8px for text fields
+            borderRadius: `${TOKENS.radius.md}px`, // 8px for text fields
             transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
             '&:hover:not(.Mui-focused) .MuiOutlinedInput-notchedOutline': {
               borderColor: TOKENS.borderHover,
@@ -286,7 +286,7 @@ const theme = createTheme({
       styleOverrides: {
         tooltip: {
           backgroundColor: TOKENS.ink,
-          borderRadius: TOKENS.radius.sm,
+          borderRadius: `${TOKENS.radius.sm}px`,
           fontWeight: 600,
           fontSize: '0.74rem',
           padding: '6px 10px',
@@ -299,7 +299,7 @@ const theme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: {
-          borderRadius: TOKENS.radius.xl,
+          borderRadius: `${TOKENS.radius.xl}px`,
           boxShadow: TOKENS.shadow.xl,
         },
       },
@@ -307,7 +307,7 @@ const theme = createTheme({
     MuiMenu: {
       styleOverrides: {
         paper: {
-          borderRadius: TOKENS.radius.md,
+          borderRadius: `${TOKENS.radius.md}px`,
           border: `1px solid ${TOKENS.border}`,
           boxShadow: TOKENS.shadow.lg,
           marginTop: 4,
@@ -320,7 +320,7 @@ const theme = createTheme({
     MuiMenuItem: {
       styleOverrides: {
         root: {
-          borderRadius: TOKENS.radius.sm,
+          borderRadius: `${TOKENS.radius.sm}px`,
           fontSize: '0.9rem',
           fontWeight: 550,
           minHeight: 38,
@@ -353,10 +353,10 @@ const theme = createTheme({
     MuiLinearProgress: {
       styleOverrides: {
         root: {
-          borderRadius: TOKENS.radius.full,
+          borderRadius: `${TOKENS.radius.full}px`,
         },
         bar: {
-          borderRadius: TOKENS.radius.full,
+          borderRadius: `${TOKENS.radius.full}px`,
         },
       },
     },

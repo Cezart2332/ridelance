@@ -31,7 +31,7 @@ export function AdminLayout({ children, navItems, activeId, onNavClick, onLogout
         <Box component="img" src={logo} alt="RIDElance" sx={{ width: 150 }} />
         {mobile && <IconButton aria-label="Închide meniul" onClick={() => setMobileOpen(false)}><CloseRoundedIcon /></IconButton>}
       </Stack>
-      <Box sx={{ mx: 2.5, px: 1.5, py: 1, mb: 1, bgcolor: 'grey.50', borderRadius: 2 }}>
+      <Box sx={{ mx: 2.5, px: 1.5, py: 1, mb: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
         <Typography variant="subtitle2">Spațiu de administrare</Typography>
         <Typography variant="caption" color="text.secondary">Echipa RIDElance</Typography>
       </Box>
@@ -43,7 +43,7 @@ export function AdminLayout({ children, navItems, activeId, onNavClick, onLogout
               {navItems.filter((item) => item.group === group).map((item) => (
                 <ListItemButton key={item.id} selected={activeId === item.id} aria-current={activeId === item.id ? 'page' : undefined}
                   onClick={() => { onNavClick(item.id); setMobileOpen(false) }}
-                  sx={{ borderRadius: 2, px: 1.75, py: 0.5, minHeight: 36, mb: 0.25, color: activeId === item.id ? 'text.primary' : 'text.secondary', '&.Mui-selected': { bgcolor: 'primary.light', boxShadow: 'inset 3px 0 0 var(--admin-accent)' } }}>
+                  sx={{ borderRadius: 1, px: 1.75, py: 0.5, minHeight: 36, mb: 0.25, color: activeId === item.id ? 'text.primary' : 'text.secondary', '&.Mui-selected': { bgcolor: 'primary.light', boxShadow: 'inset 3px 0 0 var(--admin-accent)' } }}>
                   <ListItemIcon sx={{ minWidth: 32, color: 'inherit', '& svg': { fontSize: 19 } }}>{item.icon}</ListItemIcon>
                   <ListItemText primary={item.label} slotProps={{ primary: { sx: { fontSize: 13, fontWeight: activeId === item.id ? 650 : 500 } } }} />
                 </ListItemButton>

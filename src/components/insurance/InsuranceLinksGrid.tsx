@@ -151,7 +151,7 @@ export function InsuranceLinksGrid({ compact = false, only }: InsuranceLinksGrid
             display: 'flex',
             flexDirection: 'column',
             p: compact ? 2.2 : 3,
-            borderRadius: TOKENS.radius.lg,
+            borderRadius: `${TOKENS.radius.lg}px`,
             border: `1px solid ${TOKENS.border}`,
             backgroundColor: TOKENS.paper,
             boxShadow: TOKENS.shadow.sm,
@@ -168,7 +168,7 @@ export function InsuranceLinksGrid({ compact = false, only }: InsuranceLinksGrid
             sx={{
               width: compact ? 40 : 46,
               height: compact ? 40 : 46,
-              borderRadius: TOKENS.radius.md,
+              borderRadius: `${TOKENS.radius.md}px`,
               display: 'grid',
               placeItems: 'center',
               backgroundColor: alpha(TOKENS.primary, 0.12),

@@ -166,7 +166,7 @@ export function DeductibleExpensesPanel({
         elevation={0}
         sx={{
           p: 2.5,
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
         }}
       >
@@ -182,7 +182,7 @@ export function DeductibleExpensesPanel({
       elevation={0}
       sx={{
         p: { xs: 2.5, md: 3 },
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
+        borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
         border: `1px solid ${DASHBOARD_TOKENS.border}`,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,
       }}
@@ -242,7 +242,7 @@ export function DeductibleExpensesPanel({
               />
             )}
             slotProps={{
-              paper: { sx: { borderRadius: DASHBOARD_TOKENS.radius.md, maxHeight: 320 } },
+              paper: { sx: { borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, maxHeight: 320 } },
             }}
           />
           <TextField
@@ -268,7 +268,7 @@ export function DeductibleExpensesPanel({
               alignSelf: 'flex-start',
               textTransform: 'none',
               fontWeight: 700,
-              borderRadius: DASHBOARD_TOKENS.radius.full,
+              borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
               bgcolor: DASHBOARD_TOKENS.primary,
               boxShadow: 'none', // Replaced glow shadow with flat style
               '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong },
@@ -307,7 +307,7 @@ export function DeductibleExpensesPanel({
                 elevation={0}
                 sx={{
                   p: 1.4,
-                  borderRadius: DASHBOARD_TOKENS.radius.md,
+                  borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                   border: `1px solid ${DASHBOARD_TOKENS.border}`,
                   bgcolor: DASHBOARD_TOKENS.surface,
                 }}
@@ -335,7 +335,7 @@ export function DeductibleExpensesPanel({
                       fontSize: '0.7rem',
                       color: colors.color,
                       bgcolor: colors.bg,
-                      borderRadius: DASHBOARD_TOKENS.radius.sm,
+                      borderRadius: `${DASHBOARD_TOKENS.radius.sm}px`,
                       height: 24,
                     }}
                   />
@@ -362,7 +362,7 @@ export function DeductibleExpensesPanel({
                     }
                     sx={{
                       textTransform: 'none',
-                      borderRadius: DASHBOARD_TOKENS.radius.full,
+                      borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                       fontSize: '0.8rem',
                       boxShadow: 'none',
                     }}
@@ -381,7 +381,7 @@ export function DeductibleExpensesPanel({
                         <FileDownloadRoundedIcon sx={{ fontSize: 16 }} />
                       )
                     }
-                    sx={{ textTransform: 'none', borderRadius: DASHBOARD_TOKENS.radius.full, fontSize: '0.8rem' }}
+                    sx={{ textTransform: 'none', borderRadius: `${DASHBOARD_TOKENS.radius.full}px`, fontSize: '0.8rem' }}
                   >
                     Descarcă
                   </Button>

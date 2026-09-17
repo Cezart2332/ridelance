@@ -226,7 +226,7 @@ export function OblioAdminView() {
               </Stack>
 
               {status.error && (
-                <Alert severity={status.connectionOk ? 'warning' : 'error'} sx={{ borderRadius: 2 }}>
+                <Alert severity={status.connectionOk ? 'warning' : 'error'} sx={{ borderRadius: 1 }}>
                   {status.error}
                 </Alert>
               )}
@@ -290,7 +290,7 @@ export function OblioAdminView() {
             </Button>
 
             {testResult && (
-              <Alert severity={testResult.ok ? 'success' : 'error'} sx={{ borderRadius: 2 }}>
+              <Alert severity={testResult.ok ? 'success' : 'error'} sx={{ borderRadius: 1 }}>
                 {testResult.message}
                 {testResult.link && (
                   <>

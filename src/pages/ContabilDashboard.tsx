@@ -181,7 +181,7 @@ export function ContabilDashboard() {
   const inputSx = {
     '& .MuiOutlinedInput-root': {
       bgcolor: alpha(TOKENS.paper, 0.9),
-      borderRadius: TOKENS.radius.md,
+      borderRadius: `${TOKENS.radius.md}px`,
       '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.08) },
       '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.16) },
       '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
@@ -208,7 +208,7 @@ export function ContabilDashboard() {
 
     if (statsError) {
       return (
-        <Alert severity="error" sx={{ borderRadius: TOKENS.radius.md }}>
+        <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
           {statsError}
         </Alert>
       )
@@ -283,7 +283,7 @@ export function ContabilDashboard() {
         <Box
           sx={{
             p: { xs: 2.5, md: 3.5 },
-            borderRadius: TOKENS.radius.xl,
+            borderRadius: `${TOKENS.radius.xl}px`,
             background: `linear-gradient(135deg, ${alpha(TOKENS.primary, 0.08)} 0%, ${alpha(TOKENS.paper, 0.6)} 100%)`,
             border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
             boxShadow: TOKENS.shadow.sm,
@@ -313,7 +313,7 @@ export function ContabilDashboard() {
                   label="Lună"
                   value={statsMonth}
                   onChange={(e) => setStatsMonth(Number(e.target.value))}
-                  sx={{ borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+                  sx={{ borderRadius: `${TOKENS.radius.md}px`, bgcolor: TOKENS.paper }}
                 >
                   {ROMANIAN_MONTHS.map((m, idx) => (
                     <MenuItem key={m} value={idx + 1}>{m}</MenuItem>
@@ -326,7 +326,7 @@ export function ContabilDashboard() {
                   label="An"
                   value={statsYear}
                   onChange={(e) => setStatsYear(Number(e.target.value))}
-                  sx={{ borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+                  sx={{ borderRadius: `${TOKENS.radius.md}px`, bgcolor: TOKENS.paper }}
                 >
                   {[now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
                     <MenuItem key={y} value={y}>{y}</MenuItem>
@@ -346,7 +346,7 @@ export function ContabilDashboard() {
               sx={{
                 p: 2.5,
                 cursor: 'pointer',
-                borderRadius: TOKENS.radius.lg,
+                borderRadius: `${TOKENS.radius.lg}px`,
                 border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
                 boxShadow: TOKENS.shadow.sm,
                 background: TOKENS.paper,
@@ -414,7 +414,7 @@ export function ContabilDashboard() {
       )}
 
       {clientsError && (
-        <Alert severity="error" sx={{ borderRadius: TOKENS.radius.md }}>{clientsError}</Alert>
+        <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>{clientsError}</Alert>
       )}
 
       {!clientsLoading && !clientsError && filteredClients.length === 0 && (
@@ -452,7 +452,7 @@ export function ContabilDashboard() {
               {group.items.length === 0 ? (
                 <Paper
                   elevation={0}
-                  sx={{ p: 2.5, borderRadius: TOKENS.radius.lg, border: `1px dashed ${alpha(TOKENS.ink, 0.14)}` }}
+                  sx={{ p: 2.5, borderRadius: `${TOKENS.radius.lg}px`, border: `1px dashed ${alpha(TOKENS.ink, 0.14)}` }}
                 >
                   <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
                     Niciun client în această categorie.
@@ -468,7 +468,7 @@ export function ContabilDashboard() {
                       sx={{
                         p: 2.25,
                         cursor: 'pointer',
-                        borderRadius: TOKENS.radius.lg,
+                        borderRadius: `${TOKENS.radius.lg}px`,
                         border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
                         bgcolor: TOKENS.paper,
                         transition: 'all 0.2s',

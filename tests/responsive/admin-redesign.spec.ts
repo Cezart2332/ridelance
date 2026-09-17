@@ -80,9 +80,9 @@ test('admin: verificare pe pas, filtrare documente și revenire la lista de clie
   await expect(page.getByRole('article')).toHaveCount(2)
   await page.getByRole('button', { name: /Înapoi la clienți/ }).click()
   await expect(page).toHaveURL(/\/admin\?tab=pfa$/)
-  await expect(page.getByRole('heading', { name: 'În curs de înrolare' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Onboarding' })).toBeVisible()
   await page.reload()
-  await expect(page.getByRole('heading', { name: 'În curs de înrolare' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Onboarding' })).toBeVisible()
 })
 
 test('admin: rezumat organizat în subsecțiuni și meniu accesibil pe mobil', async ({ page }, info) => {
@@ -98,6 +98,6 @@ test('admin: rezumat organizat în subsecțiuni și meniu accesibil pe mobil', a
   await page.reload()
   await expect(page.getByRole('tab', { name: 'Tranzacții și servicii' })).toHaveAttribute('aria-selected', 'true')
   if (info.project.name === 'mobile') await page.getByRole('button', { name: 'Deschide meniul' }).click()
-  await page.getByRole('navigation', { name: 'Navigare admin' }).filter({ visible: true }).getByRole('button', { name: 'În curs de înrolare' }).click()
-  await expect(page.getByRole('heading', { name: 'În curs de înrolare' })).toBeVisible()
+  await page.getByRole('navigation', { name: 'Navigare admin' }).filter({ visible: true }).getByRole('button', { name: 'Onboarding' }).click()
+  await expect(page.getByRole('heading', { name: 'Onboarding' })).toBeVisible()
 })

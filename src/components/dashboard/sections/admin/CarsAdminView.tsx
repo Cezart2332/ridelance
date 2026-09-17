@@ -197,7 +197,7 @@ export function CarsAdminView() {
             variant="contained"
             startIcon={<AddRoundedIcon />}
             onClick={() => setIsAddingCar(true)}
-            sx={{ bgcolor: DASHBOARD_TOKENS.primary, fontWeight: 700, borderRadius: 2 }}
+            sx={{ bgcolor: DASHBOARD_TOKENS.primary, fontWeight: 700, borderRadius: 1 }}
           >
             Adaugă mașină
           </Button>

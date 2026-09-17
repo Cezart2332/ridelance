@@ -31,7 +31,7 @@ export function StatCard({ label, value, helper, variant = 'default', size = 'md
       onClick={onClick}
       sx={{
         p: { xs: 2, md: 2.4 },
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
+        borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
         border: `1px solid ${accent ? alpha(DASHBOARD_TOKENS.accent, 0.28) : DASHBOARD_TOKENS.border}`,
         bgcolor: accent ? DASHBOARD_TOKENS.accentWash : DASHBOARD_TOKENS.paper,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,

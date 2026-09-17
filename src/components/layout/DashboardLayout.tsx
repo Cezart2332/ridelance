@@ -188,7 +188,7 @@ export function DashboardLayout({
                     sx={{
                       minHeight: 46,
                       px: 1.5,
-                      borderRadius: TOKENS.radius.md,
+                      borderRadius: `${TOKENS.radius.md}px`,
                       border: `1px solid ${isActive ? alpha(TOKENS.primary, 0.25) : 'transparent'}`,
                       '& .MuiAccordionSummary-content': { m: 0, alignItems: 'center' },
                       '&:hover': { bgcolor: alpha(TOKENS.primary, 0.04) },
@@ -222,7 +222,7 @@ export function DashboardLayout({
                             sx={{
                               py: 0.9,
                               pl: 1.2,
-                              borderRadius: TOKENS.radius.sm,
+                              borderRadius: `${TOKENS.radius.sm}px`,
                               borderLeft: `2px solid ${isSubActive ? alpha(TOKENS.primaryStrong, 0.65) : 'transparent'}`,
                               bgcolor: isSubActive ? alpha(TOKENS.primary, 0.08) : 'transparent',
                               color: isSubActive ? TOKENS.primaryStrong : TOKENS.textMuted,
@@ -255,7 +255,7 @@ export function DashboardLayout({
                   sx={{
                     py: 1.15,
                     px: 1.5,
-                    borderRadius: TOKENS.radius.md,
+                    borderRadius: `${TOKENS.radius.md}px`,
                     border: `1px solid ${isActive ? alpha(TOKENS.primary, 0.25) : 'transparent'}`,
                     bgcolor: isActive ? alpha(TOKENS.primary, 0.1) : 'transparent',
                     color: isActive ? TOKENS.primaryStrong : TOKENS.textMuted,
@@ -299,7 +299,7 @@ export function DashboardLayout({
             p: 1.5,
             bgcolor: alpha(TOKENS.surfaceAlt, 0.95),
             background: `linear-gradient(135deg, ${alpha(TOKENS.primary, 0.1)} 0%, ${TOKENS.surfaceAlt} 38%)`,
-            borderRadius: TOKENS.radius.lg,
+            borderRadius: `${TOKENS.radius.lg}px`,
             border: `1px solid ${TOKENS.border}`,
             display: 'flex',
             alignItems: 'center',

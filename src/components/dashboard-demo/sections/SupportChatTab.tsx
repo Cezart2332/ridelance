@@ -26,7 +26,7 @@ export function SupportChatTab({ chatMessage, chatMessages, onChatChange, onSend
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
@@ -74,7 +74,7 @@ export function SupportChatTab({ chatMessage, chatMessages, onChatChange, onSend
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
@@ -88,7 +88,7 @@ export function SupportChatTab({ chatMessage, chatMessages, onChatChange, onSend
               elevation={0}
               sx={{
                 p: 1.2,
-                borderRadius: DASHBOARD_TOKENS.radius.md,
+                borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                 backgroundColor:
                   message.sender === 'Tu' ? alpha(DASHBOARD_TOKENS.primary, 0.1) : DASHBOARD_TOKENS.surface,
                 border: `1px solid ${DASHBOARD_TOKENS.border}`,
@@ -127,7 +127,7 @@ export function SupportChatTab({ chatMessage, chatMessages, onChatChange, onSend
             variant="contained"
             onClick={onSend}
             sx={{
-              borderRadius: DASHBOARD_TOKENS.radius.full,
+              borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
               px: 2.4,
               color: '#fff',
               backgroundColor: DASHBOARD_TOKENS.primary,

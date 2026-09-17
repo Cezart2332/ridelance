@@ -78,7 +78,7 @@ export const inputSx = {
   '& .MuiOutlinedInput-root': {
     backgroundColor: '#fff',
     color: TOKENS.ink,
-    borderRadius: TOKENS.radius.md,
+    borderRadius: `${TOKENS.radius.md}px`,
     fontWeight: 500,
     '& .MuiOutlinedInput-notchedOutline': { borderColor: TOKENS.border },
     '&:hover .MuiOutlinedInput-notchedOutline': {

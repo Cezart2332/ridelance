@@ -50,7 +50,7 @@ export function StatusChip({ label, tone = 'neutral', size = 'md', icon, outline
         height: small ? 20 : 26,
         fontSize: small ? '0.68rem' : '0.75rem',
         fontWeight: 800,
-        borderRadius: DASHBOARD_TOKENS.radius.full,
+        borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
         color: style.color,
         backgroundColor: style.bg,
         border: outlined ? `1px solid ${style.border}` : 'none',

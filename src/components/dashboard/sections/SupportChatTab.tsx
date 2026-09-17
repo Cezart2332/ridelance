@@ -121,7 +121,7 @@ export function SupportChatTab({ accountantChatPath }: SupportChatTabProps) {
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
@@ -172,7 +172,7 @@ export function SupportChatTab({ accountantChatPath }: SupportChatTabProps) {
         severity="info"
         icon={false}
         sx={{
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           bgcolor: 'rgba(92,203,245,0.08)',
           color: DASHBOARD_TOKENS.ink,
@@ -198,7 +198,7 @@ export function SupportChatTab({ accountantChatPath }: SupportChatTabProps) {
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
@@ -210,7 +210,7 @@ export function SupportChatTab({ accountantChatPath }: SupportChatTabProps) {
           Program: {supportHours.label}
         </Typography>
         {!supportHours.isOpen && (
-          <Alert severity="info" sx={{ mt: 2, borderRadius: DASHBOARD_TOKENS.radius.md }}>
+          <Alert severity="info" sx={{ mt: 2, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
             Chatul suport este disponibil doar în program. Poți citi mesajele existente, dar poți trimite mesaje în intervalul afișat.
           </Alert>
         )}
@@ -244,7 +244,7 @@ export function SupportChatTab({ accountantChatPath }: SupportChatTabProps) {
                           elevation={0}
                           sx={{
                             p: 1.2,
-                            borderRadius: DASHBOARD_TOKENS.radius.md,
+                            borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                             backgroundColor: isMe
                               ? `rgba(92,203,245,0.10)`
                               : DASHBOARD_TOKENS.surface,
@@ -288,7 +288,7 @@ export function SupportChatTab({ accountantChatPath }: SupportChatTabProps) {
                 onClick={handleSend}
                 disabled={sending || !chatMessage.trim() || !supportHours.isOpen}
                 sx={{
-                  borderRadius: DASHBOARD_TOKENS.radius.full,
+                  borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                   px: 2.4,
                   color: '#fff',
                   backgroundColor: DASHBOARD_TOKENS.primary,

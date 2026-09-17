@@ -38,7 +38,7 @@ export function RailProgress({
     <Box
       sx={{
         p: 2,
-        borderRadius: SHELL.radius.card,
+        borderRadius: `${SHELL.radius.card}px`,
         backgroundColor: SHELL.text.primary,
         color: '#FFFFFF',
       }}
@@ -91,7 +91,7 @@ export function RailProgress({
         sx={{
           mt: 1,
           height: 3,
-          borderRadius: SHELL.radius.pill,
+          borderRadius: `${SHELL.radius.pill}px`,
           backgroundColor: 'rgba(255, 255, 255, 0.14)',
           overflow: 'hidden',
         }}
@@ -106,7 +106,7 @@ export function RailProgress({
             height: '100%',
             width: '100%',
             transformOrigin: 'left center',
-            borderRadius: SHELL.radius.pill,
+            borderRadius: `${SHELL.radius.pill}px`,
             backgroundColor: SHELL.brand,
           }}
         />

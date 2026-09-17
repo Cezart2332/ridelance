@@ -139,7 +139,7 @@ function NewsletterBand() {
                 flexDirection: { xs: 'column', sm: 'row' },
                 gap: 1,
                 p: 0.75,
-                borderRadius: TOKENS.radius.lg,
+                borderRadius: `${TOKENS.radius.lg}px`,
                 backgroundColor: '#fff',
                 border: `1px solid ${alpha(TOKENS.primary, 0.25)}`,
                 boxShadow: '0 8px 24px rgba(69,184,226,0.12)',
@@ -167,7 +167,7 @@ function NewsletterBand() {
                 sx={{
                   px: 3,
                   py: 1.35,
-                  borderRadius: TOKENS.radius.md,
+                  borderRadius: `${TOKENS.radius.md}px`,
                   backgroundColor: FOOTER_BG,
                   color: '#fff',
                   fontWeight: 800,
@@ -441,7 +441,7 @@ export function SiteFooter() {
                 rel="noopener noreferrer"
                 sx={{
                   display: 'block',
-                  borderRadius: TOKENS.radius.md,
+                  borderRadius: `${TOKENS.radius.md}px`,
                   overflow: 'hidden',
                   lineHeight: 0,
                   transition: `transform 0.2s ${TOKENS.easing}`,

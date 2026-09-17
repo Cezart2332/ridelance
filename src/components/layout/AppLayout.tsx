@@ -145,7 +145,7 @@ export function AppLayout() {
                       px: 2,
                       py: 1,
                       position: 'relative',
-                      borderRadius: TOKENS.radius.sm,
+                      borderRadius: `${TOKENS.radius.sm}px`,
                       fontSize: '0.85rem',
                       fontWeight: isActive ? 700 : 500,
                       letterSpacing: '0.01em',
@@ -190,7 +190,7 @@ export function AppLayout() {
                   py: 1,
                   color: '#fff',
                   backgroundColor: TOKENS.primary,
-                  borderRadius: TOKENS.radius.md,
+                  borderRadius: `${TOKENS.radius.md}px`,
                   fontWeight: 700,
                   boxShadow: 'none',
                   '&:hover': {
@@ -249,7 +249,7 @@ export function AppLayout() {
                     minWidth: 'unset',
                     color: '#fff',
                     backgroundColor: TOKENS.primary,
-                    borderRadius: TOKENS.radius.md,
+                    borderRadius: `${TOKENS.radius.md}px`,
                     fontWeight: 700,
                     fontSize: '0.75rem',
                   }}
@@ -341,7 +341,7 @@ export function AppLayout() {
                   justifyContent: 'flex-start',
                   px: 1.5,
                   py: 1,
-                  borderRadius: TOKENS.radius.md,
+                  borderRadius: `${TOKENS.radius.md}px`,
                   color:
                     location.pathname === item.path
                       ? TOKENS.primaryStrong
@@ -368,7 +368,7 @@ export function AppLayout() {
                   justifyContent: 'flex-start',
                   px: 1.5,
                   py: 1,
-                  borderRadius: TOKENS.radius.md,
+                  borderRadius: `${TOKENS.radius.md}px`,
                   color: TOKENS.primaryStrong,
                   fontWeight: 750,
                   fontSize: '0.95rem',
@@ -391,7 +391,7 @@ export function AppLayout() {
               mt: 'auto',
               color: '#fff',
               backgroundColor: TOKENS.primary,
-              borderRadius: TOKENS.radius.md,
+              borderRadius: `${TOKENS.radius.md}px`,
               py: 1.2,
               fontWeight: 700,
               boxShadow: 'none',

@@ -162,7 +162,7 @@ export function RecurringDocumentationPanel({
       elevation={0}
       sx={{
         p: { xs: 2.5, md: 3 },
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
+        borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
         border: `1px solid ${DASHBOARD_TOKENS.border}`,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,
       }}
@@ -199,7 +199,7 @@ export function RecurringDocumentationPanel({
                   elevation={0}
                   sx={{
                     p: 1.5,
-                    borderRadius: DASHBOARD_TOKENS.radius.md,
+                    borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                     border: `1px solid ${DASHBOARD_TOKENS.border}`,
                     bgcolor: DASHBOARD_TOKENS.surface,
                   }}
@@ -223,7 +223,7 @@ export function RecurringDocumentationPanel({
                         fontSize: '0.72rem',
                         color: statusStyle.color,
                         bgcolor: statusStyle.bg,
-                        borderRadius: DASHBOARD_TOKENS.radius.full,
+                        borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                       }}
                     />
                   </Stack>
@@ -247,7 +247,7 @@ export function RecurringDocumentationPanel({
                 elevation={0}
                 sx={{
                   p: 1.5,
-                  borderRadius: DASHBOARD_TOKENS.radius.md,
+                  borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                   border: `1px solid ${status === 'verified' ? alpha(DASHBOARD_TOKENS.stateActive, 0.22) : DASHBOARD_TOKENS.border}`,
                   bgcolor: DASHBOARD_TOKENS.surface,
                 }}
@@ -265,7 +265,7 @@ export function RecurringDocumentationPanel({
                         fontSize: '0.72rem',
                         color: statusStyle.color,
                         bgcolor: statusStyle.bg,
-                        borderRadius: DASHBOARD_TOKENS.radius.full,
+                        borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                       }}
                     />
                   </Stack>
@@ -300,7 +300,7 @@ export function RecurringDocumentationPanel({
                         sx={{
                           textTransform: 'none',
                           fontWeight: 700,
-                          borderRadius: DASHBOARD_TOKENS.radius.full,
+                          borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                           bgcolor: DASHBOARD_TOKENS.primary,
                           boxShadow: 'none',
                           '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong },
@@ -343,7 +343,7 @@ export function RecurringDocumentationPanel({
                           }
                           sx={{
                             textTransform: 'none',
-                            borderRadius: DASHBOARD_TOKENS.radius.full,
+                            borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                             boxShadow: 'none',
                           }}
                         >
@@ -361,7 +361,7 @@ export function RecurringDocumentationPanel({
                               <FileDownloadRoundedIcon sx={{ fontSize: 18 }} />
                             )
                           }
-                          sx={{ textTransform: 'none', borderRadius: DASHBOARD_TOKENS.radius.full }}
+                          sx={{ textTransform: 'none', borderRadius: `${DASHBOARD_TOKENS.radius.full}px` }}
                         >
                           Descarcă
                         </Button>
@@ -398,7 +398,7 @@ export function RecurringDocumentationPanel({
       )}
 
       {!loading && (
-        <Alert severity="info" sx={{ mt: 2, borderRadius: DASHBOARD_TOKENS.radius.md, fontSize: '0.85rem' }}>
+        <Alert severity="info" sx={{ mt: 2, borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontSize: '0.85rem' }}>
           Documentele marcate „Verificat” au fost validate de contabil. La începutul fiecărei luni primești o
           notificare pentru a reîncărca documentația.
         </Alert>

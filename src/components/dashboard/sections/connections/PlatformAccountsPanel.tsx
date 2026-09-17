@@ -26,13 +26,13 @@ const emptyDraft: DriverDraft = { email: '', phone: '', fullName: '' }
 
 const cardSx = {
   p: { xs: 2.5, md: 3 },
-  borderRadius: DASHBOARD_TOKENS.radius.lg,
+  borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
   border: `1px solid ${DASHBOARD_TOKENS.border}`,
   boxShadow: DASHBOARD_TOKENS.shadow.sm,
 } as const
 
 const inputSx = {
-  '& .MuiOutlinedInput-root': { bgcolor: DASHBOARD_TOKENS.paper, borderRadius: DASHBOARD_TOKENS.radius.sm },
+  '& .MuiOutlinedInput-root': { bgcolor: DASHBOARD_TOKENS.paper, borderRadius: `${DASHBOARD_TOKENS.radius.sm}px` },
 } as const
 
 /**
@@ -173,7 +173,7 @@ export function PlatformAccountsPanel({ provider }: { provider: Provider }) {
               size="small"
               sx={{
                 fontWeight: 700,
-                borderRadius: DASHBOARD_TOKENS.radius.full,
+                borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                 color: driverAccount?.driverEmail ? DASHBOARD_TOKENS.stateActive : DASHBOARD_TOKENS.textMuted,
                 backgroundColor: driverAccount?.driverEmail
                   ? alpha(DASHBOARD_TOKENS.stateActive, 0.1)
@@ -223,7 +223,7 @@ export function PlatformAccountsPanel({ provider }: { provider: Provider }) {
               boxShadow: 'none',
               bgcolor: DASHBOARD_TOKENS.primary,
               color: DASHBOARD_TOKENS.ink,
-              borderRadius: DASHBOARD_TOKENS.radius.full,
+              borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
               px: 3,
               '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong, boxShadow: 'none' },
             }}
@@ -242,7 +242,7 @@ export function PlatformAccountsPanel({ provider }: { provider: Provider }) {
             <Chip
               label={accountStatusLabel(fleetAccount)}
               size="small"
-              sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full }}
+              sx={{ fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.full}px` }}
             />
           </Stack>
           <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', mb: 2 }}>

@@ -29,7 +29,7 @@ export function SidebarSupportBlock() {
       <Box
         sx={{
           p: 1.75,
-          borderRadius: SHELL.radius.card,
+          borderRadius: `${SHELL.radius.card}px`,
           border: `1px solid ${SHELL.border.subtle}`,
           backgroundColor: SHELL.bg.surface2,
         }}
@@ -54,7 +54,7 @@ export function SidebarSupportBlock() {
             textTransform: 'none',
             fontSize: 13,
             fontWeight: 600,
-            borderRadius: SHELL.radius.input,
+            borderRadius: `${SHELL.radius.input}px`,
             backgroundColor: SHELL.text.primary,
             '&:hover': { backgroundColor: SHELL.text.primary, opacity: 0.9 },
           }}
@@ -78,7 +78,7 @@ export function SidebarSupportBlock() {
             textTransform: 'none',
             fontSize: 13,
             fontWeight: 600,
-            borderRadius: SHELL.radius.input,
+            borderRadius: `${SHELL.radius.input}px`,
             justifyContent: 'flex-start',
             color: SHELL.text.secondary,
             '&:hover': { backgroundColor: SHELL.bg.surface, color: SHELL.text.primary },

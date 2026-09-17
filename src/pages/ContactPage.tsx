@@ -9,7 +9,7 @@ const inputSx = {
   '& .MuiOutlinedInput-root': {
     backgroundColor: TOKENS.surface,
     color: TOKENS.ink,
-    borderRadius: TOKENS.radius.md,
+    borderRadius: `${TOKENS.radius.md}px`,
     fontWeight: 500,
     transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
     '& .MuiOutlinedInput-notchedOutline': { borderColor: TOKENS.border },
@@ -90,7 +90,7 @@ export function ContactPage() {
                   border: `1px solid ${TOKENS.border}`,
                   boxShadow: TOKENS.shadow.lg,
                   p: { xs: 3, md: 4 },
-                  borderRadius: TOKENS.radius.xl,
+                  borderRadius: `${TOKENS.radius.xl}px`,
                   transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
                   '&:hover': {
                     boxShadow: TOKENS.shadow.xl,
@@ -132,7 +132,7 @@ export function ContactPage() {
                       fontSize: '1.05rem',
                       color: '#FFFFFF',
                       backgroundColor: TOKENS.primary,
-                      borderRadius: TOKENS.radius.full,
+                      borderRadius: `${TOKENS.radius.full}px`,
                       fontWeight: 700,
                       boxShadow: 'none',
                       alignSelf: { xs: 'stretch', sm: 'flex-start' },
@@ -172,7 +172,7 @@ export function ContactPage() {
                 key={item.email}
                 sx={{
                   p: 3,
-                  borderRadius: TOKENS.radius.lg,
+                  borderRadius: `${TOKENS.radius.lg}px`,
                   border: `1px solid ${TOKENS.border}`,
                   backgroundColor: alpha(TOKENS.primary, 0.03),
                   transition: `all ${TOKENS.duration} ${TOKENS.easing}`,

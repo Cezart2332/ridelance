@@ -61,7 +61,7 @@ export default function RegistrationSuccessPage() {
             sx={{
               width: '100%',
               p: { xs: 4, sm: 6 },
-              borderRadius: TOKENS.radius.xl,
+              borderRadius: `${TOKENS.radius.xl}px`,
               border: `1px solid ${TOKENS.border}`,
               boxShadow: TOKENS.shadow.md,
               backgroundColor: TOKENS.paper,
@@ -121,7 +121,7 @@ export default function RegistrationSuccessPage() {
               px: 4,
               py: 1.2,
               fontWeight: 700,
-              borderRadius: TOKENS.radius.md,
+              borderRadius: `${TOKENS.radius.md}px`,
               color: '#fff',
               backgroundColor: TOKENS.primary,
               boxShadow: TOKENS.shadow.glow,

@@ -124,7 +124,7 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
   const inputSx = {
     '& .MuiOutlinedInput-root': {
       bgcolor: alpha(TOKENS.paper, 0.9),
-      borderRadius: TOKENS.radius.md,
+      borderRadius: `${TOKENS.radius.md}px`,
     },
   };
 
@@ -140,7 +140,7 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: TOKENS.radius.xl,
+        borderRadius: `${TOKENS.radius.xl}px`,
         border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
         boxShadow: TOKENS.shadow.sm,
         background: `linear-gradient(165deg, ${alpha(TOKENS.primary, 0.05)} 0%, ${TOKENS.paper} 35%)`,
@@ -154,7 +154,7 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
               size="small"
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              sx={{ width: { xs: '100%', sm: 100 }, flex: { sm: '0 0 auto' }, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+              sx={{ width: { xs: '100%', sm: 100 }, flex: { sm: '0 0 auto' }, borderRadius: `${TOKENS.radius.md}px`, bgcolor: TOKENS.paper }}
             >
               {yearOptions.map((y) => (
                 <MenuItem key={y} value={y}>{y}</MenuItem>
@@ -164,7 +164,7 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
               size="small"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              sx={{ width: { xs: '100%', sm: 160 }, flex: { sm: '0 0 auto' }, borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+              sx={{ width: { xs: '100%', sm: 160 }, flex: { sm: '0 0 auto' }, borderRadius: `${TOKENS.radius.md}px`, bgcolor: TOKENS.paper }}
             >
               {ROMANIAN_MONTHS.map((m) => (
                 <MenuItem key={m} value={m}>{m}</MenuItem>
@@ -198,7 +198,7 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
                 elevation={0}
                 sx={{
                   p: 2,
-                  borderRadius: TOKENS.radius.lg,
+                  borderRadius: `${TOKENS.radius.lg}px`,
                   border: `1px solid ${highlight ? alpha(TOKENS.primary, 0.35) : alpha(TOKENS.ink, 0.08)}`,
                   bgcolor: highlight ? alpha(TOKENS.primary, 0.05) : TOKENS.paper,
                   minWidth: 0,
@@ -247,7 +247,7 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
             elevation={0}
             sx={{
               p: 2,
-              borderRadius: TOKENS.radius.md,
+              borderRadius: `${TOKENS.radius.md}px`,
               bgcolor: alpha(TOKENS.primary, 0.06),
               border: `1px solid ${alpha(TOKENS.primary, 0.15)}`,
             }}
@@ -270,7 +270,7 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
                 elevation={0}
                 sx={{
                   p: 2,
-                  borderRadius: TOKENS.radius.md,
+                  borderRadius: `${TOKENS.radius.md}px`,
                   bgcolor: alpha('#f59e0b', 0.06),
                   border: `1px solid ${alpha('#f59e0b', 0.2)}`,
                 }}
@@ -296,7 +296,7 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
               variant="contained"
               onClick={handleSave}
               disabled={saving}
-              sx={{ alignSelf: 'flex-start', fontWeight: 700, textTransform: 'none', borderRadius: TOKENS.radius.md }}
+              sx={{ alignSelf: 'flex-start', fontWeight: 700, textTransform: 'none', borderRadius: `${TOKENS.radius.md}px` }}
             >
               {saving ? <CircularProgress size={22} color="inherit" /> : 'Salvează veniturile'}
             </Button>

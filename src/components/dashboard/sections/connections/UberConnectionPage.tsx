@@ -50,7 +50,7 @@ export function UberConnectionPage() {
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
@@ -93,7 +93,7 @@ export function UberConnectionPage() {
                 key={row.label}
                 sx={{
                   p: 2,
-                  borderRadius: DASHBOARD_TOKENS.radius.md,
+                  borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                   border: `1px solid ${DASHBOARD_TOKENS.border}`,
                   backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.02),
                 }}

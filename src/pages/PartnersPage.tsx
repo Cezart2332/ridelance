@@ -131,7 +131,7 @@ function PartnerPanel({ partner }: { partner: Partner }) {
     <Paper
       elevation={0}
       sx={{
-        borderRadius: TOKENS.radius.xl,
+        borderRadius: `${TOKENS.radius.xl}px`,
         border: `1px solid ${TOKENS.border}`,
         boxShadow: TOKENS.shadow.md,
         overflow: 'hidden',
@@ -158,7 +158,7 @@ function PartnerPanel({ partner }: { partner: Partner }) {
             flexShrink: 0,
             display: 'grid',
             placeItems: 'center',
-            borderRadius: TOKENS.radius.lg,
+            borderRadius: `${TOKENS.radius.lg}px`,
             backgroundColor: TOKENS.paper,
             border: `1px solid ${TOKENS.border}`,
             overflow: 'hidden',
@@ -196,7 +196,7 @@ function PartnerPanel({ partner }: { partner: Partner }) {
               whiteSpace: 'nowrap',
               color: TOKENS.primaryStrong,
               border: `1px solid ${alpha(TOKENS.primary, 0.4)}`,
-              borderRadius: TOKENS.radius.full,
+              borderRadius: `${TOKENS.radius.full}px`,
               px: 2.5,
               '&:hover': { backgroundColor: alpha(TOKENS.primary, 0.06) },
             }}

@@ -83,7 +83,7 @@ export function CalculatorPage() {
     '& .MuiOutlinedInput-root': {
       backgroundColor: TOKENS.paper,
       color: TOKENS.ink,
-      borderRadius: TOKENS.radius.lg,
+      borderRadius: `${TOKENS.radius.lg}px`,
       fontSize: '0.95rem',
       transition: `all ${TOKENS.duration} ${TOKENS.easing}`,
       '& .MuiOutlinedInput-notchedOutline': {
@@ -123,7 +123,7 @@ export function CalculatorPage() {
             sx={{
               width: '100%',
               maxWidth: 1000,
-              borderRadius: TOKENS.radius.xl,
+              borderRadius: `${TOKENS.radius.xl}px`,
               border: `1px solid ${TOKENS.border}`,
               boxShadow: TOKENS.shadow.xl,
               overflow: 'hidden',
@@ -162,7 +162,7 @@ export function CalculatorPage() {
                       py: 1.5,
                       color: '#FFFFFF',
                       backgroundColor: TOKENS.primary,
-                      borderRadius: TOKENS.radius.full,
+                      borderRadius: `${TOKENS.radius.full}px`,
                       fontWeight: 700,
                       fontSize: '1rem',
                       boxShadow: 'none',

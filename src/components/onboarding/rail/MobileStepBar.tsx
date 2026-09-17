@@ -108,8 +108,8 @@ export function MobileStepBar({
         slotProps={{
           paper: {
             sx: {
-              borderTopLeftRadius: TOKENS.radius.xl,
-              borderTopRightRadius: TOKENS.radius.xl,
+              borderTopLeftRadius: `${TOKENS.radius.xl}px`,
+              borderTopRightRadius: `${TOKENS.radius.xl}px`,
               maxHeight: '85vh',
               px: 2,
               pt: 1.5,

@@ -21,7 +21,7 @@ export function ProfileTab() {
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
@@ -43,7 +43,7 @@ export function ProfileTab() {
               elevation={0}
               sx={{
                 p: 1.6,
-                borderRadius: DASHBOARD_TOKENS.radius.md,
+                borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                 border: `1px solid ${DASHBOARD_TOKENS.border}`,
                 backgroundColor: DASHBOARD_TOKENS.surface,
               }}
@@ -61,7 +61,7 @@ export function ProfileTab() {
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
@@ -74,7 +74,7 @@ export function ProfileTab() {
               elevation={0}
               sx={{
                 p: 1.6,
-                borderRadius: DASHBOARD_TOKENS.radius.md,
+                borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                 border: `1px solid ${DASHBOARD_TOKENS.border}`,
                 backgroundColor: DASHBOARD_TOKENS.surface,
               }}
@@ -91,7 +91,7 @@ export function ProfileTab() {
                   size="small"
                   sx={{
                     fontWeight: 700,
-                    borderRadius: DASHBOARD_TOKENS.radius.full,
+                    borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                     color: DASHBOARD_TOKENS.stateActive,
                     backgroundColor: alpha(DASHBOARD_TOKENS.stateActive, 0.1),
                   }}
@@ -115,7 +115,7 @@ export function ProfileTab() {
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
@@ -131,7 +131,7 @@ export function ProfileTab() {
               elevation={0}
               sx={{
                 p: 1.6,
-                borderRadius: DASHBOARD_TOKENS.radius.md,
+                borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                 border: `1px solid ${DASHBOARD_TOKENS.border}`,
                 backgroundColor: DASHBOARD_TOKENS.surface,
               }}
@@ -140,7 +140,7 @@ export function ProfileTab() {
                 <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700 }}>
                   {account.provider}
                 </Typography>
-                <Chip label={account.status} size="small" sx={{ fontWeight: 700, borderRadius: DASHBOARD_TOKENS.radius.full }} />
+                <Chip label={account.status} size="small" sx={{ fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.full}px` }} />
               </Stack>
               <Typography sx={{ mt: 1, color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>
                 Email: {account.accountEmail}
@@ -164,7 +164,7 @@ export function ProfileTab() {
         elevation={0}
         sx={{
           p: { xs: 2.5, md: 3 },
-          borderRadius: DASHBOARD_TOKENS.radius.lg,
+          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
           border: `1px solid ${DASHBOARD_TOKENS.border}`,
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
@@ -189,7 +189,7 @@ export function ProfileTab() {
             sx={{
               p: 1.4,
               mb: 1,
-              borderRadius: DASHBOARD_TOKENS.radius.md,
+              borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
               border: `1px solid ${DASHBOARD_TOKENS.border}`,
               backgroundColor: DASHBOARD_TOKENS.surface,
             }}

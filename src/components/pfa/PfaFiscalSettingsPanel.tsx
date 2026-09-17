@@ -134,7 +134,7 @@ function findAccount(accounts: PfaPlatformAccount[], provider: Provider, kind: A
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
-    borderRadius: TOKENS.radius.sm,
+    borderRadius: `${TOKENS.radius.sm}px`,
     backgroundColor: TOKENS.paper,
     transition: `border-color ${TOKENS.duration} ${TOKENS.easing}`,
     '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.1) },
@@ -515,7 +515,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
                   px: 1.5,
                   py: 1.1,
                   border: 'none',
-                  borderRadius: TOKENS.radius.sm,
+                  borderRadius: `${TOKENS.radius.sm}px`,
                   cursor: 'pointer',
                   textAlign: 'left',
                   bgcolor: active ? alpha(TOKENS.primary, 0.1) : 'transparent',
@@ -844,7 +844,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
         return (
           <>
             {renderDetailHeader('Permisiuni Fleet', 'Permisiuni pentru conturile fleet și integrarea Bolt Fleet API.')}
-            <Alert severity="info" sx={{ borderRadius: TOKENS.radius.sm, maxWidth: 480, mb: 2 }}>
+            <Alert severity="info" sx={{ borderRadius: `${TOKENS.radius.sm}px`, maxWidth: 480, mb: 2 }}>
               Conturile fleet sunt create de RIDElance și pot fi utilizate de suport și contabil.
             </Alert>
             <Box sx={{ maxWidth: 480 }}>
@@ -876,14 +876,14 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
   return (
     <Stack spacing={2}>
       {apiUnavailable && (
-        <Alert severity="warning" sx={{ borderRadius: TOKENS.radius.sm }}>
+        <Alert severity="warning" sx={{ borderRadius: `${TOKENS.radius.sm}px` }}>
           API-ul pentru profil fiscal nu este încă disponibil pe backend. Afișez valorile implicite.
         </Alert>
       )}
 
       <Box
         sx={{
-          borderRadius: TOKENS.radius.lg,
+          borderRadius: `${TOKENS.radius.lg}px`,
           border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
           bgcolor: TOKENS.paper,
           overflow: 'hidden',
@@ -933,7 +933,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
                   aria-label="Deschide meniul secțiuni"
                   sx={{
                     border: `1px solid ${alpha(TOKENS.ink, 0.1)}`,
-                    borderRadius: TOKENS.radius.sm,
+                    borderRadius: `${TOKENS.radius.sm}px`,
                   }}
                 >
                   <MenuRoundedIcon />

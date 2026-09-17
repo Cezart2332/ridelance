@@ -94,7 +94,7 @@ export function PhoneVerificationPanel() {
       elevation={0}
       sx={{
         p: { xs: 2.5, md: 3 },
-        borderRadius: DASHBOARD_TOKENS.radius.lg,
+        borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
         border: `1px solid ${DASHBOARD_TOKENS.border}`,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,
       }}
@@ -145,12 +145,12 @@ export function PhoneVerificationPanel() {
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mt: 2, borderRadius: DASHBOARD_TOKENS.radius.md }}>
+        <Alert severity="error" sx={{ mt: 2, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
           {error}
         </Alert>
       )}
       {codeSent && !error && (
-        <Alert severity="info" sx={{ mt: 2, borderRadius: DASHBOARD_TOKENS.radius.md }}>
+        <Alert severity="info" sx={{ mt: 2, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
           Am trimis codul pe {phone}. Ajunge în câteva secunde.
         </Alert>
       )}
@@ -163,7 +163,7 @@ export function PhoneVerificationPanel() {
           sx={{
             textTransform: 'none',
             fontWeight: 750,
-            borderRadius: DASHBOARD_TOKENS.radius.full,
+            borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
             px: 3,
             ...(codeSent
               ? { color: DASHBOARD_TOKENS.ink, borderColor: DASHBOARD_TOKENS.border }
@@ -188,7 +188,7 @@ export function PhoneVerificationPanel() {
             sx={{
               textTransform: 'none',
               fontWeight: 750,
-              borderRadius: DASHBOARD_TOKENS.radius.full,
+              borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
               px: 3,
               bgcolor: DASHBOARD_TOKENS.primary,
               color: DASHBOARD_TOKENS.ink,

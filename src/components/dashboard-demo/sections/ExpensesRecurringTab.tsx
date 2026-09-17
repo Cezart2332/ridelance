@@ -36,7 +36,7 @@ export function ExpensesRecurringTab({
           elevation={0}
           sx={{
             p: { xs: 2.5, md: 3 },
-            borderRadius: DASHBOARD_TOKENS.radius.lg,
+            borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
             border: `1px solid ${DASHBOARD_TOKENS.border}`,
             boxShadow: DASHBOARD_TOKENS.shadow.sm,
           }}
@@ -58,7 +58,7 @@ export function ExpensesRecurringTab({
               variant="contained"
               component="label"
               sx={{
-                borderRadius: DASHBOARD_TOKENS.radius.full,
+                borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                 px: 2.5,
                 height: 48,
                 color: '#fff',
@@ -89,7 +89,7 @@ export function ExpensesRecurringTab({
                 elevation={0}
                 sx={{
                   p: 1.3,
-                  borderRadius: DASHBOARD_TOKENS.radius.md,
+                  borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                   border: `1px solid ${DASHBOARD_TOKENS.border}`,
                   backgroundColor: DASHBOARD_TOKENS.surface,
                 }}
@@ -104,7 +104,7 @@ export function ExpensesRecurringTab({
                       fontSize: '0.7rem',
                       color: '#ED6C02',
                       backgroundColor: alpha('#ED6C02', 0.1),
-                      borderRadius: DASHBOARD_TOKENS.radius.sm,
+                      borderRadius: `${DASHBOARD_TOKENS.radius.sm}px`,
                       height: 24,
                     }}
                   />
@@ -120,7 +120,7 @@ export function ExpensesRecurringTab({
           elevation={0}
           sx={{
             p: { xs: 2.5, md: 3 },
-            borderRadius: DASHBOARD_TOKENS.radius.lg,
+            borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
             border: `1px solid ${DASHBOARD_TOKENS.border}`,
             boxShadow: DASHBOARD_TOKENS.shadow.sm,
           }}
@@ -137,7 +137,7 @@ export function ExpensesRecurringTab({
                 elevation={0}
                 sx={{
                   p: 1.4,
-                  borderRadius: DASHBOARD_TOKENS.radius.md,
+                  borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                   border: `1px solid ${DASHBOARD_TOKENS.border}`,
                   backgroundColor: DASHBOARD_TOKENS.surface,
                 }}
@@ -148,7 +148,7 @@ export function ExpensesRecurringTab({
                     label="Obligatoriu"
                     size="small"
                     sx={{
-                      borderRadius: DASHBOARD_TOKENS.radius.full,
+                      borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                       fontWeight: 700,
                       color: DASHBOARD_TOKENS.stateActive,
                       backgroundColor: alpha(DASHBOARD_TOKENS.stateActive, 0.1),

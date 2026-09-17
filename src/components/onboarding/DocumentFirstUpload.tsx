@@ -206,7 +206,7 @@ export function DocumentFirstUpload({
           sx={{
             mb: 1.2,
             height: 3,
-            borderRadius: TOKENS.radius.full,
+            borderRadius: `${TOKENS.radius.full}px`,
             backgroundColor: alpha(TOKENS.pendingBase, 0.15),
             '& .MuiLinearProgress-bar': { backgroundColor: TOKENS.pending },
           }}
@@ -261,7 +261,7 @@ export function DocumentFirstUpload({
             <LinearProgress
               variant="determinate"
               value={progress ?? 0}
-              sx={{ height: 5, borderRadius: TOKENS.radius.full }}
+              sx={{ height: 5, borderRadius: `${TOKENS.radius.full}px` }}
             />
           )}
 

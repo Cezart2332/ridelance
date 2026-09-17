@@ -304,7 +304,7 @@ function MissingFieldsDialog({
       <DialogContent>
         <Stack spacing={2.5} sx={{ pt: 0.5 }}>
           {needsProfile && (
-            <Alert severity="info" sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, fontWeight: 600 }}>
+            <Alert severity="info" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}>
               Firma n-are încă profil. Completează-l în Profil firmă, apoi revino aici.
             </Alert>
           )}
@@ -353,7 +353,7 @@ function MissingFieldsDialog({
           })}
 
           {error && (
-            <Alert severity="error" sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, fontWeight: 600 }}>
+            <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}>
               {error}
             </Alert>
           )}

@@ -271,7 +271,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
               label="Lună"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              sx={{ borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+              sx={{ borderRadius: `${TOKENS.radius.md}px`, bgcolor: TOKENS.paper }}
             >
               {ROMANIAN_MONTHS.map((m, idx) => (
                 <MenuItem key={m} value={idx + 1}>{m}</MenuItem>
@@ -285,7 +285,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
               label="An"
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              sx={{ borderRadius: TOKENS.radius.md, bgcolor: TOKENS.paper }}
+              sx={{ borderRadius: `${TOKENS.radius.md}px`, bgcolor: TOKENS.paper }}
             >
               {currentYearOptions.map((y) => (
                 <MenuItem key={y} value={y}>{y}</MenuItem>
@@ -296,7 +296,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
           <Chip
             label={isProcessed ? 'Procesat' : 'În așteptare'}
             color={isProcessed ? 'success' : 'default'}
-            sx={{ fontWeight: 800, borderRadius: TOKENS.radius.md }}
+            sx={{ fontWeight: 800, borderRadius: `${TOKENS.radius.md}px` }}
           />
 
           <Button
@@ -308,7 +308,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
             sx={{
               fontWeight: 700,
               textTransform: 'none',
-              borderRadius: TOKENS.radius.md,
+              borderRadius: `${TOKENS.radius.md}px`,
             }}
           >
             {isProcessed ? 'Anulează procesarea' : 'Marchează ca procesat'}
@@ -328,7 +328,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
           <Paper
             elevation={0}
             sx={{
-              borderRadius: TOKENS.radius.xl,
+              borderRadius: `${TOKENS.radius.xl}px`,
               border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
               overflow: 'hidden',
               boxShadow: TOKENS.shadow.sm,
@@ -401,7 +401,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
                         Note interne PFA ({ROMANIAN_MONTHS[selectedMonth - 1]} {selectedYear})
                       </Typography>
 
-                      <Paper variant="outlined" sx={{ p: 2, mb: 3, borderRadius: TOKENS.radius.lg, border: `1px dashed ${alpha(TOKENS.ink, 0.15)}`, bgcolor: alpha(TOKENS.primary, 0.01) }}>
+                      <Paper variant="outlined" sx={{ p: 2, mb: 3, borderRadius: `${TOKENS.radius.lg}px`, border: `1px dashed ${alpha(TOKENS.ink, 0.15)}`, bgcolor: alpha(TOKENS.primary, 0.01) }}>
                         <Typography variant="caption" sx={{ color: TOKENS.textMuted, fontWeight: 700, display: 'block', mb: 1 }}>
                           Adaugă o notă internă pentru această lună (invizibilă clientului):
                         </Typography>
@@ -416,7 +416,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
                             sx={{
                               '& .MuiOutlinedInput-root': {
                                 bgcolor: TOKENS.paper,
-                                borderRadius: TOKENS.radius.md,
+                                borderRadius: `${TOKENS.radius.md}px`,
                               }
                             }}
                           />
@@ -425,7 +425,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
                             size="small"
                             onClick={handleAddNote}
                             disabled={!newNoteContent.trim()}
-                            sx={{ alignSelf: 'flex-start', fontWeight: 700, textTransform: 'none', borderRadius: TOKENS.radius.md }}
+                            sx={{ alignSelf: 'flex-start', fontWeight: 700, textTransform: 'none', borderRadius: `${TOKENS.radius.md}px` }}
                           >
                             Adaugă notă
                           </Button>
@@ -443,7 +443,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
                       ) : (
                         <Stack spacing={2}>
                           {internalNotes.map((note) => (
-                            <Paper key={note.id} variant="outlined" sx={{ p: 2, borderRadius: TOKENS.radius.lg, borderColor: alpha(TOKENS.ink, 0.08) }}>
+                            <Paper key={note.id} variant="outlined" sx={{ p: 2, borderRadius: `${TOKENS.radius.lg}px`, borderColor: alpha(TOKENS.ink, 0.08) }}>
                               {editingNoteId === note.id ? (
                                 <Stack spacing={1.5}>
                                   <TextField
@@ -452,7 +452,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
                                     rows={2}
                                     value={editingContent}
                                     onChange={(e) => setEditingContent(e.target.value)}
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: TOKENS.radius.md } }}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: `${TOKENS.radius.md}px` } }}
                                   />
                                   <Stack direction="row" spacing={1}>
                                     <Button size="small" variant="contained" onClick={() => handleUpdateNote(note.id)}>
@@ -522,7 +522,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
                       ) : (
                         <Stack spacing={1.5} sx={{ maxHeight: 500, overflowY: 'auto', pr: 1 }}>
                           {activityLogs.map((log) => (
-                            <Box key={log.id} sx={{ p: 1.5, borderRadius: TOKENS.radius.md, bgcolor: alpha(TOKENS.ink, 0.01), borderLeft: `3px solid ${log.activityType === 'MonthProcessed' ? '#10b981' : TOKENS.primary}` }}>
+                            <Box key={log.id} sx={{ p: 1.5, borderRadius: `${TOKENS.radius.md}px`, bgcolor: alpha(TOKENS.ink, 0.01), borderLeft: `3px solid ${log.activityType === 'MonthProcessed' ? '#10b981' : TOKENS.primary}` }}>
                               <Typography variant="body2" sx={{ color: TOKENS.ink, fontSize: '0.85rem' }}>
                                 {log.description}
                               </Typography>
@@ -551,7 +551,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
         slotProps={{
           paper: {
             sx: {
-              borderRadius: TOKENS.radius.xl,
+              borderRadius: `${TOKENS.radius.xl}px`,
               p: 1,
             },
           },
@@ -570,7 +570,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
           <Button
             onClick={() => setOpenConfirmDialog(false)}
             variant="outlined"
-            sx={{ textTransform: 'none', fontWeight: 700, borderRadius: TOKENS.radius.md }}
+            sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${TOKENS.radius.md}px` }}
           >
             Anulează
           </Button>
@@ -579,7 +579,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
             variant="contained"
             color="primary"
             autoFocus
-            sx={{ textTransform: 'none', fontWeight: 700, borderRadius: TOKENS.radius.md }}
+            sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${TOKENS.radius.md}px` }}
           >
             Confirmă procesarea
           </Button>
@@ -592,7 +592,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
         onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity={snackbar.severity} sx={{ borderRadius: TOKENS.radius.md, fontWeight: 600 }}>
+        <Alert severity={snackbar.severity} sx={{ borderRadius: `${TOKENS.radius.md}px`, fontWeight: 600 }}>
           {snackbar.message}
         </Alert>
       </Snackbar>

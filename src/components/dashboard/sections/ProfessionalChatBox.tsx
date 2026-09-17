@@ -95,7 +95,7 @@ export function ProfessionalChatBox({ clientUserId, clientName }: ProfessionalCh
         minHeight: { xs: 360, md: 600 },
         display: 'flex',
         flexDirection: 'column',
-        borderRadius: TOKENS.radius.xl,
+        borderRadius: `${TOKENS.radius.xl}px`,
         border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
         boxShadow: TOKENS.shadow.sm,
       }}
@@ -133,7 +133,7 @@ export function ProfessionalChatBox({ clientUserId, clientName }: ProfessionalCh
                           sx={{
                             p: 1.5,
                             maxWidth: '85%',
-                            borderRadius: TOKENS.radius.md,
+                            borderRadius: `${TOKENS.radius.md}px`,
                             backgroundColor: isMe ? `rgba(92,203,245,0.12)` : TOKENS.surface,
                             border: `1px solid ${isMe ? 'transparent' : alpha(TOKENS.ink, 0.08)}`,
                           }}
@@ -168,7 +168,7 @@ export function ProfessionalChatBox({ clientUserId, clientName }: ProfessionalCh
           }}
           sx={{
             '& .MuiOutlinedInput-root': {
-              borderRadius: TOKENS.radius.full,
+              borderRadius: `${TOKENS.radius.md}px`,
               bgcolor: alpha(TOKENS.surface, 0.9),
               '& fieldset': { borderColor: alpha(TOKENS.ink, 0.08) },
               '&:hover fieldset': { borderColor: alpha(TOKENS.ink, 0.16) },

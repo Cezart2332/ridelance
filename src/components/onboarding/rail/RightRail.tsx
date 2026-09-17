@@ -74,7 +74,7 @@ function Card({ children }: { children: ReactNode }) {
     <Box
       sx={{
         p: 2,
-        borderRadius: SHELL.radius.card,
+        borderRadius: `${SHELL.radius.card}px`,
         border: `1px solid ${SHELL.border.subtle}`,
         backgroundColor: SHELL.bg.surface,
         boxShadow: SHELL.shadow.card,
@@ -213,7 +213,7 @@ function ItemRow({ item }: { item: RailItem }) {
         width: '100%',
         px: 1,
         py: 0.75,
-        borderRadius: SHELL.radius.input,
+        borderRadius: `${SHELL.radius.input}px`,
         backgroundColor: isCurrent ? SHELL.brandSoft : 'transparent',
       }}
     >
@@ -275,7 +275,7 @@ function ItemRow({ item }: { item: RailItem }) {
       sx={{
         display: 'block',
         width: '100%',
-        borderRadius: SHELL.radius.input,
+        borderRadius: `${SHELL.radius.input}px`,
         textAlign: 'left',
         '&:hover': { backgroundColor: isCurrent ? 'transparent' : SHELL.bg.surface2 },
       }}

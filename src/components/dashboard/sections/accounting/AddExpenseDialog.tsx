@@ -196,7 +196,7 @@ export function AddExpenseDialog({
               sx={{
                 textTransform: 'none',
                 fontWeight: 750,
-                borderRadius: DASHBOARD_TOKENS.radius.full,
+                borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                 px: 3,
                 bgcolor: DASHBOARD_TOKENS.primary,
                 color: DASHBOARD_TOKENS.ink,
@@ -221,7 +221,7 @@ export function AddExpenseDialog({
         {step === 'confirm' && (
           <Stack spacing={2} sx={{ pt: 1 }}>
             {notice && (
-              <Alert severity="info" sx={{ borderRadius: DASHBOARD_TOKENS.radius.md }}>
+              <Alert severity="info" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
                 {notice}
               </Alert>
             )}
@@ -277,7 +277,7 @@ export function AddExpenseDialog({
             </Box>
 
             {error && (
-              <Alert severity="error" sx={{ borderRadius: DASHBOARD_TOKENS.radius.md }}>
+              <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
                 {error}
               </Alert>
             )}
@@ -285,7 +285,7 @@ export function AddExpenseDialog({
         )}
 
         {step !== 'confirm' && error && (
-          <Alert severity="error" sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, mt: 2 }}>
+          <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, mt: 2 }}>
             {error}
           </Alert>
         )}
@@ -303,7 +303,7 @@ export function AddExpenseDialog({
             sx={{
               textTransform: 'none',
               fontWeight: 750,
-              borderRadius: DASHBOARD_TOKENS.radius.full,
+              borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
               px: 3,
               bgcolor: DASHBOARD_TOKENS.primary,
               color: DASHBOARD_TOKENS.ink,

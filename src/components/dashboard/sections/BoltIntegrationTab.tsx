@@ -230,7 +230,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
                 width: 44,
                 height: 44,
                 flexShrink: 0,
-                borderRadius: DASHBOARD_TOKENS.radius.md,
+                borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                 bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.14),
                 color: DASHBOARD_TOKENS.primaryStrong,
                 display: 'grid',
@@ -256,7 +256,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
               onClick={handleSyncNow}
               disabled={syncing}
               sx={{
-                borderRadius: DASHBOARD_TOKENS.radius.md,
+                borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                 fontWeight: 800,
                 textTransform: 'none',
                 borderColor: alpha(DASHBOARD_TOKENS.ink, 0.12),
@@ -279,7 +279,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
         <Alert
           severity="error"
           onClose={() => setErrorMsg(null)}
-          sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, mb: 3, fontWeight: 700 }}
+          sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, mb: 3, fontWeight: 700 }}
         >
           {errorMsg}
         </Alert>
@@ -290,7 +290,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
           elevation={0}
           sx={{
             p: { xs: 2, sm: 3 },
-            borderRadius: DASHBOARD_TOKENS.radius.lg,
+            borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
             border: `1px solid ${DASHBOARD_TOKENS.border}`,
             boxShadow: DASHBOARD_TOKENS.shadow.sm,
             bgcolor: DASHBOARD_TOKENS.paper,
@@ -300,7 +300,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
         >
           <form onSubmit={handleConnect}>
             <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 2 }}>
-              <Box sx={{ p: 1, borderRadius: DASHBOARD_TOKENS.radius.sm, bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.12), color: DASHBOARD_TOKENS.primaryStrong }}>
+              <Box sx={{ p: 1, borderRadius: `${DASHBOARD_TOKENS.radius.sm}px`, bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.12), color: DASHBOARD_TOKENS.primaryStrong }}>
                 <SettingsInputComponentRoundedIcon fontSize="small" />
               </Box>
               <Typography sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.ink }}>
@@ -309,7 +309,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
             </Stack>
 
             {integration?.errorMessage && (
-              <Alert severity="warning" sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, mb: 2, fontWeight: 700 }}>
+              <Alert severity="warning" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, mb: 2, fontWeight: 700 }}>
                 Sincronizarea Bolt a raportat o eroare. Reconectează contul pentru a relua importul de curse.
               </Alert>
             )}
@@ -357,7 +357,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
                       fontWeight: 800,
                       textTransform: 'none',
                       color: DASHBOARD_TOKENS.textMuted,
-                      borderRadius: DASHBOARD_TOKENS.radius.md,
+                      borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                     }}
                   >
                     Renunță
@@ -373,7 +373,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
                     fontWeight: 900,
                     textTransform: 'none',
                     boxShadow: 'none',
-                    borderRadius: DASHBOARD_TOKENS.radius.md,
+                    borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                     bgcolor: DASHBOARD_TOKENS.primary,
                     color: DASHBOARD_TOKENS.ink,
                     '&:hover': {
@@ -394,7 +394,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
             elevation={0}
             sx={{
               p: { xs: 2, md: 2.5 },
-              borderRadius: DASHBOARD_TOKENS.radius.lg,
+              borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
               border: `1px solid ${DASHBOARD_TOKENS.border}`,
               bgcolor: DASHBOARD_TOKENS.paper,
               boxShadow: DASHBOARD_TOKENS.shadow.sm,
@@ -424,7 +424,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
               <Alert
                 severity="warning"
                 icon={<ErrorOutlineRoundedIcon />}
-                sx={{ borderRadius: DASHBOARD_TOKENS.radius.md, mt: 2, fontWeight: 700 }}
+                sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, mt: 2, fontWeight: 700 }}
                 action={
                   <Button color="inherit" size="small" onClick={() => setConfiguring(true)} sx={{ fontWeight: 900, textTransform: 'none' }}>
                     Reconectează
@@ -470,7 +470,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
             elevation={0}
             sx={{
               p: { xs: 2, sm: 3 },
-              borderRadius: DASHBOARD_TOKENS.radius.lg,
+              borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
               border: `1px solid ${DASHBOARD_TOKENS.border}`,
               boxShadow: DASHBOARD_TOKENS.shadow.sm,
               bgcolor: DASHBOARD_TOKENS.paper,
@@ -479,7 +479,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
             }}
           >
             <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 2.5 }}>
-              <Box sx={{ p: 1, borderRadius: DASHBOARD_TOKENS.radius.sm, bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.12), color: DASHBOARD_TOKENS.primaryStrong }}>
+              <Box sx={{ p: 1, borderRadius: `${DASHBOARD_TOKENS.radius.sm}px`, bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.12), color: DASHBOARD_TOKENS.primaryStrong }}>
                 <CalendarMonthRoundedIcon fontSize="small" />
               </Box>
               <Box sx={{ minWidth: 0 }}>
@@ -575,7 +575,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
                           maxWidth: '100%',
                           minWidth: 0,
                           boxSizing: 'border-box',
-                          borderRadius: DASHBOARD_TOKENS.radius.md,
+                          borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                           border: `1px solid ${DASHBOARD_TOKENS.border}`,
                           bgcolor: DASHBOARD_TOKENS.surface,
                           overflow: 'hidden',
@@ -653,7 +653,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
                       disabled={loadingMore}
                       startIcon={loadingMore ? <CircularProgress size={16} color="inherit" /> : null}
                       sx={{
-                        borderRadius: DASHBOARD_TOKENS.radius.md,
+                        borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                         fontWeight: 800,
                         textTransform: 'none',
                         borderColor: alpha(DASHBOARD_TOKENS.ink, 0.12),

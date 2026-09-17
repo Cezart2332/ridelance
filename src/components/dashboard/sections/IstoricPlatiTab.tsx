@@ -106,7 +106,7 @@ export function IstoricPlatiTab() {
             gap: 1,
             px: 2,
             py: 0.8,
-            borderRadius: T.radius.lg,
+            borderRadius: `${T.radius.lg}px`,
             backgroundColor: alpha(T.primary, 0.06),
             border: `1px solid ${alpha(T.primary, 0.12)}`,
           }}
@@ -124,7 +124,7 @@ export function IstoricPlatiTab() {
           elevation={0}
           sx={{
             p: 6,
-            borderRadius: T.radius.xl,
+            borderRadius: `${T.radius.xl}px`,
             border: `1px dashed ${T.border}`,
             backgroundColor: T.paper,
             textAlign: 'center',
@@ -148,7 +148,7 @@ export function IstoricPlatiTab() {
                 elevation={0}
                 sx={{
                   p: { xs: 2.5, md: 3 },
-                  borderRadius: T.radius.xl,
+                  borderRadius: `${T.radius.xl}px`,
                   border: `1px solid ${T.border}`,
                   backgroundColor: T.paper,
                   boxShadow: T.shadow.sm,
@@ -166,7 +166,7 @@ export function IstoricPlatiTab() {
                     sx={{
                       width: 44,
                       height: 44,
-                      borderRadius: T.radius.lg,
+                      borderRadius: `${T.radius.lg}px`,
                       backgroundColor: alpha(T.primary, 0.08),
                       display: 'flex',
                       alignItems: 'center',
