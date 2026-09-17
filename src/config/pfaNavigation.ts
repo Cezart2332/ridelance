@@ -300,9 +300,21 @@ export const PFA_NAV_CONFIG: DashboardNavConfig = {
   /** Cele trei destinații directe din bara de jos. Restul intră sub „Meniu". */
   mobileTabs: [
     { path: PFA_PATHS.home, label: 'Acasă', icon: HomeRoundedIcon },
-    { path: PFA_PATHS.profile, label: 'Profil', icon: PersonRoundedIcon },
-    { path: PFA_PATHS.support, label: 'Suport', icon: HeadsetMicRoundedIcon },
+    {
+      path: PFA_PATHS.financialOverview,
+      label: 'Contabilitate',
+      icon: CalculateRoundedIcon,
+      matchPrefix: PFA_PATHS.accounting,
+    },
+    { path: PFA_PATHS.docsPersonal, label: 'Documente', icon: DescriptionRoundedIcon, matchPrefix: PFA_PATHS.documents },
   ],
+  // Profilul și suportul coboară în „Meniu”, alături de restul paginilor.
+  leafIcons: {
+    ...LEAF_ICONS,
+    [PFA_PATHS.support]: HeadsetMicRoundedIcon,
+    [PFA_PATHS.profile]: PersonRoundedIcon,
+    [PFA_PATHS.benefits]: RedeemRoundedIcon,
+  },
   extraPageTitles: EXTRA_PAGE_TITLES,
   fallbackTitle: 'Dashboard PFA',
   documentTitle: 'RIDElance — Dashboard PFA',

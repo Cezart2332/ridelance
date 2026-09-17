@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Box, Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
+import { Box, Paper, BottomNavigation, BottomNavigationAction, useMediaQuery } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
+import AppsRoundedIcon from '@mui/icons-material/AppsRounded';
 
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import AppSidebar from './AppSidebar';
 import AppHeader from './AppHeader';
-import { pageTitleFor, type DashboardNavConfig } from '../../../config/dashboardNav';
+import { MobileMenu } from './MobileMenu';
+import { activeMobileTab, mobileMenuPath, pageTitleFor, type DashboardNavConfig } from '../../../config/dashboardNav';
 
 interface AppLayoutProps {
   /** Meniul dashboardului curent. Layout-ul e agnostic la tipul de cont. */
@@ -35,7 +36,25 @@ export default function AppLayout({
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  const sectionTitle = pageTitleFor(nav, pathname);
+  const theme = useTheme();
+  const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
+  const mainRef = useRef<HTMLDivElement | null>(null);
+
+  // Pe telefon „Meniu” e o pagină, nu un sertar (vezi `MobileMenu`). Pe desktop meniul e sidebar-ul,
+  // deci adresa asta n-are ce arăta acolo și duce acasă.
+  const menuPath = mobileMenuPath(nav);
+  const isMenuPage = pathname === menuPath;
+  useEffect(() => {
+    if (isMdUp && isMenuPage) navigate(nav.root, { replace: true });
+  }, [isMdUp, isMenuPage, navigate, nav.root]);
+
+  // Conținutul derulează în `main`, nu în fereastră: fără reset, o pagină nouă s-ar deschide la
+  // jumătate, unde rămăsese cea de dinainte.
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 });
+  }, [pathname]);
+
+  const sectionTitle = isMenuPage ? 'Meniu' : pageTitleFor(nav, pathname);
 
   /**
    * Titlul filei spune în ce dashboard ești (spec §1.1). Se restaurează la ieșire: altfel
@@ -48,7 +67,7 @@ export default function AppLayout({
       document.title = previous;
     };
   }, [nav.documentTitle]);
-  const bottomNavValue: string = nav.mobileTabs.find((tab) => tab.path === pathname)?.path ?? MORE_TAB;
+  const bottomNavValue: string = activeMobileTab(nav, pathname)?.path ?? MORE_TAB;
 
   return (
     <Box
@@ -87,9 +106,10 @@ export default function AppLayout({
           title={sectionTitle}
           showNotifications={showNotifications}
           onOpenRecurringDocumentation={onOpenRecurringDocumentation}
-          onOpenMenu={() => setSidebarOpen(true)}
+          menuPath={menuPath}
         />
         <Box
+          ref={mainRef}
           component="main"
           sx={{
             p: { xs: 2, md: 3 },
@@ -108,7 +128,11 @@ export default function AppLayout({
             '& > *': { flexShrink: 0 },
           }}
         >
-          {children}
+          {isMenuPage && !isMdUp ? (
+            <MobileMenu nav={nav} onLogout={onLogout} header={sidebarFooter} />
+          ) : (
+            children
+          )}
         </Box>
       </Box>
 
@@ -132,11 +156,7 @@ export default function AppLayout({
         <BottomNavigation
           value={bottomNavValue}
           onChange={(_, newValue: string) => {
-            if (newValue === MORE_TAB) {
-              setSidebarOpen(true);
-              return;
-            }
-            navigate(newValue);
+            navigate(newValue === MORE_TAB ? menuPath : newValue);
           }}
           showLabels
           sx={{
@@ -177,7 +197,8 @@ export default function AppLayout({
               <BottomNavigationAction key={tab.path} label={tab.label} value={tab.path} icon={<Icon />} />
             );
           })}
-          <BottomNavigationAction label="Meniu" value={MORE_TAB} icon={<MenuRoundedIcon />} />
+          {/* Aprins și pe paginile deschise din meniu: de acolo ai ajuns la ele. */}
+          <BottomNavigationAction label="Meniu" value={MORE_TAB} icon={<AppsRoundedIcon />} />
         </BottomNavigation>
       </Paper>
     </Box>

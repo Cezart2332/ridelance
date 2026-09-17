@@ -4,7 +4,9 @@ import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded'
 import HeadsetMicRoundedIcon from '@mui/icons-material/HeadsetMicRounded'
+import FolderRoundedIcon from '@mui/icons-material/FolderRounded'
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
+import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded'
 import LinkRoundedIcon from '@mui/icons-material/LinkRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import RedeemRoundedIcon from '@mui/icons-material/RedeemRounded'
@@ -196,9 +198,20 @@ export const SRL_NAV_CONFIG: DashboardNavConfig = {
   storageKey: 'ridelance.srl.nav.v1',
   mobileTabs: [
     { path: SRL_PATHS.home, label: 'Acasă', icon: HomeRoundedIcon },
-    { path: SRL_PATHS.cars, label: 'Mașini', icon: DirectionsCarFilledRoundedIcon },
-    { path: SRL_PATHS.support, label: 'Suport', icon: HeadsetMicRoundedIcon },
+    // Pagina unei mașini și adăugarea stau sub `masini/`: tab-ul rămâne aprins pe ele.
+    { path: SRL_PATHS.cars, label: 'Mașini', icon: DirectionsCarFilledRoundedIcon, matchPrefix: SRL_PATHS.cars },
+    { path: SRL_PATHS.rentals, label: 'Închirieri', icon: ReceiptLongRoundedIcon },
   ],
+  leafIcons: {
+    ...SRL_LEAF_ICONS,
+    [SRL_PATHS.profile]: BusinessRoundedIcon,
+    [SRL_PATHS.companyPage]: LanguageRoundedIcon,
+    [SRL_PATHS.companyDocuments]: FolderRoundedIcon,
+    [SRL_PATHS.support]: HeadsetMicRoundedIcon,
+    [SRL_PATHS.settings]: SettingsRoundedIcon,
+    [SRL_PATHS.connections]: LinkRoundedIcon,
+    [SRL_PATHS.benefits]: RedeemRoundedIcon,
+  },
   fallbackTitle: 'Dashboard SRL',
   documentTitle: 'RIDElance — Dashboard SRL',
 }

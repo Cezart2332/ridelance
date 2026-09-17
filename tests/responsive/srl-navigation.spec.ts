@@ -64,16 +64,16 @@ test.describe('navigație SRL', () => {
     await expect(page.getByText('TUKI GO')).toBeVisible()
   })
 
-  test('pe mobil meniul se deschide din bara de jos', async ({ page }, testInfo) => {
+  test('pe mobil meniul e o pagină deschisă din bara de jos', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'bara de jos există doar pe mobil')
 
     await page.goto(ROOT)
-    await page.getByRole('button', { name: 'Meniu' }).click()
+    await page.locator('.MuiBottomNavigation-root').getByRole('button', { name: 'Meniu' }).click()
 
-    const nav = page.locator('nav[aria-label="Meniu principal"]')
-    await expect(nav).toBeVisible()
-    await expect(nav.getByText('SRL', { exact: true })).toBeVisible()
-    await expect(nav.getByRole('button', { name: /Firmă/ })).toBeVisible()
+    // Nu mai e sertarul cu lista din sidebar: categoriile apar în pagină, cu paginile ca iconițe.
+    await expect(page).toHaveURL(new RegExp(`${ROOT}/meniu$`))
+    await expect(page.getByRole('region', { name: 'Firmă' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Pagina firmei' })).toBeVisible()
   })
 
   test('ruta veche /poster redirecționează, păstrând query string-ul', async ({ page }) => {

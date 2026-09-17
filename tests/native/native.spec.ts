@@ -88,3 +88,31 @@ test('PFA activ: dashboard fără plăți, sesiunea rămâne după redeschidere'
   // Fiecare deschidere trimite tokenul rotit la cea de dinainte (r1 → r2).
   expect(seen.refreshHeaderToken).toBe('r2')
 })
+
+test('meniul de pe telefon e o pagină cu iconițe, iar „Înapoi” se întoarce la el', async ({ page }) => {
+  await mockApi(page, { active: true })
+  await login(page)
+  await expect(page).toHaveURL(/\/app\/dashboard/)
+
+  // Pornim din tab-ul Documente: Acasă are nevoie de date reale de venituri.
+  await page.goto('/app/dashboard/documente/personale')
+  const tabs = page.locator('.MuiBottomNavigation-root')
+  await expect(tabs.getByRole('button', { name: 'Documente' })).toHaveClass(/Mui-selected/)
+
+  await tabs.getByRole('button', { name: 'Meniu' }).click()
+  await expect(page).toHaveURL(/\/app\/dashboard\/meniu$/)
+  await expect(page.getByRole('region', { name: 'Contabilitate' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Cheltuieli' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Profil/ })).toBeVisible()
+  // Fără sertarul de site: meniul e în pagină.
+  await expect(page.locator('.MuiDrawer-paper:visible')).toHaveCount(0)
+  await page.screenshot({ path: 'test-results/native-mobile-menu.png', fullPage: true })
+
+  await page.getByRole('button', { name: 'Profil' }).click()
+  await expect(page).toHaveURL(/\/app\/dashboard\/profil$/)
+  await expect(tabs.getByRole('button', { name: 'Meniu' })).toHaveClass(/Mui-selected/)
+  await page.screenshot({ path: 'test-results/native-mobile-subpage.png' })
+
+  await page.getByRole('button', { name: 'Înapoi' }).click()
+  await expect(page).toHaveURL(/\/app\/dashboard\/meniu$/)
+})

@@ -1,5 +1,5 @@
 import { Box, IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { alpha } from '@mui/material/styles';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
@@ -13,23 +13,33 @@ interface AppHeaderProps {
   title: string;
   showNotifications?: boolean;
   onOpenRecurringDocumentation?: () => void;
-  /** Deschide sertarul de navigare — pe mobil e singura cale înapoi din subpagini. */
-  onOpenMenu?: () => void;
+  /** Pagina de meniu de pe mobil: ținta lui „Înapoi” când subpagina a fost deschisă direct. */
+  menuPath?: string;
 }
 
 export default function AppHeader({
   nav,
   title,
   showNotifications,
-
-  onOpenMenu,
+  menuPath,
 }: AppHeaderProps) {
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
   const { pathname } = useLocation();
+  const navigate = useNavigate();
 
-  // Subpagină pe mobil = orice rută care nu e una dintre destinațiile din bara de jos.
-  const isSubPageOnMobile = !isMdUp && !nav.mobileTabs.some((tab) => tab.path === pathname);
+  // Subpagină pe mobil = nici o destinație din bara de jos, nici meniul. Ca într-o aplicație, are
+  // „Înapoi” în loc de logo.
+  const isSubPageOnMobile =
+    !isMdUp && pathname !== menuPath && !nav.mobileTabs.some((tab) => tab.path === pathname);
+
+  const goBack = () => {
+    // `idx` e poziția în istoricul aplicației (React Router). La 0 pagina a fost deschisă direct —
+    // dintr-o notificare sau un link — și nu are unde să se întoarcă, deci merge la meniu.
+    const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+    if (idx > 0) navigate(-1);
+    else if (menuPath) navigate(menuPath);
+  };
 
   return (
     <Paper
@@ -52,13 +62,13 @@ export default function AppHeader({
       }}
     >
       <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flex: 1, minWidth: 0 }}>
-        {isSubPageOnMobile && onOpenMenu && (
+        {isSubPageOnMobile && (
           <IconButton
             size="small"
-            aria-label="Deschide meniul"
+            aria-label="Înapoi"
             onClick={(e) => {
               e.stopPropagation();
-              onOpenMenu();
+              goBack();
             }}
             sx={{
               border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
@@ -69,7 +79,7 @@ export default function AppHeader({
             <ArrowBackRoundedIcon fontSize="small" color="primary" />
           </IconButton>
         )}
-        {!isMdUp && (
+        {!isMdUp && !isSubPageOnMobile && (
           <Box component="img" src={logo} alt="RIDElance" sx={{ height: 26, width: 'auto', flexShrink: 0 }} />
         )}
         <Typography noWrap sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, fontSize: '1.15rem', letterSpacing: -0.4, minWidth: 0 }}>

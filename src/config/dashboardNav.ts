@@ -40,6 +40,11 @@ export type MobileTab = {
   path: string
   label: string
   icon: SvgIconComponent
+  /**
+   * Tab-ul rămâne aprins pe toate paginile de sub acest prefix. „Documente” deschide documentele
+   * personale, dar e tot tab-ul activ și pe documentele PFA sau ale mașinii.
+   */
+  matchPrefix?: string
 }
 
 /**
@@ -60,6 +65,8 @@ export interface DashboardNavConfig {
   storageKey: string
   /** Destinațiile directe din bara de jos de pe mobil. Restul intră sub „Meniu". */
   mobileTabs: readonly MobileTab[]
+  /** Iconița fiecărei pagini în meniul de pe mobil. Paginile fără iconiță o iau pe a categoriei. */
+  leafIcons?: Record<string, SvgIconComponent>
   /**
    * Itemi de navigație randați în subsol, sub lista principală și deasupra blocului de
    * identitate. Spec §2.1 cere ca Setările să iasă din listă fără să devină un buton
@@ -72,6 +79,23 @@ export interface DashboardNavConfig {
   fallbackTitle: string
   /** Titlul filei de browser cât timp dashboardul e deschis (spec §1.1). */
   documentTitle: string
+}
+
+/**
+ * Meniul de pe mobil e o pagină a dashboardului, nu un sertar: ca într-o aplicație, „Înapoi” de pe
+ * o subpagină se întoarce la el, iar butonul Android de înapoi merge prin istoric ca oriunde.
+ */
+export function mobileMenuPath(config: DashboardNavConfig): string {
+  return `${config.root}/meniu`
+}
+
+/** Tab-ul din bara de jos care corespunde paginii curente, dacă există. */
+export function activeMobileTab(config: DashboardNavConfig, pathname: string): MobileTab | undefined {
+  return config.mobileTabs.find(
+    (tab) =>
+      tab.path === pathname ||
+      (tab.matchPrefix !== undefined && (pathname === tab.matchPrefix || pathname.startsWith(`${tab.matchPrefix}/`))),
+  )
 }
 
 /** Categoriile colapsabile, în ordinea din meniu. */
