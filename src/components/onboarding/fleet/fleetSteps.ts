@@ -28,7 +28,7 @@ export const FLEET_STEPS: FleetStepDef[] = [
     title: 'Cine va administra contul RIDElance?',
     eyebrow: 'ADMINISTRATOR',
   },
-  { key: 'flota', label: 'Despre flotă', title: 'Spune-ne câteva lucruri despre flota ta', eyebrow: 'FLOTĂ' },
+  { key: 'flota', label: 'Despre flotă', title: 'Spune-ne câteva lucruri despre flota ta', eyebrow: 'SRL' },
   { key: 'banca', label: 'Cont bancar', title: 'Contul bancar al firmei', eyebrow: 'BANCĂ' },
   { key: 'oblio', label: 'Oblio', title: 'Conectează programul de facturare', eyebrow: 'FACTURARE' },
   {

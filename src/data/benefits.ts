@@ -203,7 +203,7 @@ export const partnerBenefits: PartnerBenefit[] = [
     tagline: 'Tarife preferențiale la încărcarea mașinilor electrice.',
     website: 'https://eldrive.eu',
     intro:
-      'Perfect pentru PFA-urile și flotele care lucrează cu mașini electrice: tarif preferențial la încărcare, cu prețul de zi și de noapte și stațiile eligibile din rețea.',
+      'Perfect pentru PFA-urile și SRL-urile care lucrează cu mașini electrice: tarif preferențial la încărcare, cu prețul de zi și de noapte și stațiile eligibile din rețea.',
     // Fără blocuri: oferta depinde de oră, iar o listă de bife n-ar fi arătat asta. Conținutul
     // vine din `EldriveOffer`, aceeași componentă ca în pagina publică de Parteneri.
     blocks: [],

@@ -15,7 +15,7 @@ interface AuthSlide {
 }
 
 /**
- * Cele trei slide-uri din stânga cardului: platforma, PFA, SRL și flote.
+ * Cele trei slide-uri din stânga cardului: platforma, PFA, SRL.
  *
  * Titlurile sunt desenate în imagini, deci peste ele nu se mai pune text și nici vălul întunecat
  * care îi dădea contrast. Imaginile sunt portret (2:3) și se așază întregi (`contain`) pe un fundal

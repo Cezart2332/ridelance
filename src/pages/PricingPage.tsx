@@ -88,7 +88,7 @@ export function PricingPage() {
               }}
               options={[
                 { value: 'pfa', label: 'PFA' },
-                { value: 'srl', label: 'Flotă / SRL' },
+                { value: 'srl', label: 'SRL' },
               ]}
             />
 

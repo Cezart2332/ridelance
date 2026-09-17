@@ -20,13 +20,13 @@ export function FleetBcrRequests() {
       .then((response) => setItems(response.data))
   useEffect(() => {
     void load().catch(() =>
-      setError('Nu am putut încărca solicitările BCR ale flotelor.'),
+      setError('Nu am putut încărca solicitările BCR ale SRL-urilor.'),
     )
   }, [])
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Stack spacing={2}>
-        <Typography variant="h6">BCR · Flote SRL</Typography>
+        <Typography variant="h6">BCR · SRL</Typography>
         <Typography variant="body2" color="text.secondary">
           Confirmă numai conturile eligibile pentru oferta BCR. Pentru un
           abonament deja plătit, reducerea se aplică facturilor următoare.

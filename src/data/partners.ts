@@ -99,7 +99,7 @@ const partnersUnordered: Partner[] = [
     image: eldrive,
     tagline: 'Tarife preferențiale la încărcarea mașinilor electrice.',
     description:
-      'Beneficiu dedicat șoferilor și flotelor RIDElance care folosesc mașini electrice. În platformă vezi direct stațiile incluse în ofertă, tariful de zi și de noapte, plus acces rapid către navigare.',
+      'Beneficiu dedicat PFA-urilor și SRL-urilor RIDElance care folosesc mașini electrice. În platformă vezi direct stațiile incluse în ofertă, tariful de zi și de noapte, plus acces rapid către navigare.',
     website: 'https://eldrive.eu',
   },
   {

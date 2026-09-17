@@ -383,7 +383,7 @@ export function HomePage() {
             onChange={setAudience}
             options={[
               { value: 'pfa', label: 'PFA' },
-              { value: 'srl', label: 'Flotă / SRL' },
+              { value: 'srl', label: 'SRL' },
             ]}
           />
         </Stack>

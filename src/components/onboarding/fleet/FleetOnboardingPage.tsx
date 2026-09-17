@@ -188,7 +188,7 @@ export default function FleetOnboardingPage() {
         canGoBack={canGoBack}
         onBack={goBack}
         onLogout={handleLogout}
-        brandCaption="Onboarding flotă SRL"
+        brandCaption="Onboarding SRL"
         isMobile={isMobile}
       >
         {error && (
@@ -257,7 +257,7 @@ export default function FleetOnboardingPage() {
               </OnboardingCard>
             ) : (
               <OnboardingCard
-                eyebrow={def?.eyebrow ?? 'FLOTĂ'}
+                eyebrow={def?.eyebrow ?? 'SRL'}
                 icon={FLEET_STEP_ICONS[def?.key ?? ''] ?? 'folder'}
                 title={def?.title ?? ''}
               >

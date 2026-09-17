@@ -44,8 +44,8 @@ test.describe('abonamente', () => {
     await expect(page.getByText('2.149,20 lei facturați anual · economisești 238,80 lei/an')).toBeVisible()
   })
 
-  test('flota are un singur plan, fără variantă anuală', async ({ page }) => {
-    await page.getByRole('button', { name: /Flotă/ }).click()
+  test('SRL are un singur plan, fără variantă anuală', async ({ page }) => {
+    await page.getByRole('button', { name: 'SRL', exact: true }).click()
 
     await expect(page.getByRole('heading', { name: 'RIDElance Fleet' })).toBeVisible()
     await expect(page.getByText('299 lei', { exact: true })).toBeVisible()
