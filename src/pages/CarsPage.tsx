@@ -22,6 +22,9 @@ import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import SortRoundedIcon from '@mui/icons-material/SortRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';
+import FavoriteBorderRoundedIcon from '@mui/icons-material/FavoriteBorderRounded';
+import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
+import { useFavoriteCarIds } from '../services/carFavorites';
 
 import { TOKENS } from '../constants/tokens';
 import { FleetMap } from '../components/cars/map/LazyMaps';
@@ -64,6 +67,9 @@ export function CarsPage() {
   const [status, setStatus] = useState('Toate');
   const [platform, setPlatform] = useState('Toate');
   const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
+  /** Doar mașinile salvate la favorite. Merge și fără cont — favoritele din browser. */
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const favoriteIds = useFavoriteCarIds();
 
   /**
    * Cum se împarte ecranul între listă și hartă. „Split" e implicit pe desktop: harta răspunde
@@ -93,6 +99,11 @@ export function CarsPage() {
 
   const filteredCars = useMemo(() => {
     let result = [...cars];
+
+    if (onlyFavorites) {
+      const saved = new Set(favoriteIds);
+      result = result.filter(c => saved.has(c.id));
+    }
 
     if (search) {
       const q = search.toLowerCase();
@@ -125,7 +136,13 @@ export function CarsPage() {
 
     // Filtrarea păstrează ordinea primită de la server; nu se re-sortează local.
     return result;
-  }, [cars, search, city, offerType, engine, transmission, status, platform, mapBounds]);
+  }, [cars, search, city, offerType, engine, transmission, status, platform, mapBounds, onlyFavorites, favoriteIds]);
+
+  // Favoritele care chiar sunt în listă: o mașină salvată, retrasă între timp, nu se numără.
+  const favoriteCount = useMemo(() => {
+    const saved = new Set(favoriteIds);
+    return cars.filter(c => saved.has(c.id)).length;
+  }, [cars, favoriteIds]);
 
   /**
    * Punctele hărții. Mașinile fără coordonate nu apar — anunțurile de dinaintea fluxului cu pin
@@ -155,153 +172,71 @@ export function CarsPage() {
 
   const activeFiltersCount = [city, offerType, engine, transmission, status, platform].filter(f => f !== 'Toate').length;
 
+  // Ce primești, pe scurt. Erau trei carduri mari sub hero, care împingeau mașinile sub ecran:
+  // cine intră pe pagină vine să vadă mașini, nu să citească despre ele.
   const benefits = [
-    {
-      title: 'Mașini verificate',
-      description: 'Vehicule listate cu poze, detalii clare și condiții transparente.',
-      icon: <CheckCircleRoundedIcon sx={{ fontSize: 32, color: '#10b981' }} />,
-      color: '#10b981'
-    },
-    {
-      title: 'Preț săptămânal clar',
-      description: 'Vezi din start costul de utilizare, fără discuții inutile.',
-      icon: <AccountBalanceWalletRoundedIcon sx={{ fontSize: 32, color: '#6366f1' }} />,
-      color: '#6366f1'
-    },
-    {
-      title: 'Aplicare rapidă',
-      description: 'Completezi formularul, iar echipa RIDElance te contactează pentru detalii.',
-      icon: <FlashOnRoundedIcon sx={{ fontSize: 32, color: '#f59e0b' }} />,
-      color: '#f59e0b'
-    }
+    { label: 'Mașini verificate', icon: CheckCircleRoundedIcon, color: '#10b981' },
+    { label: 'Preț săptămânal clar', icon: AccountBalanceWalletRoundedIcon, color: '#6366f1' },
+    { label: 'Aplicare rapidă, online', icon: FlashOnRoundedIcon, color: '#f59e0b' },
   ];
 
   return (
-    <Box sx={{ pb: 10, bgcolor: TOKENS.surface }}>
-      {/* Hero Section */}
-      <Box sx={{ 
-        pt: { xs: 8, md: 12 }, 
-        pb: { xs: 8, md: 14 },
+    <Box sx={{ pb: 8, bgcolor: TOKENS.surface }}>
+      {/* Hero: titlu scurt și beneficiile pe un rând, ca grila să înceapă din primul ecran */}
+      <Box sx={{
+        pt: { xs: 2, md: 4.5 },
+        pb: { xs: 1.5, md: 3 },
         background: `linear-gradient(180deg, ${alpha(TOKENS.primary, 0.08)} 0%, transparent 100%)`,
-        borderBottom: `1px solid ${TOKENS.border}`
       }}>
         <Container maxWidth="lg">
-          <Stack spacing={4} sx={{ maxWidth: 900 }} component="div">
-            <Box>
-              <Typography variant="h2" sx={{ 
-                fontWeight: 900, 
-                color: TOKENS.ink, 
-                letterSpacing: '-0.03em',
-                mb: 2,
-                fontSize: { xs: '2.5rem', md: '4rem' },
-                lineHeight: 1.1
-              }}>
-                Alege o mașină pregătită pentru <Box component="span" sx={{ color: TOKENS.primaryStrong }}>Ridesharing</Box>
-              </Typography>
-              <Typography variant="h5" sx={{ 
-                color: TOKENS.textMuted, 
-                fontWeight: 500,
-                lineHeight: 1.6,
-                fontSize: { xs: '1.1rem', md: '1.4rem' },
-                maxWidth: 700
-              }}>
-                Găsește vehiculul ideal pentru Uber sau Bolt. Închiriere săptămânală sau opțiuni de tip „la rămânere”, cu proces de aplicare 100% online.
-              </Typography>
-            </Box>
-            
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} component="div">
-              <Button 
-                variant="contained" 
-                size="large"
-                href="#cars-grid"
-                sx={{ 
-                  px: 5,
-                  py: 2.2,
-                  borderRadius: TOKENS.radius.full,
-                  fontWeight: 800,
-                  fontSize: '1.05rem',
-                  textTransform: 'none',
-                  boxShadow: 'none',
-                  '&:hover': {
-                    backgroundColor: TOKENS.primaryStrong,
-                    transform: 'translateY(-2px)',
-                    boxShadow: 'none',
-                  }
-                }}
-              >
-                Explorează flota
-              </Button>
-            </Stack>
+          <Typography component="h1" sx={{
+            fontWeight: 900,
+            color: TOKENS.ink,
+            letterSpacing: '-0.02em',
+            fontSize: { xs: '1.35rem', md: '2.2rem' },
+            lineHeight: 1.15,
+          }}>
+            Alege o mașină pregătită pentru <Box component="span" sx={{ color: TOKENS.primaryStrong }}>Ridesharing</Box>
+          </Typography>
+          <Typography sx={{ display: { xs: 'none', sm: 'block' }, color: TOKENS.textMuted, fontSize: { xs: '0.9rem', md: '0.98rem' }, mt: 0.75, maxWidth: 680, lineHeight: 1.5 }}>
+            Pentru Uber sau Bolt, cu închiriere săptămânală sau la rămânere și aplicare 100% online.
+          </Typography>
+          <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', columnGap: { xs: 1.5, md: 2.5 }, rowGap: 0.5, mt: { xs: 1, md: 1.5 } }}>
+            {benefits.map(({ label, icon: Icon, color }) => (
+              <Stack key={label} direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
+                <Icon sx={{ fontSize: { xs: 15, md: 17 }, color }} />
+                <Typography sx={{ fontSize: { xs: '0.74rem', md: '0.82rem' }, fontWeight: 700, color: TOKENS.ink }}>{label}</Typography>
+              </Stack>
+            ))}
           </Stack>
         </Container>
       </Box>
 
-      {/* Benefits Section */}
-      <Container maxWidth="lg" sx={{ mt: -8 }}>
-        <Box sx={{ 
-          display: 'grid', 
-          gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, 
-          gap: 4 
-        }}>
-          {benefits.map((benefit, i) => (
-            <Box key={i} sx={{ 
-              p: 4, 
-              bgcolor: TOKENS.paper, 
-              borderRadius: TOKENS.radius.xl,
-              boxShadow: TOKENS.shadow.lg,
-              border: `1px solid ${TOKENS.border}`,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2.5,
-              transition: 'all 0.3s ease',
-              '&:hover': { transform: 'translateY(-6px)', boxShadow: TOKENS.shadow.xl }
-            }}>
-              <Box sx={{ 
-                width: 64, 
-                height: 64, 
-                borderRadius: TOKENS.radius.lg, 
-                bgcolor: alpha(benefit.color, 0.1),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                {benefit.icon}
-              </Box>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: TOKENS.ink, mb: 1 }}>
-                  {benefit.title}
-                </Typography>
-                <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.95rem', lineHeight: 1.7 }}>
-                  {benefit.description}
-                </Typography>
-              </Box>
-            </Box>
-          ))}
-        </Box>
-      </Container>
-
       {/* Filter & Search Bar */}
-      <Container maxWidth="lg" sx={{ mt: 10 }}>
-        <Stack spacing={4} component="div">
+      <Container maxWidth="lg" sx={{ mt: { xs: 1, md: 1.5 } }}>
+        <Stack spacing={1.5} component="div">
           <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            spacing={2.5}
-            sx={{ alignItems: { xs: 'stretch', md: 'center' }, justifyContent: 'space-between' }}
+            direction="row"
+            useFlexGap
+            // Pe telefon: căutarea pe tot rândul, iar Filtre, Favorite și sortarea pe rândul de sub
+            // ea — nu patru rânduri stivuite, care împingeau prima mașină sub ecran.
+            sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' }, gap: 1.25, alignItems: 'center', justifyContent: 'space-between' }}
             component="div"
           >
             <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              spacing={2}
-              sx={{ flex: 1, width: '100%', minWidth: 0 }}
+              direction="row"
+              useFlexGap
+              sx={{ display: { xs: 'contents', md: 'flex' }, gap: 1.25, flex: 1, minWidth: 0 }}
               component="div"
             >
               <TextField
                 fullWidth
                 placeholder="Caută model sau brand (ex: Logan, Tesla...)"
-                size="medium"
+                size="small"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 sx={{ 
+                  flex: { xs: '1 1 100%', md: '1 1 auto' },
                   '& .MuiOutlinedInput-root': { 
                     borderRadius: TOKENS.radius.lg,
                     bgcolor: TOKENS.paper,
@@ -325,9 +260,11 @@ export function CarsPage() {
                 sx={{ 
                   borderRadius: TOKENS.radius.lg,
                   fontWeight: 700,
+                  fontSize: '0.85rem',
                   whiteSpace: 'nowrap',
-                  px: 3.5,
-                  width: { xs: '100%', sm: 'auto' },
+                  px: { xs: 1, sm: 2.5 },
+                  flex: { xs: '1 1 0', md: '0 0 auto' },
+                  minWidth: 0,
                   borderColor: TOKENS.border,
                   color: showFilters ? '#fff' : TOKENS.ink,
                   bgcolor: showFilters ? TOKENS.ink : 'transparent',
@@ -339,16 +276,43 @@ export function CarsPage() {
               >
                 Filtre {activeFiltersCount > 0 && `(${activeFiltersCount})`}
               </Button>
+              <Button
+                variant={onlyFavorites ? "contained" : "outlined"}
+                startIcon={onlyFavorites ? <FavoriteRoundedIcon /> : <FavoriteBorderRoundedIcon />}
+                onClick={() => setOnlyFavorites(!onlyFavorites)}
+                aria-pressed={onlyFavorites}
+                sx={{
+                  borderRadius: TOKENS.radius.lg,
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  whiteSpace: 'nowrap',
+                  px: { xs: 1, sm: 2.25 },
+                  flex: { xs: '1 1 0', md: '0 0 auto' },
+                  minWidth: 0,
+                  borderColor: onlyFavorites ? '#e11d48' : TOKENS.border,
+                  color: onlyFavorites ? '#fff' : TOKENS.ink,
+                  bgcolor: onlyFavorites ? '#e11d48' : 'transparent',
+                  boxShadow: 'none',
+                  '&:hover': {
+                    bgcolor: onlyFavorites ? '#be123c' : alpha(TOKENS.ink, 0.04),
+                    borderColor: onlyFavorites ? '#be123c' : TOKENS.borderHover,
+                    boxShadow: 'none',
+                  }
+                }}
+              >
+                Favorite {favoriteCount > 0 && `(${favoriteCount})`}
+              </Button>
             </Stack>
 
             <TextField
               select
-              size="medium"
+              size="small"
               value={sort}
               onChange={(e) => setSort(e.target.value as SortOption)}
               sx={{ 
-                width: { xs: '100%', md: 'auto' },
-                minWidth: { md: 220 },
+                flex: { xs: '1 1 0', md: '0 0 auto' },
+                minWidth: { xs: 0, md: 200 },
+                '& .MuiSelect-select': { fontSize: '0.85rem' },
                 '& .MuiOutlinedInput-root': { 
                   borderRadius: TOKENS.radius.lg,
                   bgcolor: TOKENS.paper,
@@ -358,7 +322,7 @@ export function CarsPage() {
               slotProps={{
                 input: {
                   startAdornment: (
-                    <InputAdornment position="start">
+                    <InputAdornment position="start" sx={{ display: { xs: 'none', sm: 'flex' } }}>
                       <SortRoundedIcon sx={{ color: TOKENS.textSubtle, fontSize: 20 }} />
                     </InputAdornment>
                   ),
@@ -375,14 +339,13 @@ export function CarsPage() {
             <Paper 
               elevation={0} 
               sx={{ 
-                p: 4, 
-                borderRadius: TOKENS.radius.xl, 
+                p: { xs: 2, md: 2.5 }, borderRadius: `${TOKENS.radius.md}px`, 
                 border: `1px solid ${TOKENS.border}`,
                 bgcolor: TOKENS.surfaceAlt,
-                boxShadow: TOKENS.shadow.md
+                boxShadow: 'none'
               }}
             >
-              <Grid container spacing={3} component="div">
+              <Grid container spacing={2} component="div">
                 {[
                   { label: 'Oraș', value: city, setter: setCity, options: ['Toate', 'București', 'Cluj-Napoca', 'Brașov', 'Timișoara', 'Iași', 'Constanța'] },
                   { label: 'Tip ofertă', value: offerType, setter: setOfferType, options: ['Toate', 'Închiriere săptămânală', 'La rămânere'] },
@@ -435,16 +398,16 @@ export function CarsPage() {
       </Container>
 
       {/* Cars Grid */}
-      <Container maxWidth="lg" id="cars-grid" sx={{ mt: 8 }}>
-        <Box sx={{ mb: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 900, color: TOKENS.ink, mb: 1 }}>
-              {activeFiltersCount > 0 || search ? 'Rezultate căutare' : 'Flota noastră'}
+      <Container maxWidth="lg" id="cars-grid" sx={{ mt: { xs: 2, md: 2.5 } }}>
+        <Box sx={{ mb: 1.75, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'baseline', minWidth: 0 }}>
+            <Typography component="h2" sx={{ fontWeight: 850, color: TOKENS.ink, fontSize: { xs: '1.02rem', md: '1.12rem' } }}>
+              {onlyFavorites ? 'Mașinile tale favorite' : activeFiltersCount > 0 || search ? 'Rezultate căutare' : 'Mașini disponibile'}
             </Typography>
-            <Typography sx={{ color: TOKENS.textMuted, fontWeight: 500 }}>
-              {filteredCars.length} {filteredCars.length === 1 ? 'mașină disponibilă' : 'mașini disponibile'} pentru tine
+            <Typography sx={{ color: TOKENS.textMuted, fontWeight: 600, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+              {filteredCars.length} {filteredCars.length === 1 ? 'mașină' : 'mașini'}
             </Typography>
-          </Box>
+          </Stack>
 
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             {mapBounds && (
@@ -494,7 +457,7 @@ export function CarsPage() {
           </Stack>
         </Box>
 
-        {loading && <LinearProgress sx={{ mb: 6, borderRadius: 2, height: 6, bgcolor: alpha(TOKENS.primary, 0.1) }} />}
+        {loading && <LinearProgress sx={{ mb: 2, borderRadius: 2, height: 6, bgcolor: alpha(TOKENS.primary, 0.1) }} />}
 
         {filteredCars.length > 0 ? (
           <Box
@@ -505,7 +468,7 @@ export function CarsPage() {
                 xs: '1fr',
                 lg: view === 'split' ? 'minmax(0, 1fr) minmax(0, 1fr)' : '1fr',
               },
-              gap: { xs: 3, md: 4 },
+              gap: { xs: 2, md: 2.5 },
             }}
           >
             {view !== 'map' && (
@@ -514,10 +477,11 @@ export function CarsPage() {
                   display: 'grid',
                   gridTemplateColumns: {
                     xs: '1fr',
-                    sm: view === 'split' ? '1fr' : 'repeat(2, 1fr)',
-                    lg: view === 'split' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+                    sm: 'repeat(2, 1fr)',
+                    md: view === 'split' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+                    lg: view === 'split' ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
                   },
-                  gap: { xs: 3, md: view === 'split' ? 3 : 5 },
+                  gap: { xs: 2, md: 2.25 },
                 }}
               >
                 {filteredCars.map((car) => (
@@ -552,13 +516,15 @@ export function CarsPage() {
             )}
           </Box>
         ) : !loading && (
-          <Paper sx={{ py: 12, textAlign: 'center', borderRadius: TOKENS.radius.xl, border: `2px dashed ${TOKENS.border}`, bgcolor: 'transparent' }} elevation={0}>
+          <Paper sx={{ py: 7, textAlign: 'center', borderRadius: `${TOKENS.radius.lg}px`, border: `2px dashed ${TOKENS.border}`, bgcolor: 'transparent' }} elevation={0}>
             <DirectionsCarFilledRoundedIcon sx={{ fontSize: 64, color: TOKENS.textSubtle, mb: 3 }} />
             <Typography variant="h5" sx={{ fontWeight: 800, color: TOKENS.ink, mb: 1.5 }}>
-              Nu am găsit nimic care să corespundă
+              {onlyFavorites && favoriteCount === 0 ? 'Nicio mașină la favorite' : 'Nu am găsit nimic care să corespundă'}
             </Typography>
             <Typography sx={{ color: TOKENS.textMuted, maxWidth: 400, mx: 'auto' }}>
-              Încearcă să resetezi filtrele sau să folosești termeni de căutare mai generali.
+              {onlyFavorites && favoriteCount === 0
+                ? 'Apasă pe inima de pe o mașină ca s-o salvezi aici.'
+                : 'Încearcă să resetezi filtrele sau să folosești termeni de căutare mai generali.'}
             </Typography>
           </Paper>
         )}

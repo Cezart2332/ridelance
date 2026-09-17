@@ -16,6 +16,7 @@ import {
 import { hasActiveDiscount } from '../../utils/carPricing'
 import { formatLei } from '../../utils/vehiclePricing'
 import { CarOwnerBlock } from './CarOwnerBlock'
+import { FavoriteButton } from './FavoriteButton'
 import { StayAsterisk, StayPriceNote } from './StayPriceNote'
 import { VDP } from './vdp/vdpLayout'
 
@@ -87,14 +88,14 @@ export default function CarListCard({ car, newTab = false, companySlug }: CarLis
         // iar anunțurile păreau lipite unul de altul. Albastrul deschis desenează marginea fără să
         // concureze cu poza; la hover trece pe varianta tare, ca să se vadă care card e sub cursor.
         border: `1px solid ${TOKENS.primary}`,
-        borderRadius: `${TOKENS.radius.xl}px`,
+        borderRadius: `${TOKENS.radius.lg}px`,
         // Poza urcă până în marginea cardului; colțurile ei le dă cardul, prin `overflow`.
         overflow: 'hidden',
         boxShadow: TOKENS.shadow.sm,
         transition: `transform ${TOKENS.duration} ${TOKENS.easing}, box-shadow ${TOKENS.duration} ${TOKENS.easing}, border-color ${TOKENS.duration} ${TOKENS.easing}`,
         '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: TOKENS.shadow.xl,
+          transform: 'translateY(-2px)',
+          boxShadow: TOKENS.shadow.lg,
           borderColor: TOKENS.primaryStrong,
         },
         '&:hover .car-card-cover img': { transform: 'scale(1.04)' },
@@ -105,7 +106,7 @@ export default function CarListCard({ car, newTab = false, companySlug }: CarLis
         className="car-card-cover"
         sx={{
           position: 'relative',
-          aspectRatio: '4 / 3',
+          aspectRatio: '16 / 10',
           overflow: 'hidden',
           backgroundColor: TOKENS.surfaceAlt,
           display: 'grid',
@@ -130,7 +131,7 @@ export default function CarListCard({ car, newTab = false, companySlug }: CarLis
         )}
 
         {isStayOffer(car.offerType) ? (
-          <Box sx={{ position: 'absolute', top: 12, left: 12 }}>
+          <Box sx={{ position: 'absolute', top: 8, left: 8 }}>
             <StayPriceNote>
               <Pill sx={{ position: 'static', cursor: 'help' }}>
                 {formatCarOfferType(car.offerType)}
@@ -139,30 +140,35 @@ export default function CarListCard({ car, newTab = false, companySlug }: CarLis
             </StayPriceNote>
           </Box>
         ) : (
-          <Pill sx={{ top: 12, left: 12 }}>{formatCarOfferType(car.offerType)}</Pill>
+          <Pill sx={{ top: 8, left: 8 }}>{formatCarOfferType(car.offerType)}</Pill>
         )}
 
+        {/* Colțul din dreapta-sus e al inimii; pastila de reducere/status stă sub ea. */}
+        <Box sx={{ position: 'absolute', top: 6, right: 6 }}>
+          <FavoriteButton carId={car.id} carTitle={title} />
+        </Box>
+
         {discounted ? (
-          <Pill sx={{ top: 12, right: 12, backgroundColor: '#ef4444', color: '#FFFFFF' }}>
+          <Pill sx={{ top: 50, right: 8, backgroundColor: '#ef4444', color: '#FFFFFF' }}>
             Reducere
           </Pill>
         ) : (
           unavailable && (
-            <Pill sx={{ top: 12, right: 12, color: getCarStatusColor(car.status) }}>
+            <Pill sx={{ top: 50, right: 8, color: getCarStatusColor(car.status) }}>
               {formatCarStatus(car.status)}
             </Pill>
           )
         )}
 
         {photoCount > 1 && (
-          <Pill sx={{ bottom: 12, right: 12 }}>
+          <Pill sx={{ bottom: 8, right: 8 }}>
             <PhotoLibraryRoundedIcon sx={{ fontSize: 13 }} />
             {photoCount} poze
           </Pill>
         )}
       </Box>
 
-      <Stack spacing={0.75} sx={{ p: 2, flexGrow: 1 }}>
+      <Stack spacing={0.4} sx={{ p: 1.5, flexGrow: 1 }}>
         <Typography
           className="car-card-title"
           component={Link}
@@ -170,7 +176,7 @@ export default function CarListCard({ car, newTab = false, companySlug }: CarLis
           {...linkProps}
           onClick={(event: React.MouseEvent) => event.stopPropagation()}
           sx={{
-            fontSize: '1.02rem',
+            fontSize: '0.92rem',
             fontWeight: 800,
             color: TOKENS.ink,
             lineHeight: 1.3,
@@ -180,21 +186,21 @@ export default function CarListCard({ car, newTab = false, companySlug }: CarLis
           {title}
         </Typography>
 
-        <Typography sx={{ fontSize: '0.85rem', color: TOKENS.textMuted }}>
+        <Typography noWrap sx={{ fontSize: '0.76rem', color: TOKENS.textMuted }}>
           {[car.engine, car.transmission, car.location].filter(Boolean).join(' · ')}
         </Typography>
 
         {categories.length > 0 && (
-          <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap', pt: 0.5 }}>
+          <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap', pt: 0.25 }}>
             {categories.map((category) => (
               <Box
                 key={category}
                 sx={{
-                  px: 1,
-                  py: 0.25,
+                  px: 0.75,
+                  py: 0.1,
                   borderRadius: `${TOKENS.radius.full}px`,
                   border: `1px solid ${TOKENS.border}`,
-                  fontSize: '0.7rem',
+                  fontSize: '0.64rem',
                   fontWeight: 700,
                   color: TOKENS.textMuted,
                 }}
@@ -205,12 +211,12 @@ export default function CarListCard({ car, newTab = false, companySlug }: CarLis
           </Stack>
         )}
 
-        <Box sx={{ pt: 1, mt: 'auto' }}>
+        <Box sx={{ pt: 0.6, mt: 'auto' }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'baseline' }}>
             {discounted && (
               <Typography
                 sx={{
-                  fontSize: '0.8rem',
+                  fontSize: '0.72rem',
                   color: TOKENS.textSubtle,
                   textDecoration: 'line-through',
                 }}
@@ -218,16 +224,16 @@ export default function CarListCard({ car, newTab = false, companySlug }: CarLis
                 {formatLei(car.oldPrice!)}
               </Typography>
             )}
-            <Typography sx={{ fontSize: '1.15rem', fontWeight: 900, color: TOKENS.ink }}>
+            <Typography sx={{ fontSize: '1rem', fontWeight: 900, color: TOKENS.ink }}>
               {formatLei(car.pricePerWeek)} lei
             </Typography>
-            <Typography sx={{ fontSize: '0.82rem', color: TOKENS.textMuted }}>
+            <Typography sx={{ fontSize: '0.74rem', color: TOKENS.textMuted }}>
               / săptămână
             </Typography>
           </Stack>
 
           {car.owner && (
-            <Box sx={{ pt: 1.25 }}>
+            <Box sx={{ pt: 0.75 }}>
               <CarOwnerBlock owner={car.owner} />
             </Box>
           )}
@@ -240,8 +246,9 @@ export default function CarListCard({ car, newTab = false, companySlug }: CarLis
             onClick={(event: React.MouseEvent) => event.stopPropagation()}
             variant="outlined"
             sx={{
-              mt: 1.5,
-              height: 44,
+              mt: 1,
+              height: 34,
+              fontSize: '0.8rem',
               borderRadius: COVER_RADIUS,
               fontWeight: 800,
               textTransform: 'none',
@@ -253,7 +260,7 @@ export default function CarListCard({ car, newTab = false, companySlug }: CarLis
               },
             }}
           >
-            Vezi mai multe detalii
+            Vezi detalii
           </Button>
         </Box>
       </Stack>
@@ -275,12 +282,12 @@ function Pill({ children, sx }: { children: React.ReactNode; sx?: object }) {
       sx={{
         position: 'absolute',
         alignItems: 'center',
-        px: 1.1,
-        py: 0.4,
+        px: 0.9,
+        py: 0.3,
         borderRadius: `${TOKENS.radius.full}px`,
         backgroundColor: TOKENS.paper,
         color: TOKENS.ink,
-        fontSize: '0.7rem',
+        fontSize: '0.66rem',
         fontWeight: 800,
         boxShadow: TOKENS.shadow.sm,
         ...sx,

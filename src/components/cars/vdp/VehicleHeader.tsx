@@ -22,6 +22,7 @@ import { formatLei } from '../../../utils/vehiclePricing'
 import { StayAsterisk, StayPriceNote } from '../StayPriceNote'
 import { VDP } from './vdpLayout'
 import { CarOwnerBlock } from '../CarOwnerBlock'
+import { FavoriteButton } from '../FavoriteButton'
 
 /**
  * Blocul de titlu (spec §4): H1 display, un rând de metadate separate prin „·" și un rând de chips.
@@ -50,18 +51,23 @@ export function VehicleHeader({ car }: { car: Car }) {
   return (
     <Stack spacing={2.5}>
       <Box>
-        <Typography
-          variant="h1"
-          sx={{
-            fontSize: { xs: 30, md: 38 },
-            lineHeight: { xs: '36px', md: '44px' },
-            letterSpacing: '-0.9px',
-            fontWeight: 900,
-            color: TOKENS.ink,
-          }}
-        >
-          {car.brand} {car.model} {car.year}
-        </Typography>
+        <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <Typography
+            variant="h1"
+            sx={{
+              fontSize: { xs: 30, md: 38 },
+              lineHeight: { xs: '36px', md: '44px' },
+              letterSpacing: '-0.9px',
+              fontWeight: 900,
+              color: TOKENS.ink,
+            }}
+          >
+            {car.brand} {car.model} {car.year}
+          </Typography>
+          <Box sx={{ flexShrink: 0 }}>
+            <FavoriteButton carId={car.id} carTitle={`${car.brand} ${car.model} ${car.year}`} variant="outlined" />
+          </Box>
+        </Stack>
 
         <Stack
           direction="row"
