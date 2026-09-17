@@ -4,6 +4,7 @@ import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom'
 import { AuthLayout } from './shell/AuthLayout'
 import { AuthFormHeader } from './shell/AuthFormHeader'
 import { AuthSwitchLink } from './shell/AuthSwitchLink'
+import { IS_NATIVE_APP } from '../../native/platform'
 import { PasswordField } from './shell/PasswordField'
 import { TrustRow } from './shell/TrustRow'
 import { AUTH_COLORS, AUTH_DENSITY, authInputSx, authPrimaryButtonSx } from './shell/authShellSx'
@@ -48,7 +49,12 @@ export default function LoginPage() {
     <AuthLayout>
       <AuthFormHeader
         title="Bine ai revenit"
-        subtitle={<AuthSwitchLink prompt="Nu ai încă un cont?" linkLabel="Creează cont" to={ROUTES.register} />}
+        subtitle={
+          // Contul se creează pe site, odată cu înrolarea — aplicația e doar pentru conturile active.
+          IS_NATIVE_APP ? 'Intră în contul tău RIDElance.' : (
+            <AuthSwitchLink prompt="Nu ai încă un cont?" linkLabel="Creează cont" to={ROUTES.register} />
+          )
+        }
         error={serverError?.message}
       />
 

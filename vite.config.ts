@@ -1,5 +1,5 @@
 import type { InlineConfig } from 'vite'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -24,8 +24,27 @@ function configureServiceWorkerBuild(inlineConfig: InlineConfig) {
   }
 }
 
+/**
+ * `--mode native` construiește aplicația mobilă (Capacitor), în `dist-native`.
+ *
+ * Fără PWA: în aplicație nu există service worker de instalat. Iar adresa API-ului e obligatorie —
+ * pe telefon, căderea pe `localhost:5000` ar da o aplicație care se deschide și nu se loghează
+ * niciodată, fără nicio eroare vizibilă la build.
+ */
+function nativeBuildEnv(mode: string) {
+  if (mode !== 'native') return { isNative: false }
+  const env = loadEnv(mode, process.cwd(), 'VITE_')
+  if (!env.VITE_API_BASE_URL) {
+    throw new Error('Build-ul nativ cere VITE_API_BASE_URL (adresa publică a API-ului), de ex. în .env.native.local.')
+  }
+  return { isNative: true }
+}
+
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const { isNative } = nativeBuildEnv(mode)
+
+  return {
   server: {
     // Buildurile .NET rescriu executabile blocate de Windows; nu sunt surse frontend.
     watch: { ignored: ['**/backend/**'] },
@@ -48,7 +67,7 @@ export default defineConfig({
   plugins: [
     react(),
     babel({ presets: [reactCompilerPreset()] }),
-    VitePWA({
+    !isNative && VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.js',
@@ -140,5 +159,7 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 750,
+    outDir: isNative ? 'dist-native' : 'dist',
   },
+  }
 })

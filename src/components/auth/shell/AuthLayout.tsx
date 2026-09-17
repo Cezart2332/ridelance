@@ -6,6 +6,7 @@ import { AuthSlider } from './AuthSlider'
 import { AUTH_COLORS, AUTH_FORM_CONTENT } from './authShellSx'
 import { TOKENS } from '../../../constants/tokens'
 import logoWithMotto from '../../../assets/logowithmotto.svg'
+import { IS_NATIVE_APP } from '../../../native/platform'
 
 interface AuthLayoutProps {
   children: ReactNode
@@ -38,7 +39,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           backgroundImage: `radial-gradient(900px 520px at 50% 0%, ${alpha(TOKENS.primary, 0.22)} 0%, transparent 70%)`,
         }}
       >
-        <Link component={RouterLink} to="/" aria-label="RIDElance — pagina principală" sx={{ display: 'inline-flex' }}>
+        <Link component={RouterLink} to={IS_NATIVE_APP ? '/app' : '/'} aria-label="RIDElance — pagina principală" sx={{ display: 'inline-flex' }}>
           <Box
             component="img"
             src={logoWithMotto}
@@ -53,7 +54,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+              gridTemplateColumns: { xs: '1fr', md: IS_NATIVE_APP ? '1fr' : '1fr 1fr' },
               gap: { md: 1 },
               p: { xs: 0, md: 1.5 },
               borderRadius: { xs: `${TOKENS.radius.xl}px`, md: '24px' },
@@ -62,7 +63,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
               boxShadow: '0 30px 80px rgba(69, 184, 226, 0.16), 0 2px 8px rgba(26, 26, 46, 0.04)',
             }}
           >
-            {showSlider && <AuthSlider />}
+            {showSlider && !IS_NATIVE_APP && <AuthSlider />}
 
             <Box
               component="main"
@@ -78,7 +79,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             </Box>
           </Box>
 
-          {!showSlider && (
+          {/* În aplicația mobilă nu există site spre care să te întorci. */}
+          {!showSlider && !IS_NATIVE_APP && (
             <Box sx={{ mt: 2.5, textAlign: 'center' }}>
               <Link
                 component={RouterLink}

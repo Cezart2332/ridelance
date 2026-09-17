@@ -21,6 +21,7 @@ import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded'
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded'
 
 import type { DashboardNavConfig, NavEntry } from './dashboardNav'
+import { IS_NATIVE_APP } from '../native/platform'
 
 /**
  * Sursa unică de adevăr pentru navigația Dashboard-ului PFA.
@@ -265,6 +266,20 @@ export const LEGACY_SECTION_ROUTES: Record<string, string> = {
   platforms: PFA_PATHS.connBolt,
 }
 
+/**
+ * Paginile prin care se plătește ceva: abonamentul și serviciile individuale. Aplicația mobilă nu le
+ * are (vezi `native/platform.ts`), deci nici meniul ei.
+ */
+export const PFA_PAID_PATHS: readonly string[] = [PFA_PATHS.svcSubscriptions, PFA_PATHS.svcIndividual]
+
+function withoutPaidPages(entries: NavEntry[]): NavEntry[] {
+  return entries.map((entry) =>
+    entry.kind === 'group'
+      ? { ...entry, children: entry.children.filter((child) => !PFA_PAID_PATHS.includes(child.path)) }
+      : entry,
+  )
+}
+
 /** Titlurile din antet pentru paginile fără item de meniu. */
 const EXTRA_PAGE_TITLES: Record<string, string> = {
   [PFA_PATHS.home]: 'Dashboard PFA',
@@ -278,7 +293,7 @@ export const PFA_NAV_CONFIG: DashboardNavConfig = {
   ownerType: 'Pfa',
   root: DASHBOARD_ROOT,
   menuLabel: 'Meniu Principal',
-  entries: PFA_NAV,
+  entries: IS_NATIVE_APP ? withoutPaidPages(PFA_NAV) : PFA_NAV,
   bottomEntries: PFA_BOTTOM_NAV,
   /** Versionată: o schimbare de structură invalidează starea veche. */
   storageKey: 'ridelance.pfa.nav.v1',

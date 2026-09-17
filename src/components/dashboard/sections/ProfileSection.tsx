@@ -13,6 +13,7 @@ import { SecurityPanel } from './profile/SecurityPanel'
 import { PhoneVerificationPanel } from './profile/PhoneVerificationPanel'
 import { NotificationPreferencesPanel } from './profile/NotificationPreferencesPanel'
 import { PrivacyPanel } from './profile/PrivacyPanel'
+import { IS_NATIVE_APP } from '../../../native/platform'
 
 /**
  * Profilul: datele contului, abonamentul, istoricul plăților, securitatea, preferințele de
@@ -50,6 +51,8 @@ export function ProfileSection() {
     <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
       <ProfileTab />
 
+      {/* Istoricul plăților abonamentului nu apare în aplicația mobilă. */}
+      {!IS_NATIVE_APP && (
       <Box id="plati" sx={{ scrollMarginTop: 96 }}>
         <Paper
           elevation={0}
@@ -118,6 +121,7 @@ export function ProfileSection() {
           </Collapse>
         </Paper>
       </Box>
+      )}
       <SecurityPanel />
       <PhoneVerificationPanel />
       <NotificationPreferencesPanel />

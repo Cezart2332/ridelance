@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { Alert, Box, Button, CircularProgress } from '@mui/material'
 import { fleetOnboardingService } from '../../../services/fleetOnboarding.service'
 import { useAppSelector } from '../../../store/hooks'
+import { IS_NATIVE_APP, nativeUnavailablePath } from '../../../native/platform'
 
 export function FleetAccessGate({ children }: { children: ReactNode }) {
   const role = useAppSelector((s) => s.auth.role)
@@ -36,5 +37,6 @@ export function FleetAccessGate({ children }: { children: ReactNode }) {
         <CircularProgress />
       </Box>
     )
-  return allowed ? children : <Navigate to="/onboarding-srl" replace />
+  // Configurarea contului SRL nu se face din aplicația mobilă.
+  return allowed ? children : <Navigate to={IS_NATIVE_APP ? nativeUnavailablePath('srl') : '/onboarding-srl'} replace />
 }

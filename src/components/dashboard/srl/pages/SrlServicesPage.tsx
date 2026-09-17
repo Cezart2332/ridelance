@@ -4,6 +4,7 @@ import { Box, Tab, Tabs } from '@mui/material'
 import { InsuranceTab } from '../../sections/InsuranceTab'
 import { ServiciiTab } from '../../sections/ServiciiTab'
 import { DASHBOARD_TOKENS } from '../../dashboardTheme'
+import { IS_NATIVE_APP } from '../../../../native/platform'
 
 /**
  * Serviciile disponibile unui SRL (spec §3.2).
@@ -23,6 +24,15 @@ const TABS = [
 
 export function SrlServicesPage() {
   const [active, setActive] = useState<(typeof TABS)[number]['id']>('individuale')
+
+  // Aplicația mobilă nu vinde servicii: rămân doar asigurările, care se încheie la partener.
+  if (IS_NATIVE_APP) {
+    return (
+      <Box sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
+        <InsuranceTab />
+      </Box>
+    )
+  }
 
   return (
     <Box sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>

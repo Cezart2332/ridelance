@@ -9,6 +9,7 @@ import { fontStack } from './theme/fontStack'
 import { store } from './store/store'
 import { AuthInitializer } from './components/auth/AuthInitializer'
 import { clearChunkReloadFlag } from './utils/lazyWithRetry'
+import { IS_NATIVE_APP } from './native/platform'
 // @ts-ignore
 import '@fontsource-variable/geist'
 // Display face pentru onboarding (titluri de pas, progres) — body-ul rămâne Geist.
@@ -27,7 +28,8 @@ window.addEventListener('vite:preloadError', (event) => {
 
 // Service Worker (push notifications only). Avoid reload loops on mobile:
 // skipWaiting + controllerchange + reload resets in-memory flags every load.
-if ('serviceWorker' in navigator) {
+// Nu și în aplicația mobilă: acolo nu există PWA de instalat, iar notificările web push nu ajung.
+if (!IS_NATIVE_APP && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js', { scope: '/', updateViaCache: 'none' })

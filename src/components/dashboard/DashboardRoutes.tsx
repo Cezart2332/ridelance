@@ -21,6 +21,7 @@ import { SupportChatTab } from './sections/SupportChatTab'
 import { InvoicesPage } from './invoices/InvoicesPage'
 import { useSectionNavigate } from './useSectionNavigate'
 import { PFA_PATHS } from '../../config/pfaNavigation'
+import { IS_NATIVE_APP } from '../../native/platform'
 
 type DashboardRoutesProps = {
   pfaRegistrationId: string | null
@@ -83,8 +84,15 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
       {/* ── Servicii ── */}
       <Route path={rel(PFA_PATHS.services)} element={<Navigate to={PFA_PATHS.svcCars} replace />} />
       <Route path={rel(PFA_PATHS.svcCars)} element={<CarsView />} />
-      <Route path={rel(PFA_PATHS.svcSubscriptions)} element={<AbonamenteTab />} />
-      <Route path={rel(PFA_PATHS.svcIndividual)} element={<ServiciiTab />} />
+      {/* În aplicația mobilă nu se plătește nimic: paginile de abonament și servicii duc acasă. */}
+      <Route
+        path={rel(PFA_PATHS.svcSubscriptions)}
+        element={IS_NATIVE_APP ? <Navigate to={PFA_PATHS.home} replace /> : <AbonamenteTab />}
+      />
+      <Route
+        path={rel(PFA_PATHS.svcIndividual)}
+        element={IS_NATIVE_APP ? <Navigate to={PFA_PATHS.home} replace /> : <ServiciiTab />}
+      />
       <Route path={rel(PFA_PATHS.svcInsurance)} element={<InsuranceTab />} />
 
       {/* ── Suport, Profil ── */}

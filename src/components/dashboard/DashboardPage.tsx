@@ -11,6 +11,7 @@ import { stripeService } from '../../services/stripe.service'
 import { canAccessDashboard, resolveClientPath } from '../../utils/clientOnboarding'
 import { useRecurringDocumentationReminder } from '../../hooks/useRecurringDocumentationReminder'
 import { LEGACY_SECTION_ROUTES, PFA_NAV_CONFIG, PFA_PATHS } from '../../config/pfaNavigation'
+import { IS_NATIVE_APP, nativeUnavailablePath } from '../../native/platform'
 
 import { Box, CircularProgress, Snackbar, Alert } from '@mui/material'
 
@@ -79,14 +80,15 @@ export default function DashboardPage() {
           sub?.onboardingSectionsValidated === true &&
           (justSubscribed || canAccessDashboard(sub))
         if (!allowed) {
-          navigate(resolveClientPath(sub), { replace: true })
+          // În aplicație nu există onboarding sau plată spre care să trimitem.
+          navigate(IS_NATIVE_APP ? '/app' : resolveClientPath(sub), { replace: true })
           return
         }
         setPfaStatus(summary.pfaStatus)
         setPfaRegistrationId(summary.pfaRegistrationId ?? null)
       } catch {
         // Fail-closed: dacă nu putem verifica dreptul de acces, nu arătăm panelul.
-        navigate('/onboarding', { replace: true })
+        navigate(IS_NATIVE_APP ? nativeUnavailablePath('eroare') : '/onboarding', { replace: true })
       }
     }
     void boot()

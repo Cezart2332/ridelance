@@ -37,3 +37,6 @@ stripe-example/
 # Certificatul mTLS pentru SmartAccounts (open banking) — cheie privată, necriptată.
 # `*.pem` de mai sus nu prinde `.key`, iar folderul vine cu el de la furnizor.
 openbanking/
+
+# Aplicația mobilă: build-ul web copiat în proiectele native
+dist-native

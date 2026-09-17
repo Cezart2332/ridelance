@@ -1,3 +1,4 @@
+import { NATIVE_CLIENT_HEADERS, clearRefreshToken, storeRefreshToken } from '../native/nativeSession'
 import axios from 'axios'
 import { store } from '../store/store'
 import { setCredentials, clearCredentials, startImpersonation } from '../store/authSlice'
@@ -20,9 +21,12 @@ export const authService = {
       accessToken: string
       role: string
       userId: string
-    }>('/users/login', { email, password })
+      refreshToken?: string
+    }>('/users/login', { email, password }, { headers: NATIVE_CLIENT_HEADERS })
 
     const { accessToken, role, userId } = response.data
+    // Aplicația mobilă nu primește cookie: păstrează ea tokenul de refresh.
+    await storeRefreshToken(response.data.refreshToken)
 
     // Store in Redux (in memory only — never localStorage)
     store.dispatch(setCredentials({ accessToken, role, userId }))
@@ -66,6 +70,7 @@ export const authService = {
     // Clear Redux state immediately so the UI reacts instantly
     store.dispatch(clearCredentials())
     clearNotificationPromptSession(userId)
+    await clearRefreshToken()
     // Tell the backend to invalidate the refresh token cookie
     try {
       await authAxios.post('/users/logout', {}, {

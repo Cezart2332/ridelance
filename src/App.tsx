@@ -19,6 +19,8 @@ import RoleRedirect from './components/auth/RoleRedirect'
 import { SRL_ROOT } from './config/srlNavigation'
 import { DocumentViewerHost } from './components/common/documentViewerHost'
 import { SignDocumentPage } from './pages/SignDocumentPage'
+import { IS_NATIVE_APP } from './native/platform'
+import { NativeApp } from './native/NativeApp'
 
 /**
  * Ruta de dinainte de mutarea dashboard-ului SRL sub `/app`. Păstrează query string-ul:
@@ -76,6 +78,9 @@ const OnboardingSubscriptionsPage = lazyWithRetry(
 )
 
 function App() {
+  // Aplicația mobilă: doar autentificarea și dashboardurile PFA/SRL (vezi `native/platform.ts`).
+  if (IS_NATIVE_APP) return <NativeApp />
+
   return (
     <>
       <ScrollToTop />
