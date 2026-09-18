@@ -34,7 +34,8 @@ export const BCR_GEORGE_MESSAGE =
  * dacă `url` se schimbă, `qrImage` trebuie înlocuit în aceeași modificare.
  */
 export const BCR_ACCOUNT = {
-  url: 'https://george.bcr.ro/business-onboarding-start/?entity=0785&productId=GeorgeBusinessAccount&productId=GeorgeBusiness&channelType=gboPartner',
+  // Linkul de partener, cu RIDElance ca etichetă de canal. Codul QR de mai jos îl conține deja pe acesta.
+  url: 'https://george.bcr.ro/business-onboarding-start/?entity=0785&productId=GeorgeBusinessAccount&productId=GeorgeBusiness&channelType=gboPartnerWeb&channelLabel=RIDElance',
   qrImage: '/codqrbcr.jpeg',
   qrLabel: 'Scanează pentru a deschide contul de pe telefon',
   ctaLabel: 'Deschide cont la BCR',

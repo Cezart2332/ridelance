@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  Accordion, AccordionDetails, AccordionSummary, Button,
+  Button,
   Alert, CircularProgress, Divider, Paper, Stack, TextField, Typography,
 } from '@mui/material'
-import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 import { Link as RouterLink } from 'react-router-dom'
 
 
-import { dashboardFaqItems } from '../dashboardData'
+import { FaqAccordion } from '../../home/FaqSection'
+import type { FaqItem } from '../../../data/faq'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme'
 import { chatService, type ChatMessageDto } from '../../../services/chat.service'
 import { getChatConnection, startChatConnection, stopChatConnection } from '../../../lib/signalr'
@@ -26,9 +26,11 @@ interface SupportChatTabProps {
    * pagină, nu o promisiune care duce într-o rută inexistentă.
    */
   accountantChatPath?: string
+  /** Întrebările frecvente ale dashboardului: altele la PFA, altele la SRL. */
+  faq?: FaqItem[]
 }
 
-export function SupportChatTab({ accountantChatPath }: SupportChatTabProps) {
+export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabProps) {
   const [roomId, setRoomId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessageDto[]>([])
   const [chatMessage, setChatMessage] = useState('')
@@ -126,26 +128,12 @@ export function SupportChatTab({ accountantChatPath }: SupportChatTabProps) {
           boxShadow: DASHBOARD_TOKENS.shadow.sm,
         }}
       >
-        <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2 }}>Întrebări Frecvente</Typography>
-        {dashboardFaqItems.map((item) => (
-          <Accordion
-            key={item.title}
-            disableGutters
-            elevation={0}
-            sx={{
-              borderBottom: `1px solid ${DASHBOARD_TOKENS.border}`,
-              '&:before': { display: 'none' },
-              backgroundColor: 'transparent',
-            }}
-          >
-            <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-              <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700 }}>{item.title}</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, lineHeight: 1.7 }}>{item.text}</Typography>
-            </AccordionDetails>
-          </Accordion>
-        ))}
+        {faq.length > 0 && (
+          <>
+            <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: 2 }}>Întrebări frecvente</Typography>
+            <FaqAccordion items={faq} dense idPrefix="support-faq" />
+          </>
+        )}
 
         <Divider sx={{ my: 2 }} />
 

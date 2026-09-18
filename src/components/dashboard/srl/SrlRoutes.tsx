@@ -4,6 +4,7 @@ import { SRL_LEGACY_ACCOUNTING_SEGMENT, SRL_PATHS } from '../../../config/srlNav
 import { BankTab } from '../sections/BankTab'
 import { BeneficiiTab } from '../sections/BeneficiiTab'
 import { SupportChatTab } from '../sections/SupportChatTab'
+import { SRL_DASHBOARD_FAQ } from '../../../data/faq'
 import { InvoicesPage } from '../invoices/InvoicesPage'
 import { AddCarWizard } from '../addCar/AddCarWizard'
 import { SrlCompanyDocumentsPage } from './pages/SrlCompanyDocumentsPage'
@@ -87,7 +88,7 @@ export function SrlRoutes() {
       <Route path={rel(SRL_PATHS.connections)} element={<SrlConnectionsPage />} />
       <Route path={rel(SRL_PATHS.benefits)} element={<BeneficiiTab />} />
       {/* SRL-ul nu are contabil în platformă, deci trimiterea către chatul lui nu se afișează. */}
-      <Route path={rel(SRL_PATHS.support)} element={<SupportChatTab />} />
+      <Route path={rel(SRL_PATHS.support)} element={<SupportChatTab faq={SRL_DASHBOARD_FAQ} />} />
 
       <Route path={rel(SRL_PATHS.settings)} element={<SrlSettingsPage />} />
 

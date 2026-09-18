@@ -4,7 +4,7 @@ import { alpha } from '@mui/material/styles'
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
 
 import { TOKENS } from '../../constants/tokens'
-import { HOME_FAQ } from '../../data/faq'
+import { HOME_FAQ, type FaqItem as FaqEntry } from '../../data/faq'
 import questionSticker from '../../assets/Stickers/character 3.png'
 
 /**
@@ -24,9 +24,6 @@ interface FaqSectionProps {
 }
 
 export function FaqSection({ title = 'Întrebări frecvente' }: FaqSectionProps) {
-  // Prima întrebare e deschisă, ca în model.
-  const [open, setOpen] = useState<number | null>(0)
-
   return (
     <Box component="section" aria-labelledby="faq-title" sx={{ mt: { xs: 8, md: 12 } }}>
       <Container maxWidth="lg">
@@ -82,38 +79,56 @@ export function FaqSection({ title = 'Întrebări frecvente' }: FaqSectionProps)
             />
           </Box>
 
-          <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0 }}>
-            {HOME_FAQ.map((item, index) => (
-              <FaqItem
-                key={item.q}
-                index={index}
-                question={item.q}
-                answer={item.a}
-                isOpen={open === index}
-                onToggle={() => setOpen((current) => (current === index ? null : index))}
-              />
-            ))}
-          </Box>
+          <FaqAccordion items={HOME_FAQ} />
         </Box>
       </Container>
     </Box>
   )
 }
 
+/**
+ * Lista de întrebări, cu mișcarea din model: una deschisă odată, răspunsul coboară lin.
+ *
+ * `dense` e varianta din dashboard: aceeași formă, dar cu umbre mici și spații strânse — acolo
+ * lista stă printre alte panouri, nu singură pe o secțiune de pagină.
+ */
+export function FaqAccordion({ items, dense = false, idPrefix = 'faq' }: { items: FaqEntry[]; dense?: boolean; idPrefix?: string }) {
+  // Prima întrebare e deschisă, ca în model.
+  const [open, setOpen] = useState<number | null>(0)
+
+  return (
+    <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0 }}>
+      {items.map((item, index) => (
+        <FaqItem
+          key={item.q}
+          id={`${idPrefix}-answer-${index}`}
+          question={item.q}
+          answer={item.a}
+          dense={dense}
+          isOpen={open === index}
+          onToggle={() => setOpen((current) => (current === index ? null : index))}
+        />
+      ))}
+    </Box>
+  )
+}
+
 function FaqItem({
-  index,
+  id,
   question,
   answer,
+  dense,
   isOpen,
   onToggle,
 }: {
-  index: number
+  id: string
   question: string
   answer: string
+  dense: boolean
   isOpen: boolean
   onToggle: () => void
 }) {
-  const answerId = `faq-answer-${index}`
+  const answerId = id
 
   return (
     <Box
@@ -123,10 +138,16 @@ function FaqItem({
         borderRadius: `${TOKENS.radius.lg}px`,
         overflow: 'hidden',
         // Umbra mare și difuză din model, trasă spre stânga: cartonașele par să plutească.
-        boxShadow: isOpen ? '-10px 0 60px rgba(16, 60, 90, 0.12)' : '-10px 0 60px rgba(0, 0, 0, 0.07)',
-        border: `1px solid ${isOpen ? alpha(TOKENS.primary, 0.35) : 'transparent'}`,
+        boxShadow: dense
+          ? isOpen
+            ? '0 10px 28px rgba(16, 60, 90, 0.10)'
+            : '0 2px 10px rgba(0, 0, 0, 0.04)'
+          : isOpen
+            ? '-10px 0 60px rgba(16, 60, 90, 0.12)'
+            : '-10px 0 60px rgba(0, 0, 0, 0.07)',
+        border: `1px solid ${isOpen ? alpha(TOKENS.primary, 0.35) : dense ? TOKENS.border : 'transparent'}`,
         transition: `box-shadow .5s ${EASE}, border-color .5s ${EASE}`,
-        '& + &': { mt: { xs: 1.5, md: 2.5 } },
+        '& + &': { mt: dense ? 1.25 : { xs: 1.5, md: 2.5 } },
         '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
       }}
     >
@@ -143,10 +164,10 @@ function FaqItem({
           justifyContent: 'space-between',
           gap: 2,
           textAlign: 'left',
-          px: { xs: 2.25, md: 3.1 },
-          py: { xs: 1.75, md: 2.1 },
+          px: dense ? { xs: 2, md: 2.5 } : { xs: 2.25, md: 3.1 },
+          py: dense ? 1.5 : { xs: 1.75, md: 2.1 },
           fontFamily: 'inherit',
-          fontSize: { xs: '0.98rem', md: '1.1rem' },
+          fontSize: dense ? '0.95rem' : { xs: '0.98rem', md: '1.1rem' },
           fontWeight: 700,
           lineHeight: 1.45,
           color: isOpen ? TOKENS.primaryStrong : TOKENS.ink,
@@ -188,11 +209,11 @@ function FaqItem({
         <Typography
           id={answerId}
           sx={{
-            px: { xs: 2.25, md: 3.1 },
+            px: dense ? { xs: 2, md: 2.5 } : { xs: 2.25, md: 3.1 },
             pt: 0.5,
-            pb: { xs: 2.25, md: 3.5 },
+            pb: dense ? 2 : { xs: 2.25, md: 3.5 },
             color: TOKENS.textMuted,
-            fontSize: { xs: '0.92rem', md: '0.98rem' },
+            fontSize: dense ? '0.9rem' : { xs: '0.92rem', md: '0.98rem' },
             lineHeight: 1.75,
           }}
         >

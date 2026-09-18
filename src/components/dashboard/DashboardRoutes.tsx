@@ -21,6 +21,7 @@ import { SupportChatTab } from './sections/SupportChatTab'
 import { InvoicesPage } from './invoices/InvoicesPage'
 import { useSectionNavigate } from './useSectionNavigate'
 import { PFA_PATHS } from '../../config/pfaNavigation'
+import { PFA_DASHBOARD_FAQ } from '../../data/faq'
 import { IS_NATIVE_APP } from '../../native/platform'
 
 type DashboardRoutesProps = {
@@ -96,7 +97,7 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
       <Route path={rel(PFA_PATHS.svcInsurance)} element={<InsuranceTab />} />
 
       {/* ── Suport, Profil ── */}
-      <Route path={rel(PFA_PATHS.support)} element={<SupportChatTab accountantChatPath={PFA_PATHS.accountantChat} />} />
+      <Route path={rel(PFA_PATHS.support)} element={<SupportChatTab accountantChatPath={PFA_PATHS.accountantChat} faq={PFA_DASHBOARD_FAQ} />} />
       <Route path={rel(PFA_PATHS.profile)} element={<ProfileSection />} />
       {/* Istoricul plăților e o secțiune în Profil; calea proprie rămâne doar ca punct de
           aterizare pentru notificările deja trimise. */}
