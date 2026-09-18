@@ -158,7 +158,7 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
             sx={{
               display: 'grid',
               gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-              gap: 1.75,
+              ...AUTH_DENSITY.betweenFields,
               alignItems: 'start',
             }}
           >

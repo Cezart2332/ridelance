@@ -62,7 +62,7 @@ export function AuthSlider() {
         overflow: 'hidden',
         borderRadius: `${TOKENS.radius.xl}px`,
         background: SLIDE_BACKGROUND,
-        minHeight: 560,
+        minHeight: 'var(--auth-slider-min-height, 560px)',
         height: '100%',
       }}
     >

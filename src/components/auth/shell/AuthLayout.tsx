@@ -31,11 +31,39 @@ export function AuthLayout({ children, accountForm = false }: AuthLayoutProps) {
       <Box
         sx={{
           minHeight: '100dvh',
+          ...(accountForm && {
+            '--auth-header-gap': '16px',
+            '--auth-field-gap': '10px',
+            '--auth-meta-gap': '12px',
+            '--auth-action-gap': '16px',
+            '--auth-footer-gap': '12px',
+            '--auth-footer-padding': '8px',
+            '--auth-input-padding': '10px',
+            '--auth-button-height': '44px',
+            '--auth-title-size': '28px',
+            '--auth-subtitle-gap': '8px',
+            '--auth-slider-min-height': '0px',
+            '@media (max-height: 700px)': {
+              '--auth-header-gap': '12px',
+              '--auth-field-gap': '8px',
+              '--auth-meta-gap': '8px',
+              '--auth-action-gap': '12px',
+              '--auth-title-size': '24px',
+              '--auth-subtitle-gap': '4px',
+              '--auth-form-padding': '8px',
+            },
+            '@media (max-height: 650px)': {
+              '--auth-header-gap': '8px',
+              '--auth-field-gap': '6px',
+              '--auth-form-padding': '4px',
+              '--auth-trust-display': 'none',
+            },
+          }),
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           px: { xs: 2, sm: 3, md: 4 },
-          py: { xs: 3, md: 4 },
+          py: accountForm ? { xs: 1, md: 2 } : { xs: 3, md: 4 },
           color: AUTH_COLORS.text,
           backgroundColor: AUTH_COLORS.page,
           backgroundImage: `radial-gradient(900px 520px at 50% 0%, ${alpha(TOKENS.primary, 0.22)} 0%, transparent 70%)`,
@@ -46,17 +74,17 @@ export function AuthLayout({ children, accountForm = false }: AuthLayoutProps) {
             component="img"
             src={logoWithMotto}
             alt="RIDElance — Independent. Dar nu singur."
-            sx={{ width: { xs: 190, md: 240 }, height: 'auto', display: 'block' }}
+            sx={{ width: accountForm ? { xs: 120, md: 160 } : { xs: 190, md: 240 }, height: 'auto', display: 'block' }}
           />
         </Link>
 
         {/* `my: auto` în loc de centrare prin flex: dacă formularul e mai înalt decât ecranul,
             centrarea ar tăia partea de sus fără să o poți derula. */}
-        <Box sx={{ width: '100%', maxWidth: 1120, my: 'auto', pt: { xs: 3, md: 4 } }}>
+        <Box sx={{ width: '100%', maxWidth: accountForm ? 1000 : 1120, my: 'auto', pt: accountForm ? 1.5 : { xs: 3, md: 4 } }}>
           <Box
             sx={{
               display: 'grid',
-              minHeight: accountForm ? 700 : undefined,
+              minHeight: accountForm ? { xs: 'min(584px, calc(100svh - 112px))', sm: 'min(540px, calc(100svh - 112px))' } : undefined,
               gridTemplateColumns: { xs: '1fr', md: IS_NATIVE_APP ? '1fr' : '1fr 1fr' },
               gap: { md: 1 },
               p: { xs: 0, md: 1.5 },
@@ -74,8 +102,8 @@ export function AuthLayout({ children, accountForm = false }: AuthLayoutProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                px: { xs: 2.5, sm: 4, md: 5, lg: 7 },
-                py: { xs: 4, md: 5 },
+                px: accountForm ? { xs: 2, sm: 3, md: 4 } : { xs: 2.5, sm: 4, md: 5, lg: 7 },
+                py: accountForm ? { xs: 'var(--auth-form-padding, 12px)', sm: 'var(--auth-form-padding, 16px)' } : { xs: 4, md: 5 },
               }}
             >
               <Box sx={{ width: '100%', maxWidth: AUTH_FORM_CONTENT }}>{children}</Box>
@@ -84,7 +112,7 @@ export function AuthLayout({ children, accountForm = false }: AuthLayoutProps) {
 
           {/* În aplicația mobilă nu există site spre care să te întorci. */}
           {!showSlider && !IS_NATIVE_APP && (
-            <Box sx={{ mt: 2.5, textAlign: 'center' }}>
+            <Box sx={{ mt: accountForm ? 1 : 2.5, textAlign: 'center' }}>
               <Link
                 component={RouterLink}
                 to="/"

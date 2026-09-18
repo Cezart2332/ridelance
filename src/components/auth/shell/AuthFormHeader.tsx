@@ -23,7 +23,7 @@ export function AuthFormHeader({ title, subtitle, error }: AuthFormHeaderProps) 
       <Typography
         component="h1"
         sx={{
-          fontSize: { xs: '1.9rem', md: '2.35rem' },
+          fontSize: { xs: 'var(--auth-title-size, 1.9rem)', md: 'var(--auth-title-size, 2.35rem)' },
           fontWeight: 500,
           lineHeight: 1.15,
           letterSpacing: '-0.02em',
@@ -33,7 +33,7 @@ export function AuthFormHeader({ title, subtitle, error }: AuthFormHeaderProps) 
         {title}
       </Typography>
 
-      <Typography variant="body2" component="div" sx={{ mt: 1.25, color: AUTH_COLORS.textMuted }}>
+      <Typography variant="body2" component="div" sx={{ mt: 'var(--auth-subtitle-gap, 10px)', color: AUTH_COLORS.textMuted }}>
         {subtitle}
       </Typography>
     </Box>

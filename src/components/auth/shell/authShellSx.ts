@@ -45,7 +45,7 @@ export const authInputSx: SxProps<Theme> = {
     },
   },
   '& .MuiOutlinedInput-input': {
-    py: 1.5,
+    py: 'var(--auth-input-padding, 12px)',
     fontSize: '1rem',
   },
   '& .MuiInputBase-input::placeholder': {
@@ -58,7 +58,7 @@ export const authInputSx: SxProps<Theme> = {
 
 /** Butonul principal: plin, albastru, pe toată lățimea. */
 export const authPrimaryButtonSx = {
-  minHeight: 48,
+  minHeight: 'var(--auth-button-height, 48px)',
   borderRadius: `${TOKENS.radius.md}px`,
   backgroundColor: AUTH_COLORS.primary,
   color: AUTH_COLORS.onPrimary,
@@ -71,11 +71,11 @@ export const authPrimaryButtonSx = {
 
 /** Spațierea formularului, într-un singur loc. */
 export const AUTH_DENSITY = {
-  headerToFields: { mb: 3.5 },
-  betweenFields: { gap: 1.75 },
-  fieldsToMeta: { mt: 2 },
-  metaToCta: { mt: 3 },
-  ctaToFooter: { mt: 3 },
+  headerToFields: { mb: 'var(--auth-header-gap, 28px)' },
+  betweenFields: { gap: 'var(--auth-field-gap, 14px)' },
+  fieldsToMeta: { mt: 'var(--auth-meta-gap, 16px)' },
+  metaToCta: { mt: 'var(--auth-action-gap, 24px)' },
+  ctaToFooter: { mt: 'var(--auth-footer-gap, 24px)' },
 } satisfies Record<string, SxProps<Theme>>
 
 /** Lățimea conținutului formularului, în jumătatea dreaptă a cardului. */

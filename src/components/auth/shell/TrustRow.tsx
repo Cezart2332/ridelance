@@ -18,7 +18,8 @@ export function TrustRow() {
       spacing={2}
       sx={{
         ...AUTH_DENSITY.ctaToFooter,
-        pt: 2.5,
+        display: 'var(--auth-trust-display, flex)',
+        pt: 'var(--auth-footer-padding, 20px)',
         borderTop: `1px solid ${AUTH_COLORS.border}`,
         flexWrap: 'wrap',
         justifyContent: 'center',
