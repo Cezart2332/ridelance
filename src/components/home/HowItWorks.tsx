@@ -180,9 +180,8 @@ export function HowItWorks() {
             display: { xs: 'flex', sm: 'grid' },
             flexDirection: 'column',
             gridTemplateColumns: { sm: 'repeat(3, minmax(0, 1fr))', lg: 'repeat(5, minmax(0, 1fr))' },
-            gridAutoRows: { sm: '1fr' },
             gap: { xs: 1.25, sm: 1.75 },
-            alignItems: 'stretch',
+            alignItems: { xs: 'stretch', sm: 'start' },
           }}
         >
           {STEPS.map((step, index) => (
