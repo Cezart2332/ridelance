@@ -601,3 +601,53 @@ test.describe('pasul fiscal — banca conectată', () => {
     await page.screenshot({ path: `${dir}/onboarding-banca-conectata.png`, fullPage: true })
   })
 })
+
+test.describe('pasul 2 — datele de contact', () => {
+  /**
+   * Telefonul e cerut la crearea contului, deci ecranul „La ce număr te putem suna?” îl propune
+   * deja. Dosarul PFA se creează abia la salvarea lui, așa că un „Continuă” direct, fără nicio
+   * modificare, trebuie să-l trimită la server — altfel dosarul nu s-ar mai crea deloc.
+   */
+  test('telefonul contului e precompletat și un „Continuă” direct creează dosarul', async ({ page }) => {
+    const noRegistration = {
+      ...onboardingState,
+      pfaRegistrationId: null,
+      pfaStatus: null,
+      registrationType: null,
+      contactPhone: '0722123456',
+      steps: steps.map((step) =>
+        step.key === 'pfa' ? { ...step, status: 'InProgress', state: 'in_progress', userPartDone: false } : step,
+      ),
+    }
+    await stubBackend(page, [], { state: noRegistration })
+
+    const created: unknown[] = []
+    await page.route(`${API}/pfa-registrations`, async (route) => {
+      const origin = (await route.request().headerValue('origin')) ?? '*'
+      const headers = {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Headers': 'authorization,content-type',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+      }
+      if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers })
+      created.push(route.request().postDataJSON())
+      return route.fulfill({ status: 200, headers, contentType: 'application/json', body: '"reg-1"' })
+    })
+
+    await page.goto('/onboarding/pfa', { waitUntil: 'networkidle' })
+    await page.getByRole('radio').filter({ hasText: 'Da, am PFA' }).click()
+    const contactTitle = page.getByRole('heading', { name: 'La ce număr te putem suna?' })
+    // Alegerea avansează singură, după o scurtă pauză.
+    await expect(contactTitle).toBeVisible()
+
+    const phone = page.getByLabel('Telefon')
+    await expect(phone).toHaveValue('0722123456')
+
+    // Tranziția dintre ecrane mută butonul câteva sute de ms; așteptăm să se oprească.
+    await page.waitForTimeout(800)
+    await page.getByRole('button', { name: /Continuă/ }).first().click({ force: true })
+    await expect.poll(() => created.length).toBe(1)
+    expect(created[0]).toMatchObject({ registrationType: 'AmPfa', phone: '0722123456' })
+  })
+})

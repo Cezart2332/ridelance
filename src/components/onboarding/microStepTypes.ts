@@ -146,6 +146,13 @@ export interface MicroStepDef {
    */
   persist?: (values: Record<string, string>, c: MicroStepContext) => Promise<unknown>
 
+  /**
+   * „Continuă” salvează și valorile precompletate, nu doar ce s-a tastat. Implicit o precompletare
+   * nu pleacă la server până nu e atinsă; pe ecranele unde salvarea creează ceva (dosarul PFA, la
+   * datele de contact), un „Continuă” direct pe valoarea propusă n-ar fi salvat nimic.
+   */
+  persistPrefilledOnContinue?: boolean
+
   /** `kind === 'action'` — butonul ESTE ecranul. */
   action?: {
     label: string

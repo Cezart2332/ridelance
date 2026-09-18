@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 
 import { useAutosave } from '../../../hooks/useAutosave'
 import { usePublishAutosave } from '../autosaveStore'
@@ -40,6 +40,12 @@ export function MicroTextStep({ def, context }: { def: MicroStepDef; context: Mi
   const fields = useMemo(() => def.fields ?? [], [def])
 
   /**
+   * O precompletare încă nesalvată. Cu `persistPrefilledOnContinue`, „Continuă” o trimite la server
+   * ca și cum ar fi fost tastată; o editare o face oricum `schedule`, deci steagul cade.
+   */
+  const prefillPendingRef = useRef(false)
+
+  /**
    * Precompletările: valoarea inițială se scrie o dată în răspunsuri, nu doar în input.
    * Altfel ecranele următoare (`oblio_conectare` citește emailul de aici) ar vedea un câmp gol
    * deși pe ecran scria ceva.
@@ -50,7 +56,10 @@ export function MicroTextStep({ def, context }: { def: MicroStepDef; context: Mi
       if (answers[`${def.id}.${field.key}`] !== undefined) continue
 
       const initial = field.initialValue(context)
-      if (initial !== '') answer(`${def.id}.${field.key}`, initial)
+      if (initial !== '') {
+        answer(`${def.id}.${field.key}`, initial)
+        prefillPendingRef.current = true
+      }
     }
     // Rulează la schimbarea ecranului sau când sosesc datele serverului; `answers` e citit
     // înăuntru ca gardă de idempotență, deci nu trebuie să retrigereze efectul.
@@ -72,9 +81,24 @@ export function MicroTextStep({ def, context }: { def: MicroStepDef; context: Mi
     storageKey: `onboarding.micro.${def.id}`,
   })
 
-  usePublishAutosave(save)
+  const valuesRef = useRef(values)
+  useEffect(() => {
+    valuesRef.current = values
+  }, [values])
+
+  const { flush, schedule } = save
+  const flushWithPrefill = useCallback(async () => {
+    if (def.persistPrefilledOnContinue && def.persist && prefillPendingRef.current) {
+      prefillPendingRef.current = false
+      schedule(valuesRef.current)
+    }
+    return flush()
+  }, [def, flush, schedule])
+
+  usePublishAutosave({ ...save, flush: flushWithPrefill })
 
   const set = (field: FieldDef, next: string) => {
+    prefillPendingRef.current = false
     answer(`${def.id}.${field.key}`, next)
     if (def.persist) save.schedule({ ...values, [field.key]: next })
   }

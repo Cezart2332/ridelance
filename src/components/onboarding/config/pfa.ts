@@ -49,12 +49,6 @@ const answeredNo = (c: MicroStepContext) =>
 const laValidare = (c: MicroStepContext) =>
   c.state?.steps.find((s) => s.key === 'pfa')?.state === 'pending_admin'
 
-/** Textul din `answers` pentru un câmp al unui ecran `text`. */
-const field = (c: MicroStepContext, stepId: string, key: string): string => {
-  const value = c.answers[`${stepId}.${key}`]
-  return typeof value === 'string' ? value.trim() : ''
-}
-
 export const pfaMicroSteps: MicroStepDef[] = [
   {
     /*
@@ -106,7 +100,18 @@ export const pfaMicroSteps: MicroStepDef[] = [
     // Doar telefonul. Numele îl citim din buletinul încărcat la pasul de eligibilitate, deci
     // cerut și aici ar fi a doua sursă pentru aceeași informație — exact ce desființează fluxul
     // document-first. Vezi `ExtractedFieldApplier.ApplyToUserAsync`.
-    fields: [{ key: 'telefon', label: 'Telefon', type: 'tel', placeholder: '07XX XXX XXX' }],
+    fields: [
+      {
+        key: 'telefon',
+        label: 'Telefon',
+        type: 'tel',
+        placeholder: '07XX XXX XXX',
+        // Numărul dat la crearea contului: omul îl confirmă sau îl schimbă, nu-l scrie a doua oară.
+        initialValue: (c) => c.state?.contactPhone ?? '',
+      },
+    ],
+    // Salvarea creează dosarul PFA: un „Continuă” direct pe numărul precompletat trebuie să-l creeze.
+    persistPrefilledOnContinue: true,
     // Dosarul se creează cu datele de contact; documentele se încarcă pe el, la ecranele următoare.
     persist: async (values) => {
       if (!values.telefon?.trim()) return
@@ -117,8 +122,9 @@ export const pfaMicroSteps: MicroStepDef[] = [
       })
     },
     visibleWhen: answeredYes,
-    isDone: (c) =>
-      c.state?.pfaRegistrationId != null || field(c, 'pfa_contact', 'telefon') !== '',
+    // Doar dosarul creat închide ecranul. Cu telefonul precompletat, câmpul e plin din prima clipă —
+    // după el, ecranul ar fi părut rezolvat fără ca dosarul să existe.
+    isDone: (c) => c.state?.pfaRegistrationId != null,
   },
   {
     id: 'certificat_inregistrare',

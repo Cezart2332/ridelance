@@ -1,4 +1,3 @@
-import docs from '../assets/docs.svg'
 import mol from '../assets/partners/mol.png'
 import asigurari from '../assets/partners/asigurari.png'
 import consulto from '../assets/partners/consulto.png'
@@ -9,9 +8,6 @@ import smartfintech from '../assets/partners/smartfintech.png'
 import fiscallink from '../assets/partners/Fiscallink.svg'
 import constalaris from '../assets/partners/constalaris.png'
 import { sortByPartnerOrder } from './benefits'
-import character2 from '../assets/Stickers/character 2.png'
-import scene1 from '../assets/Stickers/scene 1.png'
-import scene4 from '../assets/Stickers/scene 4.png'
 import checkSvg from '../assets/SVG/2- Regular/check-circle.svg'
 import starSvg from '../assets/SVG/2- Regular/star.svg'
 import desktop from '../assets/SVG/2- Regular/desktop.svg'
@@ -74,29 +70,6 @@ export const homeSec2 = [
   'Contabilitate completă pentru PFA ',
   'Dashboard pentru încărcarea cheltuielilor și documentelor ',
   'Acces la mașini de închiriat',
-]
-
-export const homeSec3 = [
-  {
-    title: '1. Alegi varianta potrivita',
-    text: 'Abonament sau serviciu individual, în funcție de ce ai nevoie.',
-    image: scene1,
-  },
-  {
-    title: '2. Completezi datele necesare',
-    text: 'Încarci informațiile și documentele direct în platformă.',
-    image: docs,
-  },
-  {
-    title: '3. Procesul este preluat mai departe',
-    text: 'Noi și partenerii noștri gestionăm pașii necesari pentru continuarea procedurii.',
-    image: scene4,
-  },
-  {
-    title: '4. Tu te concentrezi pe activitate',
-    text: 'Mai puțin stres administrativ, mai multă claritate și organizare.',
-    image: character2,
-  },
 ]
 
 export const homeSec4 = [
@@ -207,25 +180,3 @@ export const homeSec8 = [
   'Mai puțin stres administrativ ',
 ]
 
-export const homeSec9 = [
-  {
-    q: 'Trebuie să am deja PFA?',
-    a: 'Nu. Poți alege un abonament sau serviciul individual de înființare PFA.',
-  },
-  {
-    q: 'Mă ajutați doar cu contabilitatea?',
-    a: 'Nu. RIDElance acoperă mai mult decât contabilitatea: PFA, ARR, TVA intracomunitar, conturi Fleet, SPV, facturi și alte etape importante.',
-  },
-  {
-    q: 'Pot alege doar un serviciu, fără abonament?',
-    a: 'Da. Poți solicita separat înființarea PFA sau găzduirea sediului social.',
-  },
-  {
-    q: 'Cum funcționează înființarea PFA?',
-    a: 'Completezi datele și documentele necesare în platformă, iar solicitarea este preluată și procesată de echipa RIDElance.',
-  },
-  {
-    q: 'Ce documente sunt necesare pentru găzduire sediu social?',
-    a: 'Pentru solicitarea inițială, vor fi necesare buletinul și CUI-ul PFA.',
-  },
-]

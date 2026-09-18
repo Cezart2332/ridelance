@@ -121,7 +121,11 @@ export function OnboardingRunner() {
     // nu avansa niciodată. `flush` nu trimite nimic când nu e nimic în așteptare.
     const autosave = currentAutosave()
 
-    if (def.kind === 'text' && autosave?.dirty === true && textStepIssues(def, answers, context).length === 0) {
+    // O precompletare neatinsă nu e „dirty”, dar pe ecranele cu `persistPrefilledOnContinue` tot
+    // trebuie trimisă: acolo salvarea creează ceva (dosarul PFA). `flush`-ul ecranului știe dacă mai
+    // are ce trimite.
+    const mustSave = autosave?.dirty === true || def.persistPrefilledOnContinue === true
+    if (def.kind === 'text' && autosave && mustSave && textStepIssues(def, answers, context).length === 0) {
       setSubmitting(true)
       try {
         if (!(await autosave.flush())) {

@@ -3,7 +3,7 @@ import { alpha } from '@mui/material/styles'
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
-import { homeSec9 } from '../data/constants'
+import { HOME_FAQ } from '../data/faq'
 import { pageFrameSx } from '../constants/layout'
 import logoWithMotto from '../assets/logowithmotto.svg'
 import motto from '../assets/motto.svg'
@@ -109,7 +109,7 @@ export function AboutPage() {
           <Box sx={{ width: '100%', mt: 4 }}>
             <SectionHeader title="Întrebări frecvente" />
             <Box sx={{ maxWidth: 800, mx: 'auto' }}>
-              {homeSec9.map((item, index) => (
+              {HOME_FAQ.map((item, index) => (
                 <Accordion
                   key={index}
                   elevation={0}

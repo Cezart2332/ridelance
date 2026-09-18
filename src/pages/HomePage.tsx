@@ -8,9 +8,7 @@ import { useAppSelector } from '../store/hooks'
 import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
 import {
-  homeSec3,
   homeSec6,
-  homeSec9,
   economyComparison,
   partnerLogos,
 } from '../data/constants'
@@ -26,10 +24,10 @@ import motto from '../assets/motto.svg'
 import heroSticker from '../assets/hero-sticker.png'
 import checkSvg from '../assets/SVG/2- Regular/check-circle.svg'
 import dashboard from '../assets/dashboard.png'
-import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
-import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 import { ProcessVisual } from '../components/home/ProcessVisual'
+import { HowItWorks } from '../components/home/HowItWorks'
+import { FaqSection } from '../components/home/FaqSection'
 import { CarCarousel } from '../components/home/CarCarousel'
 import { InsuranceLinksGrid, LANDING_INSURANCE_SLUGS } from '../components/insurance/InsuranceLinksGrid'
 
@@ -254,122 +252,8 @@ export function HomePage() {
       {/* ═══════ 2.5 CAROUSEL MASINI ═══════ */}
       <CarCarousel />
 
-      {/* ═══════ 3. CUM FUNCTIONEAZA ═══════ */}
-      <Box
-        sx={{
-          width: '100%',
-          mt: { xs: 8, md: 12 },
-          py: { xs: 8, md: 14 },
-          backgroundColor: TOKENS.surfaceAlt,
-          borderTop: `1px solid ${alpha(TOKENS.ink, 0.04)}`,
-          borderBottom: `1px solid ${alpha(TOKENS.ink, 0.04)}`,
-        }}
-      >
-        <Container maxWidth="xl">
-          <SectionHeader
-            title="Cum functioneaza"
-            subtitle="Simplu, clar si organizat"
-          />
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' },
-              gap: 3.5,
-              pt: { xs: 0, md: 4 },
-            }}
-          >
-            {homeSec3.map((card, index) => (
-              <Card
-                key={index}
-                elevation={0}
-                sx={{
-                  height: '100%',
-                  borderRadius: `${TOKENS.radius.xl}px`,
-                  border: `1px solid ${alpha(TOKENS.ink, 0.05)}`,
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.01)',
-                  backgroundColor: TOKENS.paper,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  transform: { md: index % 2 === 0 ? 'translateY(0)' : 'translateY(16px)' },
-                  transition: `all 0.4s cubic-bezier(0.16, 1, 0.3, 1)`,
-                  '&:hover': {
-                    transform: {
-                      xs: 'translateY(-4px)',
-                      md: index % 2 === 0 ? 'translateY(-6px)' : 'translateY(10px)',
-                    },
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.04)',
-                    borderColor: TOKENS.primaryStrong,
-                  },
-                }}
-              >
-                <CardContent
-                  sx={{
-                    p: { xs: 4, md: 4.5 },
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    gap: 2.5,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 10,
-                      right: 16,
-                      fontSize: '3.5rem',
-                      fontWeight: 900,
-                      color: alpha(TOKENS.primary, 0.12),
-                      userSelect: 'none',
-                      fontFamily: 'monospace',
-                    }}
-                  >
-                    {`0${index + 1}`}
-                  </Box>
-
-                  <Box
-                    sx={{
-                      width: 100,
-                      height: 100,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      mb: 1,
-                      zIndex: 1,
-                    }}
-                  >
-                    <Box
-                      component="img"
-                      src={card.image}
-                      sx={{
-                        maxHeight: '100%',
-                        maxWidth: '100%',
-                        objectFit: 'contain',
-                      }}
-                    />
-                  </Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 800, color: TOKENS.ink, lineHeight: 1.3, zIndex: 1 }}
-                  >
-                    {card.title}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      color: TOKENS.textMuted,
-                      fontSize: '0.92rem',
-                      lineHeight: 1.65,
-                      zIndex: 1,
-                    }}
-                  >
-                    {card.text}
-                  </Typography>
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
-        </Container>
-      </Box>
+      {/* ═══════ 3. CUM FUNCȚIONEAZĂ ═══════ */}
+      <HowItWorks />
 
       {/* ═══════ 5. ABONAMENTE ═══════ */}
       <Container maxWidth="xl" sx={{ mt: { xs: 8, md: 12 } }}>
@@ -1187,54 +1071,8 @@ export function HomePage() {
         </Container>
       </Box>
 
-      {/* ═══════ 9. Întrebări Frecvente ═══════ */}
-      <Container maxWidth="md" sx={{ mt: { xs: 8, md: 12 } }}>
-        <SectionHeader title="Întrebări Frecvente" />
-        <Box>
-          {homeSec9.map((item, index) => (
-            <Accordion
-              key={index}
-              elevation={0}
-              sx={{
-                mb: 2.2,
-                border: `1px solid ${alpha(TOKENS.border, 0.8)}`,
-                borderRadius: `${TOKENS.radius.lg}px !important`,
-                overflow: 'hidden',
-                backgroundColor: TOKENS.paper,
-                boxShadow: '0 4px 15px rgba(0,0,0,0.01)',
-                transition: `all 0.3s cubic-bezier(0.16, 1, 0.3, 1)`,
-                '&:hover': {
-                  borderColor: TOKENS.primaryStrong,
-                  boxShadow: '0 10px 28px rgba(0,0,0,0.03)',
-                },
-                '&:before': { display: 'none' },
-              }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMoreRoundedIcon sx={{ color: TOKENS.primary }} />}
-                sx={{
-                  px: 3,
-                  py: 0.8,
-                  '&.Mui-expanded': {
-                    backgroundColor: alpha(TOKENS.primary, 0.04),
-                  },
-                }}
-              >
-                <Typography
-                  sx={{ fontWeight: 700, fontSize: '1rem', color: TOKENS.ink }}
-                >
-                  {item.q}
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails sx={{ px: 3, pb: 3 }}>
-                <Typography sx={{ color: TOKENS.textMuted, lineHeight: 1.7 }}>
-                  {item.a}
-                </Typography>
-              </AccordionDetails>
-            </Accordion>
-          ))}
-        </Box>
-      </Container>
+      {/* ═══════ 9. ÎNTREBĂRI FRECVENTE ═══════ */}
+      <FaqSection />
 
       {/* ═══════ 10. CTA FINAL ═══════ */}
       <Box
