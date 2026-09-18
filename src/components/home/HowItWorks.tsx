@@ -135,8 +135,7 @@ const PAGE_BG = '#f0faff'
 const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
 export function HowItWorks() {
-  // Primul pas e deschis, ca în machetă; un singur pas deschis odată.
-  const [open, setOpen] = useState<number | null>(0)
+  const [open, setOpen] = useState<number | null>(null)
 
   return (
     <Box
@@ -181,8 +180,9 @@ export function HowItWorks() {
             display: { xs: 'flex', sm: 'grid' },
             flexDirection: 'column',
             gridTemplateColumns: { sm: 'repeat(3, minmax(0, 1fr))', lg: 'repeat(5, minmax(0, 1fr))' },
+            gridAutoRows: { sm: '1fr' },
             gap: { xs: 1.25, sm: 1.75 },
-            alignItems: 'start',
+            alignItems: 'stretch',
           }}
         >
           {STEPS.map((step, index) => (
@@ -227,6 +227,9 @@ function StepCard({
     <Box
       sx={{
         position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0,
         mt: { xs: 0, sm: '70px' },
         bgcolor: '#fff',
         border: `1px solid ${isOpen ? '#a8e3f7' : '#dceef6'}`,
@@ -293,7 +296,8 @@ function StepCard({
           pr: { xs: '44px', sm: 2.5 },
           pt: { xs: 2, sm: 1.5 },
           pb: { xs: 2, sm: 5.5 },
-          minHeight: { sm: 250 },
+          minHeight: { xs: 168, sm: 320 },
+          flexGrow: 1,
           '&:focus-visible': { outline: `3px solid #1483b1`, outlineOffset: -4 },
         }}
       >

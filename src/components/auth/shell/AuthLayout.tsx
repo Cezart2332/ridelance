@@ -10,6 +10,8 @@ import { IS_NATIVE_APP } from '../../../native/platform'
 
 interface AuthLayoutProps {
   children: ReactNode
+  /** Rezervă același spațiu pentru login și înregistrare, inclusiv pe mobil. */
+  accountForm?: boolean
 }
 
 /**
@@ -21,7 +23,7 @@ interface AuthLayoutProps {
  *
  * Folosește tema deschisă a aplicației: alb, cu albastrul platformei ca accent.
  */
-export function AuthLayout({ children }: AuthLayoutProps) {
+export function AuthLayout({ children, accountForm = false }: AuthLayoutProps) {
   const theme = useTheme()
   const showSlider = useMediaQuery(theme.breakpoints.up('md'))
 
@@ -54,6 +56,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           <Box
             sx={{
               display: 'grid',
+              minHeight: accountForm ? 700 : undefined,
               gridTemplateColumns: { xs: '1fr', md: IS_NATIVE_APP ? '1fr' : '1fr 1fr' },
               gap: { md: 1 },
               p: { xs: 0, md: 1.5 },

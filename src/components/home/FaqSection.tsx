@@ -93,11 +93,10 @@ export function FaqSection({ title = 'Întrebări frecvente' }: FaqSectionProps)
  * lista stă printre alte panouri, nu singură pe o secțiune de pagină.
  */
 export function FaqAccordion({ items, dense = false, idPrefix = 'faq' }: { items: FaqEntry[]; dense?: boolean; idPrefix?: string }) {
-  // Prima întrebare e deschisă, ca în model.
-  const [open, setOpen] = useState<number | null>(0)
+  const [open, setOpen] = useState<number | null>(null)
 
   return (
-    <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0 }}>
+    <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0, width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: dense ? 1.25 : { xs: 1.5, md: 2.5 } }}>
       {items.map((item, index) => (
         <FaqItem
           key={item.q}
@@ -147,7 +146,7 @@ function FaqItem({
             : '-10px 0 60px rgba(0, 0, 0, 0.07)',
         border: `1px solid ${isOpen ? alpha(TOKENS.primary, 0.35) : dense ? TOKENS.border : 'transparent'}`,
         transition: `box-shadow .5s ${EASE}, border-color .5s ${EASE}`,
-        '& + &': { mt: dense ? 1.25 : { xs: 1.5, md: 2.5 } },
+        flexShrink: 0,
         '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
       }}
     >

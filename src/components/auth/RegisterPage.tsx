@@ -46,8 +46,10 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
   const [serverError, setServerError] = useState<AuthErrorInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const touch = (field: keyof typeof EMPTY_TOUCHED) => () =>
-    setTouched((current) => ({ ...current, [field]: true }))
+  const touch = (field: 'email' | 'phone' | 'password' | 'confirmation') => () => {
+    const values = { email: email.trim(), phone: phone.trim(), password, confirmation }
+    setTouched((current) => ({ ...current, [field]: current[field] || Boolean(values[field]) }))
+  }
 
   const emailError = touched.email ? validateEmail(email) : null
   const phoneError = touched.phone ? validatePhone(phone) : null
@@ -94,7 +96,7 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout accountForm>
       <AuthFormHeader
         title="Creează-ți contul"
         subtitle={<AuthSwitchLink prompt="Ai deja un cont?" linkLabel="Autentifică-te" to={ROUTES.login} />}

@@ -13,6 +13,8 @@ import appStoreBadge from '../../assets/appstore.webp'
 import googlePlayBadge from '../../assets/googleplay.png'
 import anpcSal from '../../assets/sal.jpg'
 import anpcSol from '../../assets/sol.jpg'
+// Wordmark oficial, varianta albă: https://stripe.com/newsroom/information
+import stripeLogo from '../../assets/stripe-wordmark-white.svg'
 
 const CONTACT_EMAIL = 'contact@ridelance.ro'
 
@@ -452,6 +454,31 @@ export function SiteFooter() {
               </Box>
             ))}
           </Stack>
+          <Box
+            component="a"
+            href="https://stripe.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Plăți securizate prin Stripe"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: { xs: 'center', sm: 'flex-start' },
+              gap: 1.5,
+              mt: 3,
+              py: 1,
+              width: 'fit-content',
+              mx: { xs: 'auto', sm: 0 },
+              color: alpha('#fff', 0.8),
+              textDecoration: 'none',
+              borderRadius: `${TOKENS.radius.sm}px`,
+              '&:hover': { color: '#fff' },
+              '&:focus-visible': { outline: `2px solid ${TOKENS.primary}`, outlineOffset: 6 },
+            }}
+          >
+            <Typography component="span" sx={{ fontSize: '0.88rem', color: 'inherit' }}>Plăți securizate prin</Typography>
+            <Box component="img" src={stripeLogo} alt="Stripe" width={64} height={27} loading="lazy" sx={{ display: 'block', objectFit: 'contain', flexShrink: 0 }} />
+          </Box>
         </Container>
 
         {/* Bara de jos */}

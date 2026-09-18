@@ -133,7 +133,7 @@ export function PricingPage() {
             ))}
           </Box>
 
-          <IncludedInAll />
+          {audience === 'pfa' && <IncludedInAll />}
         </Stack>
       </Container>
     </Box>

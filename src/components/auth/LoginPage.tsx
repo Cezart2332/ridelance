@@ -21,8 +21,8 @@ export default function LoginPage() {
   const [serverError, setServerError] = useState<AuthErrorInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  // Prima dată validăm la `blur`; după ce câmpul a fost atins, la fiecare tastă. Altfel ar apărea
-  // „adresă invalidă" încă de la primul caracter tastat.
+  // Validăm la blur doar câmpurile completate; cele goale se validează la trimitere.
+  // După prima validare, mesajul se actualizează pe măsură ce utilizatorul corectează valoarea.
   const emailError = touched.email ? validateEmail(email) : null
   const passwordError = touched.password ? validateLoginPassword(password) : null
 
@@ -46,7 +46,7 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout accountForm>
       <AuthFormHeader
         title="Bine ai revenit"
         subtitle={
@@ -69,7 +69,7 @@ export default function LoginPage() {
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            onBlur={() => setTouched((current) => ({ ...current, email: true }))}
+            onBlur={() => setTouched((current) => ({ ...current, email: current.email || Boolean(email.trim()) }))}
             disabled={isLoading}
             error={Boolean(emailError)}
             helperText={emailError}
@@ -83,7 +83,7 @@ export default function LoginPage() {
             autoComplete="current-password"
             value={password}
             onChange={setPassword}
-            onBlur={() => setTouched((current) => ({ ...current, password: true }))}
+            onBlur={() => setTouched((current) => ({ ...current, password: current.password || Boolean(password) }))}
             disabled={isLoading}
             error={passwordError}
           />
