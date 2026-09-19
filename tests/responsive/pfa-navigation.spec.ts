@@ -562,7 +562,7 @@ test.describe('navigație PFA', () => {
     const main = page.getByRole('main')
 
     await main.getByRole('tab', { name: 'Consulto' }).click()
-    await expect(main.getByRole('heading', { name: 'Mai simplu să îți deschizi și să îți administrezi firma.' })).toBeVisible()
+    await expect(main.getByRole('heading', { name: 'Mai simplu să îți deschizi și administrezi forma juridică.' })).toBeVisible()
     await expect(main.getByText('Deschidere PFA gratuită', { exact: true })).toBeVisible()
     await expect(main.getByText('Cluj-Napoca')).toBeVisible()
     // Prețurile vechi, contrazise de materialul nou, nu mai apar.
