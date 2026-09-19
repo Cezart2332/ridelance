@@ -62,7 +62,7 @@ const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
   new Date(b.uploadedAtUtc).getTime() - new Date(a.uploadedAtUtc).getTime()
 
 /** Cel mai recent document dintr-o categorie — doar el contează, restul sunt versiuni vechi. */
-function newestPerCategory(documents: DocumentSummary[], categories: string[]): DocumentSummary[] {
+export function newestPerCategory(documents: DocumentSummary[], categories: string[]): DocumentSummary[] {
   return categories.flatMap((category) => {
     const newest = documents.filter((d) => d.category === category).sort(byNewest)[0]
     return newest ? [newest] : []

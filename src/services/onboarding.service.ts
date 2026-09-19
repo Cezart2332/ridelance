@@ -272,6 +272,8 @@ export interface ArrState {
   authorizationIssuedOn: string | null
   authorizationExpiresOn: string | null
   adminNote: string | null
+  /** Actele după care așteaptă dosarul: lipsă sau neverificate de echipă. Goală = se poate genera. */
+  dossierPendingReview?: string[] | null
 }
 
 // --- Pasul 4: conturi Uber & Bolt ---
@@ -362,6 +364,8 @@ export interface VehicleState {
   copyFeePerYearBani: number
   badgeFeePerSetBani: number
   maxCopyYears: number
+  /** Actele după care așteaptă dosarul: lipsă sau neverificate de echipă. Goală = se poate genera. */
+  dossierPendingReview?: string[] | null
 }
 
 export const onboardingService = {
@@ -701,6 +705,12 @@ export const onboardingService = {
   /** Ce a făcut clientul la pasul 3 — TVA, banca legată, Oblio — ca adminul să vadă ce validează. */
   async getFiscalReview(pfaId: string): Promise<AdminFiscalReview> {
     const { data } = await api.get<AdminFiscalReview>(`/admin/onboarding/${pfaId}/steps/fiscal`)
+    return data
+  },
+
+  /** Pasul 6 din admin: perioada copiei conforme, ecusoanele și dosarul, cum le vede clientul. */
+  async getVehicleReview(pfaId: string): Promise<VehicleState> {
+    const { data } = await api.get<VehicleState>(`/admin/onboarding/${pfaId}/steps/vehicle`)
     return data
   },
 

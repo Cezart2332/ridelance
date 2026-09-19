@@ -36,6 +36,7 @@ import {
   type PlatformOnboardingState,
   type PlatformOnboardingStatus,
   type PlatformProvider,
+  type VehicleState,
 } from '../../../../services/onboarding.service'
 import { formatDocumentCategory } from '../../../../utils/formatters'
 import { getErrorMessage } from '../../../../utils/errorHandler'
@@ -297,6 +298,49 @@ function FiscalReview({ pfaId, refreshKey }: { pfaId: string; refreshKey: number
   )
 }
 
+/* ── Pasul 2: PFA și avansul ── */
+
+const lei = (bani: number) => `${(bani / 100).toLocaleString('ro-RO', { maximumFractionDigits: 2 })} lei`
+
+const PAYMENT_PRESENTATION: Record<OnboardingState['paymentStatus'], { label: string; tone: Tone }> = {
+  PAID: { label: 'Plătit', tone: 'success' },
+  FAILED: { label: 'Plata a eșuat', tone: 'error' },
+  PENDING: { label: 'Neplătit încă', tone: 'warning' },
+  NOT_REQUIRED: { label: 'Nu e cazul', tone: 'neutral' },
+}
+
+/**
+ * Ramura aleasă la PFA și avansul. Adminul nu vedea dacă clientul plătise, dacă plata picase sau
+ * dacă nici nu ajunsese la ea — deci nu știa dacă poate porni înființarea.
+ */
+function PfaReview({ state }: { state: OnboardingState }) {
+  const payment = PAYMENT_PRESENTATION[state.paymentStatus] ?? { label: state.paymentStatus, tone: 'neutral' as Tone }
+  const forming = state.companyFormationStatus !== null
+
+  return (
+    <Box>
+      <Fact label="Ramura aleasă" value={forming ? 'Nu are PFA — îl înființăm noi' : state.pfaRegistrationId ? 'Are deja PFA' : 'Fără răspuns'} />
+      <Fact
+        label="Avans RIDElance Start"
+        value={
+          <Stack direction="row" sx={{ alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <span>
+              {lei(state.onboardingAdvanceBani)}
+              {state.onboardingAdvanceIsRefundable ? ' · returnabil' : ''}
+            </span>
+            <StatePill tone={payment.tone} label={payment.label} />
+          </Stack>
+        }
+        emphasis={state.paymentStatus === 'FAILED' ? 'error' : undefined}
+      />
+      {state.paymentStatus === 'PENDING' && (
+        <Fact label="Poate plăti?" value={state.canPay ? 'Da — dosarul e semnat' : 'Nu încă — dosarul nu e semnat'} />
+      )}
+      {forming && <Fact label="Dosar înființare" value={[state.companyFormationStatus, state.companyFormationStage].filter(Boolean).join(' · ')} />}
+    </Box>
+  )
+}
+
 /* ── Pasul 5: conturile Uber / Bolt ── */
 
 /** Statusurile de onboarding ale unui cont de platformă, în ordinea în care se parcurg. */
@@ -389,6 +433,7 @@ function PlatformAccountsReview({
   if (loading) return <CircularProgress size={20} />
 
   const chosen = (platforms?.platforms ?? []).filter((p) => p.isSelectedByUser)
+  const requested = chosen.length === 2 ? 'Uber și Bolt' : `Doar ${chosen[0]?.provider ?? ''}`
 
   if (chosen.length === 0) {
     return <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Clientul nu a ales încă nicio platformă.</Typography>
@@ -396,6 +441,7 @@ function PlatformAccountsReview({
 
   return (
     <Stack spacing={3}>
+      <Fact label="Conturi cerute" value={requested} emphasis="info" />
       {chosen.map((account) => (
         <Box key={account.provider}>
           <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 1, gap: 2, flexWrap: 'wrap' }}>
@@ -450,6 +496,97 @@ function PlatformAccountsReview({
         />
       )}
     </Stack>
+  )
+}
+
+/* ── Pasul 6: vehiculul, copia conformă și ecusoanele ── */
+
+const OWNERSHIP_LABELS: Record<string, string> = {
+  Owned: 'Proprietate',
+  Rented: 'Închiriată',
+  Leased: 'Leasing',
+  Comodat: 'Comodat',
+  AddedLater: 'O adaugă mai târziu',
+}
+
+const COPY_STATUS_LABELS: Record<string, string> = {
+  Draft: 'Dosar negenerat',
+  DossierGenerated: 'Dosar generat',
+  Submitted: 'Depus',
+  Issued: 'Eliberată',
+  Rejected: 'Respinsă',
+}
+
+/**
+ * Ce a cerut clientul la pasul 6. Adminul vedea doar actele, deci nu știa pe ce perioadă vrea copia
+ * conformă — exact datele cu care se depune dosarul.
+ */
+function VehicleReview({ pfaId, refreshKey }: { pfaId: string; refreshKey: number }) {
+  const [vehicle, setVehicle] = useState<VehicleState | null>(null)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    onboardingService
+      .getVehicleReview(pfaId)
+      .then((data) => {
+        if (!cancelled) setVehicle(data)
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [pfaId, refreshKey])
+
+  if (failed) return <Alert severity="warning">Nu am putut încărca datele vehiculului.</Alert>
+  if (!vehicle) return <CircularProgress size={20} />
+
+  const copy = vehicle.copyRequest
+  const car = [vehicle.plateNumber, vehicle.make, vehicle.model, vehicle.firstRegistrationYear].filter(Boolean).join(' · ')
+  const pending = vehicle.dossierPendingReview ?? []
+
+  return (
+    <Box>
+      <Fact
+        label="Mașina"
+        value={vehicle.addLater ? 'O adaugă mai târziu' : car || '—'}
+        emphasis={car || vehicle.addLater ? undefined : 'warning'}
+      />
+      <Fact label="Regim" value={OWNERSHIP_LABELS[vehicle.ownershipMode] ?? vehicle.ownershipMode} />
+      {vehicle.vin && <Fact label="VIN" value={vehicle.vin} />}
+      <Fact
+        label="Copie conformă"
+        value={copy ? `${copy.years} ${copy.years === 1 ? 'an' : 'ani'} · ${lei(copy.totalFeeSnapshotBani)}` : 'Perioada nu e aleasă încă'}
+        emphasis={copy ? 'info' : 'warning'}
+      />
+      {copy && (
+        <Fact
+          label="Dosar copie"
+          value={[
+            COPY_STATUS_LABELS[copy.status] ?? copy.status,
+            copy.dossierGeneratedAtUtc ? `generat ${new Date(copy.dossierGeneratedAtUtc).toLocaleDateString('ro-RO')}` : null,
+            copy.submittedAtUtc ? `depus ${new Date(copy.submittedAtUtc).toLocaleDateString('ro-RO')}` : null,
+            copy.copyConformaNumber ? `nr. ${copy.copyConformaNumber}` : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        />
+      )}
+      {vehicle.badges.length === 0 ? (
+        <Fact label="Ecusoane" value="Niciunul cerut" />
+      ) : (
+        vehicle.badges.map((badge) => (
+          <Fact
+            key={badge.provider}
+            label={`Ecusoane ${badge.provider}`}
+            value={`${badge.setCount} ${badge.setCount === 1 ? 'set' : 'seturi'} · ${lei(badge.totalFeeSnapshotBani)} · ${badge.status}`}
+          />
+        ))
+      )}
+      {pending.length > 0 && <Fact label="Dosarul așteaptă" value={pending.join(', ')} emphasis="warning" />}
+    </Box>
   )
 }
 
@@ -913,6 +1050,20 @@ export function OnboardingSectionsPanel({
                   <Box>
                     <Subheading>Ce a completat clientul</Subheading>
                     <FiscalReview pfaId={pfaId} refreshKey={reviewTick} />
+                  </Box>
+                )}
+
+                {group.pfa && state && (
+                  <Box>
+                    <Subheading>Ce a ales clientul</Subheading>
+                    <PfaReview state={state} />
+                  </Box>
+                )}
+
+                {group.key === 'vehicle' && (
+                  <Box>
+                    <Subheading>Ce a cerut clientul</Subheading>
+                    <VehicleReview pfaId={pfaId} refreshKey={reviewTick} />
                   </Box>
                 )}
 

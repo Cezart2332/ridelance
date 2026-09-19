@@ -3,7 +3,10 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { getErrorMessage } from '../../../utils/errorHandler'
+import { isAiPending } from '../../../services/document.service'
 import { currentAutosave } from '../autosaveStore'
+import { categoriesOfStep } from '../documentRequirements'
+import { newestPerCategory } from '../stepModel'
 import { BLOCKING_SLOTS, BLOCKING_SLOT_REASONS, type MicroStepContext } from '../microStepTypes'
 import { useMotionTokens } from '../motion'
 import { useMicroSteps } from '../useMicroSteps'
@@ -261,6 +264,22 @@ export function OnboardingRunner() {
   const isLast = current.index === steps.length - 1
   const deadEnd = isLast && !canGoForward
 
+  /**
+   * Rezumatul nu lasă omul mai departe cât timp actele pasului n-au trecut de verificarea automată
+   * — înainte butonul era activ imediat după upload, deci pasul „se termina" pe acte necitite.
+   *
+   * Validarea echipei nu se așteaptă aici: după rezumat vine ecranul „e la noi", iar când adminul
+   * validează, `MicroStepProvider` mută singur omul la pasul următor.
+   */
+  const summaryBlockers = (): string[] => {
+    const stepDocs = newestPerCategory(documents, categoriesOfStep(def.macroStep))
+    if (stepDocs.some(isAiPending)) return ['Verificăm automat documentele încărcate. Durează de obicei sub un minut.']
+    if (stepDocs.some((d) => d.aiStatus === 'Failed' || d.aiStatus === 'Error')) {
+      return ['Unele documente n-au trecut verificarea automată. Reîncarcă-le din lista de mai sus.']
+    }
+    return []
+  }
+
   const footer = (): ReactNode => {
     // §6 — un pas cu UN singur document obligatoriu nu randează deloc „Continuă": uploadul
     // reușit e semnalul, iar ecranul avansează singur. Butonul apare doar când nu se mai
@@ -310,14 +329,17 @@ export function OnboardingRunner() {
           />
         )
       }
-      case 'summary':
+      case 'summary': {
+        const blockers = summaryBlockers()
         return (
           <CardFooter
-            disabled={submitting}
-            label="Continuă către pasul următor"
+            disabled={submitting || blockers.length > 0}
+            reasons={blockers}
+            label={isLast ? 'Continuă către pasul următor' : 'Continuă'}
             onContinue={() => void advance()}
           />
         )
+      }
       default:
         return null
     }

@@ -32,11 +32,6 @@ const step2Of = (c: MicroStepContext) => (c.resources.step2 as Step2State | unde
 const bankLinked = (c: MicroStepContext): boolean =>
   (c.resources.bank as BankConnectionDto | null | undefined)?.status === 'Linked'
 
-const field = (c: MicroStepContext, stepId: string, key: string): string => {
-  const value = c.answers[`${stepId}.${key}`]
-  return typeof value === 'string' ? value.trim() : ''
-}
-
 const EYEBROW = 'FISCAL'
 
 /** Cele șase acorduri cerute de Oblio, exact ca înainte — doar ambalajul s-a schimbat. */
@@ -122,6 +117,26 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     },
   },
   {
+    /*
+     * Cine n-are cont alege întâi unde îl deschide. Înainte ecranul arăta doar BCR, cu un rând
+     * „poți alege și altă bancă” fără nicio cale de a face asta. Oricare ar fi alegerea, pasul
+     * următor e același: contul deschis se conectează prin open banking.
+     */
+    id: 'banca_noua',
+    macroStep: 'fiscal',
+    kind: 'question',
+    eyebrow: EYEBROW,
+    icon: 'idCard',
+    railLabel: 'Alege banca',
+    title: 'Unde vrei să îți deschizi contul?',
+    choices: [
+      { value: 'bcr', title: 'La BCR, cu oferta RIDElance' },
+      { value: 'other', title: 'La altă bancă' },
+    ],
+    visibleWhen: (c) => c.answers.cont_bancar === 'no',
+    isDone: (c) => c.answers.banca_noua !== undefined || bankLinked(c),
+  },
+  {
     id: 'deschide_cont',
     macroStep: 'fiscal',
     kind: 'info',
@@ -131,14 +146,30 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     title: 'Îți deschidem contul la BCR',
     lines: () => [
       'Beneficiezi de oferta dedicată parteneriatului RIDElance–BCR: contul îl poți folosi pentru încasările de la platforme, plata taxelor și administrarea activității PFA.',
-      'Poți alege și altă bancă. După ce contul e activ, revino aici și conectează-l.',
+      'După ce contul e activ, revino aici și conectează-l la pasul următor.',
     ],
     // Butonul ȘI codul QR, din aceeași componentă: pe desktop QR-ul e singura cale rezonabilă
     // de a continua pe telefon, unde onboardingul BCR chiar se face (spec fix-uri §4).
     slot: 'bankAccountCta',
-    visibleWhen: (c) => c.answers.cont_bancar === 'no',
+    visibleWhen: (c) => c.answers.cont_bancar === 'no' && c.answers.banca_noua === 'bcr',
     // Deschiderea contului se întâmplă la bancă, nu la noi: ecranul nu are cum să afle singur.
     // Trece mai departe de îndată ce contul dă semne de viață — conectat sau cu extrasul încărcat.
+    isDone: (c) => bankLinked(c),
+  },
+  {
+    id: 'deschide_cont_alta',
+    macroStep: 'fiscal',
+    kind: 'info',
+    eyebrow: EYEBROW,
+    icon: 'idCard',
+    railLabel: 'Deschide cont',
+    title: 'Deschide contul la banca aleasă',
+    lines: () => [
+      'Deschide contul de PFA la banca pe care o preferi, direct la ei — online sau la ghișeu.',
+      'Când contul e activ, revino aici: la pasul următor îl conectezi prin open banking, iar IBAN-ul și tranzacțiile ajung singure în RIDElance.',
+    ],
+    visibleWhen: (c) => c.answers.cont_bancar === 'no' && c.answers.banca_noua === 'other',
+    // Ca la BCR: deschiderea se întâmplă la bancă, iar ecranul se închide când contul e conectat.
     isDone: (c) => bankLinked(c),
   },
   {
@@ -164,28 +195,6 @@ export const fiscalMicroSteps: MicroStepDef[] = [
   },
   // ── Oblio ──
   {
-    id: 'oblio_email',
-    macroStep: 'fiscal',
-    kind: 'text',
-    eyebrow: EYEBROW,
-    icon: 'user',
-    railLabel: 'Email Oblio',
-    title: 'Pe ce email deschidem contul de facturare?',
-    fields: [
-      {
-        key: 'email',
-        label: 'Email cont Oblio',
-        type: 'email',
-        // Aceeași sursă ca la conturile de flotă: emailul contului RIDElance, din fișa
-        // clientului. Precompletat înseamnă read-only — se schimbă prin suport, nu de aici,
-        // iar serverul îl re-hidratează oricum la salvare.
-        initialValue: (c) => c.state?.contactEmail ?? '',
-        lockedWhenPrefilled: true,
-      },
-    ],
-    isDone: (c) => Boolean(step2Of(c)?.oblio?.accountEmail) || field(c, 'oblio_email', 'email') !== '',
-  },
-  {
     id: 'oblio_conectare',
     macroStep: 'fiscal',
     kind: 'action',
@@ -206,7 +215,9 @@ export const fiscalMicroSteps: MicroStepDef[] = [
       busyLabel: 'Se conectează...',
       run: async (c) => {
         await onboardingService.acceptOblioConsents({
-          accountEmail: field(c, 'oblio_email', 'email') || step2Of(c)?.oblio?.accountEmail || null,
+          // Emailul contului RIDElance: întrebarea separată a fost scoasă — era mereu același email,
+          // blocat oricum la editare.
+          accountEmail: step2Of(c)?.oblio?.accountEmail ?? c.state?.contactEmail ?? null,
           accountCreationConsent: true,
           dataProcessingConsent: true,
           eInvoiceConsent: true,
@@ -240,7 +251,10 @@ export const fiscalMicroSteps: MicroStepDef[] = [
       busyLabel: 'Se trimite...',
       run: () => onboardingService.submitFiscalForReview(),
     },
-    visibleWhen: (c) => step2Of(c)?.canSubmitForReview === true || isAtAdmin(c),
+    // Mereu vizibil: e ecranul care spune că pachetul de semnături vine pe email. Legat de
+    // `canSubmitForReview`, lipsea ori de câte ori starea serverului nu apucase să se reîmprospăteze
+    // după Oblio — iar omul termina pasul fără să afle ce urmează. Dacă lipsește ceva, serverul
+    // refuză trimiterea și spune ce.
     isDone: (c) => isAtAdmin(c) || step2Of(c)?.signature?.status === 'Completed',
   },
   {

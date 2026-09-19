@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { TOKENS } from './onboardingTheme'
 import { UploadField } from './UploadField'
+import { MAX_UPLOAD_MB } from '../../utils/uploadValidation'
 
 const isPdf = (file: File) => file.type === 'application/pdf'
 
@@ -89,7 +90,7 @@ export function TwoSidedUpload({
           deja un PDF cu ambele fețe, pune-l în prima casetă și e de ajuns.
         </Typography>
         <Typography sx={{ fontSize: '0.78rem', color: TOKENS.textMuted }}>
-          JPG, PNG sau PDF · maximum 10 MB
+          JPG, PNG sau PDF · maximum {MAX_UPLOAD_MB} MB
         </Typography>
       </Stack>
 

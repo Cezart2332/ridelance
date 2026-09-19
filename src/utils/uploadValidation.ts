@@ -6,5 +6,7 @@
  * browser respingea și poze perfect lizibile.
  */
 
-export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+/** Aceeași limită ca pe server (UploadDocumentCommandHandler.MaxFileSize). */
+export const MAX_UPLOAD_MB = 25
+export const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 export const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png']

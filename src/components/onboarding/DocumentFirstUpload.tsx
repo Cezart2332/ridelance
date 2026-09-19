@@ -8,7 +8,7 @@ import { useMemo, useState } from 'react'
 import { documentService, isAiPending, type DocumentSummary } from '../../services/document.service'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { buildUploadFile } from '../../utils/imagesToPdf'
-import { MAX_UPLOAD_BYTES } from '../../utils/uploadValidation'
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '../../utils/uploadValidation'
 import { stateColors, TOKENS } from './onboardingTheme'
 import { TwoSidedUpload } from './TwoSidedUpload'
 import { UploadField } from './UploadField'
@@ -108,7 +108,7 @@ export function DocumentFirstUpload({
     try {
       const file = await buildUploadFile(picked, label)
       if (file.size > MAX_UPLOAD_BYTES) {
-        setError('Documentul depășește 10 MB. Încarcă mai puține imagini sau imagini mai mici.')
+        setError(`Documentul depășește ${MAX_UPLOAD_MB} MB. Încarcă mai puține imagini sau imagini mai mici.`)
         return
       }
       await documentService.upload(

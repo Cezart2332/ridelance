@@ -37,6 +37,12 @@ interface DossierPanelProps {
   markSubmitted: () => Promise<unknown>
   /** Reîncarcă starea de onboarding după o operație reușită. */
   onChanged: () => Promise<void>
+  /**
+   * Actele după care așteaptă dosarul — lipsă sau încă neverificate de echipă. Cât timp lista nu e
+   * goală, generarea e blocată: înainte butonul era activ oricum, iar dosarul ieșea din acte pe
+   * care nu le văzuse nimeni.
+   */
+  pendingReview?: string[] | null
 }
 
 export function DossierPanel({
@@ -45,7 +51,10 @@ export function DossierPanel({
   generate,
   markSubmitted,
   onChanged,
+  pendingReview,
 }: DossierPanelProps) {
+  const waitingFor = pendingReview ?? []
+  const blocked = waitingFor.length > 0
   const [generating, setGenerating] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -121,12 +130,18 @@ export function DossierPanel({
         </Alert>
       )}
 
+      {blocked && (
+        <Alert severity="info" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+          Dosarul se poate genera după ce echipa verifică toate actele. Încă așteptăm: {waitingFor.join(', ')}.
+        </Alert>
+      )}
+
       {!dossier.hasDossier ? (
         <Button
           variant="contained"
           size="large"
           onClick={() => void run(setGenerating, generate, 'Nu am putut genera dosarul.')}
-          disabled={generating}
+          disabled={generating || blocked}
           startIcon={generating ? <CircularProgress size={16} color="inherit" /> : undefined}
           sx={{ alignSelf: 'flex-start', py: 1.2, px: 3, fontWeight: 700, textTransform: 'none' }}
         >
@@ -185,7 +200,7 @@ export function DossierPanel({
 
           <Button
             onClick={() => void run(setGenerating, generate, 'Nu am putut regenera dosarul.')}
-            disabled={generating}
+            disabled={generating || blocked}
             sx={{ alignSelf: 'flex-start', textTransform: 'none', color: TOKENS.textMuted }}
           >
             {generating ? 'Se regenerează...' : 'Regenerează dosarul'}

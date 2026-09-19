@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { microStepsOf, screenCountOf } from './config'
@@ -149,6 +149,26 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
     },
     [steps, activeKey, forwardTarget, navigate],
   )
+
+  /**
+   * Adminul a validat pasul pe care omul îl are deschis: îl mutăm singur la pasul următor. Înainte
+   * rămânea pe rezumat și trebuia să apese încă o dată „Continuă către pasul următor" — iar la PFA,
+   * pasul 03 se deschidea tot pe un ecran care cerea încă un click.
+   *
+   * Doar pe tranziția văzută aici (în verificare → validat), nu pe orice pas validat: cine revine
+   * pe un pas terminat, ca să-l recitească, nu trebuie aruncat înainte.
+   */
+  const activeState = steps.find((s) => s.key === activeKey)?.state ?? null
+  const previousState = useRef<{ key: string | null; state: string | null }>({ key: activeKey, state: activeState })
+
+  useEffect(() => {
+    const before = previousState.current
+    previousState.current = { key: activeKey, state: activeState }
+    if (before.key !== activeKey) return
+    if (before.state === 'pending_review' && activeState === 'approved') {
+      navigate(forwardTarget?.path ?? '/onboarding')
+    }
+  }, [activeKey, activeState, forwardTarget, navigate])
 
   const next = useCallback(() => {
     if (!current) return leave(1)

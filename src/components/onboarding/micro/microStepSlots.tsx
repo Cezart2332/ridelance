@@ -461,13 +461,15 @@ function ArrDossierSlot() {
       generate={() => onboardingService.generateArrDossier()}
       markSubmitted={() => onboardingService.markArrSubmitted()}
       onChanged={refresh}
+      pendingReview={arr?.dossierPendingReview}
     />
   )
 }
 
 function VehicleDossierSlot() {
   const { resources, refresh } = useOnboarding()
-  const copy = ((resources.vehicle as VehicleState | undefined) ?? null)?.copyRequest ?? null
+  const vehicle = (resources.vehicle as VehicleState | undefined) ?? null
+  const copy = vehicle?.copyRequest ?? null
 
   return (
     <DossierPanel
@@ -481,6 +483,7 @@ function VehicleDossierSlot() {
       generate={() => onboardingService.generateVehicleDossier()}
       markSubmitted={() => onboardingService.markVehicleSubmitted()}
       onChanged={refresh}
+      pendingReview={vehicle?.dossierPendingReview}
     />
   )
 }

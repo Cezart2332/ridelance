@@ -76,12 +76,52 @@ export async function imagesToPdfFile(images: File[], baseName: string): Promise
   return new File([blob], `${safeName}.pdf`, { type: 'application/pdf' })
 }
 
+/** Peste atâta, o poză se recomprimă înainte de upload. */
+const LARGE_PHOTO_BYTES = 6 * 1024 * 1024
+const LARGE_PHOTO_MAX_DIMENSION_PX = 3000
+
+/**
+ * O poză de telefon trece ușor de 10–15 MB. Recomprimată la 3000 px pe latura mare, un act rămâne
+ * perfect lizibil pe o pagină A4 și pleacă de câteva ori mai repede. PDF-urile și pozele mici merg
+ * ca atare. `createImageBitmap` aplică orientarea din EXIF, deci poza iese dreaptă.
+ *
+ * La orice eroare (format necunoscut browserului, memorie) pleacă originalul: limita serverului
+ * rămâne ultima plasă.
+ */
+export async function compressLargePhoto(file: File): Promise<File> {
+  const isPhoto = file.type === 'image/jpeg' || file.type === 'image/png'
+  if (!isPhoto || file.size <= LARGE_PHOTO_BYTES) return file
+
+  try {
+    const bitmap = await createImageBitmap(file)
+    try {
+      const scale = Math.min(1, LARGE_PHOTO_MAX_DIMENSION_PX / Math.max(bitmap.width, bitmap.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale))
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale))
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return file
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY))
+      if (!blob || blob.size >= file.size) return file
+
+      const name = file.name.replace(/\.[^.]+$/, '') + '.jpg'
+      return new File([blob], name, { type: 'image/jpeg' })
+    } finally {
+      bitmap.close()
+    }
+  } catch {
+    return file
+  }
+}
+
 /**
  * Pregătește fișierul final de upload: un singur fișier merge ca atare,
  * mai multe imagini sunt combinate într-un PDF.
  */
 export async function buildUploadFile(files: File[], baseName: string): Promise<File> {
   if (files.length === 0) throw new Error('Niciun fișier selectat')
-  if (files.length === 1) return files[0]
+  if (files.length === 1) return compressLargePhoto(files[0])
   return imagesToPdfFile(files, baseName)
 }

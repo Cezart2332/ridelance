@@ -420,7 +420,8 @@ test.describe('pasul 2 — am deja PFA', () => {
       page.getByRole('heading', { name: 'Verifică datele înainte să trimitem dosarul' }),
     ).toBeVisible()
 
-    await page.getByRole('button', { name: 'Continuă către pasul următor' }).click()
+    // Nu „către pasul următor": după rezumat vine ecranul de așteptare, nu pasul fiscal.
+    await page.getByRole('button', { name: 'Continuă', exact: true }).click()
 
     await expect(page.getByText('Dosarul tău PFA este în validare')).toBeVisible()
   })
@@ -440,6 +441,67 @@ test.describe('pasul 2 — am deja PFA', () => {
       page.getByRole('heading', { name: 'Verifică datele înainte să trimitem dosarul' }),
     ).toBeVisible()
     await expect(page).toHaveURL(/\/onboarding\/pfa/)
+  })
+
+  /** Înainte, butonul era activ imediat după upload — pasul „se termina" pe acte necitite de AI. */
+  test('rezumatul nu lasă mai departe cât timp AI-ul verifică actele', async ({ page }) => {
+    await stubBackend(
+      page,
+      [
+        uploadedDoc('CertificatInregistrare', 'certificat.pdf'),
+        { ...uploadedDoc('CertificatConstatator', 'constatator.pdf'), aiStatus: 'Processing' },
+      ],
+      { state: amPfaState() },
+    )
+    await page.goto('/onboarding/pfa?pas=pfa_summary', { waitUntil: 'networkidle' })
+
+    await expect(page.getByRole('button', { name: /^Continuă/ })).toBeDisabled()
+    await expect(page.getByText('Verificăm automat documentele încărcate', { exact: false })).toBeVisible()
+  })
+
+  /** Validarea adminului mută singură clientul în pasul următor — fără încă un „Continuă". */
+  test('după validarea adminului, clientul ajunge singur în pasul fiscal', async ({ page }) => {
+    const docs = [
+      uploadedDoc('CertificatInregistrare', 'certificat.pdf'),
+      uploadedDoc('CertificatConstatator', 'constatator.pdf'),
+    ]
+    await stubBackend(page, docs, {
+      state: amPfaState({
+        pfaStatus: 'Pending',
+        steps: steps.map((step) =>
+          step.key === 'pfa' ? { ...step, status: 'AwaitingValidation', state: 'pending_admin', userPartDone: true } : step,
+        ),
+      }),
+    })
+    await page.goto('/onboarding/pfa', { waitUntil: 'networkidle' })
+    await expect(page.getByRole('heading', { name: 'Verifică datele înainte să trimitem dosarul' })).toBeVisible()
+
+    // Adminul validează: la următorul poll, pasul PFA e închis, iar cel fiscal e deschis.
+    await page.route(`${API}/onboarding/state`, async (route) => {
+      const headers = {
+        'Access-Control-Allow-Origin': (await route.request().headerValue('origin')) ?? '*',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Headers': 'authorization,content-type',
+        'Access-Control-Allow-Methods': 'GET,OPTIONS',
+      }
+      if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers })
+      return route.fulfill({
+        status: 200,
+        headers,
+        contentType: 'application/json',
+        body: JSON.stringify(
+          amPfaState({
+            pfaStatus: 'Approved',
+            currentStep: 'fiscal',
+            steps: steps.map((step) =>
+              step.key === 'pfa' ? { ...step, status: 'Completed', state: 'completed', userPartDone: true } : step,
+            ),
+          }),
+        ),
+      })
+    })
+    // Pollul rulează la 10 secunde cât timp un pas e în verificare.
+    await expect(page).toHaveURL(/\/onboarding\/step2/, { timeout: 20_000 })
   })
 })
 

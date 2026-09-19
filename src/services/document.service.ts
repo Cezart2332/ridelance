@@ -1,3 +1,4 @@
+import { compressLargePhoto } from '../utils/imagesToPdf';
 import { api } from '../lib/axios';
 
 export interface DocumentSummary {
@@ -98,8 +99,10 @@ export const documentService = {
     /** Mașina din flotă, când documentul e al ei. */
     carId?: string,
   ) => {
+    // Pozele mari de telefon se recomprimă aici, o dată pentru toate uploadurile (vezi imagesToPdf).
+    const upload = await compressLargePhoto(file);
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', upload);
     formData.append('category', category);
     if (pfaRegistrationId) {
       formData.append('pfaRegistrationId', pfaRegistrationId);

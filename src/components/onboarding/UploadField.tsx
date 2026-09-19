@@ -9,6 +9,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 
 import { ACCEPTED_TYPES } from '../../utils/uploadValidation'
 import { TOKENS } from './onboardingTheme'
+import { MAX_UPLOAD_MB } from '../../utils/uploadValidation'
 
 const isPdf = (f: File) => f.type === 'application/pdf'
 
@@ -209,7 +210,7 @@ export function UploadField({
               </Typography>
             )}
             <Typography variant="caption" sx={{ color: TOKENS.textMuted }}>
-              JPG, PNG sau PDF · maximum 10 MB
+              JPG, PNG sau PDF · maximum {MAX_UPLOAD_MB} MB
             </Typography>
           </Stack>
         )}
