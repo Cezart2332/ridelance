@@ -74,20 +74,24 @@ const partnersUnordered: Partner[] = [
     slug: 'mol',
     name: 'MOL',
     image: mol,
-    tagline: 'Condiții avantajoase pentru carburanți și spălătorie auto, în rețeaua MOL la nivel național.',
+    tagline: 'Avantaje la carburant și spălătorii în rețeaua MOL, cu cardul partener RIDElance.',
     description:
       'MOL România este partener RIDElance și oferă beneficii dedicate comunității noastre. Prin acest parteneriat, șoferii și antreprenorii care fac parte din ecosistemul RIDElance pot beneficia de condiții avantajoase pentru alimentarea cu carburanți (benzină, motorină și GPL), precum și pentru utilizarea serviciilor de spălătorie auto din rețeaua MOL, la nivel național. Scopul acestui parteneriat este de a contribui la reducerea costurilor de operare și de a oferi avantaje reale celor care își desfășoară activitatea în domeniul transportului alternativ.',
-    website: 'https://mol.ro',
+    website: 'https://molromania.ro',
   },
   {
     slug: 'oblio',
     name: 'Oblio',
     image: oblio,
+    tagline: 'Facturare automată și transmitere în SPV, cu primul an gratuit pentru conturile noi.',
+    website: 'https://www.oblio.eu',
   },
   {
     slug: 'consulto',
     name: 'Consulto',
     image: consulto,
+    tagline: 'Deschidere PFA gratuită cu abonament, sediu social și reduceri la ONRC.',
+    website: 'https://consulto.ro',
   },
   {
     slug: 'simplifi',
@@ -107,17 +111,22 @@ const partnersUnordered: Partner[] = [
     slug: 'smart-fintech',
     name: 'Smart Fintech',
     image: smartfintech,
-    website: 'https://www.smartfintech.eu',
+    tagline: 'Open banking prin Smart Accounts: contul bancar sincronizat în RIDElance.',
+    website: 'https://www.smartfintech.eu/smartaccounts',
   },
   {
     slug: 'fiscallink',
     name: 'FiscalLink',
     image: fiscallink,
+    tagline: 'Casa de marcat conectată la RIDElance: bonuri, rapoarte X/Z și acces pentru contabil.',
+    website: 'https://fiscallink.ro',
   },
   {
     slug: 'constalaris',
     name: 'Constalaris',
     image: constalaris,
+    tagline: 'Case de marcat Orgtech Teo, cu fiscalizare, NUI și conectare ANAF incluse.',
+    website: 'https://www.constalaris.ro',
   },
 ]
 

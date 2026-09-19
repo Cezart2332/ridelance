@@ -19,6 +19,8 @@ import { InsuranceLinksGrid } from '../components/insurance/InsuranceLinksGrid'
 import { BcrOffer } from '../components/partners/BcrOffer'
 import { EldriveOffer } from '../components/partners/EldriveOffer'
 import { PartnerBenefitBlocks } from '../components/partners/PartnerBenefitBlocks'
+import { PartnerShowcase } from '../components/partners/PartnerShowcase'
+import { getPartnerShowcase } from '../data/partnerShowcases'
 import { getPartnerBenefit } from '../data/benefits'
 import { BCR_GEORGE_MESSAGE, getPartnerBySlug, partners, type Partner } from '../data/partners'
 import { PARTNER_LOGO } from '../data/partnerLogo'
@@ -126,6 +128,9 @@ function PartnerPanel({ partner }: { partner: Partner }) {
   // Fără el, pagina lor publică arăta doar logoul și numele.
   const benefit = getPartnerBenefit(partner.slug)
   const tagline = partner.tagline ?? benefit?.tagline
+  // Partenerii cu material propriu (MOL, Oblio, Consulto, Smart Fintech, FiscalLink, Constalaris)
+  // au pagina lor întreagă; descrierea scurtă ar spune același lucru a doua oară.
+  const showcase = getPartnerShowcase(partner.slug)
 
   return (
     <Paper
@@ -211,6 +216,8 @@ function PartnerPanel({ partner }: { partner: Partner }) {
       <Box sx={{ p: { xs: 2.5, md: 3.5 } }}>
         {partner.slug === 'bcr' ? (
           <BcrPanelContent />
+        ) : showcase ? (
+          <PartnerShowcase showcase={showcase} tokens={TOKENS} />
         ) : (
           <Stack spacing={4}>
             {partner.description && (

@@ -556,6 +556,24 @@ test.describe('navigație PFA', () => {
     await expect(main.getByRole('checkbox', { name: 'Oferte și beneficii' })).not.toBeChecked()
   })
 
+  /** Partenerii cu material propriu au în Beneficii aceeași pagină ca pe site, nu doar logoul. */
+  test('beneficiile Consulto și Constalaris arată oferta completă', async ({ page }, testInfo) => {
+    await page.goto(`${ROOT}/beneficii`, { waitUntil: 'networkidle' })
+    const main = page.getByRole('main')
+
+    await main.getByRole('tab', { name: 'Consulto' }).click()
+    await expect(main.getByRole('heading', { name: 'Mai simplu să îți deschizi și să îți administrezi firma.' })).toBeVisible()
+    await expect(main.getByText('Deschidere PFA gratuită', { exact: true })).toBeVisible()
+    await expect(main.getByText('Cluj-Napoca')).toBeVisible()
+    // Prețurile vechi, contrazise de materialul nou, nu mai apar.
+    await expect(main.getByText('−100 lei')).toHaveCount(0)
+    await page.screenshot({ path: `test-results/beneficii-consulto-${testInfo.project.name}.png`, fullPage: true })
+
+    await main.getByRole('tab', { name: 'Constalaris' }).click()
+    await expect(main.getByText('Orgtech Teo SH')).toBeVisible()
+    await expect(main.getByRole('link', { name: /Comandă pe Constalaris/ }).first()).toHaveAttribute('href', /constalaris\.ro/)
+  })
+
   test('paginile „În curând" nu aruncă erori', async ({ page }) => {
     const crashes: string[] = []
     page.on('pageerror', (error) => crashes.push(error.message))

@@ -85,20 +85,9 @@ export const partnerBenefits: PartnerBenefit[] = [
     slug: 'mol',
     name: 'MOL',
     image: mol,
-    tagline: 'Card de flotă pentru PFA, comandat online și gratuit, cu cashback și administrare digitală.',
-    website: 'https://mol.ro',
+    tagline: 'Avantaje la carburant și spălătorii în rețeaua MOL, cu cardul partener RIDElance.',
+    website: 'https://molromania.ro',
     blocks: [
-      {
-        badge: 'Beneficiu RIDElance',
-        title: 'Card de flotă gratuit pentru PFA',
-        text: 'Comanzi cardul online și ai acces la platforma MOL pentru solduri, tranzacții și cashback, fără cost de emitere.',
-        rows: [
-          { label: 'Benzină', value: '11–20 bani/litru cashback' },
-          { label: 'Diesel', value: '11–20 bani/litru cashback' },
-          { label: 'GPL', value: '11–20 bani/litru cashback' },
-          { label: 'Spălătorii MOL', value: '20% reducere prin cashback' },
-        ],
-      },
       {
         badge: 'Contact dedicat',
         title: 'Oferta de partener RIDElance',
@@ -141,36 +130,18 @@ export const partnerBenefits: PartnerBenefit[] = [
     slug: 'oblio',
     name: 'Oblio',
     image: oblio,
-    tagline: 'Facturare online simplă pentru clienții RIDElance.',
-    blocks: [
-      {
-        badge: 'Primul an gratuit · 29 € / an după',
-        title: 'Facturare digitală, fără complicații',
-        text: 'Pentru clienții RIDElance primul an e gratuit. După primul an, costul este de 29 euro pe an.',
-        checks: [
-          'Activare online',
-          'Facturi și documente într-un singur loc',
-          'Cost predictibil după primul an',
-        ],
-      },
-    ],
+    tagline: 'Facturare automată și transmitere în SPV, cu primul an gratuit pentru conturile noi.',
+    website: 'https://www.oblio.eu',
+    // Conținutul vine din `data/partnerShowcases.ts`, ca pe pagina publică.
+    blocks: [],
   },
   {
     slug: 'consulto',
     name: 'Consulto',
     image: consulto,
-    tagline: 'Reduceri speciale pentru înființarea și administrarea PFA-ului.',
-    blocks: [
-      {
-        badge: 'Prețuri RIDElance',
-        title: 'Economisești la deschiderea și găzduirea PFA-ului',
-        rows: [
-          { label: 'Deschidere PFA', value: '−100 lei' },
-          { label: 'Găzduire sediu social', value: '−50 lei / an' },
-          { label: 'Client RIDElance PRO', value: 'Găzduire gratuită' },
-        ],
-      },
-    ],
+    tagline: 'Deschidere PFA gratuită cu abonament, sediu social și reduceri la ONRC.',
+    website: 'https://consulto.ro',
+    blocks: [],
   },
   {
     slug: 'simplifi',
@@ -212,19 +183,24 @@ export const partnerBenefits: PartnerBenefit[] = [
     slug: 'smart-fintech',
     name: 'Smart Fintech',
     image: smartfintech,
-    website: 'https://www.smartfintech.eu',
+    tagline: 'Open banking prin Smart Accounts: contul bancar sincronizat în RIDElance.',
+    website: 'https://www.smartfintech.eu/smartaccounts',
     blocks: [],
   },
   {
     slug: 'fiscallink',
     name: 'FiscalLink',
     image: fiscallink,
+    tagline: 'Casa de marcat conectată la RIDElance: bonuri, rapoarte X/Z și acces pentru contabil.',
+    website: 'https://fiscallink.ro',
     blocks: [],
   },
   {
     slug: 'constalaris',
     name: 'Constalaris',
     image: constalaris,
+    tagline: 'Case de marcat Orgtech Teo, cu fiscalizare, NUI și conectare ANAF incluse.',
+    website: 'https://www.constalaris.ro',
     blocks: [],
   },
 ]

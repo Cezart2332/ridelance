@@ -16,6 +16,8 @@ import { PARTNER_LOGO } from '../../../data/partnerLogo'
 import { BCR_ONBOARDING_URL } from '../../../data/partners'
 import { BcrOffer } from '../../partners/BcrOffer'
 import { EldriveOffer } from '../../partners/EldriveOffer'
+import { PartnerShowcase } from '../../partners/PartnerShowcase'
+import { getPartnerShowcase } from '../../../data/partnerShowcases'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { PageHeader } from '../ui'
 
@@ -137,6 +139,9 @@ function PartnerPanel({
   partner: PartnerBenefit
   onNavigate?: (section: string) => void
 }) {
+  // Pagina completă a partenerilor cu material propriu — aceeași ca pe pagina publică.
+  const showcase = getPartnerShowcase(partner.slug)
+
   return (
     <Paper
       elevation={0}
@@ -304,6 +309,8 @@ function PartnerPanel({
           {partner.slug === 'eldrive' && (
             <EldriveOffer tokens={DASHBOARD_TOKENS} title="Oferta Eldrive pentru RIDElance" />
           )}
+
+          {showcase && <PartnerShowcase showcase={showcase} tokens={DASHBOARD_TOKENS} />}
 
           {partner.blocks.length > 0 && (
             <Box
