@@ -1,6 +1,9 @@
 import type { SvgIconComponent } from '@mui/icons-material'
 import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded'
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded'
+import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded'
+import PostAddRoundedIcon from '@mui/icons-material/PostAddRounded'
+import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded'
 import CalculateRoundedIcon from '@mui/icons-material/CalculateRounded'
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
@@ -20,7 +23,7 @@ import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded'
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded'
 
-import type { DashboardNavConfig, NavEntry } from './dashboardNav'
+import { withIntent, type DashboardNavConfig, type NavEntry, type QuickActionsMenu } from './dashboardNav'
 import { IS_NATIVE_APP } from '../native/platform'
 
 /**
@@ -286,6 +289,58 @@ const EXTRA_PAGE_TITLES: Record<string, string> = {
 }
 
 /**
+ * Meniul „+” din antet. Fiecare acțiune duce pe pagina care o face; unde pagina are un formular,
+ * `?actiune=` i-l deschide (vezi `useQuickActionIntent`).
+ */
+const DOCUMENT_PAGES: readonly string[] = [PFA_PATHS.docsPersonal, PFA_PATHS.docsPfa, PFA_PATHS.docsVehicle]
+
+const PFA_QUICK_ACTIONS: QuickActionsMenu = {
+  title: 'Dashboard PFA',
+  subtitle: 'Acțiuni rapide pentru șoferi',
+  icon: PersonRoundedIcon,
+  items: [
+    {
+      id: 'expense',
+      label: 'Încarcă o cheltuială',
+      hint: 'Bon fiscal, factură, service, combustibil',
+      icon: ReceiptLongRoundedIcon,
+      primary: true,
+      to: () => withIntent(PFA_PATHS.expenses, 'cheltuiala'),
+    },
+    {
+      id: 'document',
+      label: 'Adaugă document',
+      hint: 'Document PFA, vehicul sau autorizație',
+      icon: UploadFileRoundedIcon,
+      // Pe o pagină de documente rămâi pe ea — acolo voiai să încarci. Altfel, actele PFA.
+      to: (pathname) =>
+        DOCUMENT_PAGES.includes(pathname) ? pathname : PFA_PATHS.docsPfa,
+    },
+    {
+      id: 'invoice',
+      label: 'Emite factură',
+      hint: 'Deschide emiterea prin Oblio',
+      icon: PostAddRoundedIcon,
+      to: () => withIntent(PFA_PATHS.invoices, 'factura'),
+    },
+    {
+      id: 'accountant',
+      label: 'Contactează contabilul',
+      hint: 'Deschide o conversație nouă',
+      icon: ChatBubbleOutlineRoundedIcon,
+      to: () => PFA_PATHS.accountantChat,
+    },
+    {
+      id: 'support',
+      label: 'Solicită asistență',
+      hint: 'Deschide un tichet către RIDElance',
+      icon: HeadsetMicRoundedIcon,
+      to: () => withIntent(PFA_PATHS.support, 'asistenta'),
+    },
+  ],
+}
+
+/**
  * Configul complet al dashboard-ului PFA. Layout-ul primește doar obiectul ăsta — nu importă
  * nimic din fișierul de față și nu știe că PFA-ul există.
  */
@@ -317,5 +372,6 @@ export const PFA_NAV_CONFIG: DashboardNavConfig = {
   },
   extraPageTitles: EXTRA_PAGE_TITLES,
   fallbackTitle: 'Dashboard PFA',
+  quickActions: PFA_QUICK_ACTIONS,
   documentTitle: 'RIDElance — Dashboard PFA',
 }

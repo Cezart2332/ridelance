@@ -1,6 +1,10 @@
 import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded'
 import BuildRoundedIcon from '@mui/icons-material/BuildRounded'
 import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded'
+import CampaignRoundedIcon from '@mui/icons-material/CampaignRounded'
+import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded'
+import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
+import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded'
 import HeadsetMicRoundedIcon from '@mui/icons-material/HeadsetMicRounded'
@@ -13,7 +17,7 @@ import RedeemRoundedIcon from '@mui/icons-material/RedeemRounded'
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded'
 
 import { IS_NATIVE_APP } from '../native/platform'
-import type { DashboardNavConfig, NavEntry } from './dashboardNav'
+import { withIntent, type DashboardNavConfig, type NavEntry, type QuickActionsMenu } from './dashboardNav'
 
 /**
  * Navigația Dashboard-ului SRL. Aceleași reguli ca la PFA (`pfaNavigation.ts`): fișierul e
@@ -99,7 +103,7 @@ export const SRL_NAV: NavEntry[] = [
   {
     kind: 'group',
     id: 'fleet',
-    label: 'Flotă',
+    label: 'Mașini',
     icon: DirectionsCarFilledRoundedIcon,
     children: [
       { id: 'cars', label: 'Mașinile mele', path: SRL_PATHS.cars, hint: 'Flota și acțiunile pe fiecare mașină' },
@@ -189,6 +193,72 @@ export const SRL_LEAF_ICONS: Record<string, typeof HomeRoundedIcon> = {
   [SRL_PATHS.invoices]: ReceiptLongRoundedIcon,
 }
 
+/** Mașina deschisă acum, dacă ești pe pagina uneia. `masini/adauga` e formularul, nu o mașină. */
+function carIdIn(pathname: string): string | null {
+  const prefix = `${SRL_PATHS.cars}/`
+  if (!pathname.startsWith(prefix)) return null
+  const id = pathname.slice(prefix.length)
+  return id && !id.includes('/') && id !== 'adauga' ? id : null
+}
+
+/**
+ * Meniul „+” al SRL-ului. Acțiunile legate de o mașină rămân pe mașina deschisă: pe pagina ei,
+ * „Generează contract” sau „Înregistrează închiriere” nu mai cer să alegi mașina.
+ */
+const SRL_QUICK_ACTIONS: QuickActionsMenu = {
+  title: 'Dashboard SRL',
+  subtitle: 'Administrarea mașinilor firmei',
+  icon: BusinessRoundedIcon,
+  items: [
+    {
+      id: 'add-car',
+      label: 'Adaugă mașină',
+      hint: 'Înregistrează un vehicul nou',
+      icon: DirectionsCarFilledRoundedIcon,
+      primary: true,
+      to: () => SRL_PATHS.addCar,
+    },
+    {
+      id: 'publish',
+      label: 'Publică anunț',
+      hint: 'Listează o mașină în marketplace',
+      icon: CampaignRoundedIcon,
+      to: () => withIntent(SRL_PATHS.cars, 'anunt'),
+    },
+    {
+      id: 'contract',
+      label: 'Generează contract',
+      hint: 'Pregătește un contract de închiriere',
+      icon: EditNoteRoundedIcon,
+      to: (pathname) => {
+        const carId = carIdIn(pathname)
+        return withIntent(carId ? srlCarPath(carId) : SRL_PATHS.cars, 'contract')
+      },
+    },
+    {
+      id: 'rental',
+      label: 'Înregistrează închiriere',
+      hint: 'Asociază clientul, mașina și perioada',
+      icon: EventAvailableRoundedIcon,
+      to: (pathname) => {
+        const carId = carIdIn(pathname)
+        return withIntent(carId ? srlCarPath(carId) : SRL_PATHS.cars, 'inchiriere')
+      },
+    },
+    {
+      id: 'document',
+      label: 'Încarcă document',
+      hint: 'Documente auto, firmă sau colaboratori',
+      icon: UploadFileRoundedIcon,
+      // Pe o mașină: dosarul ei. Altfel: actele firmei.
+      to: (pathname) => {
+        const carId = carIdIn(pathname)
+        return withIntent(carId ? srlCarPath(carId) : SRL_PATHS.companyDocuments, 'document')
+      },
+    },
+  ],
+}
+
 export const SRL_NAV_CONFIG: DashboardNavConfig = {
   ownerType: 'Srl',
   root: SRL_ROOT,
@@ -213,5 +283,6 @@ export const SRL_NAV_CONFIG: DashboardNavConfig = {
     [SRL_PATHS.benefits]: RedeemRoundedIcon,
   },
   fallbackTitle: 'Dashboard SRL',
+  quickActions: SRL_QUICK_ACTIONS,
   documentTitle: 'RIDElance — Dashboard SRL',
 }

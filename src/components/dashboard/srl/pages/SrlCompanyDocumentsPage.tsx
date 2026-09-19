@@ -22,6 +22,7 @@ import { documentService, type DocumentSummary } from '../../../../services/docu
 import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '../../dashboardTheme'
 import { PageHeader, Panel, StatCard, StatusChip } from '../../ui'
 import { DateField } from '../../../common/DateField'
+import { useQuickActionIntent } from '../../layout/useQuickActionIntent'
 
 /**
  * Documentele societății.
@@ -77,6 +78,8 @@ export function SrlCompanyDocumentsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  // „Încarcă document” din meniul „+” deschide direct încărcarea.
+  const { intent, clearIntent } = useQuickActionIntent()
   const [reloadToken, setReloadToken] = useState(0)
   // Un singur „acum" pentru toată pagina: două citiri ale ceasului ar putea încadra același
   // document în praguri diferite, în aceeași randare.
@@ -231,10 +234,14 @@ export function SrlCompanyDocumentsPage() {
       </Panel>
 
       <UploadDialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
+        open={dialogOpen || intent === 'document'}
+        onClose={() => {
+          setDialogOpen(false)
+          clearIntent()
+        }}
         onUploaded={() => {
           setDialogOpen(false)
+          clearIntent()
           reload()
         }}
       />

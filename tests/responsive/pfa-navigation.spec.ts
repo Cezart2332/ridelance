@@ -135,6 +135,15 @@ async function mockGate(page: Page) {
   )
 }
 
+/** Butonul „+”: „Adaugă” pe desktop, doar iconița pe telefon. */
+async function openQuickActions(page: Page, projectName: string) {
+  const trigger =
+    projectName === 'mobile'
+      ? page.getByRole('button', { name: 'Acțiuni rapide' })
+      : page.getByRole('button', { name: 'Adaugă', exact: true })
+  await trigger.click()
+}
+
 /** Fiecare frunză de meniu: calea și eticheta cu care apare în sidebar. */
 const leaves = [
   { path: ROOT, label: 'Acasă', group: undefined },
@@ -572,6 +581,35 @@ test.describe('navigație PFA', () => {
     await main.getByRole('tab', { name: 'Constalaris' }).click()
     await expect(main.getByText('Orgtech Teo SH')).toBeVisible()
     await expect(main.getByRole('link', { name: /Comandă pe Constalaris/ }).first()).toHaveAttribute('href', /constalaris\.ro/)
+  })
+
+  /** Antetul spune unde ești, ca în admin: categoria din meniu, apoi pagina. */
+  test('antetul arată categoria și pagina', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'pe telefon antetul are doar titlul')
+
+    await page.goto(`${ROOT}/contabilitate/cheltuieli`, { waitUntil: 'networkidle' })
+    const crumbs = page.getByRole('navigation', { name: 'Unde ești' })
+    await expect(crumbs).toContainText('Contabilitate')
+    await expect(crumbs).toContainText('Cheltuieli')
+  })
+
+  /** „+” de lângă notificări: acțiunile PFA, iar fiecare chiar deschide ce promite. */
+  test('acțiunile rapide deschid dialogul de cheltuială', async ({ page }, testInfo) => {
+    await page.goto(`${ROOT}/contabilitate/cheltuieli`, { waitUntil: 'networkidle' })
+    await openQuickActions(page, testInfo.project.name)
+
+    await expect(page.getByText('Dashboard PFA')).toBeVisible()
+    await expect(page.getByText('5 acțiuni')).toBeVisible()
+    await expect(page.getByText('Principală')).toBeVisible()
+    await page.screenshot({ path: `test-results/quick-actions-pfa-${testInfo.project.name}.png` })
+
+    await page.getByRole('button', { name: /Încarcă o cheltuială/ }).click()
+    await expect(page).toHaveURL(/contabilitate\/cheltuieli\?actiune=cheltuiala/)
+    await expect(page.getByRole('heading', { name: 'Adaugă cheltuială' })).toBeVisible()
+
+    // Închis, dialogul nu revine la un refresh: cererea iese din adresă.
+    await page.keyboard.press('Escape')
+    await expect(page).not.toHaveURL(/actiune=/)
   })
 
   test('paginile „În curând" nu aruncă erori', async ({ page }) => {

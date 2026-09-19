@@ -27,6 +27,7 @@ import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '
 import { Amount, PageHeader, Panel } from '../ui'
 import { NewInvoiceDialog } from './NewInvoiceDialog'
 import { OblioConnectPanel } from './OblioConnectPanel'
+import { useQuickActionIntent } from '../layout/useQuickActionIntent'
 
 /**
  * Facturile emise, citite din contul Oblio al proprietarului.
@@ -68,6 +69,7 @@ export function InvoicesPage() {
   const [tab, setTab] = useState<TabId>('all')
   const [search, setSearch] = useState('')
   const [composing, setComposing] = useState(false)
+  const { intent, clearIntent } = useQuickActionIntent()
   const [reloadToken, setReloadToken] = useState(0)
   const [busyInvoice, setBusyInvoice] = useState<string | null>(null)
 
@@ -191,11 +193,16 @@ export function InvoicesPage() {
         }
       />
 
-      {composing && (
+      {/* „Emite factură” din meniul „+”: doar cu Oblio conectat. Fără cont, pagina arată deja cum
+          se conectează — un dialog de emitere n-ar avea pe ce cont să emită. */}
+      {(composing || (intent === 'factura' && connection.connected)) && (
         <NewInvoiceDialog
           open
           connection={connection}
-          onClose={() => setComposing(false)}
+          onClose={() => {
+            setComposing(false)
+            clearIntent()
+          }}
           onIssued={reload}
         />
       )}

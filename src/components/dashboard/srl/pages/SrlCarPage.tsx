@@ -10,6 +10,7 @@ import UploadRoundedIcon from '@mui/icons-material/UploadRounded'
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
 
 import { SRL_PATHS } from '../../../../config/srlNavigation'
+import { useQuickActionIntent } from '../../layout/useQuickActionIntent'
 import { carsService, type Car } from '../../../../services/cars.service'
 import { documentService, type CarDossier, type CarDossierSlot } from '../../../../services/document.service'
 import { openDocument } from '../../../common/documentViewerBus'
@@ -74,6 +75,9 @@ export function SrlCarPage() {
   const [addingMaintenance, setAddingMaintenance] = useState(false)
   /** Închirierea al cărei set de documente e deschis. */
   const [documentsFor, setDocumentsFor] = useState<Rental | null>(null)
+
+  // Meniul „+” deschis pe mașina asta: acțiunile rămân pe ea, fără să mai ceară mașina.
+  const { intent, clearIntent } = useQuickActionIntent()
 
   const reload = useCallback(() => setReloadToken((token) => token + 1), [])
 
@@ -171,6 +175,25 @@ export function SrlCarPage() {
     formatKm(car.details?.mileage),
   ].join(' · ')
 
+
+  /**
+   * „Generează contract”: contractul e al unei închirieri, nu al mașinii — se deschide cel al
+   * închirierii în curs sau, dacă nu mai e niciuna, al celei mai recente. Fără nicio închiriere,
+   * primul pas e chiar închirierea.
+   */
+  const contractRental =
+    rentals.find((r) => r.status !== 'completed' && r.status !== 'cancelled') ??
+    [...rentals].sort((a, b) => b.startAtUtc.localeCompare(a.startAtUtc))[0] ??
+    null
+  const openDocuments = documentsFor ?? (intent === 'contract' ? contractRental : null)
+  const showRental = renting || intent === 'inchiriere' || (intent === 'contract' && contractRental === null)
+  // „Încarcă document” de pe mașină duce în dosarul ei.
+  const activeTab: TabId = intent === 'document' ? 'documente' : tab
+  const closeDocuments = () => {
+    setDocumentsFor(null)
+    clearIntent()
+  }
+
   return (
     <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
       <Button
@@ -242,8 +265,11 @@ export function SrlCarPage() {
       </Box>
 
       <Tabs
-        value={tab}
-        onChange={(_, next: TabId) => setTab(next)}
+        value={activeTab}
+        onChange={(_, next: TabId) => {
+          setTab(next)
+          clearIntent()
+        }}
         variant="scrollable"
         scrollButtons="auto"
         sx={{ borderBottom: `1px solid ${DASHBOARD_TOKENS.border}` }}
@@ -258,9 +284,9 @@ export function SrlCarPage() {
         ))}
       </Tabs>
 
-      {tab === 'prezentare' && <PresentationTab car={car} />}
+      {activeTab === 'prezentare' && <PresentationTab car={car} />}
 
-      {tab === 'inchirieri' && (
+      {activeTab === 'inchirieri' && (
         <RentalsTab
           rentals={rentals}
           onNew={() => setRenting(true)}
@@ -269,7 +295,7 @@ export function SrlCarPage() {
         />
       )}
 
-      {tab === 'mentenanta' && (
+      {activeTab === 'mentenanta' && (
         <MaintenanceTab
           entries={maintenance}
           onAdd={() => setAddingMaintenance(true)}
@@ -277,9 +303,9 @@ export function SrlCarPage() {
         />
       )}
 
-      {tab === 'documente' && dossier && <DocumentsTab carId={carId} dossier={dossier} onUploaded={reload} />}
+      {activeTab === 'documente' && dossier && <DocumentsTab carId={carId} dossier={dossier} onUploaded={reload} />}
 
-      {tab === 'istoric' && <TimelineTab events={timeline} />}
+      {activeTab === 'istoric' && <TimelineTab events={timeline} />}
 
       <CarEditDialog
         open={editing}
@@ -293,12 +319,16 @@ export function SrlCarPage() {
       />
 
       <NewRentalDialog
-        open={renting}
+        open={showRental}
         cars={[car]}
         fixedCarId={car.id}
-        onClose={() => setRenting(false)}
+        onClose={() => {
+          setRenting(false)
+          clearIntent()
+        }}
         onSaved={() => {
           setRenting(false)
+          clearIntent()
           reload()
         }}
       />
@@ -316,18 +346,18 @@ export function SrlCarPage() {
 
       {/* Documentele se deschid peste pagina mașinii, nu într-un alt ecran: sunt un rezultat al
           închirierii, iar drumul înapoi la ea trebuie să fie un click. */}
-      <Dialog open={documentsFor !== null} onClose={() => setDocumentsFor(null)} fullWidth maxWidth="sm">
+      <Dialog open={openDocuments !== null} onClose={closeDocuments} fullWidth maxWidth="sm">
         <DialogContent sx={{ p: 0 }}>
-          {documentsFor && (
+          {openDocuments && (
             <Stack spacing={2}>
-              <RentalDocumentsPanel rental={documentsFor} />
-              <RentalChecksPanel rental={documentsFor} />
-              <RentalPaymentsPanel rental={documentsFor} />
+              <RentalDocumentsPanel rental={openDocuments} />
+              <RentalChecksPanel rental={openDocuments} />
+              <RentalPaymentsPanel rental={openDocuments} />
             </Stack>
           )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDocumentsFor(null)} sx={{ textTransform: 'none', fontWeight: 700 }}>
+          <Button onClick={closeDocuments} sx={{ textTransform: 'none', fontWeight: 700 }}>
             Închide
           </Button>
         </DialogActions>

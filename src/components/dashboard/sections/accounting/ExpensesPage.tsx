@@ -21,6 +21,7 @@ import { deductibleExpensesData } from '../../../../data/cheltuieliDeductibile'
 import { getErrorMessage } from '../../../../utils/errorHandler'
 import { AddExpenseDialog } from './AddExpenseDialog'
 import { openDocument } from '../../../common/documentViewerBus'
+import { useQuickActionIntent } from '../../layout/useQuickActionIntent'
 
 const MONTHS = [
   'Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie',
@@ -63,6 +64,9 @@ export function ExpensesPage({ pfaRegistrationId }: { pfaRegistrationId: string 
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
+  // „Încarcă o cheltuială” din meniul „+” deschide direct dialogul.
+  const { intent, clearIntent } = useQuickActionIntent()
+  const showDialog = dialogOpen || intent === 'cheltuiala'
 
   const key = `${pfaRegistrationId}|${year}|${month}|${reloadToken}`
   const [loaded, setLoaded] = useState<{ key: string; items: DeductibleExpense[]; error: string | null }>({
@@ -310,10 +314,13 @@ export function ExpensesPage({ pfaRegistrationId }: { pfaRegistrationId: string 
         </Typography>
       )}
 
-      {dialogOpen && (
+      {showDialog && (
         <AddExpenseDialog
           pfaRegistrationId={pfaRegistrationId}
-          onClose={() => setDialogOpen(false)}
+          onClose={() => {
+            setDialogOpen(false)
+            clearIntent()
+          }}
           onSaved={() => setReloadToken((token) => token + 1)}
         />
       )}

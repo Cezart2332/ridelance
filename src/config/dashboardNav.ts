@@ -79,6 +79,8 @@ export interface DashboardNavConfig {
   fallbackTitle: string
   /** Titlul filei de browser cât timp dashboardul e deschis (spec §1.1). */
   documentTitle: string
+  /** Meniul „+” din antet. Lipsă = fără buton. */
+  quickActions?: QuickActionsMenu
 }
 
 /**
@@ -144,4 +146,58 @@ export function pageTitleFor(config: DashboardNavConfig, pathname: string): stri
   const extra = config.extraPageTitles?.[pathname]
   if (extra) return extra
   return findActiveLeaf(config, pathname)?.label ?? config.fallbackTitle
+}
+
+/* ── Acțiuni rapide ── */
+
+/**
+ * Parametrul prin care o acțiune rapidă îi spune paginii ce să deschidă: `?actiune=cheltuiala`
+ * deschide dialogul de cheltuială, `?actiune=inchiriere` pe cel de închiriere. Pagina își derivă
+ * dialogul din adresă (vezi `useQuickActionIntent`), deci aceeași acțiune merge și dintr-un link.
+ */
+export const QUICK_ACTION_PARAM = 'actiune'
+
+export type QuickActionIntent =
+  | 'cheltuiala'
+  | 'factura'
+  | 'asistenta'
+  | 'anunt'
+  | 'contract'
+  | 'inchiriere'
+  | 'document'
+
+export const withIntent = (path: string, intent: QuickActionIntent): string =>
+  `${path}?${QUICK_ACTION_PARAM}=${intent}`
+
+/**
+ * O intrare din meniul „+” din antet. `to` primește pagina curentă: aceeași acțiune poate duce în
+ * alt loc după unde ești — „Generează contract” de pe pagina unei mașini rămâne pe mașina aceea.
+ */
+export interface QuickAction {
+  id: string
+  label: string
+  hint: string
+  icon: SvgIconComponent
+  /** Acțiunea principală a dashboardului, marcată în meniu. */
+  primary?: boolean
+  to: (pathname: string) => string
+}
+
+/** Meniul „+”: antetul lui (cine ești) și acțiunile. */
+export interface QuickActionsMenu {
+  title: string
+  subtitle: string
+  icon: SvgIconComponent
+  items: readonly QuickAction[]
+}
+
+/**
+ * Firimiturile din antet: categoria din meniu, apoi pagina. Ca în admin — spune unde ești, nu doar
+ * cum se numește pagina. Paginile de nivel unu au doar titlul.
+ */
+export function pageCrumbsFor(config: DashboardNavConfig, pathname: string): string[] {
+  const title = pageTitleFor(config, pathname)
+  const leaf = findActiveLeaf(config, pathname)
+  const group = leaf ? navGroups(config).find((entry) => entry.children.some((child) => child.path === leaf.path)) : undefined
+  return group ? [group.label, title] : [title]
 }

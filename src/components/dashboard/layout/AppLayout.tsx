@@ -8,7 +8,7 @@ import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import AppSidebar from './AppSidebar';
 import AppHeader from './AppHeader';
 import { MobileMenu } from './MobileMenu';
-import { activeMobileTab, mobileMenuPath, pageTitleFor, type DashboardNavConfig } from '../../../config/dashboardNav';
+import { activeMobileTab, mobileMenuPath, pageCrumbsFor, pageTitleFor, type DashboardNavConfig } from '../../../config/dashboardNav';
 
 interface AppLayoutProps {
   /** Meniul dashboardului curent. Layout-ul e agnostic la tipul de cont. */
@@ -55,6 +55,7 @@ export default function AppLayout({
   }, [pathname]);
 
   const sectionTitle = isMenuPage ? 'Meniu' : pageTitleFor(nav, pathname);
+  const crumbs = isMenuPage ? ['Meniu'] : pageCrumbsFor(nav, pathname);
 
   /**
    * Titlul filei spune în ce dashboard ești (spec §1.1). Se restaurează la ieșire: altfel
@@ -104,6 +105,7 @@ export default function AppLayout({
         <AppHeader
           nav={nav}
           title={sectionTitle}
+          crumbs={crumbs}
           showNotifications={showNotifications}
           onOpenRecurringDocumentation={onOpenRecurringDocumentation}
           menuPath={menuPath}

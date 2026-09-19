@@ -27,6 +27,15 @@ const SECTIONS = [
   { path: `${ROOT}/setari`, label: 'Setări' },
 ]
 
+/** Butonul „+”: „Adaugă” pe desktop, doar iconița pe telefon. */
+async function openQuickActions(page: Page, projectName: string) {
+  const trigger =
+    projectName === 'mobile'
+      ? page.getByRole('button', { name: 'Acțiuni rapide' })
+      : page.getByRole('button', { name: 'Adaugă', exact: true })
+  await trigger.click()
+}
+
 test.describe('navigație SRL', () => {
   test.describe.configure({ timeout: 90_000 })
 
@@ -74,6 +83,37 @@ test.describe('navigație SRL', () => {
     await expect(page).toHaveURL(new RegExp(`${ROOT}/meniu$`))
     await expect(page.getByRole('region', { name: 'Firmă' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Pagina firmei' })).toBeVisible()
+  })
+
+  test('antetul arată categoria și pagina', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'pe telefon antetul are doar titlul')
+
+    await page.goto(`${ROOT}/masini`)
+    const crumbs = page.getByRole('navigation', { name: 'Unde ești' })
+    await expect(crumbs).toContainText('Mașini')
+    await expect(crumbs).toContainText('Mașinile mele')
+  })
+
+  test('acțiunile rapide SRL: „Publică anunț” arată mașinile nepublicate și cota', async ({ page }, testInfo) => {
+    await page.goto(ROOT)
+    await openQuickActions(page, testInfo.project.name)
+
+    await expect(page.getByText('Dashboard SRL')).toBeVisible()
+    await expect(page.getByText('5 acțiuni')).toBeVisible()
+    // Fără „flotă” în meniu, cum s-a cerut.
+    await expect(page.getByRole('presentation').getByText(/flot/i)).toHaveCount(0)
+    await page.screenshot({ path: `test-results/quick-actions-srl-${testInfo.project.name}.png` })
+
+    await page.getByRole('button', { name: /Publică anunț/ }).click()
+    await expect(page).toHaveURL(/masini\?actiune=anunt/)
+    await expect(page.getByText(/Alege mașina și apasă „Publică”/)).toBeVisible()
+  })
+
+  test('acțiunile rapide SRL: „Adaugă mașină” deschide formularul', async ({ page }, testInfo) => {
+    await page.goto(ROOT)
+    await openQuickActions(page, testInfo.project.name)
+    await page.getByRole('button', { name: /Adaugă mașină/ }).click()
+    await expect(page).toHaveURL(new RegExp(`${ROOT}/masini/adauga$`))
   })
 
   test('ruta veche /poster redirecționează, păstrând query string-ul', async ({ page }) => {

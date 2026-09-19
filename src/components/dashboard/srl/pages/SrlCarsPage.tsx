@@ -21,6 +21,8 @@ import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFil
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 
 import { SRL_PATHS, srlCarPath } from '../../../../config/srlNavigation'
+import { withIntent } from '../../../../config/dashboardNav'
+import { useQuickActionIntent } from '../../layout/useQuickActionIntent'
 import { carsService, type Car, type CarLead } from '../../../../services/cars.service'
 import { rentalsService, type Rental, type RentalDocumentType } from '../../../../services/rentals.service'
 import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '../../dashboardTheme'
@@ -108,6 +110,12 @@ export function SrlCarsPage() {
   const [reloadToken, setReloadToken] = useState(0)
   const reload = useCallback(() => setReloadToken((token) => token + 1), [])
 
+  /**
+   * Ce a cerut meniul „+”. Nimic nu se copiază în stare: tab-ul, filtrul și dialogurile se derivă
+   * din intenție cât timp ea e în adresă, iar orice alegere a omului o închide.
+   */
+  const { intent, clearIntent } = useQuickActionIntent()
+
   useEffect(() => {
     let cancelled = false
 
@@ -146,6 +154,11 @@ export function SrlCarsPage() {
     return map
   }, [rentals])
 
+  // „Publică anunț” arată mașinile nepublicate, „Generează contract” pe cele închiriate — acolo
+  // sunt butoanele care fac asta, pe fiecare mașină.
+  const activeTab: TabId = intent === 'anunt' || intent === 'contract' ? 'masini' : tab
+  const activeFilter: FilterId = intent === 'anunt' ? 'nepublicate' : intent === 'contract' ? 'inchiriate' : filter
+
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase()
 
@@ -153,12 +166,12 @@ export function SrlCarsPage() {
       if (needle && !`${car.brand} ${car.model} ${car.details?.plateNumber ?? ''}`.toLowerCase().includes(needle)) {
         return false
       }
-      if (filter === 'inchiriate') return currentRentals.has(car.id)
-      if (filter === 'libere') return !currentRentals.has(car.id)
-      if (filter === 'nepublicate') return car.listingStatus !== 'Published' || !car.active
+      if (activeFilter === 'inchiriate') return currentRentals.has(car.id)
+      if (activeFilter === 'libere') return !currentRentals.has(car.id)
+      if (activeFilter === 'nepublicate') return car.listingStatus !== 'Published' || !car.active
       return true
     })
-  }, [cars, search, filter, currentRentals])
+  }, [cars, search, activeFilter, currentRentals])
 
   const togglePublish = async (id: string) => {
     try {
@@ -200,8 +213,13 @@ export function SrlCarsPage() {
       ? null
       : { included: includedListings, used: usedListings, remaining: Math.max(0, includedListings - usedListings) }
 
-  const documentsCar = cars.find((car) => car.id === documentsFor?.carId) ?? null
-  const documentsIntent = documentsFor ? DOCUMENT_INTENTS[documentsFor.intent] : null
+  // Cu o singură mașină închiriată, „Generează contract” n-are ce întreba: deschide contractul ei.
+  const onlyRentedCarId = currentRentals.size === 1 ? [...currentRentals.keys()][0] : null
+  const activeDocuments =
+    documentsFor ?? (intent === 'contract' && onlyRentedCarId ? { carId: onlyRentedCarId, intent: 'contract' as DocumentIntent } : null)
+  const documentsCar = cars.find((car) => car.id === activeDocuments?.carId) ?? null
+  const documentsIntent = activeDocuments ? DOCUMENT_INTENTS[activeDocuments.intent] : null
+  const renting = rentingCarId !== null || intent === 'inchiriere'
 
   if (loading) {
     return (
@@ -247,8 +265,11 @@ export function SrlCarsPage() {
       </Box>
 
       <Tabs
-        value={tab}
-        onChange={(_, next: TabId) => setTab(next)}
+        value={activeTab}
+        onChange={(_, next: TabId) => {
+          setTab(next)
+          clearIntent()
+        }}
         variant="scrollable"
         scrollButtons="auto"
         sx={{
@@ -266,8 +287,41 @@ export function SrlCarsPage() {
         ))}
       </Tabs>
 
-      {tab === 'masini' && (
+      {activeTab === 'masini' && (
         <Stack spacing={2}>
+          {intent === 'anunt' && (
+            <Alert
+              severity={quota && quota.remaining === 0 ? 'warning' : 'info'}
+              onClose={clearIntent}
+              sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}
+            >
+              {quota && quota.remaining === 0
+                ? `Ai folosit toate cele ${quota.included} anunțuri incluse în abonament. Un anunț nou se publică după ce retragi unul dintre cele active sau după ce treci la un abonament cu mai multe anunțuri — nu publicăm nimic automat.`
+                : `Alege mașina și apasă „Publică” pe cardul ei.${quota ? ` Mai ai ${quota.remaining} din ${quota.included} anunțuri incluse în abonament.` : ''}`}
+            </Alert>
+          )}
+          {intent === 'contract' && !onlyRentedCarId && (
+            <Alert
+              severity="info"
+              onClose={clearIntent}
+              action={
+                currentRentals.size === 0 ? (
+                  <Button
+                    size="small"
+                    onClick={() => navigate(withIntent(SRL_PATHS.cars, 'inchiriere'), { replace: true })}
+                    sx={{ textTransform: 'none', fontWeight: 750, whiteSpace: 'nowrap' }}
+                  >
+                    Înregistrează închiriere
+                  </Button>
+                ) : undefined
+              }
+              sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontWeight: 600 }}
+            >
+              {currentRentals.size === 0
+                ? 'Contractul se generează dintr-o închiriere, iar acum nicio mașină nu e închiriată.'
+                : 'Alege mașina și apasă „Contract” pe cardul ei.'}
+            </Alert>
+          )}
           {cars.length > 0 && (
             <Stack
               direction={{ xs: 'column', md: 'row' }}
@@ -292,8 +346,12 @@ export function SrlCarsPage() {
               />
               <ToggleButtonGroup
                 exclusive
-                value={filter}
-                onChange={(_, value: FilterId | null) => value && setFilter(value)}
+                value={activeFilter}
+                onChange={(_, value: FilterId | null) => {
+                  if (!value) return
+                  setFilter(value)
+                  clearIntent()
+                }}
                 sx={pillToggleSx}
               >
                 {FILTERS.map((entry) => (
@@ -342,9 +400,9 @@ export function SrlCarsPage() {
         </Stack>
       )}
 
-      {tab === 'solicitari' && <LeadsPanel leads={leads} onStatusChange={(id, status) => void setLeadStatus(id, status)} />}
+      {activeTab === 'solicitari' && <LeadsPanel leads={leads} onStatusChange={(id, status) => void setLeadStatus(id, status)} />}
 
-      {tab === 'statistici' && <StatsPanel cars={cars} />}
+      {activeTab === 'statistici' && <StatsPanel cars={cars} />}
 
       <CarEditDialog
         open={editing !== null}
@@ -358,12 +416,16 @@ export function SrlCarsPage() {
       />
 
       <NewRentalDialog
-        open={rentingCarId !== null}
+        open={renting}
         cars={cars}
         fixedCarId={rentingCarId ?? undefined}
-        onClose={() => setRentingCarId(null)}
+        onClose={() => {
+          setRentingCarId(null)
+          clearIntent()
+        }}
         onSaved={() => {
           setRentingCarId(null)
+          clearIntent()
           reload()
         }}
       />
@@ -375,10 +437,14 @@ export function SrlCarsPage() {
           rentals={rentals.filter((rental) => rental.carId === documentsCar.id)}
           only={documentsIntent.types}
           title={documentsIntent.title}
-          onClose={() => setDocumentsFor(null)}
+          onClose={() => {
+            setDocumentsFor(null)
+            clearIntent()
+          }}
           onNewRental={() => {
             const carId = documentsCar.id
             setDocumentsFor(null)
+            clearIntent()
             setRentingCarId(carId)
           }}
         />

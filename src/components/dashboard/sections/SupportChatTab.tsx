@@ -18,6 +18,7 @@ import { getBucharestBusinessHoursStatus } from '../../../utils/businessHours'
 import { OfficeBookingCalendar } from '../../office/OfficeBookingCalendar'
 import { userService, type UserProfile } from '../../../services/user.service'
 import { displayName } from '../../../utils/displayName'
+import { useQuickActionIntent } from '../layout/useQuickActionIntent'
 
 interface SupportChatTabProps {
   /**
@@ -39,9 +40,20 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
   const [sending, setSending] = useState(false)
   const [, setClockTick] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messageInputRef = useRef<HTMLInputElement>(null)
+  const { intent, clearIntent } = useQuickActionIntent()
   const myUserId = useAppSelector((s) => s.auth.userId) || ''
   const supportHours = getBucharestBusinessHoursStatus(10, 18)
   const [profile, setProfile] = useState<UserProfile | null>(null)
+
+  // „Solicită asistență” din meniul „+”: cursorul ajunge direct în câmpul de mesaj, după ce
+  // conversația s-a încărcat — înainte câmpul nici nu există.
+  useEffect(() => {
+    if (intent !== 'asistenta' || loading) return
+    messageInputRef.current?.focus()
+    messageInputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    clearIntent()
+  }, [intent, loading, clearIntent])
 
   useEffect(() => {
     userService.getProfile().then(setProfile).catch(() => {})
@@ -262,6 +274,7 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
             <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
               <TextField
                 fullWidth
+                inputRef={messageInputRef}
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
                 onKeyDown={(e) => {
