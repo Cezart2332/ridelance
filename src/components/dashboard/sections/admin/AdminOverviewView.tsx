@@ -29,6 +29,7 @@ import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFil
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded'
 import LoginRoundedIcon from '@mui/icons-material/LoginRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
+import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded'
 import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import { TOKENS } from '../../../../constants/tokens'
@@ -359,6 +360,13 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
         color: '#047857',
       },
       {
+        label: 'SRL-uri active',
+        value: (data.srlStats?.active ?? 0).toLocaleString('ro-RO'),
+        helper: data.srlStats ? `${formatLei(data.srlStats.subscriptionMonthlyRevenueBani)} lunar` : 'fără date',
+        icon: <BusinessRoundedIcon />,
+        color: '#1d4ed8',
+      },
+      {
         label: 'Anunțuri auto plătite',
         value: data.carStats.paidActive.toLocaleString('ro-RO'),
         helper: `${formatLei(data.carStats.monthlyRevenueBani)} lunar`,
@@ -498,7 +506,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
             </Alert>
           )}
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(4, minmax(0, 1fr))' }, gap: 1.5 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(5, minmax(0, 1fr))' }, gap: 1.5 }}>
             {operationalCards.map((card) => <MetricCard key={card.label} {...card} />)}
           </Box>
 
@@ -527,10 +535,16 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
 
             <DataPaper>
               <Box sx={{ p: 2.5 }}>
-                <SectionTitle title="Abonamente active" subtitle="PFA-uri recurente și anunțuri auto lunare." />
+                <SectionTitle title="Abonamente active" subtitle="PFA-uri și SRL-uri recurente, plus anunțurile auto." />
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="subtitle2" sx={{ fontWeight: 650, mb: 1 }}>PFA-uri</Typography>
                 <SmallStatList items={data.pfaSubscriptions} />
+                {data.srlSubscriptions && data.srlSubscriptions.length > 0 && (
+                  <>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 650, mt: 2, mb: 1 }}>SRL-uri</Typography>
+                    <SmallStatList items={data.srlSubscriptions} />
+                  </>
+                )}
                 <Typography variant="subtitle2" sx={{ fontWeight: 650, mt: 2, mb: 1 }}>Anunțuri auto</Typography>
                 <SmallStatList items={data.carSubscriptions} />
               </Box>
@@ -565,6 +579,8 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                   {[
                     ['Înrolați (onboarding complet)', data.pfaStats.totalEnrolled.toLocaleString('ro-RO')],
                     ['Active', data.pfaStats.active.toLocaleString('ro-RO')],
+                    ['Inactive (fără abonament activ)', data.pfaStats.inactive.toLocaleString('ro-RO')],
+                    ['Șterse (conturi închise)', (data.pfaStats.deleted ?? 0).toLocaleString('ro-RO')],
                     ['În onboarding', data.pfaStats.inOnboarding.toLocaleString('ro-RO')],
                     ['Cereri noi', data.pfaStats.newRequests.toLocaleString('ro-RO')],
                     ['Blocaj client', data.pfaStats.clientBlocked.toLocaleString('ro-RO')],
@@ -579,6 +595,36 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
               </Box>
             </DataPaper>
           </Box>}
+
+          {view === 'sinteza' && data.srlStats && (
+            <DataPaper>
+              <Box sx={{ p: 2.5 }}>
+                <SectionTitle
+                  title="SRL-uri"
+                  subtitle="Firmele: câte sunt, în ce stare și cât aduc — abonamentul și anunțurile plătite peste cele incluse."
+                />
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, columnGap: 4, rowGap: 1.4, mt: 2 }}>
+                  {[
+                    ['Înrolate (onboarding complet)', data.srlStats.totalEnrolled.toLocaleString('ro-RO')],
+                    ['Active (abonament plătit)', data.srlStats.active.toLocaleString('ro-RO')],
+                    ['Inactive (fără abonament activ)', data.srlStats.inactive.toLocaleString('ro-RO')],
+                    ['În onboarding', data.srlStats.inOnboarding.toLocaleString('ro-RO')],
+                    ['Șterse (conturi închise)', data.srlStats.deleted.toLocaleString('ro-RO')],
+                    ['Plată eșuată', data.srlStats.failedPayment.toLocaleString('ro-RO')],
+                    ['Venit lunar din abonamente', formatLei(data.srlStats.subscriptionMonthlyRevenueBani)],
+                    ['Mașini publicate / total', `${data.srlStats.carsPublished.toLocaleString('ro-RO')} / ${data.srlStats.carsTotal.toLocaleString('ro-RO')}`],
+                    ['Anunțuri extra plătite (active)', data.srlStats.paidExtraListings.toLocaleString('ro-RO')],
+                    ['Venit anunțuri extra (perioada aleasă)', `${formatLei(data.srlStats.extraListingsRevenueBani)} · ${data.srlStats.extraListingsPayments} plăți`],
+                  ].map(([label, value]) => (
+                    <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
+                      <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{label}</Typography>
+                      <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 650, fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{value}</Typography>
+                    </Stack>
+                  ))}
+                </Box>
+              </Box>
+            </DataPaper>
+          )}
 
           {view === 'plati' && <>
           <DataPaper>

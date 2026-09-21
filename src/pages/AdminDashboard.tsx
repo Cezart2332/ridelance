@@ -45,6 +45,9 @@ import { OblioAdminView } from '../components/dashboard/sections/admin/OblioAdmi
 import { DiscountsAdminView } from '../components/dashboard/sections/admin/DiscountsAdminView'
 import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminOverviewView'
+import { SrlAccountsView } from '../components/dashboard/sections/admin/SrlAccountsView'
+import { CloseAccountDialog } from '../components/dashboard/sections/admin/CloseAccountDialog'
+import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded'
 import { PfaDetailView } from './admin/PfaDetailView'
 import { displayName } from '../utils/displayName'
 import {
@@ -87,6 +90,23 @@ interface PfaSummary {
   hasRegistration: boolean
   createdAtUtc: string
   lastActivityAtUtc: string | null
+  /** Contul a fost închis. Datele rămân; lista îl arată la „Șterse”. */
+  deletedAtUtc: string | null
+}
+
+/** Filtrul listei „PFA înrolate”. */
+type EnrolledFilter = 'active' | 'inactive' | 'deleted'
+
+const ENROLLED_FILTERS: { id: EnrolledFilter; label: string }[] = [
+  { id: 'active', label: 'Active' },
+  { id: 'inactive', label: 'Inactive' },
+  { id: 'deleted', label: 'Șterse' },
+]
+
+/** Activ = abonament plătit. Aceeași regulă ca în privirea de ansamblu. */
+function isActiveSubscription(status: string | null): boolean {
+  const value = status?.toLowerCase()
+  return value === 'active' || value === 'activependingbilling'
 }
 
 type DetailAction = 'plan' | 'discount' | 'suspend' | 'reactivate' | 'note' | null
@@ -117,6 +137,7 @@ function normalizePfaSummary(item: any): PfaSummary {
     hasRegistration: item.hasRegistration !== false,
     createdAtUtc: item.createdAtUtc,
     lastActivityAtUtc: item.lastActivityAtUtc,
+    deletedAtUtc: item.deletedAtUtc ?? null,
   }
 }
 
@@ -188,9 +209,13 @@ export function AdminDashboard() {
   const navigate = useNavigate()
   const [manualTab, setActiveTab] = useState('overview')
   const linkedTab = notificationParams.get('tab') ?? ''
-  const activeTab = ['overview', 'pfa', 'pfa_inrolate', 'masini', 'pagini_firme', 'servicii', 'facturare', 'reduceri', 'asigurari', 'calendar', 'chat', 'contabili', 'notificari'].includes(linkedTab) ? linkedTab : manualTab
+  const activeTab = ['overview', 'pfa', 'pfa_inrolate', 'srl_inrolate', 'masini', 'pagini_firme', 'servicii', 'facturare', 'reduceri', 'asigurari', 'calendar', 'chat', 'contabili', 'notificari'].includes(linkedTab) ? linkedTab : manualTab
   const [search, setSearch] = useState('')
   const [onlyAwaitingAdmin, setOnlyAwaitingAdmin] = useState(false)
+  const [enrolledFilter, setEnrolledFilter] = useState<EnrolledFilter>('active')
+  /** Contul pe care îl închidem sau redeschidem acum. */
+  const [accountAction, setAccountAction] = useState<{ userId: string; name: string; action: 'close' | 'reopen' } | null>(null)
+  const [pfasReloadToken, setPfasReloadToken] = useState(0)
 
   // PFA list
   const [pfas, setPfas] = useState<PfaSummary[]>([])
@@ -253,7 +278,7 @@ export function AdminDashboard() {
       })
       .catch(() => setPfasError('Nu s-au putut încărca înregistrările PFA.'))
       .finally(() => setPfasLoading(false))
-  }, [activeTab, selectedPfa])
+  }, [activeTab, selectedPfa, pfasReloadToken])
 
   useEffect(() => {
     if (!selectedPfa) return
@@ -443,6 +468,8 @@ export function AdminDashboard() {
       onboardingCompletedAtUtc: new Date().toISOString(),
       createdAtUtc: new Date().toISOString(),
       lastActivityAtUtc: pfa.lastActivityAtUtc,
+      // Cardurile din overview sunt doar ale conturilor deschise.
+      deletedAtUtc: null,
     })
     setActiveTab('pfa_inrolate')
     navigate(`/admin?tab=pfa_inrolate&user=${pfa.userId}`)
@@ -510,7 +537,8 @@ export function AdminDashboard() {
   const navItems = [
     { id: 'overview', label: 'Privire de ansamblu', group: 'Spațiu de lucru', icon: <HomeRoundedIcon /> },
     { id: 'pfa', label: 'Onboarding', group: 'Clienți', icon: <PeopleAltRoundedIcon /> },
-    { id: 'pfa_inrolate', label: 'Clienți înrolați', group: 'Clienți', icon: <HowToRegRoundedIcon /> },
+    { id: 'pfa_inrolate', label: 'PFA înrolate', group: 'Clienți', icon: <HowToRegRoundedIcon /> },
+    { id: 'srl_inrolate', label: 'SRL înrolate', group: 'Clienți', icon: <BusinessRoundedIcon /> },
     { id: 'chat', label: 'Chat', group: 'Clienți', icon: <ChatRoundedIcon /> },
     { id: 'masini', label: 'Mașini ridesharing', group: 'Activitate comercială', icon: <DirectionsCarFilledRoundedIcon /> },
     // Lângă mașini, nu lângă setări: e tot moderare de conținut public, doar că a firmei.
@@ -528,13 +556,29 @@ export function AdminDashboard() {
     (p) => p.userName.toLowerCase().includes(search.toLowerCase()) || p.userEmail.toLowerCase().includes(search.toLowerCase())
   )
 
+  /**
+   * Unde cade un client în „PFA înrolate”. Un cont închis merge la „Șterse” oricând s-ar fi
+   * închis — și în mijlocul onboardingului: altfel n-ar mai apărea nicăieri, deși datele lui rămân.
+   */
+  const enrolledFilterOf = (p: PfaSummary): EnrolledFilter | null => {
+    if (p.deletedAtUtc) return 'deleted'
+    if (p.onboardingCompletedAtUtc === null) return null
+    return isActiveSubscription(p.subscriptionStatus) ? 'active' : 'inactive'
+  }
+
+  const enrolledCounts = ENROLLED_FILTERS.reduce(
+    (acc, entry) => ({ ...acc, [entry.id]: filteredPfas.filter((p) => enrolledFilterOf(p) === entry.id).length }),
+    {} as Record<EnrolledFilter, number>,
+  )
+
   const displayPfas = filteredPfas
     // Înrolat = onboarding complet, nu „dosar PFA aprobat": un dosar aprobat poate avea încă
-    // patru pași de parcurs, iar tabul de onboarding e chiar locul unde se urmăresc.
+    // patru pași de parcurs, iar tabul de onboarding e chiar locul unde se urmăresc. Conturile
+    // închise ies din onboarding și stau la „Șterse”.
     .filter(p =>
       activeTab === 'pfa_inrolate'
-        ? p.onboardingCompletedAtUtc !== null
-        : p.onboardingCompletedAtUtc === null
+        ? enrolledFilterOf(p) === enrolledFilter
+        : p.onboardingCompletedAtUtc === null && !p.deletedAtUtc
     )
     // Filtrul rapid din spec: dosarele la care mingea e la noi, nu la client.
     .filter(p => !onlyAwaitingAdmin || p.awaitingAdminAction)
@@ -811,7 +855,7 @@ export function AdminDashboard() {
   const renderPfaList = () => (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h1">{activeTab === 'pfa_inrolate' ? 'Clienți înrolați' : 'Onboarding'}</Typography>
+        <Typography variant="h1">{activeTab === 'pfa_inrolate' ? 'PFA înrolate' : 'Onboarding'}</Typography>
         <Typography color="text.secondary" variant="body1" sx={{ mt: 1 }}>Găsește un client, verifică documentele și urmărește progresul dosarului.</Typography>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5 }}>
@@ -819,7 +863,22 @@ export function AdminDashboard() {
           <SearchRoundedIcon sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} />
           <TextField variant="outlined" size="small" label="Caută după nume sau email" value={search} onChange={(e) => setSearch(e.target.value)} sx={{ width: { xs: '100%', sm: 300 }, maxWidth: '100%', ...inputSx }} />
         </Box>
-        <Chip
+        {activeTab === 'pfa_inrolate' && ENROLLED_FILTERS.map((entry) => (
+          <Chip
+            key={entry.id}
+            label={`${entry.label} (${enrolledCounts[entry.id]})`}
+            onClick={() => setEnrolledFilter(entry.id)}
+            variant={enrolledFilter === entry.id ? 'filled' : 'outlined'}
+            sx={{
+              fontWeight: 700,
+              cursor: 'pointer',
+              ...(enrolledFilter === entry.id
+                ? { bgcolor: TOKENS.primary, color: '#fff', '&:hover': { bgcolor: TOKENS.primaryStrong } }
+                : { borderColor: alpha(TOKENS.ink, 0.15), color: TOKENS.textMuted }),
+            }}
+          />
+        ))}
+        {activeTab === 'pfa' && <Chip
           label={`Așteaptă acțiune admin${awaitingAdminCount > 0 ? ` (${awaitingAdminCount})` : ''}`}
           onClick={() => setOnlyAwaitingAdmin((v) => !v)}
           variant={onlyAwaitingAdmin ? 'filled' : 'outlined'}
@@ -830,7 +889,7 @@ export function AdminDashboard() {
               ? { bgcolor: TOKENS.primary, color: '#fff', '&:hover': { bgcolor: TOKENS.primaryStrong } }
               : { borderColor: alpha(TOKENS.ink, 0.15), color: TOKENS.textMuted }),
           }}
-        />
+        />}
       </Box>
 
       {pfasLoading && <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress size={32} sx={{ color: TOKENS.primary }} /></Box>}
@@ -856,21 +915,50 @@ export function AdminDashboard() {
                 </Box>
               </Stack>
               <Box>
-                <Chip label={pfa.awaitingAdminAction ? 'Necesită verificare' : statusLabel(pfa.status)} size="small" sx={{ bgcolor: alpha(statusColor(pfa.status), 0.08), color: statusColor(pfa.status) }} />
+                {pfa.deletedAtUtc
+                  ? <Chip label="Cont închis" size="small" sx={{ bgcolor: alpha('#ef4444', 0.08), color: '#ef4444' }} />
+                  : <Chip label={pfa.awaitingAdminAction ? 'Necesită verificare' : statusLabel(pfa.status)} size="small" sx={{ bgcolor: alpha(statusColor(pfa.status), 0.08), color: statusColor(pfa.status) }} />}
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>{pfa.documentCount} documente · {pfaPlanLabel(pfa)}</Typography>
               </Box>
               <Box>
                 <Typography variant="body2">{subscriptionStatusLabel(pfa.subscriptionStatus)}</Typography>
-                <Typography variant="caption" color="text.secondary">{pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : 'Fără activitate'}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {pfa.deletedAtUtc
+                    ? `Închis la ${new Date(pfa.deletedAtUtc).toLocaleDateString('ro-RO')}`
+                    : pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : 'Fără activitate'}
+                </Typography>
               </Box>
               <Stack direction={{ xs: 'row', lg: 'column' }} sx={{ gap: 0.5, flexWrap: 'wrap', alignItems: 'flex-start' }}>
                 <Button variant="outlined" size="small" onClick={() => { setSelectedPfa(pfa); navigate('/admin?tab=' + activeTab + '&user=' + pfa.userId) }}>Deschide dosarul</Button>
                 <Button size="small" disabled={pfa.status.toLowerCase() !== 'approved'} onClick={() => handleImpersonate(pfa.userId, pfa.userName || pfa.userEmail)}>Intră în contul clientului</Button>
+                {activeTab === 'pfa_inrolate' && (
+                  <Button
+                    size="small"
+                    color={pfa.deletedAtUtc ? 'primary' : 'error'}
+                    onClick={() => setAccountAction({
+                      userId: pfa.userId,
+                      name: pfa.userName || pfa.fullName || pfa.userEmail,
+                      action: pfa.deletedAtUtc ? 'reopen' : 'close',
+                    })}
+                  >
+                    {pfa.deletedAtUtc ? 'Redeschide contul' : 'Închide contul'}
+                  </Button>
+                )}
               </Stack>
             </Box>
           ))}
         </Paper>
       )}
+
+      <CloseAccountDialog
+        target={accountAction}
+        onClose={() => setAccountAction(null)}
+        onDone={(message) => {
+          setAccountAction(null)
+          setSnackbar({ open: true, message, severity: 'success' })
+          setPfasReloadToken((token) => token + 1)
+        }}
+      />
     </Stack>
   )
 
@@ -963,6 +1051,12 @@ export function AdminDashboard() {
       )
       case 'pfa':
       case 'pfa_inrolate': return renderPfaList()
+      case 'srl_inrolate': return (
+        <SrlAccountsView
+          onImpersonate={handleImpersonate}
+          onSnackbar={(message, severity) => setSnackbar({ open: true, message, severity })}
+        />
+      )
       case 'masini': return <CarsAdminView />
       case 'pagini_firme': return <CompanyPagesAdminView />
       case 'servicii': return <ServicesAdminView />

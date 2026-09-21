@@ -102,8 +102,30 @@ export interface AdminOverviewData {
     inactive: number
     failedPayment: number
     inOnboarding: number
+    /** Conturi închise: nu intră la active sau inactive, dar datele lor rămân. */
+    deleted?: number
   }
   enrolledPfas: AdminOverviewPfaCard[]
+  /** Firmele (SRL). Lipsește doar în datele de rezervă, calculate fără backendul de overview. */
+  srlStats?: AdminSrlStats | null
+  srlSubscriptions?: AdminMetric[] | null
+}
+
+export interface AdminSrlStats {
+  totalEnrolled: number
+  active: number
+  inactive: number
+  deleted: number
+  inOnboarding: number
+  failedPayment: number
+  subscriptionMonthlyRevenueBani: number
+  carsTotal: number
+  carsPublished: number
+  /** Anunțuri plătite separat, peste cele incluse în abonament, active acum. */
+  paidExtraListings: number
+  /** Încasările din anunțuri plătite separat, în perioada aleasă. */
+  extraListingsRevenueBani: number
+  extraListingsPayments: number
 }
 
 export interface AdminPfaDetail {
