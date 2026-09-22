@@ -36,6 +36,7 @@ function newProfile(): Profile {
     },
     conditions: { askPriorDocs: true, priorFrom: `${YEAR}-01-01`, priorTo: `${YEAR}-03-14`, askCarriedLosses: true },
     corrections: [],
+    cassMinThreshold: 24_300,
   }
 }
 
@@ -79,6 +80,37 @@ function summary(locked: boolean) {
   }
 }
 
+/** Răspunsul motorului: CASS de clarificat, deci rezervă parțială. */
+function estimates(reserveOverride?: number) {
+  return {
+    taxYear: YEAR,
+    locked: false,
+    profileStatus: 'COMPLETED',
+    asOf: `${YEAR}-09-22`,
+    status: 'PARTIAL',
+    stale: false,
+    reserve: {
+      status: 'PARTIAL',
+      total: 1_800,
+      weekly: 120,
+      annualEstimated: 1_800,
+      missing: ['CASS'],
+      reasonCode: null,
+      existingReserve: reserveOverride ?? null,
+      existingReserveAssumedZero: reserveOverride == null,
+      recordedTaxPayments: 0,
+    },
+    components: [
+      { component: 'CAS', status: 'ESTIMATED', amount: 0, reasonCode: null, missingInputs: [], breakdown: null },
+      { component: 'CASS', status: 'REQUIRES_CLARIFICATION', amount: null, reasonCode: 'CASS_EXCEPTION_UNKNOWN', missingInputs: ['otherIncomeCassBase'], breakdown: null },
+      { component: 'INCOME_TAX', status: 'ESTIMATED', amount: 1_800, reasonCode: null, missingInputs: [], breakdown: null },
+      { component: 'PLATFORM_TAXES', status: 'NOT_CONFIGURED', amount: null, reasonCode: null, missingInputs: [], breakdown: null },
+    ],
+    warnings: ['CAS_THRESHOLD_NEAR'],
+    projection: { netRealized: 14_200, netAnnualEstimated: 20_000, weeklyAverage: 500, weeksUsed: 8, weeksRemaining: 14 },
+  }
+}
+
 async function mockApi(page: Page, initial: Partial<Profile> = {}) {
   const state = { profile: { ...newProfile(), ...initial } as Profile, calls: [] as string[] }
   const json = (route: Route, body: unknown) =>
@@ -94,6 +126,16 @@ async function mockApi(page: Page, initial: Partial<Profile> = {}) {
   await page.route(`${API}/pfa/dashboard/rides*`, (route) =>
     json(route, { items: [], page: 1, pageSize: 20, total: 0, uberRidesAvailable: false }),
   )
+
+  await page.route(`${API}/pfa/me/estimated-taxes/**`, async (route) => {
+    const request = route.request()
+    if (state.profile.status !== 'COMPLETED') return json(route, { taxYear: YEAR, locked: true, profileStatus: state.profile.status })
+    if (request.method() === 'PUT') {
+      state.calls.push('PUT /existing-reserve')
+      return json(route, estimates((request.postDataJSON() as { amount: number }).amount))
+    }
+    return json(route, estimates())
+  })
 
   await page.route(`${API}/pfa/me/fiscal-profiles/**`, async (route) => {
     const request = route.request()
@@ -132,7 +174,8 @@ test('fără profil: modal automat o singură dată, invitație în loc de estim
   await page.goto(ROOT)
 
   const dialog = page.getByRole('dialog', { name: `Profil fiscal ${YEAR}` })
-  await expect(dialog).toBeVisible()
+  // Prima vizită compilează dashboardul în Vite: la rece durează.
+  await expect(dialog).toBeVisible({ timeout: 45_000 })
   await expect(dialog.getByText('Am preluat aceste date din contul tău.')).toBeVisible()
   await expect(dialog.getByText('POPESCU ION PFA')).toBeVisible()
   // Intervalul neacoperit apare în titlul întrebării.
@@ -176,9 +219,11 @@ test('completarea: condiționale, ciornă pe fiecare pas, confirmare care debloc
   // Pasul 2: data angajării apare doar cu contract, și dispare la loc.
   await choose(page, 'Ai și un contract de muncă?', 'Da, normă întreagă')
   await expect(dialog.getByRole('heading', { name: 'De când ești angajat?' })).toBeVisible()
+  // Pragul CASS vine din configurația anului, nu din cod.
+  await expect(dialog.getByRole('heading', { name: `Veniturile tale salariale brute din ${YEAR} vor fi de cel puțin 24.300 lei?` })).toBeVisible()
   await choose(page, 'Ai și un contract de muncă?', 'Nu')
   await expect(dialog.getByRole('heading', { name: 'De când ești angajat?' })).toHaveCount(0)
-  for (const q of ['Ești pensionar?', 'Ești elev sau student?', 'Ești asigurat într-un sistem propriu de pensii?']) {
+  for (const q of ['Ești pensionar?', 'Ești elev sau student și ai sub 26 de ani?', 'Ești asigurat într-un sistem propriu de pensii?']) {
     await choose(page, q, 'Nu')
   }
   await choose(page, 'Ai o situație specială pe care vrei s-o discuți cu contabilul?', 'Nu')
@@ -195,6 +240,10 @@ test('completarea: condiționale, ciornă pe fiecare pas, confirmare care debloc
   ]) {
     await choose(page, q, 'Nu')
   }
+  // CAS voluntar: baza apare doar la „Da”.
+  await choose(page, 'Ai ales să plătești CAS la o bază mai mare decât minimul?', 'Da')
+  await expect(dialog.getByRole('heading', { name: 'Baza aleasă pentru CAS (lei/an)' })).toBeVisible()
+  await choose(page, 'Ai ales să plătești CAS la o bază mai mare decât minimul?', 'Nu')
   await dialog.getByRole('button', { name: 'Continuă' }).click()
 
   // Pasul 4: rezumat, confirmare obligatorie.
@@ -206,7 +255,8 @@ test('completarea: condiționale, ciornă pe fiecare pas, confirmare care debloc
   await submit.click()
 
   await expect(page.getByText('Profil fiscal completat. Estimările de taxe sunt acum disponibile.')).toBeVisible()
-  await expect(page.getByText('Cât trebuie să pui deoparte')).toBeVisible()
+  const card = page.getByTestId('estimated-taxes-card')
+  await expect(card.getByText('Cât să pui deoparte')).toBeVisible()
   await expect(page.getByTestId('fiscal-profile-invite')).toHaveCount(0)
 
   // Ciorna s-a salvat la fiecare „Continuă”, cu revizia în If-Match; ascunsele nu au plecat.
@@ -226,4 +276,33 @@ test('formularul nu are scroll orizontal la 360px', async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(0)
   const inner = await dialog.locator('.MuiDialogContent-root').evaluate((el) => el.scrollWidth - el.clientWidth)
   expect(inner).toBeLessThanOrEqual(0)
+})
+
+test('cardul „Cât să pui deoparte”: parțial, componente, rezervă existentă, fără TVA în total', async ({ page }, info) => {
+  const state = await mockApi(page, { status: 'COMPLETED', firstPromptShownAtUtc: `${YEAR}-03-16T08:00:00Z` })
+  await page.goto(ROOT)
+
+  const card = page.getByTestId('estimated-taxes-card')
+  await expect(card.getByText('Pune deoparte săptămâna aceasta')).toBeVisible()
+  await expect(card.getByTestId('weekly-amount')).toHaveText('120 lei')
+  await expect(card.getByText('Total de pus deoparte:')).toContainText('1.800 lei')
+  await expect(card.getByText('Parțial', { exact: true })).toBeVisible()
+  await expect(card.getByText(/Lipsește: CASS/)).toBeVisible()
+
+  // CASS fără sumă, niciodată 0; TVA doar „În curs de configurare”.
+  await expect(card.locator('[data-component="CASS"]')).toContainText('Avem nevoie de o informație')
+  await expect(card.locator('[data-component="CASS"]')).not.toContainText('0 lei')
+  await expect(card.locator('[data-component="PLATFORM_TAXES"]')).toContainText('În curs de configurare')
+  await expect(card.getByText('Venitul tău se apropie de un plafon CAS. Suma de pus deoparte poate crește.')).toBeVisible()
+  await expect(card.getByText('Presupunem că nu ai pus încă bani deoparte.')).toBeVisible()
+
+  await card.getByRole('button', { name: 'Cum calculăm?' }).click()
+  await expect(card.getByText(/Estimăm automat CAS, CASS și impozitul pe venit/)).toBeVisible()
+  await page.screenshot({ path: `test-results/estimated-taxes-card-${info.project.name}.png` })
+
+  await card.getByRole('button', { name: 'Modifică' }).click()
+  await card.getByLabel('Am deja pus deoparte').fill('500')
+  await card.getByRole('button', { name: 'Salvează' }).click()
+  await expect(card.getByText('Am deja pus deoparte: 500 lei')).toBeVisible()
+  expect(state.calls).toContain('PUT /existing-reserve')
 })

@@ -11,7 +11,7 @@ import type {
  * Nicio întrebare nu are varianta „Nu știu”, iar regimul (sistem real) nu se întreabă.
  */
 
-export type QuestionKind = 'single' | 'date' | 'text' | 'textarea'
+export type QuestionKind = 'single' | 'date' | 'text' | 'textarea' | 'number'
 
 export interface QuestionOption {
   value: string
@@ -22,14 +22,18 @@ export interface QuestionOption {
 export interface TitleContext {
   conditions: FiscalProfileConditions
   taxYear: number
+  /** Pragul minim CASS, din configurația anului. Nu se scrie în cod. */
+  cassMinThreshold: number | null
 }
+
+const lei = (value: number) => value.toLocaleString('ro-RO', { maximumFractionDigits: 0 })
 
 export interface Question {
   key: FiscalProfileKey
   step: 1 | 2 | 3
   kind: QuestionKind
   title: string | ((context: TitleContext) => string)
-  help?: string
+  help?: string | ((context: TitleContext) => string)
   placeholder?: string
   options?: QuestionOption[]
   required: boolean
@@ -119,6 +123,20 @@ export const QUESTIONS: Question[] = [
     required: false,
     visible: employed,
   },
+  {
+    key: 'salaryAboveCassMin',
+    step: 2,
+    kind: 'single',
+    title: ({ taxYear, cassMinThreshold }) =>
+      cassMinThreshold
+        ? `Veniturile tale salariale brute din ${taxYear} vor fi de cel puțin ${lei(cassMinThreshold)} lei?`
+        : `Veniturile tale salariale brute din ${taxYear} vor atinge pragul minim CASS?`,
+    help: ({ cassMinThreshold }) =>
+      cassMinThreshold ? `Adică în medie cel puțin ${lei(cassMinThreshold / 12)} lei brut pe lună, pe tot anul.` : '',
+    options: YES_NO,
+    required: true,
+    visible: employed,
+  },
   { key: 'pensioner', step: 2, kind: 'single', title: 'Ești pensionar?', options: YES_NO, required: true },
   {
     key: 'pensionerSince',
@@ -128,7 +146,7 @@ export const QUESTIONS: Question[] = [
     required: true,
     visible: (a) => a.pensioner === 'yes',
   },
-  { key: 'student', step: 2, kind: 'single', title: 'Ești elev sau student?', options: YES_NO, required: true },
+  { key: 'student', step: 2, kind: 'single', title: 'Ești elev sau student și ai sub 26 de ani?', options: YES_NO, required: true },
   {
     key: 'ownPensionSystem',
     step: 2,
@@ -202,6 +220,23 @@ export const QUESTIONS: Question[] = [
     required: true,
   },
   {
+    key: 'casVoluntary',
+    step: 3,
+    kind: 'single',
+    title: 'Ai ales să plătești CAS la o bază mai mare decât minimul?',
+    options: YES_NO,
+    required: true,
+  },
+  {
+    key: 'casVoluntaryBase',
+    step: 3,
+    kind: 'number',
+    title: 'Baza aleasă pentru CAS (lei/an)',
+    help: 'O găsești în Declarația unică depusă.',
+    required: true,
+    visible: (a) => a.casVoluntary === 'yes',
+  },
+  {
     key: 'crossBorder',
     step: 3,
     kind: 'single',
@@ -214,6 +249,11 @@ export const QUESTIONS: Question[] = [
 
 export function questionTitle(question: Question, context: TitleContext): string {
   return typeof question.title === 'function' ? question.title(context) : question.title
+}
+
+export function questionHelp(question: Question, context: TitleContext): string | undefined {
+  const help = typeof question.help === 'function' ? question.help(context) : question.help
+  return help || undefined
 }
 
 export function isVisible(question: Question, answers: FiscalProfileAnswers, conditions: FiscalProfileConditions) {
@@ -244,6 +284,7 @@ export function normalizeAnswers(answers: FiscalProfileAnswers, conditions: Fisc
 export const ERROR_CHOOSE = 'Alege un răspuns.'
 export const ERROR_DATE = 'Completează data.'
 export const ERROR_TEXT = 'Completează câmpul.'
+export const ERROR_NUMBER = 'Completează suma.'
 
 export function validateStep(
   step: number,
@@ -256,8 +297,18 @@ export function validateStep(
     const value = answers[question.key]
     const empty = value == null || String(value).trim() === ''
     if (empty && question.required && requireAll) {
-      errors[question.key] = question.kind === 'single' ? ERROR_CHOOSE : question.kind === 'date' ? ERROR_DATE : ERROR_TEXT
+      errors[question.key] =
+        question.kind === 'single'
+          ? ERROR_CHOOSE
+          : question.kind === 'date'
+            ? ERROR_DATE
+            : question.kind === 'number'
+              ? ERROR_NUMBER
+              : ERROR_TEXT
     }
+  }
+  if (step === 3 && answers.casVoluntaryBase != null && !(answers.casVoluntaryBase > 0)) {
+    errors.casVoluntaryBase = 'Suma trebuie să fie mai mare decât 0.'
   }
   if (
     step === 2 &&
@@ -275,10 +326,12 @@ export function validateAll(answers: FiscalProfileAnswers, conditions: FiscalPro
 }
 
 /** Textul unui răspuns, pentru rezumat și istoric. */
-export function answerLabel(key: string, value: string | null | undefined): string {
-  if (value == null || value === '') return '—'
+export function answerLabel(key: string, raw: string | number | null | undefined): string {
+  if (raw == null || raw === '') return '—'
+  const value = String(raw)
   const question = QUESTIONS.find((q) => q.key === key)
   if (!question) return value
+  if (question.kind === 'number') return `${Number(value).toLocaleString('ro-RO')} lei`
   if (question.kind === 'date') return formatDate(value)
   return question.options?.find((o) => o.value === value)?.label ?? value
 }
@@ -290,6 +343,7 @@ export function fieldLabel(key: string, taxYear: number): string {
   return questionTitle(question, {
     conditions: { askPriorDocs: true, priorFrom: null, priorTo: null, askCarriedLosses: true },
     taxYear,
+    cassMinThreshold: null,
   })
 }
 

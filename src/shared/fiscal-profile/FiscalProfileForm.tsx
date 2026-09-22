@@ -38,6 +38,7 @@ import {
   answerLabel,
   formatDate,
   normalizeAnswers,
+  questionHelp,
   questionTitle,
   questionsForStep,
   validateAll,
@@ -129,9 +130,10 @@ function FiscalProfileDialog({ mode, taxYear, pfaId, onClose, onSaved }: FiscalP
   // PFA-ul completează tot; staff-ul poate lăsa o ciornă parțială, dar nu golește un profil completat.
   const requireAll = !isStaff || completed
   const conditions = profile?.conditions ?? NO_CONDITIONS
-  const titleContext = useMemo(() => ({ conditions, taxYear }), [conditions, taxYear])
+  const cassMinThreshold = profile?.cassMinThreshold ?? null
+  const titleContext = useMemo(() => ({ conditions, taxYear, cassMinThreshold }), [conditions, taxYear, cassMinThreshold])
 
-  const setAnswer = (key: FiscalProfileKey, value: string | null) => {
+  const setAnswer = (key: FiscalProfileKey, value: string | number | null) => {
     dirty.current = true
     setAnswers((current) => normalizeAnswers({ ...current, [key]: value }, conditions))
     setErrors((current) => ({ ...current, [key]: undefined }))
@@ -301,6 +303,7 @@ function FiscalProfileDialog({ mode, taxYear, pfaId, onClose, onSaved }: FiscalP
                   key={question.key}
                   question={question}
                   title={questionTitle(question, titleContext)}
+                  help={questionHelp(question, titleContext)}
                   value={answers[question.key]}
                   error={errors[question.key]}
                   disabled={saving}

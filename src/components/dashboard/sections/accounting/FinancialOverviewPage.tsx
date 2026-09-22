@@ -14,6 +14,7 @@ import { RealProfitCard } from '../../home/components/RealProfitCard'
 import { CardError, CardSkeleton, TileSkeleton } from '../../home/components/states/CardStates'
 import { FinancialTrendChart } from '../../home/components/charts/FinancialTrendChart'
 import { FiscalProfileInviteCard, usePfaFiscalProfile } from '../../../../shared/fiscal-profile'
+import { EstimatedTaxesCard } from '../../../../shared/fiscal-estimates'
 
 const GRID_GAP = 2
 
@@ -71,10 +72,15 @@ export function FinancialOverviewPage() {
           <Box sx={{ opacity: isFetching && data ? 0.6 : 1, transition: 'opacity 150ms ease-out' }}>
             {estimatesLocked && data ? (
               <Stack spacing={GRID_GAP}>
-                <FiscalProfileInviteCard
-                  status={fiscal?.status ?? data.taxProfile?.status ?? 'NOT_STARTED'}
-                  onStart={fiscal?.openForm}
-                />
+                {data.taxProfile && !data.taxProfile.estimatesLocked ? (
+                  // Profil confirmat, dar motorul n-are încă o estimare: cardul spune ce lipsește.
+                  <EstimatedTaxesCard mode="pfa" onEditProfile={fiscal?.openForm} />
+                ) : (
+                  <FiscalProfileInviteCard
+                    status={fiscal?.status ?? data.taxProfile?.status ?? 'NOT_STARTED'}
+                    onStart={fiscal?.openForm}
+                  />
+                )}
                 <Box sx={{ display: 'grid', gap: GRID_GAP, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' } }}>
                   <KpiTile
                     label="Încasări nete"

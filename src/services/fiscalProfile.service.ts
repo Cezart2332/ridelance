@@ -17,6 +17,7 @@ export interface FiscalProfileAnswers {
   employment?: string | null
   employmentStart?: string | null
   employmentEnd?: string | null
+  salaryAboveCassMin?: string | null
   pensioner?: string | null
   pensionerSince?: string | null
   student?: string | null
@@ -28,6 +29,9 @@ export interface FiscalProfileAnswers {
   taxPaymentsMade?: string | null
   carriedLosses?: string | null
   cassOptIn?: string | null
+  casVoluntary?: string | null
+  /** Lei pe an. Singurul răspuns numeric. */
+  casVoluntaryBase?: number | null
   crossBorder?: string | null
   notes?: string | null
 }
@@ -85,6 +89,8 @@ export interface FiscalProfile {
   }
   conditions: FiscalProfileConditions
   corrections: DataCorrection[]
+  /** Pragul minim CASS al anului, din configurația fiscală. */
+  cassMinThreshold: number | null
 }
 
 export interface FiscalProfileRevision {

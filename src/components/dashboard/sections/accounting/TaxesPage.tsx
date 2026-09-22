@@ -14,6 +14,8 @@ import { taxObligationsService, type TaxObligation } from '../../../../services/
 import { getErrorMessage } from '../../../../utils/errorHandler'
 import { openDocument } from '../../../common/documentViewerBus'
 import { FiscalProfileInviteCard, usePfaFiscalProfile } from '../../../../shared/fiscal-profile'
+import { EstimatedTaxesCard } from '../../../../shared/fiscal-estimates'
+import { useSectionNavigate } from '../../useSectionNavigate'
 
 const STATUS_TONE: Record<TaxObligation['status'], StatusTone> = {
   InPregatire: 'neutral',
@@ -71,7 +73,9 @@ export function TaxesPage() {
 
   const reserve = data?.taxReserve
   // Fără profil fiscal confirmat, backendul nu trimite estimări: secțiunea e doar invitația.
-  const estimatesLocked = !!data && !data.taxReserve
+  const estimatesLocked = data?.taxProfile?.estimatesLocked === true || (!!data && !data.taxProfile && !data.taxReserve)
+  const engineEstimates = !!data?.taxProfile && !estimatesLocked
+  const navigateToSection = useSectionNavigate()
   const fiscal = usePfaFiscalProfile()
 
   return (
@@ -110,6 +114,12 @@ export function TaxesPage() {
           <FiscalProfileInviteCard
             status={fiscal?.status ?? data?.taxProfile?.status ?? 'NOT_STARTED'}
             onStart={fiscal?.openForm}
+          />
+        ) : engineEstimates ? (
+          <EstimatedTaxesCard
+            mode="pfa"
+            onEditProfile={fiscal?.openForm}
+            onContactAccountant={() => navigateToSection('accountant-chat')}
           />
         ) : (
         <>

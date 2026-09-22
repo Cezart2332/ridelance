@@ -2,6 +2,7 @@ import { Box, FormControlLabel, Radio, RadioGroup, Stack, TextField, Typography 
 import { alpha } from '@mui/material/styles'
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded'
 import NotesRoundedIcon from '@mui/icons-material/NotesRounded'
+import PaymentsRoundedIcon from '@mui/icons-material/PaymentsRounded'
 import RadioButtonCheckedRoundedIcon from '@mui/icons-material/RadioButtonCheckedRounded'
 import type { SvgIconComponent } from '@mui/icons-material'
 
@@ -12,22 +13,24 @@ const KIND: Record<Question['kind'], { icon: SvgIconComponent; label: string }> 
   date: { icon: CalendarTodayRoundedIcon, label: 'Dată' },
   text: { icon: NotesRoundedIcon, label: 'Text' },
   textarea: { icon: NotesRoundedIcon, label: 'Text' },
+  number: { icon: PaymentsRoundedIcon, label: 'Sumă' },
 }
 
 interface QuestionCardProps {
   question: Question
   title: string
-  value: string | null | undefined
+  help?: string
+  value: string | number | null | undefined
   error?: string
   disabled?: boolean
-  onChange: (value: string | null) => void
+  onChange: (value: string | number | null) => void
 }
 
 /**
  * O întrebare = un card (spec §5). Culorile vin doar din temă: accentul e `primary.main`, adică
  * albastrul platformei în oricare dintre cele trei dashboarduri.
  */
-export function QuestionCard({ question, title, value, error, disabled, onChange }: QuestionCardProps) {
+export function QuestionCard({ question, title, help, value, error, disabled, onChange }: QuestionCardProps) {
   const kind = KIND[question.kind]
   const Icon = kind.icon
   const titleId = `fp-q-${question.key}`
@@ -75,9 +78,9 @@ export function QuestionCard({ question, title, value, error, disabled, onChange
           </Box>
         )}
       </Typography>
-      {question.help && (
+      {help && (
         <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-          {question.help}
+          {help}
         </Typography>
       )}
 
@@ -121,6 +124,23 @@ export function QuestionCard({ question, title, value, error, disabled, onChange
               )
             })}
           </RadioGroup>
+        )}
+
+        {question.kind === 'number' && (
+          <TextField
+            type="number"
+            fullWidth
+            variant="outlined"
+            disabled={disabled}
+            value={value ?? ''}
+            onChange={(event) => onChange(event.target.value === '' ? null : Number(event.target.value))}
+            error={!!error}
+            slotProps={{
+              htmlInput: { min: 0, step: 1, inputMode: 'numeric', 'aria-labelledby': titleId, 'aria-describedby': error ? errorId : undefined },
+              input: { endAdornment: <Typography sx={{ color: 'text.secondary', ml: 1 }}>lei</Typography> },
+            }}
+            sx={(theme) => ({ '& .MuiOutlinedInput-root': { bgcolor: alpha(theme.palette.primary.main, 0.03) } })}
+          />
         )}
 
         {question.kind === 'date' && (

@@ -21,6 +21,7 @@ import { RidesHistoryTable } from '../home/components/RidesHistoryTable'
 import { CardError, CardSkeleton, TileSkeleton } from '../home/components/states/CardStates'
 import type { PfaDashboardSummary, RidesPage } from '../../../services/pfaDashboard.service'
 import { FiscalProfileInviteCard, usePfaFiscalProfile } from '../../../shared/fiscal-profile'
+import { EstimatedTaxesCard } from '../../../shared/fiscal-estimates'
 
 const BANNER_DISMISSED_KEY = 'ridelance:fiscal-profile-banner-dismissed'
 
@@ -149,7 +150,11 @@ export function HomeDashboardContent({
       // Fără sessionStorage bannerul se ascunde doar până la reîncărcare.
     }
   }
-  const estimatesLocked = !!data && (data.taxReserve === null || data.taxProfile?.estimatesLocked === true)
+  const estimatesLocked =
+    data?.taxProfile?.estimatesLocked === true || (!!data && !data.taxProfile && data.taxReserve === null)
+  // Profil confirmat: „Cât să pui deoparte” vine din motorul de taxe estimate. Demo-ul public
+  // n-are profil și rămâne pe cardul vechi, cu date mock.
+  const engineEstimates = !!data?.taxProfile && !estimatesLocked
   const profileStatus = fiscal?.status ?? data?.taxProfile?.status ?? 'NOT_STARTED'
   const showBanner = !!fiscal && fiscal.status !== null && fiscal.status !== 'COMPLETED' && !hideBanner
 
@@ -347,10 +352,25 @@ export function HomeDashboardContent({
                         <CardSkeleton height={380} />
                       </Box>
                     </>
-                  ) : estimatesLocked || !data.taxReserve || !data.realProfit ? (
+                  ) : estimatesLocked ? (
                     <Box sx={{ gridColumn: { lg: 'span 12' }, minWidth: 0 }}>
                       <FiscalProfileInviteCard status={profileStatus} onStart={fiscal?.openForm} />
                     </Box>
+                  ) : engineEstimates || !data.taxReserve || !data.realProfit ? (
+                    <>
+                      <Box sx={{ gridColumn: { lg: data.realProfit ? 'span 7' : 'span 12' }, minWidth: 0 }}>
+                        <EstimatedTaxesCard
+                          mode="pfa"
+                          onEditProfile={fiscal?.openForm}
+                          onContactAccountant={onNavigate ? () => onNavigate('accountant-chat') : undefined}
+                        />
+                      </Box>
+                      {data.realProfit && (
+                        <Box sx={{ gridColumn: { lg: 'span 5' }, minWidth: 0 }}>
+                          <RealProfitCard profit={data.realProfit} />
+                        </Box>
+                      )}
+                    </>
                   ) : (
                     <>
                       <Box sx={{ gridColumn: { lg: 'span 7' }, minWidth: 0 }}>
@@ -396,9 +416,9 @@ export function HomeDashboardContent({
                         points={data.series.feesAndTaxes}
                         granularity={data.period.granularity}
                         animate={!isFetching}
-                        taxesLocked={estimatesLocked}
+                        taxesLocked={estimatesLocked || engineEstimates}
                       />
-                      {!estimatesLocked && (
+                      {data.series.realProfit.length > 0 && (
                         <RealProfitTrendChart
                           points={data.series.realProfit}
                           granularity={data.period.granularity}
