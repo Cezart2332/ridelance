@@ -12,7 +12,8 @@ android {
     namespace = "ro.ridelance.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "ro.ridelance.app"
+        // ID-ul din Google Play. Namespace-ul de mai sus (pachetul codului) rămâne ro.ridelance.app.
+        applicationId "ridelance.ro"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

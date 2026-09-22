@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">RIDElance</string>
     <string name="title_activity_main">RIDElance</string>
-    <string name="package_name">ro.ridelance.app</string>
+    <string name="package_name">ridelance.ro</string>
     <string name="custom_url_scheme">ro.ridelance.app</string>
 </resources>
