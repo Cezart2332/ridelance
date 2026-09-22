@@ -95,6 +95,8 @@ export interface Car {
   paymentStatus: string;
   paidAtUtc?: string | null;
   postedByAdmin: boolean;
+  /** Numărul de înmatriculare e ascuns în anunț (plătit o dată per mașină). */
+  plateHidden?: boolean;
   details?: CarListingDetails;
   /**
    * Cine închiriază mașina. Opțional cât timp API-ul nu îl trimite încă — atunci blocul de
@@ -266,6 +268,26 @@ const carsService = {
   async archive(id: string): Promise<CarListingState> {
     const res = await api.patch<CarListingState>(`/cars/${id}/archive`);
     return res.data;
+  },
+
+  /**
+   * Anunț extra peste cele incluse în abonament: 40 lei pe lună, per mașină. Întoarce secretul
+   * pentru plata Stripe din pagină; după plată, anunțul aprobat se publică singur.
+   */
+  async createExtraListingCheckout(id: string): Promise<string> {
+    const res = await api.post<{ clientSecret: string }>(`/cars/${id}/extra-listing/checkout`);
+    return res.data.clientSecret;
+  },
+
+  /** Oprește abonamentul anunțului extra. Fără loc inclus liber, anunțul trece pe pauză. */
+  async cancelExtraListing(id: string): Promise<void> {
+    await api.post(`/cars/${id}/extra-listing/cancel`);
+  },
+
+  /** Numărul de înmatriculare ascuns în anunț: 15 lei, o singură dată per mașină. */
+  async createHiddenPlateCheckout(id: string): Promise<string> {
+    const res = await api.post<{ clientSecret: string }>(`/cars/${id}/hidden-plate/checkout`);
+    return res.data.clientSecret;
   },
 
   async toggleActive(id: string): Promise<CarListingState> {

@@ -70,7 +70,9 @@ export interface FleetCarCardProps {
   onEdit: () => void
   onTogglePublish: () => void
   onArchive: () => void
-  /** Toate anunțurile incluse în abonament sunt folosite: un anunț nepublicat nu mai poate fi publicat. */
+  /** Oprește abonamentul anunțului extra al mașinii. */
+  onCancelExtra?: () => void
+  /** Toate anunțurile incluse în abonament sunt folosite: publicarea cere un anunț extra plătit. */
   noListingsLeft?: boolean
 }
 
@@ -84,6 +86,7 @@ export function FleetCarCard({
   onEdit,
   onTogglePublish,
   onArchive,
+  onCancelExtra,
   noListingsLeft = false,
 }: FleetCarCardProps) {
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
@@ -145,6 +148,8 @@ export function FleetCarCard({
         >
           <StatusChip label={listing.label} tone={listing.tone} size="sm" />
           {approval && <StatusChip label={approval.label} tone={approval.tone} size="sm" />}
+          {car.paymentStatus === 'Paid' && <StatusChip label="Anunț extra" tone="active" size="sm" />}
+          {car.plateHidden && <StatusChip label="Număr ascuns" tone="neutral" size="sm" />}
         </Stack>
 
         <IconButton
@@ -275,15 +280,20 @@ export function FleetCarCard({
             Retrage anunțul
           </MenuItem>
         ) : (
-          <MenuItem onClick={run(onTogglePublish)} disabled={archived || noListingsLeft} sx={menuItemSx}>
+          <MenuItem onClick={run(onTogglePublish)} disabled={archived} sx={menuItemSx}>
             <Box>
               Publică anunțul
-              {noListingsLeft && !archived && (
+              {noListingsLeft && !archived && car.paymentStatus !== 'Paid' && (
                 <Typography sx={{ fontSize: '0.74rem', fontWeight: 600, color: DASHBOARD_TOKENS.textMuted }}>
-                  Nu mai ai anunțuri libere în abonament
+                  Anunț extra: 40 lei / lună
                 </Typography>
               )}
             </Box>
+          </MenuItem>
+        )}
+        {car.paymentStatus === 'Paid' && onCancelExtra && (
+          <MenuItem onClick={run(onCancelExtra)} sx={menuItemSx}>
+            Oprește anunțul extra
           </MenuItem>
         )}
         <MenuItem onClick={run(onArchive)} disabled={archived} sx={{ ...menuItemSx, color: DASHBOARD_TOKENS.stateError }}>

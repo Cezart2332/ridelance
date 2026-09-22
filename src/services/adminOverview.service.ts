@@ -126,6 +126,10 @@ export interface AdminSrlStats {
   /** Încasările din anunțuri plătite separat, în perioada aleasă. */
   extraListingsRevenueBani: number
   extraListingsPayments: number
+  /** Mașini cu numărul de înmatriculare ascuns (plătit, 15 lei o dată). */
+  hiddenPlates?: number
+  hiddenPlatesRevenueBani?: number
+  hiddenPlatesPayments?: number
 }
 
 export interface AdminPfaDetail {

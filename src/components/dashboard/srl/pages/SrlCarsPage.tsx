@@ -33,6 +33,7 @@ import { FleetCarCard } from '../FleetCarCard'
 import { ListingQuotaCard } from '../ListingQuotaCard'
 import { getErrorMessage } from '../../../../utils/errorHandler'
 import { NewRentalDialog } from '../NewRentalDialog'
+import { PublishCarDialog } from '../PublishCarDialog'
 
 /**
  * Flota, ca punct de plecare al operațiunilor.
@@ -106,6 +107,8 @@ export function SrlCarsPage() {
   const [editing, setEditing] = useState<Car | null>(null)
   const [rentingCarId, setRentingCarId] = useState<string | null>(null)
   const [documentsFor, setDocumentsFor] = useState<{ carId: string; intent: DocumentIntent } | null>(null)
+  /** Mașina care se publică acum: dialogul întreabă de anunțul extra și de numărul ascuns. */
+  const [publishingCarId, setPublishingCarId] = useState<string | null>(null)
 
   const [reloadToken, setReloadToken] = useState(0)
   const reload = useCallback(() => setReloadToken((token) => token + 1), [])
@@ -174,6 +177,12 @@ export function SrlCarsPage() {
   }, [cars, search, activeFilter, currentRentals])
 
   const togglePublish = async (id: string) => {
+    // Publicarea trece prin dialog (anunț extra, număr ascuns); retragerea rămâne un click.
+    const target = cars.find((car) => car.id === id)
+    if (target && target.listingStatus !== 'Published') {
+      setPublishingCarId(id)
+      return
+    }
     try {
       const next = await carsService.toggleActive(id)
       setCars((prev) => prev.map((car) => (car.id === id ? { ...car, ...next } : car)))
@@ -205,6 +214,16 @@ export function SrlCarsPage() {
   }
 
   const rentedCount = cars.filter((car) => currentRentals.has(car.id)).length
+  const cancelExtra = async (id: string) => {
+    if (!window.confirm('Oprești anunțul extra? Abonamentul de 40 lei pe lună se oprește, iar anunțul trece pe pauză dacă nu mai ai loc în cele incluse.')) return
+    try {
+      await carsService.cancelExtraListing(id)
+      reload()
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nu am putut opri anunțul extra.'))
+    }
+  }
+
   const publishedCount = cars.filter((car) => car.active).length
   // Aceeași regulă ca pe server (`ListingQuota`): un loc e ocupat de un anunț publicat.
   const usedListings = cars.filter((car) => car.listingStatus === 'Published').length
@@ -391,6 +410,7 @@ export function SrlCarsPage() {
                   onProtocol={() => setDocumentsFor({ carId: car.id, intent: 'protocol' })}
                   onEdit={() => setEditing(car)}
                   onTogglePublish={() => void togglePublish(car.id)}
+                  onCancelExtra={() => void cancelExtra(car.id)}
                   onArchive={() => void archive(car.id)}
                   noListingsLeft={quota?.remaining === 0}
                 />
@@ -413,6 +433,13 @@ export function SrlCarsPage() {
           setEditing(null)
           reload()
         }}
+      />
+
+      <PublishCarDialog
+        car={cars.find((car) => car.id === publishingCarId) ?? null}
+        quota={quota}
+        onClose={() => setPublishingCarId(null)}
+        onChanged={reload}
       />
 
       <NewRentalDialog

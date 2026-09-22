@@ -615,6 +615,8 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                     ['Mașini publicate / total', `${data.srlStats.carsPublished.toLocaleString('ro-RO')} / ${data.srlStats.carsTotal.toLocaleString('ro-RO')}`],
                     ['Anunțuri extra plătite (active)', data.srlStats.paidExtraListings.toLocaleString('ro-RO')],
                     ['Venit anunțuri extra (perioada aleasă)', `${formatLei(data.srlStats.extraListingsRevenueBani)} · ${data.srlStats.extraListingsPayments} plăți`],
+                    ['Numere de înmatriculare ascunse', (data.srlStats.hiddenPlates ?? 0).toLocaleString('ro-RO')],
+                    ['Venit numere ascunse (perioada aleasă)', `${formatLei(data.srlStats.hiddenPlatesRevenueBani ?? 0)} · ${data.srlStats.hiddenPlatesPayments ?? 0} plăți`],
                   ].map(([label, value]) => (
                     <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
                       <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>{label}</Typography>
