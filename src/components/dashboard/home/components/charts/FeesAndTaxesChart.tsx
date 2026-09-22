@@ -1,10 +1,11 @@
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import { HOME_TOKENS } from '../../tokens'
-import { formatAxisNumber, formatCurrency, formatDate } from '../../format'
-import type { FeesAndTaxesPoint } from '../../../../../services/pfaDashboard.service'
+import { formatAxisNumber, formatCurrency } from '../../format'
+import type { FeesAndTaxesPoint, ChartGranularity } from '../../../../../services/pfaDashboard.service'
 import { HomeCard } from '../HomeCard'
 import { ChartDataTable, ChartLegend, ChartTooltip } from './chartSetup'
+import { barFill, bucketTitle, useActiveBar, barXAxisProps } from './barChart'
 import { axisProps, CHART, gridProps } from './chartTheme'
 import { ChartFrame } from './ChartFrame'
 
@@ -23,7 +24,7 @@ const SERIES = [
 
 interface FeesAndTaxesChartProps {
   points: FeesAndTaxesPoint[]
-  granularity: 'day' | 'month'
+  granularity: ChartGranularity
   animate: boolean
   /**
    * Profilul fiscal nu e confirmat: backendul nu trimite taxele, deci graficul arată doar
@@ -37,6 +38,7 @@ export function FeesAndTaxesChart({ points, granularity, animate, taxesLocked = 
   const shown = taxesLocked ? SERIES.filter((s) => s.key === 'boltFee' || s.key === 'uberFee') : SERIES
   const total = points.reduce((sum, point) => sum + shown.reduce((s, item) => s + (point[item.key] ?? 0), 0), 0)
   const title = taxesLocked ? 'Comisioane platforme' : 'Comisioane și taxe estimate'
+  const activeBar = useActiveBar()
 
 
   return (
@@ -53,9 +55,14 @@ export function FeesAndTaxesChart({ points, granularity, animate, taxesLocked = 
 
       <ChartFrame height={220} ariaLabel={`${title}, total ${formatCurrency(total)} în perioada selectată`}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-          <BarChart data={points} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+          <BarChart
+            data={points}
+            margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
+            barCategoryGap="28%"
+            {...activeBar.chartProps}
+          >
             <CartesianGrid {...gridProps} />
-            <XAxis dataKey="label" {...axisProps} minTickGap={granularity === 'day' ? 16 : 4} />
+            <XAxis dataKey="label" {...axisProps} {...barXAxisProps(granularity)} />
             <YAxis
               {...axisProps}
               width={54}
@@ -63,14 +70,14 @@ export function FeesAndTaxesChart({ points, granularity, animate, taxesLocked = 
               tickFormatter={formatAxisNumber}
             />
             <Tooltip
-              cursor={{ fill: HOME_TOKENS.bg.surface2 }}
+              cursor={false}
               content={({ active, payload }) => {
                 const point = payload?.[0]?.payload as FeesAndTaxesPoint | undefined
                 if (!point) return null
                 return (
                   <ChartTooltip
                     active={active}
-                    title={granularity === 'day' ? formatDate(point.bucket) : point.label}
+                    title={bucketTitle(granularity, point.bucket, point.label)}
                     entries={shown.map((series) => ({
                       name: series.label,
                       value: point[series.key] ?? 0,
@@ -89,9 +96,13 @@ export function FeesAndTaxesChart({ points, granularity, animate, taxesLocked = 
                 stackId="feesAndTaxes"
                 fill={series.color}
                 isAnimationActive={animate}
-                maxBarSize={30}
-                radius={index === shown.length - 1 ? [4, 4, 0, 0] : undefined}
-              />
+                maxBarSize={36}
+                radius={index === shown.length - 1 ? [8, 8, 0, 0] : undefined}
+              >
+                {points.map((point, pointIndex) => (
+                  <Cell key={point.bucket} fill={barFill(series.color, pointIndex, activeBar.active)} />
+                ))}
+              </Bar>
             ))}
           </BarChart>
         </ResponsiveContainer>

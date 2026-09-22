@@ -123,8 +123,11 @@ export interface DashboardSources {
   };
 }
 
+/** Axa graficelor: săptămâna pe zile (Lun–Dum), luna pe săptămâni, anul pe luni (Ian–Dec). */
+export type ChartGranularity = 'day' | 'week' | 'month';
+
 export interface PfaDashboardSummary {
-  period: { from: string; to: string; granularity: 'day' | 'month' };
+  period: { from: string; to: string; granularity: ChartGranularity };
   kpis: DashboardKpis;
   /** `null` cât profilul fiscal al anului nu e confirmat: backendul nu trimite nicio estimare. */
   taxReserve: TaxReserve | null;

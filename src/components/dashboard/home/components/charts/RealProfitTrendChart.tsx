@@ -1,39 +1,29 @@
 
-import {
-  Area,
-  CartesianGrid,
-  ComposedChart,
-  Line,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import { HOME_TOKENS } from '../../tokens'
-import { formatAxisNumber, formatCurrency, formatDate } from '../../format'
-import type { RealProfitPoint } from '../../../../../services/pfaDashboard.service'
+import { formatAxisNumber, formatCurrency } from '../../format'
+import type { RealProfitPoint, ChartGranularity } from '../../../../../services/pfaDashboard.service'
 import { HomeCard } from '../HomeCard'
 import { ChartDataTable, ChartLegend, ChartTooltip } from './chartSetup'
+import { BAR_RADIUS, barFill, bucketTitle, useActiveBar, barXAxisProps } from './barChart'
 import { axisProps, CHART, gridProps } from './chartTheme'
 import { ChartFrame } from './ChartFrame'
 
 interface RealProfitTrendChartProps {
   points: RealProfitPoint[]
-  granularity: 'day' | 'month'
+  granularity: ChartGranularity
   animate: boolean
 }
 
 /**
- * „Evoluție profit real estimat". Banda din spate sunt încasările nete: distanța dintre ea
- * și linie e exact mesajul întregii pagini.
- *
- * Banda e treapta deschisă din rampa accentului, nu gri: griul se citea ca „serie
- * dezactivată", când de fapt e termenul de comparație al întregului card.
+ * „Evoluție profit real estimat". Pe fiecare perioadă, două bare alăturate: încasările nete
+ * (treapta deschisă a accentului) și profitul real (accentul plin). Diferența dintre ele e
+ * exact mesajul întregii pagini.
  */
 export function RealProfitTrendChart({ points, granularity, animate }: RealProfitTrendChartProps) {
   const hasNegative = points.some((point) => point.value < 0)
+  const activeBar = useActiveBar()
 
   return (
     <HomeCard title="Evoluție profit real estimat" fill>
@@ -46,9 +36,15 @@ export function RealProfitTrendChart({ points, granularity, animate }: RealProfi
 
       <ChartFrame height={220} ariaLabel="Evoluția profitului real estimat față de încasările nete, pe perioada selectată">
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-          <ComposedChart data={points} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+          <BarChart
+            data={points}
+            margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
+            barCategoryGap="24%"
+            barGap={3}
+            {...activeBar.chartProps}
+          >
             <CartesianGrid {...gridProps} />
-            <XAxis dataKey="label" {...axisProps} minTickGap={granularity === 'day' ? 16 : 4} />
+            <XAxis dataKey="label" {...axisProps} {...barXAxisProps(granularity)} />
             <YAxis
               {...axisProps}
               width={58}
@@ -56,14 +52,14 @@ export function RealProfitTrendChart({ points, granularity, animate }: RealProfi
               tickFormatter={formatAxisNumber}
             />
             <Tooltip
-              cursor={{ stroke: HOME_TOKENS.border.strong, strokeWidth: 1 }}
+              cursor={false}
               content={({ active, payload }) => {
                 const point = payload?.[0]?.payload as RealProfitPoint | undefined
                 if (!point) return null
                 return (
                   <ChartTooltip
                     active={active}
-                    title={granularity === 'day' ? formatDate(point.bucket) : point.label}
+                    title={bucketTitle(granularity, point.bucket, point.label)}
                     entries={[
                       {
                         name: 'Profit real estimat',
@@ -82,27 +78,18 @@ export function RealProfitTrendChart({ points, granularity, animate }: RealProfi
                 )
               }}
             />
-            <Area
-              type="monotone"
-              dataKey="netEarnings"
-              name="Încasări nete"
-              stroke="none"
-              fill={CHART[3]}
-              fillOpacity={0.55}
-              isAnimationActive={animate}
-            />
+            <Bar dataKey="netEarnings" name="Încasări nete" radius={BAR_RADIUS} maxBarSize={22} isAnimationActive={animate}>
+              {points.map((point, index) => (
+                <Cell key={point.bucket} fill={barFill(CHART[3], index, activeBar.active)} />
+              ))}
+            </Bar>
+            <Bar dataKey="value" name="Profit real estimat" radius={BAR_RADIUS} maxBarSize={22} isAnimationActive={animate}>
+              {points.map((point, index) => (
+                <Cell key={point.bucket} fill={barFill(point.value < 0 ? CHART[7] : CHART[1], index, activeBar.active)} />
+              ))}
+            </Bar>
             {hasNegative && <ReferenceLine y={0} stroke={HOME_TOKENS.border.strong} strokeDasharray="4 4" />}
-            <Line
-              type="monotone"
-              dataKey="value"
-              name="Profit real estimat"
-              stroke={CHART[1]}
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 4, strokeWidth: 0 }}
-              isAnimationActive={animate}
-            />
-          </ComposedChart>
+          </BarChart>
         </ResponsiveContainer>
 
         <ChartDataTable

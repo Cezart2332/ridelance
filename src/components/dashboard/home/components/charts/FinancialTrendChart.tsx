@@ -12,10 +12,11 @@ import {
 } from 'recharts'
 
 import { HOME_TOKENS, reducedMotionSafe } from '../../tokens'
-import { formatAxisNumber, formatCurrency, formatDate } from '../../format'
-import type { RealProfitPoint } from '../../../../../services/pfaDashboard.service'
+import { formatAxisNumber, formatCurrency } from '../../format'
+import type { RealProfitPoint, ChartGranularity } from '../../../../../services/pfaDashboard.service'
 import { HomeCard } from '../HomeCard'
 import { ChartDataTable, ChartTooltip } from './chartSetup'
+import { bucketTitle } from './barChart'
 import { axisProps, CHART, gridProps } from './chartTheme'
 import { ChartFrame } from './ChartFrame'
 
@@ -40,7 +41,7 @@ const SERIES: SeriesDef[] = [
 
 interface FinancialTrendChartProps {
   points: RealProfitPoint[]
-  granularity: 'day' | 'month'
+  granularity: ChartGranularity
   animate: boolean
 }
 
@@ -126,7 +127,7 @@ export function FinancialTrendChart({ points, granularity, animate }: FinancialT
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <ComposedChart data={points} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
             <CartesianGrid {...gridProps} />
-            <XAxis dataKey="label" {...axisProps} minTickGap={granularity === 'day' ? 16 : 4} />
+            <XAxis dataKey="label" {...axisProps} minTickGap={4} />
             <YAxis {...axisProps} width={58} tickCount={5} tickFormatter={formatAxisNumber} />
             <Tooltip
               cursor={{ stroke: HOME_TOKENS.border.strong, strokeWidth: 1 }}
@@ -136,7 +137,7 @@ export function FinancialTrendChart({ points, granularity, animate }: FinancialT
                 return (
                   <ChartTooltip
                     active={active}
-                    title={granularity === 'day' ? formatDate(point.bucket) : point.label}
+                    title={bucketTitle(granularity, point.bucket, point.label)}
                     entries={shown.map((series) => ({
                       name: series.label,
                       value: point[series.key],

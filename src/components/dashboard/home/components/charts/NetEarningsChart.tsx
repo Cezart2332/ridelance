@@ -1,29 +1,32 @@
 import { useState } from 'react'
 import { Box, Stack, Typography } from '@mui/material'
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import { HOME_TOKENS, tabularNums } from '../../tokens'
-import { formatAxisNumber, formatCurrency, formatDate } from '../../format'
-import type { NetEarningsPoint } from '../../../../../services/pfaDashboard.service'
+import { formatAxisNumber, formatCurrency } from '../../format'
+import type { NetEarningsPoint, ChartGranularity } from '../../../../../services/pfaDashboard.service'
 import { HomeCard } from '../HomeCard'
 import { ChartDataTable, ChartTooltip } from './chartSetup'
-import { areaGradient, axisProps, CHART, gridProps, PLATFORM_COLOR } from './chartTheme'
+import { BAR_RADIUS, barFill, bucketTitle, useActiveBar, barXAxisProps } from './barChart'
+import { axisProps, CHART, gridProps, PLATFORM_COLOR } from './chartTheme'
 import { ChartFrame } from './ChartFrame'
 
 interface NetEarningsChartProps {
   points: NetEarningsPoint[]
   total: number
-  granularity: 'day' | 'month'
+  granularity: ChartGranularity
   /** Dezactivează animația de intrare la re-render din filtre (spec §7). */
   animate: boolean
 }
 
 /**
- * „Încasări nete pe zile". Implicit o singură arie totală — homepage-ul rămâne curat;
- * împărțirea pe platforme e la un toggle distanță.
+ * „Încasări nete": câte o bară pe zi (săptămâna), pe săptămână (luna) sau pe lună (anul).
+ * Implicit o singură serie totală — homepage-ul rămâne curat; împărțirea pe platforme, ca bare
+ * suprapuse, e la un toggle distanță.
  */
 export function NetEarningsChart({ points, total, granularity, animate }: NetEarningsChartProps) {
   const [split, setSplit] = useState(false)
+  const activeBar = useActiveBar()
 
   return (
     <HomeCard
@@ -61,15 +64,14 @@ export function NetEarningsChart({ points, total, granularity, animate }: NetEar
     >
       <ChartFrame height={260} ariaLabel={`Evoluția încasărilor nete pe perioada selectată, total ${formatCurrency(total)}`}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-          <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-            <defs>
-              <linearGradient id="netEarningsFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={areaGradient(CHART[1]).from} />
-                <stop offset="100%" stopColor={areaGradient(CHART[1]).to} />
-              </linearGradient>
-            </defs>
+          <BarChart
+            data={points}
+            margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+            barCategoryGap="28%"
+            {...activeBar.chartProps}
+          >
             <CartesianGrid {...gridProps} />
-            <XAxis dataKey="label" {...axisProps} minTickGap={granularity === 'day' ? 16 : 4} />
+            <XAxis dataKey="label" {...axisProps} {...barXAxisProps(granularity)} />
             <YAxis
               {...axisProps}
               width={58}
@@ -77,14 +79,14 @@ export function NetEarningsChart({ points, total, granularity, animate }: NetEar
               tickFormatter={formatAxisNumber}
             />
             <Tooltip
-              cursor={{ stroke: HOME_TOKENS.border.strong, strokeWidth: 1 }}
+              cursor={false}
               content={({ active, payload }) => {
                 const point = payload?.[0]?.payload as NetEarningsPoint | undefined
                 if (!point) return null
                 return (
                   <ChartTooltip
                     active={active}
-                    title={granularity === 'day' ? formatDate(point.bucket) : point.label}
+                    title={bucketTitle(granularity, point.bucket, point.label)}
                     entries={
                       split
                         ? [
@@ -104,43 +106,25 @@ export function NetEarningsChart({ points, total, granularity, animate }: NetEar
             />
             {split ? (
               <>
-                <Area
-                  type="monotone"
-                  dataKey="bolt"
-                  name="Bolt"
-                  stroke={PLATFORM_COLOR.bolt}
-                  strokeWidth={2}
-                  fill={PLATFORM_COLOR.bolt}
-                  fillOpacity={0.14}
-                  dot={false}
-                  isAnimationActive={animate}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="uber"
-                  name="Uber"
-                  stroke={PLATFORM_COLOR.uber}
-                  strokeWidth={2}
-                  fill={PLATFORM_COLOR.uber}
-                  fillOpacity={0.1}
-                  dot={false}
-                  isAnimationActive={animate}
-                />
+                <Bar dataKey="bolt" name="Bolt" stackId="platforms" maxBarSize={36} isAnimationActive={animate}>
+                  {points.map((point, index) => (
+                    <Cell key={point.bucket} fill={barFill(PLATFORM_COLOR.bolt, index, activeBar.active)} />
+                  ))}
+                </Bar>
+                <Bar dataKey="uber" name="Uber" stackId="platforms" maxBarSize={36} radius={[8, 8, 0, 0]} isAnimationActive={animate}>
+                  {points.map((point, index) => (
+                    <Cell key={point.bucket} fill={barFill(PLATFORM_COLOR.uber, index, activeBar.active)} />
+                  ))}
+                </Bar>
               </>
             ) : (
-              <Area
-                type="monotone"
-                dataKey="total"
-                name="Net total"
-                stroke={CHART[1]}
-                strokeWidth={2}
-                fill="url(#netEarningsFill)"
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 0 }}
-                isAnimationActive={animate}
-              />
+              <Bar dataKey="total" name="Net total" radius={BAR_RADIUS} maxBarSize={36} isAnimationActive={animate}>
+                {points.map((point, index) => (
+                  <Cell key={point.bucket} fill={barFill(CHART[1], index, activeBar.active)} />
+                ))}
+              </Bar>
             )}
-          </AreaChart>
+          </BarChart>
         </ResponsiveContainer>
 
         <ChartDataTable
