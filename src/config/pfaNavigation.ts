@@ -49,6 +49,7 @@ export const PFA_PATHS = {
   financialOverview: at('contabilitate/situatie-financiara'),
   expenses: at('contabilitate/cheltuieli'),
   taxes: at('contabilitate/taxe-declaratii'),
+  fiscalProfile: at('contabilitate/profil-fiscal'),
   bankAccount: at('contabilitate/cont-bancar'),
   invoices: at('contabilitate/facturi'),
   accountantChat: at('contabilitate/chat-contabil'),
@@ -111,6 +112,7 @@ export const PFA_NAV: NavEntry[] = [
       },
       { id: 'expenses', label: 'Cheltuieli', path: PFA_PATHS.expenses, hint: 'Ce poți deduce din taxe' },
       { id: 'taxes', label: 'Taxe & declarații', path: PFA_PATHS.taxes, hint: 'Estimări și termene' },
+      { id: 'fiscal-profile', label: 'Profil fiscal', path: PFA_PATHS.fiscalProfile, hint: 'Situația ta pentru estimări' },
       { id: 'bank-account', label: 'Cont bancar', path: PFA_PATHS.bankAccount, hint: 'Cont conectat și tranzacții' },
       { id: 'invoices', label: 'Facturi', path: PFA_PATHS.invoices, hint: 'Emise prin Oblio' },
       {
@@ -227,6 +229,7 @@ export const LEAF_ICONS: Record<string, SvgIconComponent> = {
   [PFA_PATHS.financialOverview]: InsertChartRoundedIcon,
   [PFA_PATHS.expenses]: AccountBalanceWalletRoundedIcon,
   [PFA_PATHS.taxes]: CalculateRoundedIcon,
+  [PFA_PATHS.fiscalProfile]: AccountBalanceRoundedIcon,
   [PFA_PATHS.bankAccount]: AccountBalanceRoundedIcon,
   [PFA_PATHS.invoices]: ReceiptLongRoundedIcon,
   [PFA_PATHS.accountantChat]: ChatRoundedIcon,

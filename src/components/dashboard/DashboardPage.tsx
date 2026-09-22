@@ -4,6 +4,7 @@ import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-route
 
 import { DashboardRoutes } from './DashboardRoutes'
 import AppLayout from './layout/AppLayout'
+import { PfaFiscalProfileProvider } from '../../shared/fiscal-profile'
 
 import { authService } from '../../services/auth.service'
 import { userService } from '../../services/user.service'
@@ -121,7 +122,9 @@ export default function DashboardPage() {
       showNotifications
       onOpenRecurringDocumentation={() => navigate(PFA_PATHS.docsRecurring)}
     >
-      <DashboardRoutes pfaRegistrationId={pfaRegistrationId} onSnackbar={showSnackbar} />
+      <PfaFiscalProfileProvider>
+        <DashboardRoutes pfaRegistrationId={pfaRegistrationId} onSnackbar={showSnackbar} />
+      </PfaFiscalProfileProvider>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

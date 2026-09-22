@@ -8,6 +8,7 @@ import {
   type RidesPage,
   type RidesQuery,
 } from '../../../services/pfaDashboard.service'
+import { FISCAL_PROFILE_CHANGED } from '../../../services/fiscalProfile.service'
 
 export interface AsyncResource<T> {
   data: T | null
@@ -79,6 +80,12 @@ export function useDashboardSummary(
   }, [key, enabled, from, to, platform, payment])
 
   const reload = useCallback(() => setReloadToken((token) => token + 1), [])
+
+  // Profilul fiscal confirmat deblochează estimările: sumarul se recitește imediat.
+  useEffect(() => {
+    window.addEventListener(FISCAL_PROFILE_CHANGED, reload)
+    return () => window.removeEventListener(FISCAL_PROFILE_CHANGED, reload)
+  }, [reload])
 
   return { ...toResource(loaded, key, enabled), reload }
 }

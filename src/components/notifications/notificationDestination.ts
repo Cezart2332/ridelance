@@ -11,6 +11,7 @@ const TITLES: Record<string, string> = {
   DocumentStatusUpdate: 'Status document', PaymentConfirmed: 'Plată confirmată',
   DocumentExpiringSoon: 'Document aproape de expirare', MonthProcessed: 'Lună procesată',
   FleetAccountConfigured: 'Cont de platformă configurat', BankConnection: 'Cont bancar',
+  FiscalProfile: 'Profil fiscal',
 }
 
 export function notificationTitle(notification: Notification) {
@@ -38,6 +39,7 @@ export function notificationDestination(notification: Notification, role: string
   if (role !== 'Client') return null
   if (type === 'RecurringDocumentation') return PFA_PATHS.docsRecurring
   if (type === 'TaxThreshold') return PFA_PATHS.taxes
+  if (type === 'FiscalProfile') return PFA_PATHS.fiscalProfile
   if (type === 'MonthProcessed') return PFA_PATHS.financialOverview
   if (type === 'ChatRoomMessage') return notification.sectionKey === 'Contabil' ? PFA_PATHS.accountantChat : PFA_PATHS.support
   if (type === 'PaymentConfirmed') return PFA_PATHS.paymentHistoryAnchor

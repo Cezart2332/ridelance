@@ -1,4 +1,3 @@
-
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import { HOME_TOKENS } from '../../tokens'
@@ -26,24 +25,33 @@ interface FeesAndTaxesChartProps {
   points: FeesAndTaxesPoint[]
   granularity: 'day' | 'month'
   animate: boolean
+  /**
+   * Profilul fiscal nu e confirmat: backendul nu trimite taxele, deci graficul arată doar
+   * comisioanele platformelor, sub alt titlu. Nicio taxă afișată ca 0.
+   */
+  taxesLocked?: boolean
 }
 
 /** „Comisioane și taxe estimate" — ce nu ajunge niciodată la tine, pe aceeași axă de timp. */
-export function FeesAndTaxesChart({ points, granularity, animate }: FeesAndTaxesChartProps) {
-  const total = points.reduce(
-    (sum, point) => sum + point.boltFee + point.uberFee + point.vatIntracom + point.boltNonResident,
-    0,
-  )
+export function FeesAndTaxesChart({ points, granularity, animate, taxesLocked = false }: FeesAndTaxesChartProps) {
+  const shown = taxesLocked ? SERIES.filter((s) => s.key === 'boltFee' || s.key === 'uberFee') : SERIES
+  const total = points.reduce((sum, point) => sum + shown.reduce((s, item) => s + (point[item.key] ?? 0), 0), 0)
+  const title = taxesLocked ? 'Comisioane platforme' : 'Comisioane și taxe estimate'
+
 
   return (
     <HomeCard
-      title="Comisioane și taxe estimate"
-      hint="Comisioanele sunt reținute de platforme; TVA-ul intracomunitar și taxa de nerezident se calculează din ele."
+      title={title}
+      hint={
+        taxesLocked
+          ? 'Comisioanele reținute de platforme. Taxele estimate apar după ce completezi profilul fiscal.'
+          : 'Comisioanele sunt reținute de platforme; TVA-ul intracomunitar și taxa de nerezident se calculează din ele.'
+      }
       fill
     >
-      <ChartLegend items={SERIES.map((series) => ({ label: series.label, color: series.color }))} />
+      <ChartLegend items={shown.map((series) => ({ label: series.label, color: series.color }))} />
 
-      <ChartFrame height={220} ariaLabel={`Comisioane și taxe estimate, total ${formatCurrency(total)} în perioada selectată`}>
+      <ChartFrame height={220} ariaLabel={`${title}, total ${formatCurrency(total)} în perioada selectată`}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <BarChart data={points} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
             <CartesianGrid {...gridProps} />
@@ -63,9 +71,9 @@ export function FeesAndTaxesChart({ points, granularity, animate }: FeesAndTaxes
                   <ChartTooltip
                     active={active}
                     title={granularity === 'day' ? formatDate(point.bucket) : point.label}
-                    entries={SERIES.map((series) => ({
+                    entries={shown.map((series) => ({
                       name: series.label,
-                      value: point[series.key],
+                      value: point[series.key] ?? 0,
                       color: series.color,
                       dataKey: series.key,
                     }))}
@@ -73,7 +81,7 @@ export function FeesAndTaxesChart({ points, granularity, animate }: FeesAndTaxes
                 )
               }}
             />
-            {SERIES.map((series, index) => (
+            {shown.map((series, index) => (
               <Bar
                 key={series.key}
                 dataKey={series.key}
@@ -82,7 +90,7 @@ export function FeesAndTaxesChart({ points, granularity, animate }: FeesAndTaxes
                 fill={series.color}
                 isAnimationActive={animate}
                 maxBarSize={30}
-                radius={index === SERIES.length - 1 ? [4, 4, 0, 0] : undefined}
+                radius={index === shown.length - 1 ? [4, 4, 0, 0] : undefined}
               />
             ))}
           </BarChart>
@@ -90,8 +98,8 @@ export function FeesAndTaxesChart({ points, granularity, animate }: FeesAndTaxes
 
         <ChartDataTable
           caption="Comisioane și taxe estimate pe perioada selectată"
-          columns={['Perioadă', ...SERIES.map((series) => series.label)]}
-          rows={points.map((point) => [point.label, ...SERIES.map((series) => point[series.key])])}
+          columns={['Perioadă', ...shown.map((series) => series.label)]}
+          rows={points.map((point) => [point.label, ...shown.map((series) => point[series.key] ?? 0)])}
         />
       </ChartFrame>
     </HomeCard>

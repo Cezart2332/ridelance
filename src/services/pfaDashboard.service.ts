@@ -85,8 +85,9 @@ export interface FeesAndTaxesPoint {
   label: string;
   boltFee: number;
   uberFee: number;
-  vatIntracom: number;
-  boltNonResident: number;
+  /** `null` cât estimările sunt blocate de profilul fiscal necompletat. */
+  vatIntracom: number | null;
+  boltNonResident: number | null;
 }
 
 /**
@@ -125,8 +126,9 @@ export interface DashboardSources {
 export interface PfaDashboardSummary {
   period: { from: string; to: string; granularity: 'day' | 'month' };
   kpis: DashboardKpis;
-  taxReserve: TaxReserve;
-  realProfit: RealProfit;
+  /** `null` cât profilul fiscal al anului nu e confirmat: backendul nu trimite nicio estimare. */
+  taxReserve: TaxReserve | null;
+  realProfit: RealProfit | null;
   platformSplit: PlatformSplitRow[];
   series: {
     netEarnings: NetEarningsPoint[];
@@ -136,6 +138,8 @@ export interface PfaDashboardSummary {
   sources: DashboardSources;
   /** Uber livrează doar totaluri lunare; în serii sunt repartizate, nu măsurate. */
   uberIsMonthlyAggregate: boolean;
+  /** Poarta estimărilor. Lipsește doar în demo-ul public, care nu are profil. */
+  taxProfile?: { taxYear: number; status: 'NOT_STARTED' | 'DRAFT' | 'COMPLETED'; estimatesLocked: boolean };
 }
 
 /* ── /pfa/dashboard/rides ────────────────────────────────────────────────── */

@@ -23,6 +23,7 @@ import SupervisedUserCircleRoundedIcon from '@mui/icons-material/SupervisedUserC
 import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
+import AssignmentTurnedInRoundedIcon from '@mui/icons-material/AssignmentTurnedInRounded'
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded'
 import AttachFileRoundedIcon from '@mui/icons-material/AttachFileRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
@@ -46,6 +47,7 @@ import { DiscountsAdminView } from '../components/dashboard/sections/admin/Disco
 import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminOverviewView'
 import { SrlAccountsView } from '../components/dashboard/sections/admin/SrlAccountsView'
+import { AdminTasksView } from '../components/dashboard/sections/admin/AdminTasksView'
 import { CloseAccountDialog } from '../components/dashboard/sections/admin/CloseAccountDialog'
 import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded'
 import { PfaDetailView } from './admin/PfaDetailView'
@@ -57,6 +59,8 @@ import {
   type AdminPlanFilter,
 } from '../services/adminOverview.service'
 import { openDocument } from '../components/common/documentViewerBus'
+import type { FiscalProfileStatus } from '../services/fiscalProfile.service'
+import { FiscalProfileStatusChip } from '../shared/fiscal-profile'
 
 interface PfaSummary {
   id: string
@@ -92,10 +96,22 @@ interface PfaSummary {
   lastActivityAtUtc: string | null
   /** Contul a fost închis. Datele rămân; lista îl arată la „Șterse”. */
   deletedAtUtc: string | null
+  /** Profilul fiscal al anului curent. */
+  fiscalProfileStatus: FiscalProfileStatus
 }
 
 /** Filtrul listei „PFA înrolate”. */
 type EnrolledFilter = 'active' | 'inactive' | 'deleted'
+
+/** Filtrul „Profil fiscal” din lista PFA înrolate. */
+type FiscalFilter = 'all' | FiscalProfileStatus
+
+const FISCAL_FILTERS: { id: FiscalFilter; label: string }[] = [
+  { id: 'all', label: 'Toate' },
+  { id: 'NOT_STARTED', label: 'Necompletat' },
+  { id: 'DRAFT', label: 'Ciornă' },
+  { id: 'COMPLETED', label: 'Completat' },
+]
 
 const ENROLLED_FILTERS: { id: EnrolledFilter; label: string }[] = [
   { id: 'active', label: 'Active' },
@@ -138,6 +154,7 @@ function normalizePfaSummary(item: any): PfaSummary {
     createdAtUtc: item.createdAtUtc,
     lastActivityAtUtc: item.lastActivityAtUtc,
     deletedAtUtc: item.deletedAtUtc ?? null,
+    fiscalProfileStatus: item.fiscalProfileStatus ?? 'NOT_STARTED',
   }
 }
 
@@ -209,10 +226,11 @@ export function AdminDashboard() {
   const navigate = useNavigate()
   const [manualTab, setActiveTab] = useState('overview')
   const linkedTab = notificationParams.get('tab') ?? ''
-  const activeTab = ['overview', 'pfa', 'pfa_inrolate', 'srl_inrolate', 'masini', 'pagini_firme', 'servicii', 'facturare', 'reduceri', 'asigurari', 'calendar', 'chat', 'contabili', 'notificari'].includes(linkedTab) ? linkedTab : manualTab
+  const activeTab = ['overview', 'pfa', 'pfa_inrolate', 'srl_inrolate', 'masini', 'pagini_firme', 'servicii', 'facturare', 'reduceri', 'asigurari', 'calendar', 'chat', 'contabili', 'notificari', 'sarcini'].includes(linkedTab) ? linkedTab : manualTab
   const [search, setSearch] = useState('')
   const [onlyAwaitingAdmin, setOnlyAwaitingAdmin] = useState(false)
   const [enrolledFilter, setEnrolledFilter] = useState<EnrolledFilter>('active')
+  const [fiscalFilter, setFiscalFilter] = useState<FiscalFilter>('all')
   /** Contul pe care îl închidem sau redeschidem acum. */
   const [accountAction, setAccountAction] = useState<{ userId: string; name: string; action: 'close' | 'reopen' } | null>(null)
   const [pfasReloadToken, setPfasReloadToken] = useState(0)
@@ -470,6 +488,7 @@ export function AdminDashboard() {
       lastActivityAtUtc: pfa.lastActivityAtUtc,
       // Cardurile din overview sunt doar ale conturilor deschise.
       deletedAtUtc: null,
+      fiscalProfileStatus: 'NOT_STARTED',
     })
     setActiveTab('pfa_inrolate')
     navigate(`/admin?tab=pfa_inrolate&user=${pfa.userId}`)
@@ -540,6 +559,7 @@ export function AdminDashboard() {
     { id: 'pfa_inrolate', label: 'PFA înrolate', group: 'Clienți', icon: <HowToRegRoundedIcon /> },
     { id: 'srl_inrolate', label: 'SRL înrolate', group: 'Clienți', icon: <BusinessRoundedIcon /> },
     { id: 'chat', label: 'Chat', group: 'Clienți', icon: <ChatRoundedIcon /> },
+    { id: 'sarcini', label: 'Sarcini', group: 'Clienți', icon: <AssignmentTurnedInRoundedIcon /> },
     { id: 'masini', label: 'Mașini ridesharing', group: 'Activitate comercială', icon: <DirectionsCarFilledRoundedIcon /> },
     // Lângă mașini, nu lângă setări: e tot moderare de conținut public, doar că a firmei.
     { id: 'pagini_firme', label: 'Pagini firme', group: 'Activitate comercială', icon: <LanguageRoundedIcon /> },
@@ -582,6 +602,7 @@ export function AdminDashboard() {
     )
     // Filtrul rapid din spec: dosarele la care mingea e la noi, nu la client.
     .filter(p => !onlyAwaitingAdmin || p.awaitingAdminAction)
+    .filter(p => activeTab !== 'pfa_inrolate' || fiscalFilter === 'all' || p.fiscalProfileStatus === fiscalFilter)
 
   // Contorul se calculează înainte de filtru, altfel ar arăta mereu numărul afișat.
   const awaitingAdminCount = filteredPfas.filter(p => p.awaitingAdminAction).length
@@ -878,6 +899,20 @@ export function AdminDashboard() {
             }}
           />
         ))}
+        {activeTab === 'pfa_inrolate' && (
+          <TextField
+            select
+            size="small"
+            label="Profil fiscal"
+            value={fiscalFilter}
+            onChange={(e) => setFiscalFilter(e.target.value as FiscalFilter)}
+            sx={{ minWidth: 170 }}
+          >
+            {FISCAL_FILTERS.map((entry) => (
+              <MenuItem key={entry.id} value={entry.id}>{entry.label}</MenuItem>
+            ))}
+          </TextField>
+        )}
         {activeTab === 'pfa' && <Chip
           label={`Așteaptă acțiune admin${awaitingAdminCount > 0 ? ` (${awaitingAdminCount})` : ''}`}
           onClick={() => setOnlyAwaitingAdmin((v) => !v)}
@@ -919,6 +954,12 @@ export function AdminDashboard() {
                   ? <Chip label="Cont închis" size="small" sx={{ bgcolor: alpha('#ef4444', 0.08), color: '#ef4444' }} />
                   : <Chip label={pfa.awaitingAdminAction ? 'Necesită verificare' : statusLabel(pfa.status)} size="small" sx={{ bgcolor: alpha(statusColor(pfa.status), 0.08), color: statusColor(pfa.status) }} />}
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>{pfa.documentCount} documente · {pfaPlanLabel(pfa)}</Typography>
+                {activeTab === 'pfa_inrolate' && !pfa.deletedAtUtc && (
+                  <Box sx={{ mt: 0.75, display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <Typography variant="caption" color="text.secondary">Profil fiscal:</Typography>
+                    <FiscalProfileStatusChip status={pfa.fiscalProfileStatus} />
+                  </Box>
+                )}
               </Box>
               <Box>
                 <Typography variant="body2">{subscriptionStatusLabel(pfa.subscriptionStatus)}</Typography>
@@ -1067,6 +1108,14 @@ export function AdminDashboard() {
       case 'chat': return <AdminChatView pfas={pfas} />
       case 'contabili': return renderContabili()
       case 'notificari': return renderNotificari()
+      case 'sarcini': return (
+        <AdminTasksView
+          onOpenPfa={(userId) => {
+            setActiveTab('pfa_inrolate')
+            navigate(`/admin?tab=pfa_inrolate&user=${userId}`)
+          }}
+        />
+      )
       default: return null
     }
   }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Box, CircularProgress, Paper, Stack, Tooltip, Typography } from '@mui/material'
+import { Box, Button, CircularProgress, Paper, Stack, Tooltip, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
@@ -13,6 +13,7 @@ import { useDashboardSummary } from '../../home/useDashboardData'
 import { taxObligationsService, type TaxObligation } from '../../../../services/taxObligations.service'
 import { getErrorMessage } from '../../../../utils/errorHandler'
 import { openDocument } from '../../../common/documentViewerBus'
+import { FiscalProfileInviteCard, usePfaFiscalProfile } from '../../../../shared/fiscal-profile'
 
 const STATUS_TONE: Record<TaxObligation['status'], StatusTone> = {
   InPregatire: 'neutral',
@@ -69,6 +70,9 @@ export function TaxesPage() {
   }, [])
 
   const reserve = data?.taxReserve
+  // Fără profil fiscal confirmat, backendul nu trimite estimări: secțiunea e doar invitația.
+  const estimatesLocked = !!data && !data.taxReserve
+  const fiscal = usePfaFiscalProfile()
 
   return (
     <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
@@ -89,13 +93,26 @@ export function TaxesPage() {
       >
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5, flexWrap: 'wrap' }}>
           <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>Estimări RIDElance</Typography>
-          <StatusChip tone="neutral" label="Estimare" size="sm" />
+          {!estimatesLocked && <StatusChip tone="neutral" label="Estimare" size="sm" />}
+          <Box sx={{ flex: 1 }} />
+          {fiscal && fiscal.status === 'COMPLETED' && (
+            <Button size="small" variant="outlined" onClick={fiscal.openForm}>
+              Editează profilul
+            </Button>
+          )}
         </Stack>
         <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', mb: 2 }}>
           Calculate de platformă din activitatea ta. Sunt orientative și se schimbă pe măsură ce
           lucrezi — nu sunt sume declarate.
         </Typography>
 
+        {estimatesLocked ? (
+          <FiscalProfileInviteCard
+            status={fiscal?.status ?? data?.taxProfile?.status ?? 'NOT_STARTED'}
+            onStart={fiscal?.openForm}
+          />
+        ) : (
+        <>
         <Box sx={{ mb: 2 }}>
           <FilterBar
             filters={filters}
@@ -154,6 +171,8 @@ export function TaxesPage() {
               </Typography>
             </Stack>
           </Box>
+        )}
+        </>
         )}
       </Paper>
 

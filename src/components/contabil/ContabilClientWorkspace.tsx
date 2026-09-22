@@ -41,6 +41,7 @@ import { PfaMonthlyIncomeForm } from './PfaMonthlyIncomeForm'
 import { RecurringDocumentationPanel } from '../dashboard/sections/RecurringDocumentationPanel'
 import { DeductibleExpensesPanel } from '../dashboard/sections/DeductibleExpensesPanel'
 import { PfaFiscalSettingsPanel } from '../pfa/PfaFiscalSettingsPanel'
+import { FiscalProfilePanel } from '../../shared/fiscal-profile'
 import { BankActivityPanel } from '../banking/BankActivityPanel'
 
 export interface ContabilClientInfo {
@@ -363,7 +364,12 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
 
             <Box sx={{ p: { xs: 2, md: 2.5 } }}>
               {tab === 0 && <PfaMonthlyIncomeForm pfaRegistrationId={client.id} year={selectedYear} month={selectedMonth} readOnly={true} />}
-              {tab === 1 && <PfaFiscalSettingsPanel pfaId={client.id} editable clientUserId={client.userId} />}
+              {tab === 1 && (
+                <Stack spacing={2.5}>
+                  <FiscalProfilePanel mode="accounting" pfaId={client.id} />
+                  <PfaFiscalSettingsPanel pfaId={client.id} editable clientUserId={client.userId} />
+                </Stack>
+              )}
               {tab === 2 && (
                 <RecurringDocumentationPanel
                   year={selectedYear}

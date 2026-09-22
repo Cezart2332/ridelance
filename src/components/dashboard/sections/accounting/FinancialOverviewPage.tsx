@@ -13,6 +13,7 @@ import { PlatformBreakdown } from '../../home/components/PlatformBreakdown'
 import { RealProfitCard } from '../../home/components/RealProfitCard'
 import { CardError, CardSkeleton, TileSkeleton } from '../../home/components/states/CardStates'
 import { FinancialTrendChart } from '../../home/components/charts/FinancialTrendChart'
+import { FiscalProfileInviteCard, usePfaFiscalProfile } from '../../../../shared/fiscal-profile'
 
 const GRID_GAP = 2
 
@@ -41,7 +42,11 @@ export function FinancialOverviewPage() {
   )
 
   const { data, isLoading, isFetching, error, reload } = useDashboardSummary(query)
-  const breakdown = data ? selectFinancialBreakdown(data.realProfit) : null
+  const breakdown = data?.realProfit ? selectFinancialBreakdown(data.realProfit) : null
+  // Fără profil fiscal confirmat, backendul nu trimite nicio estimare: rămân încasările și
+  // sursele lor, iar în locul cifrelor după taxe apare invitația.
+  const estimatesLocked = !!data && !data.realProfit
+  const fiscal = usePfaFiscalProfile()
   const comparisonLabel = comparisonLabelFor(filters.period)
 
   return (
@@ -64,6 +69,24 @@ export function FinancialOverviewPage() {
           </HomeCard>
         ) : (
           <Box sx={{ opacity: isFetching && data ? 0.6 : 1, transition: 'opacity 150ms ease-out' }}>
+            {estimatesLocked && data ? (
+              <Stack spacing={GRID_GAP}>
+                <FiscalProfileInviteCard
+                  status={fiscal?.status ?? data.taxProfile?.status ?? 'NOT_STARTED'}
+                  onStart={fiscal?.openForm}
+                />
+                <Box sx={{ display: 'grid', gap: GRID_GAP, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' } }}>
+                  <KpiTile
+                    label="Încasări nete"
+                    metric={data.kpis.netEarnings}
+                    unit="lei"
+                    subtext="după comisioane platforme"
+                    comparisonLabel={comparisonLabel}
+                  />
+                </Box>
+                <PlatformBreakdown rows={data.platformSplit} animate={!isFetching} />
+              </Stack>
+            ) : (
             <Stack spacing={GRID_GAP}>
               {/* ── Cifrele, toate financiare ── */}
               <FadeUpRow index={0}>
@@ -155,13 +178,14 @@ export function FinancialOverviewPage() {
                     </>
                   ) : (
                     <>
-                      <RealProfitCard profit={data.realProfit} />
+                      {data.realProfit && <RealProfitCard profit={data.realProfit} />}
                       <PlatformBreakdown rows={data.platformSplit} animate={!isFetching} />
                     </>
                   )}
                 </Box>
               </FadeUpRow>
             </Stack>
+            )}
           </Box>
         )}
       </Stack>

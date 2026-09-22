@@ -15,6 +15,7 @@ import {
 } from '../../components/admin'
 import { CompanyFormationAdminPanel } from '../../components/pfa/CompanyFormationAdminPanel'
 import { PfaFiscalSettingsPanel } from '../../components/pfa/PfaFiscalSettingsPanel'
+import { FiscalProfilePanel } from '../../shared/fiscal-profile'
 import { OnboardingSectionsPanel } from '../../components/dashboard/sections/admin/OnboardingSectionsPanel'
 import { UberImportAdminPanel } from '../../components/dashboard/sections/admin/UberImportAdminPanel'
 import { DocumentRejectDialog } from '../../components/dashboard/sections/admin/DocumentRejectDialog'
@@ -326,6 +327,8 @@ export function PfaDetailView(props: PfaDetailViewProps) {
                       />
                     )}
                   </Section>
+
+                  {hasRegistration && <FiscalProfilePanel mode="admin" pfaId={pfa.id} />}
 
                   <PfaFiscalSettingsPanel pfaId={pfa.id} editable clientUserId={pfa.userId} />
                 </>

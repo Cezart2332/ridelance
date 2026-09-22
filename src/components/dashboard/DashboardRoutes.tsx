@@ -7,6 +7,7 @@ import { BeneficiiTab } from './sections/BeneficiiTab'
 import { ExpensesPage } from './sections/accounting/ExpensesPage'
 import { FinancialOverviewPage } from './sections/accounting/FinancialOverviewPage'
 import { TaxesPage } from './sections/accounting/TaxesPage'
+import { FiscalProfilePage } from './sections/accounting/FiscalProfilePage'
 import { BoltConnectionPage } from './sections/connections/BoltConnectionPage'
 import { OblioConnectionPage } from './sections/connections/OblioConnectionPage'
 import { UberConnectionPage } from './sections/connections/UberConnectionPage'
@@ -50,6 +51,7 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
       <Route path={rel(PFA_PATHS.financialOverview)} element={<FinancialOverviewPage />} />
       <Route path={rel(PFA_PATHS.expenses)} element={<ExpensesPage pfaRegistrationId={pfaRegistrationId} />} />
       <Route path={rel(PFA_PATHS.taxes)} element={<TaxesPage />} />
+      <Route path={rel(PFA_PATHS.fiscalProfile)} element={<FiscalProfilePage />} />
       <Route path={rel(PFA_PATHS.bankAccount)} element={<BankTab onNavigate={navigateToSection} />} />
       {/* Construită o singură dată, folosită de ambele dashboard-uri (spec §3.3.1). */}
       <Route path={rel(PFA_PATHS.invoices)} element={<InvoicesPage />} />

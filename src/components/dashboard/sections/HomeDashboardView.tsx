@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { Box, Chip, Stack, Typography } from '@mui/material'
+import { useEffect, useMemo, useState } from 'react'
+import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material'
 
 import { HOME_TOKENS, SPLIT_ROW } from '../home/tokens'
 import { formatPeriodLabel } from '../home/format'
@@ -20,6 +20,17 @@ import { RealProfitTrendChart } from '../home/components/charts/RealProfitTrendC
 import { RidesHistoryTable } from '../home/components/RidesHistoryTable'
 import { CardError, CardSkeleton, TileSkeleton } from '../home/components/states/CardStates'
 import type { PfaDashboardSummary, RidesPage } from '../../../services/pfaDashboard.service'
+import { FiscalProfileInviteCard, usePfaFiscalProfile } from '../../../shared/fiscal-profile'
+
+const BANNER_DISMISSED_KEY = 'ridelance:fiscal-profile-banner-dismissed'
+
+function bannerDismissed(): boolean {
+  try {
+    return sessionStorage.getItem(BANNER_DISMISSED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
 
 interface HomeDashboardViewProps {
   onNavigate?: (sectionId: string) => void
@@ -122,6 +133,26 @@ export function HomeDashboardContent({
   const awaitingActivation =
     !!sources && (sources.bolt.onboardingPending || sources.uber.onboardingPending)
 
+  // Profilul fiscal: modalul automat o singură dată (serverul ține minte), bannerul discret cât
+  // profilul nu e completat, iar estimările de taxe lipsesc cu totul până atunci.
+  const fiscal = usePfaFiscalProfile()
+  const promptIfFirstVisit = fiscal?.promptIfFirstVisit
+  useEffect(() => {
+    promptIfFirstVisit?.()
+  }, [promptIfFirstVisit])
+  const [hideBanner, setHideBanner] = useState(bannerDismissed)
+  const dismissBanner = () => {
+    setHideBanner(true)
+    try {
+      sessionStorage.setItem(BANNER_DISMISSED_KEY, '1')
+    } catch {
+      // Fără sessionStorage bannerul se ascunde doar până la reîncărcare.
+    }
+  }
+  const estimatesLocked = !!data && (data.taxReserve === null || data.taxProfile?.estimatesLocked === true)
+  const profileStatus = fiscal?.status ?? data?.taxProfile?.status ?? 'NOT_STARTED'
+  const showBanner = !!fiscal && fiscal.status !== null && fiscal.status !== 'COMPLETED' && !hideBanner
+
   const activationLabel = [
     sources?.uber.onboardingPending ? 'Uber Fleet' : null,
     sources?.bolt.onboardingPending ? 'Bolt Fleet' : null,
@@ -146,6 +177,21 @@ export function HomeDashboardContent({
         spacing={GRID_GAP}
         sx={{ pt: GRID_GAP, scrollMarginTop: `${CONDENSED_HEADER_HEIGHT}px` }}
       >
+        {showBanner && (
+          <Alert
+            severity="info"
+            onClose={dismissBanner}
+            action={
+              <Button color="inherit" size="small" onClick={fiscal?.openForm} sx={{ fontWeight: 700 }}>
+                Completează
+              </Button>
+            }
+            sx={{ alignItems: 'center' }}
+          >
+            Profilul tău fiscal nu este completat.
+          </Alert>
+        )}
+
         {awaitingActivation && (
           <Chip
             label={`${activationLabel} — cont în curs de activare`}
@@ -301,6 +347,10 @@ export function HomeDashboardContent({
                         <CardSkeleton height={380} />
                       </Box>
                     </>
+                  ) : estimatesLocked || !data.taxReserve || !data.realProfit ? (
+                    <Box sx={{ gridColumn: { lg: 'span 12' }, minWidth: 0 }}>
+                      <FiscalProfileInviteCard status={profileStatus} onStart={fiscal?.openForm} />
+                    </Box>
                   ) : (
                     <>
                       <Box sx={{ gridColumn: { lg: 'span 7' }, minWidth: 0 }}>
@@ -346,12 +396,15 @@ export function HomeDashboardContent({
                         points={data.series.feesAndTaxes}
                         granularity={data.period.granularity}
                         animate={!isFetching}
+                        taxesLocked={estimatesLocked}
                       />
-                      <RealProfitTrendChart
-                        points={data.series.realProfit}
-                        granularity={data.period.granularity}
-                        animate={!isFetching}
-                      />
+                      {!estimatesLocked && (
+                        <RealProfitTrendChart
+                          points={data.series.realProfit}
+                          granularity={data.period.granularity}
+                          animate={!isFetching}
+                        />
+                      )}
                     </>
                   )}
                 </Box>
