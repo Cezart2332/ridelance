@@ -3,8 +3,7 @@ import {
   RECURRING_DOCUMENTATION_PUSH_TITLE,
   getRecurringDocumentationDeepLink,
   getRecurringDocumentationPushBody,
-  getRomaniaMonthKey,
-  isFirstDayOfMonthInRomania,
+  getRequestedAccountingMonthKey,
 } from '../constants/recurringDocumentationNotification'
 import { showLocalPushNotification } from '../lib/localNotification'
 import { notificationService } from '../services/notification.service'
@@ -12,10 +11,12 @@ import { notificationService } from '../services/notification.service'
 const SYNC_PREFIX = 'ridelance-recurring-doc-synced:'
 const LOCAL_FALLBACK_PREFIX = 'ridelance-recurring-doc-local:'
 
+/**
+ * O dată pe lună contabilă, în orice zi a ferestrei ei (26 – 25): serverul trimite cererea doar
+ * dacă n-a plecat deja, deci cine n-a deschis aplicația pe 26 o primește la prima deschidere.
+ */
 async function dispatchRecurringDocumentationReminder(): Promise<void> {
-  if (!isFirstDayOfMonthInRomania()) return
-
-  const monthKey = getRomaniaMonthKey()
+  const monthKey = getRequestedAccountingMonthKey()
   const syncKey = `${SYNC_PREFIX}${monthKey}`
   if (localStorage.getItem(syncKey)) return
 
@@ -45,8 +46,8 @@ async function dispatchRecurringDocumentationReminder(): Promise<void> {
 }
 
 /**
- * Ensures clients receive recurring-documentation reminders on the 1st of each month
- * (Europe/Bucharest) when the app is open. Backend cron should notify offline users.
+ * Cererea de documente lunare, cât timp aplicația e deschisă. Jobul serverului o trimite pe 26
+ * (ora României); aici se acoperă cine n-a primit-o atunci.
  */
 export function useRecurringDocumentationReminder(enabled: boolean) {
   useEffect(() => {

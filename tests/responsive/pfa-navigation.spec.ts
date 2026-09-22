@@ -581,6 +581,23 @@ test.describe('navigație PFA', () => {
     await main.getByRole('tab', { name: 'Constalaris' }).click()
     await expect(main.getByText('Orgtech Teo SH')).toBeVisible()
     await expect(main.getByRole('link', { name: /Comandă pe Constalaris/ }).first()).toHaveAttribute('href', /constalaris\.ro/)
+    await expect(main.getByText('Te interesează și aplicația de raportare?')).toHaveCount(0)
+  })
+
+  test('MOL arată oferta RIDElance, eldrive are contact pe WhatsApp', async ({ page }, testInfo) => {
+    await page.goto(`${ROOT}/beneficii`, { waitUntil: 'networkidle' })
+    const main = page.getByRole('main')
+
+    await main.getByRole('tab', { name: 'MOL' }).click()
+    await expect(main.getByText('Ce primești prin RIDElance')).toBeVisible()
+    await expect(main.getByText('Cashback între 11 și 20 bani/litru')).toBeVisible()
+    await expect(main.getByText('Gabriel Prunaru')).toBeVisible()
+    await page.screenshot({ path: `test-results/beneficii-mol-${testInfo.project.name}.png`, fullPage: true })
+
+    await main.getByRole('tab', { name: 'eldrive' }).click()
+    await expect(main.getByRole('link', { name: /Scrie pe WhatsApp/ })).toHaveAttribute('href', /^https:\/\/wa\.me\/40785093336\?text=/)
+    await expect(main.getByText('0785 093 336')).toBeVisible()
+    await page.screenshot({ path: `test-results/beneficii-eldrive-${testInfo.project.name}.png`, fullPage: true })
   })
 
   /** Antetul spune unde ești, ca în admin: categoria din meniu, apoi pagina. */

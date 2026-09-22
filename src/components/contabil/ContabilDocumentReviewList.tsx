@@ -30,6 +30,7 @@ import { documentService, type DocumentSummary } from '../../services/document.s
 import { formatDocumentCategory } from '../../utils/formatters'
 import { documentStatusColors, documentStatusLabel, normalizeDocumentStatus } from '../../utils/documentStatus'
 import { openDocument } from '../common/documentViewerBus'
+import { accountingMonthKey, requestedAccountingMonth } from '../../utils/accountingPeriod'
 
 // ─── Expiry helpers ──────────────────────────────────────────────────────────
 
@@ -111,12 +112,14 @@ const MONTH_NAMES = [
   'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie',
 ]
 
+/** Luna contabilă la care se socotește documentul: încărcat pe 26 sept – 25 oct → septembrie. */
+function documentMonthKey(doc: DocumentSummary): string {
+  return accountingMonthKey(requestedAccountingMonth(new Date(doc.uploadedAtUtc)))
+}
+
 function buildMonthOptions(documents: DocumentSummary[]): { value: string; label: string }[] {
   const seen = new Set<string>()
-  for (const doc of documents) {
-    const d = new Date(doc.uploadedAtUtc)
-    seen.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
-  }
+  for (const doc of documents) seen.add(documentMonthKey(doc))
   return Array.from(seen)
     .sort((a, b) => b.localeCompare(a))
     .map((key) => {
@@ -153,11 +156,7 @@ export function ContabilDocumentReviewList({
 
   const filteredDocs = useMemo(() => {
     if (selectedMonth === 'all') return documents
-    const [year, month] = selectedMonth.split('-').map(Number)
-    return documents.filter((doc) => {
-      const d = new Date(doc.uploadedAtUtc)
-      return d.getFullYear() === year && d.getMonth() + 1 === month
-    })
+    return documents.filter((doc) => documentMonthKey(doc) === selectedMonth)
   }, [documents, selectedMonth])
 
   const handleDownload = async (doc: DocumentSummary) => {

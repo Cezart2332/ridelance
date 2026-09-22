@@ -18,6 +18,14 @@ export interface PfaMonthlyIncome {
   processedByUserName: string | null;
 }
 
+/** Secțiunea din aplicația PFA în care duce notificarea contabilului (vezi backendul, `ClientNotificationDestinations`). */
+export type ClientNotificationDestination =
+  | 'RecurringDocuments'
+  | 'Documents'
+  | 'Taxes'
+  | 'FiscalProfile'
+  | 'AccountantChat';
+
 export interface PfaInternalNote {
   id: string;
   pfaRegistrationId: string;
@@ -218,6 +226,19 @@ export const pfaService = {
     const response = await api.get<PfaInternalNote[]>(`/pfa-registrations/${pfaId}/internal-notes`, {
       params: { year, month }
     });
+    return response.data;
+  },
+
+  /** Contabilul trimite clientului o notificare (în aplicație și push). */
+  sendClientNotification: async (
+    pfaId: string,
+    text: string,
+    destination: ClientNotificationDestination | null,
+  ): Promise<{ notificationId: string; pushSent: number }> => {
+    const response = await api.post<{ notificationId: string; pushSent: number }>(
+      `/pfa-registrations/${pfaId}/client-notifications`,
+      { text, destination },
+    );
     return response.data;
   },
 

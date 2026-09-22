@@ -11,7 +11,16 @@ const TITLES: Record<string, string> = {
   DocumentStatusUpdate: 'Status document', PaymentConfirmed: 'Plată confirmată',
   DocumentExpiringSoon: 'Document aproape de expirare', MonthProcessed: 'Lună procesată',
   FleetAccountConfigured: 'Cont de platformă configurat', BankConnection: 'Cont bancar',
-  FiscalProfile: 'Profil fiscal',
+  FiscalProfile: 'Profil fiscal', AccountantMessage: 'Mesaj de la contabil',
+}
+
+/** Unde duce notificarea scrisă de contabil; fără secțiune, rămâne doar notificarea. */
+const ACCOUNTANT_MESSAGE_PATHS: Record<string, string> = {
+  RecurringDocuments: PFA_PATHS.docsRecurring,
+  Documents: PFA_PATHS.documents,
+  Taxes: PFA_PATHS.taxes,
+  FiscalProfile: PFA_PATHS.fiscalProfile,
+  AccountantChat: PFA_PATHS.accountantChat,
 }
 
 export function notificationTitle(notification: Notification) {
@@ -40,6 +49,7 @@ export function notificationDestination(notification: Notification, role: string
   if (type === 'RecurringDocumentation') return PFA_PATHS.docsRecurring
   if (type === 'TaxThreshold') return PFA_PATHS.taxes
   if (type === 'FiscalProfile') return PFA_PATHS.fiscalProfile
+  if (type === 'AccountantMessage') return ACCOUNTANT_MESSAGE_PATHS[notification.sectionKey ?? ''] ?? null
   if (type === 'MonthProcessed') return PFA_PATHS.financialOverview
   if (type === 'ChatRoomMessage') return notification.sectionKey === 'Contabil' ? PFA_PATHS.accountantChat : PFA_PATHS.support
   if (type === 'PaymentConfirmed') return PFA_PATHS.paymentHistoryAnchor

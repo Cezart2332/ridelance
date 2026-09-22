@@ -116,6 +116,27 @@ test.describe('navigație SRL', () => {
     await expect(page).toHaveURL(new RegExp(`${ROOT}/masini/adauga$`))
   })
 
+  test('FiscalLink și eldrive sunt „În curând” pentru SRL', async ({ page }, testInfo) => {
+    await page.goto(`${ROOT}/beneficii`, { waitUntil: 'networkidle' })
+    const main = page.getByRole('main')
+    for (const name of ['FiscalLink', 'eldrive']) {
+      await main.getByRole('tab', { name }).click()
+      await expect(main.getByText('În curând', { exact: true })).toBeVisible()
+      await expect(main.getByRole('link', { name: /Scrie pe WhatsApp/ })).toHaveCount(0)
+    }
+    await page.screenshot({ path: `test-results/srl-beneficii-eldrive-${testInfo.project.name}.png`, fullPage: true })
+
+    // Serverul încă trimite Eldrive; pagina nu-l mai arată.
+    const integration = { status: 'disconnected', connectedAtUtc: null, expiresAtUtc: null, lastSyncAtUtc: null, errorMessage: null, available: true, details: [] }
+    await page.route(`${API}/connections`, (route: Route) =>
+      route.fulfill({ json: [{ ...integration, provider: 'Bank' }, { ...integration, provider: 'Eldrive', available: false }] }))
+    await page.goto(`${ROOT}/conexiuni`, { waitUntil: 'networkidle' })
+    await expect(main.getByText('FiscalLink', { exact: true })).toBeVisible()
+    await expect(main.getByText(/eldrive/i)).toHaveCount(0)
+    await expect(main.getByRole('img', { name: /eldrive/i })).toHaveCount(0)
+    await page.screenshot({ path: `test-results/srl-conexiuni-${testInfo.project.name}.png`, fullPage: true })
+  })
+
   test('ruta veche /poster redirecționează, păstrând query string-ul', async ({ page }) => {
     await page.goto('/poster')
     await expect(page).toHaveURL(new RegExp(`${ROOT}$`))

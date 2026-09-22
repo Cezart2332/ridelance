@@ -24,8 +24,13 @@ import {
 } from '../../../constants/recurringDocumentationItems'
 import { documentService, type DocumentSummary } from '../../../services/document.service'
 import { documentStatusColors, documentStatusLabel, normalizeDocumentStatus } from '../../../utils/documentStatus'
-import { isUploadedInRomaniaMonth } from '../../../utils/romaniaMonth'
-import { formatMonthLabelRomania } from '../../../constants/recurringDocumentationNotification'
+import {
+  formatAccountingDeadline,
+  formatAccountingMonth,
+  isUploadedInAccountingMonth,
+  requestedAccountingMonth,
+  type AccountingMonth,
+} from '../../../utils/accountingPeriod'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { openDocument } from '../../common/documentViewerBus'
 
@@ -76,24 +81,23 @@ export function RecurringDocumentationPanel({
     void loadDocuments()
   }, [loadDocuments])
 
-  const targetDate = useMemo(() => {
-    if (year !== undefined && month !== undefined) {
-      return new Date(Date.UTC(year, month - 1, 15))
-    }
-    return new Date()
-  }, [year, month])
+  // Luna contabilă afișată: cea aleasă, altfel cea deschisă acum (până pe 25, luna trecută).
+  const target = useMemo<AccountingMonth>(
+    () => (year !== undefined && month !== undefined ? { year, month } : requestedAccountingMonth()),
+    [year, month],
+  )
 
   const docsByCategory = useMemo(() => {
     const map = new Map<string, DocumentSummary>()
     for (const doc of documents) {
-      if (!isUploadedInRomaniaMonth(doc.uploadedAtUtc, targetDate)) continue
+      if (!isUploadedInAccountingMonth(doc.uploadedAtUtc, target)) continue
       const existing = map.get(doc.category)
       if (!existing || new Date(doc.uploadedAtUtc) > new Date(existing.uploadedAtUtc)) {
         map.set(doc.category, doc)
       }
     }
     return map
-  }, [documents, targetDate])
+  }, [documents, target])
 
   const handleUpload = async (category: string, file: File, itemLabel: string) => {
     setUploadingCategory(category)
@@ -148,14 +152,10 @@ export function RecurringDocumentationPanel({
   }
 
   const monthLabel = useMemo(() => {
-    if (year !== undefined && month !== undefined) {
-      const target = new Date(Date.UTC(year, month - 1, 15))
-      const formatter = new Intl.DateTimeFormat('ro-RO', { month: 'long', year: 'numeric' })
-      const raw = formatter.format(target)
-      return raw.charAt(0).toUpperCase() + raw.slice(1)
-    }
-    return formatMonthLabelRomania()
-  }, [year, month])
+    const raw = formatAccountingMonth(target)
+    return raw.charAt(0).toUpperCase() + raw.slice(1)
+  }, [target])
+  const deadlineLabel = formatAccountingDeadline(target)
 
   return (
     <Paper
@@ -172,8 +172,8 @@ export function RecurringDocumentationPanel({
       </Typography>
       <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.7, fontSize: '0.9rem', mb: 2 }}>
         {isContabil
-          ? 'Vizualizează documentele încărcate de client pentru luna selectată.'
-          : 'Încarcă documentele obligatorii pentru închiderea lunii. Notificarea din prima zi a lunii te reamintește.'}
+          ? `Documentele încărcate de client pentru luna selectată (de pe 26 ale lunii până pe ${deadlineLabel}).`
+          : `Încarcă documentele pentru ${formatAccountingMonth(target)} până pe ${deadlineLabel}, când contabilul închide luna.`}
       </Typography>
 
       {loading ? (
@@ -186,7 +186,7 @@ export function RecurringDocumentationPanel({
             if (recurringItemUsesExpenseUpload(item)) {
               const expenseDocs = documents.filter(
                 (d) =>
-                  d.category === 'Cheltuiala' && isUploadedInRomaniaMonth(d.uploadedAtUtc, targetDate),
+                  d.category === 'Cheltuiala' && isUploadedInAccountingMonth(d.uploadedAtUtc, target),
               )
               const fulfilled = expenseDocs.length > 0
               const statusStyle = fulfilled
@@ -211,7 +211,7 @@ export function RecurringDocumentationPanel({
                       </Typography>
                       <Typography sx={{ fontSize: '0.78rem', color: DASHBOARD_TOKENS.textMuted, mt: 0.3 }}>
                         {fulfilled
-                          ? `${expenseDocs.length} factură/facturi în luna curentă — secțiunea Cheltuieli`
+                          ? `${expenseDocs.length} factură/facturi pentru luna aceasta — secțiunea Cheltuieli`
                           : 'Adaugă facturile în secțiunea Cheltuieli deductibile'}
                       </Typography>
                     </Box>

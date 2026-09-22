@@ -33,6 +33,7 @@ import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded'
 import RateReviewRoundedIcon from '@mui/icons-material/RateReviewRounded'
 import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded'
 import SavingsRoundedIcon from '@mui/icons-material/SavingsRounded'
+import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded'
 
 import { TOKENS } from '../../constants/tokens'
 import { documentService, type DocumentSummary } from '../../services/document.service'
@@ -44,6 +45,8 @@ import { PfaFiscalSettingsPanel } from '../pfa/PfaFiscalSettingsPanel'
 import { FiscalProfilePanel } from '../../shared/fiscal-profile'
 import { EstimatedTaxesCard } from '../../shared/fiscal-estimates'
 import { BankActivityPanel } from '../banking/BankActivityPanel'
+import { requestedAccountingMonth } from '../../utils/accountingPeriod'
+import { ClientNotificationDialog } from './ClientNotificationDialog'
 
 export interface ContabilClientInfo {
   id: string
@@ -68,13 +71,14 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
   const [tab, setTab] = useState(0)
   const [documents, setDocuments] = useState<DocumentSummary[]>([])
   
-  // Unified period state
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1)
+  // Luna contabilă deschisă acum: până pe 25 se lucrează pe luna trecută (vezi utils/accountingPeriod).
+  const [selectedYear, setSelectedYear] = useState<number>(() => requestedAccountingMonth().year)
+  const [selectedMonth, setSelectedMonth] = useState<number>(() => requestedAccountingMonth().month)
   
   const [isProcessed, setIsProcessed] = useState(false)
   const [processingStatus, setProcessingStatus] = useState(false)
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false)
+  const [notifyOpen, setNotifyOpen] = useState(false)
 
   // Internal Notes & Activity Logs state
   const [internalNotes, setInternalNotes] = useState<PfaInternalNote[]>([])
@@ -294,6 +298,16 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
               ))}
             </Select>
           </FormControl>
+
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<NotificationsActiveRoundedIcon />}
+            onClick={() => setNotifyOpen(true)}
+            sx={{ fontWeight: 700, textTransform: 'none', borderRadius: `${TOKENS.radius.md}px` }}
+          >
+            Trimite notificare
+          </Button>
 
           <Chip
             label={isProcessed ? 'Procesat' : 'În așteptare'}
@@ -593,6 +607,21 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ClientNotificationDialog
+        open={notifyOpen}
+        pfaId={client.id}
+        clientName={client.userName}
+        onClose={() => setNotifyOpen(false)}
+        onSent={(pushSent) => {
+          setNotifyOpen(false)
+          showSnackbar(
+            pushSent > 0 ? 'Notificarea a fost trimisă, inclusiv pe telefon.' : 'Notificarea a fost trimisă în aplicație.',
+            'success',
+          )
+          void loadNotesAndLogs()
+        }}
+      />
 
       <Snackbar
         open={snackbar.open}

@@ -82,7 +82,7 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
       <Route path={rel(PFA_PATHS.connBank)} element={<Navigate to={PFA_PATHS.bankAccount} replace />} />
 
       {/* ── Beneficii ── */}
-      <Route path={rel(PFA_PATHS.benefits)} element={<BeneficiiTab onNavigate={navigateToSection} />} />
+      <Route path={rel(PFA_PATHS.benefits)} element={<BeneficiiTab audience="pfa" onNavigate={navigateToSection} />} />
 
       {/* ── Servicii ── */}
       <Route path={rel(PFA_PATHS.services)} element={<Navigate to={PFA_PATHS.svcCars} replace />} />

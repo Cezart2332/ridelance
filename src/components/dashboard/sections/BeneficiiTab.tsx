@@ -3,15 +3,19 @@ import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import EmailRoundedIcon from '@mui/icons-material/EmailRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import RedeemRoundedIcon from '@mui/icons-material/RedeemRounded'
+import WhatsAppIcon from '@mui/icons-material/WhatsApp'
 import { Box, Button, ButtonBase, Chip, Paper, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useEffect, useRef, useState } from 'react'
 
 import {
   partnerBenefits,
+  type BenefitAudience,
   type BenefitBlock,
   type PartnerBenefit,
 } from '../../../data/benefits'
+
+const WHATSAPP_GREEN = '#25d366'
 import { PARTNER_LOGO } from '../../../data/partnerLogo'
 import { BCR_ONBOARDING_URL } from '../../../data/partners'
 import { BcrOffer } from '../../partners/BcrOffer'
@@ -33,13 +37,16 @@ import { PageHeader } from '../ui'
  */
 
 interface BeneficiiTabProps {
+  /** Dashboardul în care e deschis tabul: unele beneficii sunt doar „în curând" pentru SRL. */
+  audience: BenefitAudience
   /** Unele beneficii trimit într-o altă secțiune a dashboardului (Asigurări, Suport). */
   onNavigate?: (section: string) => void
 }
 
-export function BeneficiiTab({ onNavigate }: BeneficiiTabProps) {
+export function BeneficiiTab({ audience, onNavigate }: BeneficiiTabProps) {
   const [activeSlug, setActiveSlug] = useState(partnerBenefits[0].slug)
   const partner = partnerBenefits.find((item) => item.slug === activeSlug) ?? partnerBenefits[0]
+  const comingSoon = partner.comingSoonFor?.includes(audience) ?? false
 
   return (
     <Stack spacing={{ xs: 2.5, md: 3 }}>
@@ -49,7 +56,7 @@ export function BeneficiiTab({ onNavigate }: BeneficiiTabProps) {
       />
 
       <PartnerTabs activeSlug={partner.slug} onSelect={setActiveSlug} />
-      <PartnerPanel partner={partner} onNavigate={onNavigate} />
+      <PartnerPanel partner={partner} comingSoon={comingSoon} onNavigate={onNavigate} />
     </Stack>
   )
 }
@@ -134,13 +141,16 @@ function PartnerTabs({
 
 function PartnerPanel({
   partner,
+  comingSoon,
   onNavigate,
 }: {
   partner: PartnerBenefit
+  /** Pentru dashboardul curent nu există încă ofertă: panoul spune doar atât. */
+  comingSoon: boolean
   onNavigate?: (section: string) => void
 }) {
   // Pagina completă a partenerilor cu material propriu — aceeași ca pe pagina publică.
-  const showcase = getPartnerShowcase(partner.slug)
+  const showcase = comingSoon ? undefined : getPartnerShowcase(partner.slug)
 
   return (
     <Paper
@@ -226,6 +236,18 @@ function PartnerPanel({
       </Box>
 
       <Box sx={{ p: { xs: 2.2, md: 3 } }}>
+        {comingSoon ? (
+          <Stack spacing={1.2} sx={{ alignItems: 'flex-start', py: 1 }}>
+            <Chip label="În curând" size="small" sx={badgeSx} />
+            <Typography sx={{ fontWeight: 850, fontSize: '1rem', color: DASHBOARD_TOKENS.ink }}>
+              Beneficiul {partner.name} pentru SRL e în pregătire
+            </Typography>
+            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.88rem', lineHeight: 1.7, maxWidth: 620 }}>
+              Stabilim cu partenerul oferta pentru conturile de firmă. Te anunțăm în aplicație când devine
+              disponibilă.
+            </Typography>
+          </Stack>
+        ) : (
         <Stack spacing={3}>
           {(partner.intro || partner.highlight) && (
             <Box
@@ -330,6 +352,7 @@ function PartnerPanel({
             </Box>
           )}
         </Stack>
+        )}
       </Box>
     </Paper>
   )
@@ -442,6 +465,44 @@ function BlockCard({
             </Button>
           </Stack>
         </Box>
+      )}
+
+      {block.whatsapp && (
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1.5}
+          sx={{
+            mt: 2,
+            p: 1.6,
+            alignItems: { sm: 'center' },
+            justifyContent: 'space-between',
+            borderRadius: `${DASHBOARD_TOKENS.radius.sm}px`,
+            backgroundColor: DASHBOARD_TOKENS.surfaceAlt,
+            border: `1px solid ${DASHBOARD_TOKENS.border}`,
+          }}
+        >
+          <Box>
+            <Typography sx={{ fontSize: '0.78rem', color: DASHBOARD_TOKENS.textMuted }}>WhatsApp</Typography>
+            <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: DASHBOARD_TOKENS.ink }}>
+              {block.whatsapp.display}
+            </Typography>
+          </Box>
+          <Button
+            component="a"
+            href={`https://wa.me/${block.whatsapp.number}?text=${encodeURIComponent(block.whatsapp.message)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="contained"
+            startIcon={<WhatsAppIcon />}
+            sx={{
+              ...primaryButtonSx,
+              backgroundColor: WHATSAPP_GREEN,
+              '&:hover': { backgroundColor: '#1da851', boxShadow: 'none' },
+            }}
+          >
+            Scrie pe WhatsApp
+          </Button>
+        </Stack>
       )}
 
       {block.link && (

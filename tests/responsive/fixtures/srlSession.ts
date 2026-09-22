@@ -100,6 +100,16 @@ export async function mockSession(page: Page) {
     }),
   )
 
+  // Oblio neconectat. Prinsa generală ar răspunde `[]`, iar panoul de pe Conexiuni cade pe
+  // `availableSeries.length`.
+  await page.route(`${API}/invoices/oblio`, (route: Route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ connected: false, companyName: null, cif: null, seriesName: null, availableSeries: [], errorMessage: null, lastSyncAtUtc: null, accountEmail: null, hasApiKey: false }),
+    }),
+  )
+
   // Configurarea contului SRL e terminată: fără asta, `FleetAccessGate` trimite la /onboarding-srl
   // și niciun test de dashboard nu ajunge la pagina pe care o verifică.
   await page.route(`${API}/fleet-onboarding`, (route: Route) =>

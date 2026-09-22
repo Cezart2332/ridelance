@@ -36,6 +36,14 @@ export interface BenefitLink {
   href: string
 }
 
+/** Contact prin WhatsApp: numărul afișat și cel din link (`wa.me`), plus mesajul precompletat. */
+export interface BenefitWhatsApp {
+  display: string
+  /** Format internațional, doar cifre: `40785093336`. */
+  number: string
+  message: string
+}
+
 export interface BenefitBlock {
   badge?: string
   title: string
@@ -43,8 +51,11 @@ export interface BenefitBlock {
   checks?: string[]
   rows?: BenefitRow[]
   contact?: BenefitContact
+  whatsapp?: BenefitWhatsApp
   link?: BenefitLink
 }
+
+export type BenefitAudience = 'pfa' | 'srl'
 
 export interface PartnerBenefit {
   slug: string
@@ -58,6 +69,11 @@ export interface PartnerBenefit {
   highlight?: { amount: string; title: string; note?: string }
   /** Ofertele BCR, care au două variante și merită comparate — restul partenerilor n-au așa ceva. */
   showBcrOffers?: boolean
+  /**
+   * Dashboardurile în care partenerul apare doar ca „în curând": se vede în rând, dar panoul lui
+   * nu arată nicio ofertă, fiindcă pentru acel tip de cont încă nu există una.
+   */
+  comingSoonFor?: BenefitAudience[]
   blocks: BenefitBlock[]
 }
 
@@ -87,7 +103,19 @@ export const partnerBenefits: PartnerBenefit[] = [
     image: mol,
     tagline: 'Beneficiu partener · MOL România',
     website: 'https://molromania.ro',
+    // Oferta se arată doar în dashboarduri — blocurile nu apar pe pagina publică de parteneri.
     blocks: [
+      {
+        badge: 'Oferta MOL × RIDElance',
+        title: 'Ce primești prin RIDElance',
+        rows: [
+          { label: 'Carburant', value: 'Cashback între 11 și 20 bani/litru' },
+          { label: 'Combustibili eligibili', value: 'Benzină, motorină și GPL' },
+          { label: 'Spălătorii MOL', value: '20% cashback' },
+          { label: 'Card MOL', value: 'Card de flotă pentru PFA/SRL, comandat online și gratuit' },
+          { label: 'Administrare', value: 'Acces la platforma online MOL pentru solduri și cashback' },
+        ],
+      },
       {
         badge: 'Contact dedicat',
         title: 'Oferta de partener RIDElance',
@@ -175,9 +203,21 @@ export const partnerBenefits: PartnerBenefit[] = [
     website: 'https://eldrive.eu',
     intro:
       'Perfect pentru PFA-urile și SRL-urile care lucrează cu mașini electrice: tarif preferențial la încărcare, cu prețul de zi și de noapte și stațiile eligibile din rețea.',
-    // Fără blocuri: oferta depinde de oră, iar o listă de bife n-ar fi arătat asta. Conținutul
-    // vine din `EldriveOffer`, aceeași componentă ca în pagina publică de Parteneri.
-    blocks: [],
+    // Tarifele vin din `EldriveOffer`, aceeași componentă ca în pagina publică de Parteneri; aici
+    // se adaugă doar contactul pentru ofertă. Pentru SRL oferta nu e încă disponibilă.
+    comingSoonFor: ['srl'],
+    blocks: [
+      {
+        badge: 'Contact eldrive',
+        title: 'Obține oferta prin RIDElance',
+        text: 'Scrie-i pe WhatsApp persoanei de contact eldrive și spune că vii prin RIDElance.',
+        whatsapp: {
+          display: '0785 093 336',
+          number: '40785093336',
+          message: 'Bună ziua! Vin prin RIDElance și aș vrea oferta eldrive pentru încărcare.',
+        },
+      },
+    ],
   },
   {
     slug: 'smart-fintech',
@@ -193,6 +233,8 @@ export const partnerBenefits: PartnerBenefit[] = [
     image: fiscallink,
     tagline: 'Partener integrat: FiscalLink',
     website: 'https://fiscallink.ro',
+    // Pentru SRL e în discuție ce oferim; până atunci doar anunțat.
+    comingSoonFor: ['srl'],
     blocks: [],
   },
   {

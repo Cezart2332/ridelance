@@ -639,17 +639,6 @@ export const partnerShowcases: PartnerShowcase[] = [
           },
           {
             text: [
-              { strong: 'Te interesează și aplicația de raportare?' },
-              ' Constalaris a indicat un ',
-              {
-                link: 'pachet de 315 lei/an/aparat',
-                href: 'https://www.constalaris.ro/case-de-marcat/contract-service-casa-de-marcat/contract-service-si-aplicatie-raportare/',
-              },
-              ', în locul contractului standard. Disponibilitatea și funcțiile se confirmă cu partenerul. FiscalNet, dacă alegi să îl folosești, presupune un cost separat.',
-            ],
-          },
-          {
-            text: [
               { strong: 'Prețurile și disponibilitatea se verifică pe constalaris.ro la momentul comenzii.' },
               ' Prețurile aparatelor includ TVA și timbru verde; TVA-ul serviciilor și totalul final se confirmă cu furnizorul. Comercializarea, fiscalizarea și service-ul sunt asigurate de Constalaris, în condițiile contractului propriu.',
             ],

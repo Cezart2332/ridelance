@@ -35,6 +35,7 @@ import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsAct
 import { ProfessionalChatBox } from '../components/dashboard/sections/ProfessionalChatBox'
 import { ContabilClientWorkspace, type ContabilClientInfo } from '../components/contabil/ContabilClientWorkspace'
 import { displayName } from '../utils/displayName'
+import { requestedAccountingMonth } from '../utils/accountingPeriod'
 
 interface ClientSummary {
   id: string
@@ -112,10 +113,10 @@ export function ContabilDashboard() {
   const [statsLoading, setStatsLoading] = useState(false)
   const [statsError, setStatsError] = useState<string | null>(null)
 
-  // Month filter for the home page stats
+  // Luna pentru statisticile de pe Acasă: luna contabilă deschisă acum (până pe 25, luna trecută).
   const now = new Date()
-  const [statsYear, setStatsYear] = useState(now.getFullYear())
-  const [statsMonth, setStatsMonth] = useState(now.getMonth() + 1)
+  const [statsYear, setStatsYear] = useState(() => requestedAccountingMonth().year)
+  const [statsMonth, setStatsMonth] = useState(() => requestedAccountingMonth().month)
 
   // Load user profile
   useEffect(() => {

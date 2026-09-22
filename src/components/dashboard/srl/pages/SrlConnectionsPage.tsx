@@ -18,6 +18,7 @@ import { BankConnectPanel } from '../../../banking/BankConnectPanel'
 import { bankService, type BankConnectionDto } from '../../../../services/bank.service'
 import { PARTNER_LOGO } from '../../../../data/partnerLogo'
 import eldriveLogo from '../../../../assets/partners/eldrive.png'
+import fiscallinkLogo from '../../../../assets/partners/Fiscallink.svg'
 import oblioLogo from '../../../../assets/partners/oblio.png'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
 import { PageHeader, Panel, StatusChip } from '../../ui'
@@ -32,7 +33,8 @@ import { usePendingBackend } from '../pendingBackendContext'
 import { OwnerOblioConnectionPanel } from '../../invoices/OwnerOblioConnectionPanel'
 
 /**
- * Conexiunile SRL (spec §3.4): Oblio, bancă și eldrive, ca grid de carduri.
+ * Conexiunile SRL (spec §3.4): Oblio și banca, ca grid de carduri, plus FiscalLink „în curând".
+ * eldrive a ieșit din conexiuni: pentru SRL e doar un beneficiu anunțat, în tabul Beneficii.
  *
  * Restul integrărilor din PFA (Bolt, Uber) nu apar aici. Nu sunt șterse din cod — pur și simplu
  * nu sunt în configul de mai jos, care e locul unde se adaugă înapoi când vor fi cerute.
@@ -155,13 +157,21 @@ export function SrlConnectionsPage() {
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
         <OwnerOblioConnectionPanel />
-        {data.filter(integration => integration.provider !== 'Oblio').map((integration) => (
-          <IntegrationCard
-            key={integration.provider}
-            integration={integration}
-            onConnect={() => setDialogFor(integration.provider)}
-          />
-        ))}
+        {/* eldrive nu mai e conexiune: rămâne doar ca beneficiu „în curând", în tabul Beneficii. */}
+        {data
+          .filter((integration) => integration.provider !== 'Oblio' && integration.provider !== 'Eldrive')
+          .map((integration) => (
+            <IntegrationCard
+              key={integration.provider}
+              integration={integration}
+              onConnect={() => setDialogFor(integration.provider)}
+            />
+          ))}
+        <ComingSoonCard
+          logo={fiscallinkLogo}
+          name="FiscalLink"
+          purpose="Integrarea cu FiscalLink pentru conturile SRL e în discuție. Te anunțăm când e disponibilă."
+        />
       </Box>
 
       <ConnectDialog provider={dialogFor} onClose={() => setDialogFor(null)} />
@@ -271,6 +281,21 @@ function IntegrationCard({ integration, onConnect }: { integration: Integration;
           )}
         </Stack>
       </Stack>
+    </Panel>
+  )
+}
+
+/** O integrare anunțată, fără nimic de conectat încă. Doar logo, un rând și eticheta. */
+function ComingSoonCard({ logo, name, purpose }: { logo: string; name: string; purpose: string }) {
+  return (
+    <Panel fill action={<StatusChip label="În curând" tone="neutral" size="sm" outlined />}>
+      <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', mb: 1 }}>
+        <Box component="img" src={logo} alt="" sx={{ height: 28, width: 'auto', objectFit: 'contain', display: 'block' }} />
+        <Typography sx={{ fontWeight: 800 }}>{name}</Typography>
+      </Stack>
+      <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.82rem', lineHeight: 1.5 }}>
+        {purpose}
+      </Typography>
     </Panel>
   )
 }
