@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Box, Typography, Button, Container, alpha, Stack, Skeleton } from '@mui/material';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Box, Typography, Button, Container, alpha, Stack, Skeleton, IconButton } from '@mui/material';
+import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import { useNavigate } from 'react-router-dom';
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';
 import { TOKENS } from '../../constants/tokens';
@@ -10,6 +12,54 @@ export function CarCarousel() {
   const navigate = useNavigate();
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
+  const trackRef = useRef<HTMLDivElement>(null);
+  /** Unde se poate derula: săgeata spre capătul atins se stinge. */
+  const [edges, setEdges] = useState({ atStart: true, atEnd: true });
+
+  const measure = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    setEdges({
+      atStart: track.scrollLeft <= 4,
+      atEnd: track.scrollLeft + track.clientWidth >= track.scrollWidth - 4,
+    });
+  }, []);
+
+  // Se remăsoară când sosesc mașinile și la redimensionare: câte încap depinde de lățime.
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(track);
+    return () => observer.disconnect();
+  }, [measure, loading]);
+
+  /**
+   * Un ecran de carduri la un click, nu un card: pe desktop încap trei-patru, iar pas cu pas
+   * derularea ar fi obositoare. Snap-ul din CSS aliniază apoi primul card vizibil.
+   */
+  const scrollByPage = (direction: 1 | -1) => {
+    const track = trackRef.current;
+    if (!track) return;
+    track.scrollBy({ left: direction * track.clientWidth * 0.9, behavior: 'smooth' });
+  };
+
+  const arrowSx = (side: 'left' | 'right') => ({
+    position: 'absolute' as const,
+    top: '50%',
+    [side]: { xs: 4, md: -8 },
+    transform: 'translateY(-50%)',
+    zIndex: 2,
+    width: { xs: 40, md: 48 },
+    height: { xs: 40, md: 48 },
+    color: TOKENS.ink,
+    backgroundColor: TOKENS.paper,
+    border: `1px solid ${TOKENS.border}`,
+    boxShadow: TOKENS.shadow.md,
+    transition: 'opacity .2s ease, background-color .2s ease',
+    '&:hover': { backgroundColor: alpha(TOKENS.primary, 0.12) },
+    '&.Mui-disabled': { opacity: 0, pointerEvents: 'none' },
+  });
 
   useEffect(() => {
     carsService.getAll()
@@ -41,20 +91,38 @@ export function CarCarousel() {
           </Typography>
         </Box>
 
-        <Box 
-          sx={{ 
-            display: 'flex', 
+        {/* Săgețile din margini înlocuiesc bara de derulare de jos, greu de prins cu mouse-ul. Pe
+            telefon rămâne și glisarea cu degetul. */}
+        <Box sx={{ position: 'relative' }}>
+        {!loading && cars.length > 0 && (
+          <>
+            <IconButton aria-label="Mașinile anterioare" onClick={() => scrollByPage(-1)} disabled={edges.atStart} sx={arrowSx('left')}>
+              <ChevronLeftRoundedIcon />
+            </IconButton>
+            <IconButton aria-label="Mașinile următoare" onClick={() => scrollByPage(1)} disabled={edges.atEnd} sx={arrowSx('right')}>
+              <ChevronRightRoundedIcon />
+            </IconButton>
+          </>
+        )}
+        <Box
+          ref={trackRef}
+          onScroll={measure}
+          sx={{
+            display: 'flex',
             alignItems: 'stretch',
-            gap: 3, 
-            overflowX: 'auto', 
+            gap: 3,
+            overflowX: 'auto',
             // Loc pentru umbra și ridicarea cardului la hover. Fără el, containerul derulabil le
             // taie: cardul se ridică 4px într-o zonă care nu există.
             pt: 1.5,
             pb: 4,
             px: 1.5,
-            '&::-webkit-scrollbar': { height: 6 },
-            '&::-webkit-scrollbar-thumb': { bgcolor: alpha(TOKENS.ink, 0.1), borderRadius: 10 },
+            scrollbarWidth: 'none',
+            '&::-webkit-scrollbar': { display: 'none' },
             scrollSnapType: 'x mandatory',
+            // Snap-ul aliniază cardul la marginea cu padding, nu la marginea goală: altfel lista
+            // se mută singură 12px la încărcare, iar săgeata din stânga pare activă de la început.
+            scrollPaddingInline: 12,
             WebkitOverflowScrolling: 'touch'
           }}
         >
@@ -97,6 +165,7 @@ export function CarCarousel() {
               </Box>
             ))
           )}
+        </Box>
         </Box>
 
         <Box sx={{ mt: 6, textAlign: 'center' }}>

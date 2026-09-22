@@ -17,6 +17,7 @@ import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import TouchAppRoundedIcon from '@mui/icons-material/TouchAppRounded';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
+import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded';
 import { carsService, getCarImageUrl, type Car, type CarLead } from '../../../../services/cars.service';
 import {
   formatCarStatus,
@@ -56,6 +57,12 @@ const PAYMENT_COLORS: Record<string, string> = {
   Cancelled: '#64748b',
 };
 
+
+/**
+ * Tab-urile paginii. Parcul auto era un singur tabel cu mașinile platformei amestecate printre
+ * cele ale firmelor; acum fiecare are tabul lui.
+ */
+const TAB = { ridelance: 0, srl: 1, leads: 2, stats: 3, review: 4 } as const;
 
 export function CarsAdminView() {
   const [activeTab, setActiveTab] = useState(0);
@@ -157,13 +164,19 @@ export function CarsAdminView() {
   };
 
 
+  const ridelanceCount = cars.filter((c) => c.approvalStatus === 'Approved' && c.postedByAdmin).length;
+  const srlCount = cars.filter((c) => c.approvalStatus === 'Approved' && !c.postedByAdmin).length;
+
   const filteredCars = cars.filter(c => {
     const matchesSearch =
       c.brand.toLowerCase().includes(search.toLowerCase()) ||
       c.model.toLowerCase().includes(search.toLowerCase());
     if (!matchesSearch) return false;
-    if (activeTab === 0) return c.approvalStatus === 'Approved';
-    if (activeTab === 3) return c.approvalStatus !== 'Approved';
+    // Mașinile RIDElance sunt cele publicate de admin; restul sunt ale firmelor. Validarea le
+    // strânge pe toate cele care așteaptă, indiferent de cine le-a pus.
+    if (activeTab === TAB.ridelance) return c.approvalStatus === 'Approved' && c.postedByAdmin;
+    if (activeTab === TAB.srl) return c.approvalStatus === 'Approved' && !c.postedByAdmin;
+    if (activeTab === TAB.review) return c.approvalStatus !== 'Approved';
     return true;
   });
 
@@ -192,7 +205,7 @@ export function CarsAdminView() {
         <Typography variant="h4" sx={{ fontWeight: 650, color: DASHBOARD_TOKENS.ink }}>
           Mașini ridesharing
         </Typography>
-        {activeTab === 0 && (
+        {activeTab === TAB.ridelance && (
           <Button
             variant="contained"
             startIcon={<AddRoundedIcon />}
@@ -213,14 +226,15 @@ export function CarsAdminView() {
           onChange={handleTabChange}
           sx={{ px: 2, borderBottom: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.05)}`, '& .MuiTab-root': { fontWeight: 700, py: 2 } }}
         >
-          <Tab icon={<DirectionsCarFilledRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Parc auto" />
+          <Tab icon={<DirectionsCarFilledRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label={`Mașini RIDElance (${ridelanceCount})`} />
+          <Tab icon={<BusinessRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label={`Mașini SRL (${srlCount})`} />
           <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Solicitări" />
           <Tab icon={<BarChartRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Statistici" />
           <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Validare" />
         </Tabs>
 
         <Box sx={{ p: 3 }}>
-          {(activeTab === 0 || activeTab === 3) && (
+          {(activeTab === TAB.ridelance || activeTab === TAB.srl || activeTab === TAB.review) && (
             <Stack spacing={3}>
               <TextField placeholder="Caută după brand sau model..." size="small" value={search}
                 onChange={(e) => setSearch(e.target.value)} sx={{ maxWidth: 400 }}
@@ -254,6 +268,11 @@ export function CarsAdminView() {
                                   duce nicăieri, iar scorul e al proprietarului, nu al lui. */}
                               <Typography sx={{ fontWeight: 650, color: DASHBOARD_TOKENS.ink }}>{car.brand} {car.model}</Typography>
                               <Typography variant="caption" sx={{ color: 'text.secondary' }}>{car.year} • {car.engine} • {car.transmission}</Typography>
+                              {!car.postedByAdmin && (
+                                <Typography variant="caption" sx={{ display: 'block', color: DASHBOARD_TOKENS.primaryStrong, fontWeight: 650 }}>
+                                  {car.owner?.displayName ?? 'Firmă fără profil completat'}
+                                </Typography>
+                              )}
                             </Box>
                           </Stack>
                         </TableCell>
@@ -349,7 +368,7 @@ export function CarsAdminView() {
             </Stack>
           )}
 
-          {activeTab === 1 && (
+          {activeTab === TAB.leads && (
             <TableContainer sx={responsiveTableContainerSx}>
               <Table>
                 <TableHead>
@@ -425,7 +444,7 @@ export function CarsAdminView() {
             </TableContainer>
           )}
 
-          {activeTab === 2 && (
+          {activeTab === TAB.stats && (
             <Stack spacing={3}>
               <Grid container spacing={2} component="div">
                 {[
