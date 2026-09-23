@@ -81,7 +81,7 @@ function summary(locked: boolean) {
 }
 
 /** Răspunsul motorului: CASS de clarificat, deci rezervă parțială. */
-function estimates(reserveOverride?: number) {
+function estimates() {
   return {
     taxYear: YEAR,
     locked: false,
@@ -96,8 +96,8 @@ function estimates(reserveOverride?: number) {
       annualEstimated: 1_800,
       missing: ['CASS'],
       reasonCode: null,
-      existingReserve: reserveOverride ?? null,
-      existingReserveAssumedZero: reserveOverride == null,
+      existingReserve: null,
+      existingReserveAssumedZero: true,
       recordedTaxPayments: 0,
     },
     components: [
@@ -128,12 +128,7 @@ async function mockApi(page: Page, initial: Partial<Profile> = {}) {
   )
 
   await page.route(`${API}/pfa/me/estimated-taxes/**`, async (route) => {
-    const request = route.request()
     if (state.profile.status !== 'COMPLETED') return json(route, { taxYear: YEAR, locked: true, profileStatus: state.profile.status })
-    if (request.method() === 'PUT') {
-      state.calls.push('PUT /existing-reserve')
-      return json(route, estimates((request.postDataJSON() as { amount: number }).amount))
-    }
     return json(route, estimates())
   })
 
@@ -278,8 +273,8 @@ test('formularul nu are scroll orizontal la 360px', async ({ page }) => {
   expect(inner).toBeLessThanOrEqual(0)
 })
 
-test('cardul „Cât să pui deoparte”: parțial, componente, rezervă existentă, fără TVA în total', async ({ page }, info) => {
-  const state = await mockApi(page, { status: 'COMPLETED', firstPromptShownAtUtc: `${YEAR}-03-16T08:00:00Z` })
+test('cardul „Cât să pui deoparte”: parțial, componente, fără TVA în total', async ({ page }, info) => {
+  await mockApi(page, { status: 'COMPLETED', firstPromptShownAtUtc: `${YEAR}-03-16T08:00:00Z` })
   await page.goto(ROOT)
 
   const card = page.getByTestId('estimated-taxes-card')
@@ -294,15 +289,9 @@ test('cardul „Cât să pui deoparte”: parțial, componente, rezervă existen
   await expect(card.locator('[data-component="CASS"]')).not.toContainText('0 lei')
   await expect(card.locator('[data-component="PLATFORM_TAXES"]')).toContainText('În curs de configurare')
   await expect(card.getByText('Venitul tău se apropie de un plafon CAS. Suma de pus deoparte poate crește.')).toBeVisible()
-  await expect(card.getByText('Presupunem că nu ai pus încă bani deoparte.')).toBeVisible()
-
-  await card.getByRole('button', { name: 'Cum calculăm?' }).click()
-  await expect(card.getByText(/Estimăm automat CAS, CASS și impozitul pe venit/)).toBeVisible()
+  // Fără „Cum calculăm?” și fără „Am deja pus deoparte”: cardul arată doar sumele.
+  await expect(card.getByRole('button', { name: 'Cum calculăm?' })).toHaveCount(0)
+  await expect(card.getByText('Presupunem că nu ai pus încă bani deoparte.')).toHaveCount(0)
+  await expect(card.getByRole('button', { name: 'Modifică' })).toHaveCount(0)
   await page.screenshot({ path: `test-results/estimated-taxes-card-${info.project.name}.png` })
-
-  await card.getByRole('button', { name: 'Modifică' }).click()
-  await card.getByLabel('Am deja pus deoparte').fill('500')
-  await card.getByRole('button', { name: 'Salvează' }).click()
-  await expect(card.getByText('Am deja pus deoparte: 500 lei')).toBeVisible()
-  expect(state.calls).toContain('PUT /existing-reserve')
 })

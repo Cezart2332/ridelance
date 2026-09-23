@@ -7,11 +7,6 @@ export const COMPONENT_LABEL: Record<string, string> = {
   PLATFORM_TAXES: 'TVA / taxe platforme',
 }
 
-export const HOW_WE_CALCULATE =
-  'Estimăm automat CAS, CASS și impozitul pe venit din profilul tău fiscal și din veniturile și cheltuielile înregistrate. ' +
-  'Sumele se actualizează pe măsură ce lucrezi și pot diferi de obligațiile finale. ' +
-  'Dacă ți se schimbă situația, actualizează profilul fiscal.'
-
 export function formatLei(value: number): string {
   return `${Math.round(value).toLocaleString('ro-RO')} lei`
 }

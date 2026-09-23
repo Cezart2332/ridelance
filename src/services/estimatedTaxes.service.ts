@@ -140,9 +140,6 @@ export const estimatedTaxesService = {
   recalculate: async (mode: FiscalProfileMode, year: number, pfaId?: string): Promise<EstimatedTaxes> =>
     (await api.post<EstimatedTaxes>(`${base(mode, year, pfaId)}/recalculate`)).data,
 
-  setExistingReserve: async (year: number, amount: number | null): Promise<EstimatedTaxes> =>
-    (await api.put<EstimatedTaxes>(`${base('pfa', year)}/existing-reserve`, { amount })).data,
-
   /** Plățile CAS/CASS/impozit ale anului, înregistrate de contabilă ca declarații „Plătită”. */
   payments: async (pfaId: string, year: number): Promise<TaxPayment[]> => {
     const items = (await api.get<TaxPayment[]>('/tax-obligations', { params: { pfaRegistrationId: pfaId, year } })).data ?? []

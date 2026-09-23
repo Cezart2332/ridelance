@@ -8,10 +8,8 @@ import {
   Collapse,
   Divider,
   IconButton,
-  InputAdornment,
   Skeleton,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -27,7 +25,7 @@ import {
 import { FISCAL_PROFILE_CHANGED, currentTaxYear, type FiscalProfileMode } from '../../services/fiscalProfile.service'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { TaxPaymentsPanel } from './TaxPaymentsPanel'
-import { COMPONENT_LABEL, HOW_WE_CALCULATE, coverageGapText, formatLei, reasonText } from './texts'
+import { COMPONENT_LABEL, coverageGapText, formatLei, reasonText } from './texts'
 
 interface Props {
   mode: FiscalProfileMode
@@ -42,7 +40,7 @@ const POLL_MS = 5000
 
 /**
  * „Cât să pui deoparte” (spec taxe §11.2): recomandarea săptămânală, totalul, componentele cu
- * statusul lor și rezerva deja strânsă. Aceeași componentă pe Acasă, în Taxe estimate și, cu
+ * statusul lor. Aceeași componentă pe Acasă, în Taxe estimate și, cu
  * detaliile de calcul, în fișa PFA din admin și contabilitate (§11.3).
  */
 export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccountant }: Props) {
@@ -51,9 +49,6 @@ export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccoun
   const [data, setData] = useState<EstimatedTaxes | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
-  const [howOpen, setHowOpen] = useState(false)
-  const [editingReserve, setEditingReserve] = useState(false)
-  const [reserveDraft, setReserveDraft] = useState('')
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -98,17 +93,6 @@ export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccoun
     } finally {
       setBusy(false)
     }
-  }
-
-  const saveReserve = async () => {
-    const trimmed = reserveDraft.trim()
-    const amount = trimmed === '' ? null : Number(trimmed)
-    if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
-      setError('Suma pusă deoparte nu e validă.')
-      return
-    }
-    await run(() => estimatedTaxesService.setExistingReserve(taxYear, amount))
-    setEditingReserve(false)
   }
 
   const recalculate = () => run(() => estimatedTaxesService.recalculate(mode, taxYear, pfaId))
@@ -234,73 +218,12 @@ export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccoun
         ))}
       </Stack>
 
-      {/* ── Rezerva existentă ── */}
-      {reserve && (
-        <Box sx={(theme) => ({ mt: 2, p: 1.5, borderRadius: 1, bgcolor: alpha(theme.palette.primary.main, 0.05) })}>
-          {editingReserve ? (
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: { sm: 'center' } }}>
-              <TextField
-                size="small"
-                type="number"
-                label="Am deja pus deoparte"
-                value={reserveDraft}
-                onChange={(e) => setReserveDraft(e.target.value)}
-                slotProps={{
-                  htmlInput: { min: 0, step: 1, inputMode: 'numeric' },
-                  input: { endAdornment: <InputAdornment position="end">lei</InputAdornment> },
-                }}
-                sx={{ flex: 1 }}
-              />
-              <Stack direction="row" spacing={1}>
-                <Button variant="contained" onClick={() => void saveReserve()} disabled={busy}>
-                  Salvează
-                </Button>
-                <Button onClick={() => setEditingReserve(false)} disabled={busy}>
-                  Renunță
-                </Button>
-              </Stack>
-            </Stack>
-          ) : (
-            <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-              <Typography variant="body2" sx={{ flex: 1, minWidth: 0 }}>
-                {reserve.existingReserve == null
-                  ? 'Presupunem că nu ai pus încă bani deoparte.'
-                  : `Am deja pus deoparte: ${formatLei(reserve.existingReserve)}`}
-                {reserve.recordedTaxPayments > 0 && ` · Plătit deja în ${taxYear}: ${formatLei(reserve.recordedTaxPayments)}`}
-              </Typography>
-              {!isStaff && (
-                <Button
-                  size="small"
-                  onClick={() => {
-                    setReserveDraft(reserve.existingReserve == null ? '' : String(reserve.existingReserve))
-                    setEditingReserve(true)
-                  }}
-                >
-                  Modifică
-                </Button>
-              )}
-            </Stack>
-          )}
-        </Box>
+      {/* Plățile înregistrate de contabil se scad din total — spunem asta doar când există. */}
+      {!calculating && reserve && reserve.recordedTaxPayments > 0 && (
+        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 2 }}>
+          Am scăzut ce ai plătit deja în {taxYear}: {formatLei(reserve.recordedTaxPayments)}.
+        </Typography>
       )}
-
-      {/* ── Cum calculăm ── */}
-      <Box sx={{ mt: 1.5 }}>
-        <Button
-          size="small"
-          onClick={() => setHowOpen((open) => !open)}
-          aria-expanded={howOpen}
-          endIcon={<ExpandMoreRoundedIcon sx={{ transform: howOpen ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }} />}
-          sx={{ px: 0 }}
-        >
-          Cum calculăm?
-        </Button>
-        <Collapse in={howOpen}>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-            {HOW_WE_CALCULATE}
-          </Typography>
-        </Collapse>
-      </Box>
 
       {isStaff && data && <StaffDetails data={data} />}
       {isStaff && pfaId && <TaxPaymentsPanel pfaId={pfaId} taxYear={taxYear} onChanged={() => setReloadToken((t) => t + 1)} />}
