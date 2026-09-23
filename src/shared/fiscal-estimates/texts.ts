@@ -43,15 +43,15 @@ export function reasonText(reasonCode: string | null, missing: string[], taxYear
     case 'PENSIONER_MID_YEAR':
       return `Avem nevoie de detalii despre pensionarea din ${taxYear}.`
     case 'OTHER_INDEPENDENT_TOTAL':
-      return 'Avem nevoie de venitul net anual din celelalte activități independente.'
+      return 'Lipsește cât câștigi net pe an din celelalte activități independente. Completează suma în profilul fiscal sau las-o contabilului.'
     case 'CASS_EXCEPTION_UNKNOWN':
       return missing.includes('salaryAboveCassMin')
         ? 'Spune-ne dacă salariul tău din acest an trece de pragul minim CASS.'
-        : 'Avem nevoie să știm dacă ești deja asigurat CASS din celelalte venituri.'
+        : 'Lipsește dacă plătești deja CASS pentru chirii, dividende sau investiții. Răspunde în profilul fiscal sau lasă contabilul să verifice.'
     case 'CASS_OPT_IN':
-      return 'Avem nevoie de baza aleasă pentru CASS.'
+      return 'Lipsește baza pe care ai optat să plătești CASS. Completează suma în profilul fiscal sau las-o contabilului.'
     case 'CARRIED_LOSSES':
-      return 'Avem nevoie de anul și suma pierderii fiscale reportate.'
+      return 'Lipsește suma din pierderile reportate pe care o mai poți recupera. Completează suma în profilul fiscal sau las-o contabilului.'
     case 'CROSS_BORDER':
       return 'Situația din alt stat trebuie discutată cu contabilul.'
     case 'TAX_PAYMENTS_MISSING':

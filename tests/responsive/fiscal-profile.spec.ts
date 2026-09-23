@@ -239,10 +239,21 @@ test('completarea: condiționale, ciornă pe fiecare pas, confirmare care debloc
   await choose(page, 'Ai ales să plătești CAS la o bază mai mare decât minimul?', 'Da')
   await expect(dialog.getByRole('heading', { name: 'Baza aleasă pentru CAS (lei/an)' })).toBeVisible()
   await choose(page, 'Ai ales să plătești CAS la o bază mai mare decât minimul?', 'Nu')
+
+  // Alte activități: suma apare la „Da” și poate rămâne goală — o completează contabilul.
+  await choose(page, 'Mai ai și alte activități independente, în afara celor din RIDElance?', 'Da')
+  await choose(page, 'Ai evidența acestor activități?', 'Da')
+  const otherNet = dialog.getByRole('heading', { name: `Cât estimezi că vei câștiga net în ${YEAR} din celelalte activități? (lei)` })
+  await expect(otherNet).toBeVisible()
+  await expect(dialog.getByText('Dacă nu știi, lasă gol: o completează contabilul.', { exact: false }).first()).toBeVisible()
+  // CASS pe chirii/dividende: singura întrebare cu „Nu știu”.
+  await choose(page, 'Ai venituri din chirii, dividende, investiții sau alte surse?', 'Da')
+  await choose(page, 'Plătești deja CASS (sănătate) pentru aceste venituri?', 'Nu știu, să verifice contabilul')
   await dialog.getByRole('button', { name: 'Continuă' }).click()
 
   // Pasul 4: rezumat, confirmare obligatorie.
   await expect(dialog.getByRole('heading', { name: 'Situația ta' })).toBeVisible()
+  await expect(dialog.getByText('Necompletat — o completează contabilul')).toBeVisible()
   const submit = dialog.getByRole('button', { name: 'Confirmă și activează' })
   await expect(submit).toBeDisabled()
   await page.screenshot({ path: `test-results/fiscal-profile-confirm-${info.project.name}.png` })
@@ -259,6 +270,8 @@ test('completarea: condiționale, ciornă pe fiecare pas, confirmare care debloc
   expect(state.calls.at(-1)).toBe('POST /complete if-match="3"')
   expect(state.profile.answers.employmentStart ?? null).toBeNull()
   expect(state.profile.answers.priorDocsLocation ?? null).toBeNull()
+  expect(state.profile.answers.otherIndependentNetAnnual ?? null).toBeNull()
+  expect(state.profile.answers.otherIncomeCassInsured).toBe('unknown')
 })
 
 test('formularul nu are scroll orizontal la 360px', async ({ page }) => {

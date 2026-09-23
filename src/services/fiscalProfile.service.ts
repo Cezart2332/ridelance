@@ -25,12 +25,20 @@ export interface FiscalProfileAnswers {
   privateContact?: string | null
   otherIndependent?: string | null
   otherIndependentRecords?: string | null
+  /** Lei pe an; gol = îl completează contabilul. */
+  otherIndependentNetAnnual?: number | null
   otherIncome?: string | null
+  /** `yes` · `no` · `unknown` (verifică contabilul). */
+  otherIncomeCassInsured?: string | null
   taxPaymentsMade?: string | null
   carriedLosses?: string | null
+  /** Lei; gol = o completează contabilul. */
+  carriedLossesAmount?: number | null
   cassOptIn?: string | null
+  /** Lei pe an; gol = o completează contabilul. */
+  cassOptInBase?: number | null
   casVoluntary?: string | null
-  /** Lei pe an. Singurul răspuns numeric. */
+  /** Lei pe an. */
   casVoluntaryBase?: number | null
   crossBorder?: string | null
   notes?: string | null
