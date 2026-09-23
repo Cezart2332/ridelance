@@ -19,6 +19,9 @@ import { OfficeBookingCalendar } from '../../office/OfficeBookingCalendar'
 import { userService, type UserProfile } from '../../../services/user.service'
 import { displayName } from '../../../utils/displayName'
 import { useQuickActionIntent } from '../layout/useQuickActionIntent'
+import { ChatAttachmentView } from '../../chat/ChatAttachmentView'
+import { ChatAttachButton, PendingAttachment } from '../../chat/ChatAttachmentPicker'
+import { useChatComposer } from '../../chat/useChatComposer'
 
 interface SupportChatTabProps {
   /**
@@ -37,7 +40,8 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
   const [chatMessage, setChatMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [noAgent, setNoAgent] = useState(false)
-  const [sending, setSending] = useState(false)
+  const composer = useChatComposer(roomId)
+  const sending = composer.sending
   const [, setClockTick] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messageInputRef = useRef<HTMLInputElement>(null)
@@ -114,19 +118,11 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
     return () => window.clearInterval(timer)
   }, [])
 
-  const handleSend = async () => {
-    if (!chatMessage.trim() || !roomId || sending || !supportHours.isOpen) return
+  const canSend = (chatMessage.trim() !== '' || composer.pendingFile !== null) && supportHours.isOpen
 
-    setSending(true)
-    try {
-      const conn = getChatConnection()
-      await conn.invoke('SendMessage', roomId, chatMessage.trim())
-      setChatMessage('')
-    } catch (err) {
-      console.error('Send failed:', err)
-    } finally {
-      setSending(false)
-    }
+  const handleSend = async () => {
+    if (!canSend) return
+    if (await composer.send(chatMessage)) setChatMessage('')
   }
 
   return (
@@ -259,9 +255,12 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
                               {new Date(message.sentAtUtc).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}
                             </Typography>
                           </Stack>
-                          <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.6, fontSize: '0.9rem' }}>
-                            {message.content}
-                          </Typography>
+                          {message.content && (
+                            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.6, fontSize: '0.9rem', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                              {message.content}
+                            </Typography>
+                          )}
+                          {message.attachment && <ChatAttachmentView messageId={message.id} attachment={message.attachment} />}
                         </Paper>
                       )
                     })}
@@ -271,7 +270,21 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
               <div ref={messagesEndRef} />
             </Stack>
 
-            <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+            {composer.pendingFile && (
+              <PendingAttachment file={composer.pendingFile} progress={composer.progress} onRemove={composer.clearFile} />
+            )}
+            {composer.error && (
+              <Alert severity="error" onClose={() => composer.setError(null)} sx={{ mt: 1.5, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
+                {composer.error}
+              </Alert>
+            )}
+
+            <Stack direction="row" spacing={1} sx={{ mt: 2, alignItems: 'center' }}>
+              <ChatAttachButton
+                disabled={!supportHours.isOpen || sending}
+                onPick={composer.pickFile}
+                onError={composer.setError}
+              />
               <TextField
                 fullWidth
                 inputRef={messageInputRef}
@@ -280,14 +293,14 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') { e.preventDefault(); handleSend() }
                 }}
-                placeholder="Scrie un mesaj pentru echipă..."
+                placeholder={composer.pendingFile ? 'Adaugă o descriere (opțional)...' : 'Scrie un mesaj pentru echipă...'}
                 sx={dashboardInputSx}
                 disabled={!supportHours.isOpen}
               />
               <Button
                 variant="contained"
                 onClick={handleSend}
-                disabled={sending || !chatMessage.trim() || !supportHours.isOpen}
+                disabled={sending || !canSend}
                 sx={{
                   borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
                   px: 2.4,

@@ -43,7 +43,7 @@ import { RecurringDocumentationPanel } from '../dashboard/sections/RecurringDocu
 import { DeductibleExpensesPanel } from '../dashboard/sections/DeductibleExpensesPanel'
 import { PfaFiscalSettingsPanel } from '../pfa/PfaFiscalSettingsPanel'
 import { FiscalProfilePanel } from '../../shared/fiscal-profile'
-import { EstimatedTaxesCard } from '../../shared/fiscal-estimates'
+import { EstimatedTaxesCard, PriorPeriodPanel } from '../../shared/fiscal-estimates'
 import { BankActivityPanel } from '../banking/BankActivityPanel'
 import { requestedAccountingMonth } from '../../utils/accountingPeriod'
 import { ClientNotificationDialog } from './ClientNotificationDialog'
@@ -335,7 +335,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1.65fr) minmax(0, 1fr)' },
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1.65fr) minmax(0, 1fr)' },
           gap: 3,
           alignItems: 'start',
         }}
@@ -378,7 +378,12 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
             </Tabs>
 
             <Box sx={{ p: { xs: 2, md: 2.5 } }}>
-              {tab === 0 && <PfaMonthlyIncomeForm pfaRegistrationId={client.id} year={selectedYear} month={selectedMonth} readOnly={true} />}
+              {tab === 0 && (
+                <Stack spacing={2.5}>
+                  <PfaMonthlyIncomeForm pfaRegistrationId={client.id} year={selectedYear} month={selectedMonth} readOnly={true} />
+                  <PriorPeriodPanel mode="accounting" pfaId={client.id} />
+                </Stack>
+              )}
               {tab === 1 && (
                 <Stack spacing={2.5}>
                   <FiscalProfilePanel mode="accounting" pfaId={client.id} />

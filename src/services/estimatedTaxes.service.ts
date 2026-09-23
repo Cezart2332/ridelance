@@ -56,6 +56,9 @@ export interface EstimatedTaxes {
     weeklyAverage: number | null
     weeksUsed: number
     weeksRemaining: number
+    /** Perioada fără date, estimată din media săptămânală („01.01.2026 – 30.04.2026”). */
+    uncoveredPeriod?: string | null
+    uncoveredWeeks?: number
   } | null
   profileRevision?: number | null
   ruleVersion?: string | null
@@ -81,6 +84,45 @@ export interface TaxPayment {
   dueDate: string
   status: string
   statusLabel: string
+}
+
+/** O lună de dinainte de RIDElance: ce a trecut contabilul și ce avem deja din platforme. */
+export interface PriorPeriodMonth {
+  month: number
+  /** `null` = luna nu e completată. */
+  income: number | null
+  expenses: number | null
+  platformIncome: number
+  platformExpenses: number
+  /** Luna intrării în RIDElance, acoperită doar de la data intrării. */
+  joinMonth: boolean
+  updatedAtUtc: string | null
+}
+
+export interface PriorPeriod {
+  year: number
+  requiredFrom: string
+  joinedOn: string | null
+  months: PriorPeriodMonth[]
+}
+
+export type StaffMode = Exclude<FiscalProfileMode, 'pfa'>
+
+function priorPeriodUrl(mode: StaffMode, pfaId: string, year: number): string {
+  return `/${mode === 'admin' ? 'admin' : 'accounting'}/pfas/${pfaId}/prior-period/${year}`
+}
+
+export const priorPeriodService = {
+  get: async (mode: StaffMode, pfaId: string, year: number): Promise<PriorPeriod> =>
+    (await api.get<PriorPeriod>(priorPeriodUrl(mode, pfaId, year))).data,
+
+  /** Lunile cu ambele sume `null` se șterg. */
+  save: async (
+    mode: StaffMode,
+    pfaId: string,
+    year: number,
+    months: { month: number; income: number | null; expenses: number | null }[],
+  ): Promise<PriorPeriod> => (await api.put<PriorPeriod>(priorPeriodUrl(mode, pfaId, year), { months })).data,
 }
 
 function base(mode: FiscalProfileMode, year: number, pfaId?: string): string {

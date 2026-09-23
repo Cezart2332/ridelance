@@ -1,4 +1,12 @@
 import { api } from '../lib/axios';
+import { compressLargePhoto } from '../utils/imagesToPdf';
+
+/** Fișierul atașat unui mesaj; conținutul se descarcă separat, cu autentificare. */
+export interface ChatAttachmentDto {
+  fileName: string;
+  contentType: string;
+  size: number;
+}
 
 export interface ChatMessageDto {
   id: string;
@@ -8,6 +16,7 @@ export interface ChatMessageDto {
   content: string;
   sentAtUtc: string;
   isRead: boolean;
+  attachment?: ChatAttachmentDto | null;
 }
 
 export interface ChatMessageListResponse {
@@ -20,6 +29,14 @@ export interface SupportRoomResponse {
   supportUserId: string;
   supportUserName: string;
 }
+
+/** Aceeași limită ca pe server. */
+export const CHAT_ATTACHMENT_MAX_BYTES = 25 * 1024 * 1024;
+
+/** Ce acceptă chatul: poze, PDF, Word, Excel, CSV, text. */
+export const CHAT_ATTACHMENT_ACCEPT =
+  'image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif,application/pdf,' +
+  '.doc,.docx,.xls,.xlsx,.csv,.txt';
 
 export const chatService = {
   getSupportRoom: async (): Promise<SupportRoomResponse> => {
@@ -41,6 +58,39 @@ export const chatService = {
     const response = await api.get<ChatMessageListResponse>(
       `/chat/rooms/${roomId}/messages?page=${page}&pageSize=${pageSize}`
     );
+    return response.data;
+  },
+
+  /**
+   * Trimite un fișier, cu un mesaj opțional. Mesajul ajunge în cameră prin SignalR, ca oricare
+   * altul — inclusiv la cel care l-a trimis.
+   */
+  sendAttachment: async (
+    roomId: string,
+    file: File,
+    caption?: string,
+    onProgress?: (percent: number) => void,
+  ): Promise<ChatMessageDto> => {
+    const upload = await compressLargePhoto(file);
+    const formData = new FormData();
+    formData.append('file', upload);
+    if (caption?.trim()) {
+      formData.append('caption', caption.trim());
+    }
+
+    const response = await api.post<ChatMessageDto>(`/chat/rooms/${roomId}/attachments`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: onProgress
+        ? (event) => {
+            if (event.total) onProgress(Math.round((event.loaded / event.total) * 100));
+          }
+        : undefined,
+    });
+    return response.data;
+  },
+
+  downloadAttachment: async (messageId: string): Promise<Blob> => {
+    const response = await api.get(`/chat/messages/${messageId}/attachment`, { responseType: 'blob' });
     return response.data;
   },
 };

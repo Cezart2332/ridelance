@@ -27,7 +27,7 @@ import {
 import { FISCAL_PROFILE_CHANGED, currentTaxYear, type FiscalProfileMode } from '../../services/fiscalProfile.service'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { TaxPaymentsPanel } from './TaxPaymentsPanel'
-import { COMPONENT_LABEL, HOW_WE_CALCULATE, formatLei, reasonText } from './texts'
+import { COMPONENT_LABEL, HOW_WE_CALCULATE, coverageGapText, formatLei, reasonText } from './texts'
 
 interface Props {
   mode: FiscalProfileMode
@@ -197,6 +197,22 @@ export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccoun
           />
         )}
       </Box>
+
+      {!calculating && data?.warnings?.includes('COVERAGE_GAP') && data.projection?.uncoveredPeriod && (
+        <Alert
+          severity="info"
+          sx={{ mt: 1.5 }}
+          action={
+            !isStaff && onContactAccountant ? (
+              <Button color="inherit" size="small" onClick={onContactAccountant}>
+                Scrie contabilului
+              </Button>
+            ) : undefined
+          }
+        >
+          {coverageGapText(data.projection.uncoveredPeriod, mode)}
+        </Alert>
+      )}
 
       {!calculating && data?.warnings?.includes('CAS_THRESHOLD_NEAR') && (
         <Alert severity="warning" sx={{ mt: 1.5 }}>

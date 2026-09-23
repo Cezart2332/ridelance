@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import {
-  Box, Paper, Typography, TextField, IconButton, Stack, CircularProgress, Avatar, Divider
+  Alert, Box, Paper, Typography, TextField, IconButton, Stack, CircularProgress, Avatar, Divider
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import SendRoundedIcon from '@mui/icons-material/SendRounded'
@@ -13,6 +13,9 @@ import { chatService, type ChatMessageDto } from '../../../services/chat.service
 import { getChatConnection, startChatConnection } from '../../../lib/signalr'
 import { useAppSelector } from '../../../store/hooks'
 import { groupMessagesByDate } from '../../../utils/chat'
+import { ChatAttachmentView } from '../../chat/ChatAttachmentView'
+import { ChatAttachButton, PendingAttachment } from '../../chat/ChatAttachmentPicker'
+import { useChatComposer } from '../../chat/useChatComposer'
 
 interface AdminChatViewProps {
   pfas: any[]
@@ -26,7 +29,8 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
   const [messages, setMessages] = useState<ChatMessageDto[]>([])
   const [chatMessage, setChatMessage] = useState('')
   const [loading, setLoading] = useState(false)
-  const [sending, setSending] = useState(false)
+  const composer = useChatComposer(roomId)
+  const sending = composer.sending
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const myUserId = useAppSelector((s) => s.auth.userId) || ''
 
@@ -72,19 +76,11 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const handleSend = async () => {
-    if (!chatMessage.trim() || !roomId || sending) return
+  const canSend = chatMessage.trim() !== '' || composer.pendingFile !== null
 
-    setSending(true)
-    try {
-      const conn = getChatConnection()
-      await conn.invoke('SendMessage', roomId, chatMessage.trim())
-      setChatMessage('')
-    } catch (err) {
-      console.error('Send failed:', err)
-    } finally {
-      setSending(false)
-    }
+  const handleSend = async () => {
+    if (!canSend) return
+    if (await composer.send(chatMessage)) setChatMessage('')
   }
 
   return (
@@ -184,9 +180,12 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
                                   border: `1px solid ${isMe ? 'transparent' : alpha(TOKENS.ink, 0.08)}`,
                                 }}
                               >
-                                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mb: 0.5, fontSize: '0.85rem' }}>
-                                  {message.content}
-                                </Typography>
+                                {message.content && (
+                                  <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mb: 0.5, fontSize: '0.85rem', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                                    {message.content}
+                                  </Typography>
+                                )}
+                                {message.attachment && <ChatAttachmentView messageId={message.id} attachment={message.attachment} />}
                                 <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontSize: '0.7rem', fontWeight: 600, textAlign: 'right' }}>
                                   {new Date(message.sentAtUtc).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}
                                 </Typography>
@@ -203,7 +202,18 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
             </Box>
 
             <Box sx={{ p: 2, borderTop: `1px solid ${alpha(TOKENS.ink, 0.08)}`, bgcolor: TOKENS.paper }}>
+              {composer.pendingFile && (
+                <Box sx={{ mt: -1.5, mb: 1.5 }}>
+                  <PendingAttachment file={composer.pendingFile} progress={composer.progress} onRemove={composer.clearFile} />
+                </Box>
+              )}
+              {composer.error && (
+                <Alert severity="error" onClose={() => composer.setError(null)} sx={{ mb: 1.5 }}>
+                  {composer.error}
+                </Alert>
+              )}
               <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }} component="div">
+                <ChatAttachButton disabled={!roomId || sending || loading} onPick={composer.pickFile} onError={composer.setError} />
                 <TextField
                   fullWidth
                   size="small"
@@ -212,7 +222,7 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') { e.preventDefault(); handleSend() }
                   }}
-                  placeholder="Scrie un mesaj..."
+                  placeholder={composer.pendingFile ? 'Adaugă o descriere (opțional)...' : 'Scrie un mesaj...'}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: `${TOKENS.radius.md}px`,
@@ -225,7 +235,7 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
                 />
                 <IconButton
                   onClick={handleSend}
-                  disabled={sending || !chatMessage.trim() || loading}
+                  disabled={sending || !canSend || loading}
                   sx={{
                     bgcolor: TOKENS.primary, color: '#fff',
                     '&:hover': { bgcolor: TOKENS.primaryStrong },

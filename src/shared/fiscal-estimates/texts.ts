@@ -16,6 +16,24 @@ export function formatLei(value: number): string {
   return `${Math.round(value).toLocaleString('ro-RO')} lei`
 }
 
+/**
+ * Perioada fără date nu oprește estimarea: am presupus-o după media lunilor cunoscute. PFA-ul
+ * află că cifrele se pot schimba; contabilul, unde le completează.
+ */
+export function coverageGapText(period: string, mode: 'pfa' | 'admin' | 'accounting'): string {
+  if (mode === 'pfa') {
+    return (
+      `Nu avem încă veniturile tale pentru ${period}, așa că le-am estimat din media lunilor din RIDElance. ` +
+      'Sumele se pot schimba după ce contabilul adaugă cifrele reale.'
+    )
+  }
+  const where = mode === 'accounting' ? 'în tab-ul Venituri' : 'mai jos'
+  return (
+    `Nu avem veniturile pentru ${period}; le-am estimat din media lunilor din RIDElance. ` +
+    `Completează-le ${where}, la „Perioada dinainte de RIDElance”, ca estimarea să fie exactă.`
+  )
+}
+
 /** Ce lipsește, pe înțelesul PFA-ului. */
 export function reasonText(reasonCode: string | null, missing: string[], taxYear: number): string {
   switch (reasonCode) {
