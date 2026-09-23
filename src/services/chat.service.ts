@@ -1,5 +1,5 @@
 import { api } from '../lib/axios';
-import { compressLargePhoto } from '../utils/imagesToPdf';
+import { prepareChatPhoto } from '../utils/imagesToPdf';
 
 /** Fișierul atașat unui mesaj; conținutul se descarcă separat, cu autentificare. */
 export interface ChatAttachmentDto {
@@ -33,10 +33,11 @@ export interface SupportRoomResponse {
 /** Aceeași limită ca pe server. */
 export const CHAT_ATTACHMENT_MAX_BYTES = 25 * 1024 * 1024;
 
-/** Ce acceptă chatul: poze, PDF, Word, Excel, CSV, text. */
-export const CHAT_ATTACHMENT_ACCEPT =
-  'image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif,application/pdf,' +
-  '.doc,.docx,.xls,.xlsx,.csv,.txt';
+/**
+ * Ce acceptă chatul: poze, PDF, Word, Excel, CSV, text. `image/*` (nu HEIC explicit) face ca
+ * iPhone-ul să trimită pozele din galerie deja convertite în JPEG, deci se văd în conversație.
+ */
+export const CHAT_ATTACHMENT_ACCEPT = 'image/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt';
 
 export const chatService = {
   getSupportRoom: async (): Promise<SupportRoomResponse> => {
@@ -71,7 +72,7 @@ export const chatService = {
     caption?: string,
     onProgress?: (percent: number) => void,
   ): Promise<ChatMessageDto> => {
-    const upload = await compressLargePhoto(file);
+    const upload = await prepareChatPhoto(file);
     const formData = new FormData();
     formData.append('file', upload);
     if (caption?.trim()) {

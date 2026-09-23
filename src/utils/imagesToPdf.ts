@@ -91,20 +91,51 @@ const LARGE_PHOTO_MAX_DIMENSION_PX = 3000
 export async function compressLargePhoto(file: File): Promise<File> {
   const isPhoto = file.type === 'image/jpeg' || file.type === 'image/png'
   if (!isPhoto || file.size <= LARGE_PHOTO_BYTES) return file
+  return (await reencodeAsJpeg(file, LARGE_PHOTO_MAX_DIMENSION_PX, true)) ?? file
+}
 
+/** Peste atâta, o poză din chat se micșorează, ca să apară repede în conversație. */
+const CHAT_PHOTO_BYTES = 1.5 * 1024 * 1024
+const CHAT_PHOTO_MAX_DIMENSION_PX = 2560
+
+export function isHeic(file: File): boolean {
+  return /^image\/hei[cf]$/i.test(file.type) || /\.hei[cf]$/i.test(file.name)
+}
+
+/**
+ * Poza trimisă în chat, pregătită să se vadă direct în conversație, ca pe WhatsApp: pozele HEIC
+ * de pe iPhone devin JPEG (altfel browserul nu le poate afișa), iar cele mari se micșorează la
+ * 2560 px. Dacă browserul nu poate citi poza, pleacă originalul — apare atunci ca fișier.
+ */
+export async function prepareChatPhoto(file: File): Promise<File> {
+  // GIF-urile rămân așa (s-ar pierde animația); orice alt format de poză (HEIC, BMP, TIFF, AVIF) devine JPEG.
+  if (file.type === 'image/gif') return file
+  const displayable = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp'
+  if (isHeic(file) || (file.type.startsWith('image/') && !displayable)) {
+    return (await reencodeAsJpeg(file, CHAT_PHOTO_MAX_DIMENSION_PX, false)) ?? file
+  }
+  if (!displayable || file.size <= CHAT_PHOTO_BYTES) return file
+  return (await reencodeAsJpeg(file, CHAT_PHOTO_MAX_DIMENSION_PX, true)) ?? file
+}
+
+/**
+ * Recodează o poză ca JPEG, cu latura mare de cel mult `maxDimension`. `null` la orice eroare
+ * sau, cu `onlyIfSmaller`, când rezultatul n-ar fi mai mic decât originalul.
+ */
+async function reencodeAsJpeg(file: File, maxDimension: number, onlyIfSmaller: boolean): Promise<File | null> {
   try {
     const bitmap = await createImageBitmap(file)
     try {
-      const scale = Math.min(1, LARGE_PHOTO_MAX_DIMENSION_PX / Math.max(bitmap.width, bitmap.height))
+      const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height))
       const canvas = document.createElement('canvas')
       canvas.width = Math.max(1, Math.round(bitmap.width * scale))
       canvas.height = Math.max(1, Math.round(bitmap.height * scale))
       const ctx = canvas.getContext('2d')
-      if (!ctx) return file
+      if (!ctx) return null
       ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
 
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY))
-      if (!blob || blob.size >= file.size) return file
+      if (!blob || (onlyIfSmaller && blob.size >= file.size)) return null
 
       const name = file.name.replace(/\.[^.]+$/, '') + '.jpg'
       return new File([blob], name, { type: 'image/jpeg' })
@@ -112,7 +143,7 @@ export async function compressLargePhoto(file: File): Promise<File> {
       bitmap.close()
     }
   } catch {
-    return file
+    return null
   }
 }
 

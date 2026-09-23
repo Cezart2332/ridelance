@@ -134,12 +134,12 @@ export function ProfessionalChatBox({ clientUserId, clientName }: ProfessionalCh
                             border: `1px solid ${isMe ? 'transparent' : alpha(TOKENS.ink, 0.08)}`,
                           }}
                         >
+                          {message.attachment && <ChatAttachmentView messageId={message.id} attachment={message.attachment} />}
                           {message.content && (
-                            <Typography sx={{ color: TOKENS.ink, mb: 0.5, fontSize: '0.85rem', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                            <Typography sx={{ color: TOKENS.ink, mt: message.attachment ? 0.75 : 0, mb: 0.5, fontSize: '0.85rem', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
                               {message.content}
                             </Typography>
                           )}
-                          {message.attachment && <ChatAttachmentView messageId={message.id} attachment={message.attachment} />}
                           <Typography sx={{ color: TOKENS.textSubtle, fontSize: '0.7rem', fontWeight: 600, textAlign: 'right' }}>
                             {new Date(message.sentAtUtc).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}
                           </Typography>

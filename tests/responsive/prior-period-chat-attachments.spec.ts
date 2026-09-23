@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { test, expect, type Page, type Route } from '@playwright/test'
 
 const API = 'http://localhost:5000'
@@ -6,8 +7,8 @@ const PFA_ID = '11111111-1111-1111-1111-111111111111'
 const CLIENT_USER_ID = '22222222-2222-2222-2222-222222222222'
 const ROOM_ID = '44444444-4444-4444-4444-444444444444'
 
-// PNG 1×1, ca poza din chat să se poată afișa.
-const PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64')
+// O poză reală din proiect, ca în conversație să se vadă cum arată o poză trimisă.
+const PHOTO = readFileSync('public/pozalogin.jpeg')
 
 const json = (route: Route, body: unknown) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
 
@@ -90,7 +91,7 @@ async function mockContabil(page: Page) {
       messages: [
         {
           id: 'm-1', senderId: CLIENT_USER_ID, senderName: 'Ion Popescu', senderRole: 'Client', content: 'Bonul de la service',
-          sentAtUtc: `${YEAR}-09-23T09:00:00Z`, isRead: true, attachment: { fileName: 'bon.png', contentType: 'image/png', size: 68 },
+          sentAtUtc: `${YEAR}-09-23T09:00:00Z`, isRead: true, attachment: { fileName: 'bon.jpg', contentType: 'image/jpeg', size: PHOTO.length },
         },
         {
           id: 'm-2', senderId: CLIENT_USER_ID, senderName: 'Ion Popescu', senderRole: 'Client', content: '',
@@ -99,7 +100,7 @@ async function mockContabil(page: Page) {
       ],
     }),
   )
-  await page.route(`${API}/chat/messages/*/attachment`, (route) => route.fulfill({ status: 200, contentType: 'image/png', body: PIXEL }))
+  await page.route(`${API}/chat/messages/*/attachment`, (route) => route.fulfill({ status: 200, contentType: 'image/jpeg', body: PHOTO }))
   await page.route(`${API}/chat/rooms/${ROOM_ID}/attachments`, async (route) => {
     state.uploads.push(route.request().postData() ?? '')
     return json(route, {})
@@ -154,9 +155,30 @@ test('chatul arată pozele și fișierele și trimite un fișier atașat', async
   const state = await mockContabil(page)
   await page.goto(`/contabil?tab=clients&user=${CLIENT_USER_ID}`)
 
-  await expect(page.getByRole('img', { name: 'bon.png' })).toBeVisible()
+  // Poza se vede direct în conversație, cu descrierea sub ea, și se deschide pe tot ecranul.
+  const photo = page.getByTestId('chat-image')
+  await expect(photo).toBeVisible()
+  expect(await photo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(1)
+  const caption = page.getByText('Bonul de la service')
+  expect((await caption.boundingBox())!.y).toBeGreaterThan((await photo.boundingBox())!.y)
   await expect(page.getByRole('button', { name: 'Descarcă extras-aprilie.pdf' })).toContainText('239 KB')
-  await expect(page.getByText('Bonul de la service')).toBeVisible()
+  await page.screenshot({ path: `test-results/chat-photo-${info.project.name}.png` })
+
+  await page.getByRole('button', { name: 'Deschide poza bon.jpg' }).click()
+  const viewer = page.getByRole('dialog', { name: 'bon.jpg' })
+  await expect(viewer.getByRole('img', { name: 'bon.jpg' })).toBeVisible()
+  await expect(viewer.getByRole('button', { name: 'Descarcă poza' })).toBeVisible()
+  // Captura după ce s-a terminat apariția (fade), ca fundalul să fie cel final.
+  await expect(page.locator('.MuiDialog-container')).toHaveCSS('opacity', '1')
+  await page.screenshot({ path: `test-results/chat-photo-viewer-${info.project.name}.png` })
+  await viewer.getByRole('button', { name: 'Închide' }).click()
+  await expect(viewer).toHaveCount(0)
+
+  // Înainte de trimitere, poza aleasă apare ca miniatură.
+  await page.getByTestId('chat-attachment-input').setInputFiles({ name: 'bon-nou.jpeg', mimeType: 'image/jpeg', buffer: PHOTO })
+  await expect(page.getByTestId('chat-pending-preview')).toBeVisible()
+  await page.getByRole('button', { name: 'Renunță la poză' }).click()
+  await expect(page.getByTestId('chat-pending-preview')).toHaveCount(0)
 
   await page.getByTestId('chat-attachment-input').setInputFiles({ name: 'factura.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 test') })
   await expect(page.getByText(/factura\.pdf · 13 B/)).toBeVisible()

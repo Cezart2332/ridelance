@@ -158,12 +158,12 @@ export function AccountantChatTab() {
                               {new Date(message.sentAtUtc).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}
                             </Typography>
                           </Stack>
+                          {message.attachment && <ChatAttachmentView messageId={message.id} attachment={message.attachment} />}
                           {message.content && (
                             <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.6, fontSize: '0.9rem', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
                               {message.content}
                             </Typography>
                           )}
-                          {message.attachment && <ChatAttachmentView messageId={message.id} attachment={message.attachment} />}
                         </Paper>
                       )
                     })}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Box, ButtonBase, CircularProgress, Dialog, IconButton, Stack, Tooltip, Typography } from '@mui/material'
+import { Box, ButtonBase, CircularProgress, Dialog, IconButton, Skeleton, Stack, Tooltip, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded'
@@ -13,6 +13,22 @@ import { formatFileSize } from '../../utils/fileSize'
 // Tipurile pe care browserul le poate afișa ca <img>. HEIC nu — apare ca fișier de descărcat.
 const PREVIEWABLE_IMAGES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
+/**
+ * Pozele deja descărcate în sesiune, pe mesaj: la schimbarea conversației sau la un mesaj nou nu
+ * se mai cer o dată de la server.
+ */
+const imageCache = new Map<string, Promise<string>>()
+
+function loadImage(messageId: string): Promise<string> {
+  let cached = imageCache.get(messageId)
+  if (!cached) {
+    cached = chatService.downloadAttachment(messageId).then((blob) => URL.createObjectURL(blob))
+    cached.catch(() => imageCache.delete(messageId))
+    imageCache.set(messageId, cached)
+  }
+  return cached
+}
+
 function saveBlob(blob: Blob, fileName: string) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -25,8 +41,9 @@ function saveBlob(blob: Blob, fileName: string) {
 }
 
 /**
- * Fișierul dintr-un mesaj: pozele se văd direct în conversație (click = mărire), restul apar ca
- * un card cu nume și mărime, descărcabil. Conținutul vine cu autentificarea utilizatorului.
+ * Fișierul dintr-un mesaj. Pozele se văd direct în conversație, ca pe WhatsApp: în bulă, cu
+ * proporțiile lor, iar la click se deschid pe tot ecranul. Restul fișierelor apar ca un card cu
+ * nume și mărime, descărcabil. Conținutul vine cu autentificarea utilizatorului.
  */
 export function ChatAttachmentView({ messageId, attachment }: { messageId: string; attachment: ChatAttachmentDto }) {
   const isImage = PREVIEWABLE_IMAGES.includes(attachment.contentType.toLowerCase())
@@ -37,19 +54,12 @@ export function ChatAttachmentView({ messageId, attachment }: { messageId: strin
 
   useEffect(() => {
     if (!isImage) return undefined
-    let url: string | null = null
     let cancelled = false
-    chatService
-      .downloadAttachment(messageId)
-      .then((blob) => {
-        if (cancelled) return
-        url = URL.createObjectURL(blob)
-        setImageUrl(url)
-      })
+    loadImage(messageId)
+      .then((url) => !cancelled && setImageUrl(url))
       .catch(() => !cancelled && setFailed(true))
     return () => {
       cancelled = true
-      if (url) URL.revokeObjectURL(url)
     }
   }, [isImage, messageId])
 
@@ -69,41 +79,59 @@ export function ChatAttachmentView({ messageId, attachment }: { messageId: strin
       <>
         <ButtonBase
           onClick={() => imageUrl && setOpen(true)}
-          aria-label={`Mărește poza ${attachment.fileName}`}
-          sx={(theme) => ({
-            mt: 0.75,
-            display: 'block',
-            borderRadius: 1.5,
-            overflow: 'hidden',
-            bgcolor: alpha(theme.palette.text.primary, 0.05),
-            width: 220,
-            maxWidth: '100%',
-            aspectRatio: imageUrl ? 'auto' : '4 / 3',
-          })}
+          aria-label={`Deschide poza ${attachment.fileName}`}
+          sx={{ mt: 0.5, display: 'block', borderRadius: 1.5, overflow: 'hidden', width: 280, maxWidth: '100%' }}
         >
           {imageUrl ? (
-            <Box component="img" src={imageUrl} alt={attachment.fileName} sx={{ display: 'block', width: '100%', maxHeight: 260, objectFit: 'cover' }} />
+            <Box
+              component="img"
+              src={imageUrl}
+              alt={attachment.fileName}
+              data-testid="chat-image"
+              sx={{ display: 'block', width: '100%', height: 'auto', maxHeight: 360, objectFit: 'cover' }}
+            />
           ) : (
-            <Stack sx={{ height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-              <CircularProgress size={20} />
-            </Stack>
+            <Skeleton variant="rectangular" animation="wave" sx={{ width: '100%', height: 'auto', aspectRatio: '4 / 3' }} />
           )}
         </ButtonBase>
-        <Dialog open={open} onClose={() => setOpen(false)} maxWidth="lg" aria-label={attachment.fileName}>
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', px: 2, py: 1 }}>
+
+        <Dialog
+          open={open}
+          onClose={() => setOpen(false)}
+          fullScreen
+          slotProps={{
+            // Numele ferestrei stă pe elementul cu role="dialog", nu pe fundal.
+            paper: { 'aria-label': attachment.fileName, sx: { bgcolor: 'common.black', color: 'common.white' } },
+          }}
+        >
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', px: { xs: 1, sm: 2 }, py: 1 }}>
             <Typography variant="body2" noWrap sx={{ flex: 1, minWidth: 0, fontWeight: 600 }}>
               {attachment.fileName}
             </Typography>
             <Tooltip title="Descarcă">
-              <IconButton onClick={() => void download()} disabled={downloading} aria-label="Descarcă poza">
-                <DownloadRoundedIcon />
+              <IconButton onClick={() => void download()} disabled={downloading} aria-label="Descarcă poza" sx={{ color: 'inherit' }}>
+                {downloading ? <CircularProgress size={20} color="inherit" /> : <DownloadRoundedIcon />}
               </IconButton>
             </Tooltip>
-            <IconButton onClick={() => setOpen(false)} aria-label="Închide">
+            <IconButton onClick={() => setOpen(false)} aria-label="Închide" sx={{ color: 'inherit' }}>
               <CloseRoundedIcon />
             </IconButton>
           </Stack>
-          {imageUrl && <Box component="img" src={imageUrl} alt={attachment.fileName} sx={{ display: 'block', maxWidth: '100%', maxHeight: '80vh', mx: 'auto' }} />}
+          {/* Click pe fundal închide, ca pe telefon; pe poză nu. */}
+          <Box
+            onClick={() => setOpen(false)}
+            sx={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', p: { xs: 0, sm: 2 } }}
+          >
+            {imageUrl && (
+              <Box
+                component="img"
+                src={imageUrl}
+                alt={attachment.fileName}
+                onClick={(e) => e.stopPropagation()}
+                sx={{ display: 'block', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+              />
+            )}
+          </Box>
         </Dialog>
       </>
     )
