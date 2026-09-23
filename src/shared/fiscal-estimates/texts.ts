@@ -29,6 +29,24 @@ export function coverageGapText(period: string, mode: 'pfa' | 'admin' | 'account
   )
 }
 
+/**
+ * Informațiile pe care le completează contabilul, nu PFA-ul: pentru ele PFA-ul primește
+ * „Scrie contabilului”, nu trimiterea la profilul fiscal.
+ */
+export function accountantCompletes(reasonCode: string | null, missing: string[]): boolean {
+  switch (reasonCode) {
+    case 'OTHER_INDEPENDENT_TOTAL':
+    case 'CASS_OPT_IN':
+    case 'CARRIED_LOSSES':
+    case 'CROSS_BORDER':
+      return true
+    case 'CASS_EXCEPTION_UNKNOWN':
+      return !missing.includes('salaryAboveCassMin')
+    default:
+      return false
+  }
+}
+
 /** Ce lipsește, pe înțelesul PFA-ului. */
 export function reasonText(reasonCode: string | null, missing: string[], taxYear: number): string {
   switch (reasonCode) {
@@ -43,15 +61,15 @@ export function reasonText(reasonCode: string | null, missing: string[], taxYear
     case 'PENSIONER_MID_YEAR':
       return `Avem nevoie de detalii despre pensionarea din ${taxYear}.`
     case 'OTHER_INDEPENDENT_TOTAL':
-      return 'Lipsește cât câștigi net pe an din celelalte activități independente. Completează suma în profilul fiscal sau las-o contabilului.'
+      return 'Contabilul completează, din evidența lui, cât câștigi net pe an din celelalte activități independente.'
     case 'CASS_EXCEPTION_UNKNOWN':
       return missing.includes('salaryAboveCassMin')
         ? 'Spune-ne dacă salariul tău din acest an trece de pragul minim CASS.'
-        : 'Lipsește dacă plătești deja CASS pentru chirii, dividende sau investiții. Răspunde în profilul fiscal sau lasă contabilul să verifice.'
+        : 'Contabilul verifică dacă plătești deja CASS pentru chirii, dividende sau investiții.'
     case 'CASS_OPT_IN':
-      return 'Lipsește baza pe care ai optat să plătești CASS. Completează suma în profilul fiscal sau las-o contabilului.'
+      return 'Contabilul completează baza pe care ai optat să plătești CASS.'
     case 'CARRIED_LOSSES':
-      return 'Lipsește suma din pierderile reportate pe care o mai poți recupera. Completează suma în profilul fiscal sau las-o contabilului.'
+      return 'Contabilul completează suma din pierderile reportate pe care o mai poți recupera.'
     case 'CROSS_BORDER':
       return 'Situația din alt stat trebuie discutată cu contabilul.'
     case 'TAX_PAYMENTS_MISSING':

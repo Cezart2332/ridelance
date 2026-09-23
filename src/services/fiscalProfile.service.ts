@@ -25,26 +25,37 @@ export interface FiscalProfileAnswers {
   privateContact?: string | null
   otherIndependent?: string | null
   otherIndependentRecords?: string | null
-  /** Lei pe an; gol = îl completează contabilul. */
-  otherIndependentNetAnnual?: number | null
   otherIncome?: string | null
-  /** `yes` · `no` · `unknown` (verifică contabilul). */
-  otherIncomeCassInsured?: string | null
   taxPaymentsMade?: string | null
   carriedLosses?: string | null
-  /** Lei; gol = o completează contabilul. */
-  carriedLossesAmount?: number | null
   cassOptIn?: string | null
-  /** Lei pe an; gol = o completează contabilul. */
-  cassOptInBase?: number | null
   casVoluntary?: string | null
-  /** Lei pe an. */
+  /** Lei pe an. Singurul răspuns numeric. */
   casVoluntaryBase?: number | null
   crossBorder?: string | null
   notes?: string | null
 }
 
 export type FiscalProfileKey = keyof FiscalProfileAnswers
+
+/** Sumele pe care le trece contabilul; `null` = necompletat. */
+export interface StaffTaxInputValues {
+  otherIndependentNetAnnual: number | null
+  /** `yes` · `no` */
+  otherIncomeCassInsured: string | null
+  carriedLossesAmount: number | null
+  cassOptInBase: number | null
+}
+
+/** Datele contabilului și care contează: `ask…` = PFA-ul a răspuns „Da” la întrebarea de care țin. */
+export interface StaffTaxInputs extends StaffTaxInputValues {
+  taxYear: number
+  revision: number
+  askOtherIndependentNetAnnual: boolean
+  askOtherIncomeCassInsured: boolean
+  askCarriedLossesAmount: boolean
+  askCassOptInBase: boolean
+}
 
 export interface FiscalProfileFact<T> {
   value: T | null
@@ -166,6 +177,18 @@ export const fiscalProfileService = {
 
   revisions: async (mode: FiscalProfileMode, year: number, pfaId?: string): Promise<FiscalProfileRevision[]> =>
     (await api.get<FiscalProfileRevision[]>(`${base(mode, year, pfaId)}/revisions`)).data,
+
+  /** Ce completează contabilul din evidența lui (nu e în formularul PFA-ului). */
+  staffInputs: async (mode: Exclude<FiscalProfileMode, 'pfa'>, year: number, pfaId: string): Promise<StaffTaxInputs> =>
+    (await api.get<StaffTaxInputs>(`${base(mode, year, pfaId)}/staff-inputs`)).data,
+
+  saveStaffInputs: async (
+    mode: Exclude<FiscalProfileMode, 'pfa'>,
+    year: number,
+    pfaId: string,
+    values: StaffTaxInputValues,
+    revision: number,
+  ): Promise<StaffTaxInputs> => (await api.put<StaffTaxInputs>(`${base(mode, year, pfaId)}/staff-inputs`, values, ifMatch(revision))).data,
 
   resolveCorrection: async (mode: Exclude<FiscalProfileMode, 'pfa'>, id: string): Promise<DataCorrection> =>
     (await api.post<DataCorrection>(`/${mode}/data-corrections/${id}/resolve`)).data,

@@ -25,7 +25,7 @@ import {
 import { FISCAL_PROFILE_CHANGED, currentTaxYear, type FiscalProfileMode } from '../../services/fiscalProfile.service'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { TaxPaymentsPanel } from './TaxPaymentsPanel'
-import { COMPONENT_LABEL, coverageGapText, formatLei, reasonText } from './texts'
+import { COMPONENT_LABEL, accountantCompletes, coverageGapText, formatLei, reasonText } from './texts'
 
 interface Props {
   mode: FiscalProfileMode
@@ -305,11 +305,17 @@ function StatusBlock({
   }
 
   const clarification = status === 'REQUIRES_CLARIFICATION'
+  // Ce completează contabilul nu se rezolvă din profil: PFA-ul îi scrie contabilului.
+  const byAccountant = clarification && accountantCompletes(reasonCode, missing)
   return (
     <Alert
       severity={clarification ? 'info' : 'warning'}
       action={
-        clarification && onEditProfile ? (
+        byAccountant && onContactAccountant ? (
+          <Button color="inherit" size="small" onClick={onContactAccountant}>
+            Scrie contabilului
+          </Button>
+        ) : clarification && !byAccountant && onEditProfile ? (
           <Button color="inherit" size="small" onClick={onEditProfile}>
             Actualizează profilul
           </Button>
@@ -321,7 +327,7 @@ function StatusBlock({
       }
     >
       <Typography variant="body2" sx={{ fontWeight: 700 }}>
-        {clarification ? 'Avem nevoie de o informație' : 'Date insuficiente'}
+        {byAccountant ? 'Așteptăm datele de la contabil' : clarification ? 'Avem nevoie de o informație' : 'Date insuficiente'}
       </Typography>
       <Typography variant="body2">{reasonText(reasonCode, missing, taxYear)}</Typography>
     </Alert>
@@ -353,7 +359,7 @@ function ComponentRow({
   } else if (component.status === 'ESTIMATED') {
     value = <Typography variant="body2" sx={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{formatLei(component.amount ?? 0)}</Typography>
   } else if (component.status === 'REQUIRES_CLARIFICATION') {
-    value = onEditProfile ? (
+    value = onEditProfile && !accountantCompletes(component.reasonCode, component.missingInputs) ? (
       <Button size="small" onClick={onEditProfile} sx={{ p: 0, minWidth: 0 }}>
         Avem nevoie de o informație
       </Button>

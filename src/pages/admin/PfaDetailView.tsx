@@ -16,7 +16,7 @@ import {
 import { CompanyFormationAdminPanel } from '../../components/pfa/CompanyFormationAdminPanel'
 import { PfaFiscalSettingsPanel } from '../../components/pfa/PfaFiscalSettingsPanel'
 import { FiscalProfilePanel } from '../../shared/fiscal-profile'
-import { EstimatedTaxesCard, PriorPeriodPanel } from '../../shared/fiscal-estimates'
+import { EstimatedTaxesCard, PriorPeriodPanel, StaffTaxInputsPanel } from '../../shared/fiscal-estimates'
 import { OnboardingSectionsPanel } from '../../components/dashboard/sections/admin/OnboardingSectionsPanel'
 import { UberImportAdminPanel } from '../../components/dashboard/sections/admin/UberImportAdminPanel'
 import { DocumentRejectDialog } from '../../components/dashboard/sections/admin/DocumentRejectDialog'
@@ -330,6 +330,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
                   </Section>
 
                   {hasRegistration && <FiscalProfilePanel mode="admin" pfaId={pfa.id} />}
+                  {hasRegistration && <StaffTaxInputsPanel mode="admin" pfaId={pfa.id} />}
                   {hasRegistration && <EstimatedTaxesCard mode="admin" pfaId={pfa.id} />}
                   {hasRegistration && <PriorPeriodPanel mode="admin" pfaId={pfa.id} />}
 

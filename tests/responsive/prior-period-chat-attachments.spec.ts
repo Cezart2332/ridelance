@@ -191,3 +191,47 @@ test('chatul arată pozele și fișierele și trimite un fișier atașat', async
   expect(state.uploads[0]).toContain('Factura pe septembrie')
   await expect(page.getByText(/factura\.pdf · 13 B/)).toHaveCount(0)
 })
+
+test('contabilul completează sumele pe care PFA-ul le-a lăsat cu „Da” în profil', async ({ page }, info) => {
+  await mockContabil(page)
+  const puts: { body: unknown; ifMatch: string | undefined }[] = []
+  let current = {
+    taxYear: YEAR, revision: 4,
+    askOtherIndependentNetAnnual: true, otherIndependentNetAnnual: null as number | null,
+    askOtherIncomeCassInsured: true, otherIncomeCassInsured: null as string | null,
+    askCarriedLossesAmount: false, carriedLossesAmount: null,
+    askCassOptInBase: false, cassOptInBase: null,
+  }
+  await page.route(`${API}/accounting/pfas/${PFA_ID}/fiscal-profiles/${YEAR}/staff-inputs`, async (route) => {
+    if (route.request().method() === 'PUT') {
+      const body = route.request().postDataJSON() as typeof current
+      puts.push({ body, ifMatch: route.request().headers()['if-match'] })
+      current = { ...current, ...body, revision: current.revision + 1 }
+    }
+    return route.fulfill({ json: current })
+  })
+
+  await page.goto(`/contabil?tab=clients&user=${CLIENT_USER_ID}`)
+  await page.getByRole('tab', { name: 'Profil fiscal' }).click()
+
+  const panel = page.getByTestId('staff-tax-inputs-panel')
+  await expect(panel.getByRole('heading', { name: `De completat de contabil · ${YEAR}` })).toBeVisible()
+  await expect(panel.getByText('2 de completat')).toBeVisible()
+  // Doar ce ține de un „Da” al clientului.
+  await expect(panel.getByLabel(`Pierderi reportate de recuperat în ${YEAR}`)).toHaveCount(0)
+
+  await panel.getByLabel(`Venit net ${YEAR} din celelalte activități independente`).fill('18000')
+  await panel.getByLabel('Plătește deja CASS pentru chirii, dividende, investiții?').click()
+  await page.getByRole('option', { name: 'Da' }).click()
+  await panel.screenshot({ path: `test-results/staff-tax-inputs-${info.project.name}.png` })
+  await panel.getByRole('button', { name: 'Salvează și recalculează' }).click()
+
+  await expect(panel.getByText('Salvat. Taxele estimate se recalculează.')).toBeVisible()
+  await expect(panel.getByText('Complet', { exact: true })).toBeVisible()
+  expect(puts).toEqual([
+    {
+      body: { otherIndependentNetAnnual: 18000, carriedLossesAmount: null, cassOptInBase: null, otherIncomeCassInsured: 'yes' },
+      ifMatch: '"4"',
+    },
+  ])
+})

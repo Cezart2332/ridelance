@@ -43,7 +43,7 @@ import { RecurringDocumentationPanel } from '../dashboard/sections/RecurringDocu
 import { DeductibleExpensesPanel } from '../dashboard/sections/DeductibleExpensesPanel'
 import { PfaFiscalSettingsPanel } from '../pfa/PfaFiscalSettingsPanel'
 import { FiscalProfilePanel } from '../../shared/fiscal-profile'
-import { EstimatedTaxesCard, PriorPeriodPanel } from '../../shared/fiscal-estimates'
+import { EstimatedTaxesCard, PriorPeriodPanel, StaffTaxInputsPanel } from '../../shared/fiscal-estimates'
 import { BankActivityPanel } from '../banking/BankActivityPanel'
 import { requestedAccountingMonth } from '../../utils/accountingPeriod'
 import { ClientNotificationDialog } from './ClientNotificationDialog'
@@ -387,6 +387,7 @@ export function ContabilClientWorkspace({ client, onBack, chatSlot }: ContabilCl
               {tab === 1 && (
                 <Stack spacing={2.5}>
                   <FiscalProfilePanel mode="accounting" pfaId={client.id} />
+                  <StaffTaxInputsPanel mode="accounting" pfaId={client.id} />
                   <EstimatedTaxesCard mode="accounting" pfaId={client.id} />
                   <PfaFiscalSettingsPanel pfaId={client.id} editable clientUserId={client.userId} />
                 </Stack>

@@ -3,6 +3,7 @@ import { Alert, Box, Button, Chip, CircularProgress, Stack, Typography } from '@
 import { alpha } from '@mui/material/styles'
 
 import {
+  FISCAL_PROFILE_CHANGED,
   currentTaxYear,
   fiscalProfileService,
   type DataCorrection,
@@ -70,6 +71,14 @@ export function FiscalProfilePanel({ mode, pfaId, onOpenForm, onOpenHistory, pro
       cancelled = true
     }
   }, [selfLoading, mode, taxYear, pfaId, reloadToken])
+
+  // Profilul salvat din altă parte (formular, datele contabilului): revizia e nouă, se recitește.
+  useEffect(() => {
+    if (!selfLoading) return undefined
+    const reload = () => setReloadToken((t) => t + 1)
+    window.addEventListener(FISCAL_PROFILE_CHANGED, reload)
+    return () => window.removeEventListener(FISCAL_PROFILE_CHANGED, reload)
+  }, [selfLoading])
 
   const profile = external !== undefined ? external : own
 

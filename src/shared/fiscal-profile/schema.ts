@@ -8,9 +8,7 @@ import type {
  * Schema formularului de profil fiscal — oglinda lui `FiscalProfileSchema.cs`. Backendul e sursa
  * de adevăr și validează la fel; aici schema dă doar ordinea, textele și validarea inline.
  *
- * Regimul (sistem real) nu se întreabă. Sumele pe care PFA-ul poate să nu le știe (netul altor
- * activități, pierderile reportate, baza CASS aleasă) sunt opționale: goale, le completează
- * contabilul în același formular. Singurul „Nu știu” e la CASS pe celelalte venituri.
+ * Nicio întrebare nu are varianta „Nu știu”, iar regimul (sistem real) nu se întreabă.
  */
 
 export type QuestionKind = 'single' | 'date' | 'text' | 'textarea' | 'number'
@@ -54,9 +52,6 @@ export function formatDate(value: string | null | undefined): string {
 }
 
 const employed = (a: FiscalProfileAnswers) => a.employment === 'full' || a.employment === 'part'
-
-/** Pentru sumele opționale: goale, le completează contabilul. */
-const ACCOUNTANT_FILLS = 'Dacă nu știi, lasă gol: o completează contabilul.'
 
 export const QUESTIONS: Question[] = [
   {
@@ -192,38 +187,12 @@ export const QUESTIONS: Question[] = [
     visible: (a) => a.otherIndependent === 'yes',
   },
   {
-    key: 'otherIndependentNetAnnual',
-    step: 3,
-    kind: 'number',
-    title: ({ taxYear }) => `Cât estimezi că vei câștiga net în ${taxYear} din celelalte activități? (lei)`,
-    help: `Venitul minus cheltuielile, pe tot anul. Contează pentru plafonul CAS. ${ACCOUNTANT_FILLS}`,
-    required: false,
-    visible: (a) => a.otherIndependent === 'yes',
-  },
-  {
     key: 'otherIncome',
     step: 3,
     kind: 'single',
     title: 'Ai venituri din chirii, dividende, investiții sau alte surse?',
     options: YES_NO,
     required: true,
-  },
-  {
-    key: 'otherIncomeCassInsured',
-    step: 3,
-    kind: 'single',
-    title: 'Plătești deja CASS (sănătate) pentru aceste venituri?',
-    help: ({ cassMinThreshold }) =>
-      cassMinThreshold
-        ? `Dacă da, nu mai completăm CASS pentru PFA până la minimul de ${lei(cassMinThreshold)} lei pe an.`
-        : 'Dacă da, nu mai completăm CASS pentru PFA până la minim.',
-    options: [
-      { value: 'yes', label: 'Da' },
-      { value: 'no', label: 'Nu' },
-      { value: 'unknown', label: 'Nu știu, să verifice contabilul' },
-    ],
-    required: true,
-    visible: (a) => a.otherIncome === 'yes',
   },
   {
     key: 'taxPaymentsMade',
@@ -243,30 +212,12 @@ export const QUESTIONS: Question[] = [
     visible: (_, c) => c.askCarriedLosses,
   },
   {
-    key: 'carriedLossesAmount',
-    step: 3,
-    kind: 'number',
-    title: ({ taxYear }) => `Ce sumă din pierderi mai poți recupera în ${taxYear}? (lei)`,
-    help: `Pierderea reportată rămasă, din Declarația unică. ${ACCOUNTANT_FILLS}`,
-    required: false,
-    visible: (a, c) => c.askCarriedLosses && a.carriedLosses === 'yes',
-  },
-  {
     key: 'cassOptIn',
     step: 3,
     kind: 'single',
     title: ({ taxYear }) => `Ai optat pentru plata CASS în ${taxYear}?`,
     options: YES_NO,
     required: true,
-  },
-  {
-    key: 'cassOptInBase',
-    step: 3,
-    kind: 'number',
-    title: 'Pe ce bază ai optat să plătești CASS? (lei/an)',
-    help: `O găsești în Declarația unică depusă. ${ACCOUNTANT_FILLS}`,
-    required: false,
-    visible: (a) => a.cassOptIn === 'yes',
   },
   {
     key: 'casVoluntary',
@@ -359,15 +310,6 @@ export function validateStep(
   if (step === 3 && answers.casVoluntaryBase != null && !(answers.casVoluntaryBase > 0)) {
     errors.casVoluntaryBase = 'Suma trebuie să fie mai mare decât 0.'
   }
-  if (step === 3 && answers.otherIndependentNetAnnual != null && answers.otherIndependentNetAnnual < 0) {
-    errors.otherIndependentNetAnnual = 'Suma nu poate fi negativă. Dacă ai avut pierdere, scrie 0.'
-  }
-  if (step === 3 && answers.carriedLossesAmount != null && !(answers.carriedLossesAmount > 0)) {
-    errors.carriedLossesAmount = 'Suma trebuie să fie mai mare decât 0.'
-  }
-  if (step === 3 && answers.cassOptInBase != null && !(answers.cassOptInBase > 0)) {
-    errors.cassOptInBase = 'Suma trebuie să fie mai mare decât 0.'
-  }
   if (
     step === 2 &&
     answers.employmentStart &&
@@ -385,21 +327,30 @@ export function validateAll(answers: FiscalProfileAnswers, conditions: FiscalPro
 
 /** Textul unui răspuns, pentru rezumat și istoric. */
 export function answerLabel(key: string, raw: string | number | null | undefined): string {
-  const question = QUESTIONS.find((q) => q.key === key)
-  if (raw == null || raw === '') {
-    return question?.kind === 'number' && !question.required ? 'Necompletat — o completează contabilul' : '—'
-  }
+  if (raw == null || raw === '') return '—'
   const value = String(raw)
-  if (!question) return value
+  const question = QUESTIONS.find((q) => q.key === key)
+  if (!question) {
+    if (key === 'otherIncomeCassInsured') return value === 'yes' ? 'Da' : value === 'no' ? 'Nu' : value
+    return key in STAFF_INPUT_LABEL ? `${Number(value).toLocaleString('ro-RO')} lei` : value
+  }
   if (question.kind === 'number') return `${Number(value).toLocaleString('ro-RO')} lei`
   if (question.kind === 'date') return formatDate(value)
   return question.options?.find((o) => o.value === value)?.label ?? value
 }
 
 /** Eticheta unui câmp, pentru istoricul reviziilor. */
+/** Datele completate de contabil, care nu sunt în formular: etichetele lor pentru istoric. */
+const STAFF_INPUT_LABEL: Record<string, string> = {
+  otherIndependentNetAnnual: 'Venit net din celelalte activități independente (contabil)',
+  otherIncomeCassInsured: 'Plătește deja CASS pentru chirii, dividende, investiții (contabil)',
+  carriedLossesAmount: 'Pierderi reportate de recuperat (contabil)',
+  cassOptInBase: 'Baza aleasă pentru CASS (contabil)',
+}
+
 export function fieldLabel(key: string, taxYear: number): string {
   const question = QUESTIONS.find((q) => q.key === key)
-  if (!question) return key
+  if (!question) return STAFF_INPUT_LABEL[key] ?? key
   return questionTitle(question, {
     conditions: { askPriorDocs: true, priorFrom: null, priorTo: null, askCarriedLosses: true },
     taxYear,
