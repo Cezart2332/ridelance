@@ -340,7 +340,7 @@ test.describe('navigație PFA', () => {
     await main.getByText('BRD', { exact: true }).click()
 
     // Ecranul de date suplimentare, nu autorizarea: butonul refuză până sunt completate.
-    const continua = main.getByRole('button', { name: 'Continuă la bancă' })
+    const continua = main.getByRole('button', { name: 'Mergi la bancă' })
     await expect(continua).toBeDisabled()
 
     await main.getByLabel('Utilizatorul tău la bancă').fill('13333330')
@@ -413,7 +413,7 @@ test.describe('navigație PFA', () => {
     await main.getByText('BCR', { exact: true }).click()
 
     await expect(main.getByText('Deschide pagina băncii')).toBeVisible()
-    await expect(main.getByRole('link', { name: 'Continuă la bancă' })).toHaveAttribute(
+    await expect(main.getByRole('link', { name: 'Mergi la bancă' })).toHaveAttribute(
       'href',
       'https://banca.example/authorize/test',
     )

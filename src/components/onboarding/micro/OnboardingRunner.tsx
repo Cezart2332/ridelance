@@ -1,19 +1,20 @@
 import { Alert, Snackbar, Stack } from '@mui/material'
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 import { getErrorMessage } from '../../../utils/errorHandler'
 import { isAiPending } from '../../../services/document.service'
 import { currentAutosave } from '../autosaveStore'
 import { categoriesOfStep } from '../documentRequirements'
 import { newestPerCategory } from '../stepModel'
-import { BLOCKING_SLOTS, BLOCKING_SLOT_REASONS, type MicroStepContext } from '../microStepTypes'
+import { BLOCKING_SLOTS, BLOCKING_SLOT_REASONS, isBlockingAnswer, type MicroStepContext } from '../microStepTypes'
 import { useMotionTokens } from '../motion'
 import { useMicroSteps } from '../useMicroSteps'
 import { useOnboarding } from '../useOnboarding'
 import { useOnboardingSupport } from '../supportContext'
 import { BlockedStateCard } from './BlockedStateCard'
-import { CardFooter } from './CardFooter'
+import { AutoAdvanceFooter } from './AutoAdvanceFooter'
+import { BlockingAnswerDialog } from './BlockingAnswerDialog'
 import { ChoiceGroup } from './ChoiceGroup'
 import { MicroActionStep } from './MicroActionStep'
 import { MicroInfoStep } from './MicroInfoStep'
@@ -41,9 +42,10 @@ const AUTO_KINDS = new Set(['upload', 'action'])
  * Runnerul: primește micro-pașii pasului curent și randează ecranul potrivit. Un singur `switch`,
  * într-un singur fișier — de aici încolo, un pas nou înseamnă un fișier de config, nu componente.
  *
- * Ecranele avansează singure acolo unde există un semnal fără echivoc — o alegere apăsată, un
- * document acceptat de server, o acțiune executată. „Continuă" rămâne doar unde userul chiar are
- * de confirmat ceva: text scris, bife multiple, un ecran de citit.
+ * Nu există „Continuă”: un ecran gata trece singur mai departe. O alegere, un document acceptat
+ * sau o acțiune executată trec imediat; un formular completat, bifele, un ecran de citit sau
+ * rezumatul trec după o scurtă numărătoare, pe care omul o poate opri („Rămân aici”). Un „Nu” care
+ * oprește parcursul deschide un pop-up cu motivul.
  */
 export function OnboardingRunner() {
   const { steps, current, answers, answer, goTo, next, canGoForward } = useMicroSteps()
@@ -72,6 +74,21 @@ export function OnboardingRunner() {
   /** Avansul programat de o alegere. Se atinge doar din handlere. */
   const pickTimer = useRef<number | undefined>(undefined)
 
+  /** Pop-up-ul pentru un „Nu” care oprește parcursul. */
+  const [blockingChoice, setBlockingChoice] = useState<{ title: string; message: string } | null>(null)
+
+  /**
+   * „Rămân aici”: ecranul nu mai trece singur mai departe până nu se schimbă un răspuns. Ținem
+   * obiectul `answers` de atunci — orice răspuns nou îl înlocuiește, deci oprirea expiră singură.
+   */
+  const [stay, setStay] = useState<{ id: string; answers: unknown } | null>(null)
+
+  /**
+   * Fiecare tastă repornește numărătoarea: un formular completat trece mai departe abia după ce
+   * omul se oprește din scris, nu la prima valoare care se întâmplă să fie validă.
+   */
+  const [keystrokes, setKeystrokes] = useState(0)
+
   /**
    * `next` proaspăt pentru avansul întârziat. Un răspuns poate face vizibil un ecran nou
    * („Da" la TVA deschide încărcarea certificatului), iar un `next` capturat înainte de răspuns
@@ -99,7 +116,7 @@ export function OnboardingRunner() {
   const context: MicroStepContext = { answers, documents, eligibility, state, resources }
 
   /** Trimite răspunsul dacă micro-pasul are ce trimite, apoi avansează. */
-  const advance = async (picked?: string) => {
+  const advanceNow = async (picked?: string) => {
     const payload = picked ?? (typeof value === 'string' ? value : undefined)
 
     if (def.submit && typeof payload === 'string') {
@@ -165,6 +182,9 @@ export function OnboardingRunner() {
     nextRef.current()
   }
 
+  /** Numărătoarea pornește o singură dată pe ecran; Enter nu mai pornește nimic cât se salvează. */
+  const advance = (picked?: string) => advanceNow(picked)
+
   /**
    * O întrebare cu un singur răspuns nu mai are ce confirma: alegerea E răspunsul. Lăsăm o pauză
    * cât să se vadă bifa, apoi trimitem și trecem mai departe.
@@ -174,10 +194,19 @@ export function OnboardingRunner() {
    */
   const pick = (choice: string) => {
     answer(def.id, choice)
-    // Marcăm ecranul ca „atins de user" ca să nu apară butonul de continuare cât ține pauza.
+    // Marcăm ecranul ca „atins de user" ca să nu pornească numărătoarea cât ține pauza.
     setArmedId(def.id)
     window.clearTimeout(pickTimer.current)
-    pickTimer.current = window.setTimeout(() => void advance(choice), AUTO_ADVANCE_MS)
+    const picked = def.choices?.find((c) => c.value === choice)
+    pickTimer.current = window.setTimeout(() => {
+      // Un „Nu” care oprește parcursul: explicăm de ce și rămânem pe întrebare. Tot după pauză,
+      // ca navigarea cu săgețile prin variante să nu deschidă pop-up-ul la fiecare trecere.
+      if (picked?.blocking) {
+        setBlockingChoice(picked.blocking)
+        return
+      }
+      void advance(choice)
+    }, AUTO_ADVANCE_MS)
   }
 
   /**
@@ -259,14 +288,14 @@ export function OnboardingRunner() {
     }
   }
 
-  // Ultimul ecran al unui pas care nu are ieșire înainte (e la admin) nu primește buton: n-ar
+  // Ultimul ecran al unui pas care nu are ieșire înainte (e la admin) nu trece nicăieri: n-ar
   // duce nicăieri. Ecranul spune deja ce se întâmplă și cât durează.
   const isLast = current.index === steps.length - 1
   const deadEnd = isLast && !canGoForward
 
   /**
    * Rezumatul nu lasă omul mai departe cât timp actele pasului n-au trecut de verificarea automată
-   * — înainte butonul era activ imediat după upload, deci pasul „se termina" pe acte necitite.
+   * — altfel pasul „s-ar termina" pe acte necitite.
    *
    * Validarea echipei nu se așteaptă aici: după rezumat vine ecranul „e la noi", iar când adminul
    * validează, `MicroStepProvider` mută singur omul la pasul următor.
@@ -280,70 +309,96 @@ export function OnboardingRunner() {
     return []
   }
 
-  const footer = (): ReactNode => {
-    // §6 — un pas cu UN singur document obligatoriu nu randează deloc „Continuă": uploadul
-    // reușit e semnalul, iar ecranul avansează singur. Butonul apare doar când nu se mai
-    // întâmplă nimic de la sine — un ecran deschis din rail, deja rezolvat la sosire.
-    if (def.kind === 'question' || AUTO_KINDS.has(def.kind)) {
-      return resolved && !armed && !deadEnd ? (
-        <CardFooter disabled={submitting} onContinue={() => void advance()} />
-      ) : null
-    }
-
-    // Aceeași regulă ca mai sus, pentru ecranele cu buton propriu: fără ieșire înainte, butonul
-    // dispare. Cât timp `text` și `multi` nu se uitau la `deadEnd`, butonul lor arăta activ și
-    // făcea turul `/onboarding` → înapoi pe același pas — fundătura tăcută de la Uber/Bolt.
-    if (deadEnd) return null
-
+  /**
+   * Ce mai lipsește ca ecranul să fie gata. Gol = gata: ecranul trece singur mai departe. Nu mai
+   * există „Continuă” nicăieri în onboarding — un pas terminat nu mai cere încă un clic.
+   */
+  const pending = (): string[] => {
     switch (def.kind) {
-      case 'text': {
-        const issues = textStepIssues(def, answers, context)
-        return (
-          <CardFooter
-            disabled={submitting || issues.length > 0}
-            reasons={issues}
-            onContinue={() => void advance()}
-          />
-        )
-      }
-      case 'multi': {
-        const issues = multiStepIssues(def, value)
-        return (
-          <CardFooter
-            disabled={submitting || issues.length > 0}
-            reasons={issues}
-            onContinue={() => void advance()}
-          />
-        )
-      }
+      case 'question':
+        if (typeof value !== 'string') return resolved ? [] : ['Alege un răspuns.']
+        return isBlockingAnswer(def, value) ? ['Cu răspunsul „Nu” nu putem merge mai departe.'] : []
+      case 'upload':
+      case 'action':
+        return resolved ? [] : ['']
+      case 'text':
+        return textStepIssues(def, answers, context)
+      case 'multi':
+        return multiStepIssues(def, value)
       case 'info': {
-        // Un ecran cu slot blocant are ceva de dus la capăt în el (dosarul generat, descărcat și
-        // marcat ca depus): se continuă abia când serverul confirmă. Sloturile informative —
-        // contul băncii, contul ARR — nu blochează pe nimeni.
+        // Un ecran cu slot blocant are ceva de dus la capăt în el (dosarul generat, avansul plătit,
+        // banca conectată): trece mai departe când serverul confirmă. Restul se citesc și trec.
         const blocked = def.slot !== undefined && BLOCKING_SLOTS.has(def.slot) && !resolved
-        return (
-          <CardFooter
-            disabled={submitting || blocked}
-            reasons={def.slot ? [BLOCKING_SLOT_REASONS[def.slot] ?? ''] : []}
-            onContinue={() => void advance()}
-          />
-        )
+        return blocked ? [BLOCKING_SLOT_REASONS[def.slot!] ?? ''] : []
       }
-      case 'summary': {
-        const blockers = summaryBlockers()
-        return (
-          <CardFooter
-            disabled={submitting || blockers.length > 0}
-            reasons={blockers}
-            label={isLast ? 'Continuă către pasul următor' : 'Continuă'}
-            onContinue={() => void advance()}
-          />
-        )
-      }
-      default:
-        return null
+      case 'summary':
+        return summaryBlockers()
     }
   }
+
+  /**
+   * Cât stă un ecran gata înainte să treacă mai departe. Un ecran de citit primește timp de citit
+   * (după numărul de cuvinte); un formular completat, doar cât să se vadă că a fost primit.
+   */
+  const countdownMs = (): number => {
+    if (def.kind === 'info' && !(def.slot && BLOCKING_SLOTS.has(def.slot))) {
+      const words = (def.lines?.(context) ?? []).join(' ').split(/\s+/).filter(Boolean).length
+      return Math.min(12_000, Math.max(4_000, words * 250))
+    }
+    if (def.kind === 'summary') return 3_000
+    if (def.kind === 'text') return 2_000
+    if (def.kind === 'multi') return 1_500
+    return 2_000
+  }
+
+  const missing = pending()
+  const ready = missing.length === 0
+
+  // Alegerile, uploadurile și acțiunile făcute acum își au deja trecerea programată (550 ms).
+  const fastPending = armed && (def.kind === 'question' || AUTO_KINDS.has(def.kind))
+  const stayed = stay !== null && stay.id === def.id && stay.answers === answers
+
+  const footer = (): ReactNode => {
+    if (deadEnd) return null
+
+    const countdown =
+      ready && !fastPending && !blockingChoice
+        ? {
+            delayMs: countdownMs(),
+            restartKey: `${def.id}:${keystrokes}:${Object.keys(answers).length}:${JSON.stringify(value ?? null)}`,
+            // Cât e o eroare pe ecran, nu plecăm de sub ea.
+            paused: error !== null,
+          }
+        : null
+
+    // Upload și acțiune: ecranul însuși spune ce e de făcut; nu mai repetăm dedesubt.
+    const reasons = def.kind === 'upload' || def.kind === 'action' ? [] : missing.filter(Boolean)
+
+    return (
+      <AutoAdvanceFooter
+        reasons={reasons}
+        countdown={countdown}
+        stayed={stayed}
+        busy={submitting}
+        onDone={() => void advance()}
+        onStay={() => setStay({ id: def.id, answers })}
+      />
+    )
+  }
+
+  /**
+   * Enter într-un câmp completat trece imediat mai departe, fără să mai aștepte numărătoarea —
+   * cine a terminat de scris nu trebuie să aștepte.
+   */
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Enter' || def.kind !== 'text' || !ready || submitting) return
+    if (!(event.target instanceof HTMLInputElement)) return
+    event.preventDefault()
+    void advance()
+  }
+
+  const isField = (target: EventTarget) =>
+    target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement
 
   /**
    * Verdictul serverului contează abia la capătul pasului: profilul de eligibilitate se creează de
@@ -362,7 +417,10 @@ export function OnboardingRunner() {
           exit={{ opacity: 0, y: -8 }}
           transition={stepMotion}
         >
-          <Stack>
+          <Stack
+            onKeyDown={handleKeyDown}
+            onInputCapture={(event) => isField(event.target) && setKeystrokes((k) => k + 1)}
+          >
             {blocked && eligibility ? (
               <BlockedStateCard
                 eyebrow={def.eyebrow}
@@ -392,6 +450,14 @@ export function OnboardingRunner() {
           </Stack>
         </motion.div>
       </AnimatePresence>
+
+      <BlockingAnswerDialog
+        open={blockingChoice !== null}
+        title={blockingChoice?.title ?? ''}
+        message={blockingChoice?.message ?? ''}
+        onClose={() => setBlockingChoice(null)}
+        onContactSupport={support.openEmail}
+      />
 
       <Snackbar
         open={error !== null}

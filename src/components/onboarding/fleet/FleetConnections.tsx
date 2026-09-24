@@ -9,6 +9,7 @@ import { BankConnectPanel } from '../../banking/BankConnectPanel'
 import { BCR_ONBOARDING_URL } from '../../../data/partners'
 import { readBcrDiscountIntent } from '../../../data/bcrDiscount'
 import { getErrorMessage } from '../../../utils/errorHandler'
+import { AutoContinue } from '../AutoContinue'
 import type {
   FleetInput,
   FleetState,
@@ -143,14 +144,14 @@ export function FleetBankStep({ state, busy, save, refresh }: Props) {
         </Box>
       )}
       {error && <Alert severity="error">{error}</Alert>}
+      {/* Contul conectat: pasul trece singur mai departe, fără „Continuă”. */}
       {state.bankConnected && (
-        <Button
-          variant="contained"
-          disabled={busy}
-          onClick={() => void save({ step: 4, bcrRequested: requested })}
-        >
-          Continuă
-        </Button>
+        <AutoContinue
+          ready
+          busy={busy}
+          restartKey="bank-connected"
+          onContinue={() => void save({ step: 4, bcrRequested: requested })}
+        />
       )}
       <Button
         disabled={busy}
@@ -273,14 +274,9 @@ export function FleetOblioStep({ state, busy, save, refresh }: Props) {
         </Alert>
       )}
       {error && <Alert severity="error">{error}</Alert>}
+      {/* Oblio conectat: pasul trece singur mai departe, fără „Continuă”. */}
       {state.oblioConnected && (
-        <Button
-          variant="contained"
-          disabled={busy || working}
-          onClick={() => void save({ step: 5 })}
-        >
-          Continuă
-        </Button>
+        <AutoContinue ready busy={busy || working} restartKey="oblio-connected" onContinue={() => void save({ step: 5 })} />
       )}
       <Button
         disabled={busy || working}

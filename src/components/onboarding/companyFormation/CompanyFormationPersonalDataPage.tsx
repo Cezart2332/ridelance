@@ -1,11 +1,11 @@
-import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
-import { Alert, Button, Stack } from '@mui/material'
+import { Alert, Stack } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 
 import {
   companyFormationService,
   type PersoanaFizica,
 } from '../../../services/companyFormation.service'
+import { AutoContinue } from '../AutoContinue'
 import { PanelCard, PanelHeading } from '../PanelCard'
 import { TOKENS } from '../onboardingTheme'
 import { useOnboarding } from '../useOnboarding'
@@ -78,34 +78,27 @@ export default function CompanyFormationPersonalDataPage() {
         </Alert>
       )}
 
-      <PanelCard>
-        <PersoanaFizicaForm
-          value={solicitant}
-          onChange={update}
-          onBlur={persist}
-          prefilled={prefilled}
-          knownBirthDate={eligibility?.dateOfBirth ?? null}
-          identityReadUnreliable={onboarding?.requiresManualIdentityReview ?? false}
-          disabled={state.isLocked}
-        />
-      </PanelCard>
-
-      <Stack direction="row" sx={{ justifyContent: 'flex-end' }}>
-        <Button
-          variant="contained"
-          endIcon={<ArrowForwardRoundedIcon />}
-          onClick={() => void goNext()}
-          disabled={submitting || state.isLocked || !state.personalDataComplete}
-          sx={{
-            textTransform: 'none',
-            fontWeight: 700,
-            backgroundColor: TOKENS.primary,
-            '&:hover': { backgroundColor: TOKENS.primaryStrong },
-          }}
-        >
-          Continuă
-        </Button>
-      </Stack>
+      {/* Fără „Continuă”: datele complete (le confirmă serverul la salvare) trec singure mai departe. */}
+      <AutoContinue
+        ready={state.personalDataComplete}
+        disabled={state.isLocked}
+        restartKey={JSON.stringify(solicitant)}
+        onContinue={() => void goNext()}
+        busy={submitting}
+        reasons={['Completează toate datele de mai sus.']}
+      >
+        <PanelCard>
+          <PersoanaFizicaForm
+            value={solicitant}
+            onChange={update}
+            onBlur={persist}
+            prefilled={prefilled}
+            knownBirthDate={eligibility?.dateOfBirth ?? null}
+            identityReadUnreliable={onboarding?.requiresManualIdentityReview ?? false}
+            disabled={state.isLocked}
+          />
+        </PanelCard>
+      </AutoContinue>
     </Stack>
   )
 }

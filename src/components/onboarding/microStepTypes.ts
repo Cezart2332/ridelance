@@ -45,6 +45,17 @@ export interface ChoiceDef {
   badge?: string
   /** Ce se explică la hover pe o variantă dezactivată. Obligatoriu împreună cu `disabled`. */
   disabledReason?: string
+  /**
+   * Varianta oprește parcursul: fără ea nu se poate lucra în ridesharing (sub 21 de ani, fără
+   * permis de 2 ani, fără atestat). Aleasă, deschide un pop-up cu motivul, iar ecranul rămâne pe
+   * loc. Un „Nu” care doar schimbă drumul (TVA, cont bancar, PFA) nu are așa ceva.
+   */
+  blocking?: { title: string; message: string }
+}
+
+/** Răspunsul ales e o variantă care oprește parcursul. */
+export function isBlockingAnswer(def: MicroStepDef, value: MicroStepAnswer | undefined): boolean {
+  return def.kind === 'question' && typeof value === 'string' && def.choices?.some((c) => c.value === value && c.blocking) === true
 }
 
 /**

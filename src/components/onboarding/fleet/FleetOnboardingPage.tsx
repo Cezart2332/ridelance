@@ -35,6 +35,7 @@ import {
 import { getErrorMessage } from '../../../utils/errorHandler'
 import { authService } from '../../../services/auth.service'
 import { ROUTES } from '../../../constants/routes'
+import { AutoContinue } from '../AutoContinue'
 import { OnboardingCard } from '../micro/OnboardingCard'
 import type { MicroStepIcon } from '../microStepTypes'
 import { onboardingMuiTheme } from '../onboardingMuiTheme'
@@ -383,7 +384,7 @@ function FleetStep({ step, state, busy, save, refresh }: StepProps) {
               variant="contained"
               onClick={() => void save({ step: 1, confirmCompany: true })}
             >
-              Da, continuă
+              Da, e firma mea
             </Button>
             {!p.company && (
               <Button disabled={busy} onClick={() => setSearching(true)}>
@@ -394,9 +395,24 @@ function FleetStep({ step, state, busy, save, refresh }: StepProps) {
         )}
       </Stack>
     )
-  if (step === 2)
+  if (step === 2) {
+    // Fără „Continuă”: completat (și cu telefonul verificat, când serverul o cere), trece singur.
+    const contactReady =
+      Boolean(firstName.trim() && lastName.trim() && position) &&
+      (position !== 'Altă funcție' || Boolean(other.trim())) &&
+      !(state.contactVerificationRequired && !state.phoneVerified)
     return (
-      <Stack spacing={3}>
+      <AutoContinue
+        ready={contactReady}
+        busy={busy}
+        restartKey={JSON.stringify([firstName, lastName, position, other, state.phoneVerified])}
+        onContinue={() => void save({ step: 2, firstName, lastName, position, otherPosition: other })}
+        reasons={[
+          state.contactVerificationRequired && !state.phoneVerified
+            ? 'Completează numele, funcția și verifică telefonul.'
+            : 'Completează numele și funcția.',
+        ]}
+      >
         <FleetContactVerification state={state} refresh={refresh} />
         <TextField
           label="Prenume"
@@ -429,35 +445,19 @@ function FleetStep({ step, state, busy, save, refresh }: StepProps) {
             onChange={(e) => setOther(e.target.value)}
           />
         )}
-        <Button
-          disabled={
-            busy ||
-            !firstName.trim() ||
-            !lastName.trim() ||
-            !position ||
-            // Doar telefonul: emailul e adresa contului, confirmată la înregistrare. Și el
-            // blochează numai când serverul o cere — cât timp SMS-ul nu e configurat, codul
-            // n-are cum să ajungă, iar butonul ar rămâne gri fără nicio cale de deblocare.
-            (state.contactVerificationRequired && !state.phoneVerified)
-          }
-          variant="contained"
-          onClick={() =>
-            void save({
-              step: 2,
-              firstName,
-              lastName,
-              position,
-              otherPosition: other,
-            })
-          }
-        >
-          Continuă
-        </Button>
-      </Stack>
+      </AutoContinue>
     )
-  if (step === 3)
+  }
+  if (step === 3) {
+    const countValid = count !== '' && Number.isInteger(Number(count)) && Number(count) >= 0
     return (
-      <Stack spacing={3}>
+      <AutoContinue
+        ready={platforms.length > 0 && countValid}
+        busy={busy}
+        restartKey={JSON.stringify([platforms, count])}
+        onContinue={() => void save({ step: 3, platforms, vehicleCount: Number(count) })}
+        reasons={['Alege platformele și scrie câte mașini administrezi.']}
+      >
         <Typography>
           Cu ce platforme de ridesharing lucrează flota ta?
         </Typography>
@@ -498,23 +498,9 @@ function FleetStep({ step, state, busy, save, refresh }: StepProps) {
           onChange={(e) => setCount(e.target.value)}
           helperText="Poți introduce 0 dacă firma încă își construiește flota."
         />
-        <Button
-          variant="contained"
-          disabled={
-            busy ||
-            !platforms.length ||
-            count === '' ||
-            !Number.isInteger(Number(count)) ||
-            Number(count) < 0
-          }
-          onClick={() =>
-            void save({ step: 3, platforms, vehicleCount: Number(count) })
-          }
-        >
-          Continuă
-        </Button>
-      </Stack>
+      </AutoContinue>
     )
+  }
   if (step === 4)
     return (
       <FleetBankStep state={state} busy={busy} save={save} refresh={refresh} />

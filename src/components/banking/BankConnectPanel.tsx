@@ -237,7 +237,7 @@ export function BankConnectPanel({
                 rel="noopener"
                 sx={primaryButtonSx}
               >
-                Continuă la bancă
+                Mergi la bancă
               </Button>
             )}
             <Button
@@ -337,7 +337,7 @@ export function BankConnectPanel({
             onClick={() => void connect(selected, extra)}
             sx={{ ...primaryButtonSx, alignSelf: 'flex-start' }}
           >
-            {connecting ? 'Se deschide banca…' : 'Continuă la bancă'}
+            {connecting ? 'Se deschide banca…' : 'Mergi la bancă'}
           </Button>
         </Stack>
       </Paper>

@@ -18,6 +18,7 @@ import { PfaFiscalSettingsPanel } from '../../components/pfa/PfaFiscalSettingsPa
 import { FiscalProfilePanel } from '../../shared/fiscal-profile'
 import { EstimatedTaxesCard, PriorPeriodPanel, StaffTaxInputsPanel } from '../../shared/fiscal-estimates'
 import { OnboardingSectionsPanel } from '../../components/dashboard/sections/admin/OnboardingSectionsPanel'
+import { OnboardingAnswersPanel } from '../../components/dashboard/sections/admin/OnboardingAnswersPanel'
 import { UberImportAdminPanel } from '../../components/dashboard/sections/admin/UberImportAdminPanel'
 import { DocumentRejectDialog } from '../../components/dashboard/sections/admin/DocumentRejectDialog'
 import type { DocumentSummary } from '../../services/document.service'
@@ -283,6 +284,9 @@ export function PfaDetailView(props: PfaDetailViewProps) {
                   refreshKey={onboardingRefreshKey}
                   onStateChange={setOnboarding}
                 />
+              )}
+              {tab === 'onboarding' && hasRegistration && (
+                <OnboardingAnswersPanel pfaId={pfa.id} refreshKey={onboardingRefreshKey} />
               )}
 
               {tab === 'documente' && (

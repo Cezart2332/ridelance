@@ -7,6 +7,9 @@ import type { MicroStepAnswer, MicroStepAnswers, MicroStepContext, MicroStepView
 import { MicroStepsContext, type MicroStepsValue } from './microStepsContext'
 import type { StepView } from './stepModel'
 import { useOnboarding } from './useOnboarding'
+import { onboardingService } from '../../services/onboarding.service'
+import { describeAnswer, restoreAnswer } from './answerRecords'
+import { isBlockingAnswer } from './microStepTypes'
 
 /** Micro-pasul curent trăiește în URL, nu în state: Back-ul browserului trebuie să funcționeze. */
 const PARAM = 'pas'
@@ -37,6 +40,33 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
 
   const [answers, setAnswers] = useState<MicroStepAnswers>({})
 
+  /**
+   * Răspunsurile date înainte (alt tab, alt dispozitiv, un refresh) vin de pe server. Ce s-a
+   * răspuns deja în sesiunea asta câștigă: cererea poate ajunge după un clic.
+   */
+  useEffect(() => {
+    let cancelled = false
+    onboardingService
+      .getMyAnswers()
+      .then((saved) => {
+        if (cancelled || saved.length === 0) return
+        setAnswers((prev) => {
+          const restored: MicroStepAnswers = {}
+          for (const a of saved) restored[a.questionId] = restoreAnswer(a.questionId, a.value)
+          return { ...restored, ...prev }
+        })
+      })
+      .catch(() => {
+        // Fără răspunsurile vechi, fluxul merge tot din datele serverului, ca înainte.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  /** Câmpurile de text se trimit după o pauză de tastare, nu la fiecare literă. */
+  const saveTimers = useRef<Record<string, number>>({})
+
   const context: MicroStepContext = useMemo(
     () => ({ answers, documents, eligibility, state, resources }),
     [answers, documents, eligibility, state, resources],
@@ -52,7 +82,8 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
   const requested = searchParams.get(PARAM)
 
   const { views, current } = useMemo(() => {
-    const done = visible.map((def) => def.isDone(context))
+    // Un „Nu” care oprește parcursul (vârstă, permis, atestat) nu închide ecranul, oricât ar zice `isDone`.
+    const done = visible.map((def) => def.isDone(context) && !isBlockingAnswer(def, context.answers[def.id]))
     // Fără `?pas` în URL: primul ecran nerezolvat. Ăsta e tot mecanismul de resume.
     const fallback = done.findIndex((d) => !d)
     const requestedIndex = visible.findIndex((def) => def.id === requested)
@@ -205,6 +236,15 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
 
   const answer = useCallback((id: string, value: MicroStepAnswer) => {
     setAnswers((prev) => ({ ...prev, [id]: value }))
+
+    // Tot ce răspunde omul ajunge la admin, în afară de parole (`describeAnswer` le lasă pe dinafară).
+    const record = describeAnswer(id, value)
+    if (!record) return
+    window.clearTimeout(saveTimers.current[id])
+    saveTimers.current[id] = window.setTimeout(
+      () => void onboardingService.saveAnswer(record).catch(() => undefined),
+      id.includes('.') ? 1000 : 0,
+    )
   }, [])
 
   const value: MicroStepsValue = useMemo(

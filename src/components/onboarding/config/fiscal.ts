@@ -56,9 +56,11 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     icon: 'folder',
     railLabel: 'TVA',
     title: 'Deții certificat de TVA intracomunitar?',
+    // Aceeași ordine ca la toate întrebările: Da, apoi Nu. „Nu” nu oprește nimic: codul de TVA
+    // intracomunitar îl obține contabilul nostru.
     choices: [
-      { value: 'no', title: 'Nu' },
       { value: 'yes', title: 'Da' },
+      { value: 'no', title: 'Nu' },
     ],
     // „Da" fără dovadă e respins de server, deci se trimite doar când documentul există.
     submit: async (value) => {

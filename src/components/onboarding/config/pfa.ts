@@ -202,7 +202,7 @@ export const pfaMicroSteps: MicroStepDef[] = [
       'După confirmarea plății îți deschidem dosarul de înființare și completezi datele.',
     ],
     action: {
-      label: 'Continuă spre plată',
+      label: 'Mergi la plată',
       busyLabel: 'Se pregătește...',
       run: async () => {
         await pfaService.create({ registrationType: 'NuAmPfa', isOwner: false })

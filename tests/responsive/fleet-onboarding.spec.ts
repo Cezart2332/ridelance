@@ -99,12 +99,12 @@ test('firma, administrator, flotă zero și integrări amânate până la plată
   await expect(
     page.getByText('Flota Exemplu SRL', { exact: true }),
   ).toBeVisible()
-  await page.getByRole('button', { name: 'Da, continuă' }).click()
+  await page.getByRole('button', { name: 'Da, e firma mea' }).click()
   await page.getByLabel('Funcția în companie').click()
   await page.getByRole('option', { name: 'Manager flotă', exact: true }).click()
-  await page.getByRole('button', { name: 'Continuă', exact: true }).click()
+  // Fără „Continuă”: un pas completat trece singur mai departe.
+  await expect(page.getByRole('button', { name: 'Continuă', exact: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Momentan cu niciuna' }).click()
-  await page.getByRole('button', { name: 'Continuă', exact: true }).click()
   await page
     .getByRole('button', { name: 'Voi configura contul bancar mai târziu' })
     .click()

@@ -46,7 +46,15 @@ export const eligibilityMicroSteps: MicroStepDef[] = [
     title: 'Ai împlinit 21 de ani?',
     choices: [
       { value: 'yes', title: 'Da' },
-      { value: 'no', title: 'Nu' },
+      {
+        value: 'no',
+        title: 'Nu',
+        blocking: {
+          title: 'Trebuie să ai cel puțin 21 de ani',
+          message:
+            'Pentru transportul alternativ (Bolt, Uber), ARR cere ca șoferul să aibă minimum 21 de ani. Poți reveni oricând după ce împlinești vârsta. Dacă ai apăsat greșit, alege „Da”.',
+        },
+      },
     ],
     // Cartea de identitate răspunde deja la întrebare — nu o mai punem la revenire.
     isDone: (c) => c.answers.age !== undefined || hasDocument(c, CI),
@@ -76,7 +84,15 @@ export const eligibilityMicroSteps: MicroStepDef[] = [
     title: 'Ai permis categoria B de minimum 2 ani?',
     choices: [
       { value: 'yes', title: 'Da' },
-      { value: 'no', title: 'Nu' },
+      {
+        value: 'no',
+        title: 'Nu',
+        blocking: {
+          title: 'Ai nevoie de permis B de minimum 2 ani',
+          message:
+            'ARR dă atestatul și autorizația de transport alternativ doar șoferilor cu permis categoria B de cel puțin 2 ani. Revino când permisul are vechimea necesară. Dacă ai apăsat greșit, alege „Da”.',
+        },
+      },
     ],
     isDone: (c) => c.answers.license !== undefined || hasDocument(c, PERMIS),
   },
@@ -106,7 +122,15 @@ export const eligibilityMicroSteps: MicroStepDef[] = [
     title: 'Ai atestat de transport alternativ?',
     choices: [
       { value: 'yes', title: 'Da' },
-      { value: 'no', title: 'Nu' },
+      {
+        value: 'no',
+        title: 'Nu',
+        blocking: {
+          title: 'Ai nevoie de atestat de transport alternativ',
+          message:
+            'Fără atestat nu poți lucra legal pe Bolt sau Uber. Se obține după un curs la o școală autorizată și examenul de la ARR. Scrie-ne și îți spunem pașii. Dacă ai apăsat greșit, alege „Da”.',
+        },
+      },
     ],
     // Singurul răspuns care nu se poate deduce din documente: dacă atestatul lipsește, nu există
     // nimic din care OCR-ul să citească asta. Restul câmpurilor rămân ale OCR-ului.

@@ -1,5 +1,4 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
-import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
 import {
   Alert,
@@ -27,6 +26,7 @@ import {
   type PersoanaFizica,
   type RegisteredOfficeType,
 } from '../../../services/companyFormation.service'
+import { AutoContinue } from '../AutoContinue'
 import { PanelCard, PanelHeading } from '../PanelCard'
 import { TOKENS } from '../onboardingTheme'
 import { useOnboardingResource } from '../useOnboarding'
@@ -173,8 +173,17 @@ export default function CompanyFormationOfficePage() {
   const needsOwners = isOwn && office.isOwner === false
   const officeMissing = isOwn ? missingOfficeFields(office.adresa) : []
 
+  // Fără „Continuă”: sediul complet (îl confirmă serverul la salvare) trece singur mai departe.
   return (
-    <Stack spacing={3}>
+    <AutoContinue
+      spacing={3}
+      ready={state.registeredOfficeComplete}
+      disabled={disabled}
+      restartKey={JSON.stringify(office)}
+      onContinue={() => void goNext()}
+      busy={submitting}
+      reasons={['Completează datele sediului și bifele de mai sus.']}
+    >
       <PanelHeading title="Sediul social" />
 
       {error && (
@@ -406,23 +415,6 @@ export default function CompanyFormationOfficePage() {
           </PanelCard>
         </>
       )}
-
-      <Stack direction="row" sx={{ justifyContent: 'flex-end' }}>
-        <Button
-          variant="contained"
-          endIcon={<ArrowForwardRoundedIcon />}
-          onClick={() => void goNext()}
-          disabled={submitting || disabled || !state.registeredOfficeComplete}
-          sx={{
-            textTransform: 'none',
-            fontWeight: 700,
-            backgroundColor: TOKENS.primary,
-            '&:hover': { backgroundColor: TOKENS.primaryStrong },
-          }}
-        >
-          Continuă
-        </Button>
-      </Stack>
-    </Stack>
+    </AutoContinue>
   )
 }

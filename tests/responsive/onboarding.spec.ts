@@ -321,26 +321,48 @@ test.describe('pasul 1 pe micro-pași', () => {
     ).toBeVisible()
   })
 
-  test('„Nu" la atestat duce la ecranul de blocaj, cu motivul de la server', async ({ page }) => {
-    const reason = 'Atestatul de transport alternativ este obligatoriu.'
+  test('„Nu" la atestat deschide un pop-up cu motivul și rămâne pe întrebare', async ({ page }, info) => {
     await stubEligibility(
       page,
       [uploadedDoc('CarteIdentitate', 'ci.pdf'), uploadedDoc('PermisConducere', 'permis.pdf')],
-      eligibilityProfile({ status: 'Ineligible', reasons: [reason] }),
+      eligibilityProfile({ status: 'Pending' }),
     )
+    const saved: unknown[] = []
+    page.on('request', (request) => {
+      if (request.method() === 'PUT' && request.url().includes('/onboarding/answers/')) {
+        saved.push({ url: request.url(), body: request.postDataJSON() })
+      }
+    })
     await page.goto('/onboarding/eligibility?pas=attestation', { waitUntil: 'networkidle' })
 
     await page.getByRole('radio', { name: 'Nu' }).click()
 
-    await expect(
-      page.getByRole('heading', { name: /nu îndeplinești condițiile de eligibilitate/i }),
-    ).toBeVisible()
-    // Motivul apare și în rail (pasul e „Respins"), deci îl căutăm în lista cardului.
-    await expect(page.getByRole('list', { name: 'Condiții neîndeplinite' })).toContainText(reason)
+    const dialog = page.getByRole('dialog', { name: 'Ai nevoie de atestat de transport alternativ' })
+    await expect(dialog).toBeVisible()
+    await expect(dialog).toContainText('Fără atestat nu poți lucra legal pe Bolt sau Uber.')
+    await page.screenshot({ path: `test-results/onboarding-blocking-no-${info.project.name}.png` })
+    await dialog.getByRole('button', { name: 'Am înțeles' }).click()
 
-    // Nu e o fundătură: rail-ul rămâne întreg și se poate reveni.
-    await expect(page.getByRole('button', { name: 'Înapoi la pasul anterior' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Suport' }).first()).toBeVisible()
+    // Nu merge mai departe: întrebarea rămâne, cu motivul, iar „Da" îl lasă să continue.
+    await expect(page.getByRole('heading', { name: 'Ai atestat de transport alternativ?' })).toBeVisible()
+    await expect(page.getByText('Cu răspunsul „Nu” nu putem merge mai departe.')).toBeVisible()
+    await page.getByRole('radio', { name: 'Da' }).click()
+    await expect(page.getByRole('heading', { name: 'Încarcă atestatul' })).toBeVisible()
+
+    // Ambele răspunsuri ajung la server, cu textul de pe ecran, ca adminul să vadă tot parcursul.
+    await expect.poll(() => saved.length).toBe(2)
+    expect(saved[0]).toMatchObject({
+      url: expect.stringContaining('/onboarding/answers/attestation'),
+      body: { stepKey: 'eligibility', question: 'Ai atestat de transport alternativ?', value: 'no', valueLabel: 'Nu' },
+    })
+    expect(saved[1]).toMatchObject({ body: { value: 'yes', valueLabel: 'Da' } })
+  })
+
+  test('„Nu" la vârstă și la permis are și el pop-up', async ({ page }) => {
+    await stubEligibility(page, [], null)
+    await page.goto('/onboarding/eligibility?pas=age', { waitUntil: 'networkidle' })
+    await page.getByRole('radio', { name: 'Nu' }).click()
+    await expect(page.getByRole('dialog', { name: 'Trebuie să ai cel puțin 21 de ani' })).toBeVisible()
   })
 })
 
@@ -420,8 +442,9 @@ test.describe('pasul 2 — am deja PFA', () => {
       page.getByRole('heading', { name: 'Verifică datele înainte să trimitem dosarul' }),
     ).toBeVisible()
 
-    // Nu „către pasul următor": după rezumat vine ecranul de așteptare, nu pasul fiscal.
-    await page.getByRole('button', { name: 'Continuă', exact: true }).click()
+    // Fără „Continuă”: rezumatul complet trece singur, iar după el vine ecranul de așteptare, nu pasul fiscal.
+    await expect(page.getByTestId('auto-advance')).toBeVisible()
+    await expect(page.getByRole('button', { name: /Continuă/ })).toHaveCount(0)
 
     await expect(page.getByText('Dosarul tău PFA este în validare')).toBeVisible()
   })
@@ -455,8 +478,10 @@ test.describe('pasul 2 — am deja PFA', () => {
     )
     await page.goto('/onboarding/pfa?pas=pfa_summary', { waitUntil: 'networkidle' })
 
-    await expect(page.getByRole('button', { name: /^Continuă/ })).toBeDisabled()
+    // Nu numără spre pasul următor cât timp actele sunt în verificare; spune de ce așteaptă.
     await expect(page.getByText('Verificăm automat documentele încărcate', { exact: false })).toBeVisible()
+    await expect(page.getByTestId('auto-advance')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /Continuă/ })).toHaveCount(0)
   })
 
   /** Validarea adminului mută singură clientul în pasul următor — fără încă un „Continuă". */
@@ -670,7 +695,7 @@ test.describe('pasul 2 — datele de contact', () => {
    * deja. Dosarul PFA se creează abia la salvarea lui, așa că un „Continuă” direct, fără nicio
    * modificare, trebuie să-l trimită la server — altfel dosarul nu s-ar mai crea deloc.
    */
-  test('telefonul contului e precompletat și un „Continuă” direct creează dosarul', async ({ page }) => {
+  test('telefonul contului e precompletat și, fără nicio modificare, ecranul creează dosarul singur', async ({ page }) => {
     const noRegistration = {
       ...onboardingState,
       pfaRegistrationId: null,
@@ -706,10 +731,9 @@ test.describe('pasul 2 — datele de contact', () => {
     const phone = page.getByLabel('Telefon')
     await expect(phone).toHaveValue('0722123456')
 
-    // Tranziția dintre ecrane mută butonul câteva sute de ms; așteptăm să se oprească.
-    await page.waitForTimeout(800)
-    await page.getByRole('button', { name: /Continuă/ }).first().click({ force: true })
-    await expect.poll(() => created.length).toBe(1)
+    // Fără „Continuă”: numărul propus e valid, deci ecranul trece singur și trimite precompletarea.
+    await expect(page.getByRole('button', { name: /Continuă/ })).toHaveCount(0)
+    await expect.poll(() => created.length, { timeout: 15_000 }).toBe(1)
     expect(created[0]).toMatchObject({ registrationType: 'AmPfa', phone: '0722123456' })
   })
 })

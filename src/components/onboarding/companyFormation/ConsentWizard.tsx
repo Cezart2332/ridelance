@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from 'react'
 
 import type { LegalConsentStep } from '../../../services/companyFormation.service'
 import { PanelCard } from '../PanelCard'
-import { TOKENS, displaySx } from '../onboardingTheme'
+import { AutoAdvanceFooter } from '../micro/AutoAdvanceFooter'
+import { TOKENS } from '../onboardingTheme'
 
 /** Cât așteptăm după bifare înainte să avansăm singuri, ca userul să vadă ce a bifat. */
 const AUTO_ADVANCE_MS = 400
@@ -60,6 +61,10 @@ export function ConsentWizard({ steps, onComplete, disabled }: ConsentWizardProp
   const [current, setCurrent] = useState(0)
   const [accepted, setAccepted] = useState<boolean[]>(() => steps.map(() => false))
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** O bifă tocmai pusă și-a programat deja trecerea mai departe. */
+  const [ticked, setTicked] = useState(false)
+  /** „Rămân aici” pe o declarație deja acceptată, la care omul s-a întors să o recitească. */
+  const [stayAt, setStayAt] = useState<number | null>(null)
 
   useEffect(
     () => () => {
@@ -73,9 +78,10 @@ export function ConsentWizard({ steps, onComplete, disabled }: ConsentWizardProp
   const allAccepted = accepted.every(Boolean)
 
   const advance = () => {
-    // Și clicul pe „Continuă", și timerul duc aici: fără asta s-ar chema amândouă.
+    // Și bifa, și numărătoarea duc aici: fără asta s-ar chema amândouă.
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = null
+    setTicked(false)
 
     if (isLast) {
       onComplete()
@@ -89,10 +95,10 @@ export function ConsentWizard({ steps, onComplete, disabled }: ConsentWizardProp
     setAccepted(next)
 
     if (timerRef.current) clearTimeout(timerRef.current)
+    setTicked(checked)
     if (!checked) return
 
-    // Avans automat, ca în fluxul de referință. Butonul rămâne, pentru tastatură și
-    // pentru cine bifează din greșeală.
+    // Avans automat: bifa E acceptarea. Fără „Continuă” — cine a bifat din greșeală debifează.
     timerRef.current = setTimeout(() => {
       if (isLast && !next.every(Boolean)) return
       advance()
@@ -150,27 +156,28 @@ export function ConsentWizard({ steps, onComplete, disabled }: ConsentWizardProp
 
       <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'space-between' }}>
         <Button
-          onClick={() => setCurrent((c) => Math.max(0, c - 1))}
+          onClick={() => {
+            setTicked(false)
+            setCurrent((c) => Math.max(0, c - 1))
+          }}
           disabled={disabled || current === 0}
           sx={{ textTransform: 'none', fontWeight: 700, color: TOKENS.textMuted }}
         >
           Înapoi
         </Button>
-        <Button
-          variant="contained"
-          onClick={advance}
-          disabled={disabled || !accepted[current] || (isLast && !allAccepted)}
-          sx={{
-            ...displaySx,
-            textTransform: 'none',
-            fontWeight: 700,
-            backgroundColor: TOKENS.primary,
-            '&:hover': { backgroundColor: TOKENS.primaryStrong },
-          }}
-        >
-          Continuă
-        </Button>
       </Stack>
+
+      {/* Întors pe o declarație deja acceptată: trece singur mai departe, dacă nu rămâne aici. */}
+      <AutoAdvanceFooter
+        countdown={
+          accepted[current] && !ticked && !disabled && !(isLast && !allAccepted)
+            ? { delayMs: 2500, restartKey: String(current), paused: false }
+            : null
+        }
+        stayed={stayAt === current}
+        onDone={advance}
+        onStay={() => setStayAt(current)}
+      />
     </Stack>
   )
 }

@@ -101,3 +101,25 @@ test('admin: rezumat organizat în subsecțiuni și meniu accesibil pe mobil', a
   await page.getByRole('navigation', { name: 'Navigare admin' }).filter({ visible: true }).getByRole('button', { name: 'Onboarding' }).click()
   await expect(page.getByRole('heading', { name: 'Onboarding' })).toBeVisible()
 })
+
+test('admin: vede toate răspunsurile din onboarding, cu Da/Nu și schimbările', async ({ page }, info) => {
+  await mockAdmin(page)
+  await page.route('**/pfa-registrations/*/onboarding/answers', (route) => route.fulfill({ json: [
+    { stepKey: 'eligibility', questionId: 'age', question: 'Ai împlinit 21 de ani?', value: 'yes', valueLabel: 'Da', answeredAtUtc: '2026-09-14T08:00:00Z', previousLabels: ['Nu'] },
+    { stepKey: 'eligibility', questionId: 'attestation', question: 'Ai atestat de transport alternativ?', value: 'yes', valueLabel: 'Da', answeredAtUtc: '2026-09-14T08:02:00Z', previousLabels: [] },
+    { stepKey: 'fiscal', questionId: 'tva', question: 'Deții certificat de TVA intracomunitar?', value: 'no', valueLabel: 'Nu', answeredAtUtc: '2026-09-15T09:00:00Z', previousLabels: [] },
+    { stepKey: 'pfa', questionId: 'pfa_contact.phone', question: 'La ce număr te putem suna? · Telefon', value: '0722123456', valueLabel: '0722123456', answeredAtUtc: '2026-09-14T09:00:00Z', previousLabels: [] },
+  ] }))
+  await page.goto('/admin?tab=pfa&user=client-review')
+
+  const panel = page.getByTestId('onboarding-answers')
+  await expect(page.getByRole('heading', { name: 'Răspunsuri din onboarding' })).toBeVisible()
+  // Pe pași, în ordinea onboardingului: eligibilitate, PFA, fiscal.
+  await expect(panel.getByRole('heading', { level: 3 })).toHaveText(['Eligibilitate', 'PFA', 'Fiscal și bancă'])
+  await expect(panel.getByText('Ai împlinit 21 de ani?')).toBeVisible()
+  await expect(panel.getByText('înainte: Nu', { exact: false })).toBeVisible()
+  await expect(panel.getByText('Deții certificat de TVA intracomunitar?')).toBeVisible()
+  await expect(panel.getByText('0722123456')).toBeVisible()
+  await panel.scrollIntoViewIfNeeded()
+  await panel.screenshot({ path: `test-results/admin-onboarding-answers-${info.project.name}.png` })
+})

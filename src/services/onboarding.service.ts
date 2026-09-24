@@ -368,6 +368,17 @@ export interface VehicleState {
   dossierPendingReview?: string[] | null
 }
 
+/** Un răspuns din onboarding, cum îl vede adminul: ultimul dat și, dacă s-a schimbat, cele dinainte. */
+export interface OnboardingAnswerRecord {
+  stepKey: string
+  questionId: string
+  question: string
+  value: string
+  valueLabel: string
+  answeredAtUtc: string
+  previousLabels: string[]
+}
+
 export const onboardingService = {
   /** Starea de onboarding a userului curent. */
   async getState(): Promise<OnboardingState> {
@@ -683,6 +694,27 @@ export const onboardingService = {
   /** DOAR PENTRU TESTARE — sare peste pasul curent de onboarding. De șters. */
   async skipStep(): Promise<void> {
     await api.post('/onboarding/test/skip')
+  },
+
+  /**
+   * Salvează un răspuns din onboarding, cu textele de pe ecran, ca adminul să vadă tot parcursul.
+   * Un răspuns identic cu ultimul nu creează nimic nou pe server.
+   */
+  async saveAnswer(answer: { stepKey: string; questionId: string; question: string; value: string; valueLabel: string }): Promise<void> {
+    const { questionId, ...body } = answer
+    await api.put(`/onboarding/answers/${encodeURIComponent(questionId)}`, body)
+  },
+
+  /** Ultimul răspuns la fiecare întrebare, ca fluxul să se reia după refresh. */
+  async getMyAnswers(): Promise<{ stepKey: string; questionId: string; value: string }[]> {
+    const { data } = await api.get<{ stepKey: string; questionId: string; value: string }[]>('/onboarding/answers')
+    return data
+  },
+
+  /** Toate răspunsurile din onboarding ale unui dosar, în ordinea în care au fost date (admin). */
+  async getAnswersForRegistration(pfaId: string): Promise<OnboardingAnswerRecord[]> {
+    const { data } = await api.get<OnboardingAnswerRecord[]>(`/pfa-registrations/${pfaId}/onboarding/answers`)
+    return data
   },
 
   /** Starea de onboarding a unui dosar (admin/contabil). */
