@@ -1,5 +1,5 @@
 import { Suspense, useEffect } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { App as CapacitorApp } from '@capacitor/app'
 import { SystemBars, SystemBarsStyle } from '@capacitor/core'
 
@@ -13,6 +13,9 @@ import { ScrollToTop } from '../components/layout/ScrollToTop'
 import { SRL_ROOT } from '../config/srlNavigation'
 import { ROUTES } from '../constants/routes'
 import { lazyWithRetry } from '../utils/lazyWithRetry'
+import { NativeCurtain } from './launch/NativeCurtain'
+import { isAuthPath } from './launch/launchRoutes'
+import { useCurtainPhase } from './launch/curtainStore'
 import { NativeRoleRedirect } from './NativeRoleRedirect'
 import { NativeUnavailablePage } from './NativeUnavailablePage'
 import { NATIVE_UNAVAILABLE_PATH } from './platform'
@@ -37,6 +40,7 @@ export function NativeApp() {
     <>
       <ScrollToTop />
       <DocumentViewerHost />
+      <NativeCurtain />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path={ROUTES.login} element={<LoginPage />} />
@@ -71,9 +75,23 @@ export function NativeApp() {
  * închide aplicația doar când nu mai are unde.
  */
 function useNativeShell() {
-  useEffect(() => {
-    void SystemBars.setStyle({ style: SystemBarsStyle.Light }).catch(() => undefined)
+  const phase = useCurtainPhase()
+  const { pathname } = useLocation()
+  // Cortina și antetul login-ului sunt închise la culoare: bara de sus trece pe text deschis, iar
+  // fundalul paginii (cel care se vede și în spatele barei de sus pe iPhone) se închide și el.
+  const dark = phase !== 'hidden' || isAuthPath(pathname)
 
+  useEffect(() => {
+    document.documentElement.dataset.surface = dark ? 'dark' : 'light'
+    // În browser (dev, teste) pluginul poate arunca pe loc, nu doar respinge promisiunea.
+    try {
+      void SystemBars.setStyle({ style: dark ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => undefined)
+    } catch {
+      // Fără bară de sistem de colorat.
+    }
+  }, [dark])
+
+  useEffect(() => {
     const listener = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
       if (canGoBack) {
         window.history.back()

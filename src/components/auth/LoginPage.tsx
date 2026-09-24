@@ -5,6 +5,8 @@ import { AuthLayout } from './shell/AuthLayout'
 import { AuthFormHeader } from './shell/AuthFormHeader'
 import { AuthSwitchLink } from './shell/AuthSwitchLink'
 import { IS_NATIVE_APP } from '../../native/platform'
+import { curtain } from '../../native/launch/curtainStore'
+import { NativeLoginButton } from '../../native/launch/NativeLoginButton'
 import { PasswordField } from './shell/PasswordField'
 import { TrustRow } from './shell/TrustRow'
 import { AUTH_COLORS, AUTH_DENSITY, authInputSx, authPrimaryButtonSx } from './shell/authShellSx'
@@ -28,6 +30,8 @@ export default function LoginPage() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
+    // Butonul din aplicație rămâne apăsabil cât se încarcă (e pastila cu puncte), deci garda e aici.
+    if (isLoading) return
     setTouched({ email: true, password: true })
     setServerError(null)
 
@@ -36,6 +40,8 @@ export default function LoginPage() {
     setIsLoading(true)
     try {
       await authService.login(email.trim(), password)
+      // În aplicație, cortina coboară din antet și acoperă ecranul; urcă înapoi peste dashboard.
+      if (IS_NATIVE_APP) await curtain.cover()
       const returnTo = location.state?.returnTo
       navigate(typeof returnTo === 'string' && /^\/(app|onboarding-srl|onboarding|admin|contabil)(\/|\?|#|$)/.test(returnTo) && !returnTo.includes('\\') ? returnTo : '/app', { replace: true })
     } catch (err) {
@@ -123,15 +129,19 @@ export default function LoginPage() {
           </Link>
         </Stack>
 
-        <Button
-          type="submit"
-          variant="contained"
-          fullWidth
-          loading={isLoading}
-          sx={{ ...AUTH_DENSITY.metaToCta, ...authPrimaryButtonSx }}
-        >
-          Intră în RIDElance
-        </Button>
+        {IS_NATIVE_APP ? (
+          <NativeLoginButton loading={isLoading} sx={AUTH_DENSITY.metaToCta} />
+        ) : (
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            loading={isLoading}
+            sx={{ ...AUTH_DENSITY.metaToCta, ...authPrimaryButtonSx }}
+          >
+            Intră în RIDElance
+          </Button>
+        )}
       </Box>
 
       <TrustRow />

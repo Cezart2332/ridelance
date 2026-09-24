@@ -103,16 +103,39 @@ test('meniul de pe telefon e o pagină cu iconițe, iar „Înapoi” se întoar
   await expect(page).toHaveURL(/\/app\/dashboard\/meniu$/)
   await expect(page.getByRole('region', { name: 'Contabilitate' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Cheltuieli' })).toBeVisible()
-  await expect(page.getByRole('button', { name: /Profil/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Profil Datele/ })).toBeVisible()
   // Fără sertarul de site: meniul e în pagină.
   await expect(page.locator('.MuiDrawer-paper:visible')).toHaveCount(0)
   await page.screenshot({ path: 'test-results/native-mobile-menu.png', fullPage: true })
 
-  await page.getByRole('button', { name: 'Profil' }).click()
+  await page.getByRole('button', { name: /^Profil Datele/ }).click()
   await expect(page).toHaveURL(/\/app\/dashboard\/profil$/)
   await expect(tabs.getByRole('button', { name: 'Meniu' })).toHaveClass(/Mui-selected/)
   await page.screenshot({ path: 'test-results/native-mobile-subpage.png' })
 
   await page.getByRole('button', { name: 'Înapoi' }).click()
   await expect(page).toHaveURL(/\/app\/dashboard\/meniu$/)
+})
+
+test('pornirea: cortina se strânge în antetul login-ului, iar după login acoperă ecranul și urcă de pe el', async ({ page }) => {
+  // Contul în înrolare ajunge pe ecranul explicativ: același drum al cortinei ca spre dashboard,
+  // fără widgeturile dashboardului, care cad pe datele goale ale mock-ului.
+  await mockApi(page, { active: false })
+  await page.goto('/app')
+  const curtain = page.getByTestId('native-curtain')
+
+  // Fără sesiune: logoul pe ecran închis, apoi cortina se strânge în antet și dispare.
+  await expect(curtain).toHaveAttribute('data-phase', 'boot')
+  await expect(curtain).toHaveCount(0, { timeout: 10_000 })
+  await expect(page.getByRole('button', { name: /Intră/ })).toBeVisible()
+  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.surface)).toBe('dark')
+
+  // După login: butonul devine pastila cu puncte, cortina acoperă ecranul, apoi urcă de pe el.
+  await page.getByPlaceholder(/email/i).first().fill('sofer@example.test')
+  await page.locator('input[type="password"]').first().fill('parola123')
+  await page.getByRole('button', { name: /Intră/ }).click()
+  await expect(curtain).toHaveCount(1)
+  await expect(page.getByText('Contul tău e încă în înrolare')).toBeVisible({ timeout: 15_000 })
+  await expect(curtain).toHaveCount(0, { timeout: 10_000 })
+  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.surface)).toBe('light')
 })

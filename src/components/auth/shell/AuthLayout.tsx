@@ -7,6 +7,7 @@ import { AUTH_COLORS, AUTH_FORM_CONTENT } from './authShellSx'
 import { TOKENS } from '../../../constants/tokens'
 import logoWithMotto from '../../../assets/logowithmotto.svg'
 import { IS_NATIVE_APP } from '../../../native/platform'
+import { NativeAuthLayout } from '../../../native/launch/NativeAuthLayout'
 
 interface AuthLayoutProps {
   children: ReactNode
@@ -26,6 +27,9 @@ interface AuthLayoutProps {
 export function AuthLayout({ children, accountForm = false }: AuthLayoutProps) {
   const theme = useTheme()
   const showSlider = useMediaQuery(theme.breakpoints.up('md'))
+
+  // Aplicația mobilă are cadrul ei: antetul curbat în care se strânge cortina de la pornire.
+  if (IS_NATIVE_APP) return <NativeAuthLayout>{children}</NativeAuthLayout>
 
   return (
       <Box

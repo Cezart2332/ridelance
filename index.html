@@ -1,5 +1,9 @@
 <!doctype html>
-<html lang="ro">
+<!--
+  data-native: „true” doar în build-ul aplicației mobile (--mode native), „false” pe site; îl
+  completează pluginul „native-flag” din vite.config.ts. Pe site, nimic de mai jos nu se aplică.
+-->
+<html lang="ro" data-native="__NATIVE_APP__" data-surface="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/pwa-192x192.png" />
@@ -11,8 +15,26 @@
       content="Ridelance - înrolare și management PFA pentru șoferi Uber și Bolt din România."
     />
     <title>Ridelance • Platforma PFA pentru ridesharing</title>
+    <!--
+      Aplicația mobilă: fundalul închis și logoul se văd din primul cadru, în continuarea ecranului
+      de start nativ, până montează React cortina (src/native/launch/NativeCurtain.tsx), care arată
+      la fel și scoate #boot-splash. Lățimea logoului e aceeași ca în ecranul de start nativ.
+    -->
+    <style>
+      #boot-splash { display: none; }
+      html[data-native="true"][data-surface="dark"],
+      html[data-native="true"][data-surface="dark"] body { background-color: #1a1a2e !important; }
+      html[data-native="true"] #boot-splash {
+        display: block; position: fixed; inset: 0; z-index: 1600; background-color: #1a1a2e;
+      }
+      #boot-splash img {
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        width: min(calc(0.3836 * max(100vw, 100vh)), 88vw); height: auto;
+      }
+    </style>
   </head>
   <body>
+    <div id="boot-splash" aria-hidden="true"><img src="/src/assets/logowithmotto-dark.svg" alt="" /></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

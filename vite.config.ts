@@ -65,6 +65,11 @@ export default defineConfig(({ mode }) => {
     },
   },
   plugins: [
+    // `index.html` află de aici dacă e aplicația mobilă: ecranul de pornire static e doar al ei.
+    {
+      name: 'native-flag',
+      transformIndexHtml: (html: string) => html.replace('__NATIVE_APP__', isNative ? 'true' : 'false'),
+    },
     react(),
     babel({ presets: [reactCompilerPreset()] }),
     !isNative && VitePWA({
