@@ -1,11 +1,12 @@
 import { createContext, useContext } from 'react'
 
 /**
- * Cele două căi de ajutor din onboarding. Dialogurile trăiesc în shell (ca să nu se remonteze la
+ * Căile de ajutor din onboarding: chat, email, vizită la birou. Dialogurile trăiesc în shell (ca să nu se remonteze la
  * schimbarea pasului), iar de aici le pot deschide și rail-ul, și ecranul de blocaj — altfel
  * fiecare și-ar monta propria copie.
  */
 export interface OnboardingSupportValue {
+  openChat: () => void
   openEmail: () => void
   openBooking: () => void
 }

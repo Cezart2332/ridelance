@@ -20,6 +20,7 @@ import { authService } from '../../services/auth.service'
 import { onboardingService } from '../../services/onboarding.service'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { OfficeBookingDialog } from './dialogs/OfficeBookingDialog'
+import { SupportChatDialog } from './dialogs/SupportChatDialog'
 import { SupportEmailDialog } from './dialogs/SupportEmailDialog'
 import { OnboardingDevTools } from './devtools/OnboardingDevTools'
 import { MicroStepProvider } from './MicroStepProvider'
@@ -406,13 +407,18 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
 /** Dialogurile de suport, montate o singură dată, deasupra întregului flux. */
 function SupportHost({ activeKey, children }: { activeKey: string | null; children: React.ReactNode }) {
   const { state, steps } = useOnboarding()
+  const [chatOpen, setChatOpen] = useState(false)
   const [emailOpen, setEmailOpen] = useState(false)
   const [bookingOpen, setBookingOpen] = useState(false)
 
   const stepLabel = steps.find((s) => s.key === activeKey)?.label
 
   const value: OnboardingSupportValue = useMemo(
-    () => ({ openEmail: () => setEmailOpen(true), openBooking: () => setBookingOpen(true) }),
+    () => ({
+      openChat: () => setChatOpen(true),
+      openEmail: () => setEmailOpen(true),
+      openBooking: () => setBookingOpen(true),
+    }),
     [],
   )
 
@@ -420,6 +426,15 @@ function SupportHost({ activeKey, children }: { activeKey: string | null; childr
     <OnboardingSupportContext.Provider value={value}>
       {children}
 
+      <SupportChatDialog
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        onEmail={() => {
+          setChatOpen(false)
+          setEmailOpen(true)
+        }}
+        stepLabel={stepLabel}
+      />
       <SupportEmailDialog
         open={emailOpen}
         onClose={() => setEmailOpen(false)}

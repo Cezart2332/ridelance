@@ -99,6 +99,26 @@ export function OnboardingRunner() {
     nextRef.current = next
   }, [next])
 
+  /**
+   * `onArrive`: ecranele care fac ceva singure la sosire (trimiterea pasului fiscal la verificare).
+   * O singură dată pe ecran și sesiune: un refresh al stării nu trebuie să retrimită nimic.
+   */
+  const arrivedIds = useRef(new Set<string>())
+  const arriveDef = current?.def.onArrive ? current.def : null
+  const shouldArrive =
+    arriveDef?.onArrive?.when({ answers, documents, eligibility, state, resources }) === true
+  useEffect(() => {
+    const arrive = arriveDef?.onArrive
+    if (!arriveDef || !arrive || !shouldArrive || arrivedIds.current.has(arriveDef.id)) return
+    arrivedIds.current.add(arriveDef.id)
+    void arrive
+      .run({ answers, documents, eligibility, state, resources })
+      .then(() => refresh())
+      .catch((err: unknown) => setError(getErrorMessage(err, arrive.errorMessage)))
+    // Contextul de la sosire e cel care contează; schimbările lui ulterioare nu mai retrimit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [arriveDef, shouldArrive, refresh])
+
   useEffect(() => {
     // Întrebările nu trec pe aici: ele își programează avansul în `pick`, ca să apuce să trimită
     // răspunsul înainte de schimbarea ecranului.
@@ -425,7 +445,7 @@ export function OnboardingRunner() {
               <BlockedStateCard
                 eyebrow={def.eyebrow}
                 eligibility={eligibility}
-                onContactSupport={support.openEmail}
+                onContactSupport={support.openChat}
                 onBack={() => goTo(steps[Math.max(current.index - 1, 0)].def.id)}
               />
             ) : (
@@ -456,7 +476,7 @@ export function OnboardingRunner() {
         title={blockingChoice?.title ?? ''}
         message={blockingChoice?.message ?? ''}
         onClose={() => setBlockingChoice(null)}
-        onContactSupport={support.openEmail}
+        onContactSupport={support.openChat}
       />
 
       <Snackbar

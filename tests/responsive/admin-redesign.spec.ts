@@ -123,3 +123,31 @@ test('admin: vede toate răspunsurile din onboarding, cu Da/Nu și schimbările'
   await panel.scrollIntoViewIfNeeded()
   await panel.screenshot({ path: `test-results/admin-onboarding-answers-${info.project.name}.png` })
 })
+
+test('admin: „Validează documentele pentru dosar” e separat de validarea pasului ARR', async ({ page }) => {
+  await mockAdmin(page)
+  let validated = false
+  await page.route('**/pfa-registrations/*/onboarding', (route) => route.fulfill({ json: { pfaRegistrationId: client.id, pfaStatus: 'Validated', sections: [], steps: [
+    { key: 'eligibility', status: 'Completed', state: 'completed' },
+    { key: 'pfa', status: 'Completed', state: 'completed' },
+    { key: 'fiscal', status: 'Completed', state: 'completed' },
+    { key: 'arr', status: 'InProgress', state: 'in_progress' },
+  ] } }))
+  await page.route('**/admin/onboarding/*/steps/arr/dossier', (route) => route.fulfill({ json: validated
+    ? { step: 'arr', missing: [], awaitingValidation: [] }
+    : { step: 'arr', missing: [], awaitingValidation: ['Cazier judiciar', 'Aviz psihologic'] } }))
+  await page.route('**/admin/onboarding/*/steps/arr/dossier/validate', (route) => {
+    validated = true
+    return route.fulfill({ json: { step: 'arr', missing: [], awaitingValidation: [] } })
+  })
+  await page.goto('/admin?tab=pfa&user=client-review')
+
+  // Pasul la care e clientul se deschide singur.
+  const box = page.getByTestId('dossier-documents-arr')
+  await expect(box.getByText('De validat: Cazier judiciar, Aviz psihologic.')).toBeVisible()
+  // Pasul are, separat, propriul „Validează pasul” — pentru după autorizație.
+  await expect(page.getByRole('button', { name: 'Validează pasul', exact: true })).toBeVisible()
+  await box.getByRole('button', { name: 'Validează documentele pentru dosar' }).click()
+  await expect(box.getByText(/Validate\. Clientul poate genera dosarul/)).toBeVisible()
+  expect(validated).toBe(true)
+})

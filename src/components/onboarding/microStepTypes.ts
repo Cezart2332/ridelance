@@ -164,6 +164,18 @@ export interface MicroStepDef {
    */
   persistPrefilledOnContinue?: boolean
 
+  /**
+   * Ce se face singur când omul ajunge pe ecran, o dată pe sesiune, dacă `when` e adevărat. Pentru
+   * pașii fără nimic de apăsat: trimiterea pasului fiscal la verificare, de pildă, se făcea cu un
+   * buton pe un ecran separat; acum pleacă singură când apare ecranul pachetului de semnături.
+   */
+  onArrive?: {
+    when: (c: MicroStepContext) => boolean
+    run: (c: MicroStepContext) => Promise<unknown>
+    /** Mesajul dacă nu reușește. */
+    errorMessage: string
+  }
+
   /** `kind === 'action'` — butonul ESTE ecranul. */
   action?: {
     label: string

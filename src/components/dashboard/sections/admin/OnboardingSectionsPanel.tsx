@@ -31,11 +31,10 @@ import { documentService, type DocumentSummary } from '../../../../services/docu
 import {
   onboardingService,
   type AdminFiscalReview,
+  type DossierReadiness,
   type OnboardingState,
   type OnboardingStep,
   type PlatformOnboardingState,
-  type PlatformOnboardingStatus,
-  type PlatformProvider,
   type VehicleState,
 } from '../../../../services/onboarding.service'
 import { formatDocumentCategory } from '../../../../utils/formatters'
@@ -343,16 +342,6 @@ function PfaReview({ state }: { state: OnboardingState }) {
 
 /* ── Pasul 5: conturile Uber / Bolt ── */
 
-/** Statusurile de onboarding ale unui cont de platformă, în ordinea în care se parcurg. */
-const PLATFORM_STATUSES: { value: PlatformOnboardingStatus; label: string }[] = [
-  { value: 'NotStarted', label: 'Neînceput' },
-  { value: 'Selected', label: 'Selectat' },
-  { value: 'AccountLinked', label: 'Cont legat' },
-  { value: 'ContractSigned', label: 'Contract semnat' },
-  { value: 'Active', label: 'Activ' },
-  { value: 'Skipped', label: 'Sărit' },
-]
-
 const EXISTING_ACCOUNT_LABELS: Record<string, string> = {
   HasOperatorAccount: 'Are deja cont de operator',
   None: 'Nu are cont',
@@ -361,8 +350,9 @@ const EXISTING_ACCOUNT_LABELS: Record<string, string> = {
 }
 
 /**
- * Ce a completat clientul la pasul Uber & Bolt, plus avansul manual al conturilor. Validarea pasului
- * înseamnă conturile alese trecute pe „Activ" — asta bifează pasul la client.
+ * Ce a completat clientul la pasul Uber & Bolt. Validarea pasului trece conturile alese pe „Activ" —
+ * asta bifează pasul la client. Nu mai există un status de cont ales de mână: era un pas intermediar
+ * pe care nu-l folosea nimeni, iar validarea îl suprascria oricum.
  */
 function PlatformAccountsReview({
   pfaId,
@@ -417,19 +407,6 @@ function PlatformAccountsReview({
     }
   }
 
-  const advance = async (provider: PlatformProvider, status: PlatformOnboardingStatus) => {
-    setSaving(provider)
-    try {
-      await onboardingService.advancePlatformOnboarding(pfaId, provider, status)
-      await reload()
-      await onDone()
-    } catch (err) {
-      onSnackbar(getErrorMessage(err, `Nu am putut schimba statusul contului ${provider}.`), 'error')
-    } finally {
-      setSaving(null)
-    }
-  }
-
   if (loading) return <CircularProgress size={20} />
 
   const chosen = (platforms?.platforms ?? []).filter((p) => p.isSelectedByUser)
@@ -444,30 +421,16 @@ function PlatformAccountsReview({
       <Fact label="Conturi cerute" value={requested} emphasis="info" />
       {chosen.map((account) => (
         <Box key={account.provider}>
-          <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 1, gap: 2, flexWrap: 'wrap' }}>
-            <Typography sx={{ fontWeight: 800, color: TOKENS.ink }}>{account.provider}</Typography>
-            <TextField
-              select
-              size="small"
-              label="Status cont"
-              value={account.onboardingStatus}
-              disabled={saving !== null}
-              onChange={(e) => void advance(account.provider, e.target.value as PlatformOnboardingStatus)}
-              slotProps={{ select: { native: true } }}
-              sx={{ minWidth: 190 }}
-            >
-              {PLATFORM_STATUSES.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </TextField>
-          </Stack>
+          <Typography sx={{ fontWeight: 800, color: TOKENS.ink, mb: 1 }}>{account.provider}</Typography>
           <Fact label="Are cont?" value={EXISTING_ACCOUNT_LABELS[account.existingAccountAnswer ?? ''] ?? '—'} />
           <Fact label="Email flotă" value={account.email ?? '—'} />
           <Fact label="Telefon flotă" value={account.phone ?? '—'} />
           <Fact label="Parolă flotă" value={account.hasPassword ? 'Salvată' : 'Lipsește'} emphasis={account.hasPassword ? undefined : 'warning'} />
           <Fact label="ID operator" value={account.operatorAccountId ?? '—'} />
+          <Fact
+            label="Are cont de șofer?"
+            value={account.driverHasExistingAccount == null ? '—' : account.driverHasExistingAccount ? 'Da' : 'Nu'}
+          />
           <Fact label="Nume șofer" value={account.driverFullName ?? '—'} />
           <Fact label="Email șofer" value={account.driverEmail ?? '—'} />
           <Fact label="Telefon șofer" value={account.driverPhone ?? '—'} />
@@ -790,6 +753,94 @@ function ValidateBar({
           </Button>
         </Stack>
       </Stack>
+    </Box>
+  )
+}
+
+/* ── Pașii 4 și 6: actele dosarului ── */
+
+/**
+ * Înainte de dosar: clientul încarcă actele, echipa le validează dintr-un clic, abia apoi clientul
+ * poate genera dosarul. E altceva decât „Validează pasul”, care vine la final — după ce clientul
+ * depune dosarul și încarcă autorizația (sau copia conformă) primită.
+ */
+function DossierDocumentsValidation({
+  pfaId,
+  step,
+  refreshKey,
+  onDone,
+  onSnackbar,
+}: {
+  pfaId: string
+  step: 'arr' | 'vehicle'
+  refreshKey: number
+  onDone: () => Promise<void>
+  onSnackbar: (message: string, severity: 'success' | 'error') => void
+}) {
+  const [readiness, setReadiness] = useState<DossierReadiness | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    onboardingService
+      .getDossierReadiness(pfaId, step)
+      .then((loaded) => !cancelled && setReadiness(loaded))
+      .catch(() => !cancelled && setReadiness(null))
+    return () => {
+      cancelled = true
+    }
+  }, [pfaId, step, refreshKey])
+
+  if (!readiness) return null
+
+  const validate = async () => {
+    setBusy(true)
+    try {
+      setReadiness(await onboardingService.validateDossierDocuments(pfaId, step))
+      onSnackbar('Actele pentru dosar sunt validate. Clientul poate genera dosarul.', 'success')
+      await onDone()
+    } catch (err) {
+      onSnackbar(getErrorMessage(err, 'Nu am putut valida actele pentru dosar.'), 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const ready = readiness.missing.length === 0 && readiness.awaitingValidation.length === 0
+
+  return (
+    <Box data-testid={`dossier-documents-${step}`} sx={{ p: 2, borderRadius: `${TOKENS.radius.md}px`, bgcolor: alpha(TOKENS.ink, 0.025) }}>
+      <Typography sx={{ fontWeight: 700, mb: 0.75 }}>Actele pentru dosar</Typography>
+      {ready ? (
+        <Typography variant="body2" sx={{ color: TONE_COLOR.success, fontWeight: 600 }}>
+          Validate. Clientul poate genera dosarul; pasul se validează după ce încarcă{' '}
+          {step === 'arr' ? 'autorizația primită de la ARR' : 'copia conformă și ecusoanele'}.
+        </Typography>
+      ) : (
+        <Stack spacing={1.25}>
+          {readiness.missing.length > 0 && (
+            <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
+              Clientul n-a încărcat încă: {readiness.missing.join(', ')}.
+            </Typography>
+          )}
+          {readiness.awaitingValidation.length > 0 && (
+            <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
+              De validat: {readiness.awaitingValidation.join(', ')}.
+            </Typography>
+          )}
+          <Box>
+            <Button
+              variant="contained"
+              disabled={busy || readiness.missing.length > 0}
+              startIcon={busy ? <CircularProgress size={16} color="inherit" /> : <CheckCircleRoundedIcon />}
+              onClick={() => void validate()}
+              sx={{ fontWeight: 700, boxShadow: 'none' }}
+            >
+              Validează documentele pentru dosar
+            </Button>
+          </Box>
+        </Stack>
+      )}
     </Box>
   )
 }
@@ -1135,6 +1186,19 @@ export function OnboardingSectionsPanel({
 
                 {group.key === 'fiscal' && (
                   <SignaturePacketReview pfaId={pfaId} stepState={step?.state} onDone={loadState} onSnackbar={onSnackbar} />
+                )}
+
+                {(group.key === 'arr' || group.key === 'vehicle') && !isLocked && step?.state !== 'completed' && (
+                  <DossierDocumentsValidation
+                    pfaId={pfaId}
+                    step={group.key}
+                    refreshKey={reviewTick}
+                    onDone={async () => {
+                      await onDocumentsChanged?.()
+                      await loadState()
+                    }}
+                    onSnackbar={onSnackbar}
+                  />
                 )}
 
                 {group.sections && canValidate && (

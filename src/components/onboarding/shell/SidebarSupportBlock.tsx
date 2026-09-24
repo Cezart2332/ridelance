@@ -1,3 +1,4 @@
+import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded'
 import CardMembershipRoundedIcon from '@mui/icons-material/CardMembershipRounded'
 import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import HeadsetMicRoundedIcon from '@mui/icons-material/HeadsetMicRounded'
@@ -10,11 +11,11 @@ import { SHELL } from '../shellTokens'
 import { useOnboardingSupport } from '../supportContext'
 
 /**
- * Ajutorul, într-un singur loc din rail. Două căi, atât: scrii sau vii. Mai multe opțiuni pe un
+ * Ajutorul, într-un singur loc din rail. Trei căi, atât: chat, email sau vii la birou. Mai multe opțiuni pe un
  * ecran de onboarding înseamnă doar o decizie în plus într-un moment în care userul e deja blocat.
  */
 export function SidebarSupportBlock() {
-  const { openEmail, openBooking } = useOnboardingSupport()
+  const { openChat, openEmail, openBooking } = useOnboardingSupport()
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
 
   const close = () => setAnchor(null)
@@ -97,6 +98,20 @@ export function SidebarSupportBlock() {
         transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         slotProps={{ list: { sx: { minWidth: 260 } } }}
       >
+        <MenuItem onClick={pick(openChat)} sx={{ py: 1.25 }}>
+          <ListItemIcon>
+            <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 19, color: SHELL.text.secondary }} />
+          </ListItemIcon>
+          <ListItemText
+            primary="Scrie-ne pe chat"
+            secondary="Luni–vineri, 10:00–18:00"
+            slotProps={{
+              primary: { sx: { fontWeight: 600, fontSize: '0.9rem' } },
+              secondary: { sx: { fontSize: '0.78rem' } },
+            }}
+          />
+        </MenuItem>
+
         <MenuItem onClick={pick(openEmail)} sx={{ py: 1.25 }}>
           <ListItemIcon>
             <MailOutlineRoundedIcon sx={{ fontSize: 19, color: SHELL.text.secondary }} />

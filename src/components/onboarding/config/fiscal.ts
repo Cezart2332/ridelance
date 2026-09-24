@@ -234,33 +234,7 @@ export const fiscalMicroSteps: MicroStepDef[] = [
 
   // ── Semnături: ale noastre, nu ale userului (RL-02) ──
   {
-    id: 'trimite_verificare',
-    macroStep: 'fiscal',
-    kind: 'action',
-    eyebrow: EYEBROW,
-    icon: 'checkCircle',
-    railLabel: 'Trimite la verificare',
-    title: 'Urmează pachetul de semnături',
-    // Ecranul de după Oblio. Spune tot ce urmează ÎNAINTE de apăsare, nu după: altfel omul
-    // rămâne cu ultimul lucru pe care l-a apăsat pe ecran și pare că s-a blocat acolo.
-    lines: () => [
-      'Mai departe pregătim pachetul de semnături: împuternicirile cu care depunem dosarele în numele tău — la ARR și la ANAF — plus contractul de servicii și acordul GDPR.',
-      'Îți ajunge pe email, îl semnezi o singură dată și ni-l trimiți înapoi tot pe email. Durează de obicei 1–2 zile lucrătoare.',
-      'Apasă mai jos ca să începem pregătirea lui.',
-    ],
-    action: {
-      label: 'Trimite pentru verificare',
-      busyLabel: 'Se trimite...',
-      run: () => onboardingService.submitFiscalForReview(),
-    },
-    // Mereu vizibil: e ecranul care spune că pachetul de semnături vine pe email. Legat de
-    // `canSubmitForReview`, lipsea ori de câte ori starea serverului nu apucase să se reîmprospăteze
-    // după Oblio — iar omul termina pasul fără să afle ce urmează. Dacă lipsește ceva, serverul
-    // refuză trimiterea și spune ce.
-    isDone: (c) => isAtAdmin(c) || step2Of(c)?.signature?.status === 'Completed',
-  },
-  {
-    id: 'asteptare_semnaturi',
+    id: 'pachet_semnaturi',
     macroStep: 'fiscal',
     kind: 'info',
     eyebrow: EYEBROW,
@@ -276,15 +250,20 @@ export const fiscalMicroSteps: MicroStepDef[] = [
         ]
       }
 
-      // Fără detalii despre pachet (denumire, număr de semnături, expirare): nu le mai completează
-      // nimeni în admin, iar un rând gol care promite o informație e mai rău decât lipsa lui.
+      // Fostul ecran „Trimite pentru verificare” și cel de așteptare, într-unul singur: trimiterea
+      // pleacă singură la sosire (`onArrive`), deci nu mai e nimic de apăsat.
       return [
-        'Pachetul conține împuternicirile cu care depunem dosarele în numele tău — la ARR și la ANAF — plus contractul de servicii și acordul GDPR.',
-        'Îl pregătim noi și ți-l trimitem pe email. Durează de obicei 1–2 zile lucrătoare; te anunțăm și în aplicație când ajunge.',
-        'Nu ai nimic de încărcat aici: îl semnezi și ni-l trimiți înapoi tot pe email. Între timp poți merge mai departe — pasul rămâne în verificare și îl bifăm când primim pachetul.',
+        'Îți trimitem pe email pachetul de semnături: împuternicirile pentru ARR și ANAF, contractul de servicii și acordul GDPR. Durează de obicei 1–2 zile lucrătoare.',
+        'Îl semnezi o singură dată și ni-l trimiți înapoi tot pe email — nu ai nimic de încărcat aici. Între timp poți merge mai departe.',
       ]
     },
-    visibleWhen: (c) => isAtAdmin(c) || Boolean(step2Of(c)?.signature?.rejectionReason),
+    // Mereu vizibil după Oblio: e ecranul care spune ce urmează. Dacă lipsește ceva, serverul
+    // refuză trimiterea și eroarea apare pe ecran.
+    onArrive: {
+      when: (c) => !isAtAdmin(c) && step2Of(c)?.signature?.status !== 'Completed',
+      run: () => onboardingService.submitFiscalForReview(),
+      errorMessage: 'Nu am putut trimite pasul la verificare. Încearcă din nou.',
+    },
     isDone: (c) => step2Of(c)?.signature?.status === 'Completed',
   },
 ]

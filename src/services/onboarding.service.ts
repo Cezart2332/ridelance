@@ -47,6 +47,8 @@ export interface OnboardingState {
    */
   contactEmail: string | null
   contactPhone: string | null
+  /** Numele titularului contului; precompletează contul de șofer deschis de noi. */
+  contactName?: string | null
 
   /**
    * Județul cu care se precompletează agenția ARR: sediul social, apoi adresa din buletin.
@@ -274,6 +276,10 @@ export interface ArrState {
   adminNote: string | null
   /** Actele după care așteaptă dosarul: lipsă sau neverificate de echipă. Goală = se poate genera. */
   dossierPendingReview?: string[] | null
+  /** Acte cerute de dosar care n-au fost încărcate încă. */
+  dossierMissing?: string[] | null
+  /** Acte încărcate, încă nevalidate de echipă („Validează documentele pentru dosar”). */
+  dossierAwaitingValidation?: string[] | null
 }
 
 // --- Pasul 4: conturi Uber & Bolt ---
@@ -301,6 +307,8 @@ export interface PlatformAccount {
   /** Doar dacă există o parolă salvată — valoarea nu părăsește niciodată serverul. */
   hasPassword: boolean
   /** Contul de ȘOFER de pe aceeași platformă — alt cont decât cel de flotă. */
+  /** Are deja cont de șofer: datele sunt ale lui. Null = fără răspuns (dosare vechi). */
+  driverHasExistingAccount?: boolean | null
   driverEmail: string | null
   driverPhone: string | null
   driverFullName: string | null
@@ -366,6 +374,17 @@ export interface VehicleState {
   maxCopyYears: number
   /** Actele după care așteaptă dosarul: lipsă sau neverificate de echipă. Goală = se poate genera. */
   dossierPendingReview?: string[] | null
+  /** Acte cerute de dosar care n-au fost încărcate încă. */
+  dossierMissing?: string[] | null
+  /** Acte încărcate, încă nevalidate de echipă („Validează documentele pentru dosar”). */
+  dossierAwaitingValidation?: string[] | null
+}
+
+/** Actele unui dosar din admin: ce n-a încărcat clientul și ce așteaptă validarea echipei. */
+export interface DossierReadiness {
+  step: 'arr' | 'vehicle'
+  missing: string[]
+  awaitingValidation: string[]
 }
 
 /** Un răspuns din onboarding, cum îl vede adminul: ultimul dat și, dacă s-a schimbat, cele dinainte. */
@@ -412,6 +431,8 @@ export const onboardingService = {
     driverEmail?: string | null
     driverPhone?: string | null
     driverFullName?: string | null
+    /** Are deja cont de șofer; fără cont, serverul pune datele contului RIDElance. */
+    driverHasExistingAccount?: boolean | null
     driverExternalId?: string | null
   }): Promise<PlatformOnboardingState> {
     const { data } = await api.post<PlatformOnboardingState>('/onboarding/platforms/account', payload)
@@ -708,6 +729,18 @@ export const onboardingService = {
   /** Ultimul răspuns la fiecare întrebare, ca fluxul să se reia după refresh. */
   async getMyAnswers(): Promise<{ stepKey: string; questionId: string; value: string }[]> {
     const { data } = await api.get<{ stepKey: string; questionId: string; value: string }[]>('/onboarding/answers')
+    return data
+  },
+
+  /** Actele dosarului ARR (`arr`) sau de copie conformă (`vehicle`): ce lipsește și ce așteaptă validarea. */
+  async getDossierReadiness(pfaId: string, step: 'arr' | 'vehicle'): Promise<DossierReadiness> {
+    const { data } = await api.get<DossierReadiness>(`/admin/onboarding/${pfaId}/steps/${step}/dossier`)
+    return data
+  },
+
+  /** „Validează documentele pentru dosar”: clientul poate genera dosarul. Nu validează pasul. */
+  async validateDossierDocuments(pfaId: string, step: 'arr' | 'vehicle'): Promise<DossierReadiness> {
+    const { data } = await api.post<DossierReadiness>(`/admin/onboarding/${pfaId}/steps/${step}/dossier/validate`)
     return data
   },
 

@@ -43,6 +43,10 @@ interface DossierPanelProps {
    * care nu le văzuse nimeni.
    */
   pendingReview?: string[] | null
+  /** Din `pendingReview`: ce n-a fost încărcat încă. */
+  missing?: string[] | null
+  /** Din `pendingReview`: ce e încărcat și așteaptă validarea echipei. */
+  awaitingValidation?: string[] | null
 }
 
 export function DossierPanel({
@@ -52,9 +56,14 @@ export function DossierPanel({
   markSubmitted,
   onChanged,
   pendingReview,
+  missing,
+  awaitingValidation,
 }: DossierPanelProps) {
   const waitingFor = pendingReview ?? []
   const blocked = waitingFor.length > 0
+  // Un server mai vechi trimite doar lista comună: atunci o tratăm ca „în validare”.
+  const missingDocs = missing ?? []
+  const inValidation = awaitingValidation ?? (missing ? [] : waitingFor)
   const [generating, setGenerating] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -130,13 +139,20 @@ export function DossierPanel({
         </Alert>
       )}
 
-      {blocked && (
-        <Alert severity="info" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
-          Dosarul se poate genera după ce echipa verifică toate actele. Încă așteptăm: {waitingFor.join(', ')}.
+      {/* Dosarul se generează abia după ce echipa validează actele care intră în el. */}
+      {blocked && missingDocs.length > 0 && (
+        <Alert severity="warning" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+          Mai trebuie încărcate: {missingDocs.join(', ')}. Le găsești în pașii de mai sus.
+        </Alert>
+      )}
+      {blocked && missingDocs.length === 0 && inValidation.length > 0 && (
+        <Alert severity="info" sx={{ borderRadius: `${TOKENS.radius.md}px` }} data-testid="dossier-in-validation">
+          Documentele pentru dosar sunt în validare la echipa noastră ({inValidation.join(', ')}). Te anunțăm imediat ce
+          poți genera dosarul.
         </Alert>
       )}
 
-      {!dossier.hasDossier ? (
+      {blocked && !dossier.hasDossier ? null : !dossier.hasDossier ? (
         <Button
           variant="contained"
           size="large"

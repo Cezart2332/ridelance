@@ -737,3 +737,35 @@ test.describe('pasul 2 — datele de contact', () => {
     expect(created[0]).toMatchObject({ registrationType: 'AmPfa', phone: '0722123456' })
   })
 })
+
+test.describe('suport în onboarding', () => {
+  test('„Contactează suportul” are și chat, cu conversația din cont', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'mobile', 'Blocul de suport stă în rail-ul de desktop.')
+    await stubBackend(page)
+    const cors = async (route: Route) => ({
+      'Access-Control-Allow-Origin': (await route.request().headerValue('origin')) ?? '*',
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Headers': 'authorization,content-type',
+      'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+    })
+    const json = (body: unknown) => async (route: Route) =>
+      route.request().method() === 'OPTIONS'
+        ? route.fulfill({ status: 204, headers: await cors(route) })
+        : route.fulfill({ status: 200, contentType: 'application/json', headers: await cors(route), body: JSON.stringify(body) })
+    await page.route(`${API}/chat/support-room`, json({ roomId: 'room-1' }))
+    await page.route(`${API}/chat/rooms/room-1/messages**`, json({
+      messages: [{ id: 'm1', senderId: 'agent', senderName: 'Echipa RIDElance', content: 'Salut! Cu ce te ajutăm?', sentAtUtc: '2026-09-24T09:00:00Z', isRead: true }],
+      totalCount: 1,
+    }))
+
+    await page.goto('/onboarding/arr', { waitUntil: 'networkidle' })
+    await page.getByRole('button', { name: 'Contactează suportul' }).click()
+    await expect(page.getByRole('menuitem', { name: /Trimite un email/ })).toBeVisible()
+    await page.getByRole('menuitem', { name: /Scrie-ne pe chat/ }).click()
+
+    const dialog = page.getByRole('dialog', { name: 'Scrie-ne pe chat' })
+    await expect(dialog.getByTestId('onboarding-support-chat')).toBeVisible()
+    await expect(dialog.getByText('Salut! Cu ce te ajutăm?')).toBeVisible()
+    await expect(dialog.getByRole('textbox', { name: 'Mesaj pentru suport' })).toBeVisible()
+  })
+})

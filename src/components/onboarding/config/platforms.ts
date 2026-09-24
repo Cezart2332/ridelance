@@ -108,6 +108,7 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
   const answerId = `cont_${provider.toLowerCase()}`
   const detailsId = `date_${provider.toLowerCase()}`
   const driverId = `sofer_${provider.toLowerCase()}`
+  const driverAnswerId = `cont_sofer_${provider.toLowerCase()}`
 
   const isChosen = (c: MicroStepContext) => selectedPlatforms(c).includes(provider)
 
@@ -136,8 +137,19 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
       driverPhone: values.driverPhone || field(c, driverId, 'driverPhone') || saved?.driverPhone || null,
       driverFullName:
         values.driverFullName || field(c, driverId, 'driverFullName') || saved?.driverFullName || null,
+      driverHasExistingAccount: driverAnswerOf(c),
     })
   }
+
+  /** Răspunsul la „Ai deja cont de șofer?” — din sesiune, altfel ce s-a salvat. */
+  const driverAnswerOf = (c: MicroStepContext): boolean | null => {
+    const answer = c.answers[driverAnswerId]
+    if (typeof answer === 'string') return answer === 'yes'
+    return accountOf(c, provider)?.driverHasExistingAccount ?? null
+  }
+
+  /** Are deja cont de șofer: datele sunt ale lui și le poate corecta. */
+  const ownsDriverAccount = (c: MicroStepContext): boolean => driverAnswerOf(c) === true
 
   /** Are deja cont de operator — din sesiune dacă tocmai a răspuns, altfel din ce s-a salvat. */
   const ownsAccount = (c: MicroStepContext): boolean => {
@@ -202,8 +214,12 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
           key: 'phone',
           label: 'Telefon',
           type: 'tel',
-          initialValue: (c) => c.state?.contactPhone ?? '',
-          lockedWhenPrefilled: true,
+          // Ca emailul: contul existent poate fi pe alt număr, deci îl poate corecta. Contul pe
+          // care îl deschidem noi e pe numărul contului RIDElance și nu se schimbă de aici.
+          initialValue: (c) =>
+            (ownsAccount(c) ? accountOf(c, provider)?.phone : null) ?? c.state?.contactPhone ?? '',
+          lockedWhenPrefilled: (c) => !ownsAccount(c),
+          helper: (c) => (ownsAccount(c) ? 'Numărul cu care intri în contul existent.' : undefined),
           validate: validatePhone,
         },
         {
@@ -233,6 +249,36 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
       },
     },
     {
+      id: driverAnswerId,
+      macroStep: 'platforms',
+      kind: 'question',
+      eyebrow: EYEBROW,
+      icon: 'user',
+      railLabel: `Cont ${driverLabel}`,
+      title: `Ai deja cont de ${driverLabel}?`,
+      choices: [
+        { value: 'yes', title: 'Da' },
+        { value: 'no', title: 'Nu' },
+      ],
+      // Pleacă pe loc, ca la contul de flotă: serverul pune datele contului RIDElance când îl
+      // deschidem noi, deci trebuie să știe răspunsul înainte de primul câmp salvat.
+      // Fără răspunsul pentru flotă: serverul îl păstrează pe cel salvat.
+      submit: async (value) => {
+        await onboardingService.submitPlatformAccount({
+          provider,
+          hasExistingAccount: false,
+          driverHasExistingAccount: value === 'yes',
+        })
+      },
+      visibleWhen: isChosen,
+      isDone: (c) => {
+        if (c.answers[driverAnswerId] !== undefined) return true
+        const account = accountOf(c, provider)
+        // Dosarele de dinainte de întrebare: datele de șofer completate țin loc de răspuns.
+        return account?.driverHasExistingAccount != null || Boolean(account?.driverEmail && account.driverPhone)
+      },
+    },
+    {
       // Al doilea cont, nu al doilea set de câmpuri pe același: contul de flotă administrează
       // mașinile, contul de șofer e cel cu care se conduce. Pasul cerea doar flota, deci
       // jumătate din ce trebuie ca să poți lucra lipsea din dosar.
@@ -245,17 +291,25 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
       title: `Datele contului ${driverLabel}`,
       fields: [
         {
+          // Contul pe care îl deschidem noi e pe datele contului RIDElance: precompletate și
+          // blocate. Cine are deja cont le poate corecta — poate fi pe alt email sau număr.
           key: 'driverEmail',
           label: 'Email',
           type: 'email',
-          initialValue: (c) => accountOf(c, provider)?.driverEmail ?? '',
+          initialValue: (c) =>
+            (ownsDriverAccount(c) ? accountOf(c, provider)?.driverEmail : null) ?? c.state?.contactEmail ?? '',
+          lockedWhenPrefilled: (c) => !ownsDriverAccount(c),
+          helper: (c) => (ownsDriverAccount(c) ? 'Emailul cu care intri în contul de șofer.' : undefined),
           validate: validateEmail,
         },
         {
           key: 'driverPhone',
           label: 'Telefon',
           type: 'tel',
-          initialValue: (c) => accountOf(c, provider)?.driverPhone ?? '',
+          initialValue: (c) =>
+            (ownsDriverAccount(c) ? accountOf(c, provider)?.driverPhone : null) ?? c.state?.contactPhone ?? '',
+          lockedWhenPrefilled: (c) => !ownsDriverAccount(c),
+          helper: (c) => (ownsDriverAccount(c) ? 'Numărul contului de șofer.' : undefined),
           validate: validatePhone,
         },
         {
@@ -263,13 +317,18 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
           // câmpul rămânea gol. Numele e ce caută oricum operatorul când leagă contul.
           key: 'driverFullName',
           label: 'Nume și prenume',
-          initialValue: (c) => accountOf(c, provider)?.driverFullName ?? '',
+          initialValue: (c) =>
+            (ownsDriverAccount(c) ? accountOf(c, provider)?.driverFullName : null) ?? c.state?.contactName ?? '',
+          lockedWhenPrefilled: (c) => !ownsDriverAccount(c),
         },
       ],
       persist: async (values, c) => {
         if (!values.driverEmail?.trim() && !values.driverPhone?.trim()) return
         await persistAccount(c, values)
       },
+      // Datele precompletate (blocate, când contul îl deschidem noi) trebuie trimise și neatinse:
+      // altfel contul de șofer nu s-ar salva niciodată, iar pasul n-ar avea cum să se închidă.
+      persistPrefilledOnContinue: true,
       visibleWhen: isChosen,
       isDone: (c) => {
         const account = accountOf(c, provider)

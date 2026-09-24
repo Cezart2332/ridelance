@@ -462,6 +462,8 @@ function ArrDossierSlot() {
       markSubmitted={() => onboardingService.markArrSubmitted()}
       onChanged={refresh}
       pendingReview={arr?.dossierPendingReview}
+      missing={arr?.dossierMissing}
+      awaitingValidation={arr?.dossierAwaitingValidation}
     />
   )
 }
@@ -484,6 +486,8 @@ function VehicleDossierSlot() {
       markSubmitted={() => onboardingService.markVehicleSubmitted()}
       onChanged={refresh}
       pendingReview={vehicle?.dossierPendingReview}
+      missing={vehicle?.dossierMissing}
+      awaitingValidation={vehicle?.dossierAwaitingValidation}
     />
   )
 }
