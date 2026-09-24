@@ -36,10 +36,10 @@ test.describe('landing', () => {
 
   test('partenerii apar în ordinea din Beneficii', async ({ page }) => {
     const logos = page.getByText('Partenerii RIDElance', { exact: true }).first().locator('..').locator('img')
-    await expect(logos).toHaveCount(10)
+    await expect(logos).toHaveCount(11)
 
     const order = await logos.evaluateAll((els) => els.map((el) => el.getAttribute('alt')))
-    // Ordinea din Beneficii. ACE nu mai e partener; Smart Fintech, FiscalLink și Constalaris sunt noi.
+    // Ordinea din Beneficii. ACE nu mai e partener; Smart Fintech, FiscalLink, Constalaris și Benefit Edenred sunt noi.
     expect(order).toEqual([
       'BCR',
       'MOL',
@@ -48,6 +48,7 @@ test.describe('landing', () => {
       'Consulto',
       'Simplifi',
       'eldrive',
+      'Benefit Edenred',
       'Smart Fintech',
       'FiscalLink',
       'Constalaris',

@@ -1,5 +1,6 @@
 import mol from '../assets/partners/mol.png'
 import asigurari from '../assets/partners/asigurari.png'
+import benefitEdenred from '../assets/partners/benefit_edenred.svg'
 import consulto from '../assets/partners/consulto.png'
 import eldrive from '../assets/partners/eldrive.png'
 import oblio from '../assets/partners/oblio.png'
@@ -54,6 +55,7 @@ export const partnerLogos: { slug: string; name: string; image: string; href?: s
     { slug: 'eldrive', name: 'eldrive', image: eldrive },
     { slug: 'consulto', name: 'Consulto', image: consulto },
     { slug: 'simplifi', name: 'Simplifi', image: simplifi },
+    { slug: 'benefit-edenred', name: 'Benefit Edenred', image: benefitEdenred },
     { slug: 'smart-fintech', name: 'Smart Fintech', image: smartfintech },
     { slug: 'fiscallink', name: 'FiscalLink', image: fiscallink },
     { slug: 'constalaris', name: 'Constalaris', image: constalaris },

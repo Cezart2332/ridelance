@@ -1,6 +1,7 @@
 // Logourile de partener trăiesc în `src/assets`, nu în `public`: așa trec prin build, primesc hash
 // și nu pot rămâne în cache-ul browserului cu o versiune veche după o înlocuire.
 import asigurari from '../assets/partners/asigurari.png'
+import benefitEdenred from '../assets/partners/benefit_edenred.svg'
 import constalaris from '../assets/partners/constalaris.png'
 import consulto from '../assets/partners/consulto.png'
 import eldrive from '../assets/partners/eldrive.png'
@@ -97,6 +98,15 @@ const partnersUnordered: Partner[] = [
     slug: 'simplifi',
     name: 'Simplifi',
     image: simplifi,
+    tagline: 'Semnătură electronică calificată · Simplifi',
+    website: 'https://www.simplifi.ro',
+  },
+  {
+    slug: 'benefit-edenred',
+    name: 'Benefit Edenred',
+    image: benefitEdenred,
+    tagline: 'Partener activ · Inclus în abonamentul tău PFA',
+    website: 'https://benefit.edenred.ro',
   },
   {
     slug: 'eldrive',

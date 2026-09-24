@@ -1,6 +1,6 @@
 /**
  * Paginile de partener, cu textul materialelor primite de la fiecare (Consulto, MOL, Oblio,
- * FiscalLink, Smart Fintech, Constalaris), păstrat cuvânt cu cuvânt.
+ * FiscalLink, Smart Fintech, Constalaris, Simplifi, Benefit Edenred), păstrat cuvânt cu cuvânt.
  *
  * Materialele veneau ca pagini HTML de sine stătătoare, fiecare cu stilul ei. Aici stă doar
  * conținutul lor, în ordinea din pagină, iar `PartnerShowcase` îl desenează cu tokenii noștri — la
@@ -19,8 +19,11 @@ export type ShowcaseIcon =
   | 'business'
   | 'card'
   | 'carWash'
+  | 'cloud'
   | 'document'
   | 'fuel'
+  | 'gift'
+  | 'heart'
   | 'insights'
   | 'link'
   | 'location'
@@ -30,9 +33,13 @@ export type ShowcaseIcon =
   | 'road'
   | 'savings'
   | 'security'
+  | 'shopping'
+  | 'signature'
+  | 'sport'
   | 'speed'
   | 'support'
   | 'sync'
+  | 'sun'
   | 'verified'
   | 'wifi'
 
@@ -45,8 +52,14 @@ export interface ShowcaseStat {
   label: string
 }
 
-/** Un buton: spre o secțiune a paginii (`section`) sau spre site-ul partenerului (`href`). */
-export type ShowcaseAction = { label: string; section: string } | { label: string; href: string }
+/**
+ * Un buton: spre o secțiune a paginii (`section`), spre site-ul partenerului (`href`, tab nou) sau
+ * spre o pagină RIDElance (`to`, în același tab).
+ */
+export type ShowcaseAction =
+  | { label: string; section: string }
+  | { label: string; href: string }
+  | { label: string; to: string }
 
 /** Cartea din dreapta hero-ului. Fiecare material o desena altfel, deci câmpurile sunt opționale. */
 export interface ShowcaseHeroCard {
@@ -64,6 +77,8 @@ export interface ShowcaseHeroCard {
   /** Rânduri de tranzacții (Smart Fintech). */
   rows?: { title: string; text: string; amount: string; positive?: boolean }[]
   lines?: string[]
+  /** Bife sub text (cardul de acces Benefit). */
+  checks?: string[]
   note?: { title: string; text: string }
 }
 
@@ -72,6 +87,8 @@ export interface ShowcaseCard {
   title: string
   text: string
   value?: string
+  /** Cheia filtrului din care face parte, când secțiunea are filtre. */
+  category?: string
 }
 
 export interface ShowcaseProduct {
@@ -87,7 +104,41 @@ export interface ShowcaseProduct {
 }
 
 export type ShowcaseSection =
-  | { kind: 'cards'; id?: string; title?: string; lead?: string; cards: ShowcaseCard[]; note?: string }
+  | {
+      kind: 'cards'
+      id?: string
+      eyebrow?: string
+      title?: string
+      lead?: string
+      /** Filtre deasupra cardurilor; „toate” e implicit primul. */
+      filters?: { all: string; items: { key: string; label: string }[] }
+      cards: ShowcaseCard[]
+      note?: string
+    }
+  /** Cifre mari pe un rând (0 lei · 24/7 · 100%). */
+  | { kind: 'stats'; items: { value: string; title: string; text: string }[] }
+  /** Pași numerotați, fără panoul „despre”. */
+  | { kind: 'steps'; id?: string; eyebrow?: string; title: string; lead?: string; items: { title: string; text: string }[] }
+  /** Un argument în stânga, un card cu oferta în dreapta. */
+  | {
+      kind: 'spotlight'
+      id?: string
+      icon?: ShowcaseIcon
+      eyebrow?: string
+      title: string
+      paragraphs: string[]
+      checks?: string[]
+      note?: string
+      card: ShowcaseHeroCard
+    }
+  | {
+      kind: 'faq'
+      eyebrow?: string
+      title: string
+      lead?: string
+      link?: { label: string; href: string }
+      items: { q: string; a: string }[]
+    }
   | {
       kind: 'aboutSteps'
       id?: string
@@ -120,10 +171,12 @@ export interface PartnerShowcase {
     headline: string
     lead: Rich
     actions: ShowcaseAction[]
+    /** Rândul mic de sub butoane: „Fără taxă de acces”. */
+    micro?: string[]
     card: ShowcaseHeroCard
   }
   sections: ShowcaseSection[]
-  cta?: { title: string; text: string; action: { label: string; href: string } }
+  cta?: { title: string; text: string; action: ShowcaseAction }
   footer: { left: string; right?: string; link?: { label: string; href: string } }
 }
 
@@ -649,6 +702,214 @@ export const partnerShowcases: PartnerShowcase[] = [
     footer: {
       left: 'RIDElance × Constalaris · Beneficii pentru afacerea ta',
       link: { label: 'Vizitează site-ul partenerului', href: 'https://www.constalaris.ro/' },
+    },
+  },
+  {
+    slug: 'simplifi',
+    tagline: 'Semnătură electronică calificată · Simplifi',
+    hero: {
+      eyebrow: 'RIDElance × Simplifi',
+      headline: 'Semnătura digitală de care ai nevoie, exact când ai nevoie.',
+      lead: 'Prin colaborarea RIDElance × Simplifi folosim semnături electronice calificate, conforme eIDAS, pentru documentele necesare activării și administrării PFA-ului tău. Noi pregătim fluxul, tu semnezi online, iar procesele care urmează pot continua fără drumuri, printuri sau birocrație inutilă.',
+      actions: [
+        { label: 'Vezi cum funcționează', section: 'cum-functioneaza' },
+        { label: 'Vezi Simplifi ↗', href: 'https://www.simplifi.ro/' },
+      ],
+      card: {
+        top: 'Semnare digitală · RIDElance',
+        status: '● Conform eIDAS',
+        label: 'Semnătură electronică calificată',
+        title: 'Identitate verificată. Document semnat. Procesul continuă.',
+        text: 'Semnarea se face online, cu valoare juridică, astfel încât documentele necesare fluxurilor RIDElance să poată fi procesate fără intervenții pe hârtie.',
+        chips: ['eIDAS', 'ANAF / SPV', '100% online', 'Valoare juridică'],
+        note: { title: 'Semnare calificată', text: 'Flux digital pentru documentele necesare PFA-ului' },
+      },
+    },
+    sections: [
+      {
+        kind: 'cards',
+        title: 'Mai mult decât o semnătură. Este punctul care pornește automatizarea.',
+        lead: 'Semnătura calificată ne permite să continuăm procesele administrative în numele fluxului ales de client și să conectăm mai ușor serviciile RIDElance, contabilitatea și SPV.',
+        cards: [
+          { icon: 'signature', title: 'Semnare punctuală', text: 'Folosim semnătura calificată pentru documentele concrete necesare în fluxul de activare și administrare.', value: 'Fără abonament separat obligatoriu' },
+          { icon: 'verified', title: 'Activare SPV', text: 'Documentele semnate permit continuarea procesului de configurare și activare a accesului fiscal necesar.', value: 'Flux asistat RIDElance' },
+          { icon: 'receipt', title: 'Contabilitate pregătită', text: 'După configurarea fluxului fiscal, contabilul poate continua activitatea într-un cadru deja organizat.', value: 'Mai puțină birocrație' },
+          { icon: 'support', title: 'Suport RIDElance', text: 'Te ajutăm cu pașii, documentele și configurarea necesară astfel încât întregul proces să fie mai ușor.', value: 'Consultanță inclusă în ecosistem' },
+        ],
+      },
+      {
+        kind: 'aboutSteps',
+        id: 'cum-functioneaza',
+        about: {
+          icon: 'signature',
+          title: 'Ce este Simplifi?',
+          paragraphs: [
+            'Simplifi este o platformă pentru semnături electronice calificate și fluxuri digitale, construită pentru semnarea online a documentelor cu valoare juridică și conformitate eIDAS.',
+            'În colaborarea cu RIDElance folosim această infrastructură pentru documentele care necesită o semnătură calificată în cadrul fluxurilor administrative și fiscale.',
+          ],
+          labels: ['Semnătură calificată', 'eIDAS', 'ANAF / SPV', 'Online'],
+        },
+        steps: [
+          { title: 'RIDElance pregătește documentele', text: 'Identificăm documentele necesare pentru fluxul ales și le pregătim astfel încât utilizatorul să nu fie nevoit să gestioneze singur birocrația.' },
+          { title: 'Semnezi online prin Simplifi', text: 'Primești fluxul de semnare și aplici semnătura electronică calificată acolo unde este necesar.' },
+          { title: 'RIDElance continuă procesul', text: 'După semnare, putem continua pașii necesari pentru activarea și configurarea serviciilor asociate PFA-ului.' },
+          { title: 'Contabilul și serviciile conectate pot lucra mai departe', text: 'SPV, facturarea, contabilitatea și celelalte fluxuri pot fi integrate într-un proces deja pregătit și organizat.' },
+        ],
+      },
+      {
+        kind: 'chain',
+        title: 'O singură semnare poate debloca întregul flux administrativ.',
+        lead: 'În loc ca utilizatorul să caute separat furnizori, să descarce documente, să printeze și să trimită acte, RIDElance orchestrează procesul și folosește Simplifi acolo unde este necesară semnarea calificată.',
+        items: [
+          { icon: 'account', title: 'Utilizatorul PFA', text: 'Confirmă identitatea și parcurge fluxul digital pregătit în ecosistemul RIDElance.' },
+          { icon: 'signature', title: 'Simplifi', text: 'Asigură semnătura electronică calificată necesară pentru documentele din flux.' },
+          { icon: 'document', title: 'SPV & fiscal', text: 'Documentele semnate permit continuarea configurării fiscale și a accesului necesar.' },
+          { icon: 'insights', title: 'RIDElance + contabil', text: 'Consultanța, contabilitatea și celelalte servicii pot continua într-un ecosistem conectat.' },
+        ],
+      },
+      {
+        kind: 'spotlight',
+        icon: 'cloud',
+        title: 'Vrei propria ta semnătură digitală?',
+        paragraphs: [
+          'După finalizarea fluxurilor inițiale RIDElance, fiecare client poate alege să își cumpere separat propria semnătură electronică calificată în cloud de la Simplifi.',
+          'Este utilă dacă vrei să semnezi independent documente, contracte, declarații sau alte acte digitale în activitatea ta de zi cu zi.',
+        ],
+        note: 'Simplifi are planuri accesibile pentru semnături calificate, inclusiv variante potrivite pentru utilizare personală și profesională.',
+        card: {
+          top: 'Semnătura ta personală',
+          status: 'Disponibilă în cloud',
+          label: 'Simplifi Cloud Signature',
+          title: 'Semnezi de oriunde, când ai nevoie.',
+          text: 'Semnătură calificată asociată identității tale, disponibilă online pentru documentele pe care vrei să le semnezi independent.',
+          chips: ['eIDAS', 'ANAF / SPV', 'Documente digitale', 'Acces online'],
+        },
+      },
+    ],
+    cta: {
+      title: 'Tu semnezi. Noi continuăm procesul.',
+      text: 'RIDElance pregătește pașii administrativi, Simplifi furnizează semnarea calificată, iar apoi putem continua cu SPV, contabilitate, facturare și celelalte servicii din ecosistemul tău PFA.',
+      action: { label: 'Vezi Simplifi ↗', href: 'https://www.simplifi.ro/' },
+    },
+    footer: { left: 'RIDElance · Partener Simplifi', right: 'Semnături electronice calificate și fluxuri digitale' },
+  },
+  {
+    slug: 'benefit-edenred',
+    tagline: 'Partener activ · Inclus în abonamentul tău PFA',
+    hero: {
+      eyebrow: 'Inclus în abonamentul tău PFA',
+      headline: 'Lucrezi pe cont propriu. Te bucuri de beneficii în echipă.',
+      lead: 'Cu RIDElance, ai acces gratuit la Benefit Edenred: oferte speciale, reduceri și cashback pentru viața ta de zi cu zi. Pe toată durata abonamentului tău activ.',
+      actions: [
+        { label: 'Vreau acces la beneficii', section: 'activare' },
+        { label: 'Descoperă avantajele', section: 'avantaje' },
+      ],
+      micro: ['Fără taxă de acces', 'Fără abonament separat la Benefit'],
+      card: {
+        top: 'Acces prin RIDElance',
+        status: '● Acces inclus',
+        label: 'BENEFIT CLUB',
+        title: 'Mai mult pentru tine. În fiecare zi.',
+        text: 'Beneficiile tale, într-un singur loc.',
+        chips: ['Timp pentru tine', 'Shopping & oferte'],
+        note: { title: '0 lei pentru acces', text: 'Inclus prin RIDElance · Abonament PFA' },
+      },
+    },
+    sections: [
+      {
+        kind: 'stats',
+        items: [
+          { value: '0 lei', title: 'Taxă suplimentară de acces', text: 'Beneficiu inclus în abonamentul PFA' },
+          { value: '24/7', title: 'Beneficiile, la îndemână', text: 'Le explorezi când ai nevoie' },
+          { value: '100%', title: 'Pe durata abonamentului', text: 'Acces cât timp abonamentul este activ' },
+        ],
+      },
+      {
+        kind: 'cards',
+        id: 'avantaje',
+        eyebrow: 'Dincolo de volan',
+        title: 'Tu alegi ce îți face ziua mai bună.',
+        lead: 'Descoperă în Benefit Club oferte pentru mii de produse și servicii, online și în locațiile participante.',
+        filters: {
+          all: 'Toate avantajele',
+          items: [
+            { key: 'shopping', label: 'Cumpărături' },
+            { key: 'lifestyle', label: 'Stil de viață' },
+            { key: 'savings', label: 'Economii' },
+          ],
+        },
+        cards: [
+          { icon: 'shopping', category: 'shopping', title: 'Shopping & fashion', text: 'Haine, accesorii și produse de beauty. Descoperă ofertele înainte să cumperi.', value: 'Mai mult pentru bugetul tău' },
+          { icon: 'sport', category: 'lifestyle', title: 'Sport & stare de bine', text: 'Explorează ofertele disponibile pentru mișcare, activități și timp pentru tine.', value: 'Investește în tine' },
+          { icon: 'savings', category: 'savings', title: 'Cashback la cumpărături', text: 'Primești înapoi o parte din valoarea cumpărăturilor eligibile, conform ofertei.', value: 'Cumpărături care îți dau înapoi' },
+          { icon: 'sun', category: 'lifestyle', title: 'Experiențe & timp liber', text: 'Idei pentru pauzele dintre zilele aglomerate: activități, relaxare și distracție.', value: 'Și viața de după program contează' },
+          { icon: 'gift', category: 'shopping', title: 'Cadouri & surprize', text: 'Alege ceva pentru cei dragi și verifică ofertele din platformă înainte de achiziție.', value: 'Bucurii pentru tine și ai tăi' },
+          { icon: 'percent', category: 'savings', title: 'Vouchere de reducere', text: 'Folosește discounturile disponibile la parteneri, urmând pașii fiecărei oferte.', value: 'Avantaje simplu de folosit' },
+        ],
+        note: 'Categoriile sunt orientative. Comercianții, ofertele, procentele de cashback și condițiile de utilizare sunt cele afișate în contul tău Benefit și se pot modifica.',
+      },
+      {
+        kind: 'spotlight',
+        eyebrow: 'Independent, cu avantaje în plus',
+        title: 'Beneficii întâlnite în companii. Acum și pentru PFA-ul tău.',
+        paragraphs: [
+          'Benefit Edenred aduce într-o singură platformă avantaje pentru viața de zi cu zi. Prin parteneriatul RIDElance, ai acces la zona de oferte, reduceri și cashback, chiar dacă lucrezi pe cont propriu.',
+        ],
+        checks: [
+          'Acces inclus pentru clienții PFA cu abonament plătit',
+          'Un cont Benefit pe care îl folosești în ritmul tău',
+          'Fără o taxă de intrare sau un abonament Benefit separat',
+        ],
+        card: {
+          label: 'Beneficiul tău RIDElance',
+          amount: { value: '0', unit: 'lei în plus pentru acces' },
+          text: 'Pe toată durata abonamentului RIDElance activ.',
+          checks: ['Oferte speciale și reduceri', 'Cashback la achizițiile eligibile', 'Vouchere de discount'],
+          lines: ['Accesul este gratuit. Produsele și serviciile alese se achită separat, în condițiile ofertelor.'],
+        },
+      },
+      {
+        kind: 'steps',
+        id: 'activare',
+        eyebrow: 'Simplu, de la început',
+        title: 'Un abonament. Mai multe motive de bucurie.',
+        lead: 'Accesul Benefit face parte din experiența ta de client RIDElance.',
+        items: [
+          { title: 'Devii client RIDElance', text: 'Îți activezi abonamentul PFA prin plata acestuia. Accesul Benefit este inclus.' },
+          { title: 'Îți este creat contul Benefit', text: 'RIDElance facilitează crearea contului tău în cadrul parteneriatului cu Benefit Edenred.' },
+          { title: 'Alegi ce ți se potrivește', text: 'Intri în platformă și folosești ofertele disponibile, cât timp abonamentul RIDElance este activ.' },
+        ],
+      },
+      {
+        kind: 'callout',
+        title: 'Un parteneriat care crește în ambele direcții.',
+        text: 'Pe viitor, RIDElance va aduce propriile reduceri și beneficii în ecosistemul Benefit Edenred, pentru clienții acestuia. Vom anunța aici noile avantaje la lansare.',
+        badge: 'În pregătire',
+      },
+      {
+        kind: 'faq',
+        eyebrow: 'Bine de știut',
+        title: 'Întrebări mici. Răspunsuri clare.',
+        lead: 'Tot ce trebuie să știi despre accesul tău Benefit prin RIDElance.',
+        link: { label: 'Descoperă Benefit Edenred ↗', href: 'https://benefit.edenred.ro/' },
+        items: [
+          { q: 'Cine primește acces gratuit?', a: 'Orice utilizator PFA care devine client RIDElance cu un abonament plătit. Accesul este inclus pe toată durata în care abonamentul rămâne activ.' },
+          { q: 'Plătesc ceva în plus pentru contul Benefit?', a: 'Nu. Nu ai taxă de intrare și nu trebuie să plătești un abonament separat către Benefit pentru accesul inclus prin RIDElance. Achizițiile făcute în platformă se plătesc separat, conform ofertelor alese.' },
+          { q: 'Primesc un buget de cheltuit sau un abonament la sală gratuit?', a: 'Beneficiul inclus este accesul la ofertele, reducerile și cashback-ul disponibile în cont. Nu include automat un buget de cumpărături, bani încărcați în cont sau abonamente gratuite la servicii. Verifici în Benefit condițiile fiecărei oferte, inclusiv pentru sport și fitness.' },
+          { q: 'Cum funcționează reducerile și cashback-ul?', a: 'Deschizi oferta în Benefit și urmezi instrucțiunile afișate. Reducerea, eligibilitatea pentru cashback, validarea și utilizarea acestuia depind de condițiile comerciantului și ale programului. Consultă oferta înainte să faci achiziția.' },
+          { q: 'Ce se întâmplă dacă abonamentul RIDElance nu mai este activ?', a: 'Accesul oferit prin acest parteneriat este legat de abonamentul RIDElance activ. Dacă acesta încetează, beneficiul de acces nu mai este inclus. Pentru achiziții deja efectuate sau cashback în curs se aplică regulile Benefit și ale ofertei respective.' },
+        ],
+      },
+    ],
+    cta: {
+      title: 'Pe cont propriu. Cu RIDElance de partea ta.',
+      text: 'Adaugă mai multe avantaje zilelor tale, cu Benefit Edenred.',
+      action: { label: 'Vreau beneficiile RIDElance', to: '/abonamente-preturi' },
+    },
+    footer: {
+      left: 'Benefit Edenred · Partener al ecosistemului RIDElance',
+      right: 'Condițiile accesului prin RIDElance sunt prezentate conform parteneriatului.',
+      link: { label: 'Descrierea ofertelor Benefit Club ↗', href: 'https://benefit.edenred.ro/' },
     },
   },
 ]

@@ -4,9 +4,14 @@ import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import BuildRoundedIcon from '@mui/icons-material/BuildRounded'
 import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
+import CloudRoundedIcon from '@mui/icons-material/CloudRounded'
 import CreditCardRoundedIcon from '@mui/icons-material/CreditCardRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import DirectionsCarRoundedIcon from '@mui/icons-material/DirectionsCarRounded'
+import DrawRoundedIcon from '@mui/icons-material/DrawRounded'
+import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded'
+import FitnessCenterRoundedIcon from '@mui/icons-material/FitnessCenterRounded'
 import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded'
 import LinkRoundedIcon from '@mui/icons-material/LinkRounded'
 import LocalCarWashRoundedIcon from '@mui/icons-material/LocalCarWashRounded'
@@ -14,18 +19,24 @@ import LocalGasStationRoundedIcon from '@mui/icons-material/LocalGasStationRound
 import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded'
 import PercentRoundedIcon from '@mui/icons-material/PercentRounded'
 import ReceiptRoundedIcon from '@mui/icons-material/ReceiptRounded'
+import RedeemRoundedIcon from '@mui/icons-material/RedeemRounded'
 import SavingsRoundedIcon from '@mui/icons-material/SavingsRounded'
 import SecurityRoundedIcon from '@mui/icons-material/SecurityRounded'
+import ShoppingBagRoundedIcon from '@mui/icons-material/ShoppingBagRounded'
 import SpeedRoundedIcon from '@mui/icons-material/SpeedRounded'
 import StoreRoundedIcon from '@mui/icons-material/StoreRounded'
 import SupportAgentRoundedIcon from '@mui/icons-material/SupportAgentRounded'
 import SyncRoundedIcon from '@mui/icons-material/SyncRounded'
 import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded'
+import WbSunnyRoundedIcon from '@mui/icons-material/WbSunnyRounded'
 import WifiRoundedIcon from '@mui/icons-material/WifiRounded'
 import { Box, Button, Stack, Typography, type SvgIconProps } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { motion, useReducedMotion } from 'motion/react'
-import { Fragment, useRef, type ComponentType, type ReactNode } from 'react'
+import { Fragment, useRef, useState, type ComponentType, type ReactNode } from 'react'
+import { Link as RouterLink } from 'react-router-dom'
+
+import { FaqAccordion } from '../home/FaqSection'
 
 import type {
   PartnerShowcase as ShowcaseData,
@@ -54,8 +65,11 @@ const ICONS: Record<ShowcaseIcon, ComponentType<SvgIconProps>> = {
   business: BusinessRoundedIcon,
   card: CreditCardRoundedIcon,
   carWash: LocalCarWashRoundedIcon,
+  cloud: CloudRoundedIcon,
   document: DescriptionRoundedIcon,
   fuel: LocalGasStationRoundedIcon,
+  gift: RedeemRoundedIcon,
+  heart: FavoriteRoundedIcon,
   insights: InsightsRoundedIcon,
   link: LinkRoundedIcon,
   location: LocationOnRoundedIcon,
@@ -65,7 +79,11 @@ const ICONS: Record<ShowcaseIcon, ComponentType<SvgIconProps>> = {
   road: DirectionsCarRoundedIcon,
   savings: SavingsRoundedIcon,
   security: SecurityRoundedIcon,
+  shopping: ShoppingBagRoundedIcon,
+  signature: DrawRoundedIcon,
   speed: SpeedRoundedIcon,
+  sport: FitnessCenterRoundedIcon,
+  sun: WbSunnyRoundedIcon,
   support: SupportAgentRoundedIcon,
   sync: SyncRoundedIcon,
   verified: VerifiedRoundedIcon,
@@ -96,6 +114,8 @@ interface PartnerShowcaseProps {
 export function PartnerShowcase({ showcase, tokens: t }: PartnerShowcaseProps) {
   // Ancorele secțiunilor („Vezi ofertele”) sunt locale: un `#oferte` în URL s-ar bate cu rutarea.
   const sectionRefs = useRef(new Map<string, HTMLElement>())
+  /** Filtrul ales în fiecare secțiune de carduri cu filtre, după indexul secțiunii. */
+  const [filters, setFilters] = useState<Record<number, string>>({})
   const anchorRef = (id?: string) =>
     id
       ? (el: HTMLElement | null) => {
@@ -164,9 +184,27 @@ export function PartnerShowcase({ showcase, tokens: t }: PartnerShowcaseProps) {
     )
   }
 
-  const heading = (title?: string, lead?: string) =>
+  const eyebrowText = (text: string) => (
+    <Typography sx={{ mb: 0.75, fontSize: '0.74rem', fontWeight: 850, letterSpacing: '0.12em', textTransform: 'uppercase', color: t.primaryStrong }}>
+      {text}
+    </Typography>
+  )
+
+  const checkList = (items: string[], size: 'sm' | 'md' = 'md') => (
+    <Stack component="ul" spacing={size === 'sm' ? 0.75 : 1.1} sx={{ m: 0, p: 0, listStyle: 'none' }}>
+      {items.map((item) => (
+        <Stack component="li" key={item} direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
+          <CheckRoundedIcon sx={{ fontSize: size === 'sm' ? 17 : 19, color: t.primaryStrong, mt: 0.2, flexShrink: 0 }} />
+          <Typography sx={{ fontSize: size === 'sm' ? '0.86rem' : '0.92rem', color: t.ink, lineHeight: 1.55 }}>{item}</Typography>
+        </Stack>
+      ))}
+    </Stack>
+  )
+
+  const heading = (title?: string, lead?: string, eyebrow?: string) =>
     title || lead ? (
       <Box sx={{ mb: { xs: 2, md: 2.75 }, maxWidth: 760 }}>
+        {eyebrow && eyebrowText(eyebrow)}
         {title && (
           <Typography
             component="h3"
@@ -212,7 +250,11 @@ export function PartnerShowcase({ showcase, tokens: t }: PartnerShowcaseProps) {
   })
 
   const actionButton = (action: ShowcaseAction, variant: 'contained' | 'outlined') =>
-    'href' in action ? (
+    'to' in action ? (
+      <Button key={action.label} component={RouterLink} to={action.to} variant={variant} sx={buttonSx(variant)}>
+        {action.label}
+      </Button>
+    ) : 'href' in action ? (
       <Button key={action.label} component="a" href={action.href} target="_blank" rel="noopener noreferrer" variant={variant} sx={buttonSx(variant)}>
         {action.label}
       </Button>
@@ -269,6 +311,7 @@ export function PartnerShowcase({ showcase, tokens: t }: PartnerShowcaseProps) {
             </Stack>
           )}
           {c.text && <Typography sx={{ mt: 0.75, color: t.textMuted, fontSize: '0.9rem', lineHeight: 1.65 }}>{rich(c.text)}</Typography>}
+          {c.checks && <Box sx={{ mt: 1.75, pt: 1.75, borderTop: `1px solid ${t.border}` }}>{checkList(c.checks, 'sm')}</Box>}
           {c.lines && (
             <Stack spacing={0.25} sx={{ mt: 1.25 }}>
               {c.lines.map((line) => (
@@ -338,12 +381,50 @@ export function PartnerShowcase({ showcase, tokens: t }: PartnerShowcaseProps) {
     </Box>
   )
 
-  const section = (s: ShowcaseSection): ReactNode => {
+  const section = (s: ShowcaseSection, sectionIndex: number): ReactNode => {
     switch (s.kind) {
-      case 'cards':
+      case 'cards': {
+        const active = filters[sectionIndex] ?? 'all'
+        const visible = s.filters && active !== 'all' ? s.cards.filter((item) => item.category === active) : s.cards
+        const filterButton = (key: string, label: string) => {
+          const selected = active === key
+          return (
+            <Box
+              key={key}
+              component="button"
+              type="button"
+              aria-pressed={selected}
+              onClick={() => setFilters((prev) => ({ ...prev, [sectionIndex]: key }))}
+              sx={{
+                px: 1.75,
+                py: 0.75,
+                borderRadius: `${t.radius.full}px`,
+                border: `1px solid ${selected ? t.ink : t.border}`,
+                backgroundColor: selected ? t.ink : t.paper,
+                color: selected ? t.paper : t.ink,
+                font: 'inherit',
+                fontSize: '0.84rem',
+                fontWeight: 750,
+                cursor: 'pointer',
+                transition: 'background-color .15s ease, border-color .15s ease',
+                '&:hover': { borderColor: t.ink },
+                '&:focus-visible': { outline: `2px solid ${t.primary}`, outlineOffset: 2 },
+              }}
+            >
+              {label}
+            </Box>
+          )
+        }
+
         return (
           <Box ref={anchorRef(s.id)} sx={{ scrollMarginTop: 96 }}>
-            {heading(s.title, s.lead)}
+            {heading(s.title, s.lead, s.eyebrow)}
+            {s.filters && (
+              <Stack direction="row" role="group" aria-label="Filtrează beneficiile" sx={{ mb: 2.25, gap: 1, flexWrap: 'wrap' }}>
+                {filterButton('all', s.filters.all)}
+                {s.filters.items.map((item) => filterButton(item.key, item.label))}
+              </Stack>
+            )}
             <Box
               sx={{
                 display: 'grid',
@@ -351,7 +432,7 @@ export function PartnerShowcase({ showcase, tokens: t }: PartnerShowcaseProps) {
                 gap: 2,
               }}
             >
-              {s.cards.map((item) => (
+              {visible.map((item) => (
                 <Box key={item.title} sx={{ ...card, display: 'flex', flexDirection: 'column' }}>
                   {iconTile(item.icon)}
                   <Typography sx={{ mt: 1.75, fontWeight: 850, color: t.ink, fontSize: '1rem' }}>{item.title}</Typography>
@@ -361,6 +442,121 @@ export function PartnerShowcase({ showcase, tokens: t }: PartnerShowcaseProps) {
               ))}
             </Box>
             {s.note && <Typography sx={{ mt: 1.75, fontSize: '0.85rem', color: t.textMuted, lineHeight: 1.6 }}>{s.note}</Typography>}
+          </Box>
+        )
+      }
+
+      case 'stats':
+        return (
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: `repeat(${s.items.length}, minmax(0, 1fr))` },
+              borderRadius: `${t.radius.lg}px`,
+              border: `1px solid ${t.border}`,
+              backgroundColor: t.paper,
+              overflow: 'hidden',
+            }}
+          >
+            {s.items.map((item, index) => (
+              <Stack
+                key={item.title}
+                direction="row"
+                spacing={1.75}
+                sx={{
+                  p: { xs: 2, md: 2.5 },
+                  alignItems: 'center',
+                  borderTop: { xs: index > 0 ? `1px solid ${t.border}` : 'none', sm: 'none' },
+                  borderLeft: { xs: 'none', sm: index > 0 ? `1px solid ${t.border}` : 'none' },
+                }}
+              >
+                <Typography
+                  // Pe telefon cifrele stau una sub alta: aceeași lățime aliniază textele de lângă ele.
+                  sx={{ minWidth: { xs: 96, sm: 0 }, fontWeight: 900, fontSize: { xs: '1.6rem', md: '1.85rem' }, letterSpacing: '-0.04em', color: t.ink, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
+                >
+                  {item.value}
+                </Typography>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={{ fontWeight: 800, fontSize: '0.88rem', color: t.ink, lineHeight: 1.35 }}>{item.title}</Typography>
+                  <Typography sx={{ fontSize: '0.78rem', color: t.textMuted, lineHeight: 1.45 }}>{item.text}</Typography>
+                </Box>
+              </Stack>
+            ))}
+          </Box>
+        )
+
+      case 'steps':
+        return (
+          <Box ref={anchorRef(s.id)} sx={{ scrollMarginTop: 96 }}>
+            {heading(s.title, s.lead, s.eyebrow)}
+            <Box
+              component="ol"
+              sx={{ m: 0, p: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: { xs: '1fr', md: `repeat(${s.items.length}, minmax(0, 1fr))` }, gap: 2 }}
+            >
+              {s.items.map((step, index) => (
+                <Box component="li" key={step.title} sx={{ ...staticCard, borderTop: `3px solid ${index === 0 ? t.primary : t.border}` }}>
+                  <Typography sx={{ fontWeight: 850, fontSize: '0.82rem', letterSpacing: '0.08em', color: t.primaryStrong, fontVariantNumeric: 'tabular-nums' }}>
+                    {String(index + 1).padStart(2, '0')}
+                  </Typography>
+                  <Typography sx={{ mt: 1, fontWeight: 850, color: t.ink, fontSize: '1rem' }}>{step.title}</Typography>
+                  <Typography sx={{ mt: 0.6, color: t.textMuted, fontSize: '0.88rem', lineHeight: 1.6 }}>{step.text}</Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )
+
+      case 'spotlight':
+        return (
+          <Box
+            ref={anchorRef(s.id)}
+            sx={{ scrollMarginTop: 96, display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.1fr 1fr' }, gap: { xs: 3, md: 4 }, alignItems: 'center' }}
+          >
+            <Box>
+              {s.icon && <Box sx={{ mb: 1.75 }}>{iconTile(s.icon)}</Box>}
+              {s.eyebrow && eyebrowText(s.eyebrow)}
+              <Typography
+                component="h3"
+                sx={{ fontWeight: 850, fontSize: { xs: '1.2rem', md: '1.4rem' }, letterSpacing: '-0.02em', color: t.ink, lineHeight: 1.25 }}
+              >
+                {s.title}
+              </Typography>
+              {s.paragraphs.map((paragraph) => (
+                <Typography key={paragraph} sx={{ mt: 1.25, color: t.textMuted, fontSize: '0.93rem', lineHeight: 1.7 }}>
+                  {paragraph}
+                </Typography>
+              ))}
+              {s.checks && <Box sx={{ mt: 2 }}>{checkList(s.checks)}</Box>}
+              {s.note && (
+                <Typography
+                  sx={{ mt: 2, p: 1.5, borderRadius: `${t.radius.md}px`, backgroundColor: t.surface, border: `1px solid ${t.border}`, fontSize: '0.84rem', color: t.textMuted, lineHeight: 1.6 }}
+                >
+                  {s.note}
+                </Typography>
+              )}
+            </Box>
+            {heroCard(s.card)}
+          </Box>
+        )
+
+      case 'faq':
+        return (
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 0.8fr) minmax(0, 1.2fr)' }, gap: { xs: 2, md: 4 }, alignItems: 'start' }}>
+            <Box>
+              {heading(s.title, s.lead, s.eyebrow)}
+              {s.link && (
+                <Typography
+                  component="a"
+                  href={s.link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{ display: 'inline-block', mt: -1, fontWeight: 800, fontSize: '0.9rem', color: t.primaryStrong, textDecoration: 'none' }}
+                >
+                  {s.link.label}
+                </Typography>
+              )}
+            </Box>
+            <FaqAccordion items={s.items} dense idPrefix={`partner-faq-${sectionIndex}`} />
           </Box>
         )
 
@@ -625,12 +821,22 @@ export function PartnerShowcase({ showcase, tokens: t }: PartnerShowcaseProps) {
           <Stack direction="row" sx={{ mt: 3, gap: 1.25, flexWrap: 'wrap' }}>
             {hero.actions.map((action, index) => actionButton(action, index === 0 ? 'contained' : 'outlined'))}
           </Stack>
+          {hero.micro && (
+            <Stack direction="row" sx={{ mt: 1.75, columnGap: 2.25, rowGap: 0.5, flexWrap: 'wrap' }}>
+              {hero.micro.map((item) => (
+                <Stack key={item} direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+                  <CheckRoundedIcon sx={{ fontSize: 16, color: t.primaryStrong }} />
+                  <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: t.textMuted }}>{item}</Typography>
+                </Stack>
+              ))}
+            </Stack>
+          )}
         </Box>
         {heroCard(hero.card)}
       </Box>
 
       {showcase.sections.map((s, index) => (
-        <Reveal key={index}>{section(s)}</Reveal>
+        <Reveal key={index}>{section(s, index)}</Reveal>
       ))}
 
       {/* Îndemnul final: banda închisă la culoare, ca pagina să aibă un capăt */}

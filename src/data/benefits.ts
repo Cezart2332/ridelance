@@ -1,4 +1,5 @@
 import asigurari from '../assets/partners/asigurari.png'
+import benefitEdenred from '../assets/partners/benefit_edenred.svg'
 import constalaris from '../assets/partners/constalaris.png'
 import consulto from '../assets/partners/consulto.png'
 import eldrive from '../assets/partners/eldrive.png'
@@ -175,25 +176,10 @@ export const partnerBenefits: PartnerBenefit[] = [
     slug: 'simplifi',
     name: 'Simplifi',
     image: simplifi,
-    tagline: 'Semnături calificate în cloud, direct prin ecosistemul RIDElance.',
-    blocks: [
-      {
-        badge: 'Semnare în cloud',
-        title: 'Cea mai accesibilă metodă de semnare',
-        text: 'Primești acces în dashboardul Simplifi și gestionezi documentele care cer semnătură calificată, fără token fizic.',
-        checks: [
-          'Acces în dashboard Simplifi',
-          'Primești sau soliciți semnături calificate',
-          'Semnare documente 100% online',
-          'Certificat prin cloud',
-        ],
-      },
-      {
-        badge: 'RIDElance + Simplifi',
-        title: 'Tot fluxul într-un singur loc',
-        text: 'Pentru procuri, documente fiscale, dosare și orice altceva trebuie semnat calificat.',
-      },
-    ],
+    tagline: 'Semnătură electronică calificată · Simplifi',
+    website: 'https://www.simplifi.ro',
+    // Conținutul vine din `data/partnerShowcases.ts`, ca pe pagina publică.
+    blocks: [],
   },
   {
     slug: 'eldrive',
@@ -218,6 +204,16 @@ export const partnerBenefits: PartnerBenefit[] = [
         },
       },
     ],
+  },
+  {
+    slug: 'benefit-edenred',
+    name: 'Benefit Edenred',
+    image: benefitEdenred,
+    tagline: 'Partener activ · Inclus în abonamentul tău PFA',
+    website: 'https://benefit.edenred.ro',
+    // Accesul e inclus doar în abonamentul PFA; pentru SRL partenerul apare ca „în curând".
+    comingSoonFor: ['srl'],
+    blocks: [],
   },
   {
     slug: 'smart-fintech',
