@@ -61,7 +61,7 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
   pfa: [
     {
       category: 'CertificatInregistrare',
-      label: 'Certificat de înregistrare (CAEN 4939)',
+      label: 'Certificat de înregistrare (CAEN 4933)',
       originStep: 'pfa',
     },
     {
@@ -80,12 +80,12 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
   arr: [
     {
       category: 'CertificatInregistrare',
-      label: 'Certificat de înregistrare (CAEN 4939)',
+      label: 'Certificat de înregistrare (CAEN 4933)',
       originStep: 'pfa',
     },
     {
       category: 'CertificatConstatator',
-      label: 'Certificat constatator (CAEN 4939)',
+      label: 'Certificat constatator (CAEN 4933)',
       originStep: 'arr',
     },
     {

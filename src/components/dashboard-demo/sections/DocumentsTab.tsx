@@ -31,17 +31,17 @@ interface MainDocConfig {
 const PERSONAL_PFA_DOCS: MainDocConfig[] = [
   {
     id: 'registration_certificate',
-    title: 'Certificat de înregistrare (CAEN 4939)',
+    title: 'Certificat de înregistrare (CAEN 4933)',
     categories: ['CertificatInregistrare'],
     primaryCategory: 'CertificatInregistrare',
-    tooltip: 'Certificat de înregistrare din care să reiasă cod CAEN 4939.',
+    tooltip: 'Certificat de înregistrare din care să reiasă cod CAEN 4933.',
   },
   {
     id: 'constatator',
-    title: 'Certificat constatator (CAEN 4939)',
+    title: 'Certificat constatator (CAEN 4933)',
     categories: ['CertificatConstatator'],
     primaryCategory: 'CertificatConstatator',
-    tooltip: 'Certificat constatator cu domeniul de activitate CAEN 4939.',
+    tooltip: 'Certificat constatator cu domeniul de activitate CAEN 4933.',
   },
   {
     id: 'alt_transport',
@@ -264,7 +264,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
   const documents: MockDocument[] = [
     {
       id: 'demo_cert_inreg',
-      originalFileName: 'certificat_inregistrare_caen_4939.pdf',
+      originalFileName: 'certificat_inregistrare_caen_4933.pdf',
       category: 'CertificatInregistrare',
       status: 'Valid',
       fileSize: 520000,
@@ -272,7 +272,7 @@ export function DocumentsTab({ onNavigate }: DocumentsTabProps) {
     },
     {
       id: 'demo_constatator',
-      originalFileName: 'certificat_constatator_caen_4939.pdf',
+      originalFileName: 'certificat_constatator_caen_4933.pdf',
       category: 'CertificatConstatator',
       status: 'Valid',
       fileSize: 610000,

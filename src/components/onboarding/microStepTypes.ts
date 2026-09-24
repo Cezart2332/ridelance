@@ -176,6 +176,13 @@ export interface MicroStepDef {
     errorMessage: string
   }
 
+  /**
+   * Buton „Continuă” în loc de trecerea singură. Pentru ecranele cu date pe care omul trebuie să
+   * le verifice înainte să plece (conturile Uber/Bolt): acolo numărătoarea pleca cu precompletările
+   * înainte ca el să apuce să le corecteze.
+   */
+  manualContinue?: boolean
+
   /** `kind === 'action'` — butonul ESTE ecranul. */
   action?: {
     label: string

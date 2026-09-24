@@ -406,6 +406,7 @@ export function OnboardingRunner() {
         busy={submitting}
         onDone={() => void advance()}
         onStay={() => setStay({ id: def.id, answers })}
+        manual={def.manualContinue === true}
       />
     )
   }

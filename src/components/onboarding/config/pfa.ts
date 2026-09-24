@@ -153,7 +153,7 @@ export const pfaMicroSteps: MicroStepDef[] = [
     document: {
       category: 'CertificatConstatator',
       label: 'Certificat constatator ONRC',
-      hint: 'Îl cere ARR odată cu certificatul de înregistrare. Trebuie să conțină codul CAEN 4939.',
+      hint: 'Îl cere ARR odată cu certificatul de înregistrare. Trebuie să conțină codul CAEN 4933.',
     },
     visibleWhen: answeredYes,
     isDone: (c) => hasDocument(c, CONSTATATOR),

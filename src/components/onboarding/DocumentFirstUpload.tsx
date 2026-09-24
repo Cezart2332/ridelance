@@ -87,7 +87,7 @@ export function DocumentFirstUpload({
   const verifying = current !== null && !rejected && isAiPending(current)
   const uploading = progress !== null
 
-  // Documentul a trecut, dar ceva citit din el nu s-a verificat (ex. CAEN ≠ 4939). Nu blocăm
+  // Documentul a trecut, dar ceva citit din el nu s-a verificat (ex. CAEN ≠ 4933). Nu blocăm
   // nimic — spunem doar că se uită un om peste el, ca să nu pară că totul e în regulă.
   const needsHumanCheck = current !== null && !rejected && !verifying && current.aiRequiresManualReview
 

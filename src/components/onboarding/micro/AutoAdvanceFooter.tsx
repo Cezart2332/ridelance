@@ -1,4 +1,4 @@
-import { Box, Link, Stack, Typography } from '@mui/material'
+import { Box, Button, Link, Stack, Typography } from '@mui/material'
 import { keyframes } from '@mui/material/styles'
 import { useEffect, useRef } from 'react'
 
@@ -30,6 +30,12 @@ interface AutoAdvanceFooterProps {
   onDone: () => void
   /** „Rămân aici”. */
   onStay: () => void
+  /**
+   * Buton „Continuă” în loc de numărătoare. Pentru ecranele unde omul scrie date pe care trebuie
+   * să le verifice (conturile Uber/Bolt, datele de înființare): acolo trecerea singură pleca cu
+   * precompletările înainte ca el să apuce să le corecteze.
+   */
+  manual?: boolean
 }
 
 /**
@@ -37,13 +43,13 @@ interface AutoAdvanceFooterProps {
  * Cât numără, o bară arată că urmează pasul următor, iar „Rămân aici” oprește trecerea (cine a
  * revenit pe un ecran ca să-l recitească). Un ecran neterminat spune ce mai lipsește.
  */
-export function AutoAdvanceFooter({ reasons = [], countdown, stayed, busy, onDone, onStay }: AutoAdvanceFooterProps) {
+export function AutoAdvanceFooter({ reasons = [], countdown, stayed, busy, onDone, onStay, manual = false }: AutoAdvanceFooterProps) {
   const onDoneRef = useRef(onDone)
   useEffect(() => {
     onDoneRef.current = onDone
   }, [onDone])
 
-  const running = countdown != null && !countdown.paused && !stayed && !busy
+  const running = !manual && countdown != null && !countdown.paused && !stayed && !busy
   const delay = countdown?.delayMs ?? 0
   const restartKey = countdown?.restartKey ?? ''
 
@@ -52,6 +58,26 @@ export function AutoAdvanceFooter({ reasons = [], countdown, stayed, busy, onDon
     const timer = window.setTimeout(() => onDoneRef.current?.(), delay)
     return () => window.clearTimeout(timer)
   }, [running, delay, restartKey])
+
+  if (manual) {
+    const ready = countdown != null && !countdown.paused
+    return (
+      <Stack
+        direction={{ xs: 'column-reverse', sm: 'row' }}
+        spacing={1}
+        sx={{ alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'flex-end' }}
+      >
+        {!ready && reasons.filter(Boolean).length > 0 && (
+          <Typography role="status" sx={{ fontSize: '0.85rem', color: TOKENS.textMuted }}>
+            {reasons.filter(Boolean)[0]}
+          </Typography>
+        )}
+        <Button variant="contained" disabled={!ready || busy} onClick={onDone} sx={{ fontWeight: 700, minWidth: 140 }}>
+          {busy ? 'Se salvează…' : 'Continuă'}
+        </Button>
+      </Stack>
+    )
+  }
 
   if (busy) {
     return (

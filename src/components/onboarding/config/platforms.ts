@@ -191,6 +191,7 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
       id: detailsId,
       macroStep: 'platforms',
       kind: 'text',
+      manualContinue: true,
       eyebrow: EYEBROW,
       icon: 'idCard',
       railLabel: label,
@@ -285,6 +286,7 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
       id: driverId,
       macroStep: 'platforms',
       kind: 'text',
+      manualContinue: true,
       eyebrow: EYEBROW,
       icon: 'user',
       railLabel: driverLabel,
@@ -292,12 +294,14 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
       fields: [
         {
           // Contul pe care îl deschidem noi e pe datele contului RIDElance: precompletate și
-          // blocate. Cine are deja cont le poate corecta — poate fi pe alt email sau număr.
+          // blocate. Cine are deja cont își scrie el emailul și telefonul contului lui: pornesc goale
+          // (sau cu ce a salvat deja), nu cu datele RIDElance, pe care altfel le confirma din
+          // greșeală și contul se lega pe alt email.
           key: 'driverEmail',
           label: 'Email',
           type: 'email',
           initialValue: (c) =>
-            (ownsDriverAccount(c) ? accountOf(c, provider)?.driverEmail : null) ?? c.state?.contactEmail ?? '',
+            ownsDriverAccount(c) ? (accountOf(c, provider)?.driverEmail ?? '') : (c.state?.contactEmail ?? ''),
           lockedWhenPrefilled: (c) => !ownsDriverAccount(c),
           helper: (c) => (ownsDriverAccount(c) ? 'Emailul cu care intri în contul de șofer.' : undefined),
           validate: validateEmail,
@@ -307,7 +311,7 @@ function platformSteps(provider: PlatformProvider): MicroStepDef[] {
           label: 'Telefon',
           type: 'tel',
           initialValue: (c) =>
-            (ownsDriverAccount(c) ? accountOf(c, provider)?.driverPhone : null) ?? c.state?.contactPhone ?? '',
+            ownsDriverAccount(c) ? (accountOf(c, provider)?.driverPhone ?? '') : (c.state?.contactPhone ?? ''),
           lockedWhenPrefilled: (c) => !ownsDriverAccount(c),
           helper: (c) => (ownsDriverAccount(c) ? 'Numărul contului de șofer.' : undefined),
           validate: validatePhone,

@@ -56,8 +56,8 @@ export const dashboardRideAccounts: RideAccount[] = [
 ]
 
 export const personalPfaDocuments: DocumentItem[] = [
-  { title: 'Certificat de înregistrare (CAEN 4939)', status: 'Valid', tooltip: 'Certificat de înregistrare din care reiese codul CAEN 4939.' },
-  { title: 'Certificat constatator (CAEN 4939)', status: 'Valid', tooltip: 'Certificat constatator cu domeniul de activitate actualizat.' },
+  { title: 'Certificat de înregistrare (CAEN 4933)', status: 'Valid', tooltip: 'Certificat de înregistrare din care reiese codul CAEN 4933.' },
+  { title: 'Certificat constatator (CAEN 4933)', status: 'Valid', tooltip: 'Certificat constatator cu domeniul de activitate actualizat.' },
   {
     title: 'Certificat de atestare profesională (Atestat)',
     status: 'In verificare',

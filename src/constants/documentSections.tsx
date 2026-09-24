@@ -22,17 +22,17 @@ export interface MainDocConfig {
 export const PERSONAL_PFA_DOCS: MainDocConfig[] = [
   {
     id: 'registration_certificate',
-    title: 'Certificat de înregistrare (CAEN 4939)',
+    title: 'Certificat de înregistrare (CAEN 4933)',
     categories: ['CertificatInregistrare'],
     primaryCategory: 'CertificatInregistrare',
-    tooltip: 'Certificat de înregistrare din care să reiasă domeniul de activitate, cod CAEN 4939.',
+    tooltip: 'Certificat de înregistrare din care să reiasă domeniul de activitate, cod CAEN 4933.',
   },
   {
     id: 'constatator',
-    title: 'Certificat constatator (CAEN 4939)',
+    title: 'Certificat constatator (CAEN 4933)',
     categories: ['CertificatConstatator'],
     primaryCategory: 'CertificatConstatator',
-    tooltip: 'Certificat constatator din care să reiasă domeniul de activitate, cod CAEN 4939.',
+    tooltip: 'Certificat constatator din care să reiasă domeniul de activitate, cod CAEN 4933.',
   },
   {
     id: 'alt_transport',

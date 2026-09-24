@@ -18,7 +18,7 @@ export interface DocumentSummary {
   aiDetectedType?: string | null;
   aiExtractedExpiresAtUtc?: string | null;
   /**
-   * Un câmp citit prin OCR n-a trecut validatorul determinist (ex. CAEN ≠ 4939) sau are
+   * Un câmp citit prin OCR n-a trecut validatorul determinist (ex. CAEN ≠ 4933) sau are
    * încredere prea mică. Documentul rămâne acceptat — doar că îl verifică un om.
    */
   aiRequiresManualReview: boolean;

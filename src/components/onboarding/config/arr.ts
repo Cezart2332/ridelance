@@ -41,7 +41,7 @@ const EYEBROW = 'AUTORIZAȚIE TRANSPORT'
 
 const HINTS: Record<string, string> = {
   CertificatInregistrare: 'Preluat de la pasul PFA. Verifică doar că e cel corect.',
-  CertificatConstatator: 'Trebuie să conțină codul CAEN 4939.',
+  CertificatConstatator: 'Trebuie să conțină codul CAEN 4933.',
   AtestatTransport: 'Preluat de la pasul de eligibilitate.',
   CazierJudiciar: 'Eliberat de poliție, valabil 6 luni de la emitere.',
   // Două documente, două ecrane: emise de instituții diferite, cu valabilități diferite.

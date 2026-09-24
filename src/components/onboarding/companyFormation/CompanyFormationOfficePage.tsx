@@ -176,6 +176,8 @@ export default function CompanyFormationOfficePage() {
   // Fără „Continuă”: sediul complet (îl confirmă serverul la salvare) trece singur mai departe.
   return (
     <AutoContinue
+        // Datele de înființare se verifică înainte de trimitere: cu „Continuă”, nu cu trecerea singură.
+        manual
       spacing={3}
       ready={state.registeredOfficeComplete}
       disabled={disabled}

@@ -18,6 +18,8 @@ interface AutoContinueProps {
   delayMs?: number
   /** Spațiul dintre câmpuri și footer, ca în restul paginii. */
   spacing?: number
+  /** Buton „Continuă” în loc de trecerea singură — vezi `AutoAdvanceFooter`. */
+  manual?: boolean
   children?: ReactNode
 }
 
@@ -37,6 +39,7 @@ export function AutoContinue({
   reasons,
   delayMs = 2000,
   spacing = 3,
+  manual = false,
   children,
 }: AutoContinueProps) {
   /** Fiecare tastă repornește numărătoarea: plecăm după ce omul se oprește din scris. */
@@ -70,6 +73,7 @@ export function AutoContinue({
         busy={busy}
         onDone={onContinue}
         onStay={() => setStayedAt(key)}
+        manual={manual}
       />
     </Stack>
   )

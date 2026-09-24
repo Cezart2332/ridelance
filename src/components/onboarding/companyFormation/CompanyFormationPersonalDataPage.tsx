@@ -80,6 +80,8 @@ export default function CompanyFormationPersonalDataPage() {
 
       {/* Fără „Continuă”: datele complete (le confirmă serverul la salvare) trec singure mai departe. */}
       <AutoContinue
+        // Datele de înființare se verifică înainte de trimitere: cu „Continuă”, nu cu trecerea singură.
+        manual
         ready={state.personalDataComplete}
         disabled={state.isLocked}
         restartKey={JSON.stringify(solicitant)}
