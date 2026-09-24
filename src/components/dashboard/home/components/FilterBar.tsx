@@ -186,7 +186,7 @@ export function FilterBar({
               borderTopLeftRadius: HOME_TOKENS.radius.card,
               borderTopRightRadius: HOME_TOKENS.radius.card,
               p: 2.5,
-              pb: 'calc(20px + env(safe-area-inset-bottom))',
+              pb: 'calc(20px + var(--sab))',
             },
           },
         }}

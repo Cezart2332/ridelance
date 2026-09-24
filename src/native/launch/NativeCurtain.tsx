@@ -8,6 +8,7 @@ import { useAppSelector } from '../../store/hooks'
 import { BOOT_LOGO_WIDTH, CURTAIN_COLOR, CURVE_HEIGHT, CURVE_PATH, authHeaderHeight } from './curtainGeometry'
 import { curtain, useCurtainPhase, type CurtainPhase } from './curtainStore'
 import { isAppDestination, isAuthPath } from './launchRoutes'
+import { useSafeAreaTop } from './useSafeAreaTop'
 
 /** Cât stă logoul pe ecran la pornire, chiar dacă aplicația e gata mai devreme. */
 const MIN_BOOT_MS = 1100
@@ -46,7 +47,8 @@ export function NativeCurtain() {
   const isInitialized = useAppSelector((s) => s.auth.isInitialized)
   const reduceMotion = useReducedMotion() === true
   const viewport = useViewportHeight()
-  const headerHeight = authHeaderHeight(viewport)
+  // La fel ca antetul de login (`NativeAuthLayout`): plus bara de stare, sub care urcă.
+  const headerHeight = authHeaderHeight(viewport) + useSafeAreaTop()
 
   const onAuth = isAuthPath(pathname)
   const [bootElapsed, setBootElapsed] = useState(false)

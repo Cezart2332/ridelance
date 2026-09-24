@@ -41,7 +41,7 @@ export function ImpersonationBanner() {
         position: 'fixed',
         left: '50%',
         transform: 'translateX(-50%)',
-        bottom: { xs: 'calc(76px + env(safe-area-inset-bottom))', md: 20 },
+        bottom: { xs: 'calc(76px + var(--sab))', md: 20 },
         zIndex: 2000,
         px: { xs: 2, sm: 2.5 },
         py: 1.25,

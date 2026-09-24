@@ -21,6 +21,31 @@
       la fel și scoate #boot-splash. Lățimea logoului e aceeași ca în ecranul de start nativ.
     -->
     <style>
+      /*
+        Marginile barelor de sistem (bara de stare, zona de jos a telefonului). Pe Android,
+        Capacitor le dă ca --safe-area-inset-*; altfel vin din env(). Pe desktop sunt 0.
+      */
+      :root {
+        --sat: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+        --sab: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+        --sal: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+        --sar: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+      }
+      /* În aplicație pagina e pe tot ecranul: sertarele și dialogurile pe tot ecranul lasă loc barelor. */
+      html[data-native="true"] .MuiDrawer-paperAnchorLeft,
+      html[data-native="true"] .MuiDrawer-paperAnchorRight,
+      html[data-native="true"] .MuiDrawer-paperAnchorTop,
+      html[data-native="true"] .MuiDialog-paperFullScreen { padding-top: var(--sat); }
+      html[data-native="true"] .MuiDrawer-paperAnchorLeft,
+      html[data-native="true"] .MuiDrawer-paperAnchorRight,
+      html[data-native="true"] .MuiDrawer-paperAnchorBottom,
+      html[data-native="true"] .MuiDialog-paperFullScreen { padding-bottom: var(--sab); }
+      html[data-native="true"] .MuiSnackbar-anchorOriginBottomCenter,
+      html[data-native="true"] .MuiSnackbar-anchorOriginBottomLeft,
+      html[data-native="true"] .MuiSnackbar-anchorOriginBottomRight { margin-bottom: var(--sab); }
+      html[data-native="true"] .MuiSnackbar-anchorOriginTopCenter,
+      html[data-native="true"] .MuiSnackbar-anchorOriginTopLeft,
+      html[data-native="true"] .MuiSnackbar-anchorOriginTopRight { margin-top: var(--sat); }
       #boot-splash { display: none; }
       html[data-native="true"][data-surface="dark"],
       html[data-native="true"][data-surface="dark"] body { background-color: #1a1a2e !important; }

@@ -29,7 +29,7 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
   const [messages, setMessages] = useState<ChatMessageDto[]>([])
   const [chatMessage, setChatMessage] = useState('')
   const [loading, setLoading] = useState(false)
-  const composer = useChatComposer(roomId)
+  const composer = useChatComposer(roomId, (sent) => setMessages((prev) => [...prev, sent]))
   const sending = composer.sending
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const myUserId = useAppSelector((s) => s.auth.userId) || ''

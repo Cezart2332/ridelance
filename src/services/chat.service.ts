@@ -90,6 +90,15 @@ export const chatService = {
     return response.data;
   },
 
+  /**
+   * Un mesaj text prin HTTP — rezerva pentru când conexiunea în timp real nu e pornită (pe telefon
+   * cade des). Serverul îl publică în cameră ca pe oricare altul.
+   */
+  sendText: async (roomId: string, content: string): Promise<ChatMessageDto> => {
+    const response = await api.post<ChatMessageDto>(`/chat/rooms/${roomId}/messages`, { content });
+    return response.data;
+  },
+
   downloadAttachment: async (messageId: string): Promise<Blob> => {
     const response = await api.get(`/chat/messages/${messageId}/attachment`, { responseType: 'blob' });
     return response.data;

@@ -361,6 +361,7 @@ export function HomeDashboardContent({
                       <Box sx={{ gridColumn: { lg: data.realProfit ? 'span 7' : 'span 12' }, minWidth: 0 }}>
                         <EstimatedTaxesCard
                           mode="pfa"
+                          fill
                           onEditProfile={fiscal?.openForm}
                           onContactAccountant={onNavigate ? () => onNavigate('accountant-chat') : undefined}
                         />

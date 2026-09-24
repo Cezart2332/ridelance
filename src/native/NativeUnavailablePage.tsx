@@ -55,6 +55,8 @@ export function NativeUnavailablePage() {
         display: 'grid',
         placeItems: 'center',
         px: 3,
+        pt: 'var(--sat)',
+        pb: 'var(--sab)',
         bgcolor: TOKENS.surface,
       }}
     >

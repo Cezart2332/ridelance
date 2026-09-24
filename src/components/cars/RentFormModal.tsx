@@ -403,7 +403,7 @@ export default function RentFormModal({ open, onClose, car, intent = 'Request' }
               flexDirection: 'column',
               borderTopLeftRadius: `${VDP.radius.card}px`,
               borderTopRightRadius: `${VDP.radius.card}px`,
-              pb: 'env(safe-area-inset-bottom)',
+              pb: 'var(--sab)',
             },
           },
         }}

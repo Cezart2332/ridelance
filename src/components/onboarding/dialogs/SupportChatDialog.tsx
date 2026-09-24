@@ -94,7 +94,7 @@ function SupportChat({ onEmail, stepLabel }: Pick<SupportChatDialogProps, 'onEma
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(true)
   const [unavailable, setUnavailable] = useState(false)
-  const composer = useChatComposer(roomId)
+  const composer = useChatComposer(roomId, (sent) => setMessages((prev) => [...prev, sent]))
   const endRef = useRef<HTMLDivElement>(null)
   const myUserId = useAppSelector((s) => s.auth.userId) || ''
   const hours = getBucharestBusinessHoursStatus(10, 18)
@@ -150,7 +150,8 @@ function SupportChat({ onEmail, stepLabel }: Pick<SupportChatDialogProps, 'onEma
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const canSend = (text.trim() !== '' || composer.pendingFile !== null) && hours.isOpen
+  // Se poate scrie oricând; programul spune doar când vine răspunsul.
+  const canSend = text.trim() !== '' || composer.pendingFile !== null
 
   const send = async () => {
     if (!canSend) return
@@ -194,7 +195,7 @@ function SupportChat({ onEmail, stepLabel }: Pick<SupportChatDialogProps, 'onEma
             </Button>
           }
         >
-          Chatul răspunde doar în program. Până atunci, ne poți scrie pe email.
+          Acum ești în afara programului. Poți scrie oricând: îți răspundem în program.
         </Alert>
       )}
 
@@ -262,7 +263,7 @@ function SupportChat({ onEmail, stepLabel }: Pick<SupportChatDialogProps, 'onEma
 
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         <ChatAttachButton
-          disabled={!hours.isOpen || composer.sending}
+          disabled={composer.sending}
           onPick={composer.pickFile}
           onError={composer.setError}
         />
@@ -279,7 +280,6 @@ function SupportChat({ onEmail, stepLabel }: Pick<SupportChatDialogProps, 'onEma
             }
           }}
           placeholder={composer.pendingFile ? 'Adaugă o descriere (opțional)...' : 'Scrie un mesaj...'}
-          disabled={!hours.isOpen}
           slotProps={{ htmlInput: { 'aria-label': 'Mesaj pentru suport' } }}
         />
         <Button variant="contained" onClick={() => void send()} disabled={composer.sending || !canSend}>

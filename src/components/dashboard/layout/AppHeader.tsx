@@ -56,6 +56,8 @@ export default function AppHeader({
         borderBottom: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
         px: { xs: 1.8, md: 3 },
         py: 1.3,
+        // În aplicație pagina începe de sub bara de stare: fundalul antetului o acoperă, conținutul nu.
+        pt: 'calc(10.4px + var(--sat))',
         backgroundColor: alpha(DASHBOARD_TOKENS.paper, 0.9),
         backdropFilter: 'blur(10px)',
         position: 'sticky',

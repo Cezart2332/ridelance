@@ -6,6 +6,7 @@ import logoDark from '../../assets/logowithmotto-dark.svg'
 import { AUTH_COLORS, AUTH_FORM_CONTENT } from '../../components/auth/shell/authShellSx'
 import { CURTAIN_COLOR, CURVE_HEIGHT, CURVE_PATH, authHeaderHeight } from './curtainGeometry'
 import { useCurtainPhase } from './curtainStore'
+import { useSafeAreaTop } from './useSafeAreaTop'
 
 const rise = keyframes`
   from { opacity: 0; transform: translateY(14px); }
@@ -40,7 +41,8 @@ export function NativeAuthLayout({ children }: { children: ReactNode }) {
   // Cortina e încă peste ecran la pornire: conținutul așteaptă. După login, cortina acoperă ecranul
   // de pe loc, deci conținutul rămâne cum e.
   const ready = phase === 'hidden' || phase === 'covering' || phase === 'covered' || phase === 'exit'
-  const headerHeight = authHeaderHeight(viewport)
+  // Antetul urcă și sub bara de stare, ca fundalul închis să ajungă până sus.
+  const headerHeight = authHeaderHeight(viewport) + useSafeAreaTop()
 
   const enter = (animation: string, delay: number) =>
     ready
@@ -78,7 +80,7 @@ export function NativeAuthLayout({ children }: { children: ReactNode }) {
           flex: 1,
           px: 3,
           pt: 1,
-          pb: 4,
+          pb: 'calc(32px + var(--sab))',
         }}
       >
         <Box

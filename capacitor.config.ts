@@ -11,13 +11,15 @@ const config: CapacitorConfig = {
   appName: 'RIDElance',
   webDir: 'dist-native',
   ios: {
-    // Pagina nu se desenează sub bara de stare și sub zona de jos a iPhone-ului.
-    contentInset: 'always',
+    // Pe tot ecranul, și sub bara de stare, și sub zona de jos: cu `always`, iOS lăsa acolo două
+    // benzi negre. Spațiul pentru bare îl pune pagina, prin `--sat`/`--sab` (index.html).
+    contentInset: 'never',
   },
   plugins: {
     SystemBars: {
-      // Pe Android WebView-ul primește marginile barelor de sistem, fără `viewport-fit=cover`.
-      insetsHandling: 'native',
+      // Tot pe tot ecranul (`viewport-fit=cover` din index.html), cu marginile barelor date paginii
+      // și ca variabile `--safe-area-inset-*` — pe WebView-urile mai vechi `env()` dă 0.
+      insetsHandling: 'css',
     },
   },
 }

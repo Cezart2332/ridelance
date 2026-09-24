@@ -32,7 +32,7 @@ export function PanelActions({ children }: { children: ReactNode }) {
           zIndex: (t) => t.zIndex.appBar,
           px: 2,
           py: 1.5,
-          pb: 'max(12px, env(safe-area-inset-bottom))',
+          pb: 'max(12px, var(--sab))',
           backgroundColor: TOKENS.paper,
           borderTop: `1px solid ${TOKENS.border}`,
         }}

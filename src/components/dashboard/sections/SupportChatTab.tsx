@@ -22,6 +22,7 @@ import { useQuickActionIntent } from '../layout/useQuickActionIntent'
 import { ChatAttachmentView } from '../../chat/ChatAttachmentView'
 import { ChatAttachButton, PendingAttachment } from '../../chat/ChatAttachmentPicker'
 import { useChatComposer } from '../../chat/useChatComposer'
+import SendRoundedIcon from '@mui/icons-material/SendRounded'
 
 interface SupportChatTabProps {
   /**
@@ -40,7 +41,7 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
   const [chatMessage, setChatMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [noAgent, setNoAgent] = useState(false)
-  const composer = useChatComposer(roomId)
+  const composer = useChatComposer(roomId, (sent) => setMessages((prev) => [...prev, sent]))
   const sending = composer.sending
   const [, setClockTick] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -118,7 +119,9 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
     return () => window.clearInterval(timer)
   }, [])
 
-  const canSend = (chatMessage.trim() !== '' || composer.pendingFile !== null) && supportHours.isOpen
+  // Se poate scrie oricând: programul spune doar când vine răspunsul. Blocat în afara orelor, chatul
+  // părea stricat — iar serverul oricum nu impune programul.
+  const canSend = chatMessage.trim() !== '' || composer.pendingFile !== null
 
   const handleSend = async () => {
     if (!canSend) return
@@ -207,7 +210,7 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
         </Typography>
         {!supportHours.isOpen && (
           <Alert severity="info" sx={{ mt: 2, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
-            Chatul suport este disponibil doar în program. Poți citi mesajele existente, dar poți trimite mesaje în intervalul afișat.
+            Acum ești în afara programului. Poți scrie oricând: echipa îți răspunde în program.
           </Alert>
         )}
 
@@ -231,7 +234,7 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
                     </Typography>
                     <Divider sx={{ flex: 1 }} />
                   </Box>
-                  <Stack spacing={1.2}>
+                  <Stack spacing={1.2} sx={{ alignItems: 'stretch' }}>
                     {group.messages.map((message, index) => {
                       const isMe = message.senderId.toLowerCase() === myUserId.toLowerCase()
                       return (
@@ -240,6 +243,9 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
                           elevation={0}
                           sx={{
                             p: 1.2,
+                            alignSelf: isMe ? 'flex-end' : 'flex-start',
+                            maxWidth: '85%',
+                            minWidth: 0,
                             borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
                             backgroundColor: isMe
                               ? `rgba(92,203,245,0.10)`
@@ -281,7 +287,7 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
 
             <Stack direction="row" spacing={1} sx={{ mt: 2, alignItems: 'center' }}>
               <ChatAttachButton
-                disabled={!supportHours.isOpen || sending}
+                disabled={sending}
                 onPick={composer.pickFile}
                 onError={composer.setError}
               />
@@ -295,15 +301,19 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
                 }}
                 placeholder={composer.pendingFile ? 'Adaugă o descriere (opțional)...' : 'Scrie un mesaj pentru echipă...'}
                 sx={dashboardInputSx}
-                disabled={!supportHours.isOpen}
               />
               <Button
                 variant="contained"
                 onClick={handleSend}
                 disabled={sending || !canSend}
+                aria-label="Trimite"
                 sx={{
                   borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
-                  px: 2.4,
+                  // Pe telefon, doar iconița: textul lua câmpului de mesaj jumătate din rând.
+                  px: { xs: 0, sm: 2.4 },
+                  minWidth: { xs: 44, sm: 64 },
+                  height: 44,
+                  flexShrink: 0,
                   color: '#fff',
                   backgroundColor: DASHBOARD_TOKENS.primary,
                   fontWeight: 700,
@@ -311,7 +321,14 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
                   '&:hover': { backgroundColor: DASHBOARD_TOKENS.primaryStrong },
                 }}
               >
-                {sending ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Trimite'}
+                {sending ? (
+                  <CircularProgress size={18} sx={{ color: '#fff' }} />
+                ) : (
+                  <>
+                    <SendRoundedIcon sx={{ display: { xs: 'block', sm: 'none' }, fontSize: 20 }} />
+                    <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Trimite</Box>
+                  </>
+                )}
               </Button>
             </Stack>
           </>

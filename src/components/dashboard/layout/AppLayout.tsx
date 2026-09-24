@@ -115,7 +115,7 @@ export default function AppLayout({
           component="main"
           sx={{
             p: { xs: 2, md: 3 },
-            pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', md: 3 },
+            pb: { xs: 'calc(80px + var(--sab))', md: 3 },
             flexGrow: 1,
             // Coloană flex cu minHeight:0 ca o secțiune cu height:100% (ex. Acasă)
             // să se poată încadra exact în ecran, fără să declanșeze scroll.
@@ -151,7 +151,7 @@ export default function AppLayout({
           backgroundColor: alpha(DASHBOARD_TOKENS.paper, 0.85),
           backdropFilter: 'blur(20px)',
           borderTop: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
-          paddingBottom: 'env(safe-area-inset-bottom)',
+          paddingBottom: 'var(--sab)',
           boxShadow: '0 -4px 20px -5px rgba(0,0,0,0.08)',
         }}
       >

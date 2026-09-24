@@ -34,7 +34,7 @@ export function VehicleMobilePriceBar({
         display: { xs: 'block', md: 'none' },
         px: 2,
         pt: 1.5,
-        pb: 'calc(12px + env(safe-area-inset-bottom))',
+        pb: 'calc(12px + var(--sab))',
         backgroundColor: TOKENS.paper,
         borderTop: `1px solid ${TOKENS.border}`,
         boxShadow: TOKENS.shadow.xl,

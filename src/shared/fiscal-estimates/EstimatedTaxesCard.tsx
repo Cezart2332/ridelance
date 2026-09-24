@@ -34,6 +34,12 @@ interface Props {
   onEditProfile?: () => void
   /** Duce la chatul cu contabilul — CTA-ul pentru date lipsă. */
   onContactAccountant?: () => void
+  /**
+   * Umple înălțimea celulei în care stă (grila de pe Acasă, lângă profitul real). Implicit nu: pe
+   * „Taxe & declarații” cardul stă sub un titlu, iar cu înălțimea părintelui ieșea din chenar exact
+   * cât ocupă titlul.
+   */
+  fill?: boolean
 }
 
 const POLL_MS = 5000
@@ -43,7 +49,7 @@ const POLL_MS = 5000
  * statusul lor. Aceeași componentă pe Acasă, în Taxe estimate și, cu
  * detaliile de calcul, în fișa PFA din admin și contabilitate (§11.3).
  */
-export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccountant }: Props) {
+export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccountant, fill = false }: Props) {
   const taxYear = currentTaxYear()
   const isStaff = mode !== 'pfa'
   const [data, setData] = useState<EstimatedTaxes | null>(null)
@@ -99,7 +105,7 @@ export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccoun
 
   if (!data && !error) {
     return (
-      <CardShell>
+      <CardShell fill={fill}>
         <Skeleton variant="text" width="45%" height={32} />
         <Skeleton variant="rounded" height={64} sx={{ my: 1.5 }} />
         <Skeleton variant="text" />
@@ -110,7 +116,7 @@ export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccoun
 
   if (data?.locked) {
     return isStaff ? (
-      <CardShell>
+      <CardShell fill={fill}>
         <Title />
         <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
           Estimările apar după ce PFA-ul își confirmă profilul fiscal.
@@ -125,7 +131,7 @@ export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccoun
   const hasAmount = reserve && (reserve.status === 'ESTIMATED' || reserve.status === 'PARTIAL') && reserve.total != null
 
   return (
-    <CardShell>
+    <CardShell fill={fill}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 0.5 }}>
         <Title />
         {partial && <Chip size="small" label="Parțial" color="warning" variant="outlined" sx={{ fontWeight: 700 }} />}
@@ -183,18 +189,9 @@ export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccoun
       </Box>
 
       {!calculating && data?.warnings?.includes('COVERAGE_GAP') && data.projection?.uncoveredPeriod && (
-        <Alert
-          severity="info"
-          sx={{ mt: 1.5 }}
-          action={
-            !isStaff && onContactAccountant ? (
-              <Button color="inherit" size="small" onClick={onContactAccountant}>
-                Scrie contabilului
-              </Button>
-            ) : undefined
-          }
-        >
+        <Alert severity="info" sx={{ mt: 1.5 }}>
           {coverageGapText(data.projection.uncoveredPeriod, mode)}
+          {!isStaff && onContactAccountant && <AlertAction label="Scrie contabilului" onClick={onContactAccountant} />}
         </Alert>
       )}
 
@@ -231,7 +228,21 @@ export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccoun
   )
 }
 
-function CardShell({ children }: { children: React.ReactNode }) {
+/**
+ * Butonul unei alerte, sub text. În coloana `action` a alertei, pe telefon, strângea textul într-o
+ * fâșie de câteva cuvinte pe rând.
+ */
+function AlertAction({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <Box sx={{ mt: 1 }}>
+      <Button color="inherit" size="small" variant="outlined" onClick={onClick} sx={{ fontWeight: 700 }}>
+        {label}
+      </Button>
+    </Box>
+  )
+}
+
+function CardShell({ children, fill }: { children: React.ReactNode; fill: boolean }) {
   return (
     <Box
       component="section"
@@ -242,7 +253,7 @@ function CardShell({ children }: { children: React.ReactNode }) {
         borderRadius: 2,
         boxShadow: theme.shadows[1],
         p: { xs: 2, sm: 3 },
-        height: '100%',
+        height: fill ? '100%' : undefined,
         minWidth: 0,
       })}
     >
@@ -294,8 +305,9 @@ function StatusBlock({
 }) {
   if (status === 'ERROR') {
     return (
-      <Alert severity="error" action={<Button color="inherit" size="small" onClick={onRetry}>Reîncearcă</Button>}>
+      <Alert severity="error">
         Nu am putut calcula estimările.
+        <AlertAction label="Reîncearcă" onClick={onRetry} />
       </Alert>
     )
   }
@@ -307,29 +319,19 @@ function StatusBlock({
   const clarification = status === 'REQUIRES_CLARIFICATION'
   // Ce completează contabilul nu se rezolvă din profil: PFA-ul îi scrie contabilului.
   const byAccountant = clarification && accountantCompletes(reasonCode, missing)
+  const action =
+    (byAccountant || !clarification) && onContactAccountant
+      ? { label: 'Scrie contabilului', onClick: onContactAccountant }
+      : clarification && !byAccountant && onEditProfile
+        ? { label: 'Actualizează profilul', onClick: onEditProfile }
+        : null
   return (
-    <Alert
-      severity={clarification ? 'info' : 'warning'}
-      action={
-        byAccountant && onContactAccountant ? (
-          <Button color="inherit" size="small" onClick={onContactAccountant}>
-            Scrie contabilului
-          </Button>
-        ) : clarification && !byAccountant && onEditProfile ? (
-          <Button color="inherit" size="small" onClick={onEditProfile}>
-            Actualizează profilul
-          </Button>
-        ) : !clarification && onContactAccountant ? (
-          <Button color="inherit" size="small" onClick={onContactAccountant}>
-            Scrie contabilului
-          </Button>
-        ) : undefined
-      }
-    >
+    <Alert severity={clarification ? 'info' : 'warning'}>
       <Typography variant="body2" sx={{ fontWeight: 700 }}>
         {byAccountant ? 'Așteptăm datele de la contabil' : clarification ? 'Avem nevoie de o informație' : 'Date insuficiente'}
       </Typography>
       <Typography variant="body2">{reasonText(reasonCode, missing, taxYear)}</Typography>
+      {action && <AlertAction label={action.label} onClick={action.onClick} />}
     </Alert>
   )
 }
@@ -382,7 +384,10 @@ function ComponentRow({
 
   return (
     <Box component="li" sx={{ py: 1 }} data-component={component.component}>
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+      <Stack
+        direction="row"
+        sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', columnGap: 1, rowGap: 0.25 }}
+      >
         <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', minWidth: 0 }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {label}
@@ -398,7 +403,7 @@ function ComponentRow({
             </IconButton>
           )}
         </Stack>
-        <Box sx={{ flexShrink: 0, textAlign: 'right' }}>{value}</Box>
+        <Box sx={{ ml: 'auto', textAlign: 'right' }}>{value}</Box>
       </Stack>
       {detail && (
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.25 }}>

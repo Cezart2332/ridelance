@@ -139,3 +139,31 @@ test('pornirea: cortina se strânge în antetul login-ului, iar după login acop
   await expect(curtain).toHaveCount(0, { timeout: 10_000 })
   await expect.poll(() => page.evaluate(() => document.documentElement.dataset.surface)).toBe('light')
 })
+
+test('chat contabil: fără conexiunea în timp real, mesajul pleacă prin HTTP și apare în listă', async ({ page }) => {
+  await mockApi(page, { active: true })
+  const sent: unknown[] = []
+  await page.route(`${API}/chat/accountant-room`, (route) => route.fulfill({ json: { roomId: 'room-a', supportUserName: 'Maria Ionescu' } }))
+  await page.route(`${API}/chat/rooms/room-a/messages**`, (route) => {
+    if (route.request().method() === 'POST') {
+      sent.push(route.request().postDataJSON())
+      return route.fulfill({ json: { id: 'm9', senderId: 'u1', senderName: 'Eu', content: 'Salut, am trimis bonurile', sentAtUtc: new Date().toISOString(), isRead: false } })
+    }
+    return route.fulfill({ json: { messages: [], totalCount: 0 } })
+  })
+  // Hub-ul SignalR nu răspunde: conexiunea în timp real rămâne oprită.
+  await page.route(`${API}/hubs/**`, (route) => route.abort())
+
+  await login(page)
+  await expect(page).toHaveURL(/\/app\/(dashboard|indisponibil)/, { timeout: 15_000 })
+  await page.goto('/app/dashboard/contabilitate/chat-contabil')
+  const input = page.getByPlaceholder(/Scrie un mesaj/)
+  await expect(input).toBeEnabled({ timeout: 15_000 })
+  await input.fill('Salut, am trimis bonurile')
+  await page.getByRole('button', { name: 'Trimite' }).click()
+
+  await expect.poll(() => sent.length).toBe(1)
+  expect(sent[0]).toEqual({ content: 'Salut, am trimis bonurile' })
+  await expect(page.getByText('Salut, am trimis bonurile')).toBeVisible()
+  await expect(input).toHaveValue('')
+})

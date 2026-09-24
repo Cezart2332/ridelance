@@ -238,7 +238,7 @@ export function QuickActionsButton({ menu }: { menu: QuickActionsMenu }) {
               sx: {
                 borderTopLeftRadius: `${DASHBOARD_TOKENS.radius.xl}px`,
                 borderTopRightRadius: `${DASHBOARD_TOKENS.radius.xl}px`,
-                pb: 'env(safe-area-inset-bottom)',
+                pb: 'var(--sab)',
                 maxHeight: '85vh',
               },
             },

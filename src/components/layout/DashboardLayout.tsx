@@ -408,6 +408,8 @@ export function DashboardLayout({
             borderBottom: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
             backdropFilter: 'blur(10px)',
             color: TOKENS.ink,
+            // Sub bara de stare, în aplicație: fundalul o acoperă, conținutul începe dedesubt.
+            pt: 'var(--sat)',
           }}
         >
           <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, md: 4 } }}>
@@ -461,7 +463,7 @@ export function DashboardLayout({
       {/* PWA Bottom Navigation */}
       {isStandalone && !isMdUp && (
         <Paper 
-          sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, pb: 'env(safe-area-inset-bottom)' }} 
+          sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, pb: 'var(--sab)' }} 
           elevation={8}
         >
           <BottomNavigation
