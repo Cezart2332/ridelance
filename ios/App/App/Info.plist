@@ -4,6 +4,10 @@
 <dict>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>RIDElance folosește camera ca să fotografiezi documente, bonuri și poze pentru chat.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>RIDElance deschide galeria ca să alegi documente, bonuri și poze pentru chat.</string>
   <key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
