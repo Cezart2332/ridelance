@@ -93,9 +93,13 @@ export const fiscalMicroSteps: MicroStepDef[] = [
      * fiscal rămânea fără răspuns, iar pentru `FiscalUserPartComplete` pasul nu era terminat:
      * butonul „Trimite pentru verificare" nu apărea niciodată și pasul 3 rămânea blocat cu toate
      * bifele puse. Ramura „Nu" nu trece pe aici — ea se trimite din întrebare.
+     *
+     * Fără verificare pe `c.documents`: `commit` rulează imediat după încărcare, cu lista de
+     * documente de dinainte, în care certificatul abia urcat încă nu apare. Verificarea de acolo
+     * oprea trimiterea de fiecare dată. Serverul o face oricum (`VatProofMissing`).
      */
-    commit: async (c) => {
-      if (hasDocument(c, TVA_PROOF)) await onboardingService.submitVat('Yes')
+    commit: async () => {
+      await onboardingService.submitVat('Yes')
     },
     isDone: (c) => hasDocument(c, TVA_PROOF),
   },
@@ -261,7 +265,15 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     // refuză trimiterea și eroarea apare pe ecran.
     onArrive: {
       when: (c) => !isAtAdmin(c) && step2Of(c)?.signature?.status !== 'Completed',
-      run: () => onboardingService.submitFiscalForReview(),
+      run: async (c) => {
+        // Un „Da” la TVA rămas nespus (dosarele de dinainte de corectura din `tva_document`): cu
+        // certificatul încărcat, se trimite acum, altfel serverul refuză pasul pentru TVA lipsă.
+        const vat = step2Of(c)?.fiscal?.vatAnswer
+        if (vat !== 'Yes' && vat !== 'No' && (c.answers.tva === 'yes' || hasDocument(c, TVA_PROOF))) {
+          await onboardingService.submitVat('Yes')
+        }
+        await onboardingService.submitFiscalForReview()
+      },
       errorMessage: 'Nu am putut trimite pasul la verificare. Încearcă din nou.',
     },
     isDone: (c) => step2Of(c)?.signature?.status === 'Completed',

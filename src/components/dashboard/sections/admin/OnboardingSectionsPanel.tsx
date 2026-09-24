@@ -1,3 +1,4 @@
+import { StepAnswers } from './OnboardingAnswersPanel'
 import { ADMIN_STEPS, ELIGIBILITY_KEY, PFA_UPLOAD_CATEGORIES, type AdminStep } from '../../../../constants/adminSteps'
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
@@ -32,6 +33,7 @@ import {
   onboardingService,
   type AdminFiscalReview,
   type DossierReadiness,
+  type OnboardingAnswerRecord,
   type OnboardingState,
   type OnboardingStep,
   type PlatformOnboardingState,
@@ -873,6 +875,19 @@ export function OnboardingSectionsPanel({
   /** Documentul pe care îl respingi acum — motivul ajunge la client lângă document. */
   const [docRejectTarget, setDocRejectTarget] = useState<DocumentSummary | null>(null)
   const [reviewTick, setReviewTick] = useState(0)
+  /** Răspunsurile clientului, împărțite pe pași și arătate în cardul fiecăruia. */
+  const [answers, setAnswers] = useState<OnboardingAnswerRecord[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    onboardingService
+      .getAnswersForRegistration(pfaId)
+      .then((loaded) => !cancelled && setAnswers(loaded))
+      .catch(() => !cancelled && setAnswers([]))
+    return () => {
+      cancelled = true
+    }
+  }, [pfaId, reviewTick])
 
   const loadState = useCallback(async () => {
     try {
@@ -1094,6 +1109,13 @@ export function OnboardingSectionsPanel({
               <Stack spacing={3} sx={{ px: { xs: 2.5, md: 3 }, py: 3 }}>
                 {step?.state === 'rejected' && step.checklist?.some((c) => c.state === 'rejected') && (
                   <Alert severity="error">Clientul are documente respinse de refăcut la pasul ăsta.</Alert>
+                )}
+
+                {answers.some((a) => a.stepKey === group.key) && (
+                  <Box>
+                    <Subheading>Răspunsurile clientului</Subheading>
+                    <StepAnswers answers={answers.filter((a) => a.stepKey === group.key)} />
+                  </Box>
                 )}
 
                 {/* Ce a completat clientul — doar la pașii care au date, nu doar acte */}

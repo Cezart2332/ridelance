@@ -102,7 +102,7 @@ test('admin: rezumat organizat în subsecțiuni și meniu accesibil pe mobil', a
   await expect(page.getByRole('heading', { name: 'Onboarding' })).toBeVisible()
 })
 
-test('admin: vede toate răspunsurile din onboarding, cu Da/Nu și schimbările', async ({ page }, info) => {
+test('admin: răspunsurile din onboarding apar la fiecare pas, cu Da/Nu și schimbările', async ({ page }, info) => {
   await mockAdmin(page)
   await page.route('**/pfa-registrations/*/onboarding/answers', (route) => route.fulfill({ json: [
     { stepKey: 'eligibility', questionId: 'age', question: 'Ai împlinit 21 de ani?', value: 'yes', valueLabel: 'Da', answeredAtUtc: '2026-09-14T08:00:00Z', previousLabels: ['Nu'] },
@@ -112,16 +112,18 @@ test('admin: vede toate răspunsurile din onboarding, cu Da/Nu și schimbările'
   ] }))
   await page.goto('/admin?tab=pfa&user=client-review')
 
-  const panel = page.getByTestId('onboarding-answers')
-  await expect(page.getByRole('heading', { name: 'Răspunsuri din onboarding' })).toBeVisible()
-  // Pe pași, în ordinea onboardingului: eligibilitate, PFA, fiscal.
-  await expect(panel.getByRole('heading', { level: 3 })).toHaveText(['Eligibilitate', 'PFA', 'Fiscal și bancă'])
-  await expect(panel.getByText('Ai împlinit 21 de ani?')).toBeVisible()
-  await expect(panel.getByText('înainte: Nu', { exact: false })).toBeVisible()
-  await expect(panel.getByText('Deții certificat de TVA intracomunitar?')).toBeVisible()
-  await expect(panel.getByText('0722123456')).toBeVisible()
-  await panel.scrollIntoViewIfNeeded()
-  await panel.screenshot({ path: `test-results/admin-onboarding-answers-${info.project.name}.png` })
+  // Fără panou separat: răspunsurile stau în cardul pasului lor.
+  await expect(page.getByRole('heading', { name: 'Răspunsuri din onboarding' })).toHaveCount(0)
+  // Pasul de eligibilitate e deschis (e la admin): răspunsurile lui, cu schimbarea.
+  const eligibility = page.locator('#step-eligibility')
+  await expect(eligibility.getByText('Răspunsurile clientului')).toBeVisible()
+  await expect(eligibility.getByText('Ai împlinit 21 de ani?')).toBeVisible()
+  await expect(eligibility.getByText('înainte: Nu', { exact: false })).toBeVisible()
+  // Răspunsul de la fiscal nu apare la eligibilitate: fiecare pas le are pe ale lui.
+  await expect(eligibility.getByText('Deții certificat de TVA intracomunitar?')).toHaveCount(0)
+  await expect(page.locator('#step-pfa').getByText('0722123456')).toBeAttached()
+  await eligibility.scrollIntoViewIfNeeded()
+  await eligibility.screenshot({ path: `test-results/admin-onboarding-answers-${info.project.name}.png` })
 })
 
 test('admin: „Validează documentele pentru dosar” e separat de validarea pasului ARR', async ({ page }) => {

@@ -114,7 +114,11 @@ export function OnboardingRunner() {
     void arrive
       .run({ answers, documents, eligibility, state, resources })
       .then(() => refresh())
-      .catch((err: unknown) => setError(getErrorMessage(err, arrive.errorMessage)))
+      .catch((err: unknown) => {
+        // Nereușit: la următoarea sosire pe ecran se încearcă din nou, nu rămâne blocat pe eroare.
+        arrivedIds.current.delete(arriveDef.id)
+        setError(getErrorMessage(err, arrive.errorMessage))
+      })
     // Contextul de la sosire e cel care contează; schimbările lui ulterioare nu mai retrimit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [arriveDef, shouldArrive, refresh])
