@@ -116,6 +116,15 @@ const ownership = (c: MicroStepContext): string => {
 const hasVehicle = (c: MicroStepContext) => ownership(c) !== ''
 
 /**
+ * Tot parcursul pasului se vede de la început, odată ales modul de deținere: taxele, dovada plății,
+ * dosarul, copia conformă și ecusoanele. Înainte, fiecare apărea abia după ce se termina cel
+ * dinainte (mașina salvată, cererea confirmată, dosarul depus), iar pasul părea să aibă cinci
+ * ecrane și să se oprească la asigurare. Ordinea rămâne cea care blochează: rail-ul nu sare pe
+ * un ecran viitor nerezolvat, iar fiecare ecran așteaptă ce e înaintea lui.
+ */
+const showPath = hasVehicle
+
+/**
  * Un ecran de upload per (mod de deținere × document cerut). Câte unul singur e vizibil la un
  * moment dat, iar titlul și descrierea sunt cele ale modului — de asta nu e un singur ecran
  * „Contract" cu text generic: eticheta „Contract" pe ramura de leasing era chiar defectul.
@@ -159,7 +168,9 @@ export const vehicleMicroSteps: MicroStepDef[] = [
         firstRegistrationYear: null,
       })
     },
-    isDone: (c) => ownership(c) !== '',
+    // Gata doar cu mașina salvată pe server. Răspunsul restaurat din sesiunile trecute nu ajunge:
+    // dacă salvarea n-a apucat să se facă, restul pasului n-ar avea mașina pe care să se sprijine.
+    isDone: (c) => vehicleOf(c)?.vehicleId != null,
   },
   ...ownershipDocumentSteps,
   {
@@ -247,7 +258,7 @@ export const vehicleMicroSteps: MicroStepDef[] = [
     submit: async () => {
       // Se trimite pe ecranul de confirmare, împreună cu ecusoanele.
     },
-    visibleWhen: (c) => hasVehicle(c) && vehicleOf(c)?.vehicleId != null,
+    visibleWhen: showPath,
     isDone: (c) =>
       vehicleOf(c)?.copyRequest != null || typeof c.answers.perioada_copie === 'string',
   },
@@ -281,7 +292,7 @@ export const vehicleMicroSteps: MicroStepDef[] = [
         await onboardingService.submitCopyRequest(years, badgeSets(c))
       },
     },
-    visibleWhen: (c) => hasVehicle(c) && vehicleOf(c)?.vehicleId != null,
+    visibleWhen: showPath,
     isDone: (c) => vehicleOf(c)?.copyRequest != null,
   },
   {
@@ -300,7 +311,7 @@ export const vehicleMicroSteps: MicroStepDef[] = [
     // Contul de trezorerie stă pe ecranul unde se cere dovada plății, nu pe unul separat: cele
     // două sunt aceeași sarcină — plătești și încarci dovada.
     slot: 'arrPaymentDetails',
-    visibleWhen: (c) => vehicleOf(c)?.copyRequest != null,
+    visibleWhen: showPath,
     isDone: (c) => hasDocument(c, ['DovadaPlataCopieConformaEcusoane']),
   },
   {
@@ -318,7 +329,7 @@ export const vehicleMicroSteps: MicroStepDef[] = [
     // Exact aceeași componentă ca la pasul ARR — inclusiv pe ramura de leasing, unde înainte
     // lipsea cu totul (spec fix-uri §11.3).
     slot: 'vehicleDossier',
-    visibleWhen: (c) => vehicleOf(c)?.copyRequest != null,
+    visibleWhen: showPath,
     isDone: (c) => vehicleOf(c)?.copyRequest?.submittedAtUtc != null,
   },
   {
@@ -334,7 +345,7 @@ export const vehicleMicroSteps: MicroStepDef[] = [
       label: 'Copia conformă',
       hint: 'Numărul și data expirării trebuie să fie lizibile.',
     },
-    visibleWhen: (c) => vehicleOf(c)?.copyRequest?.submittedAtUtc != null,
+    visibleWhen: showPath,
     isDone: (c) => hasDocument(c, ['CopieConforma']),
   },
   ...(['Uber', 'Bolt'] as PlatformProvider[]).map<MicroStepDef>((provider) => ({
@@ -352,8 +363,7 @@ export const vehicleMicroSteps: MicroStepDef[] = [
     },
     // Doar pentru platformele alese: un ecuson Bolt n-are ce căuta la cineva care lucrează pe Uber.
     visibleWhen: (c) =>
-      vehicleOf(c)?.copyRequest?.submittedAtUtc != null &&
-      badgeSets(c).some((badge) => badge.provider === provider && badge.setCount > 0),
+      showPath(c) && badgeSets(c).some((badge) => badge.provider === provider && badge.setCount > 0),
     isDone: (c) => hasDocument(c, [`Ecuson${provider}`]),
   })),
 ]

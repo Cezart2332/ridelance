@@ -809,3 +809,56 @@ test.describe('pasul 2 — nu am PFA', () => {
     expect(created[0]).toMatchObject({ registrationType: 'NuAmPfa' })
   })
 })
+
+test.describe('pasul 6 — vehicul', () => {
+  const vehicleSteps = steps.map((step) =>
+    step.key === 'vehicle'
+      ? { ...step, status: 'InProgress', state: 'in_progress', blockReason: null }
+      : { ...step, status: 'Completed', state: 'completed' },
+  )
+  const json = (body: unknown) => async (route: Route) => {
+    const headers = {
+      'Access-Control-Allow-Origin': (await route.request().headerValue('origin')) ?? '*',
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Headers': 'authorization,content-type',
+      'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+    }
+    return route.request().method() === 'OPTIONS'
+      ? route.fulfill({ status: 204, headers })
+      : route.fulfill({ status: 200, headers, contentType: 'application/json', body: JSON.stringify(body) })
+  }
+  const platforms = {
+    pfaRegistrationId: 'reg-1', fleetAccountsAccepted: true, boltApiAccepted: false,
+    platforms: [{ provider: 'Uber', isSelectedByUser: true }, { provider: 'Bolt', isSelectedByUser: false }],
+  }
+
+  test('tot parcursul se vede de la început, cu copia conformă și ecusonul', async ({ page }, info) => {
+    test.skip(info.project.name === 'mobile', 'Lista pasului stă în coloana din dreapta, pe desktop.')
+    await stubBackend(page, [], { state: { ...onboardingState, steps: vehicleSteps } })
+    await page.route(`${API}/onboarding/platforms`, json(platforms))
+    await page.route(`${API}/onboarding/vehicle`, json({
+      vehicleId: 'v1', ownershipMode: 'Owned', status: 'Draft', copyRequest: null, badges: [],
+      copyFeePerYearBani: 10000, badgeFeePerSetBani: 800,
+    }))
+
+    await page.goto('/onboarding/vehicle', { waitUntil: 'networkidle' })
+    const list = page.getByRole('complementary', { name: 'Progresul pasului curent' })
+    for (const label of ['Confirmă cererea', 'Dovada plății', 'Dosarul', 'Copia conformă', 'Ecuson Uber']) {
+      await expect(list.getByText(label, { exact: true })).toBeVisible()
+    }
+    // Doar platformele alese: fără Bolt, fără ecuson Bolt.
+    await expect(list.getByText('Ecuson Bolt', { exact: true })).toHaveCount(0)
+  })
+
+  test('un răspuns vechi fără mașina salvată readuce întrebarea', async ({ page }) => {
+    await stubBackend(page, [], { state: { ...onboardingState, steps: vehicleSteps } })
+    await page.route(`${API}/onboarding/platforms`, json(platforms))
+    await page.route(`${API}/onboarding/vehicle`, json({ vehicleId: null, ownershipMode: null, copyRequest: null, badges: [] }))
+    await page.route(`${API}/onboarding/answers`, json([
+      { stepKey: 'vehicle', questionId: 'mod_detinere', question: 'Cum deții mașina?', value: 'Owned', valueLabel: 'Proprietate', answeredAtUtc: '2026-09-20T10:00:00Z', previousLabels: [] },
+    ]))
+
+    await page.goto('/onboarding/vehicle', { waitUntil: 'networkidle' })
+    await expect(page.getByRole('heading', { name: 'Cum deții mașina?' })).toBeVisible()
+  })
+})
