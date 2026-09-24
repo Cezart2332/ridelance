@@ -57,7 +57,10 @@ export function AutoContinue({
     <Stack
       spacing={spacing}
       onKeyDown={handleKeyDown}
-      onInputCapture={(event) => isField(event.target) && setKeystrokes((k) => k + 1)}
+      // Faza de bubble, nu capture: în capture, React re-randa câmpul cu valoarea veche înainte ca
+      // `onChange`-ul lui să apuce să citească tasta — și litera dispărea. Aici update-ul e în
+      // același lot cu `onChange`.
+      onInput={(event) => isField(event.target) && setKeystrokes((k) => k + 1)}
     >
       {children}
       <AutoAdvanceFooter
