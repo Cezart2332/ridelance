@@ -11,7 +11,7 @@ import type { MicroStepContext, MicroStepDef } from '../microStepTypes'
  *
  * Ramura „Nu am PFA" se oprește aici intenționat: dosarul de înființare are semnătură, blocare și
  * pași proprii (`/onboarding/pfa/date-personale`), deci rămâne un flux separat. Ecranele de aici
- * duc doar până la plata avansului — dosarul se deschide după ea, nu înaintea ei.
+ * duc doar până la deschiderea dosarului de înființare; avansul e plătit deja, pe primul ecran.
  */
 
 const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
@@ -187,26 +187,25 @@ export const pfaMicroSteps: MicroStepDef[] = [
     isDone: (c) => c.state?.pfaRegistrationId != null,
   },
   {
-    // Ecranul ăsta NU deschide dosarul — doar înregistrează ramura aleasă, ca să existe pe ce
-    // atârna plata. Dosarul se deschide după ce avansul e încasat: nu completezi un dosar
-    // pentru un serviciu pe care încă nu l-ai cumpărat (RL-03).
+    // Înregistrează ramura aleasă; după ea, pagina trimite omul în dosarul de înființare.
+    //
+    // Nu mai vorbește de plată: avansul se plătește pe primul ecran al pasului, de toată lumea,
+    // înaintea întrebării „ai deja PFA?". Ecranul spunea încă „următorul pas e plata în avans" și
+    // avea un buton „Mergi la plată" — pentru cineva care tocmai plătise.
     id: 'incepe_infiintare',
     macroStep: 'pfa',
-    kind: 'action',
+    kind: 'info',
     eyebrow: EYEBROW,
     icon: 'folder',
     railLabel: 'Înființare PFA',
     title: 'Îți înființăm PFA-ul',
     lines: () => [
-      'Următorul pas e plata în avans a abonamentului RIDElance Start.',
-      'După confirmarea plății îți deschidem dosarul de înființare și completezi datele.',
+      'Îți deschidem acum dosarul de înființare. Completezi datele personale și sediul, iar de ONRC și ANAF ne ocupăm noi.',
     ],
-    action: {
-      label: 'Mergi la plată',
-      busyLabel: 'Se pregătește...',
-      run: async () => {
-        await pfaService.create({ registrationType: 'NuAmPfa', isOwner: false })
-      },
+    onArrive: {
+      when: (c) => c.state?.pfaRegistrationId == null,
+      run: () => pfaService.create({ registrationType: 'NuAmPfa', isOwner: false }),
+      errorMessage: 'Nu am putut deschide dosarul de înființare. Încearcă din nou.',
     },
     visibleWhen: answeredNo,
     isDone: (c) => c.state?.pfaRegistrationId != null,

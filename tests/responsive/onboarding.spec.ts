@@ -769,3 +769,43 @@ test.describe('suport în onboarding', () => {
     await expect(dialog.getByRole('textbox', { name: 'Mesaj pentru suport' })).toBeVisible()
   })
 })
+
+test.describe('pasul 2 — nu am PFA', () => {
+  test('avansul e deja plătit: ecranul de înființare nu mai cere plata și deschide dosarul singur', async ({ page }) => {
+    const noRegistration = {
+      ...onboardingState,
+      pfaRegistrationId: null,
+      pfaStatus: null,
+      registrationType: null,
+      hasPaidInfiintare: true,
+      steps: steps.map((step) =>
+        step.key === 'pfa' ? { ...step, status: 'InProgress', state: 'in_progress', userPartDone: false } : step,
+      ),
+    }
+    await stubBackend(page, [], { state: noRegistration })
+
+    const created: unknown[] = []
+    await page.route(`${API}/pfa-registrations`, async (route) => {
+      const origin = (await route.request().headerValue('origin')) ?? '*'
+      const headers = {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Headers': 'authorization,content-type',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+      }
+      if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers })
+      created.push(route.request().postDataJSON())
+      return route.fulfill({ status: 200, headers, contentType: 'application/json', body: '"reg-1"' })
+    })
+
+    await page.goto('/onboarding/pfa', { waitUntil: 'networkidle' })
+    await page.getByRole('radio').filter({ hasText: 'Nu, vreau să înființez unul' }).click()
+    await page.getByText('Am citit și accept Politica de Plăți și Abonamente').click()
+
+    await expect(page.getByRole('heading', { name: 'Îți înființăm PFA-ul' })).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(/plata în avans/i)).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /Mergi la plată/ })).toHaveCount(0)
+    await expect.poll(() => created.length, { timeout: 15_000 }).toBe(1)
+    expect(created[0]).toMatchObject({ registrationType: 'NuAmPfa' })
+  })
+})
