@@ -215,8 +215,9 @@ function WizardBody({
   useEffect(() => {
     let cancelled = false
     Promise.all([
-      companyFormationService.getConsultoOffices(),
-      hosting ? Promise.resolve(null) : companyFormationService.getConsentFlow(),
+      // Fără cont: un refuz de la server nu are voie să trimită vizitatorul la login.
+      companyFormationService.getConsultoOffices({ publicRequest: true }),
+      hosting ? Promise.resolve(null) : companyFormationService.getConsentFlow(undefined, { publicRequest: true }),
     ])
       .then(([list, consent]) => {
         if (cancelled) return

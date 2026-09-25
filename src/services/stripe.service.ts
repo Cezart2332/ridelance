@@ -355,7 +355,7 @@ export const stripeService = {
       successUrl: effectiveSuccessUrl,
       cancelUrl: effectiveCancelUrl,
       dossier,
-    })
+    }, { publicRequest: true })
 
     const service = ONE_TIME_SERVICES.find(s => s.key === key)
     goToCheckout({

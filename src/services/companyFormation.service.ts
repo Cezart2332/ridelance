@@ -210,14 +210,17 @@ export const companyFormationService = {
   },
 
   /** Adresele de sediu puse la dispoziție de Consulto. */
-  async getConsultoOffices(): Promise<ConsultoOffice[]> {
-    const { data } = await api.get<ConsultoOffice[]>('/onboarding/sedii-disponibile')
+  async getConsultoOffices(options: { publicRequest?: boolean } = {}): Promise<ConsultoOffice[]> {
+    const { data } = await api.get<ConsultoOffice[]>('/onboarding/sedii-disponibile', options)
     return data
   },
 
   /** Textele wizardului, în versiunea activă. Nu trăiesc în frontend. */
-  async getConsentFlow(context = 'infiintare-societate'): Promise<LegalConsentFlow> {
-    const { data } = await api.get<LegalConsentFlow>('/legal/consent-flow', { params: { context } })
+  async getConsentFlow(
+    context = 'infiintare-societate',
+    options: { publicRequest?: boolean } = {},
+  ): Promise<LegalConsentFlow> {
+    const { data } = await api.get<LegalConsentFlow>('/legal/consent-flow', { params: { context }, ...options })
     return data
   },
 

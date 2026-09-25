@@ -4,6 +4,17 @@ import { clearCredentials } from '../store/authSlice'
 import { isRegistrationPath, refreshAccessToken } from './refreshSession'
 import { ROUTES } from '../constants/routes'
 
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    /**
+     * Cerere de pe o pagină publică (formularul serviciilor de pe site). Un 401 nu încearcă
+     * reîmprospătarea sesiunii și nu trimite la login: vizitatorul n-are cont, iar pagina își
+     * arată singură eroarea.
+     */
+    publicRequest?: boolean
+  }
+}
+
 // Create the configured Axios instance
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
@@ -63,6 +74,7 @@ api.interceptors.response.use(
     // Only attempt refresh for 401 errors on non-refresh endpoints
     if (
       error.response?.status !== 401 ||
+      originalRequest.publicRequest ||
       originalRequest._retry ||
       originalRequest.url?.includes('/users/refresh-token') ||
       originalRequest.url?.includes('/users/login')

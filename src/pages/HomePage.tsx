@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { ServiceOrderWizard } from '../components/services/ServiceOrderWizard'
+import type { ServiceKey } from '../services/stripe.service'
 import { Box, Button, Card, CardContent, Container, Paper, Stack, Typography } from '@mui/material'
 import { ROUTES } from '../constants/routes'
 import { alpha } from '@mui/material/styles'
@@ -51,6 +53,9 @@ export function HomePage() {
    */
   const [audience, setAudience] = useState<Audience>('pfa')
   const plans = plansFor(audience)
+
+  // Serviciile se cumpără fără cont: butonul deschide formularul lor, nu loginul.
+  const [ordering, setOrdering] = useState<ServiceKey | null>(null)
 
   const handleStart = () => {
     if (!isInitialized) return
@@ -579,7 +584,7 @@ export function HomePage() {
                   </Typography>
                 )}
                 <Button
-                  onClick={handleStart}
+                  onClick={() => setOrdering(svc.serviceKey)}
                   variant="outlined"
                   sx={{
                     alignSelf: 'flex-start',
@@ -1150,6 +1155,8 @@ export function HomePage() {
           </Stack>
         </Container>
       </Box>
+
+      <ServiceOrderWizard open={ordering !== null} serviceKey={ordering} onClose={() => setOrdering(null)} />
     </Box>
   )
 }
