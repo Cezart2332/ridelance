@@ -5,18 +5,12 @@ import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
 import { homeSec6 } from '../data/constants'
 import { pageFrameSx } from '../constants/layout'
-import {
-  ServicePurchaseModal,
-  type ServicePurchaseTarget,
-} from '../components/services/ServicePurchaseModal'
+import { ServiceOrderWizard } from '../components/services/ServiceOrderWizard'
 import type { ServiceKey } from '../services/stripe.service'
 
 export function ServicesPage() {
-  const [purchaseTarget, setPurchaseTarget] = useState<ServicePurchaseTarget | null>(null)
-
-  const openPurchase = (serviceKey: ServiceKey, title: string, price: string) => {
-    setPurchaseTarget({ key: serviceKey, title, price })
-  }
+  // Fiecare serviciu își are formularul: aceleași date ca în onboarding, apoi plata.
+  const [ordering, setOrdering] = useState<ServiceKey | null>(null)
 
   return (
     <Box sx={pageFrameSx}>
@@ -123,7 +117,7 @@ export function ServicesPage() {
                   )}
                   <Button
                     variant="outlined"
-                    onClick={() => openPurchase(svc.serviceKey, svc.title, svc.price)}
+                    onClick={() => setOrdering(svc.serviceKey)}
                     sx={{
                       alignSelf: 'flex-start',
                       borderRadius: `${TOKENS.radius.full}px`,
@@ -147,11 +141,7 @@ export function ServicesPage() {
         </Stack>
       </Container>
 
-      <ServicePurchaseModal
-        open={purchaseTarget !== null}
-        service={purchaseTarget}
-        onClose={() => setPurchaseTarget(null)}
-      />
+      <ServiceOrderWizard open={ordering !== null} serviceKey={ordering} onClose={() => setOrdering(null)} />
     </Box>
   )
 }

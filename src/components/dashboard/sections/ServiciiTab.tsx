@@ -1,10 +1,12 @@
-import { useState } from 'react'
-import { Alert, Box, Button, Chip, Paper, Snackbar, Typography } from '@mui/material'
+import { useEffect, useState } from 'react'
+import { Box, Button, Chip, Paper, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
-import { ONE_TIME_SERVICES, stripeService, type ServiceKey } from '../../../services/stripe.service'
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
+import { ONE_TIME_SERVICES, type ServiceKey } from '../../../services/stripe.service'
+import { userService, type UserProfile } from '../../../services/user.service'
 import type { OwnerType } from '../../../config/ownerType'
-import { PaymentPolicyAcceptance } from '../../common/PaymentPolicyAcceptance'
+import { PFA_PATHS } from '../../../config/pfaNavigation'
+import { ServiceOrderWizard } from '../../services/ServiceOrderWizard'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { PageHeader } from '../ui'
 
@@ -29,43 +31,41 @@ interface ServiciiTabProps {
 
 export function ServiciiTab({ ownerType = 'Pfa' }: ServiciiTabProps) {
   const services = ONE_TIME_SERVICES.filter((svc) => svc.ownerTypes.includes(ownerType))
-  const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
-  const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  // Același formular ca pe site, cu contactul luat din cont. Termenii și politica de plăți se
+  // acceptă în formular, la plată.
+  const [ordering, setOrdering] = useState<ServiceKey | null>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
 
-  const handleBuy = (key: ServiceKey) => {
-    if (!paymentPolicyAccepted) return
-    setCheckoutError(null)
-    stripeService.redirectToService(key).catch(() => {
-      setCheckoutError('Nu am putut deschide plata. Încearcă din nou în câteva momente.')
-    })
-  }
+  useEffect(() => {
+    userService.getProfile().then(setProfile).catch(() => {})
+  }, [])
+
+  const origin = window.location.origin
 
   return (
     <Box sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
-      <Snackbar
-        open={checkoutError !== null}
-        autoHideDuration={6000}
-        onClose={() => setCheckoutError(null)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert severity="error" onClose={() => setCheckoutError(null)} sx={{ width: '100%' }}>
-          {checkoutError}
-        </Alert>
-      </Snackbar>
+      <ServiceOrderWizard
+        open={ordering !== null}
+        serviceKey={ordering}
+        onClose={() => setOrdering(null)}
+        contact={
+          profile
+            ? {
+                name: `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim(),
+                email: profile.email,
+                phone: profile.phoneNumber ?? '',
+              }
+            : undefined
+        }
+        successUrl={`${origin}${PFA_PATHS.svcIndividual}?service_paid=1`}
+        cancelUrl={PFA_PATHS.svcIndividual}
+      />
       <Box sx={{ mb: 3 }}>
         <PageHeader
           title="Servicii individuale"
           subtitle="Ai nevoie de un serviciu punctual, fără abonament? Poți achiziționa orice serviciu separat, direct prin platforma noastră."
         />
       </Box>
-      {services.length > 0 && (
-        <Box sx={{ mb: 3 }}>
-          <PaymentPolicyAcceptance
-            checked={paymentPolicyAccepted}
-            onChange={setPaymentPolicyAccepted}
-          />
-        </Box>
-      )}
 
       {services.length === 0 && (
         <Paper
@@ -195,9 +195,8 @@ export function ServiciiTab({ ownerType = 'Pfa' }: ServiciiTabProps) {
               {/* CTA */}
               <Button
                 variant="contained"
-                endIcon={<OpenInNewRoundedIcon />}
-                disabled={!paymentPolicyAccepted}
-                onClick={() => handleBuy(svc.key)}
+                endIcon={<ArrowForwardRoundedIcon />}
+                onClick={() => setOrdering(svc.key)}
                 sx={{
                   borderRadius: `${T.radius.full}px`,
                   fontWeight: 700,
@@ -230,8 +229,9 @@ export function ServiciiTab({ ownerType = 'Pfa' }: ServiciiTabProps) {
         }}
       >
         <Typography sx={{ color: T.textMuted, fontSize: '0.85rem', lineHeight: 1.7 }}>
-          💡 <strong>Notă:</strong> Serviciile individuale se plătesc o singură dată și sunt procesate
-          de echipa RIDElance sau partenerii noștri. Vei fi contactat după achiziție pentru pașii următori.
+          💡 <strong>Notă:</strong> Serviciile individuale se plătesc o singură dată. Datele le completezi
+          înainte de plată, iar după plată dosarul pleacă automat la Consulto, partenerul nostru pentru
+          înființare și sediu. Găzduirea sediului se plătește anual.
         </Typography>
       </Box>
     </Box>

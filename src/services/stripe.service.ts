@@ -1,8 +1,8 @@
 import { api } from '../lib/axios'
-import { PFA_PATHS } from '../config/pfaNavigation'
 import type { OwnerType } from '../config/ownerType'
 import { PFA_PLANS, annualSummary, priceFor, type BillingCycle, type Plan, type PlanFeature } from '../data/plans'
 import { getPartnerBenefit } from '../data/benefits'
+import type { PersoanaFizicaPayload, RegisteredOfficePayload, SignPayload } from './companyFormation.service'
 
 /**
  * Stripe integration service using Payment Links.
@@ -11,6 +11,19 @@ import { getPartnerBenefit } from '../data/benefits'
 
 export type PlanKey = 'solo' | 'start' | 'pro'
 export type ServiceKey = 'infiintare_pfa' | 'sediu_social' | 'start_ride'
+
+/**
+ * Formularul unui serviciu, în forma în care îl așteaptă serverul. Aceleași câmpuri ca dosarul
+ * „Nu am PFA" din onboarding; fișierele circulă ca data URL.
+ */
+export interface ServiceDossierPayload {
+  solicitant: PersoanaFizicaPayload
+  office: RegisteredOfficePayload
+  companyName?: string | null
+  companyCui?: string | null
+  identityDocument: { fileName: string; contentType: string; data: string }
+  signature?: SignPayload | null
+}
 
 /** Cum se reînnoiește abonamentul, în vocabularul serverului. */
 export type SubscriptionCycle = 'Monthly' | 'Annual'
@@ -168,15 +181,16 @@ export const ONE_TIME_SERVICES: ServiceInfo[] = [
   {
     key: 'infiintare_pfa',
     title: 'Înființare PFA',
-    price: '450 lei',
-    desc: 'Deschizi rapid un PFA printr-un proces simplu și organizat, fără abonament lunar.',
+    price: '249 lei',
+    desc: 'Deschizi rapid un PFA printr-un proces simplu și organizat, fără abonament lunar. Completezi datele o singură dată, iar dosarul ajunge automat la partenerul nostru.',
     cta: 'Cumpără serviciul',
     ownerTypes: ['Pfa'],
   },
   {
     key: 'sediu_social',
     title: 'Găzduire Sediu Social',
-    price: '449 lei / an',
+    price: '349 lei / an',
+    priceNote: 'Tarif anual',
     desc: 'O soluție practică pentru cei care au nevoie de sediu social pentru PFA în București / Ilfov.',
     cta: 'Cumpără serviciul',
     ownerTypes: ['Pfa'],
@@ -184,8 +198,8 @@ export const ONE_TIME_SERVICES: ServiceInfo[] = [
   {
     key: 'start_ride',
     title: 'Start Ride',
-    price: '799 lei',
-    priceNote: '* nu include taxe ARR',
+    price: '999 lei',
+    priceNote: 'Deschiderea PFA și TVA intracomunitar incluse · nu include taxele ARR',
     desc: 'Începi pe PFA, fără să pierzi timp cu pași neclari. RIDElance te ghidează prin deschiderea PFA-ului și activarea pentru ridesharing, până ești pregătit să lucrezi independent.',
     tagline: 'Proces clar. Pornire corectă. Suport până la activare.',
     cta: 'Alege serviciul',
@@ -318,15 +332,20 @@ export const stripeService = {
     })
   },
 
+  /**
+   * Comanda unui serviciu individual: formularul întreg, apoi plata. Același drum de pe site
+   * (fără cont) și din dashboard — acolo tokenul leagă comanda de cont. Serverul refuză un
+   * formular incomplet înainte să deschidă plata; după plată, dosarul pleacă singur la Consulto.
+   */
   async redirectToPublicService(
     key: ServiceKey,
     customer: { customerName: string; customerEmail: string; customerPhone: string },
-    successUrl?: string,
-    cancelUrl?: string,
+    dossier: ServiceDossierPayload,
+    options: { successUrl?: string; cancelUrl?: string } = {},
   ): Promise<void> {
     const origin = window.location.origin
-    const effectiveSuccessUrl = successUrl ?? `${origin}/?service_paid=1`
-    const effectiveCancelUrl = cancelUrl ?? `${origin}/servicii`
+    const effectiveSuccessUrl = options.successUrl ?? `${origin}/?service_paid=1`
+    const effectiveCancelUrl = options.cancelUrl ?? `${origin}/servicii`
 
     const response = await api.post<{ clientSecret: string }>('/payments/public/service-checkout', {
       serviceKey: key,
@@ -335,8 +354,9 @@ export const stripeService = {
       customerPhone: customer.customerPhone,
       successUrl: effectiveSuccessUrl,
       cancelUrl: effectiveCancelUrl,
+      dossier,
     })
-    
+
     const service = ONE_TIME_SERVICES.find(s => s.key === key)
     goToCheckout({
       clientSecret: response.data.clientSecret,
@@ -345,24 +365,6 @@ export const stripeService = {
       title: service?.title || 'Serviciu RIDElance',
       price: service?.price,
       desc: service?.desc,
-    })
-  },
-
-  async redirectToService(key: ServiceKey): Promise<void> {
-    const service = ONE_TIME_SERVICES.find(s => s.key === key)
-    if (!service) return
-
-    const response = await api.post<{clientSecret: string}>('/payments/checkout-session', {
-      mode: 'payment',
-      plan: key
-    })
-    goToCheckout({
-      clientSecret: response.data.clientSecret,
-      cancelUrl: PFA_PATHS.svcIndividual,
-      kind: 'service',
-      title: service.title,
-      price: service.price,
-      desc: service.desc,
     })
   },
 
