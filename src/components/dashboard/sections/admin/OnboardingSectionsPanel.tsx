@@ -918,6 +918,8 @@ export function OnboardingSectionsPanel({
         setState(next)
         onStateChange?.(next)
         setError(null)
+        // La reîmprospătare (manuală sau periodică) se reiau și răspunsurile și verificările pașilor.
+        if (refreshKey > 0) setReviewTick((tick) => tick + 1)
         const current =
           next.steps.find((s) => s.state === 'pending_admin' || s.state === 'rejected') ??
           next.steps.find((s) => s.state === 'in_progress' || s.state === 'available')

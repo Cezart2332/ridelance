@@ -1,5 +1,5 @@
 import { Alert, Box, Button, Divider, LinearProgress, Paper, Stack, ThemeProvider, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 import {
   EmptyState,
@@ -62,6 +62,8 @@ export interface PfaDetailViewProps {
   payments: [string, string][]
   accounting: [string, string][]
   onBack: () => void
+  /** Butonul de reîmprospătare din antet; dosarul se actualizează și singur, periodic. */
+  refreshAction?: ReactNode
   onImpersonate: () => void
   onOpenAction: (action: 'plan' | 'discount' | 'suspend' | 'reactivate' | 'note') => void
   onOpenChat: () => void
@@ -114,6 +116,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
     payments,
     accounting,
     onBack,
+    refreshAction,
     onImpersonate,
     onOpenAction,
     onOpenChat,
@@ -233,6 +236,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
               />
             }
             primaryAction={primaryAction}
+            extraActions={refreshAction}
             menuItems={headerMenu}
           />
 

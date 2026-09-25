@@ -153,3 +153,36 @@ test('admin: „Validează documentele pentru dosar” e separat de validarea pa
   await expect(box.getByText(/Validate\. Clientul poate genera dosarul/)).toBeVisible()
   expect(validated).toBe(true)
 })
+
+test('admin: lista și dosarul PFA se reîmprospătează singure la 10 secunde și din buton', async ({ page }) => {
+  await page.clock.install()
+  await mockAdmin(page)
+  let clients = [client]
+  await page.route(/\/pfa-registrations(\?.*)?$/, (route) => route.fulfill({ json: { items: clients } }))
+  let docs = [...documents]
+  await page.route(/\/documents(?:\?.*)?$/, (route) => route.fulfill({ json: docs }))
+
+  await page.goto('/admin?tab=pfa')
+  await expect(page.getByText('Andrei Ionescu', { exact: true })).toBeVisible()
+
+  // Un client nou apare fără reîncărcarea paginii, după intervalul de 10 secunde.
+  clients = [client, { ...client, id: 'pfa-new', userId: 'client-new', userName: 'Maria Pop', userEmail: 'maria@example.test', fullName: 'Maria Pop' }]
+  await page.clock.fastForward(10_000)
+  await expect(page.getByText('Maria Pop', { exact: true })).toBeVisible()
+
+  // Butonul face același lucru imediat.
+  clients = [...clients, { ...client, id: 'pfa-third', userId: 'client-third', userName: 'Ion Radu', userEmail: 'ion@example.test', fullName: 'Ion Radu' }]
+  await page.getByRole('button', { name: 'Reîmprospătează' }).click()
+  await expect(page.getByText('Ion Radu', { exact: true })).toBeVisible()
+
+  // În dosarul deschis: un act încărcat de client apare singur în lista de documente.
+  await page.goto('/admin?tab=pfa&user=client-review&section=documente')
+  await expect(page.getByRole('article', { name: 'Permis de conducere.pdf' })).toBeVisible()
+  docs = [...docs, { ...documents[0], id: 'arr', originalFileName: 'Atestat ARR.pdf', category: 'AtestatArr' }]
+  await page.clock.fastForward(10_000)
+  await expect(page.getByRole('article', { name: 'Atestat ARR.pdf' })).toBeVisible()
+
+  docs = [...docs, { ...documents[0], id: 'cazier', originalFileName: 'Cazier.pdf', category: 'Cazier' }]
+  await page.getByRole('button', { name: 'Reîmprospătează' }).click()
+  await expect(page.getByRole('article', { name: 'Cazier.pdf' })).toBeVisible()
+})

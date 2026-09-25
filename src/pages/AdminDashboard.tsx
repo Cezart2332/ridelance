@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
 import { NotificationsInbox } from '../components/notifications/NotificationsPanel'
 import { useState, useEffect, useCallback } from 'react'
+import { useAutoRefresh } from '../hooks/useAutoRefresh'
 import { ROUTES } from '../constants/routes'
 import {
   Box, Paper, Stack, TextField, Typography, Avatar,
@@ -22,6 +23,7 @@ import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded'
 import SupervisedUserCircleRoundedIcon from '@mui/icons-material/SupervisedUserCircleRounded'
 import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded'
 import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
 import AssignmentTurnedInRoundedIcon from '@mui/icons-material/AssignmentTurnedInRounded'
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded'
@@ -105,6 +107,9 @@ type EnrolledFilter = 'active' | 'inactive' | 'deleted'
 
 /** Filtrul „Profil fiscal” din lista PFA înrolate. */
 type FiscalFilter = 'all' | FiscalProfileStatus
+
+/** Cât de des se reîmprospătează singure lista de dosare PFA și dosarul deschis. */
+const PFA_AUTO_REFRESH_MS = 10_000
 
 const FISCAL_FILTERS: { id: FiscalFilter; label: string }[] = [
   { id: 'all', label: 'Toate' },
@@ -285,18 +290,67 @@ export function AdminDashboard() {
     userService.getProfile().then(setProfile).catch(() => {})
   }, [])
 
+  const pfaListVisible = (activeTab === 'pfa' || activeTab === 'pfa_inrolate' || activeTab === 'chat') && !selectedPfa
+
+  const fetchPfas = useCallback(async () => {
+    const data = await pfaService.getAll()
+    const items = data?.items ?? data ?? []
+    setPfas(items.map(normalizePfaSummary))
+    setPfasError(null)
+  }, [])
+
   useEffect(() => {
-    if ((activeTab !== 'pfa' && activeTab !== 'pfa_inrolate' && activeTab !== 'chat') || selectedPfa) return
+    if (!pfaListVisible) return
     setPfasLoading(true)
     setPfasError(null)
-    pfaService.getAll()
-      .then((data) => {
-        const items = data?.items ?? data ?? []
-        setPfas(items.map(normalizePfaSummary))
-      })
+    fetchPfas()
       .catch(() => setPfasError('Nu s-au putut încărca înregistrările PFA.'))
       .finally(() => setPfasLoading(false))
-  }, [activeTab, selectedPfa, pfasReloadToken])
+  }, [pfaListVisible, fetchPfas, pfasReloadToken])
+
+  // Dosarul deschis: documentele, detaliile și pașii de onboarding, fără spinner — ce e pe
+  // ecran rămâne până vin datele noi.
+  const refreshSelectedPfa = useCallback(async () => {
+    if (!selectedPfa) return
+    const [docs, detail] = await Promise.all([
+      documentService.getByUser(selectedPfa.userId),
+      adminOverviewService.getPfaDetails(selectedPfa.id).catch(() => null),
+    ])
+    setDocuments(docs)
+    setDocsError(null)
+    if (detail) setPfaDetail(detail)
+    setOnboardingRefreshKey((key) => key + 1)
+  }, [selectedPfa])
+
+  // Clienții încarcă acte și avansează în onboarding cât adminul se uită: lista și dosarul se
+  // actualizează singure, fără reîncărcarea întregii pagini.
+  useAutoRefresh(fetchPfas, PFA_AUTO_REFRESH_MS, pfaListVisible && activeTab !== 'chat')
+  useAutoRefresh(refreshSelectedPfa, PFA_AUTO_REFRESH_MS, selectedPfa !== null)
+
+  const [manualRefreshing, setManualRefreshing] = useState(false)
+  const handleManualRefresh = async () => {
+    setManualRefreshing(true)
+    try {
+      await (selectedPfa ? refreshSelectedPfa() : fetchPfas())
+    } catch {
+      setSnackbar({ open: true, message: 'Nu am putut reîmprospăta datele. Încearcă din nou.', severity: 'error' })
+    } finally {
+      setManualRefreshing(false)
+    }
+  }
+
+  const refreshButton = (
+    <Button
+      variant="outlined"
+      size="small"
+      onClick={() => void handleManualRefresh()}
+      disabled={manualRefreshing}
+      startIcon={manualRefreshing ? <CircularProgress size={16} /> : <RefreshRoundedIcon />}
+      sx={{ flexShrink: 0 }}
+    >
+      Reîmprospătează
+    </Button>
+  )
 
   useEffect(() => {
     if (!selectedPfa) return
@@ -691,6 +745,7 @@ export function AdminDashboard() {
             ['Documente de verificat', String(active?.documentsToReview ?? pfa.documentCount)],
           ]}
           onBack={() => { navigate(`/admin?tab=${activeTab}`); setSelectedPfa(null) }}
+          refreshAction={refreshButton}
           onImpersonate={() => handleImpersonate(pfa.userId, pfa.userName || pfa.fullName || pfa.userEmail)}
           onOpenAction={openDetailAction}
           onOpenChat={() => { navigate('/admin?tab=chat&user=' + pfa.userId); setSelectedPfa(null); setActiveTab('chat') }}
@@ -875,9 +930,12 @@ export function AdminDashboard() {
   // ─── PFA List ────────────────────────────────────────────────────────────────
   const renderPfaList = () => (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h1">{activeTab === 'pfa_inrolate' ? 'PFA înrolate' : 'Onboarding'}</Typography>
-        <Typography color="text.secondary" variant="body1" sx={{ mt: 1 }}>Găsește un client, verifică documentele și urmărește progresul dosarului.</Typography>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+        <Box>
+          <Typography variant="h1">{activeTab === 'pfa_inrolate' ? 'PFA înrolate' : 'Onboarding'}</Typography>
+          <Typography color="text.secondary" variant="body1" sx={{ mt: 1 }}>Găsește un client, verifică documentele și urmărește progresul dosarului.</Typography>
+        </Box>
+        {refreshButton}
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>

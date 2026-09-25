@@ -19,6 +19,8 @@ export function PageHeader({
   primaryAction,
   menuItems = [],
   status,
+  /** Butoane secundare lângă acțiunea primară (ex. reîmprospătare). */
+  extraActions,
 }: {
   backLabel: string
   onBack: () => void
@@ -28,6 +30,7 @@ export function PageHeader({
   primaryAction?: { label: string; onClick: () => void; disabled?: boolean }
   menuItems?: ActionMenuItem[]
   status?: ReactNode
+  extraActions?: ReactNode
 }) {
   return (
     <Stack spacing={1.5}>
@@ -59,6 +62,7 @@ export function PageHeader({
         </Box>
 
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexShrink: 0 }}>
+          {extraActions}
           {primaryAction && (
             <Button
               variant="contained"
