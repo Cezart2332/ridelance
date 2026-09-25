@@ -9,6 +9,9 @@ export type { PanelProps } from './Panel'
 export { StatCard } from './StatCard'
 export type { StatCardProps } from './StatCard'
 
+export { StatGrid } from './StatGrid'
+export type { StatGridProps } from './StatGrid'
+
 export { SplitBar, BreakdownRow } from './SplitBar'
 
 export { StatusChip, DocumentStatusChip, PfaStatusChip } from './StatusChip'

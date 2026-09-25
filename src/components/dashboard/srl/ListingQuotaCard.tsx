@@ -17,7 +17,8 @@ export function ListingQuotaCard({ quota }: { quota: ListingQuota }) {
     <Paper
       elevation={0}
       sx={{
-        p: { xs: 2, md: 2.4 },
+        // Compact pe telefon, ca vecinii lui din `StatGrid`: altfel întindea tot rândul.
+        p: { xs: 1.4, md: 2.4 },
         borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
         border: `1px solid ${DASHBOARD_TOKENS.border}`,
         bgcolor: DASHBOARD_TOKENS.paper,
@@ -29,14 +30,14 @@ export function ListingQuotaCard({ quota }: { quota: ListingQuota }) {
         justifyContent: 'center',
       }}
     >
-      <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted }}>
+      <Typography noWrap sx={{ fontSize: '0.78rem', fontWeight: 700, color: DASHBOARD_TOKENS.textMuted }}>
         Anunțuri disponibile
       </Typography>
 
-      <Stack direction="row" spacing={0.6} sx={{ alignItems: 'baseline', mt: 0.6 }}>
+      <Stack direction="row" spacing={0.6} sx={{ alignItems: 'baseline', mt: { xs: 0.4, md: 0.6 } }}>
         <Typography
           sx={{
-            fontSize: { xs: '1.35rem', md: '1.5rem' },
+            fontSize: { xs: '1.2rem', md: '1.5rem' },
             fontWeight: 850,
             lineHeight: 1.2,
             color: full ? DASHBOARD_TOKENS.stateWarning : DASHBOARD_TOKENS.ink,
@@ -49,7 +50,7 @@ export function ListingQuotaCard({ quota }: { quota: ListingQuota }) {
         </Typography>
       </Stack>
 
-      <Box sx={{ mt: 1 }}>
+      <Box sx={{ mt: { xs: 0.6, md: 1 } }}>
         <LinearProgress
           variant="determinate"
           value={percent}
@@ -64,7 +65,7 @@ export function ListingQuotaCard({ quota }: { quota: ListingQuota }) {
         />
       </Box>
 
-      <Typography sx={{ fontSize: '0.78rem', color: DASHBOARD_TOKENS.textSubtle, mt: 0.8 }}>
+      <Typography noWrap sx={{ fontSize: { xs: '0.7rem', md: '0.78rem' }, color: DASHBOARD_TOKENS.textSubtle, mt: { xs: 0.5, md: 0.8 } }}>
         {full
           ? 'Toate anunțurile incluse sunt folosite'
           : `${quota.used} ${quota.used === 1 ? 'publicat' : 'publicate'} · incluse în abonament`}

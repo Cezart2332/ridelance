@@ -19,7 +19,7 @@ import { maintenanceService, type MaintenanceEntry } from '../../../../services/
 import { rentalsService, type Rental } from '../../../../services/rentals.service'
 import { formatCarStatus } from '../../../../utils/carLabels'
 import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardTheme'
-import { Amount, PageHeader, Panel, StatCard, StatusChip } from '../../ui'
+import { Amount, PageHeader, Panel, StatCard, StatGrid, StatusChip } from '../../ui'
 import { CarEditDialog } from '../CarEditDialog'
 import { MaintenanceEntryDialog } from '../MaintenanceEntryDialog'
 import { NewRentalDialog } from '../NewRentalDialog'
@@ -84,12 +84,14 @@ export function SrlCarPage() {
   useEffect(() => {
     let cancelled = false
 
+    // Doar mașina e obligatorie. Restul (închirieri, mentenanță, dosar, istoric) are un gol în loc:
+    // înainte, oricare dintre ele căzută ascundea toată pagina sub „Nu am putut încărca mașina”.
     Promise.all([
       carsService.getById(carId),
-      rentalsService.getOverview(),
-      maintenanceService.getOverview(carId),
-      documentService.getCarDossier(carId),
-      checksService.getTimeline(carId),
+      rentalsService.getOverview().catch(() => ({ rentals: [] as Rental[] })),
+      maintenanceService.getOverview(carId).catch(() => ({ entries: [] as MaintenanceEntry[] })),
+      documentService.getCarDossier(carId).catch(() => null),
+      checksService.getTimeline(carId).catch(() => [] as VehicleEvent[]),
     ])
       .then(([loadedCar, overview, maintenanceOverview, carDossier, events]) => {
         if (cancelled) return
@@ -201,6 +203,8 @@ export function SrlCarPage() {
         to={SRL_PATHS.cars}
         startIcon={<ArrowBackRoundedIcon />}
         sx={{
+          // Pe telefon antetul are deja săgeata de înapoi.
+          display: { xs: 'none', md: 'inline-flex' },
           alignSelf: 'flex-start',
           textTransform: 'none',
           fontWeight: 700,
@@ -211,10 +215,12 @@ export function SrlCarPage() {
       </Button>
 
       <PageHeader
+        // Aici titlul e chiar mașina, nu numele paginii din antet: rămâne și pe telefon.
+        keepTitleOnMobile
         title={title}
         subtitle={identity}
         actions={
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
+          <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
             <Button
               variant="contained"
               disableElevation
@@ -255,14 +261,14 @@ export function SrlCarPage() {
         </Alert>
       )}
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
+      <StatGrid columns={3} mobileColumns={3}>
         <StatCard label="Stare" value={formatCarStatus(car.status)} />
         <StatCard label="Închirieri deschise" value={String(openRentals.length)} />
         <StatCard
           label="Dosar vehicul"
           value={dossier ? `${dossier.completionPercent}%` : '—'}
         />
-      </Box>
+      </StatGrid>
 
       <Tabs
         value={activeTab}

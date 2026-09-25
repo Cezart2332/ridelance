@@ -15,10 +15,11 @@ export interface StatCardProps {
   onClick?: () => void
 }
 
+// Pe telefon cartonașele stau două pe rând (`StatGrid`): cifra se micșorează cât să încapă.
 const VALUE_SIZE = {
-  sm: { xs: '1.15rem', md: '1.25rem' },
-  md: { xs: '1.35rem', md: '1.5rem' },
-  lg: { xs: '1.9rem', md: '2.2rem' },
+  sm: { xs: '1.05rem', md: '1.25rem' },
+  md: { xs: '1.2rem', md: '1.5rem' },
+  lg: { xs: '1.5rem', md: '2.2rem' },
 } as const
 
 /** Etichetă sus, cifră jos. Aceeași formă peste tot, ca tile-urile să se alinieze. */
@@ -30,7 +31,7 @@ export function StatCard({ label, value, helper, variant = 'default', size = 'md
       elevation={0}
       onClick={onClick}
       sx={{
-        p: { xs: 2, md: 2.4 },
+        p: { xs: 1.4, md: 2.4 },
         borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
         border: `1px solid ${accent ? alpha(DASHBOARD_TOKENS.accent, 0.28) : DASHBOARD_TOKENS.border}`,
         bgcolor: accent ? DASHBOARD_TOKENS.accentWash : DASHBOARD_TOKENS.paper,
@@ -71,7 +72,7 @@ export function StatCard({ label, value, helper, variant = 'default', size = 'md
           fontWeight: 900,
           fontSize: VALUE_SIZE[size],
           lineHeight: 1.15,
-          mt: 0.7,
+          mt: { xs: 0.4, md: 0.7 },
           letterSpacing: -0.6,
           fontVariantNumeric: 'tabular-nums',
         }}
@@ -80,7 +81,7 @@ export function StatCard({ label, value, helper, variant = 'default', size = 'md
       </Typography>
 
       {helper && (
-        <Typography sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 600, fontSize: '0.74rem', mt: 0.4 }}>
+        <Typography noWrap sx={{ color: DASHBOARD_TOKENS.textSubtle, fontWeight: 600, fontSize: { xs: '0.7rem', md: '0.74rem' }, mt: 0.4 }}>
           {helper}
         </Typography>
       )}

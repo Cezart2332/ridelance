@@ -81,7 +81,7 @@ export function FinancialOverviewPage() {
                     onStart={fiscal?.openForm}
                   />
                 )}
-                <Box sx={{ display: 'grid', gap: GRID_GAP, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' } }}>
+                <Box sx={{ display: 'grid', gap: { xs: 1, sm: GRID_GAP }, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
                   <KpiTile
                     label="Încasări nete"
                     metric={data.kpis.netEarnings}
@@ -99,10 +99,9 @@ export function FinancialOverviewPage() {
                 <Box
                   sx={{
                     display: 'grid',
-                    gap: GRID_GAP,
+                    gap: { xs: 1, sm: GRID_GAP },
                     gridTemplateColumns: {
-                      xs: '1fr',
-                      sm: 'repeat(2, minmax(0, 1fr))',
+                      xs: 'repeat(2, minmax(0, 1fr))',
                       lg: 'repeat(5, minmax(0, 1fr))',
                     },
                   }}

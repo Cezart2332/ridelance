@@ -20,7 +20,7 @@ import UploadRoundedIcon from '@mui/icons-material/UploadRounded'
 
 import { documentService, type DocumentSummary } from '../../../../services/document.service'
 import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '../../dashboardTheme'
-import { PageHeader, Panel, StatCard, StatusChip } from '../../ui'
+import { PageHeader, Panel, StatCard, StatGrid, StatusChip } from '../../ui'
 import { DateField } from '../../../common/DateField'
 import { useQuickActionIntent } from '../../layout/useQuickActionIntent'
 
@@ -170,11 +170,11 @@ export function SrlCompanyDocumentsPage() {
         </Alert>
       )}
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
+      <StatGrid columns={3} mobileColumns={3}>
         <StatCard label="Documente stocate" value={String(items.length)} />
         <StatCard label="Expiră în 30 de zile" value={String(expiringSoon)} />
         <StatCard label="Spațiu folosit" value={formatSize(totalSize)} />
-      </Box>
+      </StatGrid>
 
       <Panel title="Dosarul firmei" subtitle="Certificate, autorizații și polițe.">
         {items.length === 0 ? (

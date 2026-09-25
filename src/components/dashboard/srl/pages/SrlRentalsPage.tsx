@@ -5,7 +5,7 @@ import { Alert, Box, Button, Skeleton, Stack, Tab, Tabs, Typography } from '@mui
 import { srlCarPath } from '../../../../config/srlNavigation'
 import { rentalsService, type Rental, type RentalOverview, type RentalStatus } from '../../../../services/rentals.service'
 import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardTheme'
-import { Amount, PageHeader, Panel, StatCard, StatusChip } from '../../ui'
+import { Amount, PageHeader, Panel, StatCard, StatGrid, StatusChip } from '../../ui'
 import type { StatusTone } from '../../ui'
 
 /**
@@ -82,11 +82,11 @@ export function SrlRentalsPage() {
     return (
       <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
         <Skeleton variant="rounded" height={72} />
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' }, gap: 2 }}>
+        <StatGrid columns={4}>
           {[0, 1, 2, 3].map((i) => (
             <Skeleton key={i} variant="rounded" height={110} />
           ))}
-        </Box>
+        </StatGrid>
         <Skeleton variant="rounded" height={280} />
       </Stack>
     )

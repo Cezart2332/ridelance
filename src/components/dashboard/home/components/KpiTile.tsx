@@ -47,8 +47,9 @@ export function KpiTile({
     <Paper
       elevation={0}
       sx={{
-        p: '20px',
-        minHeight: 118,
+        // Pe telefon stau două pe rând: mai strânse, ca să încapă cifra și să nu umple ecranul.
+        p: { xs: '12px', sm: '20px' },
+        minHeight: { xs: 0, sm: 118 },
         height: '100%',
         overflow: 'hidden',
         display: 'flex',
@@ -71,6 +72,9 @@ export function KpiTile({
         sx={{
           alignItems: 'baseline',
           justifyContent: 'space-between',
+          // Eticheta și procentul trec pe două rânduri când tile-ul e îngust.
+          flexWrap: 'wrap',
+          rowGap: 0.25,
           // Doar în layout-ul cu trei tile-uri pe coloana de span 7 eticheta chiar se rupe pe
           // două rânduri („Comision platforme" la ~200px). Acolo rezervăm înălțimea, ca valorile
           // să rămână aliniate între tile-uri; în rest ar fi doar gol.
@@ -78,7 +82,7 @@ export function KpiTile({
         }}
       >
         <Typography
-          sx={{ fontSize: 13, lineHeight: 1.4, fontWeight: 500, color: HOME_TOKENS.text.secondary }}
+          sx={{ fontSize: { xs: 12, sm: 13 }, lineHeight: 1.4, fontWeight: 500, color: HOME_TOKENS.text.secondary }}
         >
           {label}
         </Typography>
@@ -95,7 +99,7 @@ export function KpiTile({
         unit={unit}
         decimals={decimals}
         size={isCompact ? 'card' : 'kpi'}
-        sx={{ mt: '12px' }}
+        sx={{ mt: { xs: '6px', sm: '12px' } }}
       />
 
       <Typography

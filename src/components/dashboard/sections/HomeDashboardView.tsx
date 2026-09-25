@@ -253,12 +253,12 @@ export function HomeDashboardContent({
                   <Box
                     sx={{
                       display: 'grid',
-                      gap: GRID_GAP,
+                      // Două pe rând și pe telefon: câte una, cele șase cifre umpleau două ecrane.
                       gridTemplateColumns: {
-                        xs: '1fr',
-                        sm: 'repeat(2, minmax(0, 1fr))',
+                        xs: 'repeat(2, minmax(0, 1fr))',
                         lg: 'repeat(3, minmax(0, 1fr))',
                       },
+                      gap: { xs: 1, sm: GRID_GAP },
                       [SPLIT_ROW]: { gridColumn: 'span 7' },
                     }}
                   >

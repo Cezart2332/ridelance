@@ -15,7 +15,7 @@ import {
   type SrlHome,
 } from '../../../../services/srlHome.service'
 import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardTheme'
-import { Amount, PageHeader, Panel, SplitBar, StatCard, StatusChip } from '../../ui'
+import { Amount, PageHeader, Panel, SplitBar, StatCard, StatGrid, StatusChip } from '../../ui'
 import { ListingQuotaCard } from '../ListingQuotaCard'
 
 /**
@@ -122,7 +122,7 @@ export function SrlHomePage() {
       />
 
       {/* Șase cifre: trei pe rând pe desktop, ca fiecare să aibă loc de etichetă. */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, gap: 2 }}>
+      <StatGrid columns={3}>
         <StatCard
           label="Mașini în flotă"
           value={String(data.fleetSize)}
@@ -156,7 +156,7 @@ export function SrlHomePage() {
           value={String(data.scheduledMaintenance)}
           helper="în 14 zile"
         />
-      </Box>
+      </StatGrid>
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1.2fr 0.8fr' }, gap: 2 }}>
         <Panel

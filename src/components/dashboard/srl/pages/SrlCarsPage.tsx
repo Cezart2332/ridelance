@@ -26,7 +26,7 @@ import { useQuickActionIntent } from '../../layout/useQuickActionIntent'
 import { carsService, type Car, type CarLead } from '../../../../services/cars.service'
 import { rentalsService, type Rental, type RentalDocumentType } from '../../../../services/rentals.service'
 import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '../../dashboardTheme'
-import { Amount, PageHeader, Panel, pillToggleSx, StatCard, StatusChip } from '../../ui'
+import { Amount, PageHeader, Panel, pillToggleSx, StatCard, StatGrid, StatusChip } from '../../ui'
 import { CarDocumentsDialog } from '../CarDocumentsDialog'
 import { CarEditDialog } from '../CarEditDialog'
 import { FleetCarCard } from '../FleetCarCard'
@@ -264,6 +264,8 @@ export function SrlCarsPage() {
         title="Mașinile mele"
         subtitle="Fiecare mașină cu ce se poate face pe ea: dosar, închiriere, contract, proces-verbal."
         actions={<AddCarButton />}
+        // Pe telefon, „Adaugă mașină” e în meniul „+” din antet.
+        actionsOnMobile={false}
       />
 
       {error && (
@@ -276,12 +278,12 @@ export function SrlCarsPage() {
         </Alert>
       )}
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 2 }}>
+      <StatGrid columns={4}>
         <StatCard label="Mașini în flotă" value={String(cars.length)} helper={`${publishedCount} vizibile în piață`} variant="accent" />
         <StatCard label="Închiriate acum" value={String(rentedCount)} helper={`${cars.length - rentedCount} libere`} />
         <StatCard label="Solicitări" value={String(leads.length)} helper={`${leads.filter((l) => l.status === 'Nou').length} necitite`} />
         {quota && <ListingQuotaCard quota={quota} />}
-      </Box>
+      </StatGrid>
 
       <Tabs
         value={activeTab}
@@ -662,12 +664,12 @@ function StatsPanel({ cars }: { cars: Car[] }) {
 
   return (
     <Stack spacing={2}>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 2 }}>
+      <StatGrid columns={4}>
         <StatCard label="Vizualizări" value={totals.views.toLocaleString('ro-RO')} />
         <StatCard label="Click-uri" value={totals.clicks.toLocaleString('ro-RO')} />
         <StatCard label="Cereri" value={totals.forms.toLocaleString('ro-RO')} />
         <StatCard label="Conversie" value={`${conversion}%`} helper="cereri din vizualizări" />
-      </Box>
+      </StatGrid>
 
       <Panel title="Pe mașini" subtitle="Cine atrage și cine nu.">
         {cars.length === 0 ? (
