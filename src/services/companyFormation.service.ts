@@ -184,7 +184,39 @@ export const emptyAdresa = (): Adresa => ({
   codPostal: null,
 })
 
+/** Ce s-a putut citi din buletin, în forma formularului. Câmpurile necitite vin `null`. */
+export interface IdentityCardScan {
+  nume: string | null
+  prenume: string | null
+  cnp: string | null
+  serieAct: string | null
+  numarAct: string | null
+  autoritateEmitenta: string | null
+  dataEmiterii: string | null
+  dataExpirarii: string | null
+  domiciliu: Adresa
+  /** Chei majuscule, ca `prefilledFields` din onboarding: `CNP`, `DOMICILIU_STRADA`. */
+  prefilledFields: string[]
+  /** De ce nu s-a completat (tot sau CNP-ul). Null când citirea a mers. */
+  note: string | null
+}
+
 export const companyFormationService = {
+  /**
+   * Citește buletinul din formularul serviciilor de pe site, fără cont. Nu salvează nimic —
+   * actul ajunge în dosar abia odată cu comanda.
+   */
+  async scanIdentityCardPublic(file: File): Promise<IdentityCardScan> {
+    const form = new FormData()
+    form.append('file', file)
+    const { data } = await api.post<IdentityCardScan>('/payments/public/scan-identity-card', form, {
+      publicRequest: true,
+      // Modelul citește actul în câteva secunde; pe o poză mare, mai mult.
+      timeout: 90_000,
+    })
+    return data
+  },
+
   /** Starea dosarului, pentru reluare de unde a rămas. */
   async getState(): Promise<CompanyFormationState> {
     const { data } = await api.get<CompanyFormationState>('/onboarding/company-formation')

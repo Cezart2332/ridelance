@@ -23,10 +23,12 @@ import {
   emptyAdresa,
   emptyPersoana,
   type ConsultoOffice,
+  type IdentityCardScan,
   type LegalConsentFlow,
   type PersoanaFizica,
 } from '../../services/companyFormation.service'
 import { ONE_TIME_SERVICES, stripeService, type ServiceKey } from '../../services/stripe.service'
+import { COUNTIES } from '../../data/counties'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
 import { TermsAcceptance } from '../common/TermsAcceptance'
@@ -148,6 +150,43 @@ function officeComplete({ office, owners }: RegisteredOfficeValue): boolean {
   return office.acknowledgedOwnerConsent === true && owners.length > 0 && owners.every((o) => personMissing(o.persoana).length === 0)
 }
 
+const plain = (value: string) =>
+  value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/^(jud(etul)?.?|mun(icipiul)?.?)s*/, '').trim()
+
+/** Județul citit din buletin, ca valoare din listă: „ILFOV", „Jud. Argeș", „Mun. București". */
+function matchCounty(raw: string | null): string | null {
+  if (!raw) return null
+  const wanted = plain(raw)
+  return COUNTIES.find((c) => plain(c) === wanted) ?? null
+}
+
+/** Ce s-a citit din buletin trece peste formular; ce n-a putut fi citit rămâne cum era. */
+function applyScan(p: PersoanaFizica, scan: IdentityCardScan): PersoanaFizica {
+  const d = scan.domiciliu
+  return {
+    ...p,
+    nume: scan.nume ?? p.nume,
+    prenume: scan.prenume ?? p.prenume,
+    cnp: scan.cnp ?? p.cnp,
+    serieAct: scan.serieAct ?? p.serieAct,
+    numarAct: scan.numarAct ?? p.numarAct,
+    autoritateEmitenta: scan.autoritateEmitenta ?? p.autoritateEmitenta,
+    dataEmiterii: scan.dataEmiterii ?? p.dataEmiterii,
+    dataExpirarii: scan.dataExpirarii ?? p.dataExpirarii,
+    domiciliu: {
+      ...p.domiciliu,
+      judet: matchCounty(d.judet) ?? p.domiciliu.judet,
+      localitate: d.localitate ?? p.domiciliu.localitate,
+      strada: d.strada ?? p.domiciliu.strada,
+      numar: d.numar ?? p.domiciliu.numar,
+      bloc: d.bloc ?? p.domiciliu.bloc,
+      scara: d.scara ?? p.domiciliu.scara,
+      etaj: d.etaj ?? p.domiciliu.etaj,
+      apartament: d.apartament ?? p.domiciliu.apartament,
+    },
+  }
+}
+
 function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -198,6 +237,10 @@ function WizardBody({
   const [solicitant, setSolicitant] = useState<PersoanaFizica>(emptyPersoana())
   const [identityDocument, setIdentityDocument] = useState<IdentityDocument | null>(null)
   const [documentError, setDocumentError] = useState<string | null>(null)
+  // Buletinul citit de model: câmpurile completate, starea citirii și ce n-a mers.
+  const [scanning, setScanning] = useState(false)
+  const [scanNote, setScanNote] = useState<string | null>(null)
+  const [prefilled, setPrefilled] = useState<Set<string>>(new Set())
   const [officeValue, setOfficeValue] = useState<RegisteredOfficeValue>(emptyOffice())
   const [company, setCompany] = useState({ name: '', cui: '' })
   const [consentDone, setConsentDone] = useState(false)
@@ -249,7 +292,7 @@ function WizardBody({
 
   const persoanaMissing = useMemo(() => {
     const missing = personMissing(solicitant)
-    if (!identityDocument) missing.push('copia actului de identitate')
+    if (!identityDocument) missing.push('buletinul')
     return missing
   }, [solicitant, identityDocument])
 
@@ -278,6 +321,20 @@ function WizardBody({
       return
     }
     setIdentityDocument({ fileName: file.name, contentType: file.type, data: await readAsDataUrl(file) })
+
+    // Ca în onboarding: actul încărcat completează singur datele, omul doar le verifică.
+    setScanning(true)
+    setScanNote(null)
+    try {
+      const scan = await companyFormationService.scanIdentityCardPublic(file)
+      setSolicitant((current) => applyScan(current, scan))
+      setPrefilled(new Set(scan.prefilledFields))
+      setScanNote(scan.note)
+    } catch (err) {
+      setScanNote(getErrorMessage(err, 'Nu am putut citi actul. Completează datele de mână.'))
+    } finally {
+      setScanning(false)
+    }
   }
 
   const pay = async () => {
@@ -332,7 +389,7 @@ function WizardBody({
   }
 
   const next = () => {
-    if (missing.length > 0) return
+    if (missing.length > 0 || scanning) return
     if (isLast) {
       void pay()
       return
@@ -428,14 +485,11 @@ function WizardBody({
 
           {step === 'persoana' && (
             <>
-              <PanelCard>
-                <PersoanaFizicaForm value={solicitant} onChange={setSolicitant} onBlur={() => {}} />
-              </PanelCard>
-
-              <PanelCard title="Actul de identitate">
+              <PanelCard title="Buletinul">
                 <Stack spacing={1.5}>
                   <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.88rem' }}>
-                    O poză clară sau un PDF cu actul de identitate. Merge la Consulto împreună cu dosarul.
+                    Încarcă o poză clară sau un PDF cu buletinul. Citim datele și le completăm noi mai jos — tu doar le
+                    verifici. Actul merge la Consulto împreună cu dosarul.
                   </Typography>
                   <Button
                     component="label"
@@ -451,7 +505,7 @@ function WizardBody({
                     }}
                   >
                     <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {identityDocument ? identityDocument.fileName : 'Încarcă actul'}
+                      {identityDocument ? identityDocument.fileName : 'Încarcă buletinul'}
                     </Box>
                     <input
                       hidden
@@ -463,7 +517,28 @@ function WizardBody({
                   {documentError && (
                     <Typography sx={{ color: TOKENS.danger, fontSize: '0.85rem' }}>{documentError}</Typography>
                   )}
+                  {scanning && (
+                    <Stack direction="row" spacing={1} role="status" sx={{ alignItems: 'center' }}>
+                      <CircularProgress size={16} sx={{ color: TOKENS.primary }} />
+                      <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.85rem' }}>Citim datele din buletin…</Typography>
+                    </Stack>
+                  )}
+                  {!scanning && scanNote && (
+                    <Alert severity="info" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
+                      {scanNote}
+                    </Alert>
+                  )}
                 </Stack>
+              </PanelCard>
+
+              <PanelCard>
+                <PersoanaFizicaForm
+                  value={solicitant}
+                  onChange={setSolicitant}
+                  onBlur={() => {}}
+                  prefilled={prefilled}
+                  disabled={scanning}
+                />
               </PanelCard>
 
               {hosting && (
@@ -600,7 +675,7 @@ function WizardBody({
             <Button
               variant="contained"
               onClick={next}
-              disabled={submitting || missing.length > 0}
+              disabled={submitting || scanning || missing.length > 0}
               startIcon={submitting ? <CircularProgress size={16} sx={{ color: alpha('#fff', 0.9) }} /> : undefined}
               sx={{
                 ...displaySx,
