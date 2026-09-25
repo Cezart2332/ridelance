@@ -13,6 +13,7 @@ import { AUTH_COLORS, AUTH_DENSITY, authInputSx, authPrimaryButtonSx } from './s
 import { mapAuthError, validateEmail, validateLoginPassword, type AuthErrorInfo } from './authValidation'
 import { authService } from '../../services/auth.service'
 import { ROUTES } from '../../constants/routes'
+import { loginDestination } from './loginDestination'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -39,11 +40,10 @@ export default function LoginPage() {
 
     setIsLoading(true)
     try {
-      await authService.login(email.trim(), password)
+      const { role } = await authService.login(email.trim(), password)
       // În aplicație, cortina coboară din antet și acoperă ecranul; urcă înapoi peste dashboard.
       if (IS_NATIVE_APP) await curtain.cover()
-      const returnTo = location.state?.returnTo
-      navigate(typeof returnTo === 'string' && /^\/(app|onboarding-srl|onboarding|admin|contabil)(\/|\?|#|$)/.test(returnTo) && !returnTo.includes('\\') ? returnTo : '/app', { replace: true })
+      navigate(loginDestination(location.state?.returnTo, role), { replace: true })
     } catch (err) {
       setServerError(mapAuthError(err, 'login'))
     } finally {

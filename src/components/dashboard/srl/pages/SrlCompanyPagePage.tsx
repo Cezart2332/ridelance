@@ -44,6 +44,7 @@ import { CompanyCoverPanel } from './companyPage/CompanyCoverPanel'
 import { PageLocationPanel } from './companyPage/PageLocationPanel'
 import { PageModerationBanner } from './companyPage/PageModerationBanner'
 import { PageSectionsPanel } from './companyPage/PageSectionsPanel'
+import { PUBLIC_SITE_URL } from '../../../../native/platform'
 
 /**
  * Pagina firmei — editorul mini-site-ului public.
@@ -159,7 +160,7 @@ function CompanyPageEditor({
 
   // Adresa scurtă, cea care se dă mai departe. `/f/{slug}` rămâne valabilă pentru linkurile vechi.
   const path = `/${profile.slug}`
-  const publicUrl = `${window.location.origin}${path}`
+  const publicUrl = `${PUBLIC_SITE_URL}${path}`
 
   const update = (partial: Partial<Draft>) => {
     setDraft((previous) => ({ ...previous, ...partial }))
@@ -251,7 +252,7 @@ function CompanyPageEditor({
             <Button
               variant="outlined"
               endIcon={<OpenInNewRoundedIcon />}
-              href={path}
+              href={publicUrl}
               target="_blank"
               rel="noopener"
               sx={{ textTransform: 'none', fontWeight: 700, borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}

@@ -14,6 +14,7 @@ import { ROUTES } from './constants/routes'
 import RegistrationSuccessPage from './components/auth/RegistrationSuccessPage'
 import SubscriptionSelectPage from './components/auth/SubscriptionSelectPage'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import { RoleAreaGate } from './components/auth/RoleAreaGate'
 import { FleetAccessGate } from './components/onboarding/fleet/FleetAccessGate'
 import RoleRedirect from './components/auth/RoleRedirect'
 import { SRL_ROOT } from './config/srlNavigation'
@@ -108,11 +109,11 @@ function App() {
           {/* ── Protected routes ── */}
           <Route element={<ProtectedRoute />}>
             <Route path="/app/notificari/:id" element={<NotificationOpenPage />} />
-            <Route path="/onboarding-srl" element={<FleetOnboardingPage />} />
+            <Route path="/onboarding-srl" element={<RoleAreaGate><FleetOnboardingPage /></RoleAreaGate>} />
             <Route path="/app" element={<RoleRedirect />} />
             {/* Un singur shell pentru toți cei 6 pași: rail-ul, datele și poll-ul trăiesc aici,
                 deci schimbarea pasului nu remontează nimic. */}
-            <Route path="/onboarding" element={<OnboardingShell />}>
+            <Route path="/onboarding" element={<RoleAreaGate><OnboardingShell /></RoleAreaGate>}>
               <Route index element={<OnboardingRedirect />} />
               <Route path="eligibility" element={<OnboardingEligibilityPage />} />
               <Route path="pfa" element={<OnboardingPfaPage />} />

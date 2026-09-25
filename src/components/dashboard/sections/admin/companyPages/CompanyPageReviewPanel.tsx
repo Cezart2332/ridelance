@@ -36,6 +36,7 @@ import { BLOCKABLE_SECTIONS } from '../../../../company/sections'
 import { PageSectionsPanel } from '../../../srl/pages/companyPage/PageSectionsPanel'
 import { CompanyPagePreview } from './CompanyPagePreview'
 import { statusChip } from './statusChip'
+import { PUBLIC_SITE_URL } from '../../../../../native/platform'
 
 /**
  * Verificarea unui mini-site: ce a scris firma, ce se vede acum, și ce facem cu asta.
@@ -137,7 +138,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
           <Button
             variant="outlined"
             endIcon={<OpenInNewRoundedIcon />}
-            href={`/${detail.slug}`}
+            href={`${PUBLIC_SITE_URL}/${detail.slug}`}
             target="_blank"
             rel="noopener"
             sx={{ textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}

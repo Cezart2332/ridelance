@@ -33,6 +33,7 @@ import type { CompanyPageReviewStatus } from '../../../../services/company.servi
 import { BLOCKABLE_SECTIONS } from '../../../company/sections'
 import { CompanyPageReviewPanel } from './companyPages/CompanyPageReviewPanel'
 import { statusChip } from './companyPages/statusChip'
+import { PUBLIC_SITE_URL } from '../../../../native/platform'
 
 /**
  * Paginile publice ale firmelor, cu verificarea lor.
@@ -244,7 +245,7 @@ export function CompanyPagesAdminView() {
                   <TableCell>
                     <Typography
                       component="a"
-                      href={`/${item.slug}`}
+                      href={`${PUBLIC_SITE_URL}/${item.slug}`}
                       target="_blank"
                       rel="noopener"
                       sx={{

@@ -19,13 +19,10 @@ import { useVehicle } from '../../../hooks/useVehicle'
 import { useVehicleViewTracking } from '../../../hooks/useVehicleViewTracking'
 import { carsService } from '../../../services/cars.service'
 import { isCarRentDisabled } from '../../../utils/carLabels'
-import { IS_NATIVE_APP } from '../../../native/platform'
+import { PUBLIC_SITE_URL } from '../../../native/platform'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 
 const VehicleLightbox = lazy(() => import('../../cars/vdp/VehicleLightbox'))
-
-/** Site-ul public. În aplicație `window.location.origin` e `capacitor://localhost`. */
-const PUBLIC_SITE = IS_NATIVE_APP ? 'https://ridelance.ro' : window.location.origin
 
 /**
  * Pagina unei mașini, în dashboard. Pe telefon „Vezi detalii” deschidea pagina publică într-un tab
@@ -69,7 +66,7 @@ export function CarDetailView() {
 
   return (
     <Box sx={{ minWidth: 0 }}>
-      <VehicleGallery images={car.images} title={title} onOpen={setLightbox} shareUrl={`${PUBLIC_SITE}/masini/${car.slug}`} />
+      <VehicleGallery images={car.images} title={title} onOpen={setLightbox} shareUrl={`${PUBLIC_SITE_URL}/masini/${car.slug}`} />
 
       {waitlist && (
         <Alert icon={<InfoOutlinedIcon />} severity="warning" sx={{ mt: 2, borderRadius: `${VDP.radius.card}px`, fontWeight: 500 }}>
