@@ -371,12 +371,6 @@ export function TaxParametersPanel() {
           </Box>
         </Box>
 
-        {data.source && (
-          <Typography variant="caption" sx={{ color: TOKENS.textMuted, wordBreak: 'break-word' }}>
-            Sursă: {data.source}
-          </Typography>
-        )}
-
         {error && <Alert severity="error">{error}</Alert>}
         {saved && <Alert severity="success">{saved}</Alert>}
 
