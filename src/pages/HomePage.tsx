@@ -664,6 +664,8 @@ export function HomePage() {
                 color: TOKENS.primaryStrong,
                 fontWeight: 700,
                 mb: 4,
+                // Fără fundalul alb al Paper-ului: blocul stă pe fundalul secțiunii, ca textul de deasupra.
+                bgcolor: 'transparent',
               }}
             >
               <Typography
