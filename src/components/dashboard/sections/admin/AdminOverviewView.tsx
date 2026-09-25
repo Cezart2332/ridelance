@@ -45,6 +45,7 @@ import {
   type AdminServiceSaleRow,
 } from '../../../../services/adminOverview.service'
 import { DateField } from '../../../common/DateField'
+import { TaxParametersPanel } from './TaxParametersPanel'
 
 interface AdminOverviewViewProps {
   onImpersonate: (userId: string, userName: string) => void
@@ -319,6 +320,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
     { value: 'venituri', label: 'Venituri și abonamente' },
     { value: 'plati', label: 'Tranzacții și servicii' },
     { value: 'clienti', label: 'Clienți' },
+    { value: 'fiscal', label: 'Plafoane fiscale' },
   ] })
   const [filters, setFilters] = useState<AdminOverviewFilters>(initialFilters)
   const [data, setData] = useState<AdminOverviewData | null>(null)
@@ -443,6 +445,8 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
       </Paper>
 
       {viewTabs}
+      {/* Plafoanele nu depind de perioadă sau filtre: tabul lor n-are nimic din restul paginii. */}
+      {view === 'fiscal' ? <TaxParametersPanel /> : <>
       <Accordion disableGutters sx={{ '&:before': { display: 'none' } }}>
         <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
           <Box><Typography variant="subtitle2">Filtrează datele</Typography><Typography variant="caption" color="text.secondary">Perioadă, produs, plan și statusul plății · {Object.values(filters).filter(Boolean).length - 1} filtre suplimentare</Typography></Box>
@@ -721,6 +725,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
         </>
       )}
 
+      </>}
     </Stack>
   )
 }
