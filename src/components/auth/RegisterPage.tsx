@@ -21,6 +21,7 @@ import { TermsAcceptance } from '../common/TermsAcceptance'
 import { authService } from '../../services/auth.service'
 import { ROUTES } from '../../constants/routes'
 import { SRL_ROOT } from '../../config/srlNavigation'
+import { IS_NATIVE_APP } from '../../native/platform'
 
 interface RegisterPageProps {
   /** `CarPoster` e servit de `/inregistrare/anunturi`; ruta doar preselectează SRL. */
@@ -124,7 +125,7 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
           <TextField
             fullWidth
             hiddenLabel
-            autoFocus
+            autoFocus={!IS_NATIVE_APP}
             type="email"
             placeholder="Email"
             autoComplete="email"

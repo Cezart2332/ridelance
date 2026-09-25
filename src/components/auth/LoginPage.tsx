@@ -69,7 +69,8 @@ export default function LoginPage() {
           <TextField
             fullWidth
             hiddenLabel
-            autoFocus
+            // În aplicație, focusul din prima clipă deschide tastatura peste animația de pornire.
+            autoFocus={!IS_NATIVE_APP}
             type="email"
             placeholder="Email"
             autoComplete="email"
