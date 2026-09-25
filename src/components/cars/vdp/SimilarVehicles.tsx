@@ -41,7 +41,17 @@ function isSimilar(candidate: Car, current: Car): boolean {
   )
 }
 
-export function SimilarVehicles({ car }: { car: Car }) {
+/**
+ * `hrefFor`: unde duce o mașină similară. Implicit pagina publică; în dashboard rămâne în dashboard
+ * — în aplicația de telefon pagina publică nici nu există.
+ */
+export function SimilarVehicles({
+  car,
+  hrefFor = (slug) => `/masini/${slug}`,
+}: {
+  car: Car
+  hrefFor?: (slug: string) => string
+}) {
   const [items, setItems] = useState<Car[]>([])
   const [ref, setRef] = useState<HTMLDivElement | null>(null)
   const [visible, setVisible] = useState(false)
@@ -153,7 +163,7 @@ export function SimilarVehicles({ car }: { car: Car }) {
             }}
           >
             {items.map((item) => (
-              <SimilarCard key={item.id} car={item} />
+              <SimilarCard key={item.id} car={item} to={hrefFor(item.slug)} />
             ))}
           </Stack>
         </>
@@ -190,13 +200,13 @@ function Arrow({
   )
 }
 
-function SimilarCard({ car }: { car: Car }) {
+function SimilarCard({ car, to }: { car: Car; to: string }) {
   const cover = car.images[0]
 
   return (
     <Box
       component={Link}
-      to={`/masini/${car.slug}`}
+      to={to}
       sx={{
         flex: `0 0 ${CARD_WIDTH}px`,
         scrollSnapAlign: 'start',

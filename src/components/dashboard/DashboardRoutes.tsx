@@ -11,6 +11,7 @@ import { FiscalProfilePage } from './sections/accounting/FiscalProfilePage'
 import { BoltConnectionPage } from './sections/connections/BoltConnectionPage'
 import { OblioConnectionPage } from './sections/connections/OblioConnectionPage'
 import { UberConnectionPage } from './sections/connections/UberConnectionPage'
+import { CarDetailView } from './sections/CarDetailView'
 import { CarsView } from './sections/CarsView'
 import { DocumentsGroupPage } from './sections/documents/DocumentsGroupPage'
 import { ExpensesRecurringTab } from './sections/ExpensesRecurringTab'
@@ -87,6 +88,7 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
       {/* ── Servicii ── */}
       <Route path={rel(PFA_PATHS.services)} element={<Navigate to={PFA_PATHS.svcCars} replace />} />
       <Route path={rel(PFA_PATHS.svcCars)} element={<CarsView />} />
+      <Route path={`${rel(PFA_PATHS.svcCars)}/:slug`} element={<CarDetailView />} />
       {/* În aplicația mobilă nu se plătește nimic: paginile de abonament și servicii duc acasă. */}
       <Route
         path={rel(PFA_PATHS.svcSubscriptions)}

@@ -27,9 +27,14 @@ interface VehicleGalleryProps {
   /** „Dacia Logan 2022” — intră în `alt`-ul fiecărei imagini. */
   title: string
   onOpen: (index: number) => void
+  /**
+   * Linkul trimis din butonul de distribuire. Implicit adresa paginii; din dashboard (și din
+   * aplicație, unde adresa e `capacitor://…`) e pagina publică a anunțului.
+   */
+  shareUrl?: string
 }
 
-export function VehicleGallery({ images, title, onOpen }: VehicleGalleryProps) {
+export function VehicleGallery({ images, title, onOpen, shareUrl }: VehicleGalleryProps) {
   if (images.length === 0) {
     return <EmptyGallery />
   }
@@ -37,10 +42,10 @@ export function VehicleGallery({ images, title, onOpen }: VehicleGalleryProps) {
   return (
     <>
       <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-        <DesktopGallery images={images} title={title} onOpen={onOpen} />
+        <DesktopGallery images={images} title={title} onOpen={onOpen} shareUrl={shareUrl} />
       </Box>
       <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-        <MobileGallery images={images} title={title} onOpen={onOpen} />
+        <MobileGallery images={images} title={title} onOpen={onOpen} shareUrl={shareUrl} />
       </Box>
     </>
   )
@@ -96,7 +101,7 @@ function GalleryImage({
   )
 }
 
-function DesktopGallery({ images, title, onOpen }: VehicleGalleryProps) {
+function DesktopGallery({ images, title, onOpen, shareUrl }: VehicleGalleryProps) {
   const total = images.length
   // Grila asimetrică are sens de la trei poze în sus; sub asta, celulele goale ar arăta a bug.
   const asymmetric = total >= 3
@@ -128,7 +133,7 @@ function DesktopGallery({ images, title, onOpen }: VehicleGalleryProps) {
         ))}
       </Box>
 
-      <ShareButton title={title} />
+      <ShareButton title={title} url={shareUrl} />
 
       {total > 1 && (
         <Button
@@ -156,7 +161,7 @@ function DesktopGallery({ images, title, onOpen }: VehicleGalleryProps) {
   )
 }
 
-function MobileGallery({ images, title, onOpen }: VehicleGalleryProps) {
+function MobileGallery({ images, title, onOpen, shareUrl }: VehicleGalleryProps) {
   const total = images.length
   const [active, setActive] = useState(0)
   const trackRef = useRef<HTMLDivElement | null>(null)
@@ -201,7 +206,7 @@ function MobileGallery({ images, title, onOpen }: VehicleGalleryProps) {
         ))}
       </Box>
 
-      <ShareButton title={title} />
+      <ShareButton title={title} url={shareUrl} />
 
       {total > 1 && (
         <Box
@@ -238,11 +243,11 @@ function MobileGallery({ images, title, onOpen }: VehicleGalleryProps) {
  * Butonul rotund din colțul galeriei. În locul inimii din spec: nu avem favorite, dar o pagină de
  * anunț chiar se trimite mai departe.
  */
-function ShareButton({ title }: { title: string }) {
+function ShareButton({ title, url: sharedUrl }: { title: string; url?: string }) {
   const [copied, setCopied] = useState(false)
 
   const share = async () => {
-    const url = window.location.href
+    const url = sharedUrl ?? window.location.href
     if (navigator.share) {
       await navigator.share({ title, url }).catch(() => {})
       return

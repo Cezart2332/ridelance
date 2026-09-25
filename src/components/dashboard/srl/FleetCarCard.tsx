@@ -100,6 +100,7 @@ export function FleetCarCard({
   const approval = APPROVAL_WARNINGS[car.approvalStatus]
   const archived = car.listingStatus === 'Archived'
   const cover = getCarImageUrl(car.images[0]?.imageUrl)
+  const [coverFailed, setCoverFailed] = useState(false)
   const identity = [car.details?.plateNumber, formatKm(car.details?.mileage)].filter(Boolean).join(' · ')
 
   return (
@@ -130,11 +131,12 @@ export function FleetCarCard({
           placeItems: 'center',
         }}
       >
-        {cover ? (
+        {cover && !coverFailed ? (
           <Box
             component="img"
             src={cover}
             alt=""
+            onError={() => setCoverFailed(true)}
             sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         ) : (

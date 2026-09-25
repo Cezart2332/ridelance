@@ -2,6 +2,7 @@ import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFil
 import PhotoLibraryRoundedIcon from '@mui/icons-material/PhotoLibraryRounded'
 import { Box, Button, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { TOKENS } from '../../constants/tokens'
@@ -50,17 +51,24 @@ interface CarListCardProps {
    * spune de unde a fost deschisă, iar pe pagina firmei asta e tot ce se răsfoiește.
    */
   companySlug?: string
+  /**
+   * Adresa detaliului, când nu e pagina publică. În dashboard pe telefon (și în aplicație, unde
+   * pagina publică nu există) mașina se deschide în dashboard, nu într-un tab nou.
+   */
+  to?: string
 }
 
 const COVER_RADIUS = `${VDP.radius.image}px`
 
-export default function CarListCard({ car, newTab = false, companySlug }: CarListCardProps) {
+export default function CarListCard({ car, newTab = false, companySlug, to: toOverride }: CarListCardProps) {
   const navigate = useNavigate()
 
-  const to = companySlug ? `/${companySlug}/${car.slug}` : `/masini/${car.slug}`
+  const to = toOverride ?? (companySlug ? `/${companySlug}/${car.slug}` : `/masini/${car.slug}`)
   const linkProps = newTab ? { target: '_blank' as const, rel: 'noopener' } : {}
 
   const cover = car.images[0]
+  // O poză care nu se încarcă lasă iconița de mașină, nu un dreptunghi gol cu imagine ruptă.
+  const [coverFailed, setCoverFailed] = useState(false)
   const photoCount = car.images.length
   const title = `${car.brand} ${car.model}, ${car.year}`
   const discounted = hasActiveDiscount(car)
@@ -113,12 +121,13 @@ export default function CarListCard({ car, newTab = false, companySlug }: CarLis
           placeItems: 'center',
         }}
       >
-        {cover ? (
+        {cover && !coverFailed ? (
           <Box
             component="img"
             src={getCarImageUrl(cover.imageUrl)}
             alt={title}
             loading="lazy"
+            onError={() => setCoverFailed(true)}
             sx={{
               width: '100%',
               height: '100%',

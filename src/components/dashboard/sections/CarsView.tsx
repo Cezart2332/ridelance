@@ -10,7 +10,9 @@ import {
   Paper,
   Button,
   Grid,
-  Collapse
+  Collapse,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded';
@@ -23,10 +25,17 @@ import { PageHeader } from '../ui';
 import { carsService, type Car } from '../../../services/cars.service';
 import CarListCard from '../../cars/CarListCard';
 import { matchesOfferTypeFilter, matchesStatusFilter } from '../../../utils/carLabels';
+import { pfaCarPath } from '../../../config/pfaNavigation';
+import { IS_NATIVE_APP } from '../../../native/platform';
 
 export function CarsView() {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
+  // Pe desktop anunțul se deschide într-un tab nou, ca dashboardul să rămână deschis. Pe telefon
+  // tab-urile nu ajută, iar în aplicație pagina publică nici nu există: detaliul e în dashboard.
+  const theme = useTheme();
+  const isPhone = useMediaQuery(theme.breakpoints.down('md'));
+  const inDashboard = IS_NATIVE_APP || isPhone;
   const [showFilters, setShowFilters] = useState(false);
   
   // Filter States
@@ -236,7 +245,7 @@ export function CarsView() {
           gap: 3 
         }}>
           {filteredCars.map((car) => (
-            <CarListCard key={car.id} car={car} newTab />
+            <CarListCard key={car.id} car={car} newTab={!inDashboard} to={inDashboard ? pfaCarPath(car.slug) : undefined} />
           ))}
         </Box>
       ) : !loading && (

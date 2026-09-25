@@ -32,9 +32,14 @@ interface VehiclePriceCardProps {
   onRequest: () => void
   /** Cardul inline de pe mobil nu are umbră proprie; cel din coloană da. */
   elevated?: boolean
+  /**
+   * În dashboard: fără butoanele de distribuire și fără linkurile spre site. În aplicația de
+   * telefon adresa paginii nu e una publică, iar „Vezi toate mașinile” ar ieși din dashboard.
+   */
+  inDashboard?: boolean
 }
 
-export function VehiclePriceCard({ car, waitlist, onRequest, elevated = true }: VehiclePriceCardProps) {
+export function VehiclePriceCard({ car, waitlist, onRequest, elevated = true, inDashboard = false }: VehiclePriceCardProps) {
   const discounted = hasActiveDiscount(car)
   const url = typeof window === 'undefined' ? '' : window.location.href
   const shareText = `${car.brand} ${car.model} ${car.year} — ${formatLei(car.pricePerWeek)} lei/săptămână`
@@ -126,14 +131,18 @@ export function VehiclePriceCard({ car, waitlist, onRequest, elevated = true }: 
         </>
       )}
 
-      <CardDivider />
+      {!inDashboard && (
+        <>
+          <CardDivider />
 
-      <ShareRow url={url} text={shareText} />
+          <ShareRow url={url} text={shareText} />
 
-      <Stack spacing={1.25} sx={{ mt: 3, alignItems: 'center' }}>
-        <TextLink to="/masini">Vezi toate mașinile</TextLink>
-        <TextLink to="/servicii">Cum funcționează RIDElance</TextLink>
-      </Stack>
+          <Stack spacing={1.25} sx={{ mt: 3, alignItems: 'center' }}>
+            <TextLink to="/masini">Vezi toate mașinile</TextLink>
+            <TextLink to="/servicii">Cum funcționează RIDElance</TextLink>
+          </Stack>
+        </>
+      )}
     </Box>
   )
 }

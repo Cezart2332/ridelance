@@ -88,6 +88,9 @@ export const PFA_PATHS = {
 
 export type PfaPath = (typeof PFA_PATHS)[keyof typeof PFA_PATHS]
 
+/** Pagina unei mașini din „Servicii → Mașini”, fără să iasă din dashboard. */
+export const pfaCarPath = (slug: string) => `${PFA_PATHS.svcCars}/${slug}`
+
 export const PFA_NAV: NavEntry[] = [
   {
     kind: 'link',
