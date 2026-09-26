@@ -1,15 +1,31 @@
-import { Paper, Stack } from '@mui/material'
+import { Stack } from '@mui/material'
 
-import { EmptyText } from '../components'
+import { accountingApi } from '../../api/accountingApi'
+import { ErrorBlock, LoadingBlock, PeriodSelect } from '../components'
+import { useAccountingNav } from '../navigation'
 import type { DossierTabProps } from '../pfa/PfaDossierView'
+import { useApi } from '../useApi'
+import { DeclarationCard } from './DeclarationCard'
 
-/** Placeholder până la etapa F4. */
-export function DeclarationsTab({ summary }: DossierTabProps) {
+/** F4: declarațiile lunii în dosarul PFA — câte un card pentru D100, D301 și D390. */
+export function DeclarationsTab({ summary, onSummaryChanged }: DossierTabProps) {
+  const nav = useAccountingNav()
+  const period = nav.period ?? summary.currentPeriod
+  const declarations = useApi(() => accountingApi.declarations.list(summary.id, period), [summary.id, period])
+
+  const changed = () => {
+    declarations.reload()
+    onSummaryChanged()
+  }
+
   return (
-    <Paper>
-      <Stack sx={{ px: 2.5 }}>
-        <EmptyText>Vine în etapa F4 ({summary.name}).</EmptyText>
-      </Stack>
-    </Paper>
+    <Stack spacing={3}>
+      <PeriodSelect pfaId={summary.id} value={period} onChange={(value) => nav.setParam('luna', value)} />
+      {declarations.error && <ErrorBlock message={declarations.error} onRetry={declarations.reload} />}
+      {!declarations.data && !declarations.error && <LoadingBlock />}
+      {declarations.data?.map((declaration) => (
+        <DeclarationCard key={declaration.type} summary={declaration} readOnly={summary.readOnly} onChanged={changed} />
+      ))}
+    </Stack>
   )
 }

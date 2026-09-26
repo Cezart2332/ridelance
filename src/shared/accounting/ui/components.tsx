@@ -8,6 +8,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  MenuItem,
   Stack,
   TextField,
   Tooltip,
@@ -15,9 +16,10 @@ import {
 } from '@mui/material'
 
 import { StatusBadge } from '../../../components/admin'
-import { EMPTY } from '../format'
+import { accountingApi } from '../api/accountingApi'
+import { EMPTY, formatPeriod } from '../format'
 import type { StatusDescriptor } from '../statusLabels'
-import { errorMessage } from './useApi'
+import { errorMessage, useApi } from './useApi'
 
 /** Badge-ul unui status din `statusLabels`, cu explicația din spec în tooltip. */
 export function AccountingBadge({ descriptor, suffix }: { descriptor: StatusDescriptor | null | undefined; suffix?: string }) {
@@ -203,5 +205,21 @@ export function Fact({ label, children }: { label: string; children: ReactNode }
       </Typography>
       <Box sx={{ typography: 'body2', fontWeight: 500 }}>{children}</Box>
     </Stack>
+  )
+}
+
+/** Selectorul de lună al unui dosar: lunile colaborării, din `periods.list`. */
+export function PeriodSelect({ pfaId, value, onChange }: { pfaId: string; value: string; onChange: (period: string) => void }) {
+  const periods = useApi(() => accountingApi.periods.list(pfaId), [pfaId])
+  const options = (periods.data ?? []).map((item) => item.period)
+  if (!options.includes(value)) options.unshift(value)
+  return (
+    <TextField select label="Luna" value={value} onChange={(event) => onChange(event.target.value)} sx={{ minWidth: 220 }}>
+      {options.map((option) => (
+        <MenuItem key={option} value={option}>
+          {formatPeriod(option)}
+        </MenuItem>
+      ))}
+    </TextField>
   )
 }

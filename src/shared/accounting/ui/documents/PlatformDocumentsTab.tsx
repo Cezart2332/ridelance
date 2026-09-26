@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Checkbox,
-  MenuItem,
   Paper,
   Stack,
   Table,
@@ -14,7 +13,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -24,7 +22,7 @@ import { isAccountingApiError } from '../../api/errors'
 import type { Platform, PlatformDocumentListItem, PlatformDocumentType } from '../../api/types'
 import { EMPTY, formatDateTime, formatMoney, formatPeriod } from '../../format'
 import { PLATFORM_DOCUMENT_STATUS, PLATFORM_DOCUMENT_TYPE_LABEL, PLATFORM_LABEL } from '../../statusLabels'
-import { AccountingBadge, EmptyText, ErrorBlock, LoadingBlock } from '../components'
+import { AccountingBadge, EmptyText, ErrorBlock, LoadingBlock, PeriodSelect } from '../components'
 import { useAccountingNav } from '../navigation'
 import { useAction, useNotify } from '../notify'
 import type { DossierTabProps } from '../pfa/PfaDossierView'
@@ -53,7 +51,6 @@ export function PlatformDocumentsTab({ summary, onSummaryChanged }: DossierTabPr
   const { busy, run } = useAction()
   const readOnly = summary.readOnly
   const period = nav.period ?? summary.currentPeriod
-  const periods = useApi(() => accountingApi.periods.list(summary.id), [summary.id])
   const documents = useApi(() => accountingApi.documents.list(summary.id, period), [summary.id, period])
   const [selected, setSelected] = useState<string[]>([])
   const [issues, setIssues] = useState<UploadIssue[]>([])
@@ -133,19 +130,10 @@ export function PlatformDocumentsTab({ summary, onSummaryChanged }: DossierTabPr
     void upload([...event.dataTransfer.files])
   }
 
-  const periodOptions = (periods.data ?? []).map((item) => item.period)
-  if (!periodOptions.includes(period)) periodOptions.unshift(period)
-
   return (
     <Stack spacing={3}>
       <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2, alignItems: { sm: 'center' }, justifyContent: 'space-between' }}>
-        <TextField select label="Luna" value={period} onChange={(event) => nav.setParam('luna', event.target.value)} sx={{ minWidth: 220 }}>
-          {periodOptions.map((option) => (
-            <MenuItem key={option} value={option}>
-              {formatPeriod(option)}
-            </MenuItem>
-          ))}
-        </TextField>
+        <PeriodSelect pfaId={summary.id} value={period} onChange={(value) => nav.setParam('luna', value)} />
         {!readOnly && pending.length > 0 && (
           <Button variant="contained" disabled={selectedPending.length === 0 || busy !== null} onClick={confirmSelected}>
             {busy === 'bulk' ? 'Se confirmă…' : `Confirmă selectate${selectedPending.length ? ` (${selectedPending.length})` : ''}`}
