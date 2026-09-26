@@ -246,6 +246,23 @@ async function main() {
   const auditLog = await api.pfas.getAudit(mihai.id)
   expect('audit are corecția', auditLog.some((a) => a.action === 'PERIOD_CORRECTION' && a.reason === 'Descriere greșită'), true)
 
+  // F5: o cotă schimbată se vede în previzualizarea unei luni negenerate, nu și în declarațiile generate.
+  resetMockAccountingDb()
+  await waitJob((await api.months.process(P)).jobId)
+  await api.months.confirmCleanDocuments(P)
+  await waitJob((await api.months.generate(P)).jobId)
+  const uberProfile = (await api.rules.suppliers.list()).find((item) => item.vatId === 'NL852071588B01')!
+  const { id: uberProfileId, ...uberProfileInput } = uberProfile
+  await api.rules.suppliers.update(uberProfileId, { ...uberProfileInput, validTo: '2026-08-30' })
+  await api.rules.suppliers.create({ ...uberProfileInput, d100Rate: 1, validFrom: '2026-08-31', validTo: null, note: 'Cotă de test' })
+  const georgeId = all.find((p) => p.name === 'George Stan')!.id
+  const georgeUpload = await api.documents.upload(georgeId, { file: new File(['%PDF george 2'], 'Uber_factura.pdf'), period: P })
+  await sleep(3200)
+  await api.documents.confirm(georgeUpload.id)
+  const georgeD100 = (await api.declarations.list(georgeId, P))[0]
+  expect('previzualizare cu cota nouă', [georgeD100.status, georgeD100.amount], ['DRAFT', 27.93])
+  expect('declarația generată păstrează cota veche', (await api.declarations.list(ion.pfaId, P))[0].amount, 20)
+
   // Decizii pct. 2: o cotă D100 neconfirmată blochează luna.
   resetMockAccountingDb()
   const uber = (await api.rules.suppliers.list()).find((item) => item.vatId === 'NL852071588B01')!
