@@ -9,6 +9,8 @@ interface OnboardingCardProps {
   eyebrow: string
   icon: MicroStepIcon
   title: string
+  /** Doar unde întrebarea are nevoie de o precizare (vezi `MicroStepDef.subtitle`). */
+  subtitle?: string
   /** Tonul iconiței: `danger` pentru ecranul de blocaj, `success` pentru rezumatul închis. */
   tone?: 'accent' | 'danger' | 'success'
   children: ReactNode
@@ -25,9 +27,10 @@ const TONE = {
  * Cardul central. Un singur lucru pe ecran: o iconiță, o întrebare, conținutul și footerul.
  * Ierarhia o fac spacing-ul și greutățile, nu culorile — de asta e un singur accent.
  *
- * Nu are subtitlu. Un rând gri sub întrebare nu spune nimic ce întrebarea nu spune deja.
+ * Subtitlul e excepția, nu regula: un rând gri sub întrebare nu spune de obicei nimic ce întrebarea
+ * nu spune deja. Apare doar când micro-pasul îl cere explicit.
  */
-export function OnboardingCard({ eyebrow, icon, title, tone = 'accent', children, footer }: OnboardingCardProps) {
+export function OnboardingCard({ eyebrow, icon, title, subtitle, tone = 'accent', children, footer }: OnboardingCardProps) {
   const Icon = ICON_MAP[icon]
   const colors = TONE[tone]
 
@@ -68,6 +71,12 @@ export function OnboardingCard({ eyebrow, icon, title, tone = 'accent', children
       <Typography variant="h5" component="h1" sx={{ ...displaySx, color: TOKENS.ink }}>
         {title}
       </Typography>
+
+      {subtitle && (
+        <Typography variant="body1" sx={{ color: TOKENS.textMuted, mt: 1.5 }}>
+          {subtitle}
+        </Typography>
+      )}
 
       <Stack sx={{ mt: 4 }}>{children}</Stack>
 

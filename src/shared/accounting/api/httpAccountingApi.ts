@@ -38,6 +38,10 @@ export function createHttpAccountingApi(): AccountingApi {
       createHandoverPackage: (pfaId) => pending('POST', `pfas/${pfaId}/handover-package`),
       getAudit: (pfaId) => pending('GET', `pfas/${pfaId}/audit`),
     },
+    onboarding: {
+      getCashPreference: () => pending('GET', 'me/cash-preference'),
+      setCashPreference: () => pending('PUT', 'me/cash-preference'),
+    },
     documents: {
       list: (pfaId) => pending('GET', `pfas/${pfaId}/platform-documents`),
       upload: (pfaId) => pending('POST', `pfas/${pfaId}/platform-documents`),
@@ -56,6 +60,7 @@ export function createHttpAccountingApi(): AccountingApi {
     },
     jobs: {
       get: (jobId) => pending('GET', `jobs/${jobId}`),
+      getFile: (jobId) => pending('GET', `jobs/${jobId}/file`),
     },
     declarations: {
       list: (pfaId) => pending('GET', `pfas/${pfaId}/declarations`),

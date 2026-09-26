@@ -2,6 +2,7 @@ import type { BankConnectionDto } from '../../../services/bank.service'
 import type { DocumentSummary } from '../../../services/document.service'
 import { onboardingService, type Step2State } from '../../../services/onboarding.service'
 import type { MicroStepContext, MicroStepDef } from '../microStepTypes'
+import { cashMicroStep } from './cash'
 
 /**
  * Pasul 3 — Fiscal, bancă și semnături, ca întrebări.
@@ -199,6 +200,9 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     // banca confirmă autorizarea — pagina întreabă din patru în patru secunde.
     isDone: bankLinked,
   },
+  // ── Plăți în numerar (spec contabilitate F7) ──
+  cashMicroStep,
+
   // ── Oblio ──
   {
     id: 'oblio_conectare',

@@ -14,6 +14,7 @@ import { useOnboarding } from '../useOnboarding'
 import { useOnboardingSupport } from '../supportContext'
 import { BlockedStateCard } from './BlockedStateCard'
 import { AutoAdvanceFooter } from './AutoAdvanceFooter'
+import { AcknowledgeAnswerDialog } from './AcknowledgeAnswerDialog'
 import { BlockingAnswerDialog } from './BlockingAnswerDialog'
 import { ChoiceGroup } from './ChoiceGroup'
 import { MicroActionStep } from './MicroActionStep'
@@ -76,6 +77,9 @@ export function OnboardingRunner() {
 
   /** Pop-up-ul pentru un „Nu” care oprește parcursul. */
   const [blockingChoice, setBlockingChoice] = useState<{ title: string; message: string } | null>(null)
+
+  /** Pop-up-ul „Am înțeles” al unei variante cu `acknowledge`; răspunsul pleacă la închidere. */
+  const [acknowledgeChoice, setAcknowledgeChoice] = useState<{ value: string; title: string; message: string } | null>(null)
 
   /**
    * „Rămân aici”: ecranul nu mai trece singur mai departe până nu se schimbă un răspuns. Ținem
@@ -227,6 +231,10 @@ export function OnboardingRunner() {
       // ca navigarea cu săgețile prin variante să nu deschidă pop-up-ul la fiecare trecere.
       if (picked?.blocking) {
         setBlockingChoice(picked.blocking)
+        return
+      }
+      if (picked?.acknowledge) {
+        setAcknowledgeChoice({ value: choice, ...picked.acknowledge })
         return
       }
       void advance(choice)
@@ -386,7 +394,7 @@ export function OnboardingRunner() {
     if (deadEnd) return null
 
     const countdown =
-      ready && !fastPending && !blockingChoice
+      ready && !fastPending && !blockingChoice && !acknowledgeChoice
         ? {
             delayMs: countdownMs(),
             restartKey: `${def.id}:${keystrokes}:${Object.keys(answers).length}:${JSON.stringify(value ?? null)}`,
@@ -462,6 +470,7 @@ export function OnboardingRunner() {
                 icon={def.icon}
                 tone={def.kind === 'summary' ? 'success' : 'accent'}
                 title={def.title}
+                subtitle={def.subtitle}
                 footer={footer()}
               >
                 <Stack spacing={2.5}>
@@ -478,6 +487,17 @@ export function OnboardingRunner() {
           </Stack>
         </motion.div>
       </AnimatePresence>
+
+      <AcknowledgeAnswerDialog
+        open={acknowledgeChoice !== null}
+        title={acknowledgeChoice?.title ?? ''}
+        message={acknowledgeChoice?.message ?? ''}
+        onAcknowledge={() => {
+          const value = acknowledgeChoice?.value
+          setAcknowledgeChoice(null)
+          if (value) void advance(value)
+        }}
+      />
 
       <BlockingAnswerDialog
         open={blockingChoice !== null}

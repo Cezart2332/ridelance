@@ -3,6 +3,7 @@ import type {
   AnafDeclarationSchema,
   Asset,
   AuditEntry,
+  CashPreference,
   CashRegisterState,
   D100Rule,
   DeclarationBreakdown,
@@ -131,6 +132,8 @@ export interface MockDb {
   assets: Asset[]
   periods: AccountingPeriod[]
   corrections: PeriodCorrection[]
+  /** Răspunsul din onboarding al utilizatorului PFA curent (mock-ul nu are sesiune). */
+  myCashPreference: CashPreference | null
   /** Dovezile de fiscalizare încărcate, după id. */
   cashEvidence: Record<string, { pfaId: string; file: StoredFileRef }>
   audit: (AuditEntry & { pfaId: string | null })[]

@@ -246,6 +246,13 @@ async function main() {
   const auditLog = await api.pfas.getAudit(mihai.id)
   expect('audit are corecția', auditLog.some((a) => a.action === 'PERIOD_CORRECTION' && a.reason === 'Descriere greșită'), true)
 
+  // F7: răspunsul DA / NU din onboarding se salvează.
+  expect('onboarding fără răspuns', await api.onboarding.getCashPreference(), null)
+  await api.onboarding.setCashPreference({ cashRequested: true })
+  expect('onboarding DA', (await api.onboarding.getCashPreference())?.cashRequested, true)
+  await api.onboarding.setCashPreference({ cashRequested: false })
+  expect('onboarding NU', (await api.onboarding.getCashPreference())?.cashRequested, false)
+
   // F5: o cotă schimbată se vede în previzualizarea unei luni negenerate, nu și în declarațiile generate.
   resetMockAccountingDb()
   await waitJob((await api.months.process(P)).jobId)

@@ -6,6 +6,7 @@ import type {
   AuditEntry,
   AuditQuery,
   CashEvidenceUploadResult,
+  CashPreference,
   CashRegisterState,
   CashTransitionRequest,
   ConfirmBulkRequest,
@@ -84,6 +85,12 @@ export interface AccountingApi {
     getAudit(pfaId: string, query?: AuditQuery): Promise<AuditEntry[]>
   }
 
+  /** Pentru utilizatorul PFA însuși (rol PFA), nu pentru ADMIN / ACCOUNTANT: pasul 3 din onboarding. */
+  onboarding: {
+    getCashPreference(): Promise<CashPreference | null>
+    setCashPreference(request: { cashRequested: boolean }): Promise<CashPreference>
+  }
+
   /** §4.2 */
   documents: {
     list(pfaId: string, period: Period): Promise<PlatformDocumentListItem[]>
@@ -108,6 +115,8 @@ export interface AccountingApi {
 
   jobs: {
     get(jobId: string): Promise<Job>
+    /** Fișierul produs de job (arhiva dosarului de predare). */
+    getFile(jobId: string): Promise<Blob>
   }
 
   /** §4.4 */

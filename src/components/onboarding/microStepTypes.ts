@@ -51,6 +51,11 @@ export interface ChoiceDef {
    * loc. Un „Nu” care doar schimbă drumul (TVA, cont bancar, PFA) nu are așa ceva.
    */
   blocking?: { title: string; message: string }
+  /**
+   * Varianta nu oprește parcursul, dar are ceva de spus înainte: aleasă, deschide un pop-up cu
+   * „Am înțeles”, iar răspunsul se trimite și ecranul avansează abia după confirmare.
+   */
+  acknowledge?: { title: string; message: string }
 }
 
 /** Răspunsul ales e o variantă care oprește parcursul. */
@@ -138,6 +143,11 @@ export interface MicroStepDef {
    * o frază gri sub titlu nu adaugă nimic, doar face ecranul să pară aglomerat.
    */
   title: string
+  /**
+   * Excepția de la „fără subtitlu”: o precizare fără de care întrebarea se înțelege greșit (cursele
+   * plătite cu cardul în aplicație nu sunt „numerar”). Folosit doar unde spec-ul o cere explicit.
+   */
+  subtitle?: string
   /** Eticheta scurtă din checklist: `Vârstă`, `Permis`, `Atestat`. */
   railLabel: string
 

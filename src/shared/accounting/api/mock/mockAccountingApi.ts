@@ -1153,6 +1153,17 @@ export function createMockAccountingApi(): AccountingApi {
         }),
     },
 
+    onboarding: {
+      getCashPreference: () => respond(() => db.myCashPreference),
+      setCashPreference: (request) =>
+        respond(() => {
+          const before = db.myCashPreference
+          db.myCashPreference = { cashRequested: request.cashRequested, answeredAt: nowIso() }
+          audit(null, 'CashPreference', 'me', request.cashRequested ? 'CASH_PENDING' : 'CASH_NOT_REQUIRED_CURRENT_CONFIGURATION', before, db.myCashPreference, null)
+          return db.myCashPreference
+        }),
+    },
+
     documents: {
       list: (pfaId, period) =>
         respond(() => {
@@ -1358,6 +1369,14 @@ export function createMockAccountingApi(): AccountingApi {
           const job = db.jobs[jobId]
           if (!job) throw notFound('Jobul')
           return job
+        }),
+      // Mock-ul nu construiește arhiva: întoarce lista de conținut, ca text.
+      getFile: (jobId) =>
+        respond(() => {
+          const job = db.jobs[jobId]
+          if (!job?.file) throw notFound('Fișierul jobului')
+          const lines = [`${job.file.fileName} (simulat)`, '', ...job.results.map((item) => item.message)]
+          return new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })
         }),
     },
 

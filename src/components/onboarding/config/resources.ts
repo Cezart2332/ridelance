@@ -1,5 +1,6 @@
 import { bankService } from '../../../services/bank.service'
 import { onboardingService } from '../../../services/onboarding.service'
+import { cashPreferenceResource } from './cash'
 
 /**
  * Ce sub-stare are nevoie fiecare pas mare ca predicatele lui din config să poată răspunde.
@@ -18,6 +19,8 @@ export const MICRO_RESOURCES: Record<string, MicroResource[]> = {
     // Conexiunea bancară decide dacă mai cerem extrasul de cont: cu banca legată, IBAN-ul și
     // titularul vin de la ea, semnate, iar poza extrasului n-ar mai adăuga nimic.
     { key: 'bank', fetch: () => bankService.getConnection() },
+    // Răspunsul la întrebarea despre numerar, salvat prin modulul de contabilitate.
+    cashPreferenceResource,
   ],
   arr: [{ key: 'arr', fetch: () => onboardingService.getArrState() }],
   platforms: [{ key: 'platforms', fetch: () => onboardingService.getPlatformOnboarding() }],

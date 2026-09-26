@@ -175,6 +175,8 @@ POST /pfas/{pfaId}/cash/transition                  → body: { to: CashRegister
 POST /pfas/{pfaId}/deactivate                       → body: { accountingEndDate }
 POST /pfas/{pfaId}/handover-package                 → { jobId }
 GET  /pfas/{pfaId}/audit?from&to&entity             → AuditEntry[]
+GET  /me/cash-preference                            → CashPreference | null   // rol PFA: răspunsul din onboarding, pasul 3
+PUT  /me/cash-preference                            → body: { cashRequested } → CashPreference
 ```
 
 ### 4.2 Documente platformă
@@ -198,6 +200,7 @@ POST /periods/{period}/confirm-clean-documents → { confirmed[], skipped[{id, r
 POST /periods/{period}/generate      → { jobId }   // doar PFA-urile READY fără declarații generate
 POST /periods/{period}/validate      → { jobId }   // toate versiunile în GENERATED
 GET  /jobs/{jobId}                   → { status, progress: {done, total}, results[], errors[] }
+GET  /jobs/{jobId}/file              → fișierul produs de job (arhiva dosarului de predare)
 ```
 
 ### 4.4 Declarații

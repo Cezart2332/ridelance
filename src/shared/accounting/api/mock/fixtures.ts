@@ -852,6 +852,7 @@ export function createFixtureDb(): MockDb {
     periods,
     corrections: [],
     cashEvidence: {},
+    myCashPreference: null,
     audit,
     jobs: {},
     sequence: 1000,

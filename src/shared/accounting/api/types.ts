@@ -272,6 +272,15 @@ export interface CashEvidenceUploadResult {
   documentId: string
 }
 
+/**
+ * Răspunsul PFA-ului la întrebarea din onboarding (pasul 3) despre plățile în numerar. DA pune
+ * casa de marcat în `PENDING`; activarea rămâne a contabilului (F7).
+ */
+export interface CashPreference {
+  cashRequested: boolean
+  answeredAt: IsoDateTime
+}
+
 export interface DeactivateRequest {
   accountingEndDate: IsoDate
 }
