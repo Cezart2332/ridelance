@@ -40,3 +40,6 @@ openbanking/
 
 # Aplicația mobilă: build-ul web copiat în proiectele native
 dist-native
+
+# Microserviciul Java ANAF (DUKIntegrator) — repo separat
+backend-anaf/
