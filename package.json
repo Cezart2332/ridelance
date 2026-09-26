@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test:accounting": "rolldown tests/accounting/mockScenario.ts -o node_modules/.tmp/accounting-scenario.mjs -f esm -p node -e jspdf && node node_modules/.tmp/accounting-scenario.mjs",
     "preview": "vite preview",
     "test:responsive": "playwright test --config=playwright.config.ts",
     "build:native": "tsc -b && vite build --mode native",

@@ -78,6 +78,11 @@ const OnboardingSubscriptionsPage = lazyWithRetry(
   () => import('./components/onboarding/OnboardingSubscriptionsPage'),
 )
 
+// Debug-ul modulului de contabilitate (spec F0): doar în dev, eliminat din bundle-ul de producție.
+const AccountingDebugPage = import.meta.env.DEV
+  ? lazyWithRetry(() => import('./shared/accounting/debug/AccountingDebugPage'))
+  : null
+
 function App() {
   // Aplicația mobilă: doar autentificarea și dashboardurile PFA/SRL (vezi `native/platform.ts`).
   if (IS_NATIVE_APP) return <NativeApp />
@@ -138,6 +143,7 @@ function App() {
             <Route path="/poster/*" element={<LegacySrlRedirect />} />
           </Route>
 
+          {AccountingDebugPage && <Route path="/dev/contabilitate" element={<AccountingDebugPage />} />}
           <Route path="/demo/*" element={<DashboardDemoPage />} />
           <Route path="/*" element={<AppLayout />} />
         </Routes>
