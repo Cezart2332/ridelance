@@ -286,6 +286,10 @@ test.describe('pasul 1 pe micro-pași', () => {
 
     await page.getByRole('radio', { name: 'Da' }).click()
 
+    // Apoi tipul cărții de identitate; „Nu" păstrează uploadul clasic, cu fotografie.
+    await expect(page.getByRole('heading', { name: 'Ai carte de identitate electronică?' })).toBeVisible()
+    await page.getByRole('radio', { name: 'Nu' }).click()
+
     // Ecranul următor e uploadul aferent — și doar el. Fără „Continuă": alegerea avansează singură.
     await expect(page.getByRole('heading', { name: 'Încarcă cartea de identitate' })).toBeVisible()
     await expect(page.getByRole('radio')).toHaveCount(0)
@@ -356,6 +360,18 @@ test.describe('pasul 1 pe micro-pași', () => {
       body: { stepKey: 'eligibility', question: 'Ai atestat de transport alternativ?', value: 'no', valueLabel: 'Nu' },
     })
     expect(saved[1]).toMatchObject({ body: { value: 'yes', valueLabel: 'Da' } })
+  })
+
+  test('cu carte de identitate electronică se cere PDF-ul din RO CEI Reader', async ({ page }, info) => {
+    await stubEligibility(page)
+    await page.goto('/onboarding/eligibility?pas=ci_electronic', { waitUntil: 'networkidle' })
+
+    await page.getByRole('radio', { name: 'Da' }).click()
+
+    await expect(page.getByRole('heading', { name: 'Încarcă PDF-ul din aplicația RO CEI Reader' })).toBeVisible()
+    await expect(page.getByText(/Acolo se află toate datele/)).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Încarcă cartea de identitate' })).toHaveCount(0)
+    await page.screenshot({ path: `test-results/onboarding-cei-${info.project.name}.png` })
   })
 
   test('„Nu" la vârstă și la permis are și el pop-up', async ({ page }) => {

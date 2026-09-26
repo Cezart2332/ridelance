@@ -60,6 +60,22 @@ export const eligibilityMicroSteps: MicroStepDef[] = [
     isDone: (c) => c.answers.age !== undefined || hasDocument(c, CI),
   },
   {
+    // Cartea electronică nu are adresa tipărită: domiciliul stă doar în cip. PDF-ul din RO CEI
+    // Reader le are pe toate, deci pe ramura asta cerem PDF-ul, nu o fotografie.
+    id: 'ci_electronic',
+    macroStep: 'eligibility',
+    kind: 'question',
+    eyebrow: EYEBROW,
+    icon: 'idCard',
+    railLabel: 'Tip carte de identitate',
+    title: 'Ai carte de identitate electronică?',
+    choices: [
+      { value: 'yes', title: 'Da' },
+      { value: 'no', title: 'Nu' },
+    ],
+    isDone: (c) => c.answers.ci_electronic !== undefined || hasDocument(c, CI),
+  },
+  {
     id: 'ci_upload',
     macroStep: 'eligibility',
     kind: 'upload',
@@ -72,6 +88,23 @@ export const eligibilityMicroSteps: MicroStepDef[] = [
       label: 'Carte de identitate',
       hint: 'Fotografie clară, față. Toate cele 4 colțuri vizibile.',
     },
+    visibleWhen: (c) => c.answers.ci_electronic !== 'yes',
+    isDone: (c) => hasDocument(c, CI),
+  },
+  {
+    id: 'ci_electronic_upload',
+    macroStep: 'eligibility',
+    kind: 'upload',
+    eyebrow: EYEBROW,
+    icon: 'idCard',
+    railLabel: 'Carte de identitate',
+    title: 'Încarcă PDF-ul din aplicația RO CEI Reader',
+    document: {
+      category: 'CarteIdentitate',
+      label: 'Carte de identitate electronică',
+      hint: 'Citește cartea în aplicația RO CEI Reader și încarcă PDF-ul generat. Acolo se află toate datele, inclusiv domiciliul.',
+    },
+    visibleWhen: (c) => c.answers.ci_electronic === 'yes',
     isDone: (c) => hasDocument(c, CI),
   },
   {
