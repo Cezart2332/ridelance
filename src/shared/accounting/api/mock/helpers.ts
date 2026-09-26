@@ -115,6 +115,16 @@ export function resolveDeductibility(
   const rule = validAt(categories, entry.date, (item) => item.category === entry.category)
   if (!rule) return none
 
+  // Amortizarea și alte cazuri speciale: DE CONFIRMAT, nu prin procentul auto (B6), nici pentru categoriile auto.
+  if (rule.defaultDeductibility === 'SPECIAL_RULE') {
+    return {
+      ...none,
+      vehicleRelated: rule.vehicleRelated,
+      deductibilityType: 'SPECIAL_RULE',
+      deductibilityRule: { settingKey: null, ruleId: rule.id, validFrom: rule.validFrom },
+    }
+  }
+
   if (rule.vehicleRelated) {
     const setting = settingAt(history, 'vehicle_deductibility', entry.date)
     if (!setting) return { ...none, vehicleRelated: true }
@@ -125,14 +135,6 @@ export function resolveDeductibility(
       deductiblePercent: percent,
       deductibleAmount: round2((Math.abs(entry.amount) * percent) / 100),
       deductibilityRule: { settingKey: 'vehicle_deductibility', ruleId: rule.id, validFrom: setting.validFrom },
-    }
-  }
-
-  if (rule.defaultDeductibility === 'SPECIAL_RULE') {
-    return {
-      ...none,
-      deductibilityType: 'SPECIAL_RULE',
-      deductibilityRule: { settingKey: null, ruleId: rule.id, validFrom: rule.validFrom },
     }
   }
 
