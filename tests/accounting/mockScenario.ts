@@ -1,12 +1,12 @@
 /**
  * Scenariul de acceptanță al fundației contabilității (spec F0), rulat headless pe mock:
- * fixtures → procesare (27 / 2 / 1) → rezolvarea celor 3 excepții → generare → validare →
+ * fixtures → procesare (0 / 29 / 1) → confirmarea în bloc (27 / 2 / 1) → rezolvarea celor 3 excepții → generare → validare →
  * tranziții, recipisă, rectificativă → ledger / RJIP / REF (§5.3) → cash, setări, perioade.
  *
  * `npm run test:accounting` (bundle cu rolldown, apoi Node). Latența mock-ului e reală, deci
  * durează aproape un minut.
  */
-import { createMockAccountingApi } from '../../src/shared/accounting/api/mock/mockAccountingApi'
+import { createMockAccountingApi, resetMockAccountingDb } from '../../src/shared/accounting/api/mock/mockAccountingApi'
 import { validateRomanianCIF } from '../../src/utils/validation'
 import { formatLei, formatDate, formatValidity } from '../../src/shared/accounting/format'
 import { availableOperations } from '../../src/shared/accounting/declarationWorkflow'
@@ -49,7 +49,11 @@ async function main() {
   const processed = await waitJob((await api.months.process(P)).jobId)
   expect('process job progress grows', processed.seen.length > 2, true)
   overview = await api.months.getOverview(P)
-  expect('overview after process', overview.stats, { total: 30, ready: 27, needsReview: 2, missingDocuments: 1, notProcessed: 0 })
+  expect('overview after process', overview.stats, { total: 30, ready: 0, needsReview: 29, missingDocuments: 1, notProcessed: 0 })
+  const clean = await api.months.confirmCleanDocuments(P)
+  expect('confirmare în bloc', [clean.confirmed.length, clean.skipped.length], [30 * 4 - 3 * 2 - 1 - 2, 0])
+  overview = await api.months.getOverview(P)
+  expect('overview after bulk confirm', overview.stats, { total: 30, ready: 27, needsReview: 2, missingDocuments: 1, notProcessed: 0 })
   for (const row of overview.rows.filter((r) => r.status !== 'READY')) console.log('     ', row.pfaName, row.status, '→', row.blockingReasons[0])
 
   const ion = overview.rows.find((r) => r.pfaName === 'Ion Popescu')!
@@ -85,11 +89,11 @@ async function main() {
   detail = await api.documents.get(razvanInvoice.id)
   expect('Răzvan check', detail.checks.filter((c) => !c.passed).map((c) => [c.code, c.action]), [['SUPPLIER_KNOWN', 'ADD_SUPPLIER']])
   try {
-    await api.rules.suppliers.create({ supplierName: 'Uber B.V.', country: 'NL', vatId: 'NL852071588B01', incomeType: 'COMMISSION', treaty: null, d100Rate: 1, d100RateConfirmed: false, validFrom: '2026-01-01', validTo: null, residenceCertValidFrom: null, residenceCertValidTo: null, residenceCertFile: null })
+    await api.rules.suppliers.create({ supplierName: 'Uber B.V.', country: 'NL', vatId: 'NL852071588B01', incomeType: 'COMMISSION', treaty: null, d100Rate: 1, d100RateConfirmed: false, validFrom: '2026-01-01', validTo: null, residenceCertValidFrom: null, residenceCertValidTo: null, residenceCertFile: null, note: null })
   } catch (e) {
     expect('overlap refuzat', (e as { status: number }).status, 409)
   }
-  await api.rules.suppliers.create({ supplierName: 'Uber B.V. (sucursală)', country: 'NL', vatId: 'NL001234567B01', incomeType: 'COMMISSION', treaty: 'Convenția RO–NL', d100Rate: null, d100RateConfirmed: false, validFrom: '2026-01-01', validTo: null, residenceCertValidFrom: '2026-01-01', residenceCertValidTo: '2026-12-31', residenceCertFile: null })
+  await api.rules.suppliers.create({ supplierName: 'Uber B.V. (sucursală)', country: 'NL', vatId: 'NL001234567B01', incomeType: 'COMMISSION', treaty: 'Convenția RO–NL', d100Rate: 0, d100RateConfirmed: true, validFrom: '2026-01-01', validTo: null, residenceCertValidFrom: '2026-01-01', residenceCertValidTo: '2026-12-31', residenceCertFile: null, note: null })
   detail = await api.documents.get(razvanInvoice.id)
   expect('Răzvan after supplier', detail.status, 'PENDING_CONFIRMATION')
   await api.documents.confirm(razvanInvoice.id)
@@ -203,7 +207,13 @@ async function main() {
   } catch (e) {
     expect('cash fără dovadă', (e as { status: number }).status, 400)
   }
-  const cash = await api.pfas.transitionCash(florin.id, { to: 'ACTIVE', note: 'ok', evidenceDocumentId: 'ev-1' })
+  try {
+    await api.pfas.transitionCash(florin.id, { to: 'ACTIVE', note: 'ok', evidenceDocumentId: 'inexistent' })
+  } catch (e) {
+    expect('cash cu dovadă neîncărcată', (e as { status: number }).status, 400)
+  }
+  const evidence = await api.pfas.uploadCashEvidence(florin.id, new File(['fiscalizare'], 'fiscalizare.pdf'))
+  const cash = await api.pfas.transitionCash(florin.id, { to: 'ACTIVE', note: 'ok', evidenceDocumentId: evidence.documentId })
   expect('cash activ', [cash.status, cash.verifiedBy?.name], ['ACTIVE', 'Contabil RIDElance'])
 
   // Setări append-only
@@ -235,6 +245,19 @@ async function main() {
   expect('corecție controlată', corr.ledgerEntryId, locked[0].id)
   const auditLog = await api.pfas.getAudit(mihai.id)
   expect('audit are corecția', auditLog.some((a) => a.action === 'PERIOD_CORRECTION' && a.reason === 'Descriere greșită'), true)
+
+  // Decizii pct. 2: o cotă D100 neconfirmată blochează luna.
+  resetMockAccountingDb()
+  const uber = (await api.rules.suppliers.list()).find((item) => item.vatId === 'NL852071588B01')!
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id: _uberId, ...uberInput } = uber
+  await api.rules.suppliers.update(uber.id, { ...uberInput, d100Rate: null, d100RateConfirmed: false })
+  await waitJob((await api.months.process(P)).jobId)
+  await api.months.confirmCleanDocuments(P)
+  const blocked = (await api.months.getOverview(P)).rows.find((row) => row.pfaName === 'Ion Popescu')!
+  expect('D100 neconfirmat blochează', [blocked.status, blocked.blockingReasons[0]], ['NEEDS_REVIEW', 'Cota D100 pentru Uber B.V. nu e confirmată.'])
+  const boltOnly = (await api.months.getOverview(P)).rows.find((row) => row.pfaName === 'Adrian Stoica')!
+  expect('PFA doar Bolt neafectat', boltOnly.status, 'READY')
 
   console.log(failures === 0 ? '\nTOATE VERIFICĂRILE AU TRECUT' : `\n${failures} VERIFICĂRI PICATE`)
   process.exit(failures === 0 ? 0 : 1)

@@ -131,6 +131,8 @@ export interface MockDb {
   assets: Asset[]
   periods: AccountingPeriod[]
   corrections: PeriodCorrection[]
+  /** Dovezile de fiscalizare încărcate, după id. */
+  cashEvidence: Record<string, { pfaId: string; file: StoredFileRef }>
   audit: (AuditEntry & { pfaId: string | null })[]
   jobs: Record<string, Job>
   /** Contor pentru id-uri deterministe. */

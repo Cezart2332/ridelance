@@ -8,9 +8,7 @@ import type { MockDb, MockDocument, MockPfa } from './mockDb'
  * confirmate și regulile valabile la data fiecărei facturi. Cotele, țările UE și data
  * exigibilității vin din `db` (reguli și config), niciuna nu e scrisă aici.
  *
- * Diferență asumată față de B2: o cotă D100 neconfirmată nu blochează declarația, ci exclude
- * linia cu avertisment. Altfel exemplul Ion Popescu (D100 = 20, „+ Uber după cota confirmată”)
- * n-ar putea fi generat. De lămurit la B2.
+ * O cotă D100 neconfirmată blochează luna, ca în B2 (Decizii, pct. 2).
  */
 
 export interface MockTaxResult {
@@ -99,21 +97,7 @@ export function calculate(db: MockDb, pfa: MockPfa, period: Period): MockTaxResu
       if (!certValid) {
         blockingReasons.push(`Certificatul de rezidență pentru ${supplier.supplierName} nu e valabil la ${formatDate(date)}.`)
       } else if (!supplier.d100RateConfirmed || supplier.d100Rate === null) {
-        d100Lines.push({
-          ...common,
-          id: `D100-${document.id}`,
-          ruleCode: d100Rule.code,
-          base,
-          rate: supplier.d100Rate,
-          value: 0,
-          explanation: `${formatAmount(base)}${conversionNote} × cotă neconfirmată`,
-          operationType: null,
-          treaty: supplier.treaty,
-          residenceCertValidFrom: supplier.residenceCertValidFrom,
-          residenceCertValidTo: supplier.residenceCertValidTo,
-          excluded: true,
-          warning: `Cota D100 pentru ${supplier.supplierName} nu e confirmată.`,
-        })
+        blockingReasons.push(`Cota D100 pentru ${supplier.supplierName} nu e confirmată.`)
       } else {
         const value = round2((base * supplier.d100Rate) / 100)
         d100Lines.push({
@@ -128,8 +112,6 @@ export function calculate(db: MockDb, pfa: MockPfa, period: Period): MockTaxResu
           treaty: supplier.treaty,
           residenceCertValidFrom: supplier.residenceCertValidFrom,
           residenceCertValidTo: supplier.residenceCertValidTo,
-          excluded: false,
-          warning: null,
         })
       }
     }
@@ -155,8 +137,6 @@ export function calculate(db: MockDb, pfa: MockPfa, period: Period): MockTaxResu
       treaty: null,
       residenceCertValidFrom: null,
       residenceCertValidTo: null,
-      excluded: false,
-      warning: null,
     })
 
     const bucket = euBySupplier.get(supplier.vatId) ?? { base: 0, documents: [], country: supplier.country, name: supplier.supplierName }
@@ -183,18 +163,15 @@ export function calculate(db: MockDb, pfa: MockPfa, period: Period): MockTaxResu
     treaty: null,
     residenceCertValidFrom: null,
     residenceCertValidTo: null,
-    excluded: false,
-    warning: null,
   }))
 
   const rideIncome = round2(
     reports.reduce((sum, item) => sum + (toRon(item.fields.amount ?? 0, item.fields.currency, item.fields.periodTo)?.ron ?? 0), 0),
   )
 
-  const sum = (lines: DeclarationLine[]) => round2(lines.filter((line) => !line.excluded).reduce((total, line) => total + line.value, 0))
+  const sum = (lines: DeclarationLine[]) => round2(lines.reduce((total, line) => total + line.value, 0))
   const d100Total = sum(d100Lines)
   const d301Total = sum(d301Lines)
-  const excludedCount = d100Lines.filter((line) => line.excluded).length
 
   return {
     blockingReasons,
@@ -204,9 +181,7 @@ export function calculate(db: MockDb, pfa: MockPfa, period: Period): MockTaxResu
         breakdown: {
           lines: d100Lines,
           total: d100Total,
-          explanation:
-            `Impozit pe comisioanele nerezidenților: ${formatLei(d100Total)}.` +
-            (excludedCount > 0 ? ` ${excludedCount} ${excludedCount === 1 ? 'linie exclusă' : 'linii excluse'} până la confirmarea cotei.` : ''),
+          explanation: `Impozit pe comisioanele nerezidenților: ${formatLei(d100Total)}.`,
           excludedRideIncome: null,
         },
       },

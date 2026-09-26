@@ -440,6 +440,40 @@ function seedForUpload(pfa: MockPfa, period: Period, file: File, id: string): Mo
   )
 }
 
+/** Confirmarea în bloc: sare peste ce nu se poate confirma și spune de ce. */
+function confirmMany(ids: string[], reason: string): { confirmed: string[]; skipped: { id: string; reason: string }[] } {
+  const confirmed: string[] = []
+  const skipped: { id: string; reason: string }[] = []
+  const touched = new Set<string>()
+  for (const id of ids) {
+    const document = db.documents.find((item) => item.id === id)
+    if (!document) {
+      skipped.push({ id, reason: 'Documentul nu există.' })
+      continue
+    }
+    if (findPfa(document.pfaId).engagement.status === 'INACTIVE') {
+      skipped.push({ id, reason: 'Dosar inactiv.' })
+      continue
+    }
+    const failed = refreshReviewStatus(document).find((check) => !check.passed)
+    if (document.status !== 'PENDING_CONFIRMATION') {
+      skipped.push({ id, reason: failed ? failed.message : `Nu așteaptă confirmare (status ${effectiveStatus(document)}).` })
+      continue
+    }
+    document.status = 'CONFIRMED'
+    document.reviewedBy = CURRENT_USER
+    document.reviewedAt = nowIso()
+    audit(document.pfaId, 'PlatformDocument', document.id, 'CONFIRM', { status: 'PENDING_CONFIRMATION' }, { status: 'CONFIRMED' }, reason)
+    confirmed.push(id)
+    touched.add(`${document.pfaId}|${document.period}`)
+  }
+  touched.forEach((key) => {
+    const [pfaId, period] = key.split('|')
+    refreshPrecheck(pfaId, period)
+  })
+  return { confirmed, skipped }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Pre-check și luna fiscală
 // ---------------------------------------------------------------------------------------------
@@ -468,6 +502,7 @@ function runPrecheck(pfa: MockPfa, period: Period): PfaMonthStatus {
     }
   }
 
+  let pendingConfirmation = 0
   for (const document of documents) {
     if (document.status === 'CONFIRMED') continue
     if (document.status === 'UPLOADED' || document.status === 'EXTRACTING') {
@@ -476,8 +511,13 @@ function runPrecheck(pfa: MockPfa, period: Period): PfaMonthStatus {
       review.push(`${document.fileName}: citire eșuată.`)
     } else {
       const failed = refreshReviewStatus(document).find((check) => !check.passed)
-      review.push(failed ? `${documentName(document)}: ${failed.message}` : `${documentName(document)}: așteaptă confirmare.`)
+      if (failed) review.push(`${documentName(document)}: ${failed.message}`)
+      else pendingConfirmation++
     }
+  }
+  // După problemele reale: un document fără probleme doar așteaptă confirmarea.
+  if (pendingConfirmation > 0) {
+    review.push(pendingConfirmation === 1 ? 'Un document așteaptă confirmare.' : `${pendingConfirmation} documente așteaptă confirmare.`)
   }
 
   if (!art317At(pfa, periodEnd).enabled) review.push('Codul special de TVA art. 317 nu e activ în perioadă.')
@@ -638,7 +678,7 @@ function mockXml(pfa: MockPfa, declaration: MockDeclaration, version: MockDeclar
   const lines = version.breakdown.lines
     .map(
       (line) =>
-        `  <linie document="${escapeXml(line.sourceDocumentLabel)}" furnizor="${escapeXml(line.supplierName)}" codTva="${escapeXml(line.supplierVatId)}" baza="${line.base.toFixed(2)}" cota="${line.rate ?? ''}" valoare="${line.value.toFixed(2)}" exclusa="${line.excluded}"/>`,
+        `  <linie document="${escapeXml(line.sourceDocumentLabel)}" furnizor="${escapeXml(line.supplierName)}" codTva="${escapeXml(line.supplierVatId)}" baza="${line.base.toFixed(2)}" cota="${line.rate ?? ''}" valoare="${line.value.toFixed(2)}"/>`,
     )
     .join('\n')
   return [
@@ -726,7 +766,7 @@ function generateFor(pfa: MockPfa, period: Period): { ok: boolean; message: stri
 
 /** Cele 3 niveluri (B4), simulate. RIDElance chiar recalculează din snapshot. */
 function validateVersion(pfa: MockPfa, declaration: MockDeclaration, version: MockDeclarationVersion): boolean {
-  const expected = round2(version.breakdown.lines.filter((line) => !line.excluded).reduce((sum, line) => sum + line.value, 0))
+  const expected = round2(version.breakdown.lines.reduce((sum, line) => sum + line.value, 0))
   const ridelanceOk = declaration.type === 'D390' ? version.amount === 0 : expected === version.amount
   const failure = pfa.failFirstValidation
   const failsNow =
@@ -1011,6 +1051,15 @@ export function createMockAccountingApi(): AccountingApi {
           return toSettings(pfa)
         }),
 
+      uploadCashEvidence: (pfaId, file) =>
+        respond(async () => {
+          ensureWritable(findPfa(pfaId))
+          const stored = await fileRefFrom(file, 'cash-evidence')
+          db.cashEvidence[stored.id] = { pfaId, file: stored }
+          audit(pfaId, 'CashEvidence', stored.id, 'UPLOAD', null, { fileName: stored.fileName }, null)
+          return { documentId: stored.id }
+        }),
+
       transitionCash: (pfaId, request) =>
         respond(() => {
           const pfa = findPfa(pfaId)
@@ -1020,8 +1069,9 @@ export function createMockAccountingApi(): AccountingApi {
           if (!canTransitionCash(from, request.to)) {
             throw conflict('INVALID_TRANSITION', `Casa de marcat nu poate trece din ${from} în ${request.to}.`)
           }
-          if (CASH_STATUSES_REQUIRING_EVIDENCE.includes(request.to) && !request.evidenceDocumentId) {
-            throw badRequest('EVIDENCE_REQUIRED', 'Dovada de fiscalizare e obligatorie pentru activarea numerarului.')
+          const evidence = request.evidenceDocumentId ? db.cashEvidence[request.evidenceDocumentId] : undefined
+          if (CASH_STATUSES_REQUIRING_EVIDENCE.includes(request.to) && (!evidence || evidence.pfaId !== pfaId)) {
+            throw badRequest('EVIDENCE_REQUIRED', 'Încarcă dovada de fiscalizare înainte de activarea numerarului.')
           }
           const before = { ...pfa.cash }
           const active = request.to === 'ACTIVE'
@@ -1031,7 +1081,7 @@ export function createMockAccountingApi(): AccountingApi {
             cashEnabled: active,
             activationDate: active ? todayIso() : null,
             verifiedBy: active ? CURRENT_USER : null,
-            evidenceFile: active ? fileRef(request.evidenceDocumentId!, 'Dovada_fiscalizare.pdf') : request.to === 'NOT_REQUIRED_CURRENT_CONFIGURATION' ? null : before.evidenceFile,
+            evidenceFile: active ? evidence!.file : request.to === 'NOT_REQUIRED_CURRENT_CONFIGURATION' ? null : before.evidenceFile,
           }
           audit(pfaId, 'CashRegisterState', pfaId, `CASH_${request.to}`, before, pfa.cash, note)
           return pfa.cash
@@ -1192,40 +1242,7 @@ export function createMockAccountingApi(): AccountingApi {
           return toDetail(document)
         }),
 
-      confirmBulk: (request) =>
-        respond(() => {
-          const confirmed: string[] = []
-          const skipped: { id: string; reason: string }[] = []
-          const touched = new Set<string>()
-          for (const id of request.ids) {
-            const document = db.documents.find((item) => item.id === id)
-            if (!document) {
-              skipped.push({ id, reason: 'Documentul nu există.' })
-              continue
-            }
-            const pfa = findPfa(document.pfaId)
-            if (pfa.engagement.status === 'INACTIVE') {
-              skipped.push({ id, reason: 'Dosar inactiv.' })
-              continue
-            }
-            const failed = refreshReviewStatus(document).find((check) => !check.passed)
-            if (document.status !== 'PENDING_CONFIRMATION') {
-              skipped.push({ id, reason: failed ? failed.message : `Nu așteaptă confirmare (status ${effectiveStatus(document)}).` })
-              continue
-            }
-            document.status = 'CONFIRMED'
-            document.reviewedBy = CURRENT_USER
-            document.reviewedAt = nowIso()
-            audit(document.pfaId, 'PlatformDocument', document.id, 'CONFIRM', { status: 'PENDING_CONFIRMATION' }, { status: 'CONFIRMED' }, 'Confirmare în bloc')
-            confirmed.push(id)
-            touched.add(`${document.pfaId}|${document.period}`)
-          }
-          touched.forEach((key) => {
-            const [pfaId, period] = key.split('|')
-            refreshPrecheck(pfaId, period)
-          })
-          return { confirmed, skipped }
-        }),
+      confirmBulk: (request) => respond(() => confirmMany(request.ids, 'Confirmare în bloc')),
     },
 
     months: {
@@ -1245,6 +1262,20 @@ export function createMockAccountingApi(): AccountingApi {
             },
             rows,
           }
+        }),
+
+      confirmCleanDocuments: (period) =>
+        respond(() => {
+          requirePeriod(period)
+          const active = new Set(pfasInPeriod(period).map((pfa) => pfa.id))
+          const ids = db.documents
+            .filter((document) => document.period === period && active.has(document.pfaId))
+            .filter((document) => {
+              refreshReviewStatus(document)
+              return document.status === 'PENDING_CONFIRMATION'
+            })
+            .map((document) => document.id)
+          return confirmMany(ids, 'Confirmare în bloc a documentelor fără probleme')
         }),
 
       process: (period) =>

@@ -52,8 +52,14 @@ export const MOCK_USERS = {
 
 /**
  * Datele furnizorilor sunt cele de pe facturile de comision; se verifică cu facturile reale ale
- * clienților înainte de seed-ul din B0. Cota D100 pentru Uber e DE CONFIRMAT (§6 pct. 1).
+ * clienților înainte de seed-ul din B0.
+ *
+ * Cota D100 pentru Uber e DE CONFIRMAT (§6 pct. 1). O cotă neconfirmată blochează luna (B2), deci
+ * în fixtures profilul e confirmat cu 0%, etichetat explicit: Ion Popescu dă D100 = 20 doar din
+ * Bolt. Testul de scenariu verifică separat că o cotă neconfirmată blochează.
  */
+export const FIXTURE_PLACEHOLDER_NOTE = 'fixture – de înlocuit'
+
 const BOLT = { name: 'Bolt Operations OÜ', country: 'EE', vatId: 'EE102090374' }
 const UBER = { name: 'Uber B.V.', country: 'NL', vatId: 'NL852071588B01' }
 
@@ -73,6 +79,7 @@ function suppliers(): SupplierTaxProfile[] {
       residenceCertValidFrom: '2026-01-01',
       residenceCertValidTo: '2026-12-31',
       residenceCertFile: fileRef('cert-bolt-2026', 'Certificat_rezidenta_Bolt_2026.pdf'),
+      note: null,
     },
     {
       id: 'supplier-uber',
@@ -81,13 +88,14 @@ function suppliers(): SupplierTaxProfile[] {
       vatId: UBER.vatId,
       incomeType: 'COMMISSION',
       treaty: 'Convenția RO–NL',
-      d100Rate: null,
-      d100RateConfirmed: false,
+      d100Rate: 0,
+      d100RateConfirmed: true,
       validFrom: '2025-01-01',
       validTo: null,
       residenceCertValidFrom: '2026-01-01',
       residenceCertValidTo: '2026-10-31',
       residenceCertFile: fileRef('cert-uber-2026', 'Certificat_rezidenta_Uber_2026.pdf'),
+      note: `Cota D100 0%: ${FIXTURE_PLACEHOLDER_NOTE}.`,
     },
   ]
 }
@@ -744,7 +752,6 @@ export function createFixtureDb(): MockDb {
         kind: 'invoice',
         ...seed.bolt,
         misreadCommission: seed.name === 'Bogdan Matei' ? 1284.5 : undefined,
-        unprocessed: seed.name === 'Bogdan Matei',
       })
       invoiceSlots.push({ pfa, platform: 'BOLT', kind: 'report', ...seed.bolt })
     }
@@ -758,12 +765,13 @@ export function createFixtureDb(): MockDb {
           ...seed.uber,
           currency: seed.uberCurrency,
           vatIdOnDocument: seed.name === 'Răzvan Ene' ? 'NL001234567B01' : undefined,
-          unprocessed: seed.name === 'Răzvan Ene',
         })
       }
       invoiceSlots.push({ pfa, platform: 'UBER', kind: 'report', ...seed.uber, currency: seed.uberCurrency })
     }
-    invoiceSlots.forEach((slot, slotIndex) => documents.push(buildDocument(slot, index * 10 + slotIndex)))
+    // Toate documentele lunii sunt doar încărcate: procesarea le citește, iar cele fără probleme
+    // ajung „De confirmat” (Decizii, pct. 4).
+    invoiceSlots.forEach((slot, slotIndex) => documents.push(buildDocument({ ...slot, unprocessed: true }, index * 10 + slotIndex)))
 
     ledger.push(...buildLedger(pfa, history, categories, nextId))
     assets.push(...assetsFor(pfa))
@@ -827,6 +835,7 @@ export function createFixtureDb(): MockDb {
     assets,
     periods,
     corrections: [],
+    cashEvidence: {},
     audit: [],
     jobs: {},
     sequence: 1000,

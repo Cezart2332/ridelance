@@ -5,6 +5,7 @@ import type {
   AssetInput,
   AuditEntry,
   AuditQuery,
+  CashEvidenceUploadResult,
   CashRegisterState,
   CashTransitionRequest,
   ConfirmBulkRequest,
@@ -75,6 +76,8 @@ export interface AccountingApi {
     getSummary(pfaId: string): Promise<PfaAccountingSummary>
     getSettings(pfaId: string): Promise<PfaAccountingSettings>
     updateSettings(pfaId: string, change: SettingsChange): Promise<PfaAccountingSettings>
+    /** Dovada de fiscalizare a casei de marcat (multipart), cerută de tranziția spre `ACTIVE`. */
+    uploadCashEvidence(pfaId: string, file: File): Promise<CashEvidenceUploadResult>
     transitionCash(pfaId: string, request: CashTransitionRequest): Promise<CashRegisterState>
     deactivate(pfaId: string, request: DeactivateRequest): Promise<PfaAccountingSummary>
     createHandoverPackage(pfaId: string): Promise<JobRef>
@@ -97,6 +100,8 @@ export interface AccountingApi {
   months: {
     getOverview(period: Period): Promise<PeriodOverview>
     process(period: Period): Promise<JobRef>
+    /** Confirmă în bloc documentele lunii `PENDING_CONFIRMATION` (verificări trecute), pe toate PFA-urile. */
+    confirmCleanDocuments(period: Period): Promise<ConfirmBulkResult>
     generate(period: Period): Promise<JobRef>
     validate(period: Period): Promise<JobRef>
   }

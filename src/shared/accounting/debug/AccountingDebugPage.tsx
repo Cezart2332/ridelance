@@ -124,6 +124,21 @@ function MonthSection({ version, onChanged }: { version: number; onChanged: () =
           <Button variant="contained" disabled={running} onClick={() => run(() => accountingApi.months.process(PERIOD))}>
             Procesează luna
           </Button>
+          <Button
+            variant="outlined"
+            disabled={running}
+            onClick={async () => {
+              setError(null)
+              try {
+                await accountingApi.months.confirmCleanDocuments(PERIOD)
+                onChanged()
+              } catch (confirmError) {
+                setError(errorText(confirmError))
+              }
+            }}
+          >
+            Confirmă documentele fără probleme
+          </Button>
           <Button variant="outlined" disabled={running || !canGenerate} onClick={() => run(() => accountingApi.months.generate(PERIOD))}>
             Generează declarațiile
           </Button>

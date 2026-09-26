@@ -267,6 +267,11 @@ export interface CashTransitionRequest {
   evidenceDocumentId?: string
 }
 
+/** Răspunsul `POST /pfas/{pfaId}/cash/evidence`: id-ul dovezii, trimis apoi la tranziția spre `ACTIVE`. */
+export interface CashEvidenceUploadResult {
+  documentId: string
+}
+
 export interface DeactivateRequest {
   accountingEndDate: IsoDate
 }
@@ -568,9 +573,6 @@ export interface DeclarationLine {
   /** D100: valabilitatea certificatului de rezidență. */
   residenceCertValidFrom: IsoDate | null
   residenceCertValidTo: IsoDate | null
-  /** Linie calculată dar neinclusă în total (de ex. cotă neconfirmată). */
-  excluded: boolean
-  warning: string | null
 }
 
 export interface DeclarationBreakdown {
@@ -620,6 +622,8 @@ export interface SupplierTaxProfile extends Validity {
   residenceCertValidFrom: IsoDate | null
   residenceCertValidTo: IsoDate | null
   residenceCertFile: StoredFileRef | null
+  /** Observație afișată lângă profil, de ex. „fixture – de înlocuit”. */
+  note: string | null
 }
 
 export interface VatRate extends Validity {

@@ -32,6 +32,7 @@ export function createHttpAccountingApi(): AccountingApi {
       getSummary: (pfaId) => pending('GET', `pfas/${pfaId}/summary`),
       getSettings: (pfaId) => pending('GET', `pfas/${pfaId}/settings`),
       updateSettings: (pfaId) => pending('PUT', `pfas/${pfaId}/settings`),
+      uploadCashEvidence: (pfaId) => pending('POST', `pfas/${pfaId}/cash/evidence`),
       transitionCash: (pfaId) => pending('POST', `pfas/${pfaId}/cash/transition`),
       deactivate: (pfaId) => pending('POST', `pfas/${pfaId}/deactivate`),
       createHandoverPackage: (pfaId) => pending('POST', `pfas/${pfaId}/handover-package`),
@@ -49,6 +50,7 @@ export function createHttpAccountingApi(): AccountingApi {
     months: {
       getOverview: (period) => pending('GET', `periods/${period}/overview`),
       process: (period) => pending('POST', `periods/${period}/process`),
+      confirmCleanDocuments: (period) => pending('POST', `periods/${period}/confirm-clean-documents`),
       generate: (period) => pending('POST', `periods/${period}/generate`),
       validate: (period) => pending('POST', `periods/${period}/validate`),
     },
