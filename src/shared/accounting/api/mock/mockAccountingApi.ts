@@ -410,8 +410,23 @@ function extract(document: MockDocument): void {
 /** Ce „citește” AI-ul dintr-un fișier încărcat din UI: tipul din numele fișierului, sumele din documentul pereche. */
 function seedForUpload(pfa: MockPfa, period: Period, file: File, id: string): MockDocument {
   const name = normalizeSearch(file.name)
-  const platform: Platform | null = name.includes('bolt') ? 'BOLT' : name.includes('uber') ? 'UBER' : null
-  const kind = /factur|invoice|comision/.test(name) ? 'invoice' : /raport|report|statement/.test(name) ? 'report' : null
+  let platform: Platform | null = name.includes('bolt') ? 'BOLT' : name.includes('uber') ? 'UBER' : null
+  let kind: 'invoice' | 'report' | null = /factur|invoice|comision/.test(name) ? 'invoice' : /raport|report|statement/.test(name) ? 'report' : null
+
+  // AI-ul real citește conținutul; mock-ul, când numele nu spune destul, alege singurul slot lipsă
+  // compatibil cu ce se știe din nume.
+  if (!platform || !kind) {
+    const present = db.documents.filter((item) => item.pfaId === pfa.id && item.period === period)
+    const missing = platformsAt(pfa, lastDayOfPeriod(period)).flatMap((candidate) =>
+      (['invoice', 'report'] as const)
+        .filter((candidateKind) => !present.some((item) => item.platform === candidate && item.documentType === (candidateKind === 'invoice' ? 'COMMISSION_INVOICE' : 'PLATFORM_REPORT')))
+        .map((candidateKind) => ({ platform: candidate, kind: candidateKind })),
+    ).filter((slot) => (!platform || slot.platform === platform) && (!kind || slot.kind === kind))
+    if (missing.length === 1) {
+      platform = missing[0].platform
+      kind = missing[0].kind
+    }
+  }
 
   if (!platform || !kind) {
     return {

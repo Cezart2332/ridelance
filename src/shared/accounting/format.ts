@@ -95,3 +95,19 @@ export function formatPeriodShort(period: Period): string {
 export function formatCalculation(base: number, rate: number, value: number): string {
   return `${formatAmount(base)} × ${formatRate(rate)} = ${formatAmount(value)}`
 }
+
+/**
+ * Suma tastată de om → număr. Acceptă `1.248,50`, `1248,50`, `1248.50`, `1,248.50`; `null` dacă
+ * nu e o sumă. Ultimul separator e cel zecimal, dacă are cel mult două cifre după el.
+ */
+export function parseAmount(text: string): number | null {
+  const compact = text.replace(/\s|lei|RON|EUR/gi, '')
+  if (!compact) return null
+  const lastSeparator = Math.max(compact.lastIndexOf(','), compact.lastIndexOf('.'))
+  const decimals = lastSeparator >= 0 ? compact.slice(lastSeparator + 1) : ''
+  const hasDecimals = lastSeparator >= 0 && decimals.length > 0 && decimals.length <= 2
+  const whole = (hasDecimals ? compact.slice(0, lastSeparator) : compact).replace(/[.,]/g, '')
+  const normalized = hasDecimals ? `${whole}.${decimals}` : whole
+  if (!/^-?\d+(\.\d{1,2})?$/.test(normalized)) return null
+  return Number(normalized)
+}
