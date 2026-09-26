@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { NotificationsInbox } from '../components/notifications/NotificationsPanel'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { useAutoRefresh } from '../hooks/useAutoRefresh'
 import { ROUTES } from '../constants/routes'
 import {
@@ -63,6 +63,15 @@ import {
 import { openDocument } from '../components/common/documentViewerBus'
 import type { FiscalProfileStatus } from '../services/fiscalProfile.service'
 import { FiscalProfileStatusChip } from '../shared/fiscal-profile'
+import { reloadOnceOnChunkError } from '../utils/lazyWithRetry'
+import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded'
+import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
+import RuleRoundedIcon from '@mui/icons-material/RuleRounded'
+import { RouteFallback } from '../components/common/RouteFallback'
+
+// Modulul de contabilitate PFA (spec contabilitate), comun cu dashboard-ul contabilului.
+const AccountingArea = lazy(() => import('../shared/accounting/ui/AccountingArea').catch(reloadOnceOnChunkError))
+const ACCOUNTING_TABS = { pfa: 'contab_pfa', declarations: 'contab_declaratii', rules: 'contab_reguli' }
 
 interface PfaSummary {
   id: string
@@ -231,7 +240,7 @@ export function AdminDashboard() {
   const navigate = useNavigate()
   const [manualTab, setActiveTab] = useState('overview')
   const linkedTab = notificationParams.get('tab') ?? ''
-  const activeTab = ['overview', 'pfa', 'pfa_inrolate', 'srl_inrolate', 'masini', 'pagini_firme', 'servicii', 'facturare', 'reduceri', 'asigurari', 'calendar', 'chat', 'contabili', 'notificari', 'sarcini'].includes(linkedTab) ? linkedTab : manualTab
+  const activeTab = ['overview', 'pfa', 'pfa_inrolate', 'srl_inrolate', 'masini', 'pagini_firme', 'servicii', 'facturare', 'reduceri', 'asigurari', 'calendar', 'chat', 'contabili', 'notificari', 'sarcini', ...Object.values(ACCOUNTING_TABS)].includes(linkedTab) ? linkedTab : manualTab
   const [search, setSearch] = useState('')
   const [onlyAwaitingAdmin, setOnlyAwaitingAdmin] = useState(false)
   const [enrolledFilter, setEnrolledFilter] = useState<EnrolledFilter>('active')
@@ -614,6 +623,9 @@ export function AdminDashboard() {
     { id: 'srl_inrolate', label: 'SRL înrolate', group: 'Clienți', icon: <BusinessRoundedIcon /> },
     { id: 'chat', label: 'Chat', group: 'Clienți', icon: <ChatRoundedIcon /> },
     { id: 'sarcini', label: 'Sarcini', group: 'Clienți', icon: <AssignmentTurnedInRoundedIcon /> },
+    { id: ACCOUNTING_TABS.pfa, label: 'PFA', group: 'Contabilitate', icon: <AccountBalanceWalletRoundedIcon /> },
+    { id: ACCOUNTING_TABS.declarations, label: 'Declarații', group: 'Contabilitate', icon: <DescriptionRoundedIcon /> },
+    { id: ACCOUNTING_TABS.rules, label: 'Reguli fiscale', group: 'Contabilitate', icon: <RuleRoundedIcon /> },
     { id: 'masini', label: 'Mașini ridesharing', group: 'Activitate comercială', icon: <DirectionsCarFilledRoundedIcon /> },
     // Lângă mașini, nu lângă setări: e tot moderare de conținut public, doar că a firmei.
     { id: 'pagini_firme', label: 'Pagini firme', group: 'Activitate comercială', icon: <LanguageRoundedIcon /> },
@@ -1155,6 +1167,17 @@ export function AdminDashboard() {
           onImpersonate={handleImpersonate}
           onSnackbar={(message, severity) => setSnackbar({ open: true, message, severity })}
         />
+      )
+      case ACCOUNTING_TABS.pfa:
+      case ACCOUNTING_TABS.declarations:
+      case ACCOUNTING_TABS.rules: return (
+        <Suspense fallback={<RouteFallback />}>
+          <AccountingArea
+            role="Admin"
+            tabs={ACCOUNTING_TABS}
+            view={activeTab === ACCOUNTING_TABS.pfa ? 'pfa' : activeTab === ACCOUNTING_TABS.declarations ? 'declarations' : 'rules'}
+          />
+        </Suspense>
       )
       case 'masini': return <CarsAdminView />
       case 'pagini_firme': return <CompanyPagesAdminView />

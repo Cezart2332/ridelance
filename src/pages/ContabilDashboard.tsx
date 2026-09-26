@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { NotificationsInbox } from '../components/notifications/NotificationsPanel'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { ROUTES } from '../constants/routes'
 import {
   Box,
@@ -35,6 +35,15 @@ import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsAct
 import { ProfessionalChatBox } from '../components/dashboard/sections/ProfessionalChatBox'
 import { ContabilClientWorkspace, type ContabilClientInfo } from '../components/contabil/ContabilClientWorkspace'
 import { displayName } from '../utils/displayName'
+import { reloadOnceOnChunkError } from '../utils/lazyWithRetry'
+import { RouteFallback } from '../components/common/RouteFallback'
+import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded'
+import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
+import RuleRoundedIcon from '@mui/icons-material/RuleRounded'
+
+// Modulul de contabilitate PFA (spec contabilitate), comun cu dashboard-ul de admin.
+const AccountingArea = lazy(() => import('../shared/accounting/ui/AccountingArea').catch(reloadOnceOnChunkError))
+const ACCOUNTING_TABS = { pfa: 'pfa', declarations: 'declaratii', rules: 'reguli' }
 import { requestedAccountingMonth } from '../utils/accountingPeriod'
 
 interface ClientSummary {
@@ -85,7 +94,7 @@ export function ContabilDashboard() {
   const navigate = useNavigate()
   const [manualTab, setActiveTab] = useState('dashboard')
   const linkedTab = notificationParams.get('tab') ?? ''
-  const activeTab = ['clients', 'notificari'].includes(linkedTab) ? linkedTab : manualTab
+  const activeTab = ['clients', 'notificari', ...Object.values(ACCOUNTING_TABS)].includes(linkedTab) ? linkedTab : manualTab
   const [manualPfaId, setSelectedPfaId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
 
@@ -176,6 +185,9 @@ export function ContabilDashboard() {
   const navItems = [
     { id: 'dashboard', label: 'Acasă', icon: <HomeRoundedIcon /> },
     { id: 'clients', label: 'Clienți PFA', icon: <GroupsRoundedIcon /> },
+    { id: ACCOUNTING_TABS.pfa, label: 'PFA', icon: <AccountBalanceWalletRoundedIcon /> },
+    { id: ACCOUNTING_TABS.declarations, label: 'Declarații', icon: <DescriptionRoundedIcon /> },
+    { id: ACCOUNTING_TABS.rules, label: 'Reguli fiscale', icon: <RuleRoundedIcon /> },
     { id: 'notificari', label: 'Notificări', icon: <NotificationsActiveRoundedIcon /> },
   ]
 
@@ -565,7 +577,17 @@ export function ContabilDashboard() {
       userName={userName}
       userRole="Contabil"
     >
-      {selectedPfaId
+      {Object.values(ACCOUNTING_TABS).includes(activeTab)
+        ? (
+          <Suspense fallback={<RouteFallback />}>
+            <AccountingArea
+              role="Contabil"
+              tabs={ACCOUNTING_TABS}
+              view={activeTab === ACCOUNTING_TABS.pfa ? 'pfa' : activeTab === ACCOUNTING_TABS.declarations ? 'declarations' : 'rules'}
+            />
+          </Suspense>
+        )
+        : selectedPfaId
         ? renderClientDetail()
         : activeTab === 'notificari'
           ? renderNotifications()

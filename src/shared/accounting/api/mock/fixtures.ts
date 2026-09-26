@@ -667,6 +667,7 @@ export function createFixtureDb(): MockDb {
   const ledger: LedgerEntry[] = []
   const assets: Asset[] = []
   const periods: AccountingPeriod[] = []
+  const audit: MockDb['audit'] = []
 
   seeds.forEach((seed, index) => {
     const id = `pfa-${slug(seed.name)}`
@@ -727,6 +728,21 @@ export function createFixtureDb(): MockDb {
       })),
     ]
     settingsHistory[id] = history
+    // Fiecare setare din istoric a fost, la vremea ei, o modificare cu audit.
+    history.forEach((entry) =>
+      audit.push({
+        id: `audit-${entry.id}`,
+        pfaId: id,
+        entity: 'PfaAccountingSettings',
+        entityId: entry.id,
+        action: 'APPEND',
+        before: null,
+        after: { key: entry.key, value: entry.value, validFrom: entry.validFrom },
+        reason: entry.note,
+        user: entry.changedBy,
+        at: entry.changedAt,
+      }),
+    )
 
     // Perioadele contabile: închise până în iulie inclusiv; la inactive, până la final.
     const firstPeriod = periodOf(startDate) < '2026-01' ? '2026-01' : periodOf(startDate)
@@ -836,7 +852,7 @@ export function createFixtureDb(): MockDb {
     periods,
     corrections: [],
     cashEvidence: {},
-    audit: [],
+    audit,
     jobs: {},
     sequence: 1000,
   }

@@ -80,7 +80,7 @@ const OnboardingSubscriptionsPage = lazyWithRetry(
 
 // Debug-ul modulului de contabilitate (spec F0): doar în dev, eliminat din bundle-ul de producție.
 const AccountingDebugPage = import.meta.env.DEV
-  ? lazyWithRetry(() => import('./shared/accounting/debug/AccountingDebugPage'))
+  ? lazyWithRetry(() => import('./shared/accounting/debug/AccountingDevShell'))
   : null
 
 function App() {
