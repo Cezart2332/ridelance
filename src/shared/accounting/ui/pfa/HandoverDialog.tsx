@@ -17,21 +17,24 @@ import { useAction } from '../notify'
 import { downloadBlob } from '../useApi'
 
 /**
- * Structura arhivei de predare, pentru previzualizare. Structura exactă vine din documentul
- * clientului, secțiunea 13 (încă nu e în repo): de confirmat înainte de B8.
+ * Structura arhivei de predare, pentru previzualizare: aceeași ca arhiva generată de backend (B8).
+ * Structura exactă din documentul clientului, secțiunea 13, e încă de confirmat.
  */
 function handoverTree(cui: string, year: number, intermediate: boolean): string {
   return [
     `RIDElance_PFA_${cui}_${year}.zip`,
-    '├── Registre/',
-    `│   ├── RJIP_${year}.pdf, .xlsx`,
-    `│   ├── REF_${year}.pdf, .xlsx${intermediate ? ' (situație intermediară)' : ''}`,
-    `│   └── Registru_inventar_${year}.pdf, .xlsx`,
-    `├── Ledger_${year}.xlsx`,
-    '├── Documente originale/',
-    '│   └── {lună}/ facturi și rapoarte Uber/Bolt, documente de cheltuieli, rapoarte Z',
-    '├── Declaratii/',
-    '│   └── {lună}/ D100, D301, D390 (XML + PDF) și recipisele',
+    '├── 01_Registre/',
+    `│   ├── RJIP_${cui}_… .pdf, .xlsx`,
+    `│   ├── REF_${cui}_${year}… .pdf, .xlsx${intermediate ? ' (situație intermediară)' : ''}`,
+    `│   └── Registru-inventar_${cui}_… .pdf, .xlsx`,
+    '├── 02_Ledger/',
+    `│   └── Ledger_${cui}_… .xlsx`,
+    '├── 03_Documente/',
+    '│   ├── Platforme/{lună}/{Bolt|Uber}/ facturi și rapoarte',
+    '│   ├── Cheltuieli/ și Rapoarte_Z/',
+    '│   └── Casa_de_marcat/ dovada de fiscalizare',
+    '├── 04_Declaratii/',
+    '│   └── {lună}/{D100|D301|D390}_v{n}/ XML, PDF și recipisa',
     '└── Sumar_predare.pdf',
   ].join('\n')
 }
