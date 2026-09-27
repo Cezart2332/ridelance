@@ -1283,6 +1283,12 @@ export function createMockAccountingApi(): AccountingApi {
         }),
 
       confirmBulk: (request) => respond(() => confirmMany(request.ids, 'Confirmare în bloc')),
+      remove: (id) =>
+        respond(() => {
+          const index = db.documents.findIndex((document) => document.id === id)
+          if (index < 0) throw notFound('Documentul')
+          db.documents.splice(index, 1)
+        }),
     },
 
     months: {

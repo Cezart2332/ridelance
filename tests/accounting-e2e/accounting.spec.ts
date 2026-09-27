@@ -226,3 +226,34 @@ test('Clienți PFA: lista, profilul și spațiul de lucru unite', async ({ page 
   await page.getByRole('button', { name: 'Adaugă notă' }).click()
   await expect(page.getByText('Extras verificat')).toBeVisible()
 })
+
+test('admin: șterge un document încărcat greșit, nu și unul din declarații', async ({ page }) => {
+  await page.goto('/autentificare')
+  await page.getByLabel('Email').fill(process.env.E2E_ADMIN_EMAIL ?? 'admin.e2e@ridelance.test')
+  await page.getByLabel('Parolă').fill(process.env.E2E_ADMIN_PASSWORD ?? 'E2e-Admin-2026!')
+  await page.getByRole('button', { name: 'Intră în RIDElance' }).click()
+  await page.waitForURL(/\/admin/)
+
+  await open(page, '/admin?tab=contab_pfa')
+  await pfa(page, 'GEORGESCU ANA PFA').click()
+  await page.getByRole('tab', { name: 'Documente platformă' }).click()
+
+  // August: documentele Anei sunt în declarațiile generate — ștergerea e refuzată, cu motiv.
+  await open(page, `${new URL(page.url()).pathname}${new URL(page.url()).search}&luna=2026-08`)
+  await page.getByRole('button', { name: /^Șterge / }).first().click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Șterge', exact: true }).click()
+  await expect(page.getByRole('dialog')).toContainText('nu se poate șterge')
+  await page.getByRole('dialog').getByRole('button', { name: 'Renunță' }).click()
+
+  // Septembrie: un PDF încărcat din greșeală se șterge și dispare din listă.
+  const url = new URL(page.url())
+  url.searchParams.set('luna', '2026-09')
+  await open(page, `${url.pathname}${url.search}`)
+  await expect(page.getByText('Niciun document încărcat pentru septembrie 2026.')).toBeVisible()
+  await page.locator('input[type=file]').setInputFiles({ name: 'gresit.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 gresit') })
+  await expect(page.getByText('gresit.pdf')).toBeVisible()
+  await page.getByRole('button', { name: 'Șterge gresit.pdf' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Șterge', exact: true }).click()
+  await expect(page.getByText('Documentul a fost șters.')).toBeVisible()
+  await expect(page.getByText('gresit.pdf')).toHaveCount(0)
+})

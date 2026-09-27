@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react'
 import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded'
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
 import {
   Alert,
   Box,
   Button,
   Checkbox,
+  IconButton,
   Paper,
   Stack,
   Table,
@@ -13,16 +15,18 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import { visuallyHidden } from '@mui/utils'
 
 import { accountingApi } from '../../api/accountingApi'
 import { isAccountingApiError } from '../../api/errors'
 import type { Platform, PlatformDocumentListItem, PlatformDocumentStatus, PlatformDocumentType } from '../../api/types'
 import { EMPTY, formatDateTime, formatMoney, formatPeriod } from '../../format'
 import { PLATFORM_DOCUMENT_STATUS, PLATFORM_DOCUMENT_TYPE_LABEL, PLATFORM_LABEL } from '../../statusLabels'
-import { AccountingBadge, EmptyText, ErrorBlock, LoadingBlock, PeriodSelect } from '../components'
+import { AccountingBadge, ConfirmDialog, EmptyText, ErrorBlock, LoadingBlock, PeriodSelect } from '../components'
 import { useAccountingNav } from '../navigation'
 import { useAction, useNotify } from '../notify'
 import type { DossierTabProps } from '../pfa/PfaDossierView'
@@ -59,6 +63,9 @@ export function PlatformDocumentsTab({ summary, onSummaryChanged, periodInHeader
   const [issues, setIssues] = useState<UploadIssue[]>([])
   const [skipped, setSkipped] = useState<{ id: string; reason: string }[]>([])
   const [dragging, setDragging] = useState(false)
+  // Doar adminul șterge documente (încărcate greșit); contabilul le corectează.
+  const canDelete = nav.role === 'Admin' && !readOnly
+  const [deleting, setDeleting] = useState<PlatformDocumentListItem | null>(null)
   const [uploading, setUploading] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -287,6 +294,13 @@ export function PlatformDocumentsTab({ summary, onSummaryChanged, periodInHeader
                   <TableCell>Verificări</TableCell>
                   <TableCell>Încărcat</TableCell>
                   <TableCell>Status</TableCell>
+                  {canDelete && (
+                    <TableCell align="right" sx={{ width: 56 }}>
+                      <Box component="span" sx={visuallyHidden}>
+                        Acțiuni
+                      </Box>
+                    </TableCell>
+                  )}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -329,6 +343,15 @@ export function PlatformDocumentsTab({ summary, onSummaryChanged, periodInHeader
                       <TableCell>
                         <AccountingBadge descriptor={PLATFORM_DOCUMENT_STATUS[document.status]} />
                       </TableCell>
+                      {canDelete && (
+                        <TableCell align="right" onClick={(event) => event.stopPropagation()}>
+                          <Tooltip title="Șterge documentul">
+                            <IconButton size="small" aria-label={`Șterge ${document.fileName}`} onClick={() => setDeleting(document)}>
+                              <DeleteOutlineRoundedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      )}
                     </TableRow>
                   )
                 })}
@@ -337,6 +360,22 @@ export function PlatformDocumentsTab({ summary, onSummaryChanged, periodInHeader
           </TableContainer>
         )}
       </Paper>
+
+      <ConfirmDialog
+        open={deleting !== null}
+        title="Șterge documentul"
+        message={deleting ? `${deleting.fileName} dispare din lună, din verificări și din calcul. Rămâne în istoric.` : ''}
+        confirmLabel="Șterge"
+        onClose={() => setDeleting(null)}
+        onConfirm={async () => {
+          if (!deleting) return
+          await accountingApi.documents.remove(deleting.id)
+          notify('Documentul a fost șters.', 'success')
+          setDeleting(null)
+          setSelected((current) => current.filter((id) => id !== deleting.id))
+          changed()
+        }}
+      />
 
       {nav.documentId && (
         <DocumentReviewDialog

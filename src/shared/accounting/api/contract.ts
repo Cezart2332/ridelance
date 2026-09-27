@@ -103,6 +103,8 @@ export interface AccountingApi {
     updateExtraction(id: string, request: UpdateExtractionRequest): Promise<PlatformDocumentDetail>
     confirm(id: string): Promise<PlatformDocumentDetail>
     confirmBulk(request: ConfirmBulkRequest): Promise<ConfirmBulkResult>
+    /** Doar ADMIN: ștergere logică; refuzată pentru documentele din declarații sau perioade închise. */
+    remove(id: string): Promise<void>
   }
 
   /** §4.3 — luna fiscală, pe toate PFA-urile. */

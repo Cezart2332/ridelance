@@ -119,6 +119,7 @@ export function createHttpAccountingApi(): AccountingApi {
       updateExtraction: (id, request) => patch(`platform-documents/${id}/extraction`, request),
       confirm: (id) => post(`platform-documents/${id}/confirm`),
       confirmBulk: (request) => post('platform-documents/confirm-bulk', request),
+      remove: (id) => remove(`platform-documents/${id}`),
     },
     months: {
       getOverview: (period) => get(`periods/${period}/overview`),
