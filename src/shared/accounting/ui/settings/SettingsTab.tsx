@@ -25,7 +25,7 @@ import { CashSection } from './CashSection'
 
 const SETTING_LABEL: Record<SettingKey, string> = {
   art317: 'Cod TVA art. 317',
-  art317_vat_code: 'Codul de TVA art. 317',
+  art317_vat_code: 'Cod TVA art. 317',
   platforms: 'Platforme',
   vehicle_deductibility: 'Deductibilitate cheltuieli auto',
 }
@@ -37,7 +37,7 @@ function settingValueLabel(entry: SettingHistoryEntry): string {
     case 'art317':
       return entry.value ? 'Da' : 'Nu'
     case 'art317_vat_code':
-      return entry.value as string
+      return (entry.value as string | null) ?? 'Fără cod'
     case 'platforms':
       return (entry.value as Platform[]).map((platform) => PLATFORM_LABEL[platform]).join(', ')
     case 'vehicle_deductibility':
@@ -87,6 +87,18 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
   const data = settings.data
   const readOnly = summary.readOnly
   const historyOf = (key: SettingKey) => data.history.filter((entry) => entry.key === key)
+  // Codul și regimul art. 317 sunt o singură setare: istoricul arată codurile, plus intrările vechi
+  // „Da/Nu” salvate înainte de cod (cele noi au un cod la aceeași dată).
+  const art317History = data.history.filter(
+    (entry) =>
+      entry.key === 'art317_vat_code' ||
+      (entry.key === 'art317' && !data.history.some((code) => code.key === 'art317_vat_code' && code.validFrom === entry.validFrom)),
+  )
+  const art317Text = data.art317.vatCode
+    ? `${data.art317.vatCode}, din ${formatDate(data.art317.activationDate)}`
+    : data.art317.enabled
+      ? `Activ din ${formatDate(data.art317.activationDate)}, cod necompletat`
+      : 'Nu are'
 
   const open = (key: SettingKey) => {
     // Implicit de la începutul lunii fiscale în lucru: o schimbare făcută acum, la procesarea
@@ -112,7 +124,7 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
     }
   }
 
-  const section = (key: SettingKey, current: string) => (
+  const section = (key: SettingKey, current: string, entries = historyOf(key)) => (
     <Stack spacing={1.5}>
       <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
         <Fact label={SETTING_LABEL[key]}>{current}</Fact>
@@ -122,7 +134,7 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
           </Button>
         )}
       </Stack>
-      <Timeline entries={historyOf(key)} />
+      <Timeline entries={entries} />
     </Stack>
   )
 
@@ -139,10 +151,8 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
             </Fact>
           </Stack>
           <Divider />
-          {section('art317', data.art317.enabled ? `Da, din ${formatDate(data.art317.activationDate)}` : 'Nu')}
-          <Divider />
-          {/* Separat de CUI: poate diferi de „RO” + CUI (ex. CUI 51149610, TVA RO51321900). D390 îl folosește. */}
-          {section('art317_vat_code', data.art317.vatCode ?? 'Necompletat')}
+          {/* Codul decide și regimul art. 317; e separat de CUI (ex. CUI 51149610, TVA RO51321900). D390 îl folosește. */}
+          {section('art317_vat_code', art317Text, art317History)}
           <Divider />
           {section('platforms', data.platforms.map((platform) => PLATFORM_LABEL[platform]).join(', ') || '—')}
           <Divider />
@@ -167,7 +177,8 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
         canSubmit={
           Boolean(validFrom) &&
           (editing !== 'platforms' || platforms.length > 0) &&
-          (editing !== 'art317_vat_code' || /^RO\d{2,10}$/.test(vatCode.replace(/\s/g, '').toUpperCase()))
+          // Gol = fără cod: regimul art. 317 se oprește de la data aleasă.
+          (editing !== 'art317_vat_code' || /^(RO\d{2,10})?$/.test(vatCode.replace(/\s/g, '').toUpperCase()))
         }
         onClose={() => setEditing(null)}
         onSubmit={async (note) => {
@@ -185,11 +196,11 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
         )}
         {editing === 'art317_vat_code' && (
           <TextField
-            label="Codul de TVA art. 317"
+            label="Cod TVA art. 317"
             placeholder="RO51321900"
             value={vatCode}
             onChange={(event) => setVatCode(event.target.value)}
-            helperText="Din certificatul de înregistrare în scopuri de TVA; nu se deduce din CUI."
+            helperText="Gol = PFA-ul nu are cod art. 317."
           />
         )}
         {editing === 'platforms' && (
