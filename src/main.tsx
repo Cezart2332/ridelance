@@ -8,7 +8,8 @@ import { TOKENS } from './constants/tokens'
 import { fontStack } from './theme/fontStack'
 import { store } from './store/store'
 import { AuthInitializer } from './components/auth/AuthInitializer'
-import { clearChunkReloadFlag } from './utils/lazyWithRetry'
+import { reloadForMissingChunk } from './utils/lazyWithRetry'
+import { watchForNewVersion } from './utils/appVersion'
 import { IS_NATIVE_APP } from './native/platform'
 // @ts-ignore
 import '@fontsource-variable/geist'
@@ -16,14 +17,11 @@ import '@fontsource-variable/geist'
 // @ts-ignore
 import '@fontsource-variable/bricolage-grotesque'
 
-clearChunkReloadFlag()
+watchForNewVersion()
 
 window.addEventListener('vite:preloadError', (event) => {
-  event.preventDefault()
-  if (!sessionStorage.getItem('rl_chunk_reload')) {
-    sessionStorage.setItem('rl_chunk_reload', '1')
-    window.location.reload()
-  }
+  // Reîncărcarea înlocuiește eroarea; fără ea (a doua oară în 30 s), eroarea rămâne vizibilă.
+  if (reloadForMissingChunk()) event.preventDefault()
 })
 
 // Service Worker (push notifications only). Avoid reload loops on mobile:

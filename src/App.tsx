@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { lazyWithRetry } from './utils/lazyWithRetry'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { useReloadOnNewVersion } from './utils/appVersion'
 import { ScrollToTop } from './components/layout/ScrollToTop'
 import InstallPWA from './components/pwa/InstallPWA'
 import { RouteFallback } from './components/common/RouteFallback'
@@ -83,6 +84,12 @@ const AccountingDebugPage = import.meta.env.DEV
   ? lazyWithRetry(() => import('./shared/accounting/debug/AccountingDevShell'))
   : null
 
+/** După un deploy nou, pagina se reîncarcă la navigare, nu la un clic oarecare (`utils/appVersion`). */
+function ReloadOnNewVersion() {
+  useReloadOnNewVersion()
+  return null
+}
+
 function App() {
   // Aplicația mobilă: doar autentificarea și dashboardurile PFA/SRL (vezi `native/platform.ts`).
   if (IS_NATIVE_APP) return <NativeApp />
@@ -90,6 +97,7 @@ function App() {
   return (
     <>
       <ScrollToTop />
+      <ReloadOnNewVersion />
       <InstallPWA />
       {/* Suprapunere unică pentru vizualizarea documentelor, apelabilă din orice pagină. */}
       <DocumentViewerHost />

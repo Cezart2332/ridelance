@@ -40,11 +40,20 @@ function nativeBuildEnv(mode: string) {
   return { isNative: true }
 }
 
+/**
+ * Identificatorul build-ului: copt în bundle (`__APP_BUILD__`) și publicat în `/version.json`.
+ * O filă deschisă îl compară cu cel de pe server și află așa de un deploy nou (`utils/appVersion`).
+ */
+const APP_BUILD = new Date().toISOString()
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const { isNative } = nativeBuildEnv(mode)
 
   return {
+  define: {
+    __APP_BUILD__: JSON.stringify(APP_BUILD),
+  },
   server: {
     // Buildurile .NET rescriu executabile blocate de Windows; nu sunt surse frontend.
     watch: { ignored: ['**/backend/**'] },
@@ -69,6 +78,13 @@ export default defineConfig(({ mode }) => {
     {
       name: 'native-flag',
       transformIndexHtml: (html: string) => html.replace('__NATIVE_APP__', isNative ? 'true' : 'false'),
+    },
+    {
+      name: 'app-version',
+      apply: 'build',
+      generateBundle() {
+        this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build: APP_BUILD }) })
+      },
     },
     react(),
     babel({ presets: [reactCompilerPreset()] }),
@@ -133,6 +149,11 @@ export default defineConfig(({ mode }) => {
   build: {
     rolldownOptions: {
       output: {
+        // Worker-ul pdf.js vine din npm ca `.mjs`. Unele servere (nginx fără `.mjs` în mime.types,
+        // WebView-ul aplicației mobile) îl trimit ca application/octet-stream, iar browserul refuză
+        // modulul. Ca `.js` are tipul corect oriunde.
+        assetFileNames: (asset) =>
+          (asset.names[0] ?? '').endsWith('.mjs') ? 'assets/[name]-[hash].js' : 'assets/[name]-[hash][extname]',
         codeSplitting: {
           minSize: 20_000,
           groups: [
