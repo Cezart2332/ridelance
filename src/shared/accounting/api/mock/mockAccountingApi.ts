@@ -957,20 +957,25 @@ function refView(pfa: MockPfa, year: number, asOfOverride?: IsoDate): RefView {
   const closedYear = yearPeriods.length === 12 && yearPeriods.every((item) => item.status === 'CLOSED')
   const endDate = pfa.engagement.endDate
   const intermediate = asOfOverride ?? (!closedYear && pfa.engagement.status === 'INACTIVE' && endDate?.startsWith(`${year}-`) ? endDate : null)
-  // Denumirile elementelor de calcul se iau din modelul OMFP 3254/2017 (DE CONFIRMAT, §6 pct. 10).
+  // Elementele de calcul și categoria, ca în backend (B7): termenii din OMFP 3254/2017 și din Codul fiscal.
   const row = (calculationElement: string, value: number) => ({
     year,
     rectification: false,
-    incomeCategory: 'Activități independente – transport alternativ (ridesharing)',
+    incomeCategory: 'Venituri din activități independente – transport alternativ (ridesharing)',
     calculationElement,
     value,
   })
+  const net = round2(income - deductible)
   return {
     pfaId: pfa.id,
     year,
     status: closedYear ? 'FINAL' : intermediate ? 'INTERMEDIATE' : 'CURRENT',
     asOf: closedYear ? null : intermediate,
-    rows: [row('Venit brut', income), row('Cheltuieli deductibile', deductible), row('Venit net', round2(income - deductible))],
+    rows: [
+      row('Venit brut', income),
+      row('Cheltuieli deductibile', deductible),
+      net >= 0 ? row('Venit net anual', net) : row('Pierdere netă anuală', -net),
+    ],
   }
 }
 
