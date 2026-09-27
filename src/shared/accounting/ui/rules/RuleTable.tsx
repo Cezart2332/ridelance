@@ -24,7 +24,7 @@ import {
 import type { RuleResource } from '../../api/contract'
 import type { RuleInput, Validity } from '../../api/types'
 import { formatValidity, parseAmount } from '../../format'
-import { EmptyText, ErrorBlock, LoadingBlock } from '../components'
+import { ConfirmDialog, EmptyText, ErrorBlock, LoadingBlock } from '../components'
 import { useNotify } from '../notify'
 import { errorMessage, useApi } from '../useApi'
 
@@ -122,6 +122,7 @@ export function RuleTable<T extends Validity & { id: string }>({
     prefill ? { item: null, form: toForm(fields, { ...empty, ...prefill }) } : null,
   )
   const [closing, setClosing] = useState<T | null>(null)
+  const [deleting, setDeleting] = useState<T | null>(null)
   const [closeDate, setCloseDate] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -237,6 +238,11 @@ export function RuleTable<T extends Validity & { id: string }>({
                         Închide
                       </Button>
                     )}
+                    {resource.remove && (
+                      <Button size="small" color="error" onClick={() => setDeleting(item)}>
+                        Șterge
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -309,6 +315,23 @@ export function RuleTable<T extends Validity & { id: string }>({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {resource.remove && (
+        <ConfirmDialog
+          open={deleting !== null}
+          title="Șterge din registru"
+          message="Nu se poate șterge dacă apare deja într-o declarație; atunci închide-l cu „Valabil până la”."
+          confirmLabel="Șterge"
+          onClose={() => setDeleting(null)}
+          onConfirm={async () => {
+            if (!deleting) return
+            await resource.remove!(deleting.id)
+            notify('Șters din registru.', 'success')
+            setDeleting(null)
+            rules.reload()
+          }}
+        />
+      )}
     </Paper>
   )
 }

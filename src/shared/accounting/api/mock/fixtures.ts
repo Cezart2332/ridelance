@@ -61,7 +61,7 @@ export const MOCK_USERS = {
 export const FIXTURE_PLACEHOLDER_NOTE = 'fixture – de înlocuit'
 
 const BOLT = { name: 'Bolt Operations OÜ', country: 'EE', vatId: 'EE102090374' }
-const UBER = { name: 'Uber B.V.', country: 'NL', vatId: 'NL852071588B01' }
+const UBER = { name: 'Uber B.V.', country: 'NL', vatId: 'NL852071589B01' }
 
 function suppliers(): SupplierTaxProfile[] {
   return [

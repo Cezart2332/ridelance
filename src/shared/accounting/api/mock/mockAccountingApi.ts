@@ -1490,13 +1490,21 @@ export function createMockAccountingApi(): AccountingApi {
     },
 
     rules: {
-      suppliers: ruleResource<SupplierTaxProfile>({
-        items: () => db.suppliers,
-        prefix: 'supplier',
-        entity: 'SupplierTaxProfile',
-        keyOf: (item) => item.vatId,
-        describeKey: (item) => `${item.supplierName} (${item.vatId})`,
-      }),
+      suppliers: {
+        ...ruleResource<SupplierTaxProfile>({
+          items: () => db.suppliers,
+          prefix: 'supplier',
+          entity: 'SupplierTaxProfile',
+          keyOf: (item) => item.vatId,
+          describeKey: (item) => `${item.supplierName} (${item.vatId})`,
+        }),
+        remove: (id) =>
+          respond(() => {
+            const index = db.suppliers.findIndex((item) => item.id === id)
+            if (index < 0) throw notFound('Furnizorul')
+            db.suppliers.splice(index, 1)
+          }),
+      },
       vatRates: ruleResource<VatRate>({
         items: () => db.vatRates,
         prefix: 'vat',

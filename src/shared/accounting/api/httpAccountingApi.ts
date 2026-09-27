@@ -64,6 +64,7 @@ const get = <T>(url: string, params?: object) => call<T>({ method: 'GET', url, p
 const post = <T>(url: string, data?: unknown) => call<T>({ method: 'POST', url, data })
 const put = <T>(url: string, data?: unknown) => call<T>({ method: 'PUT', url, data })
 const patch = <T>(url: string, data?: unknown) => call<T>({ method: 'PATCH', url, data })
+const remove = (url: string) => call<void>({ method: 'DELETE', url })
 const blob = (url: string, params?: object) => call<Blob>({ method: 'GET', url, params: clean(params), responseType: 'blob' })
 
 /** Un răspuns „fără valoare” (200 fără corp) devine `null`. */
@@ -143,7 +144,7 @@ export function createHttpAccountingApi(): AccountingApi {
       createRectification: (declarationId, request) => post(`declarations/${declarationId}/rectification`, request),
     },
     rules: {
-      suppliers: ruleResource('suppliers'),
+      suppliers: { ...ruleResource('suppliers'), remove: (id) => remove(`rules/suppliers/${id}`) },
       vatRates: ruleResource('vat-rates'),
       d100: ruleResource('d100'),
       anafSchemas: ruleResource('anaf-schemas'),

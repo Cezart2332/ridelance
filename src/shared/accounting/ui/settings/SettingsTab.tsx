@@ -89,7 +89,9 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
   const historyOf = (key: SettingKey) => data.history.filter((entry) => entry.key === key)
 
   const open = (key: SettingKey) => {
-    setValidFrom(todayIso())
+    // Implicit de la începutul lunii fiscale în lucru: o schimbare făcută acum, la procesarea
+    // lunii trecute, trebuie să se aplice și ei.
+    setValidFrom(`${summary.currentPeriod}-01`)
     setArt317(data.art317.enabled)
     setVatCode(data.art317.vatCode ?? '')
     setPlatforms(data.platforms)

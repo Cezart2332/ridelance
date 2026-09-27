@@ -62,6 +62,8 @@ export interface RuleResource<T extends { id: string }> {
   list(): Promise<T[]>
   create(input: RuleInput<T>): Promise<T>
   update(id: string, input: RuleInput<T>): Promise<T>
+  /** Doar unde e permis (furnizorii): ștergere logică, refuzată dacă regula e folosită în declarații. */
+  remove?(id: string): Promise<void>
 }
 
 /**

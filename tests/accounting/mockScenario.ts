@@ -89,7 +89,7 @@ async function main() {
   detail = await api.documents.get(razvanInvoice.id)
   expect('Răzvan check', detail.checks.filter((c) => !c.passed).map((c) => [c.code, c.action]), [['SUPPLIER_KNOWN', 'ADD_SUPPLIER']])
   try {
-    await api.rules.suppliers.create({ supplierName: 'Uber B.V.', country: 'NL', vatId: 'NL852071588B01', incomeType: 'COMMISSION', treaty: null, d100Rate: 1, d100RateConfirmed: false, validFrom: '2026-01-01', validTo: null, residenceCertValidFrom: null, residenceCertValidTo: null, residenceCertFile: null, note: null })
+    await api.rules.suppliers.create({ supplierName: 'Uber B.V.', country: 'NL', vatId: 'NL852071589B01', incomeType: 'COMMISSION', treaty: null, d100Rate: 1, d100RateConfirmed: false, validFrom: '2026-01-01', validTo: null, residenceCertValidFrom: null, residenceCertValidTo: null, residenceCertFile: null, note: null })
   } catch (e) {
     expect('overlap refuzat', (e as { status: number }).status, 409)
   }
@@ -258,7 +258,7 @@ async function main() {
   await waitJob((await api.months.process(P)).jobId)
   await api.months.confirmCleanDocuments(P)
   await waitJob((await api.months.generate(P)).jobId)
-  const uberProfile = (await api.rules.suppliers.list()).find((item) => item.vatId === 'NL852071588B01')!
+  const uberProfile = (await api.rules.suppliers.list()).find((item) => item.vatId === 'NL852071589B01')!
   const { id: uberProfileId, ...uberProfileInput } = uberProfile
   await api.rules.suppliers.update(uberProfileId, { ...uberProfileInput, validTo: '2026-08-30' })
   await api.rules.suppliers.create({ ...uberProfileInput, d100Rate: 1, validFrom: '2026-08-31', validTo: null, note: 'Cotă de test' })
@@ -272,7 +272,7 @@ async function main() {
 
   // Decizii pct. 2: o cotă D100 neconfirmată blochează luna.
   resetMockAccountingDb()
-  const uber = (await api.rules.suppliers.list()).find((item) => item.vatId === 'NL852071588B01')!
+  const uber = (await api.rules.suppliers.list()).find((item) => item.vatId === 'NL852071589B01')!
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id: _uberId, ...uberInput } = uber
   await api.rules.suppliers.update(uber.id, { ...uberInput, d100Rate: null, d100RateConfirmed: false })
