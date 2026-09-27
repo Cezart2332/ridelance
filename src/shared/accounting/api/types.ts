@@ -221,13 +221,15 @@ export interface PfaAccountingSummary {
 }
 
 /** Cheile setărilor versionate pe `validFrom` (`PfaAccountingSettings`, append-only). */
-export const SETTING_KEYS = ['art317', 'platforms', 'vehicle_deductibility'] as const
+export const SETTING_KEYS = ['art317', 'art317_vat_code', 'platforms', 'vehicle_deductibility'] as const
 export type SettingKey = (typeof SETTING_KEYS)[number]
 
 export type VehicleDeductibility = '50_PERCENT' | '100_PERCENT'
 
 export interface SettingValueMap {
   art317: boolean
+  /** Codul de TVA art. 317 (`RO51321900`); separat de CUI, poate diferi de „RO” + CUI. */
+  art317_vat_code: string
   platforms: Platform[]
   vehicle_deductibility: VehicleDeductibility
 }
@@ -249,7 +251,7 @@ export interface PfaAccountingSettings {
   realSystem: boolean
   vatPayer: boolean
   /** Valorile valabile azi. */
-  art317: { enabled: boolean; activationDate: IsoDate | null }
+  art317: { enabled: boolean; activationDate: IsoDate | null; vatCode?: string | null }
   platforms: Platform[]
   vehicleDeductibility: VehicleDeductibility
   cash: CashRegisterState
@@ -359,6 +361,10 @@ export interface ExtractedFields {
   amount: number | null
   commissionAmount: number | null
   otherAmounts: OtherAmount[]
+  /** „Data impozitării” (tax point) de pe factură; decide luna fiscală a facturilor săptămânale Uber. */
+  taxPointDate: IsoDate | null
+  /** Reținerea la sursă raportată de platformă (rezumatul Bolt); doar informativ față de D100. */
+  withheldTax: number | null
 }
 
 export type ExtractedFieldKey = keyof ExtractedFields
@@ -385,6 +391,8 @@ export interface DocumentCheck {
   message: string
   /** Acțiunea propusă lângă verificarea picată. */
   action?: 'ADD_SUPPLIER'
+  /** Trecută, dar de văzut (ex. corelarea cu raportul): nu blochează documentul. */
+  warning?: boolean
 }
 
 export interface DeclarationReference {
@@ -599,6 +607,17 @@ export interface DeclarationBreakdown {
   explanation: string
   /** D301: veniturile din curse, care nu intră în bază. */
   excludedRideIncome: number | null
+  /** Diferențe de semnalat, care nu blochează (corelarea cu raportul, reținerea la sursă). */
+  warnings: string[]
+  /** D100: reținerea la sursă raportată de platformă, lângă impozitul calculat. */
+  withholding: WithholdingComparison[]
+}
+
+export interface WithholdingComparison {
+  platform: string
+  reported: number
+  calculated: number
+  difference: number
 }
 
 export interface TransitionRequest {

@@ -25,6 +25,7 @@ import { CashSection } from './CashSection'
 
 const SETTING_LABEL: Record<SettingKey, string> = {
   art317: 'Cod TVA art. 317',
+  art317_vat_code: 'Codul de TVA art. 317',
   platforms: 'Platforme',
   vehicle_deductibility: 'Deductibilitate cheltuieli auto',
 }
@@ -35,6 +36,8 @@ function settingValueLabel(entry: SettingHistoryEntry): string {
   switch (entry.key) {
     case 'art317':
       return entry.value ? 'Da' : 'Nu'
+    case 'art317_vat_code':
+      return entry.value as string
     case 'platforms':
       return (entry.value as Platform[]).map((platform) => PLATFORM_LABEL[platform]).join(', ')
     case 'vehicle_deductibility':
@@ -75,6 +78,7 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
   const [editing, setEditing] = useState<SettingKey | null>(null)
   const [validFrom, setValidFrom] = useState(todayIso())
   const [art317, setArt317] = useState(true)
+  const [vatCode, setVatCode] = useState('')
   const [platforms, setPlatforms] = useState<Platform[]>([])
   const [deductibility, setDeductibility] = useState<VehicleDeductibility>('50_PERCENT')
 
@@ -87,6 +91,7 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
   const open = (key: SettingKey) => {
     setValidFrom(todayIso())
     setArt317(data.art317.enabled)
+    setVatCode(data.art317.vatCode ?? '')
     setPlatforms(data.platforms)
     setDeductibility(data.vehicleDeductibility)
     setEditing(key)
@@ -96,6 +101,8 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
     switch (editing) {
       case 'art317':
         return { field: 'art317', value: art317, validFrom, note }
+      case 'art317_vat_code':
+        return { field: 'art317_vat_code', value: vatCode.replace(/\s/g, '').toUpperCase(), validFrom, note }
       case 'platforms':
         return { field: 'platforms', value: platforms, validFrom, note }
       default:
@@ -132,6 +139,9 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
           <Divider />
           {section('art317', data.art317.enabled ? `Da, din ${formatDate(data.art317.activationDate)}` : 'Nu')}
           <Divider />
+          {/* Separat de CUI: poate diferi de „RO” + CUI (ex. CUI 51149610, TVA RO51321900). D390 îl folosește. */}
+          {section('art317_vat_code', data.art317.vatCode ?? 'Necompletat')}
+          <Divider />
           {section('platforms', data.platforms.map((platform) => PLATFORM_LABEL[platform]).join(', ') || '—')}
           <Divider />
           {section('vehicle_deductibility', DEDUCTIBILITY_LABEL[data.vehicleDeductibility])}
@@ -152,7 +162,11 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
         title={editing ? `Modifică: ${SETTING_LABEL[editing]}` : ''}
         description="Valoarea nouă se adaugă în istoric de la data aleasă; cea veche rămâne valabilă până în ziua dinainte."
         reasonLabel="Observație / justificare"
-        canSubmit={Boolean(validFrom) && (editing !== 'platforms' || platforms.length > 0)}
+        canSubmit={
+          Boolean(validFrom) &&
+          (editing !== 'platforms' || platforms.length > 0) &&
+          (editing !== 'art317_vat_code' || /^RO\d{2,10}$/.test(vatCode.replace(/\s/g, '').toUpperCase()))
+        }
         onClose={() => setEditing(null)}
         onSubmit={async (note) => {
           await accountingApi.pfas.updateSettings(summary.id, change(note))
@@ -166,6 +180,15 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
             <MenuItem value="da">Da</MenuItem>
             <MenuItem value="nu">Nu</MenuItem>
           </TextField>
+        )}
+        {editing === 'art317_vat_code' && (
+          <TextField
+            label="Codul de TVA art. 317"
+            placeholder="RO51321900"
+            value={vatCode}
+            onChange={(event) => setVatCode(event.target.value)}
+            helperText="Din certificatul de înregistrare în scopuri de TVA; nu se deduce din CUI."
+          />
         )}
         {editing === 'platforms' && (
           <FormGroup row>

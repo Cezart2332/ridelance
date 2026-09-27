@@ -128,6 +128,11 @@ export function BreakdownDialog({
               </TableContainer>
             )}
 
+            {data.warnings.map((warning) => (
+              <Alert key={warning} severity="warning">
+                {warning}
+              </Alert>
+            ))}
             {type === 'D301' && data.excludedRideIncome !== null && (
               <Alert severity="info">Veniturile din curse nu intră în bază: {formatLei(data.excludedRideIncome)}.</Alert>
             )}

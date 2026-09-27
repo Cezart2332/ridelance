@@ -396,6 +396,8 @@ export function buildDocument(seed: DocumentSeed, index: number): MockDocument {
     amount: isInvoice ? extractedCommission : seed.income,
     commissionAmount: extractedCommission,
     otherAmounts: isInvoice ? [{ label: 'TVA', amount: 0 }] : [],
+    taxPointDate: null,
+    withheldTax: null,
   }
   const sourceSnippets: MockExtractionSeed['sourceSnippets'] = {
     supplierName: supplier.name,

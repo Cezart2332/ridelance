@@ -183,6 +183,8 @@ export function calculate(db: MockDb, pfa: MockPfa, period: Period): MockTaxResu
           total: d100Total,
           explanation: `Impozit pe comisioanele nerezidenților: ${formatLei(d100Total)}.`,
           excludedRideIncome: null,
+          warnings: [],
+          withholding: [],
         },
       },
       D301: {
@@ -192,6 +194,8 @@ export function calculate(db: MockDb, pfa: MockPfa, period: Period): MockTaxResu
           total: d301Total,
           explanation: `TVA pentru serviciile intracomunitare achiziționate: ${formatLei(d301Total)}. Veniturile din curse nu intră în bază.`,
           excludedRideIncome: rideIncome,
+          warnings: [],
+          withholding: [],
         },
       },
       D390: {
@@ -201,6 +205,8 @@ export function calculate(db: MockDb, pfa: MockPfa, period: Period): MockTaxResu
           total: 0,
           explanation: '0 lei, doar raportare.',
           excludedRideIncome: null,
+          warnings: [],
+          withholding: [],
         },
       },
     },

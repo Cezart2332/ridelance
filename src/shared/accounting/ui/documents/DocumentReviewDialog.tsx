@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
+import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded'
 import SearchOffRoundedIcon from '@mui/icons-material/SearchOffRounded'
 import {
   Alert,
@@ -56,9 +57,12 @@ function fieldSpecs(detail: PlatformDocumentDetail): FieldSpec[] {
     { key: 'invoiceDate', label: report ? 'Data raportului' : 'Data facturii', kind: 'date' },
     { key: 'periodFrom', label: 'Perioada de la', kind: 'date' },
     { key: 'periodTo', label: 'Perioada până la', kind: 'date' },
+    // Luna fiscală a facturilor săptămânale Uber: data impozitării, nu data facturii.
+    ...(report ? [] : [{ key: 'taxPointDate', label: 'Data impozitării', kind: 'date' } as const]),
     { key: 'currency', label: 'Monedă', kind: 'text' },
     { key: 'commissionAmount', label: 'Comision', kind: 'amount' },
     { key: 'amount', label: report ? 'Venituri din curse' : 'Total factură', kind: 'amount' },
+    ...(report ? [{ key: 'withheldTax', label: 'Reținere la sursă', kind: 'amount' } as const] : []),
   ]
 }
 
@@ -354,7 +358,9 @@ export function DocumentReviewDialog({
                     <Typography variant="subtitle2">Verificări</Typography>
                     {doc.checks.map((check) => (
                       <Stack key={check.code} direction="row" sx={{ gap: 1, alignItems: 'flex-start' }}>
-                        {check.passed ? (
+                        {check.passed && check.warning ? (
+                          <ErrorOutlineRoundedIcon fontSize="small" sx={{ color: 'warning.main', mt: 0.25 }} aria-label="De văzut" />
+                        ) : check.passed ? (
                           <CheckCircleRoundedIcon fontSize="small" sx={{ color: 'success.main', mt: 0.25 }} aria-label="Trecută" />
                         ) : (
                           <CancelRoundedIcon fontSize="small" sx={{ color: 'error.main', mt: 0.25 }} aria-label="Picată" />

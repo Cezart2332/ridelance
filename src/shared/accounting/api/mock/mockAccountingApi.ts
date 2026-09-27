@@ -758,7 +758,7 @@ function newVersion(declaration: MockDeclaration, kind: MockDeclarationVersion['
     statusHistory: [{ from: null, to: 'GENERATED', at: nowIso(), by: CURRENT_USER, note: reason }],
     createdAt: nowIso(),
     rowVersion: '1',
-    breakdown: { lines: [], total: 0, explanation: '', excludedRideIncome: null },
+    breakdown: { lines: [], total: 0, explanation: '', excludedRideIncome: null, warnings: [], withholding: [] },
     validation: null,
     xml: null,
     documentIds: [],

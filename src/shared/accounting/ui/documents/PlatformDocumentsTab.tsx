@@ -19,7 +19,7 @@ import { alpha } from '@mui/material/styles'
 
 import { accountingApi } from '../../api/accountingApi'
 import { isAccountingApiError } from '../../api/errors'
-import type { Platform, PlatformDocumentListItem, PlatformDocumentType } from '../../api/types'
+import type { Platform, PlatformDocumentListItem, PlatformDocumentStatus, PlatformDocumentType } from '../../api/types'
 import { EMPTY, formatDateTime, formatMoney, formatPeriod } from '../../format'
 import { PLATFORM_DOCUMENT_STATUS, PLATFORM_DOCUMENT_TYPE_LABEL, PLATFORM_LABEL } from '../../statusLabels'
 import { AccountingBadge, EmptyText, ErrorBlock, LoadingBlock, PeriodSelect } from '../components'
@@ -29,10 +29,13 @@ import type { DossierTabProps } from '../pfa/PfaDossierView'
 import { errorMessage, POLL_INTERVAL_MS, useApi } from '../useApi'
 import { DocumentReviewDialog } from './DocumentReviewDialog'
 
-const SLOT_TYPES: { type: Exclude<PlatformDocumentType, 'UNKNOWN'>; label: string }[] = [
-  { type: 'COMMISSION_INVOICE', label: 'Factură comision' },
-  { type: 'PLATFORM_REPORT', label: 'Raport venituri' },
+const SLOT_TYPES: { type: Exclude<PlatformDocumentType, 'UNKNOWN'>; label: string; plural: string }[] = [
+  { type: 'COMMISSION_INVOICE', label: 'Factură comision', plural: 'Facturi comision' },
+  { type: 'PLATFORM_REPORT', label: 'Raport venituri', plural: 'Rapoarte venituri' },
 ]
+
+/** Ordinea în care un status cere atenție: cardul unui slot cu mai multe documente îl arată pe cel mai urgent. */
+const ATTENTION: PlatformDocumentStatus[] = ['EXTRACTION_FAILED', 'NEEDS_REVIEW', 'EXTRACTING', 'UPLOADED', 'PENDING_CONFIRMATION', 'CONFIRMED', 'LOCKED']
 
 interface UploadIssue {
   fileName: string
@@ -117,8 +120,11 @@ export function PlatformDocumentsTab({ summary, onSummaryChanged, periodInHeader
       changed()
     })
 
-  const slotDocument = (platform: Platform, type: PlatformDocumentType) =>
-    list.find((document) => document.platform === platform && document.documentType === type)
+  // Uber emite o factură pe săptămână: un slot poate avea mai multe documente.
+  const slotDocuments = (platform: Platform, type: PlatformDocumentType) =>
+    list
+      .filter((document) => document.platform === platform && document.documentType === type)
+      .sort((a, b) => ATTENTION.indexOf(a.status) - ATTENTION.indexOf(b.status))
 
   const openDocument = (id: string) => nav.setParam('document', id)
 
@@ -142,20 +148,26 @@ export function PlatformDocumentsTab({ summary, onSummaryChanged, periodInHeader
 
       {documents.error && <ErrorBlock message={documents.error} onRetry={documents.reload} />}
 
-      {/* Sloturile așteptate: câte o factură și un raport pe platformă. */}
+      {/* Sloturile așteptate pe platformă: facturile de comision (Uber: săptămânale) și raportul lunar. */}
       <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' } }}>
         {summary.platforms.flatMap((platform) =>
-          SLOT_TYPES.map(({ type, label }) => {
-            const document = slotDocument(platform, type)
+          SLOT_TYPES.map(({ type, label, plural }) => {
+            const documents = slotDocuments(platform, type)
+            // Cel mai urgent întâi: badge-ul și butonul lui îl reprezintă pe tot slotul.
+            const document = documents[0]
+            const sameCurrency = documents.every((item) => item.currency === document?.currency)
+            const total = documents.reduce((sum, item) => sum + (item.mainAmount ?? 0), 0)
             return (
               <Paper key={`${platform}-${type}`} sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1, borderColor: document ? 'divider' : 'warning.dark' }}>
                 <Typography variant="subtitle2">
-                  {label} {PLATFORM_LABEL[platform]}
+                  {documents.length > 1 ? `${plural} ${PLATFORM_LABEL[platform]} · ${documents.length}` : `${label} ${PLATFORM_LABEL[platform]}`}
                 </Typography>
                 {document ? (
                   <>
                     <AccountingBadge descriptor={PLATFORM_DOCUMENT_STATUS[document.status]} />
-                    <Typography variant="body2">{formatMoney(document.mainAmount, document.currency)}</Typography>
+                    <Typography variant="body2">
+                      {documents.length > 1 && sameCurrency ? formatMoney(total, document.currency) : formatMoney(document.mainAmount, document.currency)}
+                    </Typography>
                     <Box sx={{ mt: 'auto', pt: 1 }}>
                       <Button size="small" variant="outlined" onClick={() => openDocument(document.id)}>
                         {document.status === 'NEEDS_REVIEW' || document.status === 'PENDING_CONFIRMATION' ? 'Verifică' : 'Deschide'}

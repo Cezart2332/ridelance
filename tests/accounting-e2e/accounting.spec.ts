@@ -128,7 +128,7 @@ test('dosar: setări, casa de marcat, reguli fiscale, predare și inactivare', a
   await open(page, '/contabil?tab=clienti')
   await pfa(page, 'GEORGESCU ANA PFA').click()
   await page.getByRole('tab', { name: 'Setări' }).click()
-  await page.getByRole('button', { name: 'Modifică' }).nth(2).click()
+  await page.getByRole('button', { name: 'Modifică' }).nth(3).click()
   const setting = page.getByRole('dialog')
   await setting.getByRole('combobox').click()
   await page.getByRole('option', { name: '50%' }).click()

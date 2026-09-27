@@ -84,6 +84,14 @@ export function DeclarationCard({
   const operations = !readOnly && status && current ? availableOperations(status) : []
   const title = DECLARATION_TYPE_LABEL[summary.type]
   const isD390 = summary.type === 'D390'
+  // Avertismentele calculului (corelarea cu raportul, reținerea la sursă) stau în defalcare; se
+  // arată pe card, fără să blocheze nimic.
+  const breakdown = useApi(
+    () => (versionId && !isD390 ? accountingApi.declarations.getBreakdown(versionId) : Promise.resolve(null)),
+    [versionId, isD390],
+  )
+  const withholding = breakdown.data?.withholding ?? []
+  const warnings = breakdown.data?.warnings ?? []
   const amountText = summary.amount === null ? '—' : isD390 ? '0 lei, doar raportare' : formatLei(summary.amount)
 
   const changed = () => {
@@ -138,7 +146,20 @@ export function DeclarationCard({
           ) : (
             <Typography variant="h5">{amountText}</Typography>
           )}
+          {withholding.map((item) => (
+            <Typography key={item.platform} variant="body2" color="text.secondary">
+              Reținere raportată de {item.platform}: {formatLei(item.reported)} · calculat {formatLei(item.calculated)}
+            </Typography>
+          ))}
         </Box>
+
+        {warnings.length > 0 && (
+          <Alert severity="warning">
+            {warnings.map((warning) => (
+              <Box key={warning}>{warning}</Box>
+            ))}
+          </Alert>
+        )}
 
         {summary.blockingReasons.length > 0 && (
           <Alert
