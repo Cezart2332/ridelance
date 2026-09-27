@@ -1,77 +1,146 @@
+import axios, { type AxiosRequestConfig } from 'axios'
+import { api } from '../../../lib/axios'
 import type { AccountingApi, RuleResource } from './contract'
 import { AccountingApiError } from './errors'
+import type { CashPreference, ExchangeRate, ValidationResult } from './types'
 
 /**
- * Implementarea HTTP: stub până la B9.
- *
- * Fiecare metodă își declară deja calea, ca B9 să însemne doar înlocuirea `pending` cu apelul
- * `api` din `lib/axios`. Prefixul e `accounting/`, fără `/api`: backendul își mapează toate
- * endpoint-urile direct la rădăcină (de ex. `admin/tax-parameters`).
+ * Implementarea HTTP a contractului (B9), peste instanța `api` din `lib/axios` (token, refresh).
+ * Prefixul e `accounting/`, fără `/api`: backendul își mapează endpoint-urile direct la rădăcină.
  */
 
 const PREFIX = 'accounting'
 
-function pending(method: string, path: string): Promise<never> {
-  return Promise.reject(
-    new AccountingApiError(501, 'NOT_IMPLEMENTED', `${method} /${PREFIX}/${path} nu e implementat încă (B9).`),
-  )
+/** `Accounting.InvalidTransition` → `INVALID_TRANSITION`, codul pe care îl folosește și mock-ul. */
+function contractCode(title: unknown): string {
+  if (typeof title !== 'string' || !title) return 'UNKNOWN'
+  const name = title.includes('.') ? title.slice(title.lastIndexOf('.') + 1) : title
+  return name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()
+}
+
+/** ProblemDetails (`title` = codul, `detail` = mesajul) → aceeași eroare ca în mock. */
+async function toApiError(error: unknown): Promise<AccountingApiError> {
+  if (!axios.isAxiosError(error)) {
+    return new AccountingApiError(0, 'NETWORK', error instanceof Error ? error.message : 'Eroare necunoscută.')
+  }
+  if (!error.response) {
+    return new AccountingApiError(0, 'NETWORK', 'Serverul nu răspunde. Verifică conexiunea și încearcă din nou.')
+  }
+
+  let body: unknown = error.response.data
+  if (body instanceof Blob) {
+    // La descărcări răspunsul vine ca Blob și în caz de eroare.
+    try {
+      body = JSON.parse(await body.text())
+    } catch {
+      body = null
+    }
+  }
+
+  const problem = (body && typeof body === 'object' ? body : {}) as Record<string, unknown>
+  const { title, detail, status, type, errors, traceId, ...details } = problem
+  void status
+  void type
+  void traceId
+  const message =
+    typeof detail === 'string' && detail
+      ? detail
+      : errors && typeof errors === 'object'
+        ? Object.values(errors as Record<string, string[]>).flat().join(' ')
+        : `Cererea a eșuat (${error.response.status}).`
+  return new AccountingApiError(error.response.status, contractCode(title), message, Object.keys(details).length ? details : null)
+}
+
+async function call<T>(config: AxiosRequestConfig): Promise<T> {
+  try {
+    const response = await api.request<T>({ ...config, url: `${PREFIX}/${config.url}` })
+    return response.data
+  } catch (error) {
+    throw await toApiError(error)
+  }
+}
+
+const get = <T>(url: string, params?: object) => call<T>({ method: 'GET', url, params: clean(params) })
+const post = <T>(url: string, data?: unknown) => call<T>({ method: 'POST', url, data })
+const put = <T>(url: string, data?: unknown) => call<T>({ method: 'PUT', url, data })
+const patch = <T>(url: string, data?: unknown) => call<T>({ method: 'PATCH', url, data })
+const blob = (url: string, params?: object) => call<Blob>({ method: 'GET', url, params: clean(params), responseType: 'blob' })
+
+/** Un răspuns „fără valoare” (200 fără corp) devine `null`. */
+const orNull = <T>(value: T | '' | null | undefined): T | null => (value === '' || value === undefined ? null : value)
+
+/** Parametrii fără valori goale: backendul nu primește `?status=`. */
+function clean(params?: object): Record<string, string | number> | undefined {
+  if (!params) return undefined
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== ''),
+  ) as Record<string, string | number>
+}
+
+function form(fields: Record<string, string | Blob | undefined>): FormData {
+  const data = new FormData()
+  Object.entries(fields).forEach(([key, value]) => {
+    if (value !== undefined) data.append(key, value)
+  })
+  return data
 }
 
 function ruleResource<T extends { id: string }>(path: string): RuleResource<T> {
   return {
-    list: () => pending('GET', `rules/${path}`),
-    create: () => pending('POST', `rules/${path}`),
-    update: (id) => pending('PUT', `rules/${path}/${id}`),
+    list: () => get(`rules/${path}`),
+    create: (input) => post(`rules/${path}`, input),
+    update: (id, input) => put(`rules/${path}/${id}`, input),
   }
 }
 
 export function createHttpAccountingApi(): AccountingApi {
   return {
     pfas: {
-      list: () => pending('GET', 'pfas'),
-      getSummary: (pfaId) => pending('GET', `pfas/${pfaId}/summary`),
-      getSettings: (pfaId) => pending('GET', `pfas/${pfaId}/settings`),
-      updateSettings: (pfaId) => pending('PUT', `pfas/${pfaId}/settings`),
-      uploadCashEvidence: (pfaId) => pending('POST', `pfas/${pfaId}/cash/evidence`),
-      transitionCash: (pfaId) => pending('POST', `pfas/${pfaId}/cash/transition`),
-      deactivate: (pfaId) => pending('POST', `pfas/${pfaId}/deactivate`),
-      createHandoverPackage: (pfaId) => pending('POST', `pfas/${pfaId}/handover-package`),
-      getAudit: (pfaId) => pending('GET', `pfas/${pfaId}/audit`),
+      list: (query) => get('pfas', query),
+      getSummary: (pfaId) => get(`pfas/${pfaId}/summary`),
+      getSettings: (pfaId) => get(`pfas/${pfaId}/settings`),
+      updateSettings: (pfaId, change) => put(`pfas/${pfaId}/settings`, change),
+      uploadCashEvidence: (pfaId, file) => post(`pfas/${pfaId}/cash/evidence`, form({ file })),
+      transitionCash: (pfaId, request) => post(`pfas/${pfaId}/cash/transition`, request),
+      deactivate: (pfaId, request) => post(`pfas/${pfaId}/deactivate`, request),
+      createHandoverPackage: (pfaId) => post(`pfas/${pfaId}/handover-package`),
+      getAudit: (pfaId, query) => get(`pfas/${pfaId}/audit`, query),
     },
     onboarding: {
-      getCashPreference: () => pending('GET', 'me/cash-preference'),
-      setCashPreference: () => pending('PUT', 'me/cash-preference'),
+      getCashPreference: async () => orNull(await get<CashPreference | ''>('me/cash-preference')),
+      setCashPreference: (request) => put('me/cash-preference', request),
     },
     documents: {
-      list: (pfaId) => pending('GET', `pfas/${pfaId}/platform-documents`),
-      upload: (pfaId) => pending('POST', `pfas/${pfaId}/platform-documents`),
-      get: (id) => pending('GET', `platform-documents/${id}`),
-      getFile: (id) => pending('GET', `platform-documents/${id}/file`),
-      updateExtraction: (id) => pending('PATCH', `platform-documents/${id}/extraction`),
-      confirm: (id) => pending('POST', `platform-documents/${id}/confirm`),
-      confirmBulk: () => pending('POST', 'platform-documents/confirm-bulk'),
+      list: (pfaId, period) => get(`pfas/${pfaId}/platform-documents`, { period }),
+      upload: (pfaId, request) => post(`pfas/${pfaId}/platform-documents`, form({ file: request.file, period: request.period })),
+      get: (id) => get(`platform-documents/${id}`),
+      getFile: (id) => blob(`platform-documents/${id}/file`),
+      updateExtraction: (id, request) => patch(`platform-documents/${id}/extraction`, request),
+      confirm: (id) => post(`platform-documents/${id}/confirm`),
+      confirmBulk: (request) => post('platform-documents/confirm-bulk', request),
     },
     months: {
-      getOverview: (period) => pending('GET', `periods/${period}/overview`),
-      process: (period) => pending('POST', `periods/${period}/process`),
-      confirmCleanDocuments: (period) => pending('POST', `periods/${period}/confirm-clean-documents`),
-      generate: (period) => pending('POST', `periods/${period}/generate`),
-      validate: (period) => pending('POST', `periods/${period}/validate`),
+      getOverview: (period) => get(`periods/${period}/overview`),
+      process: (period) => post(`periods/${period}/process`),
+      confirmCleanDocuments: (period) => post(`periods/${period}/confirm-clean-documents`),
+      generate: (period) => post(`periods/${period}/generate`),
+      validate: (period) => post(`periods/${period}/validate`),
     },
     jobs: {
-      get: (jobId) => pending('GET', `jobs/${jobId}`),
-      getFile: (jobId) => pending('GET', `jobs/${jobId}/file`),
+      get: (jobId) => get(`jobs/${jobId}`),
+      getFile: (jobId) => blob(`jobs/${jobId}/file`),
     },
     declarations: {
-      list: (pfaId) => pending('GET', `pfas/${pfaId}/declarations`),
-      get: (id) => pending('GET', `declarations/${id}`),
-      getBreakdown: (versionId) => pending('GET', `declaration-versions/${versionId}/breakdown`),
-      getXml: (versionId) => pending('GET', `declaration-versions/${versionId}/xml`),
-      getPdf: (versionId) => pending('GET', `declaration-versions/${versionId}/pdf`),
-      getValidation: (versionId) => pending('GET', `declaration-versions/${versionId}/validation`),
-      transition: (versionId) => pending('POST', `declaration-versions/${versionId}/transitions`),
-      uploadReceipt: (versionId) => pending('POST', `declaration-versions/${versionId}/receipt`),
-      createRectification: (declarationId) => pending('POST', `declarations/${declarationId}/rectification`),
+      list: (pfaId, period) => get(`pfas/${pfaId}/declarations`, { period }),
+      get: (id) => get(`declarations/${id}`),
+      getBreakdown: (versionId) => get(`declaration-versions/${versionId}/breakdown`),
+      getXml: (versionId) => call<string>({ method: 'GET', url: `declaration-versions/${versionId}/xml`, responseType: 'text' }),
+      getPdf: (versionId) => blob(`declaration-versions/${versionId}/pdf`),
+      getValidation: async (versionId) => orNull(await get<ValidationResult | ''>(`declaration-versions/${versionId}/validation`)),
+      transition: (versionId, request) => post(`declaration-versions/${versionId}/transitions`, request),
+      uploadReceipt: (versionId, request) =>
+        post(`declaration-versions/${versionId}/receipt`, form({ file: request.file, receiptNumber: request.receiptNumber || undefined })),
+      createRectification: (declarationId, request) => post(`declarations/${declarationId}/rectification`, request),
     },
     rules: {
       suppliers: ruleResource('suppliers'),
@@ -79,33 +148,33 @@ export function createHttpAccountingApi(): AccountingApi {
       d100: ruleResource('d100'),
       anafSchemas: ruleResource('anaf-schemas'),
       expenseCategories: ruleResource('expense-categories'),
-      getExchangeRate: () => pending('GET', 'rules/exchange-rates'),
+      getExchangeRate: async (query) => orNull(await get<ExchangeRate | ''>('rules/exchange-rates', query)),
     },
     ledger: {
-      list: (pfaId) => pending('GET', `pfas/${pfaId}/ledger`),
-      update: (id) => pending('PATCH', `ledger/${id}`),
-      verify: (id) => pending('POST', `ledger/${id}/verify`),
-      createManual: (pfaId) => pending('POST', `pfas/${pfaId}/ledger/manual`),
-      uploadExpenseDocument: (pfaId) => pending('POST', `pfas/${pfaId}/expense-documents`),
-      uploadZReport: (pfaId) => pending('POST', `pfas/${pfaId}/z-reports`),
+      list: (pfaId, query) => get(`pfas/${pfaId}/ledger`, query),
+      update: (id, request) => patch(`ledger/${id}`, request),
+      verify: (id) => post(`ledger/${id}/verify`),
+      createManual: (pfaId, request) => post(`pfas/${pfaId}/ledger/manual`, request),
+      uploadExpenseDocument: (pfaId, file) => post(`pfas/${pfaId}/expense-documents`, form({ file })),
+      uploadZReport: (pfaId, file) => post(`pfas/${pfaId}/z-reports`, form({ file })),
     },
     assets: {
-      list: (pfaId) => pending('GET', `pfas/${pfaId}/assets`),
-      create: (pfaId) => pending('POST', `pfas/${pfaId}/assets`),
-      update: (pfaId, id) => pending('PUT', `pfas/${pfaId}/assets/${id}`),
+      list: (pfaId) => get(`pfas/${pfaId}/assets`),
+      create: (pfaId, input) => post(`pfas/${pfaId}/assets`, input),
+      update: (pfaId, id, input) => put(`pfas/${pfaId}/assets/${id}`, input),
     },
     registers: {
-      getRjip: (pfaId) => pending('GET', `pfas/${pfaId}/registers/rjip`),
-      exportRjip: (pfaId) => pending('GET', `pfas/${pfaId}/registers/rjip/export`),
-      getRef: (pfaId) => pending('GET', `pfas/${pfaId}/registers/ref`),
-      exportRef: (pfaId) => pending('GET', `pfas/${pfaId}/registers/ref/export`),
-      getInventory: (pfaId) => pending('GET', `pfas/${pfaId}/registers/inventory`),
-      exportInventory: (pfaId) => pending('GET', `pfas/${pfaId}/registers/inventory/export`),
+      getRjip: (pfaId, range) => get(`pfas/${pfaId}/registers/rjip`, range),
+      exportRjip: (pfaId, range, format) => blob(`pfas/${pfaId}/registers/rjip/export`, { ...range, format }),
+      getRef: (pfaId, year) => get(`pfas/${pfaId}/registers/ref`, { year }),
+      exportRef: (pfaId, year, format, asOf) => blob(`pfas/${pfaId}/registers/ref/export`, { year, format, asOf }),
+      getInventory: (pfaId, year) => get(`pfas/${pfaId}/registers/inventory`, { year }),
+      exportInventory: (pfaId, year, format) => blob(`pfas/${pfaId}/registers/inventory/export`, { year, format }),
     },
     periods: {
-      list: (pfaId) => pending('GET', `pfas/${pfaId}/periods`),
-      close: (pfaId, period) => pending('POST', `pfas/${pfaId}/periods/${period}/close`),
-      createCorrection: (pfaId, period) => pending('POST', `pfas/${pfaId}/periods/${period}/corrections`),
+      list: (pfaId) => get(`pfas/${pfaId}/periods`),
+      close: (pfaId, period) => post(`pfas/${pfaId}/periods/${period}/close`),
+      createCorrection: (pfaId, period, request) => post(`pfas/${pfaId}/periods/${period}/corrections`, request),
     },
   }
 }

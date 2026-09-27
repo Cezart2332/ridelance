@@ -177,7 +177,7 @@ export function RuleTable<T extends Validity & { id: string }>({
   const set = (key: string, value: FormValue) => setEditing((current) => current && { ...current, form: { ...current.form, [key]: value } })
 
   return (
-    <Paper>
+    <Paper component="section" aria-label={title}>
       <Stack direction="row" sx={{ px: 2.5, pt: 2.5, pb: 1.5, gap: 2, justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <Stack spacing={0.5}>
           <Typography variant="h2">{title}</Typography>

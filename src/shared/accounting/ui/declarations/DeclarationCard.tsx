@@ -115,7 +115,7 @@ export function DeclarationCard({
   }
 
   return (
-    <Paper sx={{ p: 2.5 }}>
+    <Paper component="section" aria-label={title} sx={{ p: 2.5 }}>
       <Stack spacing={2}>
         <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 1, flexWrap: 'wrap' }}>
           <Stack spacing={0.25}>

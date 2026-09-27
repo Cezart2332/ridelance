@@ -68,7 +68,7 @@ function RjipCard({ summary, years }: DossierTabProps & { years: number[] }) {
           <Stack spacing={0.25}>
             <Typography variant="h2">Registrul-jurnal de încasări și plăți</Typography>
             <Typography variant="caption" color="text.secondary">
-              Model 14-1-1/b · sumele efectiv încasate sau plătite · coloanele exacte OMFP 170/2015 DE CONFIRMAT
+              Model 14-1-1/b (OMFP 170/2015) · sumele efectiv încasate sau plătite, totalizate lunar
             </Typography>
           </Stack>
           <ExportButtons
@@ -114,12 +114,12 @@ function RjipCard({ summary, years }: DossierTabProps & { years: number[] }) {
           <Table size="small" stickyHeader sx={{ minWidth: 900 }}>
             <TableHead>
               <TableRow>
-                <TableCell>Data</TableCell>
-                <TableCell>Document</TableCell>
-                <TableCell>Felul operațiunii</TableCell>
+                <TableCell>Data operațiunii</TableCell>
+                <TableCell>Documentul (fel, număr)</TableCell>
+                <TableCell>Explicații</TableCell>
                 <TableCell align="right">Încasări numerar</TableCell>
-                <TableCell align="right">Plăți numerar</TableCell>
                 <TableCell align="right">Încasări bancă</TableCell>
+                <TableCell align="right">Plăți numerar</TableCell>
                 <TableCell align="right">Plăți bancă</TableCell>
               </TableRow>
             </TableHead>
@@ -136,8 +136,8 @@ function RjipCard({ summary, years }: DossierTabProps & { years: number[] }) {
                           <TableCell>{row.document}</TableCell>
                           <TableCell>{row.operation}</TableCell>
                           <TableCell align="right">{cell(row.cashIn)}</TableCell>
-                          <TableCell align="right">{cell(row.cashOut)}</TableCell>
                           <TableCell align="right">{cell(row.bankIn)}</TableCell>
+                          <TableCell align="right">{cell(row.cashOut)}</TableCell>
                           <TableCell align="right">{cell(row.bankOut)}</TableCell>
                         </TableRow>
                       ))}
@@ -147,8 +147,8 @@ function RjipCard({ summary, years }: DossierTabProps & { years: number[] }) {
                           Total {formatPeriod(period)}
                         </TableCell>
                         <TableCell align="right" sx={{ fontWeight: 600 }}>{formatAmount(total.cashIn)}</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 600 }}>{formatAmount(total.cashOut)}</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 600 }}>{formatAmount(total.bankIn)}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>{formatAmount(total.cashOut)}</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 600 }}>{formatAmount(total.bankOut)}</TableCell>
                       </TableRow>
                     )}
@@ -185,7 +185,7 @@ function RefCard({ summary, years }: DossierTabProps & { years: number[] }) {
               )}
             </Stack>
             <Typography variant="caption" color="text.secondary">
-              Model OMFP 3254/2017 · sumele deductibile · denumirile elementelor de calcul DE CONFIRMAT
+              Model OMFP 3254/2017 · sumele deductibile
             </Typography>
           </Stack>
           <ExportButtons

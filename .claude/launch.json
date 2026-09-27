@@ -21,6 +21,39 @@
         "--strictPort"
       ],
       "port": 5174
+    },
+    {
+      "name": "ridelance-api-e2e",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "backend/src/Web.Api",
+        "--no-launch-profile",
+        "--",
+        "--environment",
+        "Development",
+        "--urls",
+        "http://localhost:5080",
+        "--ConnectionStrings:Database=Host=localhost;Port=55432;Database=ridelance_e2e;Username=postgres;Password=test",
+        "--FileStorage:BasePath=.e2e/uploads",
+        "--App:BaseUrl=http://localhost:5175",
+        "--OpenRouter:ApiKey="
+      ],
+      "port": 5080
+    },
+    {
+      "name": "ridelance-web-e2e",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "node_modules/vite/bin/vite.js",
+        "--mode",
+        "e2e",
+        "--port",
+        "5175",
+        "--strictPort"
+      ],
+      "port": 5175
     }
   ]
 }

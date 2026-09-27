@@ -43,3 +43,6 @@ dist-native
 
 # Microserviciul Java ANAF (DUKIntegrator) — repo separat
 backend-anaf/
+
+# Fișierele backend-ului rulat pentru testele e2e (B9)
+.e2e/

@@ -1769,15 +1769,15 @@ export function createMockAccountingApi(): AccountingApi {
               entry.documentLabel,
               entry.description,
               cash && incoming ? value : '',
-              cash && !incoming ? value : '',
               !cash && incoming ? value : '',
+              cash && !incoming ? value : '',
               !cash && !incoming ? value : '',
             ]
           })
           return exportRows(
             `Registru-jurnal de încasări și plăți – ${pfa.name} (CUI ${pfa.cui}) – ${formatDate(range.from)}–${formatDate(range.to)}`,
             format,
-            ['Data', 'Document', 'Felul operațiunii', 'Încasări numerar', 'Plăți numerar', 'Încasări bancă', 'Plăți bancă'],
+            ['Data operațiunii', 'Documentul (fel, număr)', 'Explicații', 'Încasări numerar', 'Încasări bancă', 'Plăți numerar', 'Plăți bancă'],
             rows,
           )
         }),

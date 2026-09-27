@@ -4,11 +4,10 @@ import type { MicroStepContext, MicroStepDef } from '../microStepTypes'
 /**
  * Pasul 3 — întrebarea despre plățile în numerar (spec contabilitate F7).
  *
- * Răspunsul se salvează prin `accountingApi`. Cât timp implementarea e mock-ul din memorie
- * (Partea A), întrebarea apare doar în dev: în producție un răspuns salvat în mock s-ar pierde la
- * reîncărcare. Cu `VITE_ACCOUNTING_API=http` (B9) apare peste tot.
+ * Răspunsul se salvează prin `accountingApi`, implicit pe API-ul real (B9,
+ * `PUT accounting/me/cash-preference`). În dev, cu mock-ul, răspunsul trăiește doar în memorie.
  */
-export const CASH_QUESTION_ENABLED = import.meta.env.DEV || import.meta.env.VITE_ACCOUNTING_API === 'http'
+export const CASH_QUESTION_ENABLED = true
 
 /** Import la cerere: modulul de contabilitate (cu mock-ul lui) nu intră în bundle-ul onboardingului. */
 const loadAccountingApi = () => import('../../../shared/accounting/api/accountingApi').then((module) => module.accountingApi)
