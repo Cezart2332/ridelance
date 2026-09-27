@@ -296,19 +296,7 @@ export function DeclarationCard({
       <ReasonDialog
         open={dialog === 'rectification'}
         title={`Creează rectificativă ${summary.type}`}
-        description={
-          <Stack spacing={1.5}>
-            <Typography variant="body2">
-              Se creează o versiune nouă, calculată din documentele și regulile de acum. Versiunea cu recipisă rămâne neschimbată.
-            </Typography>
-            {summary.type === 'D100' && (
-              <Alert severity="info">
-                Pentru D100 se aplică procedura specifică de corecție (de ex. D710, unde e cazul). Implementarea exactă e DE CONFIRMAT cu
-                contabilul.
-              </Alert>
-            )}
-          </Stack>
-        }
+        description="Se creează o versiune nouă din documentele și regulile de acum. Versiunea cu recipisă rămâne neschimbată."
         reasonLabel="Motivul rectificativei"
         confirmLabel="Creează rectificativa"
         onClose={() => setDialog(null)}

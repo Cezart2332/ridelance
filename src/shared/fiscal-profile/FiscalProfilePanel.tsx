@@ -127,7 +127,7 @@ export function FiscalProfilePanel({ mode, pfaId, onOpenForm, onOpenHistory, pro
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
               {profile.status === 'NOT_STARTED'
                 ? isStaff
-                  ? 'PFA-ul nu a început încă profilul. Estimările de taxe sunt ascunse până îl confirmă.'
+                  ? 'Estimările apar după confirmarea PFA-ului.'
                   : 'Completează profilul ca să vezi estimările de taxe. Durează câteva minute.'
                 : `Ultima modificare: ${new Date(profile.updatedAtUtc).toLocaleString('ro-RO', { dateStyle: 'medium', timeStyle: 'short' })}${
                     profile.lastChangedBy ? ` · ${profile.lastChangedBy.name} (${ROLE_LABEL[profile.lastChangedBy.role]})` : ''
@@ -136,7 +136,7 @@ export function FiscalProfilePanel({ mode, pfaId, onOpenForm, onOpenHistory, pro
           )}
           {isStaff && profile && profile.status !== 'COMPLETED' && (
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-              Doar PFA-ul poate confirma profilul; modificările tale rămân în ciornă până atunci.
+              Modificările tale rămân ciornă până confirmă PFA-ul.
             </Typography>
           )}
         </Box>

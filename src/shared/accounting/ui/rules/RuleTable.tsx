@@ -249,11 +249,6 @@ export function RuleTable<T extends Validity & { id: string }>({
         <DialogTitle>{editing?.item ? `Modifică: ${title}` : `Adaugă: ${title}`}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 0.5 }}>
-            {editing?.item && (
-              <Alert severity="info">
-                Pentru o valoare nouă de la o anumită dată, închide regula actuală și adaugă alta; modificarea schimbă regula pe tot intervalul ei.
-              </Alert>
-            )}
             {editing &&
               fields.map((field) =>
                 field.kind === 'bool' ? (

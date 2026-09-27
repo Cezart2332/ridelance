@@ -186,13 +186,13 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
           {/* Read-only synthesis — same info as the client's dashboard cards */}
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, gap: 1.5 }}>
             {[
-              { label: 'Venit total', value: venitTotal, helper: 'Cash + Card + Bolt + Uber', highlight: true },
+              { label: 'Venit total', value: venitTotal, highlight: true },
               { label: 'Venit Bolt', value: income.venitBolt },
               { label: 'Venit Uber', value: income.venitUber },
               { label: 'Încasări cash', value: income.venitCash },
               { label: 'Încasări card', value: income.venitCard },
-              { label: 'Taxe estimate (anual)', value: income.taxeEstimate, helper: 'CAS + CASS + impozit' },
-            ].map(({ label, value, helper, highlight }) => (
+              { label: 'Taxe estimate (anual)', value: income.taxeEstimate },
+            ].map(({ label, value, highlight }) => (
               <Paper
                 key={label}
                 elevation={0}
@@ -210,11 +210,6 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
                 <Typography sx={{ fontWeight: 900, fontSize: '1.35rem', mt: 0.6, color: highlight ? TOKENS.primaryStrong : TOKENS.ink, fontVariantNumeric: 'tabular-nums' }}>
                   {value.toLocaleString('ro-RO')} lei
                 </Typography>
-                {helper && (
-                  <Typography sx={{ fontSize: '0.72rem', color: TOKENS.textSubtle, mt: 0.4 }}>
-                    {helper}
-                  </Typography>
-                )}
               </Paper>
             ))}
           </Box>
@@ -257,9 +252,6 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
             </Typography>
             <Typography sx={{ fontWeight: 900, fontSize: '1.5rem', color: TOKENS.primaryStrong }}>
               {venitTotal.toLocaleString('ro-RO')} lei
-            </Typography>
-            <Typography sx={{ fontSize: '0.72rem', color: TOKENS.textSubtle, mt: 0.5 }}>
-              Cash + Card + Bolt + Uber
             </Typography>
           </Paper>
 

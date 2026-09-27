@@ -45,7 +45,7 @@ function isPdf(file: File): boolean {
 }
 
 /** F2: documentele Uber/Bolt ale unei luni — sloturi, încărcare, verificare, confirmare în bloc. */
-export function PlatformDocumentsTab({ summary, onSummaryChanged }: DossierTabProps) {
+export function PlatformDocumentsTab({ summary, onSummaryChanged, periodInHeader }: DossierTabProps) {
   const nav = useAccountingNav()
   const notify = useNotify()
   const { busy, run } = useAction()
@@ -119,7 +119,6 @@ export function PlatformDocumentsTab({ summary, onSummaryChanged }: DossierTabPr
 
   const slotDocument = (platform: Platform, type: PlatformDocumentType) =>
     list.find((document) => document.platform === platform && document.documentType === type)
-  const unclassified = list.filter((document) => !document.platform || document.documentType === 'UNKNOWN')
 
   const openDocument = (id: string) => nav.setParam('document', id)
 
@@ -133,7 +132,7 @@ export function PlatformDocumentsTab({ summary, onSummaryChanged }: DossierTabPr
   return (
     <Stack spacing={3}>
       <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2, alignItems: { sm: 'center' }, justifyContent: 'space-between' }}>
-        <PeriodSelect pfaId={summary.id} value={period} onChange={(value) => nav.setParam('luna', value)} />
+        {periodInHeader ? <span /> : <PeriodSelect pfaId={summary.id} value={period} onChange={(value) => nav.setParam('luna', value)} />}
         {!readOnly && pending.length > 0 && (
           <Button variant="contained" disabled={selectedPending.length === 0 || busy !== null} onClick={confirmSelected}>
             {busy === 'bulk' ? 'Se confirmă…' : `Confirmă selectate${selectedPending.length ? ` (${selectedPending.length})` : ''}`}
@@ -204,7 +203,7 @@ export function PlatformDocumentsTab({ summary, onSummaryChanged }: DossierTabPr
           <Stack spacing={1} sx={{ alignItems: 'center' }}>
             <CloudUploadRoundedIcon color="action" />
             <Typography variant="body2">
-              Trage aici facturile și rapoartele Uber/Bolt (PDF, mai multe deodată). Tipul documentului îl recunoaște RIDElance.
+              Trage aici PDF-urile Uber și Bolt
             </Typography>
             <Button variant="outlined" size="small" onClick={() => inputRef.current?.click()} disabled={uploading > 0}>
               {uploading > 0 ? `Se încarcă ${uploading}…` : 'Alege fișiere'}
@@ -326,11 +325,6 @@ export function PlatformDocumentsTab({ summary, onSummaryChanged }: DossierTabPr
           </TableContainer>
         )}
       </Paper>
-      {unclassified.length > 0 && (
-        <Typography variant="caption" color="text.secondary">
-          Documentele fără tip primesc tipul după citire (procesarea lunii sau încărcarea).
-        </Typography>
-      )}
 
       {nav.documentId && (
         <DocumentReviewDialog

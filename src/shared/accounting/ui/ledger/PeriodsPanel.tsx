@@ -26,11 +26,8 @@ export function PeriodsPanel({ summary, onChanged }: { summary: PfaAccountingSum
 
   return (
     <Paper>
-      <Stack sx={{ px: 2.5, pt: 2.5, pb: 1.5 }} spacing={0.5}>
+      <Stack sx={{ px: 2.5, pt: 2.5, pb: 1.5 }}>
         <Typography variant="h2">Perioade contabile</Typography>
-        <Typography variant="body2" color="text.secondary">
-          După închidere, tranzacțiile lunii se modifică doar prin „Corecție controlată”, cu motiv.
-        </Typography>
       </Stack>
       {periods.error && <ErrorBlock message={periods.error} onRetry={periods.reload} />}
       {!periods.data && !periods.error && <LoadingBlock />}

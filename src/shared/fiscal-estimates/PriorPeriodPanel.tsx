@@ -158,10 +158,7 @@ export function PriorPeriodPanel({ mode, pfaId }: { mode: StaffMode; pfaId: stri
       {period && period.months.length > 0 && (
         <>
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-            {period.joinedOn ? `Clientul a intrat în RIDElance pe ${formatDate(period.joinedOn)}. ` : ''}
-            Trece venitul brut și cheltuielile deductibile ale fiecărei luni din registrul de încasări și plăți. Suma unei luni
-            înlocuiește ce avem în RIDElance pentru luna respectivă, nu se adună. O lună fără activitate se trece cu 0; până completezi,
-            estimăm lunile lipsă din media celorlalte.
+            {period.joinedOn ? `În RIDElance din ${formatDate(period.joinedOn)}. ` : ''}Lunile fără activitate se trec cu 0.
           </Typography>
 
           <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0, mt: 2, display: 'grid', gap: 1 }}>

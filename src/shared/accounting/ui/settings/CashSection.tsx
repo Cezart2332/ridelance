@@ -92,7 +92,7 @@ export function CashSection({ summary, cash, onChanged }: { summary: PfaAccounti
         </Stepper>
 
         {cash.status === 'PENDING' && (
-          <Alert severity="info">Clientul a cerut în onboarding să accepte și numerar. Pornește verificarea când trimite dovada de fiscalizare.</Alert>
+          <Alert severity="info">Clientul a cerut numerar în onboarding.</Alert>
         )}
 
         <Stack direction="row" sx={{ gap: 4, flexWrap: 'wrap' }}>

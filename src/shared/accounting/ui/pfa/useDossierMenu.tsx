@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Alert, Stack, TextField, Typography } from '@mui/material'
+import { Stack, TextField, Typography } from '@mui/material'
 
 import type { ActionMenuItem } from '../../../../components/admin'
 import { accountingApi } from '../../api/accountingApi'
@@ -34,7 +34,6 @@ export function useDossierMenu(summary: PfaAccountingSummary | null, onChanged: 
             <Typography variant="body2">
               După confirmare, dosarul devine read-only: nu se mai importă operațiuni de după data de sfârșit și nu se mai pot modifica datele.
             </Typography>
-            <Alert severity="info">Datele contabile nu se șterg. Termenul de păstrare obligatorie apare în dosar după inactivare.</Alert>
           </Stack>
         }
         requireReason={false}

@@ -184,6 +184,14 @@ export interface PfaListItem {
   /** Badge-ul agregat al lunii curente. */
   currentMonthStatus: PfaMonthStatus
   cashStatus: CashRegisterStatus
+  client: ClientContact
+}
+
+/** Titularul contului PFA: chat, open banking și datele de contact din profilul clientului. */
+export interface ClientContact {
+  userId: string
+  email: string
+  phone: string | null
 }
 
 export interface PfaAccountingSummary {
@@ -209,6 +217,7 @@ export interface PfaAccountingSummary {
   readOnly: boolean
   /** Calculat de backend (`RetentionService`); doar pentru dosarele inactive. */
   retentionUntil: IsoDate | null
+  client: ClientContact
 }
 
 /** Cheile setărilor versionate pe `validFrom` (`PfaAccountingSettings`, append-only). */

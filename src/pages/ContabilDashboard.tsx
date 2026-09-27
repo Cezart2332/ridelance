@@ -6,10 +6,7 @@ import {
   Box,
   Paper,
   Stack,
-  TextField,
   Typography,
-  Avatar,
-  Chip,
   CircularProgress,
   Alert,
   FormControl,
@@ -29,21 +26,20 @@ import { useNavigate } from 'react-router-dom'
 // Icons
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded'
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded'
 
-import { ProfessionalChatBox } from '../components/dashboard/sections/ProfessionalChatBox'
-import { ContabilClientWorkspace, type ContabilClientInfo } from '../components/contabil/ContabilClientWorkspace'
 import { displayName } from '../utils/displayName'
 import { reloadOnceOnChunkError } from '../utils/lazyWithRetry'
 import { RouteFallback } from '../components/common/RouteFallback'
-import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import RuleRoundedIcon from '@mui/icons-material/RuleRounded'
 
 // Modulul de contabilitate PFA (spec contabilitate), comun cu dashboard-ul de admin.
 const AccountingArea = lazy(() => import('../shared/accounting/ui/AccountingArea').catch(reloadOnceOnChunkError))
-const ACCOUNTING_TABS = { pfa: 'pfa', declarations: 'declaratii', rules: 'reguli' }
+// „Clienți PFA” e tabul `pfa` al modulului: lista și profilul clientului, cu dosarul contabil.
+const ACCOUNTING_TABS = { pfa: 'clienti', declarations: 'declaratii', rules: 'reguli' }
+/** Nume vechi ale tabului de clienți, din notificări și legături salvate. */
+const LEGACY_CLIENT_TABS = ['clients', 'pfa']
 import { requestedAccountingMonth } from '../utils/accountingPeriod'
 
 interface ClientSummary {
@@ -57,26 +53,6 @@ interface ClientSummary {
   registrationType: string
   documentCount: number
   createdAtUtc: string
-}
-
-function relativeTime(utcString: string): string {
-  const date = new Date(utcString)
-  const diff = Date.now() - date.getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 60) return `Acum ${mins} minute`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `Acum ${hours} ${hours === 1 ? 'oră' : 'ore'}`
-  const days = Math.floor(hours / 24)
-  if (days === 1) return 'Ieri'
-  return `Acum ${days} zile`
-}
-
-function accountStatusColor(status: string) {
-  switch (status.toLowerCase()) {
-    case 'activ': return '#10b981'
-    case 'inactiv': return '#ef4444'
-    default: return '#6366f1'
-  }
 }
 
 function isActiveClient(client: { accountStatus: string }) {
@@ -93,10 +69,9 @@ export function ContabilDashboard() {
 
   const navigate = useNavigate()
   const [manualTab, setActiveTab] = useState('dashboard')
-  const linkedTab = notificationParams.get('tab') ?? ''
-  const activeTab = ['clients', 'notificari', ...Object.values(ACCOUNTING_TABS)].includes(linkedTab) ? linkedTab : manualTab
-  const [manualPfaId, setSelectedPfaId] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
+  const requestedTab = notificationParams.get('tab') ?? ''
+  const linkedTab = LEGACY_CLIENT_TABS.includes(requestedTab) ? ACCOUNTING_TABS.pfa : requestedTab
+  const activeTab = ['notificari', ...Object.values(ACCOUNTING_TABS)].includes(linkedTab) ? linkedTab : manualTab
 
   const handleLogout = async () => {
     await authService.logout()
@@ -104,9 +79,6 @@ export function ContabilDashboard() {
   }
 
   const [clients, setClients] = useState<ClientSummary[]>([])
-  const selectedPfaId = notificationParams.get('user') ? clients.find((client) => client.userId === notificationParams.get('user'))?.id ?? null : manualPfaId
-  const [clientsLoading, setClientsLoading] = useState(false)
-  const [clientsError, setClientsError] = useState<string | null>(null)
 
   const [profile, setProfile] = useState<UserProfile | null>(null)
 
@@ -149,17 +121,15 @@ export function ContabilDashboard() {
   }
 
   useEffect(() => {
-    if (activeTab === 'dashboard' && !selectedPfaId) {
+    if (activeTab === 'dashboard') {
       void loadStats(statsYear, statsMonth)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, selectedPfaId, statsYear, statsMonth])
+  }, [activeTab, statsYear, statsMonth])
 
-  // Load clients (PFAs visible to this contabil) — needed on home (active/inactive split) and on the list
+  // Clienții alocați contabilului: pe Acasă, pentru împărțirea activi / inactivi.
   useEffect(() => {
-    if (activeTab !== 'clients' && activeTab !== 'dashboard') return
-    setClientsLoading(true)
-    setClientsError(null)
+    if (activeTab !== 'dashboard') return
     pfaService.getAll()
       .then((data) => {
         const items = data?.items ?? data ?? []
@@ -176,39 +146,16 @@ export function ContabilDashboard() {
           createdAtUtc: item.createdAtUtc,
         })))
       })
-      .catch(() => setClientsError('Nu s-au putut încărca clienții.'))
-      .finally(() => setClientsLoading(false))
+      .catch(() => setClients([]))
   }, [activeTab])
-
-  // Load notifications when on that tab
 
   const navItems = [
     { id: 'dashboard', label: 'Acasă', icon: <HomeRoundedIcon /> },
-    { id: 'clients', label: 'Clienți PFA', icon: <GroupsRoundedIcon /> },
-    { id: ACCOUNTING_TABS.pfa, label: 'PFA', icon: <AccountBalanceWalletRoundedIcon /> },
+    { id: ACCOUNTING_TABS.pfa, label: 'Clienți PFA', icon: <GroupsRoundedIcon /> },
     { id: ACCOUNTING_TABS.declarations, label: 'Declarații', icon: <DescriptionRoundedIcon /> },
     { id: ACCOUNTING_TABS.rules, label: 'Reguli fiscale', icon: <RuleRoundedIcon /> },
     { id: 'notificari', label: 'Notificări', icon: <NotificationsActiveRoundedIcon /> },
   ]
-
-  const inputSx = {
-    '& .MuiOutlinedInput-root': {
-      bgcolor: alpha(TOKENS.paper, 0.9),
-      borderRadius: `${TOKENS.radius.md}px`,
-      '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.08) },
-      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.16) },
-      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-        borderColor: alpha(TOKENS.primary, 0.6),
-        borderWidth: 2,
-      },
-    },
-  }
-
-  const filteredClients = clients.filter(
-    (c) =>
-      c.userName.toLowerCase().includes(search.toLowerCase()) ||
-      c.userEmail.toLowerCase().includes(search.toLowerCase())
-  )
 
   const renderGlobalStats = () => {
     if (statsLoading) {
@@ -235,59 +182,51 @@ export function ContabilDashboard() {
     const statCards = [
       {
         key: 'activeClients',
-        label: 'PFA-uri active',
+        label: 'Abonament activ',
         value: activeClients,
         color: '#10b981',
-        desc: 'Clienți cu abonament activ',
       },
       {
         key: 'inactiveClients',
-        label: 'PFA-uri inactive',
+        label: 'Fără abonament activ',
         value: inactiveClients,
         color: '#ef4444',
-        desc: 'Clienți suspendați, noi sau fără abonament',
       },
       {
         key: 'docsToVerify',
         label: 'Documente de verificat',
         value: stats.docsToVerify,
         color: '#f59e0b',
-        desc: 'Documente încărcate, neverificate',
       },
       {
         key: 'missingMonthlyDocs',
         label: 'Documente lunare lipsă',
         value: stats.missingMonthlyDocs,
         color: '#dc2626',
-        desc: 'Clienți cu cel puțin un document lipsă',
       },
       {
         key: 'readyToProcess',
         label: 'Gata de procesare',
         value: stats.readyToProcess,
         color: '#6366f1',
-        desc: 'Venituri, cheltuieli și acte validate',
       },
       {
         key: 'processedThisMonth',
         label: 'Procesați în luna aleasă',
         value: stats.processedThisMonth,
         color: '#0f766e',
-        desc: 'PFA-uri cu luna închisă',
       },
       {
         key: 'unreadMessages',
         label: 'Mesaje necitite',
         value: stats.unreadMessages,
         color: '#8b5cf6',
-        desc: 'Mesaje de asistență necitite',
       },
       {
         key: 'totalClients',
         label: 'Total clienți PFA',
         value: stats.totalClients,
         color: '#3b82f6',
-        desc: 'Toate PFA-urile din portofoliul tău',
       },
     ]
 
@@ -308,14 +247,8 @@ export function ContabilDashboard() {
             sx={{ alignItems: { xs: 'flex-start', md: 'center' }, justifyContent: 'space-between' }}
           >
             <Box>
-              <Typography variant="h6" sx={{ fontWeight: 800, color: TOKENS.textSubtle, mb: 0.5, letterSpacing: 0.5, textTransform: 'uppercase', fontSize: '0.72rem' }}>
-                Portofoliu contabil
-              </Typography>
               <Typography variant="h4" sx={{ fontWeight: 900, color: TOKENS.primaryStrong, mb: 0.5 }}>
                 {stats.monthLabel}
-              </Typography>
-              <Typography variant="body2" sx={{ color: TOKENS.textMuted, maxWidth: 520 }}>
-                Urmărește statusul lunii selectate, procesează documentele primite și răspunde la mesajele clienților.
               </Typography>
             </Box>
 
@@ -355,7 +288,7 @@ export function ContabilDashboard() {
             <Paper
               key={card.key}
               elevation={0}
-              onClick={() => setActiveTab('clients')}
+              onClick={() => setActiveTab(ACCOUNTING_TABS.pfa)}
               sx={{
                 p: 2.5,
                 cursor: 'pointer',
@@ -396,167 +329,10 @@ export function ContabilDashboard() {
                   {card.value}
                 </Typography>
               </Box>
-              <Typography variant="caption" sx={{ color: TOKENS.textMuted, fontSize: '0.74rem' }}>
-                {card.desc}
-              </Typography>
             </Paper>
           ))}
         </Box>
       </Stack>
-    )
-  }
-
-  const renderClientList = () => (
-    <Stack spacing={3} component="div">
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <SearchRoundedIcon sx={{ color: TOKENS.textSubtle, fontSize: 20 }} />
-        <TextField
-          variant="outlined"
-          size="small"
-          placeholder="Caută client..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{ width: { xs: '100%', sm: 300 }, maxWidth: '100%', ...inputSx }}
-        />
-      </Box>
-
-      {clientsLoading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-          <CircularProgress size={32} sx={{ color: TOKENS.primary }} />
-        </Box>
-      )}
-
-      {clientsError && (
-        <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>{clientsError}</Alert>
-      )}
-
-      {!clientsLoading && !clientsError && filteredClients.length === 0 && (
-        <Box sx={{ py: 8, textAlign: 'center' }}>
-          <Typography variant="body1" sx={{ color: TOKENS.textMuted }}>
-            {search ? 'Niciun client găsit.' : 'Nu ai încă clienți în portofoliu.'}
-          </Typography>
-        </Box>
-      )}
-
-      {!clientsLoading && !clientsError && filteredClients.length > 0 && (
-        <Stack spacing={3}>
-          {[
-            { title: 'PFA-uri active', items: filteredClients.filter(isActiveClient), accent: '#10b981' },
-            { title: 'PFA-uri inactive', items: filteredClients.filter((c) => !isActiveClient(c)), accent: '#ef4444' },
-          ].map((group) => (
-            <Box key={group.title}>
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1.5 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 850, color: TOKENS.ink }}>
-                  {group.title}
-                </Typography>
-                <Chip
-                  label={group.items.length}
-                  size="small"
-                  sx={{
-                    height: 22,
-                    fontWeight: 800,
-                    fontSize: '0.72rem',
-                    color: group.accent,
-                    bgcolor: alpha(group.accent, 0.1),
-                  }}
-                />
-              </Stack>
-
-              {group.items.length === 0 ? (
-                <Paper
-                  elevation={0}
-                  sx={{ p: 2.5, borderRadius: `${TOKENS.radius.lg}px`, border: `1px dashed ${alpha(TOKENS.ink, 0.14)}` }}
-                >
-                  <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
-                    Niciun client în această categorie.
-                  </Typography>
-                </Paper>
-              ) : (
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, gap: 2 }}>
-                  {group.items.map((client) => (
-                    <Paper
-                      key={client.id}
-                      elevation={0}
-                      onClick={() => setSelectedPfaId(client.id)}
-                      sx={{
-                        p: 2.25,
-                        cursor: 'pointer',
-                        borderRadius: `${TOKENS.radius.lg}px`,
-                        border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
-                        bgcolor: TOKENS.paper,
-                        transition: 'all 0.2s',
-                        minWidth: 0,
-                        '&:hover': {
-                          borderColor: alpha(TOKENS.primary, 0.4),
-                          boxShadow: TOKENS.shadow.md,
-                          transform: 'translateY(-2px)',
-                        },
-                      }}
-                    >
-                      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 1.5 }} component="div">
-                        <Avatar sx={{ width: 40, height: 40, bgcolor: alpha(TOKENS.primary, 0.1), color: TOKENS.primaryStrong, fontWeight: 700 }}>
-                          {client.userName[0] ?? '?'}
-                        </Avatar>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 800 }} noWrap>{client.userName}</Typography>
-                          <Typography variant="caption" sx={{ color: TOKENS.textMuted }} noWrap>{client.userEmail}</Typography>
-                        </Box>
-                        <Chip
-                          label={client.accountStatus}
-                          size="small"
-                          sx={{
-                            flexShrink: 0,
-                            fontWeight: 800,
-                            fontSize: '0.68rem',
-                            bgcolor: alpha(accountStatusColor(client.accountStatus), 0.1),
-                            color: accountStatusColor(client.accountStatus),
-                          }}
-                        />
-                      </Stack>
-
-                      <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }} component="div">
-                        <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>
-                          {client.registrationType}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: TOKENS.textSubtle }}>
-                          {relativeTime(client.createdAtUtc)}
-                        </Typography>
-                      </Stack>
-                    </Paper>
-                  ))}
-                </Box>
-              )}
-            </Box>
-          ))}
-        </Stack>
-      )}
-    </Stack>
-  )
-
-  const renderClientDetail = () => {
-    const client = clients.find((c) => c.id === selectedPfaId)
-    if (!client) return null
-
-    const clientInfo: ContabilClientInfo = {
-      id: client.id,
-      userId: client.userId,
-      userName: client.userName,
-      userEmail: client.userEmail,
-      status: client.status,
-    }
-
-    return (
-      <ContabilClientWorkspace
-        client={clientInfo}
-        onBack={() => {
-          navigate('/contabil')
-          setSelectedPfaId(null)
-          void loadStats() // Refresh stats when returning from a client workspace
-        }}
-        chatSlot={
-          <ProfessionalChatBox clientUserId={client.userId} clientName={client.userName} />
-        }
-      />
     )
   }
 
@@ -571,7 +347,6 @@ export function ContabilDashboard() {
       onNavClick={(id) => {
         navigate('/contabil')
         setActiveTab(id)
-        if (id !== 'clients') setSelectedPfaId(null)
       }}
       onLogout={handleLogout}
       userName={userName}
@@ -583,17 +358,13 @@ export function ContabilDashboard() {
             <AccountingArea
               role="Contabil"
               tabs={ACCOUNTING_TABS}
-              view={activeTab === ACCOUNTING_TABS.pfa ? 'pfa' : activeTab === ACCOUNTING_TABS.declarations ? 'declarations' : 'rules'}
+              view={activeTab === ACCOUNTING_TABS.pfa ? 'clients' : activeTab === ACCOUNTING_TABS.declarations ? 'declarations' : 'rules'}
             />
           </Suspense>
         )
-        : selectedPfaId
-        ? renderClientDetail()
         : activeTab === 'notificari'
           ? renderNotifications()
-          : activeTab === 'dashboard'
-            ? renderGlobalStats()
-            : renderClientList()}
+          : renderGlobalStats()}
     </DashboardLayout>
   )
 }

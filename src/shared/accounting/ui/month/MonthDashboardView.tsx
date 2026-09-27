@@ -122,12 +122,7 @@ export function MonthDashboardView() {
   return (
     <Stack spacing={3}>
       <Stack direction={{ xs: 'column', md: 'row' }} sx={{ gap: 2, justifyContent: 'space-between', alignItems: { md: 'flex-end' } }}>
-        <Stack spacing={0.5}>
-          <Typography variant="h1">Declarații · {formatPeriod(period)}</Typography>
-          <Typography variant="body2" color="text.secondary">
-            D100, D301 și D390 pentru toate PFA-urile active în lună.
-          </Typography>
-        </Stack>
+        <Typography variant="h1">Declarații · {formatPeriod(period)}</Typography>
         <TextField select label="Luna" value={period} onChange={(event) => nav.openMonth(event.target.value, nav.onlyExceptions)} sx={{ minWidth: 200 }}>
           {recentPeriods(currentPeriod ?? period).map((option) => (
             <MenuItem key={option} value={option}>

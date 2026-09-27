@@ -167,14 +167,14 @@ export function RecurringDocumentationPanel({
         boxShadow: DASHBOARD_TOKENS.shadow.sm,
       }}
     >
-      <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>
-        Documentație lunară — {monthLabel}
+      <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: isContabil ? 2 : 0 }}>
+        {isContabil ? `Încărcate de client · ${monthLabel}` : `Documentație lunară — ${monthLabel}`}
       </Typography>
-      <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.7, fontSize: '0.9rem', mb: 2 }}>
-        {isContabil
-          ? `Documentele încărcate de client pentru luna selectată (de pe 26 ale lunii până pe ${deadlineLabel}).`
-          : `Încarcă documentele pentru ${formatAccountingMonth(target)} până pe ${deadlineLabel}, când contabilul închide luna.`}
-      </Typography>
+      {!isContabil && (
+        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.7, fontSize: '0.9rem', mb: 2 }}>
+          {`Încarcă documentele pentru ${formatAccountingMonth(target)} până pe ${deadlineLabel}, când contabilul închide luna.`}
+        </Typography>
+      )}
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -397,7 +397,7 @@ export function RecurringDocumentationPanel({
         </Stack>
       )}
 
-      {!loading && (
+      {!loading && !isContabil && (
         <Alert severity="info" sx={{ mt: 2, borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, fontSize: '0.85rem' }}>
           Documentele marcate „Verificat” au fost validate de contabil. La începutul fiecărei luni primești o
           notificare pentru a reîncărca documentația.

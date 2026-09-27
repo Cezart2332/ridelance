@@ -67,9 +67,6 @@ function RjipCard({ summary, years }: DossierTabProps & { years: number[] }) {
         <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
           <Stack spacing={0.25}>
             <Typography variant="h2">Registrul-jurnal de încasări și plăți</Typography>
-            <Typography variant="caption" color="text.secondary">
-              Model 14-1-1/b (OMFP 170/2015) · sumele efectiv încasate sau plătite, totalizate lunar
-            </Typography>
           </Stack>
           <ExportButtons
             busy={busy !== null}
@@ -184,9 +181,6 @@ function RefCard({ summary, years }: DossierTabProps & { years: number[] }) {
                 />
               )}
             </Stack>
-            <Typography variant="caption" color="text.secondary">
-              Model OMFP 3254/2017 · sumele deductibile
-            </Typography>
           </Stack>
           <ExportButtons
             busy={busy !== null}
@@ -276,9 +270,6 @@ function InventoryCard({ summary, years }: DossierTabProps & { years: number[] }
         <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
           <Stack spacing={0.25}>
             <Typography variant="h2">Registrul-inventar</Typography>
-            <Typography variant="caption" color="text.secondary">
-              Model 14-1-2/b · la începutul activității, la sfârșitul anului și la încetare
-            </Typography>
           </Stack>
           <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
             {!summary.readOnly && (

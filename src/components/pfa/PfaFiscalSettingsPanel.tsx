@@ -543,13 +543,11 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
     </Stack>
   )
 
-  const renderDetailHeader = (title: string, description: string) => (
+  // Panoul e doar pentru admin și contabil: titlul ajunge, explicațiile secțiunilor nu mai apar.
+  const renderDetailHeader = (title: string) => (
     <Box sx={{ mb: 3, maxWidth: 560 }}>
       <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.025em', textWrap: 'balance' }}>
         {title}
-      </Typography>
-      <Typography variant="body2" sx={{ color: TOKENS.textMuted, mt: 0.6, lineHeight: 1.65, maxWidth: '42ch' }}>
-        {description}
       </Typography>
     </Box>
   )
@@ -639,7 +637,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
       case 'overview':
         return (
           <>
-            {renderDetailHeader('Prezentare generală', 'Toate informațiile fiscale ale PFA-ului, grupate pe categorii.')}
+            {renderDetailHeader('Prezentare generală')}
             <Box sx={{ maxWidth: 640 }}>
               <SettingGroup title="Profil fiscal standard">
                 {FIXED_FISCAL_FIELDS.map((field) => (
@@ -681,7 +679,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
       case 'tax':
         return (
           <>
-            {renderDetailHeader('Cod special TVA', 'Profilul fiscal standard este fix. Actualizează doar codul special TVA.')}
+            {renderDetailHeader('Cod special TVA')}
             {renderFormStack(
               <>
                 {FIXED_FISCAL_FIELDS.map((field) => (
@@ -748,7 +746,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
       case 'platforms':
         return (
           <>
-            {renderDetailHeader('Platforme active', 'Statusul platformelor pe care lucrează PFA-ul.')}
+            {renderDetailHeader('Platforme active')}
             {renderFormStack(
               editable ? (
                 <>
@@ -777,7 +775,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
       case 'cash':
         return (
           <>
-            {renderDetailHeader('Cash și casă de marcat', 'Informații despre venituri cash și obligația de casă de marcat.')}
+            {renderDetailHeader('Cash și casă de marcat')}
             {renderFormStack(
               editable ? (
                 <>
@@ -802,7 +800,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
       case 'vehicle':
         return (
           <>
-            {renderDetailHeader('Utilizare auto', 'Situația mașinii folosite de PFA și documentul justificativ.')}
+            {renderDetailHeader('Utilizare auto')}
             {renderFormStack(
               editable ? (
                 <>
@@ -827,7 +825,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
         const provider: Provider = section === 'uber' ? 'Uber' : 'Bolt'
         return (
           <>
-            {renderDetailHeader(`Conturi ${provider}`, `Cont ${provider} Driver și ${provider} Fleet.`)}
+            {renderDetailHeader(`Conturi ${provider}`)}
             {renderFormStack(
               <>
                 {renderAccountBlock(provider, 'Driver')}
@@ -843,7 +841,7 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
       case 'fleet':
         return (
           <>
-            {renderDetailHeader('Permisiuni Fleet', 'Permisiuni pentru conturile fleet și integrarea Bolt Fleet API.')}
+            {renderDetailHeader('Permisiuni Fleet')}
             <Alert severity="info" sx={{ borderRadius: `${TOKENS.radius.sm}px`, maxWidth: 480, mb: 2 }}>
               Conturile fleet sunt create de RIDElance și pot fi utilizate de suport și contabil.
             </Alert>

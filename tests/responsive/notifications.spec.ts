@@ -52,6 +52,6 @@ for (const role of ['Admin', 'Contabil']) {
     await page.screenshot({ path: `test-results/notifications-${role}-${info.project.name}.png` })
     await expect(page.getByRole('button', { name: 'Deschide', exact: true }).last()).toBeVisible()
     await page.getByRole('button', { name: 'Deschide', exact: true }).last().click()
-    await expect(page).toHaveURL(new RegExp(`${root}\\?tab=${role === 'Admin' ? 'pfa' : 'clients'}`))
+    await expect(page).toHaveURL(new RegExp(`${root}\\?tab=${role === 'Admin' ? 'pfa' : 'clienti'}`))
   })
 }

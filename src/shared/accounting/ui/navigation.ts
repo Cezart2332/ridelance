@@ -37,6 +37,43 @@ export const DOSSIER_SECTION_LABEL: Record<DossierSection, string> = {
   istoric: 'Istoric',
 }
 
+/**
+ * Profilul unui client din „Clienți PFA” (dashboard-ul contabilului): dosarul contabil și
+ * spațiul de lucru vechi (venituri, taxe, bancă, cheltuieli, note, chat) într-un singur loc.
+ * Secțiunile comune cu dosarul (`declaratii`, `documente`, …) au aceleași nume, ca legăturile din
+ * luna fiscală să ducă la fel în ambele.
+ */
+export const CLIENT_SECTIONS = [
+  'prezentare',
+  'declaratii',
+  'documente',
+  'venituri',
+  'taxe',
+  'banca',
+  'tranzactii',
+  'cheltuieli',
+  'registre',
+  'setari',
+  'istoric',
+  'mesaje',
+] as const
+export type ClientSection = (typeof CLIENT_SECTIONS)[number]
+
+export const CLIENT_SECTION_LABEL: Record<ClientSection, string> = {
+  prezentare: 'Prezentare',
+  declaratii: 'Declarații',
+  documente: 'Documente',
+  venituri: 'Venituri',
+  taxe: 'Taxe',
+  banca: 'Bancă',
+  tranzactii: 'Tranzacții',
+  cheltuieli: 'Cheltuieli',
+  registre: 'Registre',
+  setari: 'Setări',
+  istoric: 'Istoric',
+  mesaje: 'Mesaje',
+}
+
 /** Precompletarea formularului de furnizor, din verificarea „furnizor necunoscut” (F2). */
 export interface SupplierPrefill {
   supplierName?: string
@@ -45,7 +82,7 @@ export interface SupplierPrefill {
 }
 
 /** Parametrii din query string care aparțin modulului. */
-const OWNED_PARAMS = ['tab', 'pfa', 'sectiune', 'luna', 'document', 'lista', 'exceptii', 'furnizor_tva', 'furnizor_tara', 'furnizor_nume']
+const OWNED_PARAMS = ['tab', 'pfa', 'sectiune', 'luna', 'user', 'section', 'document', 'lista', 'exceptii', 'furnizor_tva', 'furnizor_tara', 'furnizor_nume']
 
 export function useAccountingConfig(): AccountingConfig {
   const config = useContext(AccountingConfigContext)
@@ -82,8 +119,10 @@ export function useAccountingNav() {
 
     openPfaList: (listTab: 'active' | 'inactive' = 'active') =>
       go({ tab: tabs.pfa, lista: listTab === 'inactive' ? 'inactive' : undefined }),
-    openPfa: (pfaId: string, section: DossierSection = 'declaratii', extra: { luna?: Period; document?: string } = {}) =>
+    openPfa: (pfaId: string, section: DossierSection | ClientSection = 'declaratii', extra: { luna?: Period; document?: string } = {}) =>
       go({ tab: tabs.pfa, pfa: pfaId, sectiune: section, ...extra }),
+    /** Secțiunea brută din URL: profilul clientului are mai multe secțiuni decât dosarul. */
+    rawSection: section,
     /** Păstrează restul parametrilor (de ex. deschide un document peste tabul curent). */
     setParam: (key: string, value: string | null) => {
       const next = new URLSearchParams(params)

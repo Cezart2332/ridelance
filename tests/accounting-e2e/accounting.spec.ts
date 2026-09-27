@@ -33,7 +33,7 @@ async function open(page: Page, url: string) {
   }, url)
 }
 
-/** Rândul unui PFA din luna fiscală: se deschide ca link spre dosar. */
+/** Rândul unui PFA (luna fiscală sau „Clienți PFA”): se deschide ca link spre profilul clientului. */
 function pfa(page: Page, name: string) {
   return page.getByRole('link', { name: `Deschide dosarul ${name}` })
 }
@@ -125,9 +125,9 @@ test('dosar: setări, casa de marcat, reguli fiscale, predare și inactivare', a
   await login(page)
 
   // F5: o setare nouă se adaugă în istoric, cu „Valabil de la”; cea veche rămâne.
-  await open(page, '/contabil?tab=pfa')
+  await open(page, '/contabil?tab=clienti')
   await pfa(page, 'GEORGESCU ANA PFA').click()
-  await page.getByRole('tab', { name: 'Setări contabilitate' }).click()
+  await page.getByRole('tab', { name: 'Setări' }).click()
   await page.getByRole('button', { name: 'Modifică' }).nth(2).click()
   const setting = page.getByRole('dialog')
   await setting.getByRole('combobox').click()
@@ -164,7 +164,7 @@ test('dosar: setări, casa de marcat, reguli fiscale, predare și inactivare', a
   await expect(categories).toContainText('Parcare (PARKING)')
 
   // F7: dosarul de predare al lui Ion (job, apoi arhiva).
-  await open(page, '/contabil?tab=pfa')
+  await open(page, '/contabil?tab=clienti')
   await pfa(page, 'POPESCU ION PFA').click()
   await page.getByRole('button', { name: 'Mai multe acțiuni' }).click()
   await page.getByRole('menuitem', { name: 'Generează dosar de predare' }).click()
@@ -176,7 +176,7 @@ test('dosar: setări, casa de marcat, reguli fiscale, predare și inactivare', a
   await handover.getByRole('button', { name: 'Închide' }).click()
 
   // F7: inactivarea lui George: dosar read-only, cu termenul de păstrare.
-  await open(page, '/contabil?tab=pfa')
+  await open(page, '/contabil?tab=clienti')
   await pfa(page, 'STAN GEORGE PFA').click()
   await page.getByRole('button', { name: 'Mai multe acțiuni' }).click()
   await page.getByRole('menuitem', { name: 'Inactivează PFA' }).click()
@@ -202,4 +202,25 @@ test('registre: exportul RJIP', async ({ page }) => {
   expect(file.suggestedFilename()).toMatch(/^RJIP_12345674_.+\.pdf$/)
   // PDF-ul generat de backend (QuestPDF), nu exportul simulat al mock-ului.
   expect(readFileSync(await file.path()).subarray(0, 4).toString()).toBe('%PDF')
+})
+
+test('Clienți PFA: lista, profilul și spațiul de lucru unite', async ({ page }) => {
+  await login(page)
+  await open(page, '/contabil?tab=clienti')
+  const rows = page.getByRole('link', { name: /^Deschide dosarul / })
+  await expect(rows).toHaveCount(4)
+  await page.getByLabel('Caută client').fill('popescu')
+  await expect(rows).toHaveCount(1)
+
+  await pfa(page, 'POPESCU ION PFA').click()
+  await expect(page.getByText('CUI 12345674')).toBeVisible()
+  await expect(page.getByText('Ion.Popescu.e2e@ridelance.test')).toBeVisible()
+
+  // Venituri și notele vin din spațiul de lucru vechi al contabilului, acum în același profil.
+  await page.getByRole('tab', { name: 'Venituri' }).click()
+  await expect(page.getByRole('button', { name: 'Marchează ca procesat' })).toBeVisible()
+  await page.getByRole('tab', { name: 'Istoric' }).click()
+  await page.getByPlaceholder('Notă vizibilă doar contabililor').fill('Extras verificat')
+  await page.getByRole('button', { name: 'Adaugă notă' }).click()
+  await expect(page.getByText('Extras verificat')).toBeVisible()
 })

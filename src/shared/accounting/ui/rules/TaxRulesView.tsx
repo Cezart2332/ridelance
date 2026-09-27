@@ -82,9 +82,6 @@ function ExchangeRateLookup() {
     <Paper sx={{ p: 2.5 }}>
       <Stack spacing={2}>
         <Typography variant="h2">Curs valutar</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Cursul folosit la conversia facturilor în valută. Sursa și ziua cursului sunt DE CONFIRMAT cu contabilul.
-        </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2 }}>
           <TextField label="Monedă" value={currency} onChange={(event) => setCurrency(event.target.value.toUpperCase())} />
           <TextField type="date" label="Data" value={date} onChange={(event) => setDate(event.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
@@ -131,12 +128,7 @@ export function TaxRulesView() {
 
   return (
     <Stack spacing={3}>
-      <Stack spacing={0.5}>
-        <Typography variant="h1">Reguli fiscale</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Cote, furnizori și scheme cu perioadă de valabilitate. Declarațiile deja generate păstrează regulile din momentul generării.
-        </Typography>
-      </Stack>
+      <Typography variant="h1">Reguli fiscale</Typography>
 
       <Paper sx={{ px: 1 }}>
         <Tabs value={section} onChange={(_, value: Section) => setSection(value)} variant="scrollable" allowScrollButtonsMobile>
@@ -149,7 +141,6 @@ export function TaxRulesView() {
       {section === 'furnizori' && (
         <RuleTable<SupplierTaxProfile>
           title="Registrul de furnizori"
-          description="Entitățile platformelor, cu cota D100 și certificatul de rezidență."
           resource={accountingApi.rules.suppliers}
           fields={supplierFields}
           empty={SUPPLIER_EMPTY}
@@ -202,7 +193,6 @@ export function TaxRulesView() {
       {section === 'd100' && (
         <RuleTable<D100Rule>
           title="Reguli D100"
-          description="D100_RENT_INDIVIDUAL rămâne dezactivată până la confirmarea regulii (bază, cotă, sursa datelor)."
           resource={accountingApi.rules.d100}
           fields={[
             { key: 'code', label: 'Cod', kind: 'select', options: D100_RULE_CODES.map((code) => ({ value: code, label: code })) },
@@ -231,7 +221,6 @@ export function TaxRulesView() {
       {section === 'anaf' && (
         <RuleTable<AnafDeclarationSchema>
           title="Scheme ANAF"
-          description="Versiunea XSD și a validatorului, selectată după perioada declarației. Fișierele XSD oficiale se încarcă în B4."
           resource={accountingApi.rules.anafSchemas}
           fields={[
             { key: 'declarationType', label: 'Declarație', kind: 'select', options: DECLARATION_TYPES.map((type) => ({ value: type, label: type })) },
@@ -252,7 +241,6 @@ export function TaxRulesView() {
       {section === 'categorii' && (
         <RuleTable<ExpenseCategoryRule>
           title="Categorii de cheltuieli"
-          description="Clasificarea deterministă a tranzacțiilor. Pentru cheltuielile auto, procentul vine din setarea de deductibilitate a PFA-ului."
           resource={accountingApi.rules.expenseCategories}
           fields={[
             { key: 'category', label: 'Cod categorie', kind: 'text' },

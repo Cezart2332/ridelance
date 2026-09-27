@@ -20,6 +20,8 @@ export interface DossierTabProps {
   summary: PfaAccountingSummary
   /** Reîncarcă antetul (statusul lunii, cash-ul, starea dosarului) după o acțiune din tab. */
   onSummaryChanged: () => void
+  /** Luna se alege din antetul paginii (profilul clientului), nu din tab. */
+  periodInHeader?: boolean
 }
 
 function initials(name: string): string {

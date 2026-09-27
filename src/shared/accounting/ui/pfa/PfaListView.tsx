@@ -35,12 +35,7 @@ export function PfaListView() {
 
   return (
     <Stack spacing={3}>
-      <Stack spacing={0.5}>
-        <Typography variant="h1">PFA</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Contabilitatea PFA-urilor în sistem real: declarații, documente Uber/Bolt, tranzacții și registre.
-        </Typography>
-      </Stack>
+      <Typography variant="h1">PFA</Typography>
 
       <Paper>
         <Stack

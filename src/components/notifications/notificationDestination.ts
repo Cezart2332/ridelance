@@ -31,7 +31,8 @@ export function notificationDestination(notification: Notification, role: string
   const type = notification.type
   if (!TITLES[type]) return null
   if (role === 'Admin' || role === 'Contabil') {
-    const tab = role === 'Admin' ? (type === 'ChatRoomMessage' ? 'chat' : 'pfa') : 'clients'
+    // Contabilul: „Clienți PFA”, care deschide profilul clientului după `user` și `section`.
+    const tab = role === 'Admin' ? (type === 'ChatRoomMessage' ? 'chat' : 'pfa') : 'clienti'
     const query = new URLSearchParams({ tab })
     if (notification.relatedUserId) query.set('user', notification.relatedUserId)
     if (type === 'DocumentUploaded' || type === 'DocumentExpiringSoon') query.set('section', 'documents')

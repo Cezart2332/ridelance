@@ -492,9 +492,6 @@ export function TransactionsTab({ summary, onSummaryChanged }: DossierTabProps) 
               <Typography variant="body2">Data: {formatDate(zReport.extracted.date)}</Typography>
               <Typography variant="body2">Nr. Z: {zReport.extracted.zNumber ?? EMPTY}</Typography>
               <Typography variant="body2">Total: {formatLei(zReport.extracted.total)}</Typography>
-              <Typography variant="caption" color="text.secondary">
-                Verifică valorile cu raportul; la confirmare, încasarea în numerar intră în registru ca verificată.
-              </Typography>
             </Stack>
           )}
         </DialogContent>

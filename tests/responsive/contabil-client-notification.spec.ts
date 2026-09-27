@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { notificationDestination } from '../../src/components/notifications/notificationDestination'
 import { requestedAccountingMonth } from '../../src/utils/accountingPeriod'
+import { mockAccountingClient } from './fixtures/accountingClient'
 
 const PFA_ID = '11111111-1111-1111-1111-111111111111'
 const CLIENT_USER_ID = '22222222-2222-2222-2222-222222222222'
@@ -16,6 +17,7 @@ async function mock(page: Page, sent: unknown[]) {
     sent.push(route.request().postDataJSON())
     await route.fulfill({ json: { notificationId: '33333333-3333-3333-3333-333333333333', pushSent: 1 } })
   })
+  await mockAccountingClient(page, { pfaId: PFA_ID, userId: CLIENT_USER_ID, name: 'POPESCU ION PFA', email: 'ion@example.test' })
 }
 
 test('notificarea contabilului duce clientul în secțiunea aleasă', () => {
@@ -34,9 +36,16 @@ test('luna contabilă: până pe 25 luna trecută, de pe 26 luna curentă (ora R
 test('contabilul trimite o notificare clientului din fișa lui', async ({ page }, info) => {
   const sent: unknown[] = []
   await mock(page, sent)
+  // Legătura veche din notificări (`tab=clients&user=`) deschide profilul clientului.
   await page.goto(`/contabil?tab=clients&user=${CLIENT_USER_ID}`)
 
-  await page.getByRole('button', { name: 'Trimite notificare', exact: true }).click()
+  if (info.project.name === 'mobile') {
+    // Pe telefon, acțiunea stă în meniul „⋯” al profilului.
+    await page.getByRole('button', { name: 'Mai multe acțiuni' }).click()
+    await page.getByRole('menuitem', { name: 'Trimite notificare' }).click()
+  } else {
+    await page.getByRole('button', { name: 'Trimite notificare', exact: true }).click()
+  }
   const dialog = page.getByRole('dialog')
   await dialog.getByRole('button', { name: 'Documente lunare', exact: true }).click()
   await expect(dialog.getByLabel('Mesaj')).toHaveValue(/Te rog să încarci documentele pentru .+ până pe 25 /)

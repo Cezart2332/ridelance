@@ -67,9 +67,6 @@ export function HandoverDialog({ summary, onClose }: { summary: PfaAccountingSum
           >
             {handoverTree(summary.cui, year, true)}
           </Box>
-          <Typography variant="caption" color="text.secondary">
-            REF și RJIP sunt „situație intermediară” dacă anul nu e închis. Structura exactă e DE CONFIRMAT din documentul clientului.
-          </Typography>
           {job && <JobProgress job={job} onClose={() => undefined} />}
         </Stack>
       </DialogContent>

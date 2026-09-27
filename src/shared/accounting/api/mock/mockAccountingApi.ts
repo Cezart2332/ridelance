@@ -28,6 +28,7 @@ import type {
   LedgerEntry,
   OverviewRow,
   PfaAccountingSettings,
+  ClientContact,
   PfaAccountingSummary,
   PfaListItem,
   PfaMonthStatus,
@@ -212,6 +213,12 @@ function monthStatusOf(pfa: MockPfa, period: Period): PfaMonthStatus {
   return pfa.monthStatus[period]?.status ?? 'NOT_PROCESSED'
 }
 
+/** Titularul simulat: derivat din id și nume, ca să fie stabil între reîncărcări. */
+function clientOf(pfa: MockPfa): ClientContact {
+  const slug = normalizeSearch(pfa.name).replace(/\bpfa\b/g, '').trim().split(/\s+/).join('.')
+  return { userId: `user-${pfa.id}`, email: `${slug}@exemplu.ro`, phone: null }
+}
+
 function toSummary(pfa: MockPfa): PfaAccountingSummary {
   const date = settingsDate(pfa)
   const art317 = art317At(pfa, date)
@@ -233,6 +240,7 @@ function toSummary(pfa: MockPfa): PfaAccountingSummary {
     readOnly: pfa.engagement.status === 'INACTIVE',
     retentionUntil:
       pfa.engagement.status === 'INACTIVE' && endDate ? retentionUntil(Number(endDate.slice(0, 4)), yearsAfter, startMonthDay) : null,
+    client: clientOf(pfa),
   }
 }
 
@@ -1028,6 +1036,7 @@ export function createMockAccountingApi(): AccountingApi {
                 currentPeriod: summary.currentPeriod,
                 currentMonthStatus: summary.currentMonthStatus,
                 cashStatus: pfa.cash.status,
+                client: summary.client,
               }
             })
         }),

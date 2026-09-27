@@ -187,14 +187,14 @@ export function DeductibleExpensesPanel({
         boxShadow: DASHBOARD_TOKENS.shadow.sm,
       }}
     >
-      <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>
+      <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: contabilContext ? 2 : 0 }}>
         Cheltuieli deductibile
       </Typography>
-      <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.7, fontSize: '0.85rem', mb: 2 }}>
-        {contabilContext
-          ? 'Vizualizează facturile de cheltuieli deductibile adăugate de client.'
-          : 'Alege tipul din catalog, suma în lei (opțional) și încarcă factura.'}
-      </Typography>
+      {!contabilContext && (
+        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.7, fontSize: '0.85rem', mb: 2 }}>
+          Alege tipul din catalog, suma în lei (opțional) și încarcă factura.
+        </Typography>
+      )}
 
       {propYear === undefined || propMonth === undefined ? (
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
