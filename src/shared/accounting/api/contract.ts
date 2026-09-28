@@ -56,6 +56,8 @@ import type {
   ValidationResult,
   VatRate,
   VatRegistration,
+  AnafConnection,
+  PfaEFactura,
   VatRegistrationFileKind,
   ZReportUploadResult,
 } from './types'
@@ -114,6 +116,19 @@ export interface AccountingApi {
   /** Portofoliul (contabilul: clienții alocați; adminul: toți), cu luna, banca și mesajele. */
   clients: {
     list(period: Period): Promise<ClientWorkspaceRow[]>
+  }
+
+  /** Conexiunea ANAF (OAuth, certificatul împuternicitului) și e-Factura pe clienți. */
+  anaf: {
+    connection(): Promise<AnafConnection>
+    /** Adresa ANAF la care se trimite adminul; după autorizare revine la `returnPath`. */
+    start(returnPath: string): Promise<string>
+    disconnect(): Promise<void>
+    forPfa(pfaId: string): Promise<PfaEFactura>
+    connectPfa(pfaId: string): Promise<void>
+    sync(pfaId: string): Promise<{ newMessages: number; downloaded: number }>
+    disablePfa(pfaId: string): Promise<void>
+    getFile(messageId: string, kind: 'xml' | 'pdf'): Promise<Blob>
   }
 
   /** Cererile D700 pentru codul de TVA art. 317, generate din onboarding. */

@@ -517,6 +517,57 @@ export interface VatRegistration {
 
 export type VatRegistrationFileKind = 'xml' | 'pdf' | 'certificate'
 
+/** Conexiunea OAuth cu ANAF a împuternicitului (adminul), făcută cu certificatul lui. */
+export interface AnafConnection {
+  /** ClientId și ClientSecret există pe server. */
+  configured: boolean
+  /** `null` = neconectat. */
+  status: 'ACTIVE' | 'EXPIRED' | 'DISCONNECTED' | null
+  connectedBy: string | null
+  connectedAtUtc: string | null
+  accessExpiresAtUtc: string | null
+  refreshExpiresAtUtc: string | null
+  lastError: string | null
+}
+
+export type AnafPfaLinkStatus = 'ACTIVE' | 'NO_ACCESS' | 'DISABLED'
+
+export interface AnafPfaLink {
+  status: AnafPfaLinkStatus
+  enabledAtUtc: string
+  lastSyncAtUtc: string | null
+  lastError: string | null
+}
+
+export type EFacturaMessageKind = 'RECEIVED' | 'SENT' | 'ERROR' | 'BUYER_MESSAGE' | 'OTHER'
+
+/** Un mesaj e-Factura al unui PFA, cu datele facturii citite din XML. */
+export interface EFacturaMessage {
+  id: string
+  kind: EFacturaMessageKind
+  anafType: string
+  createdAtUtc: string
+  invoiceNumber: string | null
+  issueDate: string | null
+  supplierName: string | null
+  supplierCif: string | null
+  customerName: string | null
+  customerCif: string | null
+  currency: string | null
+  totalAmount: number | null
+  vatAmount: number | null
+  downloaded: boolean
+  downloadError: string | null
+  details: string | null
+}
+
+/** Tabul „ANAF” din fișa clientului. */
+export interface PfaEFactura {
+  connection: AnafConnection
+  link: AnafPfaLink | null
+  messages: EFacturaMessage[]
+}
+
 /** Un rând din „Clienți PFA” și „Rezumat” (`GET accounting/clients?period=`). */
 export interface ClientWorkspaceRow {
   pfaId: string

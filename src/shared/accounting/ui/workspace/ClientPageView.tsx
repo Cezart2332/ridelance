@@ -23,6 +23,7 @@ import { useDossierMenu } from '../pfa/useDossierMenu'
 import { RegistersTab } from '../registers/RegistersTab'
 import { SettingsTab } from '../settings/SettingsTab'
 import { useApi } from '../useApi'
+import { AnafTab } from './AnafTab'
 import { MonthTab } from './MonthTab'
 import { Avatar, MonthSelect, PageTitle } from './parts'
 import { currentFiscalPeriod, INK } from './status'
@@ -131,6 +132,7 @@ export function ClientPageView({ pfaId }: { pfaId: string }) {
         )}
         {section === 'registre' && <RegistersTab {...tabProps} />}
         {section === 'mesaje' && userId && <ProfessionalChatBox clientUserId={userId} clientName={pfa.name} />}
+        {section === 'anaf' && <AnafTab pfaId={pfa.id} />}
         {section === 'setari' && <SettingsTab {...tabProps} />}
         {section === 'istoric' && <ClientHistorySection pfaId={pfa.id} year={year} month={month} refreshKey={historyKey} />}
       </Box>

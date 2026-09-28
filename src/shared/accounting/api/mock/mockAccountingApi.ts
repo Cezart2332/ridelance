@@ -31,6 +31,9 @@ import type {
   ClientContact,
   ClientWorkspaceRow,
   VatRegistration,
+  AnafConnection,
+  AnafPfaLink,
+  EFacturaMessage,
   PfaAccountingSummary,
   PfaListItem,
   PfaMonthStatus,
@@ -89,7 +92,54 @@ let generation = 0
 export function resetMockAccountingDb(): void {
   db = createFixtureDb()
   vatRequests = null
+  anafConnection = null
+  anafLinks = {}
   generation++
+}
+
+/** e-Factura în mock: conexiunea „se face” direct, iar un client conectat primește două facturi. */
+let anafConnection: AnafConnection | null = null
+let anafLinks: Record<string, { link: AnafPfaLink; messages: EFacturaMessage[] }> = {}
+
+function anafState(): AnafConnection {
+  return anafConnection ?? { configured: true, status: null, connectedBy: null, connectedAtUtc: null, accessExpiresAtUtc: null, refreshExpiresAtUtc: null, lastError: null }
+}
+
+function mockEFactura(pfaId: string): EFacturaMessage[] {
+  const pfa = db.pfas.find((item) => item.id === pfaId)
+  const base = { downloaded: true, downloadError: null, currency: 'RON', details: null }
+  return [
+    {
+      ...base,
+      id: `ef-${pfaId}-1`,
+      kind: 'RECEIVED',
+      anafType: 'FACTURA PRIMITA',
+      createdAtUtc: nowIso(),
+      invoiceNumber: 'OMV-2026-0915',
+      issueDate: todayIso(),
+      supplierName: 'OMV PETROM MARKETING SRL',
+      supplierCif: 'RO11201891',
+      customerName: pfa?.name ?? null,
+      customerCif: pfa?.cui ?? null,
+      totalAmount: 363,
+      vatAmount: 63,
+    },
+    {
+      ...base,
+      id: `ef-${pfaId}-2`,
+      kind: 'SENT',
+      anafType: 'FACTURA TRIMISA',
+      createdAtUtc: nowIso(),
+      invoiceNumber: 'RDL-0042',
+      issueDate: todayIso(),
+      supplierName: pfa?.name ?? null,
+      supplierCif: pfa?.cui ?? null,
+      customerName: 'CLIENT CURSĂ SRL',
+      customerCif: 'RO45000000',
+      totalAmount: 120,
+      vatAmount: 0,
+    },
+  ]
 }
 
 /** Cererile D700 ale mock-ului; prima listare pornește cu una de verificat. */
@@ -1367,6 +1417,50 @@ export function createMockAccountingApi(): AccountingApi {
               }
             })
         }),
+    },
+
+    anaf: {
+      connection: () => respond(() => anafState()),
+      start: (returnPath) =>
+        respond(() => {
+          anafConnection = {
+            configured: true,
+            status: 'ACTIVE',
+            connectedBy: 'Admin RIDElance',
+            connectedAtUtc: nowIso(),
+            accessExpiresAtUtc: new Date(Date.now() + 90 * 86_400_000).toISOString(),
+            refreshExpiresAtUtc: new Date(Date.now() + 365 * 86_400_000).toISOString(),
+            lastError: null,
+          }
+          return `${returnPath}${returnPath.includes('?') ? '&' : '?'}anaf=conectat`
+        }),
+      disconnect: () =>
+        respond(() => {
+          anafConnection = null
+        }),
+      forPfa: (pfaId) =>
+        respond(() => ({ connection: anafState(), link: anafLinks[pfaId]?.link ?? null, messages: anafLinks[pfaId]?.messages ?? [] })),
+      connectPfa: (pfaId) =>
+        respond(() => {
+          if (anafState().status !== 'ACTIVE') throw badRequest('NOT_CONNECTED', 'Contul ANAF nu e conectat. Conectează-l cu certificatul.')
+          anafLinks[pfaId] = { link: { status: 'ACTIVE', enabledAtUtc: nowIso(), lastSyncAtUtc: nowIso(), lastError: null }, messages: mockEFactura(pfaId) }
+        }),
+      sync: (pfaId) =>
+        respond(() => {
+          const entry = anafLinks[pfaId]
+          if (!entry || entry.link.status !== 'ACTIVE') throw badRequest('NOT_LINKED', 'Clientul nu e conectat la e-Factura.')
+          entry.link.lastSyncAtUtc = nowIso()
+          return { newMessages: 0, downloaded: 0 }
+        }),
+      disablePfa: (pfaId) =>
+        respond(() => {
+          const entry = anafLinks[pfaId]
+          if (entry) entry.link.status = 'DISABLED'
+        }),
+      getFile: (messageId, kind) =>
+        respond(() =>
+          kind === 'xml' ? new Blob([`<Invoice id="${messageId}"/>`], { type: 'application/xml' }) : textPdf(`Factura ${messageId}`, ['e-Factura']),
+        ),
     },
 
     vatRegistrations: {

@@ -51,9 +51,9 @@ async function toApiError(error: unknown): Promise<AccountingApiError> {
   return new AccountingApiError(error.response.status, contractCode(title), message, Object.keys(details).length ? details : null)
 }
 
-async function call<T>(config: AxiosRequestConfig): Promise<T> {
+async function call<T>(config: AxiosRequestConfig, prefix = PREFIX): Promise<T> {
   try {
-    const response = await api.request<T>({ ...config, url: `${PREFIX}/${config.url}` })
+    const response = await api.request<T>({ ...config, url: `${prefix}/${config.url}` })
     return response.data
   } catch (error) {
     throw await toApiError(error)
@@ -123,6 +123,16 @@ export function createHttpAccountingApi(): AccountingApi {
     },
     clients: {
       list: (period) => get('clients', { period }),
+    },
+    anaf: {
+      connection: () => call({ method: 'GET', url: 'connection' }, 'anaf'),
+      start: async (returnPath) => (await call<{ url: string }>({ method: 'POST', url: 'oauth/start', data: { returnPath } }, 'anaf')).url,
+      disconnect: () => call({ method: 'DELETE', url: 'connection' }, 'anaf'),
+      forPfa: (pfaId) => get(`pfas/${pfaId}/efactura`),
+      connectPfa: (pfaId) => post(`pfas/${pfaId}/efactura/connect`),
+      sync: (pfaId) => post(`pfas/${pfaId}/efactura/sync`),
+      disablePfa: (pfaId) => remove(`pfas/${pfaId}/efactura`),
+      getFile: (messageId, kind) => blob(`efactura/${messageId}/${kind}`),
     },
     vatRegistrations: {
       list: () => get('vat-registrations'),
