@@ -55,6 +55,8 @@ import type {
   UploadReceiptRequest,
   ValidationResult,
   VatRate,
+  VatRegistration,
+  VatRegistrationFileKind,
   ZReportUploadResult,
 } from './types'
 
@@ -112,6 +114,20 @@ export interface AccountingApi {
   /** Portofoliul (contabilul: clienții alocați; adminul: toți), cu luna, banca și mesajele. */
   clients: {
     list(period: Period): Promise<ClientWorkspaceRow[]>
+  }
+
+  /** Cererile D700 pentru codul de TVA art. 317, generate din onboarding. */
+  vatRegistrations: {
+    list(): Promise<VatRegistration[]>
+    /** Cererea unui PFA (profilul de onboarding); `null` dacă nu există. */
+    forPfa(pfaId: string): Promise<VatRegistration | null>
+    /** Generează sau regenerează D700 din datele actuale ale PFA-ului. */
+    generate(pfaId: string): Promise<VatRegistration>
+    /** Validatorul ANAF și PDF-ul de semnat. */
+    validate(id: string): Promise<VatRegistration>
+    transition(id: string, to: 'APPROVED' | 'REJECTED' | 'SUBMITTED', note?: string): Promise<VatRegistration>
+    registerCode(id: string, request: { vatCode: string; validFrom: string; file?: File }): Promise<VatRegistration>
+    getFile(id: string, kind: VatRegistrationFileKind): Promise<Blob>
   }
 
   /** Joburile lunii; cu `pfaId`, doar pentru un client (pagina clientului). */

@@ -30,6 +30,7 @@ import type {
   PfaAccountingSettings,
   ClientContact,
   ClientWorkspaceRow,
+  VatRegistration,
   PfaAccountingSummary,
   PfaListItem,
   PfaMonthStatus,
@@ -87,7 +88,56 @@ let generation = 0
 /** Readuce mock-ul la fixtures (pagina de debug, testele). */
 export function resetMockAccountingDb(): void {
   db = createFixtureDb()
+  vatRequests = null
   generation++
+}
+
+/** Cererile D700 ale mock-ului; prima listare pornește cu una de verificat. */
+let vatRequests: VatRegistration[] | null = null
+
+function vatList(): VatRegistration[] {
+  if (vatRequests) return vatRequests
+  const pfa = db.pfas[db.pfas.length - 1]
+  vatRequests = pfa ? [newVatRequest(pfa.id, 'READY_FOR_REVIEW')] : []
+  return vatRequests
+}
+
+function newVatRequest(pfaId: string, status: VatRegistration['status']): VatRegistration {
+  const pfa = db.pfas.find((item) => item.id === pfaId)
+  if (!pfa) throw notFound('PFA-ul')
+  const client = clientOf(pfa)
+  return {
+    id: nextId('d700'),
+    pfaId,
+    userId: client.userId,
+    clientName: pfa.name,
+    cui: pfa.cui,
+    status,
+    period: todayIso().slice(0, 7),
+    missingData: null,
+    rejectionReason: null,
+    vatCode: null,
+    vatCodeValidFrom: null,
+    hasXml: true,
+    hasPdf: status === 'READY_FOR_REVIEW',
+    hasCertificate: false,
+    errors: [],
+    warnings: status === 'READY_FOR_REVIEW' ? ['Formularul urmează să fie prelucrat la organul fiscal competent.'] : [],
+    createdAtUtc: nowIso(),
+    updatedAtUtc: nowIso(),
+  }
+}
+
+function vatRequest(id: string): VatRegistration {
+  const request = vatList().find((item) => item.id === id)
+  if (!request) throw notFound('Cererea D700')
+  return request
+}
+
+const VAT_FROM: Record<'APPROVED' | 'REJECTED' | 'SUBMITTED', VatRegistration['status'][]> = {
+  APPROVED: ['READY_FOR_REVIEW'],
+  REJECTED: ['GENERATED', 'VALIDATION_FAILED', 'READY_FOR_REVIEW', 'APPROVED'],
+  SUBMITTED: ['APPROVED'],
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1316,6 +1366,57 @@ export function createMockAccountingApi(): AccountingApi {
                 unreadMessages: 0,
               }
             })
+        }),
+    },
+
+    vatRegistrations: {
+      list: () => respond(() => [...vatList()].sort((a, b) => a.clientName.localeCompare(b.clientName, 'ro'))),
+      forPfa: (pfaId) => respond(() => vatList().find((item) => item.pfaId === pfaId) ?? null),
+      generate: (pfaId) =>
+        respond(() => {
+          const list = vatList()
+          const existing = list.find((item) => item.pfaId === pfaId)
+          if (existing && ['APPROVED', 'SUBMITTED', 'REGISTERED'].includes(existing.status)) {
+            throw conflict('LOCKED', 'Cererea D700 e deja aprobată sau depusă; nu se mai regenerează.')
+          }
+          const fresh = newVatRequest(pfaId, 'GENERATED')
+          if (existing) Object.assign(existing, { ...fresh, id: existing.id, createdAtUtc: existing.createdAtUtc })
+          else list.push(fresh)
+          return existing ?? fresh
+        }),
+      validate: (id) =>
+        respond(() => {
+          const request = vatRequest(id)
+          Object.assign(request, { status: 'READY_FOR_REVIEW', hasPdf: true, errors: [], updatedAtUtc: nowIso() })
+          return request
+        }),
+      transition: (id, to, note) =>
+        respond(() => {
+          const request = vatRequest(id)
+          if (!VAT_FROM[to].includes(request.status)) throw conflict('WRONG_STATUS', 'Acțiunea nu e posibilă în starea curentă.')
+          const reason = to === 'REJECTED' ? requireReason(note, 'Motivul respingerii') : null
+          Object.assign(request, { status: to, rejectionReason: reason ?? request.rejectionReason, updatedAtUtc: nowIso() })
+          return request
+        }),
+      registerCode: (id, { vatCode, validFrom, file }) =>
+        respond(() => {
+          const request = vatRequest(id)
+          if (!['APPROVED', 'SUBMITTED'].includes(request.status)) throw conflict('WRONG_STATUS', 'Acțiunea nu e posibilă în starea curentă.')
+          const code = vatCode.toUpperCase().replace(/[^A-Z0-9]/g, '')
+          if (!/^RO\d{2,10}$/.test(code)) throw badRequest('INVALID_VAT_CODE', 'Codul de TVA art. 317 trebuie să fie „RO” urmat de un cod fiscal valid.')
+          Object.assign(request, {
+            status: 'REGISTERED',
+            vatCode: code,
+            vatCodeValidFrom: requireDate(validFrom, 'Valabil de la'),
+            hasCertificate: Boolean(file),
+            updatedAtUtc: nowIso(),
+          })
+          return request
+        }),
+      getFile: (id, kind) =>
+        respond(() => {
+          const request = vatRequest(id)
+          return kind === 'xml' ? new Blob([`<D700 cif="${request.cui ?? ''}"/>`], { type: 'application/xml' }) : textPdf(`D700 ${request.clientName}`, [`CUI ${request.cui ?? ''}`])
         }),
     },
 

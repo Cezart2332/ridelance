@@ -6,6 +6,7 @@ import type {
   DeclarationType,
   PfaMonthStatus,
   Period,
+  VatRegistrationStatus,
 } from '../../api/types'
 
 /**
@@ -35,6 +36,18 @@ export interface Cell {
   label: string
   /** Motivul complet, pentru tooltip. */
   title?: string
+}
+
+/** Starea unei cereri D700, într-un cuvânt. */
+export const VAT_STATUS_CELL: Record<VatRegistrationStatus, Cell> = {
+  WAITING_FOR_DATA: { tone: 'red', label: 'Lipsesc date' },
+  GENERATED: { tone: 'gray', label: 'Neverificată' },
+  VALIDATION_FAILED: { tone: 'red', label: 'Validare picată' },
+  READY_FOR_REVIEW: { tone: 'yellow', label: 'De verificat' },
+  APPROVED: { tone: 'blue', label: 'De depus' },
+  REJECTED: { tone: 'red', label: 'Respinsă' },
+  SUBMITTED: { tone: 'blue', label: 'Depusă' },
+  REGISTERED: { tone: 'green', label: 'Cod primit' },
 }
 
 /** Luna fiscală de lucru: luna trecută (declarațiile se depun până pe 25 a lunii curente). */

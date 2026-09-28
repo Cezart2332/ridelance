@@ -186,3 +186,40 @@ test('admin: lista și dosarul PFA se reîmprospătează singure la 10 secunde �
   await page.getByRole('button', { name: 'Reîmprospătează' }).click()
   await expect(page.getByRole('article', { name: 'Cazier.pdf' })).toBeVisible()
 })
+
+test('admin: la „Nu” pe TVA intracomunitar, D700 generat apare la pasul fiscal', async ({ page }, info) => {
+  await mockAdmin(page)
+  const approvals: unknown[] = []
+  const d700 = {
+    id: 'd700-1', pfaId: client.id, userId: client.userId, clientName: 'IONESCU ANDREI PFA', cui: '41000105', status: 'READY_FOR_REVIEW', period: '2026-09',
+    missingData: null, rejectionReason: null, vatCode: null, vatCodeValidFrom: null, hasXml: true, hasPdf: true, hasCertificate: false,
+    errors: [], warnings: [], createdAtUtc: '2026-09-15T09:00:00Z', updatedAtUtc: '2026-09-15T09:01:00Z',
+  }
+  await page.route('**/pfa-registrations/*/onboarding', (route) => route.fulfill({ json: { pfaRegistrationId: client.id, pfaStatus: 'Pending', sections: [], steps: [
+    { key: 'eligibility', status: 'Completed', state: 'completed' },
+    { key: 'pfa', status: 'Completed', state: 'completed' },
+    { key: 'fiscal', status: 'AwaitingValidation', state: 'pending_admin' },
+  ] } }))
+  await page.route('**/admin/onboarding/*/steps/fiscal', (route) => route.fulfill({ json: {
+    step2: { pfaRegistrationId: client.id, fiscal: { vatAnswer: 'No', vatRegistrationKind: 'None' }, bank: null, oblio: null, signature: null },
+    bank: null,
+    declaredIban: null,
+  } }))
+  await page.route(`**/accounting/pfas/${client.id}/vat-registration`, (route) => route.fulfill({ json: d700 }))
+  await page.route('**/accounting/vat-registrations/d700-1/transitions', (route) => {
+    approvals.push(route.request().postDataJSON())
+    return route.fulfill({ json: { ...d700, status: 'APPROVED' } })
+  })
+  await page.goto('/admin?tab=pfa&user=client-review')
+
+  const fiscal = page.locator('#step-fiscal')
+  await expect(fiscal.getByText('D700 · cod TVA art. 317')).toBeVisible()
+  await expect(fiscal.getByText('De verificat', { exact: true })).toBeVisible()
+  await expect(fiscal.getByRole('button', { name: 'PDF' })).toBeVisible()
+  await fiscal.getByText('D700 · cod TVA art. 317').scrollIntoViewIfNeeded()
+  await fiscal.screenshot({ path: `test-results/admin-d700-${info.project.name}.png` })
+
+  await fiscal.getByRole('button', { name: 'Aprobă' }).click()
+  await expect(fiscal.getByText('De depus', { exact: true })).toBeVisible()
+  expect(approvals).toEqual([{ to: 'APPROVED' }])
+})

@@ -15,6 +15,8 @@ import type { AccountingRole, Period } from '../api/types'
 export interface AccountingTabs {
   /** „Rezumat”. */
   today?: string
+  /** „Cod TVA”: cererile D700. */
+  vat?: string
   pfa: string
   declarations: string
   rules: string

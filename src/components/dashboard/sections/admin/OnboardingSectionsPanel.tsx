@@ -26,6 +26,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 
 import { TOKENS } from '../../../../constants/tokens'
 import AdminExtractedFields from './AdminExtractedFields'
+import { VatRegistrationBlock } from '../../../../shared/accounting/ui/workspace/VatRegistrationCard'
 import { DocumentRejectDialog } from './DocumentRejectDialog'
 import { DocumentRow, SectionSkeleton } from '../../../admin'
 import { documentService, type DocumentSummary } from '../../../../services/document.service'
@@ -264,6 +265,12 @@ function FiscalReview({ pfaId, refreshKey }: { pfaId: string; refreshKey: number
         value={step2.fiscal ? (VAT_LABELS[step2.fiscal.vatAnswer] ?? step2.fiscal.vatAnswer) : 'Fără răspuns'}
         emphasis={step2.fiscal ? undefined : 'warning'}
       />
+      {/* „Nu”: codul îl obținem noi, cu D700 generat automat și verificat de contabil. */}
+      {step2.fiscal?.vatAnswer === 'No' && (
+        <Box sx={{ my: 1.5, p: 2, border: '1px solid rgba(0,0,0,0.08)', borderRadius: 2 }}>
+          <VatRegistrationBlock pfaId={pfaId} />
+        </Box>
+      )}
       <Fact
         label="Bancă (open banking)"
         value={

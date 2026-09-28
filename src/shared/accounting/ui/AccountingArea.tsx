@@ -13,18 +13,21 @@ import { TaxRulesView } from './rules/TaxRulesView'
 import { ClientPageView } from './workspace/ClientPageView'
 import { ClientsTableView } from './workspace/ClientsTableView'
 import { TodayView } from './workspace/TodayView'
+import { VatRegistrationsView } from './workspace/VatRegistrationsView'
 
 /**
  * `today` = „Rezumat”; `clients` = „Clienți PFA” (tabelul cu semafoare și fișa clientului),
- * la contabil și la admin. `pfa` = lista și dosarul vechi, păstrate pentru legăturile existente.
+ * la contabil și la admin; `vat` = „Cod TVA” (cererile D700). `pfa` = lista și dosarul vechi,
+ * păstrate pentru legăturile existente.
  */
-export type AccountingView = 'pfa' | 'clients' | 'today' | 'declarations' | 'rules'
+export type AccountingView = 'pfa' | 'clients' | 'today' | 'declarations' | 'rules' | 'vat'
 
 function AccountingContent({ view }: { view: AccountingView }) {
   const nav = useAccountingNav()
   if (view === 'declarations') return <MonthDashboardView />
   if (view === 'rules') return <TaxRulesView />
   if (view === 'today') return <TodayView />
+  if (view === 'vat') return <VatRegistrationsView />
   if (view === 'clients') return nav.pfaId ? <ClientPageView key={nav.pfaId} pfaId={nav.pfaId} /> : <ClientsTableView />
   return nav.pfaId ? <PfaDossierView key={nav.pfaId} pfaId={nav.pfaId} /> : <PfaListView />
 }

@@ -2,7 +2,7 @@ import axios, { type AxiosRequestConfig } from 'axios'
 import { api } from '../../../lib/axios'
 import type { AccountingApi, RuleResource } from './contract'
 import { AccountingApiError } from './errors'
-import type { CashPreference, ExchangeRate, ValidationResult } from './types'
+import type { CashPreference, ExchangeRate, ValidationResult, VatRegistration } from './types'
 
 /**
  * Implementarea HTTP a contractului (B9), peste instanța `api` din `lib/axios` (token, refresh).
@@ -123,6 +123,16 @@ export function createHttpAccountingApi(): AccountingApi {
     },
     clients: {
       list: (period) => get('clients', { period }),
+    },
+    vatRegistrations: {
+      list: () => get('vat-registrations'),
+      forPfa: async (pfaId) => orNull(await get<VatRegistration | ''>(`pfas/${pfaId}/vat-registration`)),
+      generate: (pfaId) => post(`pfas/${pfaId}/vat-registration`),
+      validate: (id) => post(`vat-registrations/${id}/validate`),
+      transition: (id, to, note) => post(`vat-registrations/${id}/transitions`, { to, note }),
+      registerCode: (id, request) =>
+        post(`vat-registrations/${id}/vat-code`, form({ vatCode: request.vatCode, validFrom: request.validFrom, file: request.file })),
+      getFile: (id, kind) => blob(`vat-registrations/${id}/${kind}`),
     },
     months: {
       getOverview: (period) => get(`periods/${period}/overview`),

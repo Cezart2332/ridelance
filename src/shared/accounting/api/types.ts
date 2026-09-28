@@ -481,6 +481,42 @@ export type ClientStage = 'ACTIVE' | 'ONBOARDING' | 'INACTIVE'
 /** Starea conexiunii open banking a clientului. */
 export type BankConnectionStatus = 'CREATED' | 'PENDING' | 'LINKED' | 'EXPIRED' | 'ERROR' | 'REVOKED'
 
+/** Cererea D700 pentru codul de TVA art. 317, de la generare la cod primit. */
+export type VatRegistrationStatus =
+  | 'WAITING_FOR_DATA'
+  | 'GENERATED'
+  | 'VALIDATION_FAILED'
+  | 'READY_FOR_REVIEW'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'SUBMITTED'
+  | 'REGISTERED'
+
+/** O cerere D700 (`GET accounting/vat-registrations`). */
+export interface VatRegistration {
+  id: string
+  pfaId: string
+  userId: string
+  clientName: string
+  cui: string | null
+  status: VatRegistrationStatus
+  /** Luna cererii, `yyyy-MM`. */
+  period: string
+  missingData: string | null
+  rejectionReason: string | null
+  vatCode: string | null
+  vatCodeValidFrom: string | null
+  hasXml: boolean
+  hasPdf: boolean
+  hasCertificate: boolean
+  errors: string[]
+  warnings: string[]
+  createdAtUtc: string
+  updatedAtUtc: string
+}
+
+export type VatRegistrationFileKind = 'xml' | 'pdf' | 'certificate'
+
 /** Un rând din „Clienți PFA” și „Rezumat” (`GET accounting/clients?period=`). */
 export interface ClientWorkspaceRow {
   pfaId: string

@@ -5,6 +5,7 @@ import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded'
 import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded'
 import RuleRoundedIcon from '@mui/icons-material/RuleRounded'
+import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded'
 
 import { RouteFallback } from '../components/common/RouteFallback'
 import { DashboardLayout } from '../components/layout/DashboardLayout'
@@ -18,14 +19,15 @@ import { reloadOnceOnChunkError } from '../utils/lazyWithRetry'
 // Modulul de contabilitate PFA (spec contabilitate), comun cu dashboard-ul de admin.
 const AccountingArea = lazy(() => import('../shared/accounting/ui/AccountingArea').catch(reloadOnceOnChunkError))
 
-/** Tab-urile modulului: „Rezumat”, „Clienți PFA” (lista și fișa clientului), declarații, reguli. */
-const ACCOUNTING_TABS = { today: 'azi', pfa: 'clienti', declarations: 'declaratii', rules: 'reguli' }
+/** Tab-urile modulului: „Rezumat”, „Clienți PFA” (lista și fișa clientului), declarații, „Cod TVA” (D700), reguli. */
+const ACCOUNTING_TABS = { today: 'azi', pfa: 'clienti', declarations: 'declaratii', vat: 'cod-tva', rules: 'reguli' }
 /** Nume vechi ale tabului de clienți, din notificări și legături salvate. */
 const LEGACY_CLIENT_TABS = ['clients', 'pfa']
-const VIEW_OF: Record<string, 'today' | 'clients' | 'declarations' | 'rules'> = {
+const VIEW_OF: Record<string, 'today' | 'clients' | 'declarations' | 'vat' | 'rules'> = {
   [ACCOUNTING_TABS.today]: 'today',
   [ACCOUNTING_TABS.pfa]: 'clients',
   [ACCOUNTING_TABS.declarations]: 'declarations',
+  [ACCOUNTING_TABS.vat]: 'vat',
   [ACCOUNTING_TABS.rules]: 'rules',
 }
 
@@ -54,6 +56,7 @@ export function ContabilDashboard() {
     { id: ACCOUNTING_TABS.today, label: 'Rezumat', icon: <ChecklistRoundedIcon /> },
     { id: ACCOUNTING_TABS.pfa, label: 'Clienți PFA', icon: <GroupsRoundedIcon /> },
     { id: ACCOUNTING_TABS.declarations, label: 'Declarații', icon: <DescriptionRoundedIcon /> },
+    { id: ACCOUNTING_TABS.vat, label: 'Cod TVA', icon: <VerifiedRoundedIcon /> },
     { id: ACCOUNTING_TABS.rules, label: 'Reguli fiscale', icon: <RuleRoundedIcon /> },
     { id: 'notificari', label: 'Notificări', icon: <NotificationsActiveRoundedIcon /> },
   ]

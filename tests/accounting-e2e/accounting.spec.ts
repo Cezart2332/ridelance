@@ -236,6 +236,34 @@ test('Clienți PFA: lista, profilul și spațiul de lucru unite', async ({ page 
   await expect(page.getByText('Extras verificat')).toBeVisible()
 })
 
+test('Cod TVA: D700 din onboarding, verificat la ANAF, aprobat, depus și cod primit', async ({ page }) => {
+  await login(page)
+  await open(page, '/contabil?tab=cod-tva')
+
+  // Generat automat când Radu a răspuns „Nu” la TVA intracomunitar în onboarding.
+  const row = page.getByRole('link', { name: 'Deschide D700 ENE RADU PFA' })
+  await expect(row).toContainText('Neverificată')
+  await row.click()
+  const dialog = page.getByRole('dialog')
+
+  // Validatorul ANAF oficial (DUKIntegrator, D700Validator) și PDF-ul de semnat.
+  await dialog.getByRole('button', { name: 'Verifică la ANAF' }).click()
+  await expect(dialog.getByText('De verificat', { exact: true })).toBeVisible({ timeout: 60_000 })
+  await expect(dialog.getByRole('button', { name: 'PDF' })).toBeVisible()
+
+  await dialog.getByRole('button', { name: 'Aprobă' }).click()
+  await expect(dialog.getByText('De depus', { exact: true })).toBeVisible()
+  await dialog.getByRole('button', { name: 'Marchează depusă' }).click()
+  await expect(dialog.getByText('Depusă', { exact: true })).toBeVisible()
+
+  await dialog.getByRole('button', { name: 'Cod primit' }).click()
+  const code = page.getByRole('dialog').last()
+  await code.getByLabel('Valabil de la').fill('2026-10-01')
+  await code.getByRole('button', { name: 'Salvează' }).click()
+  await expect(dialog.getByText('Cod primit', { exact: true })).toBeVisible()
+  await expect(dialog).toContainText('RO41000105, din 01.10.2026')
+})
+
 test('admin: șterge un document încărcat greșit, nu și unul din declarații', async ({ page }) => {
   await page.goto('/autentificare')
   await page.getByLabel('Email').fill(process.env.E2E_ADMIN_EMAIL ?? 'admin.e2e@ridelance.test')
