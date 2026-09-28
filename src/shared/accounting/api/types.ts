@@ -561,6 +561,57 @@ export interface EFacturaMessage {
   details: string | null
 }
 
+export type SpvMessageStatus = 'PROCESSED' | 'NEW' | 'NEEDS_ATTENTION'
+
+/** Un mesaj SPV (recipisă, notificare, decizie, răspuns la o cerere), adus de aplicația desktop. */
+export interface SpvMessage {
+  id: string
+  type: string
+  createdAtUtc: string
+  details: string | null
+  status: SpvMessageStatus
+  /** Ce s-a făcut automat sau de ce nu. */
+  note: string | null
+  hasDocument: boolean
+  read: boolean
+  requestType: string | null
+}
+
+export type SpvRequestStatus = 'QUEUED' | 'SENDING' | 'SENT' | 'ANSWERED' | 'FAILED'
+
+export interface SpvRequest {
+  id: string
+  type: string
+  parameters: Record<string, string>
+  status: SpvRequestStatus
+  createdAtUtc: string
+  sentAtUtc: string | null
+  error: string | null
+}
+
+export interface PfaSpv {
+  lastSyncAtUtc: string | null
+  messages: SpvMessage[]
+  requests: SpvRequest[]
+}
+
+export interface SpvAgentKey {
+  id: string
+  name: string
+  prefix: string
+  createdAtUtc: string
+  lastUsedAtUtc: string | null
+}
+
+/** Aplicația desktop SPV, pentru admin. */
+export interface SpvOverview {
+  keys: SpvAgentKey[]
+  lastSuccessAtUtc: string | null
+  lastError: string | null
+  needsAttention: number
+  queuedRequests: number
+}
+
 /** Tabul „ANAF” din fișa clientului. */
 export interface PfaEFactura {
   connection: AnafConnection

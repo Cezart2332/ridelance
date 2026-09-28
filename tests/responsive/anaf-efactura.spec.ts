@@ -32,6 +32,19 @@ async function mock(page: Page, role: 'Admin' | 'Contabil', state: object) {
   await page.route('**/users/profile', (route) => route.fulfill({ json: { firstName: 'Ana', lastName: role, email: 'staff@example.test', role } }))
   await mockAccountingClient(page, { pfaId: PFA_ID, userId: CLIENT_USER_ID, name: 'POPESCU ION PFA', email: 'ion@example.test' })
   await page.route(`**/accounting/pfas/${PFA_ID}/efactura`, (route) => route.fulfill({ json: state }))
+  await page.route(`**/accounting/pfas/${PFA_ID}/spv`, (route) => route.fulfill({ json: spv }))
+  await page.route('**/anaf/spv', (route) => route.fulfill({ json: { keys: [], lastSuccessAtUtc: null, lastError: null, needsAttention: 0, queuedRequests: 0 } }))
+}
+
+const spv = {
+  lastSyncAtUtc: '2026-09-28T09:00:00Z',
+  messages: [
+    {
+      id: 's1', type: 'RECIPISA', createdAtUtc: '2026-09-25T08:00:00Z', details: 'recipisa pentru CIF 12345674, tip D100, perioada raportare 8.2026',
+      status: 'PROCESSED', note: 'Recipisă D100 2026-08 atașată declarației.', hasDocument: true, read: false, requestType: null,
+    },
+  ],
+  requests: [],
 }
 
 const url = (root: string) => `${root}?tab=${root === '/admin' ? 'contab_pfa' : 'clienti'}&pfa=${PFA_ID}&sectiune=anaf`
@@ -46,7 +59,8 @@ test('admin: conectează contul ANAF cu certificatul, revenind în fișa clientu
   await page.route('https://logincert.anaf.ro/**', (route) => route.fulfill({ contentType: 'text/html', body: '<p>Certificat</p>' }))
   await page.goto(url('/admin'))
 
-  await expect(page.getByText('Neconectat').first()).toBeVisible()
+  // Primul test din fișier prinde serverul Vite rece: fișa clientului se compilează acum.
+  await expect(page.getByText('Neconectat').first()).toBeVisible({ timeout: 45_000 })
   await page.getByRole('button', { name: 'Conectează contul ANAF' }).click()
   await page.waitForURL(/logincert\.anaf\.ro/)
   expect(returnPath).toContain(`pfa=${PFA_ID}`)
@@ -79,6 +93,26 @@ test('admin: facturile e-Factura ale clientului, filtre și sincronizare', async
   await page.getByRole('button', { name: 'Sincronizează' }).click()
   await expect(page.getByText('Sincronizat.')).toBeVisible()
   expect(synced).toBe(1)
+})
+
+test('SPV: recipisa adusă de aplicația desktop și o cerere nouă în coadă', async ({ page }) => {
+  await mock(page, 'Contabil', { connection: connected, link: null, messages: [] })
+  const queued: unknown[] = []
+  await page.route(`**/accounting/pfas/${PFA_ID}/spv/requests`, (route) => {
+    queued.push(route.request().postDataJSON())
+    return route.fulfill({ status: 204 })
+  })
+  await page.goto(url('/contabil'))
+
+  await expect(page.getByText('Recipisă D100 2026-08 atașată declarației.')).toBeVisible()
+  await expect(page.getByText('Procesat', { exact: true })).toBeVisible()
+  // Cheile aplicației sunt doar la admin.
+  await expect(page.getByText('Aplicația SPV')).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Cere document' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Cere', exact: true }).click()
+  await expect(page.getByText('Cererea pleacă la următoarea trimitere a aplicației SPV.')).toBeVisible()
+  expect(queued).toEqual([{ type: 'VECTOR FISCAL', parameters: {} }])
 })
 
 test('contabil: vede facturile, dar nu conectează și nu sincronizează', async ({ page }) => {

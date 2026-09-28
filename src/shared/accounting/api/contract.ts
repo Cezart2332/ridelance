@@ -57,6 +57,9 @@ import type {
   VatRate,
   VatRegistration,
   AnafConnection,
+  PfaSpv,
+  SpvAgentKey,
+  SpvOverview,
   PfaEFactura,
   VatRegistrationFileKind,
   ZReportUploadResult,
@@ -129,6 +132,19 @@ export interface AccountingApi {
     sync(pfaId: string): Promise<{ newMessages: number; downloaded: number }>
     disablePfa(pfaId: string): Promise<void>
     getFile(messageId: string, kind: 'xml' | 'pdf'): Promise<Blob>
+  }
+
+  /** SPV prin aplicația desktop RIDElance SPV (stickul împuternicitului). */
+  spv: {
+    forPfa(pfaId: string): Promise<PfaSpv>
+    /** Pune cererea în coadă; pleacă la următoarea trimitere a aplicației. */
+    queueRequest(pfaId: string, type: string, parameters: Record<string, string>): Promise<void>
+    markRead(messageId: string): Promise<void>
+    getFile(messageId: string): Promise<Blob>
+    overview(): Promise<SpvOverview>
+    /** Cheia nouă, afișată o singură dată. */
+    createKey(name: string): Promise<{ key: SpvAgentKey; secret: string }>
+    revokeKey(keyId: string): Promise<void>
   }
 
   /** Cererile D700 pentru codul de TVA art. 317, generate din onboarding. */

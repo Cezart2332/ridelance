@@ -134,6 +134,15 @@ export function createHttpAccountingApi(): AccountingApi {
       disablePfa: (pfaId) => remove(`pfas/${pfaId}/efactura`),
       getFile: (messageId, kind) => blob(`efactura/${messageId}/${kind}`),
     },
+    spv: {
+      forPfa: (pfaId) => get(`pfas/${pfaId}/spv`),
+      queueRequest: (pfaId, type, parameters) => post(`pfas/${pfaId}/spv/requests`, { type, parameters }),
+      markRead: (messageId) => post(`spv/messages/${messageId}/read`),
+      getFile: (messageId) => blob(`spv/messages/${messageId}/file`),
+      overview: () => call({ method: 'GET', url: 'spv' }, 'anaf'),
+      createKey: (name) => call({ method: 'POST', url: 'spv/keys', data: { name } }, 'anaf'),
+      revokeKey: (keyId) => call({ method: 'DELETE', url: `spv/keys/${keyId}` }, 'anaf'),
+    },
     vatRegistrations: {
       list: () => get('vat-registrations'),
       forPfa: async (pfaId) => orNull(await get<VatRegistration | ''>(`pfas/${pfaId}/vat-registration`)),

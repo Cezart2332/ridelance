@@ -32,6 +32,9 @@ import type {
   ClientWorkspaceRow,
   VatRegistration,
   AnafConnection,
+  SpvAgentKey,
+  SpvMessage,
+  SpvRequest,
   AnafPfaLink,
   EFacturaMessage,
   PfaAccountingSummary,
@@ -94,7 +97,41 @@ export function resetMockAccountingDb(): void {
   vatRequests = null
   anafConnection = null
   anafLinks = {}
+  spvRequests = {}
+  spvKeys = []
   generation++
+}
+
+/** SPV în mock: două mesaje aduse „de aplicația desktop” și cererile puse din web. */
+let spvRequests: Record<string, SpvRequest[]> = {}
+let spvKeys: SpvAgentKey[] = []
+
+function mockSpvMessages(pfaId: string): SpvMessage[] {
+  const pfa = db.pfas.find((item) => item.id === pfaId)
+  return [
+    {
+      id: `spv-${pfaId}-1`,
+      type: 'RECIPISA',
+      createdAtUtc: nowIso(),
+      details: `recipisa pentru CIF ${pfa?.cui ?? ''}, tip D100, perioada raportare 8.2026`,
+      status: 'PROCESSED',
+      note: 'Recipisă D100 2026-08 atașată declarației.',
+      hasDocument: true,
+      read: false,
+      requestType: null,
+    },
+    {
+      id: `spv-${pfaId}-2`,
+      type: 'NOTIFICARE',
+      createdAtUtc: nowIso(),
+      details: 'Notificare privind obligațiile declarative',
+      status: 'NEW',
+      note: null,
+      hasDocument: true,
+      read: true,
+      requestType: null,
+    },
+  ]
 }
 
 /** e-Factura în mock: conexiunea „se face” direct, iar un client conectat primește două facturi. */
@@ -1461,6 +1498,31 @@ export function createMockAccountingApi(): AccountingApi {
         respond(() =>
           kind === 'xml' ? new Blob([`<Invoice id="${messageId}"/>`], { type: 'application/xml' }) : textPdf(`Factura ${messageId}`, ['e-Factura']),
         ),
+    },
+
+    spv: {
+      forPfa: (pfaId) =>
+        respond(() => ({ lastSyncAtUtc: nowIso(), messages: mockSpvMessages(pfaId), requests: spvRequests[pfaId] ?? [] })),
+      queueRequest: (pfaId, type, parameters) =>
+        respond(() => {
+          spvRequests[pfaId] = [
+            { id: nextId('spvreq'), type, parameters, status: 'QUEUED', createdAtUtc: nowIso(), sentAtUtc: null, error: null },
+            ...(spvRequests[pfaId] ?? []),
+          ]
+        }),
+      markRead: () => respond(() => undefined),
+      getFile: (messageId) => respond(() => textPdf(`Document SPV ${messageId}`, ['ANAF'])),
+      overview: () => respond(() => ({ keys: spvKeys, lastSuccessAtUtc: nowIso(), lastError: null, needsAttention: 0, queuedRequests: 0 })),
+      createKey: (name) =>
+        respond(() => {
+          const key: SpvAgentKey = { id: nextId('spvkey'), name, prefix: 'rdl_spv_MOCK00', createdAtUtc: nowIso(), lastUsedAtUtc: null }
+          spvKeys = [...spvKeys, key]
+          return { key, secret: `rdl_spv_MOCK00${key.id}` }
+        }),
+      revokeKey: (keyId) =>
+        respond(() => {
+          spvKeys = spvKeys.filter((key) => key.id !== keyId)
+        }),
     },
 
     vatRegistrations: {

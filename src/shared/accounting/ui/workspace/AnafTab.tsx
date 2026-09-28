@@ -10,6 +10,8 @@ import { useAccountingNav } from '../navigation'
 import { useNotify } from '../notify'
 import { downloadBlob, errorMessage, openBlob, useApi } from '../useApi'
 import { Panel, StatusPill } from './parts'
+import { SpvAppCard } from './SpvAppCard'
+import { SpvSection } from './SpvSection'
 import { HAIRLINE, INK, MUTED, TONES, type Cell, type Tone } from './status'
 
 const DARK = { bgcolor: INK, color: '#FFFFFF', '&:hover': { bgcolor: '#2d2d45' } }
@@ -166,7 +168,12 @@ export function AnafTab({ pfaId }: { pfaId: string }) {
         </Panel>
       </Stack>
 
+      {admin && <SpvAppCard />}
+
       <Stack spacing={1.5}>
+        <Typography component="h2" sx={{ fontSize: 16, fontWeight: 700, color: INK }}>
+          Facturi e-Factura
+        </Typography>
         <Stack direction="row" role="group" aria-label="Filtru" sx={{ gap: 1, flexWrap: 'wrap' }}>
           {FILTERS.map((item) => {
             const selected = item.value === filter
@@ -250,6 +257,8 @@ export function AnafTab({ pfaId }: { pfaId: string }) {
           )}
         </Panel>
       </Stack>
+
+      <SpvSection pfaId={pfaId} />
     </Stack>
   )
 }
