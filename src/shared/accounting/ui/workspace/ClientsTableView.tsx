@@ -12,14 +12,13 @@ import { useApi } from '../useApi'
 import { Avatar, MonthSelect, PageTitle, Panel, StatusPill } from './parts'
 import { bankCell, currentFiscalPeriod, DECLARATION_TYPES, declarationCell, documentsCell, HAIRLINE, INK, PRIMARY, TONES, type Tone } from './status'
 
-type Filter = 'ALL' | 'MISSING' | 'REVIEW' | 'READY' | 'ONBOARDING' | 'INACTIVE'
+type Filter = 'ALL' | 'MISSING' | 'REVIEW' | 'READY' | 'INACTIVE'
 
 const FILTERS: { value: Filter; label: string; tone: Tone | null; match: (row: ClientWorkspaceRow) => boolean }[] = [
   { value: 'ALL', label: 'Toți', tone: null, match: (row) => row.stage !== 'INACTIVE' },
   { value: 'MISSING', label: 'Blocați', tone: 'red', match: (row) => row.monthStatus === 'MISSING_DOCUMENTS' },
   { value: 'REVIEW', label: 'De verificat', tone: 'yellow', match: (row) => row.monthStatus === 'NEEDS_REVIEW' },
   { value: 'READY', label: 'Gata', tone: 'green', match: (row) => row.monthStatus === 'READY' },
-  { value: 'ONBOARDING', label: 'În onboarding', tone: 'gray', match: (row) => row.stage === 'ONBOARDING' },
   { value: 'INACTIVE', label: 'Inactivi', tone: 'gray', match: (row) => row.stage === 'INACTIVE' },
 ]
 
@@ -57,7 +56,8 @@ export function ClientsTableView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkedUser, clients.data])
 
-  const rows = clients.data ?? []
+  // Clienții în onboarding nu au încă lună de lucrat: nu apar în tabel.
+  const rows = (clients.data ?? []).filter((row) => row.stage !== 'ONBOARDING')
   const active = FILTERS.find((item) => item.value === filter)!
   const visible = rows
     .filter(active.match)
@@ -168,9 +168,7 @@ export function ClientsTableView() {
                       </Stack>
                     </TableCell>
                     <TableCell>
-                      {row.stage === 'ONBOARDING' ? (
-                        <StatusPill cell={{ tone: 'gray', label: 'În onboarding' }} />
-                      ) : row.stage === 'INACTIVE' ? (
+                      {row.stage === 'INACTIVE' ? (
                         <StatusPill cell={{ tone: 'gray', label: 'Inactiv' }} />
                       ) : (
                         <StatusPill cell={documentsCell(row)} />
