@@ -1,8 +1,8 @@
 import type { Page } from '@playwright/test'
 
 /**
- * Profilul unui client din „Clienți PFA” (contabil) pornește din modulul de contabilitate: lista
- * PFA-urilor și antetul dosarului. Testele care deschid profilul le simulează aici; restul
+ * Pagina unui client din „Clienți PFA” (contabil) pornește din modulul de contabilitate: tabelul
+ * clienților și antetul dosarului. Testele care deschid profilul le simulează aici; restul
  * cererilor (venituri, chat, taxe) rămân în grija fiecărui test.
  */
 export async function mockAccountingClient(
@@ -25,6 +25,25 @@ export async function mockAccountingClient(
           currentMonthStatus: 'NOT_PROCESSED',
           cashStatus: 'NOT_REQUIRED_CURRENT_CONFIGURATION',
           client: contact,
+        },
+      ],
+    }),
+  )
+  await page.route(/\/accounting\/clients(\?.*)?$/, (route) =>
+    route.fulfill({
+      json: [
+        {
+          pfaId: client.pfaId,
+          userId: client.userId,
+          name: client.name,
+          cui: '12345674',
+          email: client.email,
+          stage: 'ACTIVE',
+          monthStatus: 'NOT_PROCESSED',
+          reason: null,
+          declarations: {},
+          bankStatus: null,
+          unreadMessages: 0,
         },
       ],
     }),
@@ -54,5 +73,5 @@ export async function mockAccountingClient(
   await page.route(`**/accounting/pfas/${client.pfaId}/platform-documents**`, (route) => route.fulfill({ json: [] }))
 }
 
-/** Profilul clientului, direct pe o secțiune (`prezentare`, `venituri`, `taxe`, `mesaje`…). */
+/** Pagina clientului, direct pe un tab (`luna`, `venituri`, `mesaje`…). */
 export const clientProfileUrl = (pfaId: string, section: string) => `/contabil?tab=clienti&pfa=${pfaId}&sectiune=${section}`

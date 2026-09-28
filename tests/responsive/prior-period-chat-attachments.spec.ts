@@ -141,7 +141,7 @@ test('contabilul completează perioada dinainte de RIDElance', async ({ page }, 
 
 test('cardul de taxe estimează perioada lipsă și spune unde se completează', async ({ page }, info) => {
   await mockContabil(page)
-  await page.goto(clientProfileUrl(PFA_ID, 'taxe'))
+  await page.goto(clientProfileUrl(PFA_ID, 'venituri'))
 
   const card = page.getByTestId('estimated-taxes-card')
   await expect(card.getByTestId('weekly-amount')).toHaveText('493 lei')
@@ -212,7 +212,7 @@ test('contabilul completează sumele pe care PFA-ul le-a lăsat cu „Da” în 
     return route.fulfill({ json: current })
   })
 
-  await page.goto(clientProfileUrl(PFA_ID, 'taxe'))
+  await page.goto(clientProfileUrl(PFA_ID, 'venituri'))
 
   const panel = page.getByTestId('staff-tax-inputs-panel')
   await expect(panel.getByRole('heading', { name: `De completat de contabil · ${YEAR}` })).toBeVisible()

@@ -475,6 +475,30 @@ export interface OverviewRow {
   declarations: Record<DeclarationType, DeclarationCell>
 }
 
+/** Unde e clientul în colaborare. */
+export type ClientStage = 'ACTIVE' | 'ONBOARDING' | 'INACTIVE'
+
+/** Starea conexiunii open banking a clientului. */
+export type BankConnectionStatus = 'CREATED' | 'PENDING' | 'LINKED' | 'EXPIRED' | 'ERROR' | 'REVOKED'
+
+/** Un rând din „Clienți PFA” și „De făcut azi” (`GET accounting/clients?period=`). */
+export interface ClientWorkspaceRow {
+  pfaId: string
+  userId: string
+  name: string
+  cui: string
+  email: string
+  stage: ClientStage
+  /** `null` pentru clienții încă în onboarding. */
+  monthStatus: PfaMonthStatus | null
+  /** Primul motiv pentru care luna nu e gata. */
+  reason: string | null
+  declarations: Partial<Record<DeclarationType, DeclarationCell>>
+  /** `null` = banca nu a fost conectată niciodată. */
+  bankStatus: BankConnectionStatus | null
+  unreadMessages: number
+}
+
 export interface PeriodOverview {
   period: Period
   stats: PeriodStats

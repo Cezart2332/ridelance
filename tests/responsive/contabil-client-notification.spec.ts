@@ -39,13 +39,9 @@ test('contabilul trimite o notificare clientului din fișa lui', async ({ page }
   // Legătura veche din notificări (`tab=clients&user=`) deschide profilul clientului.
   await page.goto(`/contabil?tab=clients&user=${CLIENT_USER_ID}`)
 
-  if (info.project.name === 'mobile') {
-    // Pe telefon, acțiunea stă în meniul „⋯” al profilului.
-    await page.getByRole('button', { name: 'Mai multe acțiuni' }).click()
-    await page.getByRole('menuitem', { name: 'Trimite notificare' }).click()
-  } else {
-    await page.getByRole('button', { name: 'Trimite notificare', exact: true }).click()
-  }
+  // Acțiunea stă în meniul „⋯” din antetul clientului.
+  await page.getByRole('button', { name: 'Mai multe acțiuni' }).click()
+  await page.getByRole('menuitem', { name: 'Trimite notificare' }).click()
   const dialog = page.getByRole('dialog')
   await dialog.getByRole('button', { name: 'Documente lunare', exact: true }).click()
   await expect(dialog.getByLabel('Mesaj')).toHaveValue(/Te rog să încarci documentele pentru .+ până pe 25 /)

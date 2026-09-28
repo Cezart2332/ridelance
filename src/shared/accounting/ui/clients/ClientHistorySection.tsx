@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { Box, Button, Divider, Stack, TextField, Typography } from '@mui/material'
 
 import { pfaService } from '../../../../services/pfa.service'
@@ -7,7 +8,7 @@ import { EmptyText, LoadingBlock } from '../components'
 import { useNotify } from '../notify'
 import { useApi } from '../useApi'
 import { AuditTab } from '../pfa/AuditTab'
-import { Card } from './ui'
+import { Panel } from '../workspace/parts'
 
 /** Notele interne ale lunii, activitatea clientului și modificările contabile (audit). */
 export function ClientHistorySection({ pfaId, year, month, refreshKey }: { pfaId: string; year: number; month: number; refreshKey: number }) {
@@ -147,5 +148,16 @@ export function ClientHistorySection({ pfaId, year, month, refreshKey }: { pfaId
         <AuditTab pfaId={pfaId} />
       </Stack>
     </Stack>
+  )
+}
+
+function Card({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <Panel sx={{ px: 2.5, py: 2 }}>
+      <Typography component="h2" sx={{ fontSize: 16, fontWeight: 700, mb: 1.5 }}>
+        {title}
+      </Typography>
+      {children}
+    </Panel>
   )
 }

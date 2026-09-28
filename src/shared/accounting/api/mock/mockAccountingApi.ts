@@ -29,6 +29,7 @@ import type {
   OverviewRow,
   PfaAccountingSettings,
   ClientContact,
+  ClientWorkspaceRow,
   PfaAccountingSummary,
   PfaListItem,
   PfaMonthStatus,
@@ -1291,6 +1292,33 @@ export function createMockAccountingApi(): AccountingApi {
         }),
     },
 
+    clients: {
+      list: (period) =>
+        respond(() => {
+          requirePeriod(period)
+          const inPeriod = new Set(pfasInPeriod(period).map((pfa) => pfa.id))
+          return [...db.pfas]
+            .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
+            .map((pfa): ClientWorkspaceRow => {
+              const client = clientOf(pfa)
+              const row = inPeriod.has(pfa.id) ? overviewRow(pfa, period) : null
+              return {
+                pfaId: pfa.id,
+                userId: client.userId,
+                name: pfa.name,
+                cui: pfa.cui,
+                email: client.email,
+                stage: pfa.engagement.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
+                monthStatus: row?.status ?? null,
+                reason: row?.blockingReasons[0] ?? null,
+                declarations: row?.declarations ?? {},
+                bankStatus: 'LINKED',
+                unreadMessages: 0,
+              }
+            })
+        }),
+    },
+
     months: {
       getOverview: (period) =>
         respond(() => {
@@ -1324,12 +1352,12 @@ export function createMockAccountingApi(): AccountingApi {
           return confirmMany(ids, 'Confirmare în bloc a documentelor fără probleme')
         }),
 
-      process: (period) =>
+      process: (period, pfaId) =>
         respond(() => {
           requirePeriod(period)
           return startJob(
             'PROCESS_PERIOD',
-            pfasInPeriod(period).map((pfa) => ({
+            pfasInPeriod(period).filter((pfa) => !pfaId || pfa.id === pfaId).map((pfa) => ({
               pfaId: pfa.id,
               pfaName: pfa.name,
               run: () => {
@@ -1344,11 +1372,12 @@ export function createMockAccountingApi(): AccountingApi {
           )
         }),
 
-      generate: (period) =>
+      generate: (period, pfaId) =>
         respond(() => {
           requirePeriod(period)
           const candidates = pfasInPeriod(period).filter(
             (pfa) =>
+              (!pfaId || pfa.id === pfaId) &&
               monthStatusOf(pfa, period) === 'READY' && !db.declarations.some((item) => item.pfaId === pfa.id && item.period === period),
           )
           return startJob(
@@ -1357,12 +1386,12 @@ export function createMockAccountingApi(): AccountingApi {
           )
         }),
 
-      validate: (period) =>
+      validate: (period, pfaId) =>
         respond(() => {
           requirePeriod(period)
           const byPfa = new Map<string, MockDeclaration[]>()
           db.declarations
-            .filter((declaration) => declaration.period === period && currentVersion(declaration).status === 'GENERATED')
+            .filter((declaration) => declaration.period === period && (!pfaId || declaration.pfaId === pfaId) && currentVersion(declaration).status === 'GENERATED')
             .forEach((declaration) => byPfa.set(declaration.pfaId, [...(byPfa.get(declaration.pfaId) ?? []), declaration]))
           return startJob(
             'VALIDATE_DECLARATIONS',

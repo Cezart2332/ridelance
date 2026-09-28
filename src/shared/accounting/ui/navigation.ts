@@ -13,6 +13,8 @@ import type { AccountingRole, Period } from '../api/types'
  */
 
 export interface AccountingTabs {
+  /** „De făcut azi”. */
+  today?: string
   pfa: string
   declarations: string
   rules: string
@@ -43,35 +45,27 @@ export const DOSSIER_SECTION_LABEL: Record<DossierSection, string> = {
  * Secțiunile comune cu dosarul (`declaratii`, `documente`, …) au aceleași nume, ca legăturile din
  * luna fiscală să ducă la fel în ambele.
  */
-export const CLIENT_SECTIONS = [
-  'prezentare',
-  'declaratii',
-  'documente',
-  'venituri',
-  'taxe',
-  'banca',
-  'tranzactii',
-  'cheltuieli',
-  'registre',
-  'setari',
-  'istoric',
-  'mesaje',
-] as const
+export const CLIENT_SECTIONS = ['luna', 'banca', 'venituri', 'cheltuieli', 'registre', 'mesaje', 'setari', 'istoric'] as const
 export type ClientSection = (typeof CLIENT_SECTIONS)[number]
 
 export const CLIENT_SECTION_LABEL: Record<ClientSection, string> = {
-  prezentare: 'Prezentare',
-  declaratii: 'Declarații',
-  documente: 'Documente',
-  venituri: 'Venituri',
-  taxe: 'Taxe',
+  luna: 'Luna aceasta',
   banca: 'Bancă',
-  tranzactii: 'Tranzacții',
+  venituri: 'Venituri și taxe',
   cheltuieli: 'Cheltuieli',
   registre: 'Registre',
+  mesaje: 'Mesaje',
   setari: 'Setări',
   istoric: 'Istoric',
-  mesaje: 'Mesaje',
+}
+
+/** Secțiunile vechi din legături (luna fiscală, notificări, dosarul) → tabul nou. */
+export const CLIENT_SECTION_ALIASES: Record<string, ClientSection> = {
+  prezentare: 'luna',
+  documente: 'luna',
+  declaratii: 'luna',
+  tranzactii: 'banca',
+  taxe: 'venituri',
 }
 
 /** Precompletarea formularului de furnizor, din verificarea „furnizor necunoscut” (F2). */
@@ -82,7 +76,7 @@ export interface SupplierPrefill {
 }
 
 /** Parametrii din query string care aparțin modulului. */
-const OWNED_PARAMS = ['tab', 'pfa', 'sectiune', 'luna', 'user', 'section', 'document', 'lista', 'exceptii', 'furnizor_tva', 'furnizor_tara', 'furnizor_nume']
+const OWNED_PARAMS = ['tab', 'pfa', 'sectiune', 'luna', 'user', 'section', 'declaratie', 'document', 'lista', 'exceptii', 'furnizor_tva', 'furnizor_tara', 'furnizor_nume']
 
 export function useAccountingConfig(): AccountingConfig {
   const config = useContext(AccountingConfigContext)
@@ -111,6 +105,8 @@ export function useAccountingNav() {
     section: (DOSSIER_SECTIONS as readonly string[]).includes(section ?? '') ? (section as DossierSection) : 'declaratii',
     period: params.get('luna'),
     documentId: params.get('document'),
+    /** Declarația deschisă peste pagina clientului (`?declaratie=D301`). */
+    declarationType: (['D100', 'D301', 'D390'] as const).find((type) => type === params.get('declaratie')) ?? null,
     listTab: params.get('lista') === 'inactive' ? ('inactive' as const) : ('active' as const),
     onlyExceptions: params.get('exceptii') === '1',
     supplierPrefill: params.get('furnizor_tva')

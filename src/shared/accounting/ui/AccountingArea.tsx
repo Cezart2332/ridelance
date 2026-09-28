@@ -4,23 +4,28 @@ import { ThemeProvider } from '@mui/material/styles'
 
 import { adminTheme } from '../../../theme/adminTheme'
 import type { AccountingRole } from '../api/types'
-import { ClientProfileView } from './clients/ClientProfileView'
-import { ClientsListView } from './clients/ClientsListView'
 import { MonthDashboardView } from './month/MonthDashboardView'
 import { AccountingConfigContext, useAccountingNav, type AccountingTabs } from './navigation'
 import { NotifyContext, type Notice, type NotifySeverity } from './notify'
 import { PfaDossierView } from './pfa/PfaDossierView'
 import { PfaListView } from './pfa/PfaListView'
 import { TaxRulesView } from './rules/TaxRulesView'
+import { ClientPageView } from './workspace/ClientPageView'
+import { ClientsTableView } from './workspace/ClientsTableView'
+import { TodayView } from './workspace/TodayView'
 
-/** `clients` = „Clienți PFA” al contabilului: dosarul contabil și spațiul de lucru vechi, unite. */
-export type AccountingView = 'pfa' | 'clients' | 'declarations' | 'rules'
+/**
+ * `today` = „De făcut azi”; `clients` = „Clienți PFA” (tabelul cu semafoare și fișa clientului),
+ * la contabil și la admin. `pfa` = lista și dosarul vechi, păstrate pentru legăturile existente.
+ */
+export type AccountingView = 'pfa' | 'clients' | 'today' | 'declarations' | 'rules'
 
 function AccountingContent({ view }: { view: AccountingView }) {
   const nav = useAccountingNav()
   if (view === 'declarations') return <MonthDashboardView />
   if (view === 'rules') return <TaxRulesView />
-  if (view === 'clients') return nav.pfaId ? <ClientProfileView key={nav.pfaId} pfaId={nav.pfaId} /> : <ClientsListView />
+  if (view === 'today') return <TodayView />
+  if (view === 'clients') return nav.pfaId ? <ClientPageView key={nav.pfaId} pfaId={nav.pfaId} /> : <ClientsTableView />
   return nav.pfaId ? <PfaDossierView key={nav.pfaId} pfaId={nav.pfaId} /> : <PfaListView />
 }
 

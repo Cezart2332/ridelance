@@ -71,7 +71,7 @@ test('luna fiscală: procesarea și rezolvarea excepțiilor', async ({ page }) =
   await review.getByRole('button', { name: 'Confirmă' }).click()
   await expect(review).toContainText('Confirmat')
   await review.getByRole('button', { name: 'Închide' }).click()
-  await expect(page.getByText('Gata · august 2026')).toBeVisible()
+  await expect(page.getByText('Declarațiile sunt gata de generat')).toBeVisible()
 
   // Excepția 3: lui George îi lipsește factura Uber. Încărcarea ei trece prin citirea AI, oprită
   // în e2e: luna o arată ca document lipsă, cu motivul.
@@ -93,28 +93,32 @@ test('declarații: generare, validare pe 3 niveluri, recipisă și rectificativ�
   await expect(ion).toContainText('336,00 lei')
   await ion.click()
 
+  // Pe pagina clientului, fiecare declarație e un rând; cardul complet se deschide peste pagină.
+  await page.getByRole('button', { name: 'Deschide D301' }).click()
   const d301 = page.getByRole('region', { name: 'D301 – decont special TVA' })
+  // Confirmările se deschid peste dialogul declarației.
+  const dialog = () => page.getByRole('dialog').last()
   await expect(d301).toContainText('Draft automat')
   await d301.getByRole('button', { name: 'Validează' }).click()
   // RIDElance + XSD + validatorul ANAF (serviciul Java): PDF-ul DUKIntegrator e gata de semnat.
   await expect(d301).toContainText('Pregătit pentru depunere', { timeout: 60_000 })
 
   await d301.getByRole('button', { name: 'Marchează semnat' }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Marchează semnat' }).click()
+  await dialog().getByRole('button', { name: 'Marchează semnat' }).click()
   await expect(d301.getByRole('button', { name: 'Marchează depus' })).toBeVisible()
   await d301.getByRole('button', { name: 'Marchează depus' }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Marchează depus' }).click()
+  await dialog().getByRole('button', { name: 'Marchează depus' }).click()
   await expect(d301).toContainText('Depus nu înseamnă acceptat. Se așteaptă recipisa.')
 
   await d301.getByRole('button', { name: 'Încarcă recipisa' }).click()
-  const receipt = page.getByRole('dialog')
+  const receipt = dialog()
   await receipt.locator('input[type=file]').setInputFiles({ name: 'recipisa-d301.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 recipisa') })
   await receipt.getByLabel('Număr recipisă (opțional)').fill('INTERNT-123')
   await receipt.getByRole('button', { name: 'Încarcă' }).click()
   await expect(d301).toContainText('Recipisa nr. INTERNT-123')
 
   await d301.getByRole('button', { name: 'Creează rectificativă' }).click()
-  const rectification = page.getByRole('dialog')
+  const rectification = dialog()
   await rectification.getByLabel('Motivul rectificativei (obligatoriu)').fill('Comision Bolt corectat')
   await rectification.getByRole('button', { name: 'Creează rectificativa' }).click()
   await expect(d301).toContainText('v2 · Rectificativă')
@@ -210,16 +214,21 @@ test('Clienți PFA: lista, profilul și spațiul de lucru unite', async ({ page 
   await login(page)
   await open(page, '/contabil?tab=clienti')
   const rows = page.getByRole('link', { name: /^Deschide dosarul / })
-  await expect(rows).toHaveCount(4)
+  // George a fost inactivat mai sus: apare doar la „Inactivi”.
+  await expect(rows).toHaveCount(3)
+  await page.getByRole('button', { name: 'Inactivi 1' }).click()
+  await expect(rows).toHaveCount(1)
+  await expect(pfa(page, 'STAN GEORGE PFA')).toBeVisible()
+  await page.getByRole('button', { name: 'Toți 3' }).click()
   await page.getByLabel('Caută client').fill('popescu')
   await expect(rows).toHaveCount(1)
 
   await pfa(page, 'POPESCU ION PFA').click()
-  await expect(page.getByText('CUI 12345674')).toBeVisible()
+  await expect(page.getByText('12345674', { exact: true })).toBeVisible()
   await expect(page.getByText('Ion.Popescu.e2e@ridelance.test')).toBeVisible()
 
   // Venituri și notele vin din spațiul de lucru vechi al contabilului, acum în același profil.
-  await page.getByRole('tab', { name: 'Venituri' }).click()
+  await page.getByRole('tab', { name: 'Venituri și taxe' }).click()
   await expect(page.getByRole('button', { name: 'Marchează ca procesat' })).toBeVisible()
   await page.getByRole('tab', { name: 'Istoric' }).click()
   await page.getByPlaceholder('Notă vizibilă doar contabililor').fill('Extras verificat')
@@ -236,7 +245,6 @@ test('admin: șterge un document încărcat greșit, nu și unul din declarații
 
   await open(page, '/admin?tab=contab_pfa')
   await pfa(page, 'GEORGESCU ANA PFA').click()
-  await page.getByRole('tab', { name: 'Documente platformă' }).click()
 
   // August: documentele Anei sunt în declarațiile generate — ștergerea e refuzată, cu motiv.
   await open(page, `${new URL(page.url()).pathname}${new URL(page.url()).search}&luna=2026-08`)
@@ -249,8 +257,9 @@ test('admin: șterge un document încărcat greșit, nu și unul din declarații
   const url = new URL(page.url())
   url.searchParams.set('luna', '2026-09')
   await open(page, `${url.pathname}${url.search}`)
-  await expect(page.getByText('Niciun document încărcat pentru septembrie 2026.')).toBeVisible()
-  await page.locator('input[type=file]').setInputFiles({ name: 'gresit.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 gresit') })
+  // Septembrie e gol: toate documentele apar ca lipsă.
+  await expect(page.getByText('Lipsă', { exact: true }).first()).toBeVisible()
+  await page.getByLabel('Încarcă PDF').setInputFiles({ name: 'gresit.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 gresit') })
   await expect(page.getByText('gresit.pdf')).toBeVisible()
   await page.getByRole('button', { name: 'Șterge gresit.pdf' }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Șterge', exact: true }).click()

@@ -121,12 +121,15 @@ export function createHttpAccountingApi(): AccountingApi {
       confirmBulk: (request) => post('platform-documents/confirm-bulk', request),
       remove: (id) => remove(`platform-documents/${id}`),
     },
+    clients: {
+      list: (period) => get('clients', { period }),
+    },
     months: {
       getOverview: (period) => get(`periods/${period}/overview`),
-      process: (period) => post(`periods/${period}/process`),
+      process: (period, pfaId) => post(`${pfaId ? `pfas/${pfaId}/` : ''}periods/${period}/process`),
       confirmCleanDocuments: (period) => post(`periods/${period}/confirm-clean-documents`),
-      generate: (period) => post(`periods/${period}/generate`),
-      validate: (period) => post(`periods/${period}/validate`),
+      generate: (period, pfaId) => post(`${pfaId ? `pfas/${pfaId}/` : ''}periods/${period}/generate`),
+      validate: (period, pfaId) => post(`${pfaId ? `pfas/${pfaId}/` : ''}periods/${period}/validate`),
     },
     jobs: {
       get: (jobId) => get(`jobs/${jobId}`),

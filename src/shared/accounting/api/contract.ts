@@ -1,4 +1,5 @@
 import type {
+  ClientWorkspaceRow,
   AccountingPeriod,
   AnafDeclarationSchema,
   Asset,
@@ -108,13 +109,19 @@ export interface AccountingApi {
   }
 
   /** §4.3 — luna fiscală, pe toate PFA-urile. */
+  /** Portofoliul (contabilul: clienții alocați; adminul: toți), cu luna, banca și mesajele. */
+  clients: {
+    list(period: Period): Promise<ClientWorkspaceRow[]>
+  }
+
+  /** Joburile lunii; cu `pfaId`, doar pentru un client (pagina clientului). */
   months: {
     getOverview(period: Period): Promise<PeriodOverview>
-    process(period: Period): Promise<JobRef>
+    process(period: Period, pfaId?: string): Promise<JobRef>
     /** Confirmă în bloc documentele lunii `PENDING_CONFIRMATION` (verificări trecute), pe toate PFA-urile. */
     confirmCleanDocuments(period: Period): Promise<ConfirmBulkResult>
-    generate(period: Period): Promise<JobRef>
-    validate(period: Period): Promise<JobRef>
+    generate(period: Period, pfaId?: string): Promise<JobRef>
+    validate(period: Period, pfaId?: string): Promise<JobRef>
   }
 
   jobs: {

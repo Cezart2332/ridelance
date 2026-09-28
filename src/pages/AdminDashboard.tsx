@@ -67,11 +67,12 @@ import { reloadOnceOnChunkError } from '../utils/lazyWithRetry'
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import RuleRoundedIcon from '@mui/icons-material/RuleRounded'
+import ChecklistRoundedIcon from '@mui/icons-material/ChecklistRounded'
 import { RouteFallback } from '../components/common/RouteFallback'
 
 // Modulul de contabilitate PFA (spec contabilitate), comun cu dashboard-ul contabilului.
 const AccountingArea = lazy(() => import('../shared/accounting/ui/AccountingArea').catch(reloadOnceOnChunkError))
-const ACCOUNTING_TABS = { pfa: 'contab_pfa', declarations: 'contab_declaratii', rules: 'contab_reguli' }
+const ACCOUNTING_TABS = { today: 'contab_azi', pfa: 'contab_pfa', declarations: 'contab_declaratii', rules: 'contab_reguli' }
 
 interface PfaSummary {
   id: string
@@ -623,7 +624,8 @@ export function AdminDashboard() {
     { id: 'srl_inrolate', label: 'SRL înrolate', group: 'Clienți', icon: <BusinessRoundedIcon /> },
     { id: 'chat', label: 'Chat', group: 'Clienți', icon: <ChatRoundedIcon /> },
     { id: 'sarcini', label: 'Sarcini', group: 'Clienți', icon: <AssignmentTurnedInRoundedIcon /> },
-    { id: ACCOUNTING_TABS.pfa, label: 'PFA', group: 'Contabilitate', icon: <AccountBalanceWalletRoundedIcon /> },
+    { id: ACCOUNTING_TABS.today, label: 'De făcut azi', group: 'Contabilitate', icon: <ChecklistRoundedIcon /> },
+    { id: ACCOUNTING_TABS.pfa, label: 'Clienți PFA', group: 'Contabilitate', icon: <AccountBalanceWalletRoundedIcon /> },
     { id: ACCOUNTING_TABS.declarations, label: 'Declarații', group: 'Contabilitate', icon: <DescriptionRoundedIcon /> },
     { id: ACCOUNTING_TABS.rules, label: 'Reguli fiscale', group: 'Contabilitate', icon: <RuleRoundedIcon /> },
     { id: 'masini', label: 'Mașini ridesharing', group: 'Activitate comercială', icon: <DirectionsCarFilledRoundedIcon /> },
@@ -1168,6 +1170,7 @@ export function AdminDashboard() {
           onSnackbar={(message, severity) => setSnackbar({ open: true, message, severity })}
         />
       )
+      case ACCOUNTING_TABS.today:
       case ACCOUNTING_TABS.pfa:
       case ACCOUNTING_TABS.declarations:
       case ACCOUNTING_TABS.rules: return (
@@ -1175,7 +1178,7 @@ export function AdminDashboard() {
           <AccountingArea
             role="Admin"
             tabs={ACCOUNTING_TABS}
-            view={activeTab === ACCOUNTING_TABS.pfa ? 'pfa' : activeTab === ACCOUNTING_TABS.declarations ? 'declarations' : 'rules'}
+            view={activeTab === ACCOUNTING_TABS.today ? 'today' : activeTab === ACCOUNTING_TABS.pfa ? 'clients' : activeTab === ACCOUNTING_TABS.declarations ? 'declarations' : 'rules'}
           />
         </Suspense>
       )
