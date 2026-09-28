@@ -13,7 +13,7 @@ import type { AccountingRole, Period } from '../api/types'
  */
 
 export interface AccountingTabs {
-  /** „De făcut azi”. */
+  /** „Rezumat”. */
   today?: string
   pfa: string
   declarations: string

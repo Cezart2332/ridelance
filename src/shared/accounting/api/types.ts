@@ -481,7 +481,7 @@ export type ClientStage = 'ACTIVE' | 'ONBOARDING' | 'INACTIVE'
 /** Starea conexiunii open banking a clientului. */
 export type BankConnectionStatus = 'CREATED' | 'PENDING' | 'LINKED' | 'EXPIRED' | 'ERROR' | 'REVOKED'
 
-/** Un rând din „Clienți PFA” și „De făcut azi” (`GET accounting/clients?period=`). */
+/** Un rând din „Clienți PFA” și „Rezumat” (`GET accounting/clients?period=`). */
 export interface ClientWorkspaceRow {
   pfaId: string
   userId: string

@@ -18,7 +18,7 @@ import { reloadOnceOnChunkError } from '../utils/lazyWithRetry'
 // Modulul de contabilitate PFA (spec contabilitate), comun cu dashboard-ul de admin.
 const AccountingArea = lazy(() => import('../shared/accounting/ui/AccountingArea').catch(reloadOnceOnChunkError))
 
-/** Tab-urile modulului: „De făcut azi”, „Clienți PFA” (lista și fișa clientului), declarații, reguli. */
+/** Tab-urile modulului: „Rezumat”, „Clienți PFA” (lista și fișa clientului), declarații, reguli. */
 const ACCOUNTING_TABS = { today: 'azi', pfa: 'clienti', declarations: 'declaratii', rules: 'reguli' }
 /** Nume vechi ale tabului de clienți, din notificări și legături salvate. */
 const LEGACY_CLIENT_TABS = ['clients', 'pfa']
@@ -51,7 +51,7 @@ export function ContabilDashboard() {
   }
 
   const navItems = [
-    { id: ACCOUNTING_TABS.today, label: 'De făcut azi', icon: <ChecklistRoundedIcon /> },
+    { id: ACCOUNTING_TABS.today, label: 'Rezumat', icon: <ChecklistRoundedIcon /> },
     { id: ACCOUNTING_TABS.pfa, label: 'Clienți PFA', icon: <GroupsRoundedIcon /> },
     { id: ACCOUNTING_TABS.declarations, label: 'Declarații', icon: <DescriptionRoundedIcon /> },
     { id: ACCOUNTING_TABS.rules, label: 'Reguli fiscale', icon: <RuleRoundedIcon /> },

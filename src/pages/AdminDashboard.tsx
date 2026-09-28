@@ -624,7 +624,7 @@ export function AdminDashboard() {
     { id: 'srl_inrolate', label: 'SRL înrolate', group: 'Clienți', icon: <BusinessRoundedIcon /> },
     { id: 'chat', label: 'Chat', group: 'Clienți', icon: <ChatRoundedIcon /> },
     { id: 'sarcini', label: 'Sarcini', group: 'Clienți', icon: <AssignmentTurnedInRoundedIcon /> },
-    { id: ACCOUNTING_TABS.today, label: 'De făcut azi', group: 'Contabilitate', icon: <ChecklistRoundedIcon /> },
+    { id: ACCOUNTING_TABS.today, label: 'Rezumat', group: 'Contabilitate', icon: <ChecklistRoundedIcon /> },
     { id: ACCOUNTING_TABS.pfa, label: 'Clienți PFA', group: 'Contabilitate', icon: <AccountBalanceWalletRoundedIcon /> },
     { id: ACCOUNTING_TABS.declarations, label: 'Declarații', group: 'Contabilitate', icon: <DescriptionRoundedIcon /> },
     { id: ACCOUNTING_TABS.rules, label: 'Reguli fiscale', group: 'Contabilitate', icon: <RuleRoundedIcon /> },

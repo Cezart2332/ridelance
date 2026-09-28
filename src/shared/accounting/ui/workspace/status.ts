@@ -9,7 +9,7 @@ import type {
 } from '../../api/types'
 
 /**
- * Culorile și textele scurte din „Clienți PFA” și „De făcut azi”, ca în macheta aprobată: o bulină
+ * Culorile și textele scurte din „Clienți PFA” și „Rezumat”, ca în macheta aprobată: o bulină
  * și un cuvânt, fără explicații dedesubt.
  */
 export type Tone = 'green' | 'yellow' | 'red' | 'blue' | 'gray'

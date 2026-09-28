@@ -15,7 +15,7 @@ import { ClientsTableView } from './workspace/ClientsTableView'
 import { TodayView } from './workspace/TodayView'
 
 /**
- * `today` = „De făcut azi”; `clients` = „Clienți PFA” (tabelul cu semafoare și fișa clientului),
+ * `today` = „Rezumat”; `clients` = „Clienți PFA” (tabelul cu semafoare și fișa clientului),
  * la contabil și la admin. `pfa` = lista și dosarul vechi, păstrate pentru legăturile existente.
  */
 export type AccountingView = 'pfa' | 'clients' | 'today' | 'declarations' | 'rules'

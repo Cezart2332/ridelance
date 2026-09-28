@@ -20,7 +20,7 @@ interface Task {
 
 const PRIMARY_BUTTON = { bgcolor: '#5CCBF5', color: INK, '&:hover': { bgcolor: '#45B8E2' } }
 
-/** „De făcut azi”: ce e de făcut în lună, grupat pe tip, fiecare cu butonul lui. */
+/** „Rezumat”: ce e de făcut în lună, grupat pe tip, fiecare cu butonul lui. */
 export function TodayView() {
   const nav = useAccountingNav()
   const notify = useNotify()
@@ -52,7 +52,7 @@ export function TodayView() {
           <Button variant="outlined" onClick={() => setAsking(row)}>
             Cere clientului
           </Button>
-          {primary('Încarcă eu', () => open(row))}
+          {primary('Încarcă', () => open(row))}
         </>
       ),
     }))
@@ -144,7 +144,7 @@ export function TodayView() {
   return (
     <Stack spacing={3} sx={{ minWidth: 0 }}>
       <Stack direction={{ xs: 'column', lg: 'row' }} sx={{ justifyContent: 'space-between', alignItems: { lg: 'flex-end' }, gap: 2 }}>
-        <PageTitle>De făcut azi</PageTitle>
+        <PageTitle>Rezumat</PageTitle>
         <Stack direction="row" sx={{ gap: 1.25, flexWrap: 'wrap', alignItems: 'center' }}>
           {stats.map((stat) => (
             <Panel key={stat.label} sx={{ px: 2, py: 1.25, minWidth: 116 }}>
