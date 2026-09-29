@@ -7,7 +7,7 @@ export const SPV_REQUEST_TYPES: { type: string; label: string; fields: ('an' | '
   { type: 'Obligatii de plata', label: 'Obligații de plată', fields: [] },
   { type: 'Nota obligatiilor de plata', label: 'Nota obligațiilor de plată', fields: [] },
   { type: 'Situatie Sintetica', label: 'Situație sintetică', fields: ['an', 'luna'] },
-  { type: 'Fisa Rol', label: 'Fișa rol', fields: ['an'] },
+  { type: 'Fisa Rol', label: 'Fișa rol', fields: [] },
   { type: 'Istoric declaratii', label: 'Istoric declarații', fields: ['an'] },
   { type: 'Duplicat Recipisa', label: 'Duplicat recipisă', fields: ['numar_inregistrare'] },
   { type: 'D100', label: 'D100', fields: ['an', 'luna'] },
