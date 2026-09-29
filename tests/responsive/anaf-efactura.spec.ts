@@ -127,3 +127,30 @@ test('contabil: vede facturile, dar nu conectează și nu sincronizează', async
   await expect(page.getByRole('button', { name: 'Sincronizează' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Conectează/ })).toHaveCount(0)
 })
+
+test('admin: secțiunea ANAF are contul e-Factura și cheile aplicației SPV', async ({ page }, info) => {
+  await page.route('**/users/refresh-token', (route) => route.fulfill({ json: { accessToken: 'test', userId: 'staff', role: 'Admin' } }))
+  await page.route('**/users/profile', (route) => route.fulfill({ json: { firstName: 'Ana', lastName: 'Admin', email: 'staff@example.test', role: 'Admin' } }))
+  await page.route('**/anaf/connection', (route) => route.fulfill({ json: connected }))
+  let keys: { id: string; name: string; prefix: string; createdAtUtc: string; lastUsedAtUtc: string | null }[] = []
+  await page.route('**/anaf/spv', (route) => route.fulfill({ json: { keys, lastSuccessAtUtc: '2026-09-29T08:30:00Z', lastError: null, needsAttention: 2, queuedRequests: 0 } }))
+  await page.route('**/anaf/spv/keys', (route) => {
+    const key = { id: 'k1', name: route.request().postDataJSON().name, prefix: 'rdl_spv_AB12CD', createdAtUtc: '2026-09-29T09:00:00Z', lastUsedAtUtc: null }
+    keys = [key]
+    return route.fulfill({ json: { key, secret: 'rdl_spv_AB12CD0000' } })
+  })
+  await page.goto('/admin?tab=contab_anaf')
+
+  await expect(page.getByRole('heading', { name: 'ANAF', exact: true })).toBeVisible({ timeout: 45_000 })
+  await expect(page.getByText('Cont ANAF · e-Factura')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Deconectează' })).toBeVisible()
+  await expect(page.getByText('Mesaje de verificat')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Cheie nouă' }).click()
+  await page.getByRole('dialog').getByLabel('Nume').fill('Laptop birou')
+  await page.getByRole('dialog').getByRole('button', { name: 'Creează' }).click()
+  await expect(page.getByRole('dialog').getByLabel('Cheia')).toHaveValue('rdl_spv_AB12CD0000')
+  await page.screenshot({ path: `test-results/anaf-admin-${info.project.name}.png`, fullPage: true })
+  await page.getByRole('dialog').getByRole('button', { name: 'Gata' }).click()
+  await expect(page.getByText('Laptop birou')).toBeVisible()
+})

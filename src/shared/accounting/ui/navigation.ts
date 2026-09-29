@@ -17,6 +17,8 @@ export interface AccountingTabs {
   today?: string
   /** „Cod TVA”: cererile D700. */
   vat?: string
+  /** „ANAF” (doar admin): contul e-Factura și aplicația desktop SPV. */
+  anaf?: string
   pfa: string
   declarations: string
   rules: string

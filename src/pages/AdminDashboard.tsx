@@ -68,17 +68,19 @@ import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceW
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import RuleRoundedIcon from '@mui/icons-material/RuleRounded'
 import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded'
+import CloudSyncRoundedIcon from '@mui/icons-material/CloudSyncRounded'
 import ChecklistRoundedIcon from '@mui/icons-material/ChecklistRounded'
 import { RouteFallback } from '../components/common/RouteFallback'
 
 // Modulul de contabilitate PFA (spec contabilitate), comun cu dashboard-ul contabilului.
 const AccountingArea = lazy(() => import('../shared/accounting/ui/AccountingArea').catch(reloadOnceOnChunkError))
-const ACCOUNTING_TABS = { today: 'contab_azi', pfa: 'contab_pfa', declarations: 'contab_declaratii', vat: 'contab_cod_tva', rules: 'contab_reguli' }
-const ACCOUNTING_VIEW: Record<string, 'today' | 'clients' | 'declarations' | 'vat' | 'rules'> = {
+const ACCOUNTING_TABS = { today: 'contab_azi', pfa: 'contab_pfa', declarations: 'contab_declaratii', vat: 'contab_cod_tva', anaf: 'contab_anaf', rules: 'contab_reguli' }
+const ACCOUNTING_VIEW: Record<string, 'today' | 'clients' | 'declarations' | 'vat' | 'anaf' | 'rules'> = {
   [ACCOUNTING_TABS.today]: 'today',
   [ACCOUNTING_TABS.pfa]: 'clients',
   [ACCOUNTING_TABS.declarations]: 'declarations',
   [ACCOUNTING_TABS.vat]: 'vat',
+  [ACCOUNTING_TABS.anaf]: 'anaf',
   [ACCOUNTING_TABS.rules]: 'rules',
 }
 
@@ -636,6 +638,7 @@ export function AdminDashboard() {
     { id: ACCOUNTING_TABS.pfa, label: 'Clienți PFA', group: 'Contabilitate', icon: <AccountBalanceWalletRoundedIcon /> },
     { id: ACCOUNTING_TABS.declarations, label: 'Declarații', group: 'Contabilitate', icon: <DescriptionRoundedIcon /> },
     { id: ACCOUNTING_TABS.vat, label: 'Cod TVA', group: 'Contabilitate', icon: <VerifiedRoundedIcon /> },
+    { id: ACCOUNTING_TABS.anaf, label: 'ANAF', group: 'Contabilitate', icon: <CloudSyncRoundedIcon /> },
     { id: ACCOUNTING_TABS.rules, label: 'Reguli fiscale', group: 'Contabilitate', icon: <RuleRoundedIcon /> },
     { id: 'masini', label: 'Mașini ridesharing', group: 'Activitate comercială', icon: <DirectionsCarFilledRoundedIcon /> },
     // Lângă mașini, nu lângă setări: e tot moderare de conținut public, doar că a firmei.
@@ -1183,6 +1186,7 @@ export function AdminDashboard() {
       case ACCOUNTING_TABS.pfa:
       case ACCOUNTING_TABS.declarations:
       case ACCOUNTING_TABS.vat:
+      case ACCOUNTING_TABS.anaf:
       case ACCOUNTING_TABS.rules: return (
         <Suspense fallback={<RouteFallback />}>
           <AccountingArea

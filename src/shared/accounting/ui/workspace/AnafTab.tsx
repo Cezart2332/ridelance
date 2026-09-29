@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useState } from 'react'
 import { Alert, Box, Button, ButtonBase, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 
 import { accountingApi } from '../../api/accountingApi'
@@ -9,8 +8,8 @@ import { EmptyText, ErrorBlock, LoadingBlock } from '../components'
 import { useAccountingNav } from '../navigation'
 import { useNotify } from '../notify'
 import { downloadBlob, errorMessage, openBlob, useApi } from '../useApi'
+import { startAnafAuthorization, useAnafReturnNotice } from './anafReturn'
 import { Panel, StatusPill } from './parts'
-import { SpvAppCard } from './SpvAppCard'
 import { SpvSection } from './SpvSection'
 import { HAIRLINE, INK, MUTED, TONES, type Cell, type Tone } from './status'
 
@@ -49,26 +48,13 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 export function AnafTab({ pfaId }: { pfaId: string }) {
   const nav = useAccountingNav()
   const notify = useNotify()
-  const [params, setParams] = useSearchParams()
   const state = useApi(() => accountingApi.anaf.forPfa(pfaId), [pfaId])
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('ALL')
   const admin = nav.role === 'Admin'
 
-  // Întoarcerea de la ANAF: rezultatul autorizării vine în URL o singură dată.
-  const connected = params.get('anaf')
-  const refused = params.get('anaf_eroare')
-  useEffect(() => {
-    if (!connected && !refused) return
-    if (connected) notify('Contul ANAF e conectat.', 'success')
-    if (refused) notify(refused, 'error')
-    const next = new URLSearchParams(params)
-    next.delete('anaf')
-    next.delete('anaf_eroare')
-    setParams(next, { replace: true })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected, refused])
+  useAnafReturnNotice()
 
   if (state.error && !state.data) return <ErrorBlock message={state.error} onRetry={state.reload} />
   if (!state.data) return <LoadingBlock />
@@ -88,11 +74,7 @@ export function AnafTab({ pfaId }: { pfaId: string }) {
     }
   }
 
-  const connectAccount = () =>
-    run('account', async () => {
-      const returnPath = `${window.location.pathname}${window.location.search}`
-      window.location.assign(await accountingApi.anaf.start(returnPath))
-    })
+  const connectAccount = () => run('account', () => startAnafAuthorization(accountingApi.anaf.start))
 
   const file = (message: EFacturaMessage, kind: 'xml' | 'pdf') =>
     run(`${kind}-${message.id}`, async () => {
@@ -167,8 +149,6 @@ export function AnafTab({ pfaId }: { pfaId: string }) {
           )}
         </Panel>
       </Stack>
-
-      {admin && <SpvAppCard />}
 
       <Stack spacing={1.5}>
         <Typography component="h2" sx={{ fontSize: 16, fontWeight: 700, color: INK }}>
