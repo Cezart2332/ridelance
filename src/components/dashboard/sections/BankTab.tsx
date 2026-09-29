@@ -260,7 +260,7 @@ export function BankTab({ onNavigate }: BankTabProps) {
         <DialogContent>
           <Typography sx={{ color: T.textMuted, fontSize: 14 }}>
             Sincronizarea automată se oprește, iar contabilul nu mai vede mișcările noi din cont.
-            Tranzacțiile deja sincronizate rămân vizibile.
+            Tranzacțiile vechi rămân păstrate, dar nu vor mai apărea după deconectare sau la conectarea altui cont.
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
