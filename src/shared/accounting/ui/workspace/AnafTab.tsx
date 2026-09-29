@@ -8,7 +8,7 @@ import { EmptyText, ErrorBlock, LoadingBlock } from '../components'
 import { useAccountingNav } from '../navigation'
 import { useNotify } from '../notify'
 import { downloadBlob, errorMessage, openBlob, useApi } from '../useApi'
-import { startAnafAuthorization, useAnafReturnNotice } from './anafReturn'
+import { useAnafReturnNotice } from './anafReturn'
 import { Panel, StatusPill } from './parts'
 import { SpvSection } from './SpvSection'
 import { HAIRLINE, INK, MUTED, TONES, type Cell, type Tone } from './status'
@@ -74,8 +74,6 @@ export function AnafTab({ pfaId }: { pfaId: string }) {
     }
   }
 
-  const connectAccount = () => run('account', () => startAnafAuthorization(accountingApi.anaf.start))
-
   const file = (message: EFacturaMessage, kind: 'xml' | 'pdf') =>
     run(`${kind}-${message.id}`, async () => {
       const blob = await accountingApi.anaf.getFile(message.id, kind)
@@ -121,7 +119,7 @@ export function AnafTab({ pfaId }: { pfaId: string }) {
           {accountActive && <Row label="Valabil până la">{formatDate(connection.refreshExpiresAtUtc)}</Row>}
           {connection.lastError && <Alert severity="warning" sx={{ mt: 1 }}>{connection.lastError}</Alert>}
           {admin && connection.configured && !accountActive && (
-            <Box sx={{ pt: 1.5 }}>{button('account', connection.status === 'EXPIRED' ? 'Reconectează' : 'Conectează contul ANAF', () => void connectAccount(), true)}</Box>
+            <Box sx={{ pt: 1.5 }}>{button('account', connection.status === 'EXPIRED' ? 'Reconectează' : 'Conectează contul ANAF', nav.openAnaf, true)}</Box>
           )}
         </Panel>
 

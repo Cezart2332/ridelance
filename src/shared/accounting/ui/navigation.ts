@@ -120,6 +120,9 @@ export function useAccountingNav() {
 
     openPfaList: (listTab: 'active' | 'inactive' = 'active') =>
       go({ tab: tabs.pfa, lista: listTab === 'inactive' ? 'inactive' : undefined }),
+    openAnaf: () => {
+      if (tabs.anaf) go({ tab: tabs.anaf })
+    },
     openPfa: (pfaId: string, section: DossierSection | ClientSection = 'declaratii', extra: { luna?: Period; document?: string } = {}) =>
       go({ tab: tabs.pfa, pfa: pfaId, sectiune: section, ...extra }),
     /** Secțiunea brută din URL: profilul clientului are mai multe secțiuni decât dosarul. */

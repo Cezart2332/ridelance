@@ -49,22 +49,22 @@ const spv = {
 
 const url = (root: string) => `${root}?tab=${root === '/admin' ? 'contab_pfa' : 'clienti'}&pfa=${PFA_ID}&sectiune=anaf`
 
-test('admin: conectează contul ANAF cu certificatul, revenind în fișa clientului', async ({ page }) => {
+test('admin: conectarea ANAF din fișa clientului deschide secțiunea ANAF din contabilitate', async ({ page }) => {
   await mock(page, 'Admin', { connection: notConnected, link: null, messages: [] })
-  let returnPath = ''
+  await page.route('**/anaf/connection', (route) => route.fulfill({ json: notConnected }))
+  let authorizationStarted = false
   await page.route('**/anaf/oauth/start', async (route) => {
-    returnPath = route.request().postDataJSON().returnPath
-    await route.fulfill({ json: { url: 'https://logincert.anaf.ro/anaf-oauth2/v1/authorize?response_type=code' } })
+    authorizationStarted = true
+    await route.abort()
   })
-  await page.route('https://logincert.anaf.ro/**', (route) => route.fulfill({ contentType: 'text/html', body: '<p>Certificat</p>' }))
   await page.goto(url('/admin'))
 
   // Primul test din fișier prinde serverul Vite rece: fișa clientului se compilează acum.
   await expect(page.getByText('Neconectat').first()).toBeVisible({ timeout: 45_000 })
   await page.getByRole('button', { name: 'Conectează contul ANAF' }).click()
-  await page.waitForURL(/logincert\.anaf\.ro/)
-  expect(returnPath).toContain(`pfa=${PFA_ID}`)
-  expect(returnPath).toContain('sectiune=anaf')
+  await expect(page).toHaveURL(/\/admin\?tab=contab_anaf$/)
+  await expect(page.getByText('Cont ANAF · e-Factura')).toBeVisible()
+  expect(authorizationStarted).toBe(false)
 })
 
 test('admin: facturile e-Factura ale clientului, filtre și sincronizare', async ({ page }, info) => {
