@@ -27,17 +27,14 @@ export function useNotifications() {
     const requests = revision
     void reload()
     const refresh = () => { void reload() }
-    const onPush = (event: MessageEvent) => { if (event.data?.type === 'notifications-changed') refresh() }
     const timer = window.setInterval(refresh, 60_000)
     window.addEventListener(NOTIFICATIONS_CHANGED, refresh)
     window.addEventListener('focus', refresh)
-    navigator.serviceWorker?.addEventListener('message', onPush)
     return () => {
       ++requests.current
       window.clearInterval(timer)
       window.removeEventListener(NOTIFICATIONS_CHANGED, refresh)
       window.removeEventListener('focus', refresh)
-      navigator.serviceWorker?.removeEventListener('message', onPush)
     }
   }, [reload, userId])
 

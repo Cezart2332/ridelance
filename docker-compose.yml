@@ -8,7 +8,7 @@ services:
       # le citește nimeni: bundle-ul e deja construit, cu valorile goale.
       #
       # De aici veneau „harta nu e disponibilă" și checkoutul Stripe care nu pornea pe un deploy
-      # unde tokenul chiar era setat. `Dockerfile` are `ARG` pentru toate patru; astea sunt
+      # unde tokenul chiar era setat. `Dockerfile` are `ARG` pentru toate trei; astea sunt
       # jumătatea care lipsea.
       #
       # Valorile se interpolează din `./.env`, pe care Docker Compose îl citește singur.
@@ -16,7 +16,6 @@ services:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL}
         VITE_MAPBOX_TOKEN: ${VITE_MAPBOX_TOKEN}
         VITE_PUBLIC_STRIPE: ${VITE_PUBLIC_STRIPE}
-        VITE_VAPID_PUBLIC_KEY: ${VITE_VAPID_PUBLIC_KEY}
     env_file:
       - .env
     ports:

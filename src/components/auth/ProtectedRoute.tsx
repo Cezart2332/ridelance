@@ -1,10 +1,8 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { ROUTES } from '../../constants/routes'
 import { CircularProgress, Box } from '@mui/material'
-import { NotificationPermissionPrompt } from '../notifications/NotificationPermissionPrompt'
 import { ImpersonationBanner } from './ImpersonationBanner'
 import { useAppSelector } from '../../store/hooks'
-import { IS_NATIVE_APP } from '../../native/platform'
 
 /**
  * Wraps protected routes.
@@ -30,8 +28,6 @@ export default function ProtectedRoute() {
 
   return (
     <>
-      {/* Notificările web push nu funcționează în aplicația mobilă. */}
-      {!IS_NATIVE_APP && <NotificationPermissionPrompt />}
       <ImpersonationBanner />
       <Outlet />
     </>

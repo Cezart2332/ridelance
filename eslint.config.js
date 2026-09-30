@@ -6,7 +6,8 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // Build-urile web și proiectele native generate de Capacitor nu sunt surse.
+  globalIgnores(['dist', 'dist-native', 'android', 'ios']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

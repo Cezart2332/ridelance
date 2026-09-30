@@ -1,47 +1,23 @@
 import { useEffect } from 'react'
-import {
-  RECURRING_DOCUMENTATION_PUSH_TITLE,
-  getRecurringDocumentationDeepLink,
-  getRecurringDocumentationPushBody,
-  getRequestedAccountingMonthKey,
-} from '../constants/recurringDocumentationNotification'
-import { showLocalPushNotification } from '../lib/localNotification'
+import { getRequestedAccountingMonthKey } from '../constants/recurringDocumentationNotification'
 import { notificationService } from '../services/notification.service'
 
 const SYNC_PREFIX = 'ridelance-recurring-doc-synced:'
-const LOCAL_FALLBACK_PREFIX = 'ridelance-recurring-doc-local:'
 
 /**
  * O dată pe lună contabilă, în orice zi a ferestrei ei (26 – 25): serverul trimite cererea doar
  * dacă n-a plecat deja, deci cine n-a deschis aplicația pe 26 o primește la prima deschidere.
  */
 async function dispatchRecurringDocumentationReminder(): Promise<void> {
-  const monthKey = getRequestedAccountingMonthKey()
-  const syncKey = `${SYNC_PREFIX}${monthKey}`
+  const syncKey = `${SYNC_PREFIX}${getRequestedAccountingMonthKey()}`
   if (localStorage.getItem(syncKey)) return
 
   try {
-    const result = await notificationService.ensureMonthlyRecurringDocumentation()
+    await notificationService.ensureMonthlyRecurringDocumentation()
     localStorage.setItem(syncKey, '1')
-
-    if (result.created && !result.pushSent) {
-      await showLocalPushNotification(
-        RECURRING_DOCUMENTATION_PUSH_TITLE,
-        getRecurringDocumentationPushBody(),
-        getRecurringDocumentationDeepLink(),
-      )
-    }
   } catch (error) {
-    console.warn('Recurring documentation ensure failed; using local fallback if permitted.', error)
-    const fallbackKey = `${LOCAL_FALLBACK_PREFIX}${monthKey}`
-    if (localStorage.getItem(fallbackKey)) return
-
-    await showLocalPushNotification(
-      RECURRING_DOCUMENTATION_PUSH_TITLE,
-      getRecurringDocumentationPushBody(),
-      getRecurringDocumentationDeepLink(),
-    )
-    localStorage.setItem(fallbackKey, '1')
+    // Se reîncearcă la următoarea verificare: cheia lunii nu s-a scris.
+    console.warn('Recurring documentation ensure failed.', error)
   }
 }
 

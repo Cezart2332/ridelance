@@ -3,7 +3,6 @@ import { lazyWithRetry } from './utils/lazyWithRetry'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useReloadOnNewVersion } from './utils/appVersion'
 import { ScrollToTop } from './components/layout/ScrollToTop'
-import InstallPWA from './components/pwa/InstallPWA'
 import { RouteFallback } from './components/common/RouteFallback'
 
 // Auth (kept eager — small, needed immediately on /autentificare)
@@ -98,7 +97,6 @@ function App() {
     <>
       <ScrollToTop />
       <ReloadOnNewVersion />
-      <InstallPWA />
       {/* Suprapunere unică pentru vizualizarea documentelor, apelabilă din orice pagină. */}
       <DocumentViewerHost />
       <Suspense fallback={<RouteFallback />}>

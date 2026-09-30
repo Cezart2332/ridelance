@@ -2,7 +2,6 @@ import { NATIVE_CLIENT_HEADERS, clearRefreshToken, storeRefreshToken } from '../
 import axios from 'axios'
 import { store } from '../store/store'
 import { setCredentials, clearCredentials, startImpersonation } from '../store/authSlice'
-import { clearNotificationPromptSession } from '../lib/push'
 import { refreshAccessToken } from '../lib/refreshSession'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
@@ -64,12 +63,10 @@ export const authService = {
   },
 
   logout: async () => {
-    const userId = store.getState().auth.userId ?? undefined
     // Grab the current access token BEFORE clearing Redux
     const token = store.getState().auth.accessToken
     // Clear Redux state immediately so the UI reacts instantly
     store.dispatch(clearCredentials())
-    clearNotificationPromptSession(userId)
     await clearRefreshToken()
     // Tell the backend to invalidate the refresh token cookie
     try {

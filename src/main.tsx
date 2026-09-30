@@ -24,23 +24,13 @@ window.addEventListener('vite:preloadError', (event) => {
   if (reloadForMissingChunk()) event.preventDefault()
 })
 
-// Service Worker (push notifications only). Avoid reload loops on mobile:
-// skipWaiting + controllerchange + reload resets in-memory flags every load.
-// Nu și în aplicația mobilă: acolo nu există PWA de instalat, iar notificările web push nu ajung.
+// Site-ul nu mai e PWA. Browserele care au instalat service worker-ul de push îl păstrează până îl
+// scoate cineva — iar `/sw.js` nu mai există pe server ca să se actualizeze singur.
 if (!IS_NATIVE_APP && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js', { scope: '/', updateViaCache: 'none' })
-      .catch((error) => console.error('SW registration failed:', error))
-  })
-
-  // Check for updates when user returns to the tab (not on every load)
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState !== 'visible') return
-    navigator.serviceWorker.ready
-      .then((reg) => reg.update())
-      .catch(() => {})
-  })
+  void navigator.serviceWorker
+    .getRegistrations()
+    .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+    .catch(() => {})
 }
 
 const theme = createTheme({
