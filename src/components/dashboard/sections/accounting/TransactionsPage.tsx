@@ -37,6 +37,7 @@ const STATE: Record<ClientTransactionState, { label: string; tone: StatusTone }>
   TRANSFER: { label: 'Transfer ✓', tone: 'active' },
   TAX: { label: 'Taxe ANAF ✓', tone: 'active' },
   INCOME: { label: 'Încasare ✓', tone: 'active' },
+  CORRECTION: { label: 'Corecție contabilă', tone: 'neutral' },
 }
 
 const iso = (date: Date) =>

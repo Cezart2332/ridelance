@@ -198,12 +198,15 @@ export function TransactionsTab({ summary, onSummaryChanged }: DossierTabProps) 
       await accountingApi.ledger.update(dialog.entry.id, { fields: values, reason })
       notify('Tranzacția a fost modificată.', 'success')
     } else if (dialog?.mode === 'correction') {
-      await accountingApi.periods.createCorrection(summary.id, dialog.entry.accountingPeriod, {
+      const correction = await accountingApi.periods.createCorrection(summary.id, dialog.entry.accountingPeriod, {
         ledgerEntryId: dialog.entry.id,
         change: values,
         reason,
       })
-      notify('Corecția controlată a fost înregistrată.', 'success')
+      notify(
+        correction.stornoEntryId ? 'Tranzacția a fost stornată și corectată în luna curentă.' : 'Corecția controlată a fost înregistrată.',
+        'success',
+      )
     }
     changed()
   }

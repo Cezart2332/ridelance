@@ -2235,6 +2235,8 @@ export function createMockAccountingApi(): AccountingApi {
             throw badRequest('PERIOD_OPEN', `Perioada ${formatPeriod(period)} e deschisă; modifică direct tranzacția.`)
           }
           let ledgerEntryId: string | null = null
+          let stornoEntryId: string | null = null
+          let replacementEntryId: string | null = null
           if (request.ledgerEntryId) {
             const entry = findLedgerEntry(request.ledgerEntryId)
             if (entry.pfaId !== pfaId || entry.accountingPeriod !== period) {
@@ -2243,9 +2245,54 @@ export function createMockAccountingApi(): AccountingApi {
             if (request.change.date && periodOf(String(request.change.date)) !== period) {
               throw badRequest('ENTRY_OUTSIDE_PERIOD', 'O corecție nu poate muta tranzacția în altă perioadă.')
             }
-            const updated = { ...applyLedgerChange(entry, request.change), status: 'LOCKED' as const }
-            replaceLedgerEntry(updated)
-            audit(pfaId, 'LedgerEntry', entry.id, 'PERIOD_CORRECTION', entry, updated, reason)
+            if (entry.status === 'LOCKED') {
+              // §4: înregistrarea blocată rămâne; în luna curentă intră stornarea și înlocuitoarea corectată.
+              if (db.ledger.some((e) => e.stornoOfEntryId === entry.id)) {
+                throw conflict('ALREADY_STORNED', 'Înregistrarea e deja stornată; corectează înregistrarea care o înlocuiește, din luna curentă.')
+              }
+              const today = todayIso()
+              const moved = { date: today, accountingPeriod: periodOf(today), documentDate: entry.documentDate ?? entry.date }
+              const corrected = applyLedgerChange(entry, request.change)
+              if (entry.paymentMethod === 'BANK' && (corrected.amount !== entry.amount || corrected.paymentMethod !== entry.paymentMethod)) {
+                throw badRequest('LEDGER_INVARIANT', 'Suma și canalul unei plăți bancare sunt cele din extras; corecția poate schimba doar celelalte câmpuri.')
+              }
+              const storno: LedgerEntry = {
+                ...entry,
+                ...moved,
+                id: nextId('ledger'),
+                source: 'MANUAL',
+                externalId: null,
+                documentLabel: `Stornare ${entry.documentLabel}`.trim(),
+                description: `Stornare: ${entry.description}`,
+                amount: -entry.amount,
+                deductibleAmount: entry.deductibleAmount === null ? null : -entry.deductibleAmount,
+                status: 'LOCKED',
+                settlementGroupId: null,
+                eFacturaMessageId: null,
+                stornoOfEntryId: entry.id,
+                rowVersion: '1',
+              }
+              const replacement: LedgerEntry = {
+                ...corrected,
+                ...moved,
+                id: nextId('ledger'),
+                source: 'MANUAL',
+                externalId: null,
+                status: 'VERIFIED',
+                settlementGroupId: null,
+                eFacturaMessageId: null,
+                correctsEntryId: entry.id,
+                rowVersion: '1',
+              }
+              db.ledger.push(storno, replacement)
+              audit(pfaId, 'LedgerEntry', entry.id, 'PERIOD_CORRECTION', entry, { stornoEntryId: storno.id, replacementEntryId: replacement.id }, reason)
+              stornoEntryId = storno.id
+              replacementEntryId = replacement.id
+            } else {
+              const updated = { ...applyLedgerChange(entry, request.change), status: 'LOCKED' as const }
+              replaceLedgerEntry(updated)
+              audit(pfaId, 'LedgerEntry', entry.id, 'PERIOD_CORRECTION', entry, updated, reason)
+            }
             ledgerEntryId = entry.id
           }
           const correction = {
@@ -2257,6 +2304,8 @@ export function createMockAccountingApi(): AccountingApi {
             reason,
             by: CURRENT_USER,
             at: nowIso(),
+            stornoEntryId,
+            replacementEntryId,
           }
           db.corrections.push(correction)
           audit(pfaId, 'PeriodCorrection', correction.id, 'CREATE', null, correction, reason)

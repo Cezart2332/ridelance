@@ -949,6 +949,10 @@ export interface LedgerEntry {
   documentDate: IsoDate | null
   /** Partea personală, în valoare absolută (R30); nu e niciodată deductibilă. */
   personalAmount: number
+  /** Stornarea (§4) înregistrării blocate cu acest id, dintr-o lună închisă. */
+  stornoOfEntryId?: string | null
+  /** Înregistrarea blocată pe care aceasta o înlocuiește, corectată, în luna curentă. */
+  correctsEntryId?: string | null
 }
 
 export interface UpdateLedgerEntryRequest {
@@ -1175,4 +1179,8 @@ export interface PeriodCorrection {
   reason: string
   by: UserRef
   at: IsoDateTime
+  /** Stornarea din luna curentă, când corecția privește o înregistrare blocată (§4). */
+  stornoEntryId?: string | null
+  /** Înregistrarea corectată care o înlocuiește pe cea stornată. */
+  replacementEntryId?: string | null
 }

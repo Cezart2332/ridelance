@@ -12,6 +12,7 @@ export type ClientTransactionState =
   | 'TRANSFER'
   | 'TAX'
   | 'INCOME'
+  | 'CORRECTION'
 
 export interface ClientTransaction {
   id: string
