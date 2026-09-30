@@ -17,7 +17,7 @@
 #   secrets.DOCKERHUB_USERNAME   utilizatorul Docker Hub
 #   secrets.DOCKERHUB_TOKEN      Personal Access Token Docker Hub, Read & Write
 #   vars.DOCKERHUB_NAMESPACE     utilizatorul sau organizația sub care stă `ridelance-frontend`
-#   vars.VITE_*                  opțional: valorile publice coapte în bundle (ca în Coolify)
+#   VITE_*                       opțional, la Secrets sau la Variables: valorile coapte în bundle
 
 name: DevSecOps
 
@@ -122,9 +122,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
-            VITE_MAPBOX_TOKEN=${{ vars.VITE_MAPBOX_TOKEN }}
-            VITE_PUBLIC_STRIPE=${{ vars.VITE_PUBLIC_STRIPE }}
+            VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL || vars.VITE_API_BASE_URL }}
+            VITE_MAPBOX_TOKEN=${{ secrets.VITE_MAPBOX_TOKEN || vars.VITE_MAPBOX_TOKEN }}
+            VITE_PUBLIC_STRIPE=${{ secrets.VITE_PUBLIC_STRIPE || vars.VITE_PUBLIC_STRIPE }}
 
       - name: Trivy image scan
         env:
