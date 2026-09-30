@@ -618,6 +618,11 @@ function buildLedger(pfa: MockPfa, history: SettingHistoryEntry[], categories: E
         status: seed.status ?? 'VERIFIED',
         accountingPeriod: periodOf(seed.date),
         closedPeriodFlag: false,
+        reconciliationStatus: 'MATCHED' as const,
+        settlementGroupId: null,
+        eFacturaMessageId: null,
+        documentDate: null,
+        personalAmount: 0,
         rowVersion: '1',
       }
     })

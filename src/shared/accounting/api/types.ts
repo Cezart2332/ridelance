@@ -100,14 +100,22 @@ export const ENGAGEMENT_STATUSES = ['ACTIVE', 'INACTIVE'] as const
 export type EngagementStatus = (typeof ENGAGEMENT_STATUSES)[number]
 
 /** §3.3 */
-export const LEDGER_SOURCES = ['BANK', 'UBER', 'BOLT', 'OBLIO', 'UPLOAD', 'CASH_Z', 'MANUAL'] as const
+export const LEDGER_SOURCES = ['BANK', 'UBER', 'BOLT', 'OBLIO', 'UPLOAD', 'CASH_Z', 'MANUAL', 'E_FACTURA'] as const
 export type LedgerSource = (typeof LEDGER_SOURCES)[number]
 
-export const LEDGER_TRANSACTION_TYPES = ['INCOME', 'EXPENSE', 'TRANSFER', 'OWNER_CONTRIBUTION', 'LOAN', 'TAX', 'OTHER'] as const
+export const LEDGER_TRANSACTION_TYPES = [
+  'INCOME', 'EXPENSE', 'TRANSFER', 'OWNER_CONTRIBUTION', 'LOAN', 'TAX', 'OTHER',
+  'OWNER_WITHDRAWAL', 'INTERNAL_TRANSFER', 'PLATFORM_SETTLEMENT',
+] as const
 export type LedgerTransactionType = (typeof LEDGER_TRANSACTION_TYPES)[number]
 
-export const PAYMENT_METHODS = ['BANK', 'CASH'] as const
+/** Canalul: `MANUAL` = card sau cont neconectat (spec flux contabil R34, R35). */
+export const PAYMENT_METHODS = ['BANK', 'CASH', 'MANUAL'] as const
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number]
+
+/** Spec flux contabil §4: cât de sigur e legată înregistrarea de documente și bani. */
+export const RECONCILIATION_STATUSES = ['MATCHED', 'PARTIAL', 'UNMATCHED', 'NEEDS_REVIEW', 'NEEDS_RECONCILIATION'] as const
+export type ReconciliationStatus = (typeof RECONCILIATION_STATUSES)[number]
 
 export const DEDUCTIBILITY_TYPES = ['100_PERCENT', '50_PERCENT', 'NON_DEDUCTIBLE', 'SPECIAL_RULE'] as const
 export type DeductibilityType = (typeof DEDUCTIBILITY_TYPES)[number]
@@ -925,6 +933,14 @@ export interface LedgerEntry {
   /** Import căzut într-o perioadă închisă (B6). */
   closedPeriodFlag: boolean
   rowVersion: string
+  reconciliationStatus: ReconciliationStatus
+  /** Venitul brut și comisionul aceluiași payout (R21). */
+  settlementGroupId: string | null
+  /** Factura e-Factura plătită (R04). */
+  eFacturaMessageId: string | null
+  documentDate: IsoDate | null
+  /** Partea personală, în valoare absolută (R30); nu e niciodată deductibilă. */
+  personalAmount: number
 }
 
 export interface UpdateLedgerEntryRequest {

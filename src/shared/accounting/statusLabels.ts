@@ -13,6 +13,7 @@ import type {
   LedgerSource,
   LedgerTransactionType,
   PaymentMethod,
+  ReconciliationStatus,
   PfaMonthStatus,
   Platform,
   PlatformDocumentStatus,
@@ -174,6 +175,7 @@ export const LEDGER_SOURCE_LABEL: Readonly<Record<LedgerSource, string>> = {
   UPLOAD: 'Document încărcat',
   CASH_Z: 'Raport Z',
   MANUAL: 'Manual',
+  E_FACTURA: 'e-Factura',
 }
 
 export const LEDGER_TRANSACTION_TYPE_LABEL: Readonly<Record<LedgerTransactionType, string>> = {
@@ -184,11 +186,23 @@ export const LEDGER_TRANSACTION_TYPE_LABEL: Readonly<Record<LedgerTransactionTyp
   LOAN: 'Împrumut',
   TAX: 'Taxe și impozite',
   OTHER: 'Altele',
+  OWNER_WITHDRAWAL: 'Retragere titular',
+  INTERNAL_TRANSFER: 'Transfer între conturi',
+  PLATFORM_SETTLEMENT: 'Payout platformă',
 }
 
 export const PAYMENT_METHOD_LABEL: Readonly<Record<PaymentMethod, string>> = {
   BANK: 'Bancă',
   CASH: 'Numerar',
+  MANUAL: 'Card / cont neconectat',
+}
+
+export const RECONCILIATION_STATUS_LABEL: Readonly<Record<ReconciliationStatus, string>> = {
+  MATCHED: 'Reconciliat',
+  PARTIAL: 'Plată parțială',
+  UNMATCHED: 'Document lipsă',
+  NEEDS_REVIEW: 'De verificat',
+  NEEDS_RECONCILIATION: 'Așteaptă reconcilierea',
 }
 
 export const DEDUCTIBILITY_TYPE_LABEL: Readonly<Record<DeductibilityType, string>> = {

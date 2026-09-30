@@ -1909,6 +1909,11 @@ export function createMockAccountingApi(): AccountingApi {
             status: 'VERIFIED',
             accountingPeriod: periodOf(date),
             closedPeriodFlag: false,
+            reconciliationStatus: 'MATCHED' as const,
+            settlementGroupId: null,
+            eFacturaMessageId: null,
+            documentDate: null,
+            personalAmount: 0,
             rowVersion: '1',
           })
           db.ledger.push(entry)
@@ -1988,6 +1993,11 @@ export function createMockAccountingApi(): AccountingApi {
             status: 'NEEDS_REVIEW',
             accountingPeriod: periodOf(date),
             closedPeriodFlag: false,
+            reconciliationStatus: 'MATCHED' as const,
+            settlementGroupId: null,
+            eFacturaMessageId: null,
+            documentDate: null,
+            personalAmount: 0,
             rowVersion: '1',
           })
           db.ledger.push(entry)
