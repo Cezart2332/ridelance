@@ -672,7 +672,7 @@ test.describe('pasul fiscal — banca conectată', () => {
         linkedAtUtc: '2026-09-12T10:00:00Z',
         lastSyncedAtUtc: '2026-09-13T08:00:00Z',
         errorMessage: null,
-        accounts: [{ ibanMasked: 'RO49 **** **** 1234', currency: 'RON', ownerName: 'POPESCU ION PFA' }],
+        accounts: [{ iban: 'RO49AAAA1B31007593841234', currency: 'RON', ownerName: 'POPESCU ION PFA' }],
         linkExpiresAtUtc: null,
       }),
     )
