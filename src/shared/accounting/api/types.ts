@@ -1124,6 +1124,42 @@ export interface AccountingPeriod {
   closedAt: IsoDateTime | null
 }
 
+/** Spec flux contabil §8: controalele reconcilierii lunare. */
+export const RECONCILIATION_CONTROLS = [
+  'OPEN_BANKING', 'E_FACTURA', 'CASH_REGISTER', 'BOLT_DOCUMENTS', 'UBER_DOCUMENTS',
+  'UNRECONCILED_PAYOUTS', 'OPEN_TRANSACTIONS', 'PLATFORM_CASH_VS_Z', 'BANK_BALANCE',
+] as const
+export type ReconciliationControl = (typeof RECONCILIATION_CONTROLS)[number]
+
+export interface ReconciliationControlResult {
+  control: ReconciliationControl
+  passed: boolean
+  /** Fals când controlul nu privește PFA-ul (fără casă de marcat, fără Uber): trece. */
+  applicable: boolean
+  detail: string
+}
+
+export interface PayoutReconciliation {
+  bankTransactionId: string
+  date: IsoDate
+  platform: LedgerSource
+  payout: number
+  gross: number | null
+  commission: number | null
+  difference: number | null
+  status: ReconciliationStatus
+}
+
+export interface MonthReconciliation {
+  pfaId: string
+  period: Period
+  status: AccountingPeriodStatus
+  /** „Închide luna” e activ doar cu toate controalele trecute; serverul verifică la fel. */
+  canClose: boolean
+  controls: ReconciliationControlResult[]
+  payouts: PayoutReconciliation[]
+}
+
 export interface PeriodCorrectionRequest {
   ledgerEntryId?: string
   change: Record<string, unknown>

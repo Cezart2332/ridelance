@@ -23,6 +23,7 @@ import type {
   ExpenseCategoryRule,
   ExpenseDocumentUploadResult,
   ConfirmExpenseDocumentRequest,
+  MonthReconciliation,
   MatchProposal,
   ExportFormat,
   InventoryView,
@@ -235,6 +236,9 @@ export interface AccountingApi {
   periods: {
     list(pfaId: string): Promise<AccountingPeriod[]>
     close(pfaId: string, period: Period): Promise<AccountingPeriod>
+    reconciliation(pfaId: string, period: Period): Promise<MonthReconciliation>
+    /** Doar ADMIN, cu motiv obligatoriu. */
+    reopen(pfaId: string, period: Period, reason: string): Promise<AccountingPeriod>
     createCorrection(pfaId: string, period: Period, request: PeriodCorrectionRequest): Promise<PeriodCorrection>
   }
 }

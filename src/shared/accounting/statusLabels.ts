@@ -14,6 +14,7 @@ import type {
   LedgerTransactionType,
   PaymentMethod,
   ReconciliationStatus,
+  ReconciliationControl,
   PfaMonthStatus,
   Platform,
   PlatformDocumentStatus,
@@ -195,6 +196,18 @@ export const PAYMENT_METHOD_LABEL: Readonly<Record<PaymentMethod, string>> = {
   BANK: 'Bancă',
   CASH: 'Numerar',
   MANUAL: 'Card / cont neconectat',
+}
+
+export const RECONCILIATION_CONTROL_LABEL: Readonly<Record<ReconciliationControl, string>> = {
+  OPEN_BANKING: 'Open Banking',
+  E_FACTURA: 'e-Factura',
+  CASH_REGISTER: 'Casă de marcat / Z',
+  BOLT_DOCUMENTS: 'Bolt: raport fiscal și factură comision',
+  UBER_DOCUMENTS: 'Uber: raport fiscal și facturi comision',
+  UNRECONCILED_PAYOUTS: 'Payout-uri nereconciliate',
+  OPEN_TRANSACTIONS: 'Tranzacții fără document / de verificat',
+  PLATFORM_CASH_VS_Z: 'Cash platformă vs rapoarte Z',
+  BANK_BALANCE: 'Sold bancar vs RJIP bancă',
 }
 
 export const RECONCILIATION_STATUS_LABEL: Readonly<Record<ReconciliationStatus, string>> = {

@@ -71,7 +71,7 @@ export function PeriodsPanel({ summary, onChanged }: { summary: PfaAccountingSum
       <ConfirmDialog
         open={closing !== null}
         title={closing ? `Închide ${formatPeriod(closing.period)}` : ''}
-        message="Tranzacțiile lunii devin blocate, iar importurile care ar cădea în ea intră la verificare, fără să modifice luna. Închiderea nu se poate anula din interfață."
+        message="Luna se închide doar cu toate controalele reconcilierii trecute. Tranzacțiile ei devin blocate, iar importurile care ar cădea în ea intră la verificare. O lună închisă o poate redeschide doar un administrator, cu motiv."
         confirmLabel="Închide luna"
         onClose={() => setClosing(null)}
         onConfirm={() => closePeriod(closing)}

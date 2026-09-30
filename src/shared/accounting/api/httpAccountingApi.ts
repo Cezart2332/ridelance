@@ -214,6 +214,8 @@ export function createHttpAccountingApi(): AccountingApi {
     periods: {
       list: (pfaId) => get(`pfas/${pfaId}/periods`),
       close: (pfaId, period) => post(`pfas/${pfaId}/periods/${period}/close`),
+      reconciliation: (pfaId, period) => get(`pfas/${pfaId}/periods/${period}/reconciliation`),
+      reopen: (pfaId, period, reason) => post(`pfas/${pfaId}/periods/${period}/reopen`, { reason }),
       createCorrection: (pfaId, period, request) => post(`pfas/${pfaId}/periods/${period}/corrections`, request),
     },
   }

@@ -16,6 +16,7 @@ import { documentGroups, uploadInputId } from './documentGroups'
 import { MonthDeclarations } from './MonthDeclarations'
 import { MonthDocuments } from './MonthDocuments'
 import { Panel } from './parts'
+import { ReconciliationPanel } from './ReconciliationPanel'
 import { HAIRLINE, INK, laggingDeclaration, TONES, type Tone } from './status'
 import { useClientJob } from './useClientJob'
 
@@ -205,6 +206,8 @@ export function MonthTab({
         </Accordion>
 
         <MonthDeclarations declarations={decls} readOnly={summary.readOnly} onChanged={reload} />
+
+        <ReconciliationPanel summary={summary} period={period} onChanged={reload} />
       </Stack>
 
       <Stack spacing={2}>

@@ -6,6 +6,7 @@ import type { AccountingApi, RuleResource } from '../contract'
 import { badRequest, conflict, notFound } from '../errors'
 import type {
   AccountingPeriod,
+  ReconciliationControl,
   AnafDeclarationSchema,
   Asset,
   AssetInput,
@@ -2186,6 +2187,43 @@ export function createMockAccountingApi(): AccountingApi {
             entry.pfaId === pfaId && entry.accountingPeriod === period ? { ...entry, status: 'LOCKED' as const } : entry,
           )
           audit(pfaId, 'AccountingPeriod', `${pfaId}:${period}`, 'CLOSE', { status: 'OPEN' }, { status: 'CLOSED' }, null)
+          return item
+        }),
+
+      reconciliation: (pfaId, period) =>
+        respond(() => {
+          findPfa(pfaId)
+          const entries = db.ledger.filter((entry) => entry.pfaId === pfaId && entry.accountingPeriod === period)
+          const open = entries.filter((entry) => entry.transactionType === 'PLATFORM_SETTLEMENT')
+          const loose = entries.filter((entry) => entry.reconciliationStatus === 'UNMATCHED' || entry.reconciliationStatus === 'NEEDS_REVIEW')
+          const passed = (control: ReconciliationControl, detail: string) => ({ control, passed: true, applicable: true, detail })
+          const controls = [
+            passed('OPEN_BANKING', 'Sincronizat azi.'),
+            passed('E_FACTURA', 'Import SPV după sfârșitul lunii.'),
+            { control: 'CASH_REGISTER' as const, passed: true, applicable: false, detail: 'Fără casă de marcat în lună.' },
+            passed('BOLT_DOCUMENTS', 'Raportul și factura de comision sunt confirmate.'),
+            { control: 'UBER_DOCUMENTS' as const, passed: true, applicable: false, detail: 'Fără activitate pe platformă.' },
+            { control: 'UNRECONCILED_PAYOUTS' as const, passed: open.length === 0, applicable: true, detail: open.length === 0 ? 'Toate payout-urile sunt reconciliate.' : `${open.length} payout-uri nereconciliate.` },
+            { control: 'OPEN_TRANSACTIONS' as const, passed: loose.length === 0, applicable: true, detail: loose.length === 0 ? 'Nicio tranzacție deschisă.' : `${loose.length} tranzacții deschise.` },
+            { control: 'PLATFORM_CASH_VS_Z' as const, passed: true, applicable: false, detail: 'Fără încasări numerar.' },
+            passed('BANK_BALANCE', 'Variația contului = RJIP bancă.'),
+          ]
+          const status = db.periods.find((item) => item.pfaId === pfaId && item.period === period)?.status ?? 'OPEN'
+          return { pfaId, period, status, canClose: controls.every((control) => control.passed), controls, payouts: [] }
+        }),
+
+      reopen: (pfaId, period, reason) =>
+        respond(() => {
+          const item = db.periods.find((candidate) => candidate.pfaId === pfaId && candidate.period === period)
+          if (!item || item.status !== 'CLOSED') throw conflict('PERIOD_OPEN', `Perioada ${formatPeriod(period)} nu e închisă.`)
+          requireReason(reason, 'Motivul redeschiderii')
+          item.status = 'OPEN'
+          item.closedBy = null
+          item.closedAt = null
+          db.ledger = db.ledger.map((entry) =>
+            entry.pfaId === pfaId && entry.accountingPeriod === period && entry.status === 'LOCKED' ? { ...entry, status: 'VERIFIED' as const } : entry,
+          )
+          audit(pfaId, 'AccountingPeriod', `${pfaId}:${period}`, 'REOPEN', { status: 'CLOSED' }, { status: 'OPEN' }, reason)
           return item
         }),
 
