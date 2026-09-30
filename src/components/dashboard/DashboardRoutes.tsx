@@ -6,6 +6,7 @@ import { BankTab } from './sections/BankTab'
 import { BeneficiiTab } from './sections/BeneficiiTab'
 import { ExpensesPage } from './sections/accounting/ExpensesPage'
 import { FinancialOverviewPage } from './sections/accounting/FinancialOverviewPage'
+import { TransactionsPage } from './sections/accounting/TransactionsPage'
 import { TaxesPage } from './sections/accounting/TaxesPage'
 import { FiscalProfilePage } from './sections/accounting/FiscalProfilePage'
 import { BoltConnectionPage } from './sections/connections/BoltConnectionPage'
@@ -53,6 +54,7 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
       {/* ── Contabilitate ── */}
       <Route path={rel(PFA_PATHS.accounting)} element={<Navigate to={PFA_PATHS.financialOverview} replace />} />
       <Route path={rel(PFA_PATHS.financialOverview)} element={<FinancialOverviewPage />} />
+      <Route path={rel(PFA_PATHS.transactions)} element={<TransactionsPage />} />
       <Route path={rel(PFA_PATHS.expenses)} element={<ExpensesPage pfaRegistrationId={pfaRegistrationId} />} />
       <Route path={rel(PFA_PATHS.taxes)} element={<TaxesPage />} />
       <Route path={rel(PFA_PATHS.fiscalProfile)} element={<FiscalProfilePage />} />

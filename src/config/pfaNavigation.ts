@@ -47,6 +47,7 @@ export const PFA_PATHS = {
 
   accounting: at('contabilitate'),
   financialOverview: at('contabilitate/situatie-financiara'),
+  transactions: at('contabilitate/tranzactii'),
   expenses: at('contabilitate/cheltuieli'),
   taxes: at('contabilitate/taxe-declaratii'),
   fiscalProfile: at('contabilitate/profil-fiscal'),
@@ -115,6 +116,7 @@ export const PFA_NAV: NavEntry[] = [
         path: PFA_PATHS.financialOverview,
         hint: 'Analiza detaliată a banilor',
       },
+      { id: 'transactions', label: 'Tranzacții', path: PFA_PATHS.transactions, hint: 'Plăți, bonuri și încasări' },
       { id: 'expenses', label: 'Cheltuieli', path: PFA_PATHS.expenses, hint: 'Ce poți deduce din taxe' },
       { id: 'taxes', label: 'Taxe & declarații', path: PFA_PATHS.taxes, hint: 'Estimări și termene' },
       { id: 'fiscal-profile', label: 'Profil fiscal', path: PFA_PATHS.fiscalProfile, hint: 'Situația ta pentru estimări' },
