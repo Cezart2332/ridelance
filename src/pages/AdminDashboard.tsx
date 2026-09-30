@@ -32,6 +32,7 @@ import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFil
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded'
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded'
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
+import EvStationRoundedIcon from '@mui/icons-material/EvStationRounded'
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
 import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
@@ -46,6 +47,7 @@ import { OfficeCalendarAdminView } from '../components/dashboard/sections/admin/
 import { InsuranceTab } from '../components/dashboard/sections/InsuranceTab'
 import { OblioAdminView } from '../components/dashboard/sections/admin/OblioAdminView'
 import { DiscountsAdminView } from '../components/dashboard/sections/admin/DiscountsAdminView'
+import { EldriveAdminView } from '../components/dashboard/sections/admin/EldriveAdminView'
 import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminOverviewView'
 import { SrlAccountsView } from '../components/dashboard/sections/admin/SrlAccountsView'
@@ -251,7 +253,7 @@ export function AdminDashboard() {
   const navigate = useNavigate()
   const [manualTab, setActiveTab] = useState('overview')
   const linkedTab = notificationParams.get('tab') ?? ''
-  const activeTab = ['overview', 'pfa', 'pfa_inrolate', 'srl_inrolate', 'masini', 'pagini_firme', 'servicii', 'facturare', 'reduceri', 'asigurari', 'calendar', 'chat', 'contabili', 'notificari', 'sarcini', ...Object.values(ACCOUNTING_TABS)].includes(linkedTab) ? linkedTab : manualTab
+  const activeTab = ['overview', 'pfa', 'pfa_inrolate', 'srl_inrolate', 'masini', 'pagini_firme', 'servicii', 'facturare', 'reduceri', 'eldrive', 'asigurari', 'calendar', 'chat', 'contabili', 'notificari', 'sarcini', ...Object.values(ACCOUNTING_TABS)].includes(linkedTab) ? linkedTab : manualTab
   const [search, setSearch] = useState('')
   const [onlyAwaitingAdmin, setOnlyAwaitingAdmin] = useState(false)
   const [enrolledFilter, setEnrolledFilter] = useState<EnrolledFilter>('active')
@@ -645,6 +647,7 @@ export function AdminDashboard() {
     { id: 'pagini_firme', label: 'Pagini firme', group: 'Activitate comercială', icon: <LanguageRoundedIcon /> },
     { id: 'servicii', label: 'Servicii', group: 'Activitate comercială', icon: <ShoppingCartRoundedIcon /> },
     { id: 'asigurari', label: 'Asigurări', group: 'Activitate comercială', icon: <ShieldRoundedIcon /> },
+    { id: 'eldrive', label: 'Eldrive', group: 'Activitate comercială', icon: <EvStationRoundedIcon /> },
     { id: 'facturare', label: 'Facturare Oblio', group: 'Finanțe', icon: <ReceiptLongRoundedIcon /> },
     { id: 'reduceri', label: 'Coduri de reducere', group: 'Finanțe', icon: <LocalOfferRoundedIcon /> },
     { id: 'calendar', label: 'Calendar birou', group: 'Administrare', icon: <EventAvailableRoundedIcon /> },
@@ -1201,6 +1204,7 @@ export function AdminDashboard() {
       case 'servicii': return <ServicesAdminView />
       case 'facturare': return <OblioAdminView />
       case 'reduceri': return <DiscountsAdminView />
+      case 'eldrive': return <EldriveAdminView />
       case 'asigurari': return <InsuranceTab />
       case 'calendar': return <OfficeCalendarAdminView />
       case 'chat': return <AdminChatView pfas={pfas} />

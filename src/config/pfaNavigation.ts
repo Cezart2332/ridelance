@@ -65,6 +65,7 @@ export const PFA_PATHS = {
   connUber: at('conexiuni/uber'),
   connOblio: at('conexiuni/oblio'),
   connBank: at('conexiuni/banca'),
+  connEldrive: at('conexiuni/eldrive'),
 
   benefits: at('beneficii'),
 
@@ -155,6 +156,7 @@ export const PFA_NAV: NavEntry[] = [
       { id: 'conn-uber', label: 'Uber', path: PFA_PATHS.connUber, hint: 'Import date și conturi' },
       { id: 'conn-oblio', label: 'OBLIO', path: PFA_PATHS.connOblio, hint: 'Facturare' },
       { id: 'conn-bank', label: 'Bancă', path: PFA_PATHS.connBank, hint: 'Contul bancar PFA' },
+      { id: 'conn-eldrive', label: 'Eldrive', path: PFA_PATHS.connEldrive, hint: 'Încărcare cu tarif RIDElance' },
     ],
   },
 
