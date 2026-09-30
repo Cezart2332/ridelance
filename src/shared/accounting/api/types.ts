@@ -373,6 +373,8 @@ export interface ExtractedFields {
   taxPointDate: IsoDate | null
   /** Reținerea la sursă raportată de platformă (rezumatul Bolt); doar informativ față de D100. */
   withheldTax: number | null
+  /** Venitul cash din raportul platformei: doar control față de rapoartele Z (R24). */
+  cashAmount?: number | null
 }
 
 export type ExtractedFieldKey = keyof ExtractedFields

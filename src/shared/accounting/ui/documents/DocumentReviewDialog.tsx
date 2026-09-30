@@ -63,6 +63,7 @@ function fieldSpecs(detail: PlatformDocumentDetail): FieldSpec[] {
     { key: 'commissionAmount', label: 'Comision', kind: 'amount' },
     { key: 'amount', label: report ? 'Venituri din curse' : 'Total factură', kind: 'amount' },
     ...(report ? [{ key: 'withheldTax', label: 'Reținere la sursă', kind: 'amount' } as const] : []),
+    ...(report ? [{ key: 'cashAmount', label: 'Venit numerar', kind: 'amount' } as const] : []),
   ]
 }
 
