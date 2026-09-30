@@ -31,6 +31,9 @@ import { currentFiscalPeriod, INK } from './status'
 /** Fișa clientului: luna aceasta în față, restul în tab-uri. */
 export function ClientPageView({ pfaId }: { pfaId: string }) {
   const nav = useAccountingNav()
+  // Aceeași pagină servește adminul și contabilul; rutele fiscale au prefix diferit pe rol
+  // (`admin/pfas` vs `accounting/pfas`, doar pentru clienții alocați contabilului).
+  const staffMode = nav.role === 'Admin' ? 'admin' : 'accounting'
   const notify = useNotify()
   const summary = useApi(() => accountingApi.pfas.getSummary(pfaId), [pfaId])
   const menu = useDossierMenu(summary.data, summary.reload)
@@ -121,9 +124,9 @@ export function ClientPageView({ pfaId }: { pfaId: string }) {
         {section === 'venituri' && (
           <Stack spacing={3}>
             <ClientIncomeSection key={period} pfaId={pfa.id} year={year} month={month} />
-            <EstimatedTaxesCard mode="accounting" pfaId={pfa.id} />
-            <FiscalProfilePanel mode="accounting" pfaId={pfa.id} />
-            <StaffTaxInputsPanel mode="accounting" pfaId={pfa.id} />
+            <EstimatedTaxesCard mode={staffMode} pfaId={pfa.id} />
+            <FiscalProfilePanel mode={staffMode} pfaId={pfa.id} />
+            <StaffTaxInputsPanel mode={staffMode} pfaId={pfa.id} />
             <PfaFiscalSettingsPanel pfaId={pfa.id} editable clientUserId={userId} />
           </Stack>
         )}

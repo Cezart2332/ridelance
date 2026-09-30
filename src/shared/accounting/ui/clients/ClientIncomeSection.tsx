@@ -6,12 +6,14 @@ import { PriorPeriodPanel } from '../../../fiscal-estimates'
 import { pfaService } from '../../../../services/pfa.service'
 import { formatPeriod } from '../../format'
 import { ConfirmDialog } from '../components'
+import { useAccountingNav } from '../navigation'
 import { useNotify } from '../notify'
 import { useApi } from '../useApi'
 import { StatusBadge } from '../../../../components/admin'
 
 /** Veniturile lunii (raportul lunar) și marcarea lunii ca procesată, care îl anunță pe client. */
 export function ClientIncomeSection({ pfaId, year, month }: { pfaId: string; year: number; month: number }) {
+  const nav = useAccountingNav()
   const notify = useNotify()
   const income = useApi(
     () => pfaService.getMonthlyIncome(pfaId, year, month).then((data) => data.isProcessed, () => false),
@@ -48,7 +50,7 @@ export function ClientIncomeSection({ pfaId, year, month }: { pfaId: string; yea
         </Button>
       </Stack>
       <PfaMonthlyIncomeForm pfaRegistrationId={pfaId} year={year} month={month} readOnly />
-      <PriorPeriodPanel mode="accounting" pfaId={pfaId} />
+      <PriorPeriodPanel mode={nav.role === 'Admin' ? 'admin' : 'accounting'} pfaId={pfaId} />
       <ConfirmDialog
         open={confirming}
         title={`Procesezi ${formatPeriod(period)}?`}
