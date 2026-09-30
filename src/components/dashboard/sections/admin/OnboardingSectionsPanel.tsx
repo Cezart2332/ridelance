@@ -287,9 +287,9 @@ function FiscalReview({ pfaId, refreshKey }: { pfaId: string; refreshKey: number
       />
       {bank?.accounts.map((account, index) => (
         <Fact
-          key={`${account.ibanMasked ?? 'cont'}-${index}`}
+          key={`${account.iban ?? 'cont'}-${index}`}
           label={bank.accounts.length > 1 ? `Cont ${index + 1}` : 'Cont'}
-          value={[account.ibanMasked, account.currency, account.ownerName].filter(Boolean).join(' · ') || '—'}
+          value={[account.iban, account.currency, account.ownerName].filter(Boolean).join(' · ') || '—'}
         />
       ))}
       {declaredIban && <Fact label="IBAN declarat" value={declaredIban} />}

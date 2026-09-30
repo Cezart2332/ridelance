@@ -120,7 +120,7 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     ],
     isDone: (c) => {
       const bank = step2Of(c)?.bank
-      return c.answers.cont_bancar !== undefined || Boolean(bank?.ibanMasked ?? bank?.bankName)
+      return c.answers.cont_bancar !== undefined || Boolean(bank?.iban ?? bank?.bankName)
     },
   },
   {

@@ -220,7 +220,7 @@ export function BankTab({ onNavigate }: BankTabProps) {
                   </Stack>
                   <Typography sx={{ fontSize: 12.5, color: T.textMuted }}>
                     {connection.accounts
-                      .map((a) => a.ibanMasked ?? 'Cont bancar')
+                      .map((a) => a.iban ?? 'Cont bancar')
                       .join(' · ') || 'Cont bancar'}
                     {' · '}Consimțământ valabil până la {formatDate(connection.consentExpiresAtUtc)}
                   </Typography>

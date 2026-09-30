@@ -176,7 +176,7 @@ export function BankActivityPanel({ userId }: { userId?: string }) {
         {activity && activity.accounts.length > 0 && (
           <Typography sx={{ mt: 2, fontSize: 12.5, color: T.textSubtle }}>
             {activity.accounts
-              .map((a) => `${a.ibanMasked ?? 'Cont'}${a.currency ? ` · ${a.currency}` : ''}`)
+              .map((a) => `${a.iban ?? 'Cont'}${a.currency ? ` · ${a.currency}` : ''}`)
               .join('  ·  ')}
             {' — ultima sincronizare: '}
             {formatDateTime(activity.accounts[0].lastSyncedAtUtc)}

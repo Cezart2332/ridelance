@@ -114,7 +114,7 @@ function BankConnectedCard({ connection }: { connection: BankConnectionDto }) {
     ...connection.accounts.flatMap((account, index) => {
       const suffix = connection.accounts.length > 1 ? ` ${index + 1}` : ''
       return [
-        { label: `IBAN${suffix}`, value: account.ibanMasked ?? '—' },
+        { label: `IBAN${suffix}`, value: account.iban ?? '—' },
         { label: `Titular${suffix}`, value: account.ownerName ?? '—' },
         { label: `Monedă${suffix}`, value: account.currency ?? '—' },
       ]

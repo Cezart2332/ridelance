@@ -16,7 +16,7 @@ export interface BankInstitutionDto {
 export type BankConnectionStatus = 'Created' | 'Pending' | 'Linked' | 'Expired' | 'Error' | 'Revoked';
 
 export interface BankAccountDto {
-  ibanMasked: string | null;
+  iban: string | null;
   currency: string | null;
   ownerName: string | null;
 }
@@ -64,7 +64,7 @@ export interface BankActivityBucketDto {
 
 export interface BankActivityAccountDto {
   id: string;
-  ibanMasked: string | null;
+  iban: string | null;
   currency: string | null;
   ownerName: string | null;
   lastSyncedAtUtc: string | null;

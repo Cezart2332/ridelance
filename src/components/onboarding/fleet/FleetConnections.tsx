@@ -85,7 +85,7 @@ export function FleetBankStep({ state, busy, save, refresh }: Props) {
           {state.bankConnected ? (
             <Alert severity="success">
               Cont bancar conectat {connection?.institutionName}{' '}
-              {connection?.accounts[0]?.ibanMasked}
+              {connection?.accounts[0]?.iban}
             </Alert>
           ) : (
             // Același panou ca în dashboard: alegi banca, îi dai datele pe care le cere ea și te

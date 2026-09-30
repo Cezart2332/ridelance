@@ -212,7 +212,7 @@ export interface AdminFiscalReview {
     status: string
     institutionName: string | null
     linkedAtUtc: string | null
-    accounts: { ibanMasked: string | null; currency: string | null; ownerName: string | null }[]
+    accounts: { iban: string | null; currency: string | null; ownerName: string | null }[]
   } | null
   declaredIban: string | null
 }
@@ -222,7 +222,7 @@ export interface Step2State {
   fiscal: { vatAnswer: VatAnswer; vatRegistrationKind: VatRegistrationKind } | null
   bank: {
     bankName: string | null
-    ibanMasked: string | null
+    iban: string | null
     hasConfirmationDocument: boolean
     ocrIbanMatches: boolean | null
     source: 'Manual' | 'OpenBanking'
