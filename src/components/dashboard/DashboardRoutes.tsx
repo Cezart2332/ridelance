@@ -12,6 +12,7 @@ import { BoltConnectionPage } from './sections/connections/BoltConnectionPage'
 import { OblioConnectionPage } from './sections/connections/OblioConnectionPage'
 import { UberConnectionPage } from './sections/connections/UberConnectionPage'
 import { EldriveConnectionPage } from './sections/connections/EldriveConnectionPage'
+import { FiscalLinkConnectionPage } from './sections/connections/FiscalLinkConnectionPage'
 import { CarDetailView } from './sections/CarDetailView'
 import { CarsView } from './sections/CarsView'
 import { DocumentsGroupPage } from './sections/documents/DocumentsGroupPage'
@@ -82,6 +83,7 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
       <Route path={rel(PFA_PATHS.connUber)} element={<UberConnectionPage />} />
       <Route path={rel(PFA_PATHS.connOblio)} element={<OblioConnectionPage />} />
       <Route path={rel(PFA_PATHS.connEldrive)} element={<EldriveConnectionPage />} />
+      <Route path={rel(PFA_PATHS.connFiscalLink)} element={<FiscalLinkConnectionPage />} />
       {/* Banca e o singură pagină; sub Conexiuni apare doar ca punct de intrare. */}
       <Route path={rel(PFA_PATHS.connBank)} element={<Navigate to={PFA_PATHS.bankAccount} replace />} />
 

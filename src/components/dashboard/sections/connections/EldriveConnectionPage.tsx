@@ -61,8 +61,8 @@ export function EldriveConnectionPage() {
           boxShadow: T.shadow.sm,
         }}
       >
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 2 }}>
-          <Box component="img" src={eldriveLogo} alt="" sx={{ height: 28, width: 'auto' }} />
+        <Stack direction="row" useFlexGap spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap', mb: 2 }}>
+          <Box component="img" src={eldriveLogo} alt="" sx={{ height: 28, width: 'auto', maxWidth: '55%', objectFit: 'contain' }} />
           <Box sx={{ flex: 1 }} />
           {!loading && (
             <StatusChip
