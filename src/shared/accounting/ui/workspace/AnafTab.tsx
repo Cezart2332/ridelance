@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Alert, Box, Button, ButtonBase, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 
 import { accountingApi } from '../../api/accountingApi'
-import type { EFacturaMessage, EFacturaMessageKind } from '../../api/types'
+import type { EFacturaMessage, EFacturaMessageKind, InvoicePaymentStatus } from '../../api/types'
 import { formatDate, formatDateTime, formatMoney } from '../../format'
 import { EmptyText, ErrorBlock, LoadingBlock } from '../components'
 import { useAccountingNav } from '../navigation'
@@ -14,6 +14,13 @@ import { SpvSection } from './SpvSection'
 import { HAIRLINE, INK, MUTED, TONES, type Cell, type Tone } from './status'
 
 const DARK = { bgcolor: INK, color: '#FFFFFF', '&:hover': { bgcolor: '#2d2d45' } }
+
+/** Plata facturilor primite, legată din bancă (spec flux contabil R03–R04b). */
+const PAYMENT_CELL: Record<InvoicePaymentStatus, Cell> = {
+  UNPAID: { tone: 'yellow', label: 'Neplătită' },
+  PARTIALLY_PAID: { tone: 'blue', label: 'Plătită parțial' },
+  PAID: { tone: 'green', label: 'Plătită' },
+}
 
 const KIND_CELL: Record<EFacturaMessageKind, Cell> = {
   RECEIVED: { tone: 'blue', label: 'Primită' },
@@ -212,7 +219,17 @@ export function AnafTab({ pfaId }: { pfaId: string }) {
                           {message.totalAmount !== null ? formatMoney(message.totalAmount, message.currency) : ''}
                         </TableCell>
                         <TableCell>
-                          <StatusPill cell={{ ...KIND_CELL[message.kind], title: message.downloadError ?? undefined }} />
+                          <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', rowGap: 0.5 }}>
+                            <StatusPill cell={{ ...KIND_CELL[message.kind], title: message.downloadError ?? undefined }} />
+                            {message.kind === 'RECEIVED' && message.totalAmount !== null && (
+                              <StatusPill
+                                cell={{
+                                  ...PAYMENT_CELL[message.paymentStatus],
+                                  title: message.paymentStatus === 'PARTIALLY_PAID' ? `${formatMoney(message.paidAmount, message.currency)} plătiți` : undefined,
+                                }}
+                              />
+                            )}
+                          </Stack>
                         </TableCell>
                         <TableCell align="right" sx={{ pr: 2.5, whiteSpace: 'nowrap' }}>
                           {invoice && message.downloaded && (

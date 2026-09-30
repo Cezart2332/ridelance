@@ -144,7 +144,7 @@ function anafState(): AnafConnection {
 
 function mockEFactura(pfaId: string): EFacturaMessage[] {
   const pfa = db.pfas.find((item) => item.id === pfaId)
-  const base = { downloaded: true, downloadError: null, currency: 'RON', details: null }
+  const base = { downloaded: true, downloadError: null, currency: 'RON', details: null, paymentStatus: 'UNPAID' as const, paidAmount: 0 }
   return [
     {
       ...base,

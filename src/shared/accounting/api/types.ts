@@ -567,7 +567,13 @@ export interface EFacturaMessage {
   downloaded: boolean
   downloadError: string | null
   details: string | null
+  /** Facturile primite: plata vine din bancă (spec flux contabil R03–R04b). */
+  paymentStatus: InvoicePaymentStatus
+  paidAmount: number
 }
+
+export const INVOICE_PAYMENT_STATUSES = ['UNPAID', 'PARTIALLY_PAID', 'PAID'] as const
+export type InvoicePaymentStatus = (typeof INVOICE_PAYMENT_STATUSES)[number]
 
 export type SpvMessageStatus = 'PROCESSED' | 'NEW' | 'NEEDS_ATTENTION'
 
