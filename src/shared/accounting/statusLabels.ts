@@ -1,6 +1,12 @@
 import type { StatusTone } from '../../components/admin/StatusBadge'
 import type {
   AccountingPeriodStatus,
+  AssetKind,
+  AssetStatus,
+  InventoryCategory,
+  InventoryItemStatus,
+  InventoryReason,
+  InventoryStatus,
   CashRegisterStatus,
   DeclarationStatus,
   DeclarationType,
@@ -208,6 +214,51 @@ export const RECONCILIATION_CONTROL_LABEL: Readonly<Record<ReconciliationControl
   OPEN_TRANSACTIONS: 'Tranzacții fără document / de verificat',
   PLATFORM_CASH_VS_Z: 'Cash platformă vs rapoarte Z',
   BANK_BALANCE: 'Sold bancar vs RJIP bancă',
+  FIXED_ASSETS_CLASSIFIED: 'Achiziții de clasificat (mijloace fixe)',
+  DEPRECIATION: 'Amortizarea lunii',
+}
+
+export const ASSET_STATUS: Readonly<Record<AssetStatus, StatusDescriptor>> = {
+  ACTIVE: { label: 'Activ', tone: 'success' },
+  PENDING_CLASSIFICATION: { label: 'De clasificat', tone: 'warning' },
+  FULLY_DEPRECIATED: { label: 'Amortizat integral', tone: 'neutral' },
+  DISPOSED: { label: 'Ieșit din gestiune', tone: 'neutral' },
+}
+
+export const ASSET_KIND_LABEL: Readonly<Record<AssetKind, string>> = {
+  FIXED_ASSET: 'Mijloc fix',
+  INVENTORY_OBJECT: 'Obiect de inventar',
+}
+
+export const INVENTORY_STATUS: Readonly<Record<InventoryStatus, StatusDescriptor>> = {
+  DRAFT: { label: 'Ciornă', tone: 'neutral' },
+  AWAITING_PFA_CONFIRMATION: { label: 'La confirmarea PFA', tone: 'warning' },
+  AWAITING_ADMIN_REVIEW: { label: 'De revizuit', tone: 'warning' },
+  FINAL: { label: 'Final', tone: 'success' },
+}
+
+export const INVENTORY_REASON_LABEL: Readonly<Record<InventoryReason, string>> = {
+  ACTIVITY_START: 'Începerea activității',
+  YEAR_END: 'Sfârșitul anului',
+  CESSATION: 'Încetarea activității',
+}
+
+export const INVENTORY_CATEGORY_LABEL: Readonly<Record<InventoryCategory, string>> = {
+  FIXED_ASSETS: 'Mijloace fixe',
+  INVENTORY_OBJECTS: 'Obiecte de inventar',
+  STOCKS: 'Stocuri',
+  RECEIVABLES: 'Creanțe',
+  BANK: 'Disponibil în bancă',
+  CASH: 'Numerar',
+  DEBTS: 'Datorii',
+}
+
+export const INVENTORY_ITEM_STATUS: Readonly<Record<InventoryItemStatus, StatusDescriptor>> = {
+  PREFILLED: { label: 'De confirmat', tone: 'warning' },
+  CONFIRMED: { label: 'Confirmat', tone: 'success' },
+  ADJUSTED: { label: 'Corectat', tone: 'neutral' },
+  REMOVED: { label: 'Scos din folosință', tone: 'neutral' },
+  ADDED_MANUALLY: { label: 'Adăugat', tone: 'neutral' },
 }
 
 export const RECONCILIATION_STATUS_LABEL: Readonly<Record<ReconciliationStatus, string>> = {

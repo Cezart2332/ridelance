@@ -1,4 +1,8 @@
 import type {
+  AccountingYear,
+  FixedAssetReview,
+  InventoryCount,
+  ReconciliationControl,
   AccountingPeriod,
   AnafDeclarationSchema,
   Asset,
@@ -130,6 +134,11 @@ export interface MockDb {
   exchangeRates: ExchangeRate[]
   ledger: LedgerEntry[]
   assets: Asset[]
+  /** Deciziile Adminului pentru posibilele mijloace fixe, după id-ul plății. */
+  fixedAssetDecisions: Record<string, FixedAssetReview>
+  inventoryCounts: InventoryCount[]
+  years: AccountingYear[]
+  explanations: { pfaId: string; period: Period; control: ReconciliationControl; note: string }[]
   periods: AccountingPeriod[]
   corrections: PeriodCorrection[]
   /** Răspunsul din onboarding al utilizatorului PFA curent (mock-ul nu are sesiune). */

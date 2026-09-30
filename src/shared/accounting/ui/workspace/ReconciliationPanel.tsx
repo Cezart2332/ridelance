@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Box, Button, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 
 import { accountingApi } from '../../api/accountingApi'
-import type { MonthReconciliation, PfaAccountingSummary, ReconciliationControlResult } from '../../api/types'
+import type { MonthReconciliation, PfaAccountingSummary, ReconciliationControl, ReconciliationControlResult } from '../../api/types'
+import { EXPLAINABLE_CONTROLS } from '../../api/types'
 import { EMPTY, formatDate, formatMoney, formatPeriod } from '../../format'
 import { LEDGER_SOURCE_LABEL, RECONCILIATION_CONTROL_LABEL, RECONCILIATION_STATUS_LABEL } from '../../statusLabels'
 import { ConfirmDialog, ErrorBlock, LoadingBlock, ReasonDialog } from '../components'
@@ -29,6 +30,7 @@ export function ReconciliationPanel({ summary, period, onChanged }: { summary: P
   const reconciliation = useApi(() => accountingApi.periods.reconciliation(summary.id, period), [summary.id, period])
   const [closing, setClosing] = useState(false)
   const [reopening, setReopening] = useState(false)
+  const [explaining, setExplaining] = useState<ReconciliationControl | null>(null)
 
   const changed = (message: string) => {
     notify(message, 'success')
@@ -84,9 +86,14 @@ export function ReconciliationPanel({ summary, period, onChanged }: { summary: P
               <Typography sx={{ fontSize: 14, fontWeight: 600, color: INK }}>{RECONCILIATION_CONTROL_LABEL[control.control]}</Typography>
               <Typography sx={{ fontSize: 13, color: MUTED, overflowWrap: 'anywhere' }}>{control.detail}</Typography>
             </Box>
-            <Box sx={{ flexShrink: 0 }}>
+            <Stack direction="row" sx={{ flexShrink: 0, gap: 1, alignItems: 'center' }}>
+              {!closed && !control.passed && !summary.readOnly && EXPLAINABLE_CONTROLS.includes(control.control) && (
+                <Button size="small" onClick={() => setExplaining(control.control)}>
+                  Explică
+                </Button>
+              )}
               <StatusPill cell={controlCell(control)} />
-            </Box>
+            </Stack>
           </Stack>
         ))}
       </Stack>
@@ -131,6 +138,17 @@ export function ReconciliationPanel({ summary, period, onChanged }: { summary: P
         onConfirm={async () => {
           await accountingApi.periods.close(summary.id, period)
           changed(`${formatPeriod(period)} a fost închisă.`)
+        }}
+      />
+      <ReasonDialog
+        open={explaining !== null}
+        title={explaining ? RECONCILIATION_CONTROL_LABEL[explaining] : ''}
+        reasonLabel="Explicație"
+        onClose={() => setExplaining(null)}
+        onSubmit={async (note) => {
+          if (!explaining) return
+          await accountingApi.periods.explain(summary.id, period, explaining, note)
+          changed('Explicația a fost salvată.')
         }}
       />
       <ReasonDialog

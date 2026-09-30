@@ -2,8 +2,19 @@ import type {
   ClientWorkspaceRow,
   AccountingPeriod,
   AnafDeclarationSchema,
+  AccountingYear,
+  AddInventoryItemRequest,
   Asset,
-  AssetInput,
+  AssetClassificationRequest,
+  AssetDetail,
+  FixedAssetCandidate,
+  FixedAssetDecision,
+  InventoryCount,
+  InventoryItemRequest,
+  InventoryReason,
+  ManualAssetRequest,
+  ReconciliationControl,
+  RegisterStatus,
   AuditEntry,
   AuditQuery,
   CashEvidenceUploadResult,
@@ -26,7 +37,6 @@ import type {
   MonthReconciliation,
   MatchProposal,
   ExportFormat,
-  InventoryView,
   Job,
   JobRef,
   LedgerEntry,
@@ -217,19 +227,45 @@ export interface AccountingApi {
     uploadZReport(pfaId: string, file: File): Promise<ZReportUploadResult>
   }
 
+  /** Activele și decizia de mijloc fix (spec registre §6). */
   assets: {
-    list(pfaId: string): Promise<Asset[]>
-    create(pfaId: string, input: AssetInput): Promise<Asset>
-    update(pfaId: string, id: string, input: AssetInput): Promise<Asset>
+    list(pfaId: string, asOf?: string): Promise<Asset[]>
+    get(pfaId: string, id: string): Promise<AssetDetail>
+    candidates(pfaId: string): Promise<FixedAssetCandidate[]>
+    /** `null` la decizia „cheltuială curentă”. */
+    decide(pfaId: string, ledgerEntryId: string, decision: FixedAssetDecision, name: string | null, reason: string | null): Promise<Asset | null>
+    create(pfaId: string, request: ManualAssetRequest): Promise<Asset>
+    classify(pfaId: string, id: string, request: AssetClassificationRequest): Promise<Asset>
+    dispose(pfaId: string, id: string, date: string, reason: string): Promise<Asset>
+    exportSheet(pfaId: string, id: string, format: ExportFormat): Promise<Blob>
+    exportList(pfaId: string, asOf: string, format: ExportFormat): Promise<Blob>
   }
 
   registers: {
-    getRjip(pfaId: string, range: RangeQuery): Promise<RjipView>
+    status(pfaId: string, year: number): Promise<RegisterStatus>
+    getRjip(pfaId: string, range: RangeQuery, regenerate?: boolean): Promise<RjipView>
     exportRjip(pfaId: string, range: RangeQuery, format: ExportFormat): Promise<Blob>
     getRef(pfaId: string, year: number): Promise<RefView>
     exportRef(pfaId: string, year: number, format: ExportFormat, asOf?: string): Promise<Blob>
-    getInventory(pfaId: string, year: number): Promise<InventoryView>
     exportInventory(pfaId: string, year: number, format: ExportFormat): Promise<Blob>
+  }
+
+  /** Inventarierea (spec registre §5). */
+  inventory: {
+    list(pfaId: string): Promise<InventoryCount[]>
+    start(pfaId: string, date: string, reason: InventoryReason): Promise<InventoryCount>
+    updateItem(pfaId: string, countId: string, itemId: string, request: InventoryItemRequest): Promise<InventoryCount>
+    addItem(pfaId: string, countId: string, request: AddInventoryItemRequest): Promise<InventoryCount>
+    finalize(pfaId: string, countId: string): Promise<InventoryCount>
+  }
+
+  /** Anul contabil (spec registre §7). */
+  years: {
+    get(pfaId: string, year: number): Promise<AccountingYear>
+    close(pfaId: string, year: number): Promise<AccountingYear>
+    /** Doar ADMIN, cu motiv. */
+    reopen(pfaId: string, year: number, reason: string): Promise<AccountingYear>
+    package(pfaId: string, year: number): Promise<Blob>
   }
 
   /** Perioadele contabile per PFA (§3.5), nu luna fiscală bulk. */
@@ -240,5 +276,7 @@ export interface AccountingApi {
     /** Doar ADMIN, cu motiv obligatoriu. */
     reopen(pfaId: string, period: Period, reason: string): Promise<AccountingPeriod>
     createCorrection(pfaId: string, period: Period, request: PeriodCorrectionRequest): Promise<PeriodCorrection>
+    /** Registre §7: explicația Adminului pentru Z vs cash platformă sau payout-urile nereconciliate. */
+    explain(pfaId: string, period: Period, control: ReconciliationControl, note: string): Promise<void>
   }
 }

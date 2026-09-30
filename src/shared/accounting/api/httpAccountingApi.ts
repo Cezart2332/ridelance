@@ -2,7 +2,7 @@ import axios, { type AxiosRequestConfig } from 'axios'
 import { api } from '../../../lib/axios'
 import type { AccountingApi, RuleResource } from './contract'
 import { AccountingApiError } from './errors'
-import type { CashPreference, ExchangeRate, ValidationResult, VatRegistration } from './types'
+import type { Asset, CashPreference, ExchangeRate, ValidationResult, VatRegistration } from './types'
 
 /**
  * Implementarea HTTP a contractului (B9), peste instanța `api` din `lib/axios` (token, refresh).
@@ -199,17 +199,37 @@ export function createHttpAccountingApi(): AccountingApi {
       uploadZReport: (pfaId, file) => post(`pfas/${pfaId}/z-reports`, form({ file })),
     },
     assets: {
-      list: (pfaId) => get(`pfas/${pfaId}/assets`),
-      create: (pfaId, input) => post(`pfas/${pfaId}/assets`, input),
-      update: (pfaId, id, input) => put(`pfas/${pfaId}/assets/${id}`, input),
+      list: (pfaId, asOf) => get(`pfas/${pfaId}/assets`, { asOf }),
+      get: (pfaId, id) => get(`pfas/${pfaId}/assets/${id}`),
+      candidates: (pfaId) => get(`pfas/${pfaId}/fixed-asset-candidates`),
+      decide: async (pfaId, ledgerEntryId, decision, name, reason) =>
+        (await post<Asset | ''>(`pfas/${pfaId}/ledger/${ledgerEntryId}/fixed-asset-decision`, { decision, name, reason })) || null,
+      create: (pfaId, request) => post(`pfas/${pfaId}/assets`, request),
+      classify: (pfaId, id, request) => put(`pfas/${pfaId}/assets/${id}`, request),
+      dispose: (pfaId, id, date, reason) => post(`pfas/${pfaId}/assets/${id}/dispose`, { date, reason }),
+      exportSheet: (pfaId, id, format) => blob(`pfas/${pfaId}/assets/${id}/sheet`, { format }),
+      exportList: (pfaId, asOf, format) => blob(`pfas/${pfaId}/assets/register`, { asOf, format }),
     },
     registers: {
-      getRjip: (pfaId, range) => get(`pfas/${pfaId}/registers/rjip`, range),
+      status: (pfaId, year) => get(`pfas/${pfaId}/registers/status`, { year }),
+      getRjip: (pfaId, range, regenerate) => get(`pfas/${pfaId}/registers/rjip`, { ...range, regenerate: regenerate || undefined }),
       exportRjip: (pfaId, range, format) => blob(`pfas/${pfaId}/registers/rjip/export`, { ...range, format }),
       getRef: (pfaId, year) => get(`pfas/${pfaId}/registers/ref`, { year }),
       exportRef: (pfaId, year, format, asOf) => blob(`pfas/${pfaId}/registers/ref/export`, { year, format, asOf }),
-      getInventory: (pfaId, year) => get(`pfas/${pfaId}/registers/inventory`, { year }),
       exportInventory: (pfaId, year, format) => blob(`pfas/${pfaId}/registers/inventory/export`, { year, format }),
+    },
+    inventory: {
+      list: (pfaId) => get(`pfas/${pfaId}/inventory-counts`),
+      start: (pfaId, date, reason) => post(`pfas/${pfaId}/inventory-counts`, { date, reason }),
+      updateItem: (pfaId, countId, itemId, request) => patch(`pfas/${pfaId}/inventory-counts/${countId}/items/${itemId}`, request),
+      addItem: (pfaId, countId, request) => post(`pfas/${pfaId}/inventory-counts/${countId}/items`, request),
+      finalize: (pfaId, countId) => post(`pfas/${pfaId}/inventory-counts/${countId}/finalize`),
+    },
+    years: {
+      get: (pfaId, year) => get(`pfas/${pfaId}/years/${year}`),
+      close: (pfaId, year) => post(`pfas/${pfaId}/years/${year}/close`),
+      reopen: (pfaId, year, reason) => post(`pfas/${pfaId}/years/${year}/reopen`, { reason }),
+      package: (pfaId, year) => blob(`pfas/${pfaId}/years/${year}/package`),
     },
     periods: {
       list: (pfaId) => get(`pfas/${pfaId}/periods`),
@@ -217,6 +237,9 @@ export function createHttpAccountingApi(): AccountingApi {
       reconciliation: (pfaId, period) => get(`pfas/${pfaId}/periods/${period}/reconciliation`),
       reopen: (pfaId, period, reason) => post(`pfas/${pfaId}/periods/${period}/reopen`, { reason }),
       createCorrection: (pfaId, period, request) => post(`pfas/${pfaId}/periods/${period}/corrections`, request),
+      explain: async (pfaId, period, control, note) => {
+        await post(`pfas/${pfaId}/periods/${period}/explanations`, { control, note })
+      },
     },
   }
 }

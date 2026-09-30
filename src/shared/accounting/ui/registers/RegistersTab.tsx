@@ -1,6 +1,8 @@
 import { Fragment, useState } from 'react'
 import {
-  Button,
+  Box,
+  Collapse,
+  IconButton,
   MenuItem,
   Paper,
   Stack,
@@ -13,15 +15,22 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material'
 
 import { accountingApi } from '../../api/accountingApi'
-import type { Asset, AssetInput, ExportFormat } from '../../api/types'
-import { EMPTY, formatAmount, formatDate, formatPeriod, parseAmount } from '../../format'
+import type { RefRow } from '../../api/types'
+import { formatAmount, formatDate, formatPeriod } from '../../format'
 import { REF_STATUS } from '../../statusLabels'
-import { AccountingBadge, EmptyText, ErrorBlock, LoadingBlock, ReasonDialog } from '../components'
+import { AccountingBadge, EmptyText, ErrorBlock, LoadingBlock } from '../components'
 import { useAction } from '../notify'
 import type { DossierTabProps } from '../pfa/PfaDossierView'
 import { downloadBlob, useApi } from '../useApi'
+import { AssetsCard } from './AssetsCard'
+import { InventoryCard } from './InventoryCard'
+import { RegisterStatusBar } from './RegisterStatusBar'
+import { YearCard } from './YearCard'
+import { exportName } from './exportName'
+import { ExportButtons, YearSelect } from './registerParts'
 
 const cell = (value: number) => (value ? formatAmount(value) : '')
 
@@ -31,31 +40,18 @@ function yearsOf(startDate: string, lastYear: number): number[] {
   return Array.from({ length: lastYear - first + 1 }, (_, index) => lastYear - index)
 }
 
-function ExportButtons({ onExport, busy }: { onExport: (format: ExportFormat) => void; busy: boolean }) {
-  return (
-    <Stack direction="row" sx={{ gap: 1 }}>
-      <Button size="small" variant="outlined" disabled={busy} onClick={() => onExport('pdf')}>
-        Export PDF
-      </Button>
-      <Button size="small" variant="outlined" disabled={busy} onClick={() => onExport('xlsx')}>
-        Export Excel
-      </Button>
-    </Stack>
-  )
-}
-
-/** Extensia după conținut: exportul „Excel” al mock-ului e CSV. */
-function exportName(base: string, blob: Blob, format: ExportFormat): string {
-  return `${base}.${blob.type.startsWith('text/csv') ? 'csv' : format}`
-}
-
-function RjipCard({ summary, years }: DossierTabProps & { years: number[] }) {
+function RjipCard({ summary, year }: DossierTabProps & { year: number }) {
   const { busy, run } = useAction()
-  const [mode, setMode] = useState<'year' | 'custom'>('year')
-  const [year, setYear] = useState(years[0])
-  const [from, setFrom] = useState(`${years[0]}-01-01`)
-  const [to, setTo] = useState(`${years[0]}-12-31`)
-  const range = mode === 'year' ? { from: `${year}-01-01`, to: `${year}-12-31` } : { from, to }
+  const [mode, setMode] = useState<'year' | 'month' | 'custom'>('year')
+  const [month, setMonth] = useState(summary.currentPeriod)
+  const [from, setFrom] = useState(`${year}-01-01`)
+  const [to, setTo] = useState(`${year}-12-31`)
+  const monthEnd = (period: string) => {
+    const [y, m] = period.split('-').map(Number)
+    return `${period}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`
+  }
+  const range =
+    mode === 'year' ? { from: `${year}-01-01`, to: `${year}-12-31` } : mode === 'month' ? { from: `${month}-01`, to: monthEnd(month) } : { from, to }
   const rjip = useApi(() => accountingApi.registers.getRjip(summary.id, range), [summary.id, range.from, range.to])
   const data = rjip.data
   const totals = new Map((data?.monthTotals ?? []).map((total) => [total.period, total]))
@@ -65,10 +61,9 @@ function RjipCard({ summary, years }: DossierTabProps & { years: number[] }) {
     <Paper>
       <Stack spacing={2} sx={{ p: 2.5 }}>
         <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
-          <Stack spacing={0.25}>
-            <Typography variant="h2">Registrul-jurnal de încasări și plăți</Typography>
-          </Stack>
+          <Typography variant="h2">Registrul-jurnal de încasări și plăți</Typography>
           <ExportButtons
+            csv
             busy={busy !== null}
             onExport={(format) =>
               run('rjip', async () => {
@@ -79,22 +74,18 @@ function RjipCard({ summary, years }: DossierTabProps & { years: number[] }) {
           />
         </Stack>
         <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2 }}>
-          <TextField select label="Interval" value={mode} onChange={(event) => setMode(event.target.value as 'year' | 'custom')} sx={{ minWidth: 160 }}>
-            <MenuItem value="year">An</MenuItem>
-            <MenuItem value="custom">Interval custom</MenuItem>
+          <TextField select size="small" label="Interval" value={mode} onChange={(event) => setMode(event.target.value as typeof mode)} sx={{ minWidth: 160 }}>
+            <MenuItem value="year">Anul {year}</MenuItem>
+            <MenuItem value="month">O lună</MenuItem>
+            <MenuItem value="custom">Interval</MenuItem>
           </TextField>
-          {mode === 'year' ? (
-            <TextField select label="An" value={year} onChange={(event) => setYear(Number(event.target.value))} sx={{ minWidth: 120 }}>
-              {years.map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-            </TextField>
-          ) : (
+          {mode === 'month' && (
+            <TextField type="month" size="small" label="Luna" value={month} onChange={(event) => setMonth(event.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
+          )}
+          {mode === 'custom' && (
             <>
-              <TextField type="date" label="De la" value={from} onChange={(event) => setFrom(event.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField type="date" label="Până la" value={to} onChange={(event) => setTo(event.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
+              <TextField type="date" size="small" label="De la" value={from} onChange={(event) => setFrom(event.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
+              <TextField type="date" size="small" label="Până la" value={to} onChange={(event) => setTo(event.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
             </>
           )}
         </Stack>
@@ -102,7 +93,7 @@ function RjipCard({ summary, years }: DossierTabProps & { years: number[] }) {
       {rjip.error && <ErrorBlock message={rjip.error} onRetry={rjip.reload} />}
       {!data && !rjip.error && <LoadingBlock />}
       {data && data.rows.length === 0 && (
-        <Stack sx={{ px: 2.5 }}>
+        <Stack sx={{ px: 2.5, pb: 2.5 }}>
           <EmptyText>Nicio operațiune în interval.</EmptyText>
         </Stack>
       )}
@@ -111,8 +102,8 @@ function RjipCard({ summary, years }: DossierTabProps & { years: number[] }) {
           <Table size="small" stickyHeader sx={{ minWidth: 900 }}>
             <TableHead>
               <TableRow>
-                <TableCell>Data operațiunii</TableCell>
-                <TableCell>Documentul (fel, număr)</TableCell>
+                <TableCell>Data</TableCell>
+                <TableCell>Document</TableCell>
                 <TableCell>Explicații</TableCell>
                 <TableCell align="right">Încasări numerar</TableCell>
                 <TableCell align="right">Încasări bancă</TableCell>
@@ -127,8 +118,8 @@ function RjipCard({ summary, years }: DossierTabProps & { years: number[] }) {
                   <Fragment key={period}>
                     {data.rows
                       .filter((row) => row.date.startsWith(period))
-                      .map((row) => (
-                        <TableRow key={row.ledgerEntryId}>
+                      .map((row, index) => (
+                        <TableRow key={`${row.ledgerEntryId}-${index}`}>
                           <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(row.date)}</TableCell>
                           <TableCell>{row.document}</TableCell>
                           <TableCell>{row.operation}</TableCell>
@@ -139,7 +130,7 @@ function RjipCard({ summary, years }: DossierTabProps & { years: number[] }) {
                         </TableRow>
                       ))}
                     {total && (
-                      <TableRow sx={{ bgcolor: 'grey.50' }}>
+                      <TableRow sx={{ bgcolor: 'action.hover' }}>
                         <TableCell colSpan={3} sx={{ fontWeight: 600 }}>
                           Total {formatPeriod(period)}
                         </TableCell>
@@ -160,9 +151,50 @@ function RjipCard({ summary, years }: DossierTabProps & { years: number[] }) {
   )
 }
 
-function RefCard({ summary, years }: DossierTabProps & { years: number[] }) {
+/** Un rând REF cu drill-down până la înregistrări și lunile de amortizare. */
+function RefRowView({ row }: { row: RefRow }) {
+  const [open, setOpen] = useState(false)
+  const contributions = row.contributions ?? []
+  return (
+    <>
+      <TableRow hover>
+        <TableCell sx={{ width: 48 }}>
+          {contributions.length > 0 && (
+            <IconButton size="small" aria-label={open ? 'Ascunde detaliile' : 'Arată detaliile'} onClick={() => setOpen((value) => !value)}>
+              {open ? <KeyboardArrowUp fontSize="small" /> : <KeyboardArrowDown fontSize="small" />}
+            </IconButton>
+          )}
+        </TableCell>
+        <TableCell>{row.calculationElement}</TableCell>
+        <TableCell align="right" sx={{ fontWeight: 600 }}>{formatAmount(row.value)}</TableCell>
+      </TableRow>
+      {contributions.length > 0 && (
+        <TableRow>
+          <TableCell colSpan={3} sx={{ p: 0, borderBottom: open ? undefined : 'none' }}>
+            <Collapse in={open} unmountOnExit>
+              <Box sx={{ maxHeight: 320, overflowY: 'auto', px: 2, py: 1 }}>
+                <Table size="small">
+                  <TableBody>
+                    {contributions.map((item, index) => (
+                      <TableRow key={`${item.ledgerEntryId ?? item.assetId}-${index}`}>
+                        <TableCell sx={{ whiteSpace: 'nowrap', width: 110 }}>{formatDate(item.date)}</TableCell>
+                        <TableCell>{item.label}</TableCell>
+                        <TableCell align="right">{formatAmount(item.value)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            </Collapse>
+          </TableCell>
+        </TableRow>
+      )}
+    </>
+  )
+}
+
+function RefCard({ summary, year }: DossierTabProps & { year: number }) {
   const { busy, run } = useAction()
-  const [year, setYear] = useState(years[0])
   const ref = useApi(() => accountingApi.registers.getRef(summary.id, year), [summary.id, year])
   const data = ref.data
 
@@ -170,17 +202,13 @@ function RefCard({ summary, years }: DossierTabProps & { years: number[] }) {
     <Paper>
       <Stack spacing={2} sx={{ p: 2.5 }}>
         <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
-          <Stack spacing={0.25}>
-            <Stack direction="row" sx={{ gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-              <Typography variant="h2">Registrul de evidență fiscală</Typography>
-              {data && (
-                <AccountingBadge
-                  descriptor={
-                    data.status === 'INTERMEDIATE' ? { ...REF_STATUS.INTERMEDIATE, label: `Situație intermediară la ${formatDate(data.asOf)}` } : REF_STATUS[data.status]
-                  }
-                />
-              )}
-            </Stack>
+          <Stack direction="row" sx={{ gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Typography variant="h2">Registrul de evidență fiscală {year}</Typography>
+            {data && (
+              <AccountingBadge
+                descriptor={data.status === 'INTERMEDIATE' ? { ...REF_STATUS.INTERMEDIATE, label: `Situație intermediară la ${formatDate(data.asOf)}` } : REF_STATUS[data.status]}
+              />
+            )}
           </Stack>
           <ExportButtons
             busy={busy !== null}
@@ -192,13 +220,6 @@ function RefCard({ summary, years }: DossierTabProps & { years: number[] }) {
             }
           />
         </Stack>
-        <TextField select label="An" value={year} onChange={(event) => setYear(Number(event.target.value))} sx={{ maxWidth: 160 }}>
-          {years.map((option) => (
-            <MenuItem key={option} value={option}>
-              {option}
-            </MenuItem>
-          ))}
-        </TextField>
       </Stack>
       {ref.error && <ErrorBlock message={ref.error} onRetry={ref.reload} />}
       {!data && !ref.error && <LoadingBlock />}
@@ -207,22 +228,14 @@ function RefCard({ summary, years }: DossierTabProps & { years: number[] }) {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>An</TableCell>
-                <TableCell>Rectificare</TableCell>
-                <TableCell>Categoria venitului</TableCell>
+                <TableCell />
                 <TableCell>Element de calcul</TableCell>
                 <TableCell align="right">Valoare</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {data.rows.map((row) => (
-                <TableRow key={row.calculationElement}>
-                  <TableCell>{row.year}</TableCell>
-                  <TableCell>{row.rectification ? 'Da' : 'Nu'}</TableCell>
-                  <TableCell>{row.incomeCategory}</TableCell>
-                  <TableCell>{row.calculationElement}</TableCell>
-                  <TableCell align="right">{formatAmount(row.value)}</TableCell>
-                </TableRow>
+                <RefRowView key={row.calculationElement} row={row} />
               ))}
             </TableBody>
           </Table>
@@ -232,177 +245,25 @@ function RefCard({ summary, years }: DossierTabProps & { years: number[] }) {
   )
 }
 
-interface AssetForm {
-  type: string
-  description: string
-  acquisitionDate: string
-  acquisitionValue: string
-  status: Asset['status']
-  disposedDate: string
-}
-
-const emptyAsset: AssetForm = { type: '', description: '', acquisitionDate: '', acquisitionValue: '', status: 'IN_USE', disposedDate: '' }
-
-function InventoryCard({ summary, years }: DossierTabProps & { years: number[] }) {
-  const { busy, run } = useAction()
-  const [year, setYear] = useState(years[0])
-  const inventory = useApi(() => accountingApi.registers.getInventory(summary.id, year), [summary.id, year])
-  const [editing, setEditing] = useState<{ asset: Asset | null; form: AssetForm } | null>(null)
-  const data = inventory.data
-
-  const toInput = (form: AssetForm, asset: Asset | null): AssetInput => ({
-    type: form.type.trim(),
-    description: form.description.trim(),
-    acquisitionDate: form.acquisitionDate,
-    acquisitionValue: parseAmount(form.acquisitionValue) ?? 0,
-    document: asset?.document ?? null,
-    status: form.status,
-    disposedDate: form.status === 'DISPOSED' ? form.disposedDate || null : null,
-  })
-
-  const set = (patch: Partial<AssetForm>) => setEditing((current) => current && { ...current, form: { ...current.form, ...patch } })
-  const form = editing?.form
-  const valid = Boolean(form && form.type.trim() && form.description.trim() && form.acquisitionDate && parseAmount(form.acquisitionValue) && (form.status === 'IN_USE' || form.disposedDate))
-
-  return (
-    <Paper>
-      <Stack spacing={2} sx={{ p: 2.5 }}>
-        <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
-          <Stack spacing={0.25}>
-            <Typography variant="h2">Registrul-inventar</Typography>
-          </Stack>
-          <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
-            {!summary.readOnly && (
-              <Button size="small" variant="contained" onClick={() => setEditing({ asset: null, form: emptyAsset })}>
-                Adaugă activ
-              </Button>
-            )}
-            <ExportButtons
-              busy={busy !== null}
-              onExport={(format) =>
-                run('inventory', async () => {
-                  const blob = await accountingApi.registers.exportInventory(summary.id, year, format)
-                  downloadBlob(blob, exportName(`Registru_inventar_${summary.cui}_${year}`, blob, format))
-                })
-              }
-            />
-          </Stack>
-        </Stack>
-        <TextField select label="An" value={year} onChange={(event) => setYear(Number(event.target.value))} sx={{ maxWidth: 160 }}>
-          {years.map((option) => (
-            <MenuItem key={option} value={option}>
-              {option}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Stack>
-      {inventory.error && <ErrorBlock message={inventory.error} onRetry={inventory.reload} />}
-      {!data && !inventory.error && <LoadingBlock />}
-      {data && data.assets.length === 0 && (
-        <Stack sx={{ px: 2.5 }}>
-          <EmptyText>Niciun activ în {year}.</EmptyText>
-        </Stack>
-      )}
-      {data && data.assets.length > 0 && (
-        <TableContainer sx={{ overflowX: 'auto' }}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Tip</TableCell>
-                <TableCell>Descriere</TableCell>
-                <TableCell>Achiziție</TableCell>
-                <TableCell align="right">Valoare</TableCell>
-                <TableCell>Document</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.assets.map((asset) => (
-                <TableRow key={asset.id} hover>
-                  <TableCell>{asset.type}</TableCell>
-                  <TableCell>{asset.description}</TableCell>
-                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(asset.acquisitionDate)}</TableCell>
-                  <TableCell align="right">{formatAmount(asset.acquisitionValue)}</TableCell>
-                  <TableCell>{asset.document?.fileName ?? EMPTY}</TableCell>
-                  <TableCell>{asset.status === 'IN_USE' ? 'În folosință' : `Ieșit la ${formatDate(asset.disposedDate)}`}</TableCell>
-                  <TableCell align="right">
-                    {!summary.readOnly && (
-                      <Button
-                        size="small"
-                        onClick={() =>
-                          setEditing({
-                            asset,
-                            form: {
-                              type: asset.type,
-                              description: asset.description,
-                              acquisitionDate: asset.acquisitionDate,
-                              acquisitionValue: formatAmount(asset.acquisitionValue),
-                              status: asset.status,
-                              disposedDate: asset.disposedDate ?? '',
-                            },
-                          })
-                        }
-                      >
-                        Modifică
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-
-      <ReasonDialog
-        open={editing !== null}
-        title={editing?.asset ? 'Modifică activul' : 'Adaugă activ'}
-        requireReason={false}
-        showReason={false}
-        canSubmit={valid}
-        onClose={() => setEditing(null)}
-        onSubmit={async () => {
-          if (!editing) return
-          const input = toInput(editing.form, editing.asset)
-          if (editing.asset) await accountingApi.assets.update(summary.id, editing.asset.id, input)
-          else await accountingApi.assets.create(summary.id, input)
-          inventory.reload()
-        }}
-      >
-        {form && (
-          <>
-            <TextField label="Tip" value={form.type} onChange={(event) => set({ type: event.target.value })} helperText="De ex. Autoturism, Casă de marcat" />
-            <TextField label="Descriere" value={form.description} onChange={(event) => set({ description: event.target.value })} />
-            <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2 }}>
-              <TextField type="date" label="Data achiziției" value={form.acquisitionDate} onChange={(event) => set({ acquisitionDate: event.target.value })} slotProps={{ inputLabel: { shrink: true } }} fullWidth />
-              <TextField label="Valoarea achiziției (lei)" value={form.acquisitionValue} onChange={(event) => set({ acquisitionValue: event.target.value })} fullWidth />
-            </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2 }}>
-              <TextField select label="Status" value={form.status} onChange={(event) => set({ status: event.target.value as Asset['status'] })} fullWidth>
-                <MenuItem value="IN_USE">În folosință</MenuItem>
-                <MenuItem value="DISPOSED">Ieșit din patrimoniu</MenuItem>
-              </TextField>
-              {form.status === 'DISPOSED' && (
-                <TextField type="date" label="Data ieșirii" value={form.disposedDate} onChange={(event) => set({ disposedDate: event.target.value })} slotProps={{ inputLabel: { shrink: true } }} fullWidth />
-              )}
-            </Stack>
-          </>
-        )}
-      </ReasonDialog>
-    </Paper>
-  )
-}
-
-/** F6: tabul „Registre” — RJIP, REF și Registru-inventar, cu previzualizare și export. */
+/** Tabul „Registre”: starea, RJIP, REF, activele, inventarul și anul contabil (spec registre §3–§8). */
 export function RegistersTab(props: DossierTabProps) {
   const lastYear = Number(props.summary.currentPeriod.slice(0, 4))
   const years = yearsOf(props.summary.engagement.startDate, lastYear)
+  const [year, setYear] = useState(years[0])
+  const [version, setVersion] = useState(0)
+  const changed = () => setVersion((value) => value + 1)
+
   return (
     <Stack spacing={3}>
-      <RjipCard {...props} years={years} />
-      <RefCard {...props} years={years} />
-      <InventoryCard {...props} years={years} />
+      <Stack direction="row" sx={{ gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+        <YearSelect years={years} year={year} onChange={setYear} />
+        <RegisterStatusBar key={`status-${year}-${version}`} pfaId={props.summary.id} year={year} />
+      </Stack>
+      <RjipCard key={`rjip-${year}`} {...props} year={year} />
+      <RefCard key={`ref-${year}-${version}`} {...props} year={year} />
+      <AssetsCard {...props} onChanged={changed} />
+      <InventoryCard {...props} year={year} onChanged={changed} />
+      <YearCard key={`year-${year}-${version}`} {...props} year={year} onChanged={changed} />
     </Stack>
   )
 }

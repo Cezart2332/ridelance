@@ -141,7 +141,7 @@ export type JobStatus = (typeof JOB_STATUSES)[number]
 export const JOB_TYPES = ['PROCESS_PERIOD', 'GENERATE_DECLARATIONS', 'VALIDATE_DECLARATIONS', 'HANDOVER_PACKAGE'] as const
 export type JobType = (typeof JOB_TYPES)[number]
 
-export const EXPORT_FORMATS = ['pdf', 'xlsx'] as const
+export const EXPORT_FORMATS = ['pdf', 'xlsx', 'csv'] as const
 export type ExportFormat = (typeof EXPORT_FORMATS)[number]
 
 // ---------------------------------------------------------------------------------------------
@@ -1039,22 +1039,174 @@ export interface ZReportUploadResult {
   ledgerEntry: LedgerEntry
 }
 
-export const ASSET_STATUSES = ['IN_USE', 'DISPOSED'] as const
+// ---------------------------------------------------------------------------------------------
+// Active, amortizare, inventariere, an contabil (spec registre §5–§8)
+// ---------------------------------------------------------------------------------------------
+
+export const ASSET_STATUSES = ['ACTIVE', 'DISPOSED', 'PENDING_CLASSIFICATION', 'FULLY_DEPRECIATED'] as const
 export type AssetStatus = (typeof ASSET_STATUSES)[number]
+
+export const ASSET_KINDS = ['FIXED_ASSET', 'INVENTORY_OBJECT'] as const
+export type AssetKind = (typeof ASSET_KINDS)[number]
+
+/** Decizia de mijloc fix a unei achiziții: Tax Engine propune `PENDING`, Adminul decide. */
+export const FIXED_ASSET_REVIEWS = ['NONE', 'PENDING', 'EXPENSE', 'FIXED_ASSET', 'INVENTORY_OBJECT'] as const
+export type FixedAssetReview = (typeof FIXED_ASSET_REVIEWS)[number]
 
 export interface Asset {
   id: string
   pfaId: string
-  type: string
-  description: string
-  acquisitionDate: IsoDate
-  acquisitionValue: number
-  document: StoredFileRef | null
+  /** `MF-0001` / `OI-0001`. */
+  inventoryNumber: string
+  name: string
+  kind: AssetKind
   status: AssetStatus
-  disposedDate: IsoDate | null
+  acquisitionEntryId: string | null
+  documentRef: string
+  supplierName: string | null
+  entryDate: IsoDate
+  inServiceDate: IsoDate | null
+  entryValue: number
+  depreciationClassCode: string | null
+  normalLifeMonths: number | null
+  method: string
+  disposalDate: IsoDate | null
+  disposalReason: string | null
+  document: StoredFileRef | null
+  monthlyDepreciation: number | null
+  /** Data la care sunt calculate `accumulated` și `remaining`. */
+  asOf: IsoDate
+  accumulated: number
+  remaining: number
 }
 
-export type AssetInput = Omit<Asset, 'id' | 'pfaId'>
+export interface DepreciationLine {
+  year: number
+  month: number
+  amount: number
+  accumulated: number
+  remaining: number
+  isLocked: boolean
+}
+
+export interface AssetDetail {
+  asset: Asset
+  lines: DepreciationLine[]
+}
+
+export interface FixedAssetCandidate {
+  ledgerEntryId: string
+  date: IsoDate
+  documentLabel: string
+  description: string
+  counterparty: string | null
+  amount: number
+  category: string | null
+  review: FixedAssetReview
+}
+
+export type FixedAssetDecision = 'EXPENSE' | 'FIXED_ASSET' | 'INVENTORY_OBJECT'
+
+export interface AssetClassificationRequest {
+  name: string
+  documentRef: string
+  supplierName: string | null
+  inServiceDate: IsoDate | null
+  depreciationClassCode: string | null
+  normalLifeMonths: number | null
+  reason: string | null
+}
+
+export interface ManualAssetRequest {
+  name: string
+  kind: AssetKind
+  entryDate: IsoDate
+  entryValue: number
+  documentRef: string
+  supplierName: string | null
+  reason: string | null
+}
+
+export const INVENTORY_REASONS = ['ACTIVITY_START', 'YEAR_END', 'CESSATION'] as const
+export type InventoryReason = (typeof INVENTORY_REASONS)[number]
+
+export const INVENTORY_STATUSES = ['DRAFT', 'AWAITING_PFA_CONFIRMATION', 'AWAITING_ADMIN_REVIEW', 'FINAL'] as const
+export type InventoryStatus = (typeof INVENTORY_STATUSES)[number]
+
+export const INVENTORY_ITEM_STATUSES = ['PREFILLED', 'CONFIRMED', 'ADJUSTED', 'REMOVED', 'ADDED_MANUALLY'] as const
+export type InventoryItemStatus = (typeof INVENTORY_ITEM_STATUSES)[number]
+
+export const INVENTORY_CATEGORIES = ['FIXED_ASSETS', 'INVENTORY_OBJECTS', 'STOCKS', 'RECEIVABLES', 'BANK', 'CASH', 'DEBTS'] as const
+export type InventoryCategory = (typeof INVENTORY_CATEGORIES)[number]
+
+export type InventoryItemAction = 'CONFIRM' | 'ADJUST' | 'REMOVE' | 'NOTE'
+
+export interface InventoryItem {
+  id: string
+  category: InventoryCategory
+  description: string
+  systemValue: number
+  confirmedValue: number | null
+  /** Confirmat − sistem. */
+  difference: number
+  sourceType: string | null
+  sourceId: string | null
+  status: InventoryItemStatus
+  requiresConfirmation: boolean
+  note: string | null
+}
+
+export interface InventoryCount {
+  id: string
+  pfaId: string
+  date: IsoDate
+  reason: InventoryReason
+  status: InventoryStatus
+  submittedAt: IsoDateTime | null
+  finalizedAt: IsoDateTime | null
+  finalizedBy: UserRef | null
+  snapshotDocumentId: string | null
+  items: InventoryItem[]
+  total: number
+}
+
+export interface InventoryItemRequest {
+  action: InventoryItemAction
+  value?: number | null
+  note?: string | null
+}
+
+export interface AddInventoryItemRequest {
+  category: InventoryCategory
+  description: string
+  value: number
+  note: string | null
+}
+
+export interface AccountingYear {
+  pfaId: string
+  year: number
+  status: AccountingPeriodStatus
+  closedBy: UserRef | null
+  closedAt: IsoDateTime | null
+  hasPackage: boolean
+  /** Ce lipsește pentru „Închide anul”. */
+  missing: string[]
+}
+
+/** Panoul de stare al registrelor (spec registre §8). */
+export interface RegisterStatus {
+  pfaId: string
+  year: number
+  rjipOk: boolean
+  rjipExceptions: number
+  refStatus: RefStatus
+  refNet: number
+  inventory: InventoryStatus | null
+  inventoryCountId: string | null
+  assetsInClassification: number
+  yearStatus: AccountingPeriodStatus
+}
 
 export interface RangeQuery {
   from: IsoDate
@@ -1093,12 +1245,22 @@ export interface RjipView {
 }
 
 /** Rândul REF (OMFP 3254/2017). Denumirile elementelor de calcul vin din modelul oficial, DE CONFIRMAT. */
+/** Ce compune un rând REF: o înregistrare din ledger sau o lună de amortizare. */
+export interface RefContribution {
+  ledgerEntryId: string | null
+  assetId: string | null
+  date: IsoDate
+  label: string
+  value: number
+}
+
 export interface RefRow {
   year: number
   rectification: boolean
   incomeCategory: string
   calculationElement: string
   value: number
+  contributions?: RefContribution[] | null
 }
 
 export interface RefView {
@@ -1108,12 +1270,6 @@ export interface RefView {
   /** Data situației intermediare; `null` pentru `CURRENT`/`FINAL`. */
   asOf: IsoDate | null
   rows: RefRow[]
-}
-
-export interface InventoryView {
-  pfaId: string
-  year: number
-  assets: Asset[]
 }
 
 export interface RegisterExportQuery {
@@ -1132,7 +1288,11 @@ export interface AccountingPeriod {
 export const RECONCILIATION_CONTROLS = [
   'OPEN_BANKING', 'E_FACTURA', 'CASH_REGISTER', 'BOLT_DOCUMENTS', 'UBER_DOCUMENTS',
   'UNRECONCILED_PAYOUTS', 'OPEN_TRANSACTIONS', 'PLATFORM_CASH_VS_Z', 'BANK_BALANCE',
+  'FIXED_ASSETS_CLASSIFIED', 'DEPRECIATION',
 ] as const
+
+/** Controalele pe care Adminul le poate explica (registre §7). */
+export const EXPLAINABLE_CONTROLS: readonly ReconciliationControl[] = ['PLATFORM_CASH_VS_Z', 'UNRECONCILED_PAYOUTS']
 export type ReconciliationControl = (typeof RECONCILIATION_CONTROLS)[number]
 
 export interface ReconciliationControlResult {

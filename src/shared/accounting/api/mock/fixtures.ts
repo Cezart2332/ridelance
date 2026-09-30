@@ -629,29 +629,65 @@ function buildLedger(pfa: MockPfa, history: SettingHistoryEntry[], categories: E
 }
 
 function assetsFor(pfa: MockPfa): Asset[] {
-  const asset = (id: string, type: string, description: string, acquisitionDate: IsoDate, acquisitionValue: number): Asset => ({
+  const asset = (
+    id: string,
+    inventoryNumber: string,
+    name: string,
+    kind: Asset['kind'],
+    entryDate: IsoDate,
+    entryValue: number,
+    classification: Pick<Asset, 'inServiceDate' | 'depreciationClassCode' | 'normalLifeMonths'> | null,
+  ): Asset => ({
     id: `asset-${pfa.id.replace('pfa-', '')}-${id}`,
     pfaId: pfa.id,
-    type,
-    description,
-    acquisitionDate,
-    acquisitionValue,
+    inventoryNumber,
+    name,
+    kind,
+    status: classification ? 'ACTIVE' : 'PENDING_CLASSIFICATION',
+    acquisitionEntryId: null,
+    documentRef: `Factura ${id.toUpperCase()}-1`,
+    supplierName: null,
+    entryDate,
+    inServiceDate: classification?.inServiceDate ?? null,
+    entryValue,
+    depreciationClassCode: classification?.depreciationClassCode ?? null,
+    normalLifeMonths: classification?.normalLifeMonths ?? null,
+    method: 'Linear',
+    disposalDate: null,
+    disposalReason: null,
     document: fileRef(`asset-${pfa.id}-${id}`, `Factura_${id}.pdf`),
-    status: 'IN_USE',
-    disposedDate: null,
+    monthlyDepreciation: null,
+    asOf: entryDate,
+    accumulated: 0,
+    remaining: entryValue,
   })
   switch (pfa.name) {
     case 'Ion Popescu':
-      return [asset('car', 'Autoturism', 'Toyota Corolla Hybrid, B-101-IPP', '2024-06-01', 98500)]
+      return [
+        asset('car', 'MF-0001', 'Toyota Corolla Hybrid, B-101-IPP', 'FIXED_ASSET', '2024-06-01', 98500, {
+          inServiceDate: '2024-06-01', depreciationClassCode: '2.3.2.1.1', normalLifeMonths: 60,
+        }),
+      ]
     case 'Andrei Dumitrescu':
       return [
-        asset('car', 'Autoturism', 'Dacia Logan MCV, B-123-ADM', '2025-11-15', 62000),
-        asset('ecr', 'Casă de marcat', 'Datecs DP-25X', '2026-08-20', 1350),
+        asset('car', 'MF-0001', 'Dacia Logan MCV, B-123-ADM', 'FIXED_ASSET', '2025-11-15', 62000, null),
+        asset('ecr', 'OI-0001', 'Casă de marcat Datecs DP-25X', 'INVENTORY_OBJECT', '2026-08-20', 1350, {
+          inServiceDate: '2026-08-20', depreciationClassCode: null, normalLifeMonths: null,
+        }),
       ]
     case 'Mihai Ionescu':
       return [
-        asset('car', 'Autoturism', 'Skoda Octavia, IF-45-MIH', '2025-02-10', 87000),
-        { ...asset('phone', 'Telefon', 'Samsung Galaxy A55', '2026-02-10', 1899), status: 'DISPOSED', disposedDate: '2026-09-15' },
+        asset('car', 'MF-0001', 'Skoda Octavia, IF-45-MIH', 'FIXED_ASSET', '2025-02-10', 87000, {
+          inServiceDate: '2025-02-10', depreciationClassCode: '2.3.2.1.1', normalLifeMonths: 60,
+        }),
+        {
+          ...asset('phone', 'OI-0001', 'Telefon Samsung Galaxy A55', 'INVENTORY_OBJECT', '2026-02-10', 1899, {
+            inServiceDate: '2026-02-10', depreciationClassCode: null, normalLifeMonths: null,
+          }),
+          status: 'DISPOSED',
+          disposalDate: '2026-09-15',
+          disposalReason: 'Defect, casat',
+        },
       ]
     default:
       return []
@@ -857,6 +893,10 @@ export function createFixtureDb(): MockDb {
     ],
     ledger,
     assets,
+    fixedAssetDecisions: {},
+    inventoryCounts: [],
+    years: [],
+    explanations: [],
     periods,
     corrections: [],
     cashEvidence: {},

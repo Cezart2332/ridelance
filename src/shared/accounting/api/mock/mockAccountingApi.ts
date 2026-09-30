@@ -1,15 +1,16 @@
 import { DECLARATION_ACTION_TARGETS, DECLARATION_STATUSES_LOCKING_DOCUMENTS, canTransition, isActionAllowed } from '../../declarationWorkflow'
 import { CASH_STATUSES_REQUIRING_EVIDENCE, canTransitionCash } from '../../cashWorkflow'
 import { formatAmount, formatDate, formatLei, formatPeriod, formatValidity } from '../../format'
-import { DECLARATION_STATUS, PLATFORM_LABEL } from '../../statusLabels'
+import { DECLARATION_STATUS, INVENTORY_CATEGORY_LABEL, PLATFORM_LABEL } from '../../statusLabels'
 import type { AccountingApi, RuleResource } from '../contract'
 import { badRequest, conflict, notFound } from '../errors'
 import type {
+  AccountingYear,
+  InventoryCount,
   AccountingPeriod,
   ReconciliationControl,
   AnafDeclarationSchema,
   Asset,
-  AssetInput,
   AuditEntry,
   D100Rule,
   DeclarationDetail,
@@ -55,7 +56,7 @@ import type {
   Validity,
   VatRate,
 } from '../types'
-import { DECLARATION_TYPES } from '../types'
+import { DECLARATION_TYPES, EXPLAINABLE_CONTROLS } from '../types'
 import { runChecks } from './checks'
 import { FIXTURE_PERIOD, MOCK_USERS, buildDocument, createFixtureDb, fileRef } from './fixtures'
 import {
@@ -73,6 +74,7 @@ import {
 } from './helpers'
 import type { MockDb, MockDeclaration, MockDeclarationVersion, MockDocument, MockPfa } from './mockDb'
 import { csvBlob, textPdf } from './pdf'
+import { assetAt, candidates, depreciationPlan, isComplete, needsNote, nextInventoryNumber, prefill, reviewOf, withTotals } from './registersMock'
 import { calculate } from './taxEngine'
 
 /**
@@ -1129,26 +1131,44 @@ function refView(pfa: MockPfa, year: number, asOfOverride?: IsoDate): RefView {
   }
 }
 
-function inventoryAssets(pfaId: string, year: number): Asset[] {
-  return db.assets
-    .filter(
-      (asset) =>
-        asset.pfaId === pfaId && asset.acquisitionDate <= `${year}-12-31` && (!asset.disposedDate || asset.disposedDate >= `${year}-01-01`),
-    )
-    .sort((a, b) => a.acquisitionDate.localeCompare(b.acquisitionDate))
+function findAsset(pfaId: string, id: string): Asset {
+  const asset = db.assets.find((candidate) => candidate.id === id && candidate.pfaId === pfaId)
+  if (!asset) throw notFound('Activul')
+  return asset
 }
 
-function validateAsset(input: AssetInput): void {
-  if (!input.type.trim() || !input.description.trim()) throw badRequest('ASSET_INVALID', 'Tipul și descrierea sunt obligatorii.')
-  requireDate(input.acquisitionDate, 'Data achiziției')
-  if (!(input.acquisitionValue > 0)) throw badRequest('ASSET_INVALID', 'Valoarea achiziției trebuie să fie pozitivă.')
-  if (input.status === 'DISPOSED') requireDate(input.disposedDate, 'Data ieșirii')
+function findCount(pfaId: string, id: string): InventoryCount {
+  const count = db.inventoryCounts.find((candidate) => candidate.id === id && candidate.pfaId === pfaId)
+  if (!count) throw notFound('Inventarierea')
+  return count
+}
+
+function saveCount(count: InventoryCount): InventoryCount {
+  const updated = withTotals(count)
+  db.inventoryCounts = db.inventoryCounts.map((candidate) => (candidate.id === count.id ? updated : candidate))
+  return updated
+}
+
+/** Ce lipsește pentru „Închide anul”: lunile deschise ale colaborării și inventarul final. */
+function yearOf(pfa: MockPfa, year: number): AccountingYear {
+  const stored = db.years.find((item) => item.pfaId === pfa.id && item.year === year)
+  if (stored?.status === 'CLOSED') return stored
+  const missing: string[] = []
+  const first = Math.max(1, pfa.engagement.startDate.startsWith(String(year)) ? Number(pfa.engagement.startDate.slice(5, 7)) : 1)
+  for (let month = first; month <= 12; month += 1) {
+    const period = `${year}-${String(month).padStart(2, '0')}`
+    if (!isPeriodClosed(pfa.id, period)) missing.push(`Luna ${formatPeriod(period)} nu e închisă.`)
+  }
+  if (!db.inventoryCounts.some((count) => count.pfaId === pfa.id && count.date.startsWith(String(year)) && count.status === 'FINAL')) {
+    missing.push('Inventarul de la sfârșitul anului nu e final.')
+  }
+  return { pfaId: pfa.id, year, status: 'OPEN', closedBy: null, closedAt: null, hasPackage: false, missing }
 }
 
 const MOCK_EXPORT_NOTE = 'Export simulat (mock). Layoutul oficial vine în B7, după confirmarea modelelor OMFP.'
 
 async function exportRows(title: string, format: ExportFormat, header: string[], rows: (string | number)[][]): Promise<Blob> {
-  if (format === 'xlsx') return csvBlob(header, rows)
+  if (format !== 'pdf') return csvBlob(header, rows)
   return textPdf(title, [header.join(' | '), ...rows.map((row) => row.join(' | '))], MOCK_EXPORT_NOTE)
 }
 
@@ -2037,37 +2057,194 @@ export function createMockAccountingApi(): AccountingApi {
     },
 
     assets: {
-      list: (pfaId) =>
+      list: (pfaId, asOf) =>
         respond(() => {
           findPfa(pfaId)
-          return db.assets.filter((asset) => asset.pfaId === pfaId).sort((a, b) => a.acquisitionDate.localeCompare(b.acquisitionDate))
+          return db.assets
+            .filter((asset) => asset.pfaId === pfaId)
+            .map((asset) => assetAt(asset, asOf ?? todayIso()))
+            .sort((a, b) => a.inventoryNumber.localeCompare(b.inventoryNumber))
         }),
 
-      create: (pfaId, input) =>
+      get: (pfaId, id) =>
+        respond(() => {
+          const asset = findAsset(pfaId, id)
+          return { asset: assetAt(asset, todayIso()), lines: depreciationPlan(asset) }
+        }),
+
+      candidates: (pfaId) =>
+        respond(() => {
+          findPfa(pfaId)
+          return candidates(db, pfaId)
+        }),
+
+      decide: (pfaId, ledgerEntryId, decision, name, reason) =>
         respond(() => {
           ensureWritable(findPfa(pfaId))
-          validateAsset(input)
-          const asset: Asset = { ...structuredClone(input), id: nextId('asset'), pfaId }
+          const entry = findLedgerEntry(ledgerEntryId)
+          const review = reviewOf(db, entry)
+          if (entry.pfaId !== pfaId || !(review === 'PENDING' || review === 'NONE') || entry.transactionType !== 'EXPENSE') {
+            throw conflict('FIXED_ASSET_DECIDED', 'Plata nu e o achiziție de clasificat.')
+          }
+          db.fixedAssetDecisions[entry.id] = decision
+          audit(pfaId, 'LedgerEntry', entry.id, 'FIXED_ASSET_DECISION', { review }, { review: decision }, reason)
+          if (decision === 'EXPENSE') return null
+          const kind = decision === 'FIXED_ASSET' ? 'FIXED_ASSET' : 'INVENTORY_OBJECT'
+          const value = Math.abs(entry.amount) - (entry.personalAmount ?? 0)
+          const asset: Asset = {
+            id: nextId('asset'),
+            pfaId,
+            inventoryNumber: nextInventoryNumber(db, pfaId, kind),
+            name: name?.trim() || entry.description,
+            kind,
+            status: 'PENDING_CLASSIFICATION',
+            acquisitionEntryId: entry.id,
+            documentRef: entry.documentLabel,
+            supplierName: entry.counterparty,
+            entryDate: entry.documentDate ?? entry.date,
+            inServiceDate: null,
+            entryValue: value,
+            depreciationClassCode: null,
+            normalLifeMonths: null,
+            method: 'Linear',
+            disposalDate: null,
+            disposalReason: null,
+            document: null,
+            monthlyDepreciation: null,
+            asOf: todayIso(),
+            accumulated: 0,
+            remaining: value,
+          }
           db.assets.push(asset)
-          audit(pfaId, 'Asset', asset.id, 'CREATE', null, asset, null)
-          return asset
+          return assetAt(asset, todayIso())
         }),
 
-      update: (pfaId, id, input) =>
+      create: (pfaId, request) =>
         respond(() => {
           ensureWritable(findPfa(pfaId))
-          validateAsset(input)
-          const index = db.assets.findIndex((asset) => asset.id === id && asset.pfaId === pfaId)
-          if (index < 0) throw notFound('Activul')
-          const before = db.assets[index]
-          const after: Asset = { ...structuredClone(input), id, pfaId }
-          db.assets[index] = after
-          audit(pfaId, 'Asset', id, 'UPDATE', before, after, null)
-          return after
+          if (!request.name.trim() || !request.documentRef.trim() || !(request.entryValue > 0)) {
+            throw badRequest('ASSET_INVALID', 'Denumirea și documentul sunt obligatorii, iar valoarea de intrare trebuie să fie pozitivă.')
+          }
+          const asset: Asset = {
+            id: nextId('asset'),
+            pfaId,
+            inventoryNumber: nextInventoryNumber(db, pfaId, request.kind),
+            name: request.name.trim(),
+            kind: request.kind,
+            status: 'PENDING_CLASSIFICATION',
+            acquisitionEntryId: null,
+            documentRef: request.documentRef.trim(),
+            supplierName: request.supplierName,
+            entryDate: requireDate(request.entryDate, 'Data intrării'),
+            inServiceDate: null,
+            entryValue: round2(request.entryValue),
+            depreciationClassCode: null,
+            normalLifeMonths: null,
+            method: 'Linear',
+            disposalDate: null,
+            disposalReason: null,
+            document: null,
+            monthlyDepreciation: null,
+            asOf: todayIso(),
+            accumulated: 0,
+            remaining: round2(request.entryValue),
+          }
+          db.assets.push(asset)
+          audit(pfaId, 'PfaAsset', asset.id, 'CREATE', null, asset, request.reason)
+          return assetAt(asset, todayIso())
+        }),
+
+      classify: (pfaId, id, request) =>
+        respond(() => {
+          ensureWritable(findPfa(pfaId))
+          const asset = findAsset(pfaId, id)
+          if (!request.name.trim() || !request.documentRef.trim()) throw badRequest('ASSET_INVALID', 'Denumirea și documentul sunt obligatorii.')
+          if (request.normalLifeMonths !== null && (request.normalLifeMonths < 12 || request.normalLifeMonths > 600)) {
+            throw badRequest('ASSET_INVALID', 'Durata normală de funcționare e în luni, între 12 și 600.')
+          }
+          if (request.inServiceDate && request.inServiceDate < asset.entryDate) throw badRequest('ASSET_INVALID', 'Punerea în funcțiune nu poate fi înainte de data intrării.')
+          const updated: Asset = {
+            ...asset,
+            name: request.name.trim(),
+            documentRef: request.documentRef.trim(),
+            supplierName: request.supplierName,
+            inServiceDate: request.inServiceDate,
+            depreciationClassCode: request.depreciationClassCode?.trim() || null,
+            normalLifeMonths: asset.kind === 'FIXED_ASSET' ? request.normalLifeMonths : null,
+          }
+          if (updated.status !== 'DISPOSED') updated.status = isComplete(updated) ? 'ACTIVE' : 'PENDING_CLASSIFICATION'
+          db.assets = db.assets.map((candidate) => (candidate.id === id ? updated : candidate))
+          audit(pfaId, 'PfaAsset', id, 'CLASSIFY', asset, updated, request.reason)
+          return assetAt(updated, todayIso())
+        }),
+
+      dispose: (pfaId, id, date, reason) =>
+        respond(() => {
+          ensureWritable(findPfa(pfaId))
+          const asset = findAsset(pfaId, id)
+          if (asset.status === 'DISPOSED') throw conflict('ASSET_DISPOSED', 'Activul e deja ieșit din gestiune.')
+          const disposal = requireDate(date, 'Data ieșirii')
+          if (disposal < asset.entryDate) throw badRequest('ASSET_INVALID', 'Ieșirea din gestiune nu poate fi înainte de data intrării.')
+          const updated: Asset = { ...asset, status: 'DISPOSED', disposalDate: disposal, disposalReason: requireReason(reason) }
+          db.assets = db.assets.map((candidate) => (candidate.id === id ? updated : candidate))
+          audit(pfaId, 'PfaAsset', id, 'DISPOSE', null, { disposalDate: disposal }, reason)
+          return assetAt(updated, todayIso())
+        }),
+
+      exportSheet: (pfaId, id, format) =>
+        respond(() => {
+          const pfa = findPfa(pfaId)
+          const asset = findAsset(pfaId, id)
+          return exportRows(
+            `Fișa mijlocului fix ${asset.inventoryNumber} – ${asset.name} – ${pfa.name} (CUI ${pfa.cui})`,
+            format,
+            ['Luna', 'Amortizare lunară', 'Amortizare cumulată', 'Valoare rămasă'],
+            depreciationPlan(asset).map((line) => [`${String(line.month).padStart(2, '0')}.${line.year}`, formatAmount(line.amount), formatAmount(line.accumulated), formatAmount(line.remaining)]),
+          )
+        }),
+
+      exportList: (pfaId, asOf, format) =>
+        respond(() => {
+          const pfa = findPfa(pfaId)
+          return exportRows(
+            `Lista activelor la ${formatDate(asOf)} – ${pfa.name} (CUI ${pfa.cui})`,
+            format,
+            ['Nr. inventar', 'Denumire', 'Data intrării', 'Valoare de intrare', 'Amortizare cumulată', 'Valoare rămasă'],
+            db.assets
+              .filter((asset) => asset.pfaId === pfaId && asset.entryDate <= asOf)
+              .map((asset) => assetAt(asset, asOf))
+              .map((asset) => [asset.inventoryNumber, asset.name, formatDate(asset.entryDate), formatAmount(asset.entryValue), formatAmount(asset.accumulated), formatAmount(asset.remaining)]),
+          )
         }),
     },
 
     registers: {
+      status: (pfaId, year) =>
+        respond(() => {
+          const pfa = findPfa(pfaId)
+          const ref = refView(pfa, year)
+          const exceptions = db.ledger.filter(
+            (entry) =>
+              entry.pfaId === pfaId &&
+              entry.date.startsWith(String(year)) &&
+              (entry.reconciliationStatus === 'UNMATCHED' || entry.reconciliationStatus === 'NEEDS_REVIEW' || entry.transactionType === 'PLATFORM_SETTLEMENT'),
+          ).length
+          const openCount = db.inventoryCounts.filter((count) => count.pfaId === pfaId && count.status !== 'FINAL').sort((a, b) => b.date.localeCompare(a.date))[0]
+          const net = ref.rows[ref.rows.length - 1]
+          return {
+            pfaId,
+            year,
+            rjipOk: exceptions === 0,
+            rjipExceptions: exceptions,
+            refStatus: ref.status,
+            refNet: net.calculationElement === 'Pierdere netă anuală' ? -net.value : net.value,
+            inventory: openCount?.status ?? null,
+            inventoryCountId: openCount?.id ?? null,
+            assetsInClassification: candidates(db, pfaId).length + db.assets.filter((asset) => asset.pfaId === pfaId && asset.status === 'PENDING_CLASSIFICATION').length,
+            yearStatus: yearOf(pfa, year).status,
+          }
+        }),
+
       getRjip: (pfaId, range) =>
         respond(() => {
           findPfa(pfaId)
@@ -2078,8 +2255,11 @@ export function createMockAccountingApi(): AccountingApi {
             return {
               ledgerEntryId: entry.id,
               date: entry.date,
-              document: entry.documentLabel,
-              operation: entry.counterparty ? `${entry.description} – ${entry.counterparty}` : entry.description,
+              // Registre §3: la bancă, „Extras bancar”; justificativul trece în explicații.
+              document: cash ? entry.documentLabel : 'Extras bancar',
+              operation:
+                (entry.counterparty ? `${entry.description} – ${entry.counterparty}` : entry.description) +
+                (!cash && !entry.documentLabel.startsWith('Extras') ? `, ${entry.documentLabel}` : ''),
               cashIn: cash && incoming ? value : 0,
               cashOut: cash && !incoming ? value : 0,
               bankIn: !cash && incoming ? value : 0,
@@ -2146,24 +2326,144 @@ export function createMockAccountingApi(): AccountingApi {
           )
         }),
 
-      getInventory: (pfaId, year) => respond(() => ({ pfaId, year, assets: inventoryAssets(findPfa(pfaId).id, year) })),
-
       exportInventory: (pfaId, year, format) =>
         respond(() => {
           const pfa = findPfa(pfaId)
+          const count =
+            db.inventoryCounts.find((item) => item.pfaId === pfaId && item.date.startsWith(String(year)) && item.status === 'FINAL') ??
+            withTotals({
+              id: 'preview', pfaId, date: `${year}-12-31`, reason: 'YEAR_END', status: 'DRAFT', submittedAt: null, finalizedAt: null, finalizedBy: null,
+              snapshotDocumentId: null, items: prefill(db, pfaId, `${year}-12-31`, nextId), total: 0,
+            })
           return exportRows(
-            `Registru-inventar ${year} – ${pfa.name} (CUI ${pfa.cui})`,
+            `Registru-inventar la ${formatDate(count.date)} – ${pfa.name} (CUI ${pfa.cui})`,
             format,
-            ['Tip', 'Descriere', 'Data achiziției', 'Valoare', 'Status', 'Data ieșirii'],
-            inventoryAssets(pfaId, year).map((asset) => [
-              asset.type,
-              asset.description,
-              formatDate(asset.acquisitionDate),
-              formatAmount(asset.acquisitionValue),
-              asset.status === 'IN_USE' ? 'În folosință' : 'Ieșit',
-              formatDate(asset.disposedDate),
-            ]),
+            ['Categorie', 'Denumirea elementelor inventariate', 'Valoarea de inventar'],
+            count.items
+              .filter((item) => item.status !== 'REMOVED')
+              .map((item) => [INVENTORY_CATEGORY_LABEL[item.category], item.description, formatAmount(item.confirmedValue ?? item.systemValue)]),
           )
+        }),
+    },
+
+    inventory: {
+      list: (pfaId) =>
+        respond(() => {
+          findPfa(pfaId)
+          return db.inventoryCounts.filter((count) => count.pfaId === pfaId).sort((a, b) => b.date.localeCompare(a.date))
+        }),
+
+      start: (pfaId, date, reason) =>
+        respond(() => {
+          ensureWritable(findPfa(pfaId))
+          requireDate(date, 'Data inventarului')
+          if (db.inventoryCounts.some((count) => count.pfaId === pfaId && count.date === date && count.reason === reason)) {
+            throw conflict('INVENTORY_EXISTS', 'Există deja o inventariere la această dată, cu același motiv.')
+          }
+          const count = withTotals({
+            id: nextId('inventory'),
+            pfaId,
+            date,
+            reason,
+            status: 'AWAITING_PFA_CONFIRMATION',
+            submittedAt: null,
+            finalizedAt: null,
+            finalizedBy: null,
+            snapshotDocumentId: null,
+            items: prefill(db, pfaId, date, nextId),
+            total: 0,
+          })
+          db.inventoryCounts.push(count)
+          audit(pfaId, 'InventoryCount', count.id, 'CREATE', null, { date, reason }, null)
+          return count
+        }),
+
+      updateItem: (pfaId, countId, itemId, request) =>
+        respond(() => {
+          const count = findCount(pfaId, countId)
+          if (count.status === 'FINAL') throw conflict('INVENTORY_READ_ONLY', 'Inventarierea e finală și nu se mai modifică.')
+          const item = count.items.find((candidate: InventoryCount['items'][number]) => candidate.id === itemId)
+          if (!item) throw notFound('Elementul')
+          const note = request.note?.trim() || null
+          if (request.action === 'CONFIRM') {
+            item.confirmedValue = item.systemValue
+            if (item.status !== 'ADDED_MANUALLY') item.status = 'CONFIRMED'
+          } else if (request.action === 'ADJUST') {
+            if (request.value === null || request.value === undefined || request.value < 0) throw badRequest('INVENTORY_INVALID', 'Valoarea nu poate fi negativă.')
+            item.confirmedValue = round2(request.value)
+            if (item.status !== 'ADDED_MANUALLY') item.status = item.confirmedValue === item.systemValue ? 'CONFIRMED' : 'ADJUSTED'
+          } else if (request.action === 'REMOVE') {
+            if (!note) throw badRequest('INVENTORY_NOTE_REQUIRED', 'O diferență, un element scos sau adăugat cere o notă.')
+            item.status = 'REMOVED'
+          }
+          item.note = note ?? item.note
+          audit(pfaId, 'InventoryItem', item.id, request.action, null, { ...item }, note)
+          return saveCount(count)
+        }),
+
+      addItem: (pfaId, countId, request) =>
+        respond(() => {
+          const count = findCount(pfaId, countId)
+          if (count.status === 'FINAL') throw conflict('INVENTORY_READ_ONLY', 'Inventarierea e finală și nu se mai modifică.')
+          if (!request.description.trim() || request.value < 0) throw badRequest('INVENTORY_INVALID', 'Descrierea e obligatorie, iar valoarea nu poate fi negativă.')
+          count.items.push({
+            id: nextId('inv-item'),
+            category: request.category,
+            description: request.description.trim(),
+            systemValue: 0,
+            confirmedValue: round2(request.value),
+            difference: 0,
+            sourceType: null,
+            sourceId: null,
+            status: 'ADDED_MANUALLY',
+            requiresConfirmation: false,
+            note: request.note,
+          })
+          return saveCount(count)
+        }),
+
+      finalize: (pfaId, countId) =>
+        respond(() => {
+          const count = withTotals(findCount(pfaId, countId))
+          if (count.status === 'FINAL') throw conflict('INVENTORY_READ_ONLY', 'Inventarierea e finală și nu se mai modifică.')
+          const open = count.items.filter((item) => item.status === 'PREFILLED').map((item) => item.description)
+          if (open.length > 0) throw badRequest('INVENTORY_UNCONFIRMED', `Mai sunt de confirmat: ${open.join(', ')}.`)
+          const missing = count.items.filter((item) => needsNote(item) && !item.note).map((item) => item.description)
+          if (missing.length > 0) throw badRequest('INVENTORY_NOTE_REQUIRED', `Diferențele cer o notă: ${missing.join(', ')}.`)
+          audit(pfaId, 'InventoryCount', count.id, 'FINALIZE', null, { total: count.total }, null)
+          return saveCount({ ...count, status: 'FINAL', finalizedAt: nowIso(), finalizedBy: CURRENT_USER })
+        }),
+    },
+
+    years: {
+      get: (pfaId, year) => respond(() => yearOf(findPfa(pfaId), year)),
+
+      close: (pfaId, year) =>
+        respond(() => {
+          const current = yearOf(findPfa(pfaId), year)
+          if (current.status === 'CLOSED') throw conflict('YEAR_CLOSED', `Anul ${year} e deja închis.`)
+          if (current.missing.length > 0) throw conflict('YEAR_NOT_READY', `Anul nu se poate închide: ${current.missing.join(' ')}`)
+          const closed: AccountingYear = { ...current, status: 'CLOSED', closedBy: CURRENT_USER, closedAt: nowIso(), hasPackage: true, missing: [] }
+          db.years = [...db.years.filter((item) => !(item.pfaId === pfaId && item.year === year)), closed]
+          audit(pfaId, 'AccountingYear', `${pfaId}:${year}`, 'CLOSE', { status: 'OPEN' }, { status: 'CLOSED' }, null)
+          return closed
+        }),
+
+      reopen: (pfaId, year, reason) =>
+        respond(() => {
+          requireReason(reason, 'Motivul redeschiderii')
+          const stored = db.years.find((item) => item.pfaId === pfaId && item.year === year)
+          if (stored?.status !== 'CLOSED') throw conflict('YEAR_OPEN', `Anul ${year} nu e închis.`)
+          db.years = db.years.filter((item) => item !== stored)
+          audit(pfaId, 'AccountingYear', `${pfaId}:${year}`, 'REOPEN', { status: 'CLOSED' }, { status: 'OPEN' }, reason)
+          return yearOf(findPfa(pfaId), year)
+        }),
+
+      package: (pfaId, year) =>
+        respond(() => {
+          const pfa = findPfa(pfaId)
+          if (yearOf(pfa, year).status !== 'CLOSED') throw notFound('Pachetul anual')
+          return textPdf(`Pachet anual ${year} – ${pfa.name}`, ['RJIP, REF, Registru-inventar, fișele MF, lista activelor'], MOCK_EXPORT_NOTE)
         }),
     },
 
@@ -2207,7 +2507,15 @@ export function createMockAccountingApi(): AccountingApi {
             { control: 'OPEN_TRANSACTIONS' as const, passed: loose.length === 0, applicable: true, detail: loose.length === 0 ? 'Nicio tranzacție deschisă.' : `${loose.length} tranzacții deschise.` },
             { control: 'PLATFORM_CASH_VS_Z' as const, passed: true, applicable: false, detail: 'Fără încasări numerar.' },
             passed('BANK_BALANCE', 'Variația contului = RJIP bancă.'),
-          ]
+            (() => {
+              const pending = candidates(db, pfaId).filter((candidate) => periodOf(candidate.date) <= period).length
+              return { control: 'FIXED_ASSETS_CLASSIFIED' as const, passed: pending === 0, applicable: true, detail: pending === 0 ? 'Nicio achiziție de clasificat.' : `${pending} posibile mijloace fixe fără decizie.` }
+            })(),
+            { control: 'DEPRECIATION' as const, passed: true, applicable: db.assets.some((asset) => asset.pfaId === pfaId && asset.kind === 'FIXED_ASSET'), detail: 'Amortizarea lunii e calculată.' },
+          ].map((control) => {
+            const explanation = db.explanations.filter((item) => item.pfaId === pfaId && item.period === period && item.control === control.control).at(-1)
+            return !control.passed && explanation ? { ...control, passed: true, detail: `${control.detail} Explicat: ${explanation.note}` } : control
+          })
           const status = db.periods.find((item) => item.pfaId === pfaId && item.period === period)?.status ?? 'OPEN'
           return { pfaId, period, status, canClose: controls.every((control) => control.passed), controls, payouts: [] }
         }),
@@ -2225,6 +2533,13 @@ export function createMockAccountingApi(): AccountingApi {
           )
           audit(pfaId, 'AccountingPeriod', `${pfaId}:${period}`, 'REOPEN', { status: 'CLOSED' }, { status: 'OPEN' }, reason)
           return item
+        }),
+
+      explain: (pfaId, period, control, note) =>
+        respond(() => {
+          if (!EXPLAINABLE_CONTROLS.includes(control)) throw badRequest('CONTROL_NOT_EXPLAINABLE', 'Doar diferența Z vs cash platformă și payout-urile nereconciliate se pot explica.')
+          db.explanations.push({ pfaId, period, control, note: requireReason(note, 'Explicația') })
+          audit(pfaId, 'ReconciliationExplanation', `${pfaId}:${period}`, 'EXPLAIN', null, { control }, note)
         }),
 
       createCorrection: (pfaId, period, request) =>
