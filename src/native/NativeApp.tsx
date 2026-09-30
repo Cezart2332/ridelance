@@ -7,6 +7,8 @@ import LoginPage from '../components/auth/LoginPage'
 import ForgotPasswordPage from '../components/auth/ForgotPasswordPage'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
 import { FleetAccessGate } from '../components/onboarding/fleet/FleetAccessGate'
+import { RoleAreaGate } from '../components/auth/RoleAreaGate'
+import { ErrorBoundary } from '../components/common/ErrorBoundary'
 import { RouteFallback } from '../components/common/RouteFallback'
 import { DocumentViewerHost } from '../components/common/documentViewerHost'
 import { ScrollToTop } from '../components/layout/ScrollToTop'
@@ -41,6 +43,7 @@ export function NativeApp() {
       <ScrollToTop />
       <DocumentViewerHost />
       <NativeCurtain />
+      <ErrorBoundary>
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path={ROUTES.login} element={<LoginPage />} />
@@ -50,13 +53,15 @@ export function NativeApp() {
             <Route path="/app" element={<NativeRoleRedirect />} />
             <Route path={NATIVE_UNAVAILABLE_PATH} element={<NativeUnavailablePage />} />
             <Route path="/app/notificari/:id" element={<NotificationOpenPage />} />
-            <Route path="/app/dashboard/*" element={<DashboardPage />} />
+            <Route path="/app/dashboard/*" element={<RoleAreaGate><DashboardPage /></RoleAreaGate>} />
             <Route
               path={`${SRL_ROOT}/*`}
               element={
-                <FleetAccessGate>
-                  <CarPosterDashboard />
-                </FleetAccessGate>
+                <RoleAreaGate>
+                  <FleetAccessGate>
+                    <CarPosterDashboard />
+                  </FleetAccessGate>
+                </RoleAreaGate>
               }
             />
           </Route>
@@ -64,6 +69,7 @@ export function NativeApp() {
           <Route path="*" element={<Navigate to="/app" replace />} />
         </Routes>
       </Suspense>
+      </ErrorBoundary>
     </>
   )
 }

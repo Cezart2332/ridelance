@@ -24,6 +24,7 @@ import { SupportChatTab } from './sections/SupportChatTab'
 import { InvoicesPage } from './invoices/InvoicesPage'
 import { useSectionNavigate } from './useSectionNavigate'
 import { PFA_PATHS } from '../../config/pfaNavigation'
+import { ErrorPage } from '../common/ErrorPage'
 import { PFA_DASHBOARD_FAQ } from '../../data/faq'
 import { IS_NATIVE_APP } from '../../native/platform'
 
@@ -112,7 +113,7 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
         element={<Navigate to={PFA_PATHS.paymentHistoryAnchor} replace />}
       />
 
-      <Route path="*" element={<Navigate to={PFA_PATHS.home} replace />} />
+      <Route path="*" element={<ErrorPage code={404} embedded homePath={PFA_PATHS.home} />} />
     </Routes>
   )
 }

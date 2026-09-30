@@ -4,6 +4,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useReloadOnNewVersion } from './utils/appVersion'
 import { ScrollToTop } from './components/layout/ScrollToTop'
 import { RouteFallback } from './components/common/RouteFallback'
+import { ErrorBoundary } from './components/common/ErrorBoundary'
 
 // Auth (kept eager — small, needed immediately on /autentificare)
 import LoginPage from './components/auth/LoginPage'
@@ -99,6 +100,7 @@ function App() {
       <ReloadOnNewVersion />
       {/* Suprapunere unică pentru vizualizarea documentelor, apelabilă din orice pagină. */}
       <DocumentViewerHost />
+      <ErrorBoundary>
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           {/* ── Public auth pages ── */}
@@ -142,10 +144,10 @@ function App() {
               {/* Rutele vechi pe secțiuni au dispărut — un singur onboarding, pe cei 6 pași. */}
               <Route path="sections/*" element={<Navigate to="/onboarding" replace />} />
             </Route>
-            <Route path="/app/dashboard/*" element={<DashboardPage />} />
-            <Route path="/contabil/*" element={<ContabilDashboard />} />
-            <Route path="/admin/*" element={<AdminDashboard />} />
-            <Route path={`${SRL_ROOT}/*`} element={<FleetAccessGate><CarPosterDashboard /></FleetAccessGate>} />
+            <Route path="/app/dashboard/*" element={<RoleAreaGate><DashboardPage /></RoleAreaGate>} />
+            <Route path="/contabil/*" element={<RoleAreaGate><ContabilDashboard /></RoleAreaGate>} />
+            <Route path="/admin/*" element={<RoleAreaGate><AdminDashboard /></RoleAreaGate>} />
+            <Route path={`${SRL_ROOT}/*`} element={<RoleAreaGate><FleetAccessGate><CarPosterDashboard /></FleetAccessGate></RoleAreaGate>} />
             <Route path="/poster/*" element={<LegacySrlRedirect />} />
           </Route>
 
@@ -154,6 +156,7 @@ function App() {
           <Route path="/*" element={<AppLayout />} />
         </Routes>
       </Suspense>
+      </ErrorBoundary>
     </>
   )
 }

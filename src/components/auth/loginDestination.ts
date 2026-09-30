@@ -34,3 +34,20 @@ export function loginDestination(returnTo: unknown, role: string | null | undefi
 export function roleOwnsPath(role: string | null | undefined, pathname: string): boolean {
   return (ROLE_AREAS[role ?? ''] ?? []).some((area) => within(pathname, area))
 }
+
+/** Rolul căruia îi aparține adresa, dacă e în zona unui singur rol. */
+export function roleForPath(pathname: string): string | null {
+  return Object.entries(ROLE_AREAS).find(([, areas]) => areas.some((area) => within(pathname, area)))?.[0] ?? null
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  Client: 'PFA',
+  CarPoster: 'firmă (SRL)',
+  Admin: 'administrator',
+  Contabil: 'contabil',
+}
+
+/** Numele rolului cum îl înțelege omul, pentru mesaje. */
+export function roleLabel(role: string): string {
+  return ROLE_LABELS[role] ?? role
+}

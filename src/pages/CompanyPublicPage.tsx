@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Alert, Box, CircularProgress, Container } from '@mui/material'
+import { Box, CircularProgress } from '@mui/material'
 
 import { CompanySite } from '../components/company/CompanySite'
-import { TOKENS } from '../constants/tokens'
+import { ErrorPage } from '../components/common/ErrorPage'
 import { companyService, type PublicCompany } from '../services/company.service'
 
 /**
@@ -63,13 +63,8 @@ export function CompanyPublicPage() {
   }
 
   if (notFound || !company) {
-    return (
-      <Container maxWidth="md" sx={{ py: 10 }}>
-        <Alert severity="info" sx={{ borderRadius: `${TOKENS.radius.lg}px`, fontWeight: 600 }}>
-          Pagina firmei nu există sau a fost mutată.
-        </Alert>
-      </Container>
-    )
+    // `/:companySlug` prinde orice adresă cu un singur segment, deci și greșelile de tastare.
+    return <ErrorPage code={404} embedded />
   }
 
   return <CompanySite company={company} />

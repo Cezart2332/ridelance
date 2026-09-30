@@ -13,6 +13,7 @@ import { SiteFooter } from './SiteFooter'
 import { useAppSelector } from '../../store/hooks'
 
 import { RouteFallback } from '../common/RouteFallback'
+import { ErrorPage } from '../common/ErrorPage'
 import { ServicePaymentSuccessDialog } from '../services/ServicePaymentSuccessDialog'
 import { lazyWithRetry } from '../../utils/lazyWithRetry'
 
@@ -441,7 +442,7 @@ export function AppLayout() {
             */}
             <Route path="/:companySlug" element={<CompanyPublicPage />} />
             <Route path="/:companySlug/:slug" element={<VehicleDetailPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<ErrorPage code={404} embedded />} />
           </Routes>
         </Suspense>
       </Box>

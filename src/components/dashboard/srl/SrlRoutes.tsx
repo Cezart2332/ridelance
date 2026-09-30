@@ -18,6 +18,7 @@ import { SrlServicesPage } from './pages/SrlServicesPage'
 import { SrlCarPage } from './pages/SrlCarPage'
 import { SrlCarsPage } from './pages/SrlCarsPage'
 import { SrlSettingsPage } from './pages/SrlSettingsPage'
+import { ErrorPage } from '../../common/ErrorPage'
 
 /**
  * Tabelul de rute al dashboard-ului SRL. Ca la PFA: căile vin exclusiv din `SRL_PATHS`, ca
@@ -92,7 +93,7 @@ export function SrlRoutes() {
 
       <Route path={rel(SRL_PATHS.settings)} element={<SrlSettingsPage />} />
 
-      <Route path="*" element={<Navigate to={SRL_PATHS.home} replace />} />
+      <Route path="*" element={<ErrorPage code={404} embedded homePath={SRL_PATHS.home} />} />
     </Routes>
   )
 }
