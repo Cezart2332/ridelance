@@ -972,17 +972,51 @@ export interface ManualLedgerEntryRequest {
   reason: string
 }
 
+/** O linie de pe bon; `personal` = nu ține de activitate (spec flux contabil R30). */
+export interface ExpenseLine {
+  name: string
+  amount: number | null
+  personal: boolean
+}
+
 export interface ExpenseDocumentUploadResult {
   documentId: string
+  /** Pentru confirmare (`confirmExpenseDocument`). */
+  expenseDocumentId: string
   extracted: {
     merchant: string | null
     merchantCui: string | null
     date: IsoDate | null
     total: number | null
     items: string[]
+    number: string | null
+    /** CUI-ul cumpărătorului de pe bon (R31–R33). */
+    beneficiaryCui: string | null
+    lines: ExpenseLine[] | null
   }
   /** Tranzacția propusă pentru potrivire; utilizatorul confirmă. */
   proposedMatch: LedgerEntry | null
+  /** Partea personală propusă din linii (R30). */
+  suggestedPersonalAmount: number
+}
+
+/** „Cum ai plătit?” (R34): din contul conectat, numerar sau card / cont neconectat. */
+export type ExpensePaymentChoice = 'BANK' | 'CASH' | 'MANUAL'
+
+export interface ConfirmExpenseDocumentRequest {
+  payment: ExpensePaymentChoice
+  /** Plata din bancă, la `BANK`. */
+  ledgerEntryId: string | null
+  personalAmount: number | null
+  category: string | null
+}
+
+/** „Am găsit plata acestui bon în cont. Asociază?” (R36). */
+export interface MatchProposal {
+  id: string
+  transaction: { id: string; date: IsoDate | null; amount: number; counterparty: string | null; details: string | null }
+  entry: LedgerEntry
+  createdAtUtc: string
 }
 
 export interface ZReport {

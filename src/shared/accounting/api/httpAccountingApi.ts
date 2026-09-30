@@ -190,6 +190,12 @@ export function createHttpAccountingApi(): AccountingApi {
       verify: (id) => post(`ledger/${id}/verify`),
       createManual: (pfaId, request) => post(`pfas/${pfaId}/ledger/manual`, request),
       uploadExpenseDocument: (pfaId, file) => post(`pfas/${pfaId}/expense-documents`, form({ file })),
+      confirmExpenseDocument: (pfaId, id, request) => post(`pfas/${pfaId}/expense-documents/${id}/confirm`, request),
+      matchProposals: (pfaId) => get(`pfas/${pfaId}/match-proposals`),
+      acceptMatch: (id) => post(`match-proposals/${id}/accept`),
+      rejectMatch: async (id) => {
+        await post(`match-proposals/${id}/reject`)
+      },
       uploadZReport: (pfaId, file) => post(`pfas/${pfaId}/z-reports`, form({ file })),
     },
     assets: {

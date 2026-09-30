@@ -22,6 +22,8 @@ import type {
   ExchangeRateQuery,
   ExpenseCategoryRule,
   ExpenseDocumentUploadResult,
+  ConfirmExpenseDocumentRequest,
+  MatchProposal,
   ExportFormat,
   InventoryView,
   Job,
@@ -207,6 +209,10 @@ export interface AccountingApi {
     verify(id: string): Promise<LedgerEntry>
     createManual(pfaId: string, request: ManualLedgerEntryRequest): Promise<LedgerEntry>
     uploadExpenseDocument(pfaId: string, file: File): Promise<ExpenseDocumentUploadResult>
+    confirmExpenseDocument(pfaId: string, expenseDocumentId: string, request: ConfirmExpenseDocumentRequest): Promise<LedgerEntry>
+    matchProposals(pfaId: string): Promise<MatchProposal[]>
+    acceptMatch(id: string): Promise<LedgerEntry>
+    rejectMatch(id: string): Promise<void>
     uploadZReport(pfaId: string, file: File): Promise<ZReportUploadResult>
   }
 

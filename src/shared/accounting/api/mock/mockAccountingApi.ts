@@ -136,6 +136,9 @@ function mockSpvMessages(pfaId: string): SpvMessage[] {
 
 /** e-Factura în mock: conexiunea „se face” direct, iar un client conectat primește două facturi. */
 let anafConnection: AnafConnection | null = null
+/** Bonurile încărcate în mock, până la confirmare. */
+const mockExpenseDocuments = new Map<string, { pfaId: string; documentId: string; total: number | null; date: string | null; merchant: string | null }>()
+
 let anafLinks: Record<string, { link: AnafPfaLink; messages: EFacturaMessage[] }> = {}
 
 function anafState(): AnafConnection {
@@ -1938,18 +1941,44 @@ export function createMockAccountingApi(): AccountingApi {
               )
               .sort((a, b) => b.date.localeCompare(a.date))[0] ?? null
           audit(pfaId, 'ExpenseDocument', stored.id, 'UPLOAD', null, { fileName: stored.fileName }, null)
+          const total = proposedMatch ? Math.abs(proposedMatch.amount) : null
+          mockExpenseDocuments.set(stored.id, { pfaId, documentId: stored.id, total, date: proposedMatch?.date ?? null, merchant: proposedMatch?.counterparty ?? null })
           return {
             documentId: stored.id,
+            expenseDocumentId: stored.id,
             extracted: {
               merchant: proposedMatch?.counterparty ?? null,
               merchantCui: null,
               date: proposedMatch?.date ?? null,
-              total: proposedMatch ? Math.abs(proposedMatch.amount) : null,
+              total,
               items: proposedMatch ? [proposedMatch.description] : [],
+              number: null,
+              beneficiaryCui: null,
+              lines: proposedMatch ? [{ name: proposedMatch.description, amount: total, personal: false }] : [],
             },
             proposedMatch,
+            suggestedPersonalAmount: 0,
           }
         }),
+
+      confirmExpenseDocument: (pfaId, expenseDocumentId, request) =>
+        respond(async () => {
+          const document = mockExpenseDocuments.get(expenseDocumentId)
+          if (!document || document.pfaId !== pfaId) throw conflict('EXPENSE_DOCUMENT_NOT_FOUND', 'Documentul de cheltuială nu există.')
+          if (request.payment === 'BANK') {
+            const entry = db.ledger.find((item) => item.id === request.ledgerEntryId)
+            if (!entry) throw conflict('LEDGER_ENTRY_NOT_FOUND', 'Înregistrarea nu există.')
+            entry.sourceDocumentId = document.documentId
+            entry.personalAmount = request.personalAmount ?? 0
+            entry.reconciliationStatus = 'MATCHED'
+            return entry
+          }
+          throw conflict('NOT_SUPPORTED', 'Mock-ul confirmă doar plăți din bancă.')
+        }),
+
+      matchProposals: () => respond(async () => []),
+      acceptMatch: () => respond(async () => { throw conflict('MATCH_PROPOSAL_NOT_FOUND', 'Propunerea nu există.') }),
+      rejectMatch: () => respond(async () => undefined),
 
       uploadZReport: (pfaId, file) =>
         respond(async () => {
