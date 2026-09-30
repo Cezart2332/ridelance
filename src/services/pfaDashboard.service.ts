@@ -157,7 +157,8 @@ export interface RideRow {
   distanceKm: number | null;
   durationMin: number | null;
   paymentType: 'card' | 'cash';
-  net: number;
+  /** Lipsește pe cursele Uber: raportul Uber are câștigul doar pe lună, nu pe cursă. */
+  net: number | null;
 }
 
 export interface RidesPage {
@@ -165,7 +166,7 @@ export interface RidesPage {
   page: number;
   pageSize: number;
   total: number;
-  /** Fals cât timp Uber nu expune curse individuale, doar rapoarte lunare. */
+  /** Adevărat când PFA-ul are curse Uber importate din raportul de curse. */
   uberRidesAvailable: boolean;
 }
 

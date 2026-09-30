@@ -33,7 +33,7 @@ const PAGE_SIZES = [5, 10, 25] as const
 
 interface RidesHistoryTableProps {
   filters: DashboardFilters
-  /** Uber nu expune curse individuale — se spune explicit, o singură dată. */
+  /** Are PFA-ul importuri Uber. Fără curse Uber salvate, subtitlul spune de ce lista are doar Bolt. */
   uberConnected: boolean
   /** Demo-ul public injectează cursele; atunci nu se mai apelează API-ul. */
   override?: RidesPage
@@ -102,7 +102,7 @@ export function RidesHistoryTable({ filters, uberConnected, override }: RidesHis
     <HomeCard
       title="Istoric curse"
       subtitle={
-        uberConnected
+        uberConnected && data && !data.uberRidesAvailable
           ? 'Uber raportează doar totaluri lunare, deci cursele listate vin din Bolt.'
           : undefined
       }
@@ -346,7 +346,7 @@ function RideTable({ items, sortField, sortDescending, onToggleSort }: RideTable
                 component="td"
                 sx={{ ...bodyCellSx, textAlign: 'right', whiteSpace: 'nowrap' }}
               >
-                <Amount value={ride.net} size="row" weight={500} />
+                {ride.net === null ? <Missing /> : <Amount value={ride.net} size="row" weight={500} />}
               </Box>
             </Box>
           ))}
@@ -391,7 +391,11 @@ function RideCardList({ items }: { items: RideRow[] }) {
               <PaymentBadge payment={ride.paymentType} />
             </Stack>
           </Box>
-          <Amount value={ride.net} unit="lei" size="card" sx={{ flexShrink: 0 }} />
+          {ride.net === null ? (
+            <Missing />
+          ) : (
+            <Amount value={ride.net} unit="lei" size="card" sx={{ flexShrink: 0 }} />
+          )}
         </Stack>
       ))}
     </Stack>
