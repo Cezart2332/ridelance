@@ -175,6 +175,20 @@ export function createHttpAccountingApi(): AccountingApi {
       uploadReceipt: (versionId, request) =>
         post(`declaration-versions/${versionId}/receipt`, form({ file: request.file, receiptNumber: request.receiptNumber || undefined })),
       createRectification: (declarationId, request) => post(`declarations/${declarationId}/rectification`, request),
+      attention: () => get('declarations/attention'),
+    },
+    annual: {
+      get: (pfaId, year) => get(`pfas/${pfaId}/annual/${year}`),
+      generate: (pfaId, year) => post(`pfas/${pfaId}/annual/${year}/generate`),
+      saveAnswers: (pfaId, year, request) => put(`pfas/${pfaId}/annual/${year}/answers`, request),
+      listRentalContracts: (pfaId) => get(`pfas/${pfaId}/rental-contracts`),
+      rentRules: () => get('rental-contracts/rules'),
+      createRentalContract: (pfaId, request) => post(`pfas/${pfaId}/rental-contracts`, request),
+      addRentPayment: (contractId, request) => post(`rental-contracts/${contractId}/payments`, request),
+      getC801: (pfaId) => get(`pfas/${pfaId}/c801`),
+      updateC801: (pfaId, request) => put(`pfas/${pfaId}/c801`, request),
+      listNonResidentDecisions: (pfaId, status) => get(`pfas/${pfaId}/non-resident-decisions`, { status }),
+      confirmNonResidentDecision: (id, reason) => post(`non-resident-decisions/${id}/confirm`, { reason }),
     },
     rules: {
       suppliers: { ...ruleResource('suppliers'), remove: (id) => remove(`rules/suppliers/${id}`) },

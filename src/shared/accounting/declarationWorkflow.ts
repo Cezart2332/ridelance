@@ -16,7 +16,8 @@ export const DECLARATION_STATUS_TRANSITIONS: Readonly<Record<DeclarationStatus, 
   VALIDATED: ['READY_TO_SIGN'],
   READY_TO_SIGN: ['SIGNED'],
   SIGNED: ['SUBMITTED'],
-  SUBMITTED: ['ACCEPTED', 'REJECTED'],
+  SUBMITTED: ['INDEX_RECEIVED', 'ACCEPTED', 'REJECTED'],
+  INDEX_RECEIVED: ['ACCEPTED', 'REJECTED'],
   // Din ACCEPTED nu se mișcă versiunea: se creează una nouă, RECTIFICATIVE, în GENERATED.
   ACCEPTED: [],
   REJECTED: ['GENERATED'],
@@ -31,8 +32,9 @@ export const DECLARATION_ACTION_SOURCES: Readonly<Record<DeclarationAction, read
   VALIDATE: ['GENERATED'],
   MARK_SIGNED: ['READY_TO_SIGN'],
   MARK_SUBMITTED: ['SIGNED'],
-  MARK_REJECTED: ['SUBMITTED'],
+  MARK_REJECTED: ['SUBMITTED', 'INDEX_RECEIVED'],
   REGENERATE: ['VALIDATION_FAILED', 'REJECTED'],
+  RECORD_INDEX: ['SUBMITTED'],
 }
 
 /** Statusul-țintă al acțiunilor deterministe. `VALIDATE` depinde de rezultatul validării. */
@@ -41,10 +43,11 @@ export const DECLARATION_ACTION_TARGETS: Readonly<Record<Exclude<DeclarationActi
   MARK_SUBMITTED: 'SUBMITTED',
   MARK_REJECTED: 'REJECTED',
   REGENERATE: 'GENERATED',
+  RECORD_INDEX: 'INDEX_RECEIVED',
 }
 
 /** Acțiunile cu notă obligatorie. */
-export const ACTIONS_REQUIRING_NOTE: readonly DeclarationAction[] = ['MARK_REJECTED']
+export const ACTIONS_REQUIRING_NOTE: readonly DeclarationAction[] = ['MARK_REJECTED', 'RECORD_INDEX']
 
 /** Toate operațiile din UI pe o versiune, inclusiv cele cu endpoint propriu. */
 export type DeclarationOperation = DeclarationAction | 'UPLOAD_RECEIPT' | 'CREATE_RECTIFICATION'
@@ -60,7 +63,7 @@ export function isActionAllowed(status: DeclarationStatus, action: DeclarationAc
 export function availableOperations(status: DeclarationStatus): DeclarationOperation[] {
   const operations: DeclarationOperation[] = (Object.keys(DECLARATION_ACTION_SOURCES) as DeclarationAction[])
     .filter((action) => isActionAllowed(status, action))
-  if (status === 'SUBMITTED') operations.push('UPLOAD_RECEIPT')
+  if (status === 'SUBMITTED' || status === 'INDEX_RECEIVED') operations.push('UPLOAD_RECEIPT')
   if (status === 'ACCEPTED') operations.push('CREATE_RECTIFICATION')
   return operations
 }

@@ -1,4 +1,14 @@
 import type {
+  AnnualAnswersRequest,
+  AnnualDeclarations,
+  C801,
+  C801Request,
+  DeclarationAttention,
+  NonResidentDecision,
+  NonResidentDecisionStatus,
+  RentalContract,
+  RentalContractRequest,
+  RentRule,
   ClientWorkspaceRow,
   AccountingPeriod,
   AnafDeclarationSchema,
@@ -201,6 +211,23 @@ export interface AccountingApi {
     transition(versionId: string, request: TransitionRequest): Promise<DeclarationVersion>
     uploadReceipt(versionId: string, request: UploadReceiptRequest): Promise<DeclarationVersion>
     createRectification(declarationId: string, request: RectificationRequest): Promise<DeclarationVersion>
+    /** „Necesită atenție”: recipise cu erori, validări picate, rectificări de făcut, reguli de confirmat. */
+    attention(): Promise<DeclarationAttention[]>
+  }
+
+  /** Spec declarații F20–F61: anualele, chiriile, C801 și coada de confirmare a regulilor de nerezident. */
+  annual: {
+    get(pfaId: string, year: number): Promise<AnnualDeclarations>
+    generate(pfaId: string, year: number): Promise<AnnualDeclarations>
+    saveAnswers(pfaId: string, year: number, request: AnnualAnswersRequest): Promise<void>
+    listRentalContracts(pfaId: string): Promise<RentalContract[]>
+    rentRules(): Promise<RentRule[]>
+    createRentalContract(pfaId: string, request: RentalContractRequest): Promise<{ id: string }>
+    addRentPayment(contractId: string, request: { paymentDate: string; grossAmount: number }): Promise<{ id: string }>
+    getC801(pfaId: string): Promise<C801>
+    updateC801(pfaId: string, request: C801Request): Promise<C801>
+    listNonResidentDecisions(pfaId: string, status?: NonResidentDecisionStatus): Promise<NonResidentDecision[]>
+    confirmNonResidentDecision(id: string, reason: string): Promise<NonResidentDecision>
   }
 
   /** §4.5 */

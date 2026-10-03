@@ -26,7 +26,6 @@ import { resetMockAccountingDb } from '../api/mock/mockAccountingApi'
 import type {
   AccountingPeriod,
   DeclarationSummary,
-  DeclarationType,
   Job,
   LedgerEntry,
   PeriodOverview,
@@ -218,7 +217,7 @@ function MonthSection({ version, onChanged }: { version: number; onChanged: () =
                         )}
                       </TableCell>
                     ))}
-                    {DECLARATION_TYPES.map((type: DeclarationType) => {
+                    {DECLARATION_TYPES.map((type) => {
                       const cell = row.declarations[type]
                       return (
                         <TableCell key={type}>

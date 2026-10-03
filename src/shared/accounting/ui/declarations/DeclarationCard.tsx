@@ -35,6 +35,7 @@ const OPERATION_LABEL: Record<DeclarationOperation, string> = {
   MARK_SUBMITTED: 'Marchează depus',
   MARK_REJECTED: 'Marchează respins',
   REGENERATE: 'Regenerează',
+  RECORD_INDEX: 'Indexul ANAF',
   UPLOAD_RECEIPT: 'Încarcă recipisa',
   CREATE_RECTIFICATION: 'Creează rectificativă',
 }
@@ -43,6 +44,7 @@ const OPERATION_LABEL: Record<DeclarationOperation, string> = {
 function stepIndex(status: DeclarationStatus): number {
   if (status === 'VALIDATION_FAILED') return DECLARATION_STEPPER.indexOf('VALIDATED')
   if (status === 'REJECTED') return DECLARATION_STEPPER.indexOf('ACCEPTED')
+  if (status === 'INDEX_RECEIVED') return DECLARATION_STEPPER.indexOf('SUBMITTED')
   return DECLARATION_STEPPER.indexOf(status)
 }
 
@@ -50,7 +52,7 @@ function versionLabel(version: Pick<DeclarationVersion, 'versionNo' | 'kind'>): 
   return `v${version.versionNo} · ${version.kind === 'RECTIFICATIVE' ? 'Rectificativă' : 'Inițială'}`
 }
 
-type Dialog = 'breakdown' | 'xml' | 'reject' | 'rectification' | 'receipt' | 'sign' | 'submit' | null
+type Dialog = 'breakdown' | 'xml' | 'reject' | 'index' | 'rectification' | 'receipt' | 'sign' | 'submit' | null
 
 /** F4: câte un card per declarație (D100, D301, D390) în dosarul PFA. */
 export function DeclarationCard({
@@ -115,6 +117,8 @@ export function DeclarationCard({
         return setDialog('submit')
       case 'MARK_REJECTED':
         return setDialog('reject')
+      case 'RECORD_INDEX':
+        return setDialog('index')
       case 'UPLOAD_RECEIPT':
         return setDialog('receipt')
       case 'CREATE_RECTIFICATION':
@@ -313,6 +317,14 @@ export function DeclarationCard({
         destructive
         onClose={() => setDialog(null)}
         onSubmit={(reason) => transition('MARK_REJECTED', reason)}
+      />
+      <ReasonDialog
+        open={dialog === 'index'}
+        title={`Indexul ANAF ${summary.type}`}
+        reasonLabel="Index de încărcare"
+        confirmLabel="Salvează"
+        onClose={() => setDialog(null)}
+        onSubmit={(index) => transition('RECORD_INDEX', index)}
       />
       <ReasonDialog
         open={dialog === 'rectification'}

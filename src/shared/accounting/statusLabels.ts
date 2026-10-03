@@ -76,6 +76,7 @@ export const DECLARATION_STATUS: Readonly<Record<DeclarationStatus, StatusDescri
   SUBMITTED: { label: 'Depus', tone: 'warning', hint: 'Depus nu înseamnă acceptat. Se așteaptă recipisa.' },
   ACCEPTED: { label: 'Recipisă validă', tone: 'success' },
   REJECTED: { label: 'Respins', tone: 'error' },
+  INDEX_RECEIVED: { label: 'Index ANAF', tone: 'warning', hint: 'Se așteaptă recipisa din SPV.' },
 }
 
 export const PFA_MONTH_STATUS: Readonly<Record<PfaMonthStatus, StatusDescriptor>> = {
@@ -154,6 +155,9 @@ export const DECLARATION_TYPE_LABEL: Readonly<Record<DeclarationType, string>> =
   D100: 'D100 – impozit nerezidenți',
   D301: 'D301 – decont special TVA',
   D390: 'D390 – declarație recapitulativă',
+  D207: 'D207 – informativă nerezidenți',
+  D205: 'D205 – informativă chirii',
+  D212: 'D212 – declarația unică',
 }
 
 export const VALIDATION_LEVEL_LABEL: Readonly<Record<ValidationLevel, string>> = {

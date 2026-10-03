@@ -5,6 +5,7 @@ import { DECLARATION_STATUS, INVENTORY_CATEGORY_LABEL, PLATFORM_LABEL } from '..
 import type { AccountingApi, RuleResource } from '../contract'
 import { badRequest, conflict, notFound } from '../errors'
 import type {
+  MonthlyDeclarationType,
   AccountingYear,
   InventoryCount,
   AccountingPeriod,
@@ -56,7 +57,7 @@ import type {
   Validity,
   VatRate,
 } from '../types'
-import { DECLARATION_TYPES, EXPLAINABLE_CONTROLS } from '../types'
+import { ANNUAL_DECLARATION_TYPES, DECLARATION_TYPES, EXPLAINABLE_CONTROLS } from '../types'
 import { runChecks } from './checks'
 import { FIXTURE_PERIOD, MOCK_USERS, buildDocument, createFixtureDb, fileRef } from './fixtures'
 import {
@@ -76,6 +77,7 @@ import type { MockDb, MockDeclaration, MockDeclarationVersion, MockDocument, Moc
 import { csvBlob, textPdf } from './pdf'
 import { assetAt, candidates, depreciationPlan, isComplete, needsNote, nextInventoryNumber, prefill, reviewOf, withTotals } from './registersMock'
 import { calculate } from './taxEngine'
+import * as annualMock from './annualMock'
 
 /**
  * Implementarea mock a `AccountingApi` (Partea A). Ține starea în memorie, pe fixtures, și
@@ -872,7 +874,8 @@ function setStatus(pfa: MockPfa, declaration: MockDeclaration, version: MockDecl
 function applyCalculation(pfa: MockPfa, declaration: MockDeclaration, version: MockDeclarationVersion): void {
   const result = calculate(db, pfa, declaration.period)
   if (result.blockingReasons.length > 0) throw conflict('PRECHECK_BLOCKED', result.blockingReasons[0])
-  const { breakdown } = result.declarations[declaration.type]
+  // Mock-ul calculează doar lunarele; anualele au ecranul lor.
+  const { breakdown } = result.declarations[declaration.type as MonthlyDeclarationType]
   version.breakdown = breakdown
   version.amount = breakdown.total
   // D390 agregă pe furnizor; documentele ei sunt aceleași facturi UE ca la D301.
@@ -883,6 +886,21 @@ function applyCalculation(pfa: MockPfa, declaration: MockDeclaration, version: M
   version.hasPdf = false
   version.xml = mockXml(pfa, declaration, version)
   version.hasXml = true
+}
+
+const isAnnual = (type: DeclarationType) => (ANNUAL_DECLARATION_TYPES as readonly string[]).includes(type)
+
+/** Ecranul anual: calculul din mock-ul anual și înregistrările generate din `db.declarations`. */
+function annualView(pfa: MockPfa, year: number) {
+  const records = Object.fromEntries(
+    db.declarations
+      .filter((item) => item.pfaId === pfa.id && item.period === String(year))
+      .map((item) => {
+        const version = currentVersion(item)
+        return [item.type, { declarationId: item.id, versionId: version.id, versionNo: version.versionNo, status: version.status, amount: version.amount }]
+      }),
+  )
+  return annualMock.annualOf(pfa.id, year, yearOf(pfa, year).status === 'CLOSED', records)
 }
 
 function newVersion(declaration: MockDeclaration, kind: MockDeclarationVersion['kind'], reason: string | null): MockDeclarationVersion {
@@ -1761,8 +1779,16 @@ export function createMockAccountingApi(): AccountingApi {
           const note = request.note?.trim() || null
           if (request.action === 'MARK_REJECTED') requireReason(note, 'Motivul respingerii')
 
-          if (request.action === 'VALIDATE') {
+          if (request.action === 'RECORD_INDEX') requireReason(note, 'Indexul de încărcare')
+
+          if (request.action === 'VALIDATE' && isAnnual(declaration.type)) {
+            // Anualele se depun manual: validarea e controlul datelor, fără XML.
+            setStatus(pfa, declaration, version, 'VALIDATED', null)
+            setStatus(pfa, declaration, version, 'READY_TO_SIGN', 'Depunere manuală (aplicația web ANAF / PDF)')
+          } else if (request.action === 'VALIDATE') {
             validateVersion(pfa, declaration, version)
+          } else if (request.action === 'REGENERATE' && isAnnual(declaration.type)) {
+            setStatus(pfa, declaration, version, 'GENERATED', note)
           } else if (request.action === 'REGENERATE') {
             // Întâi calculul: dacă pre-check-ul blochează, versiunea rămâne neatinsă.
             applyCalculation(pfa, declaration, version)
@@ -1778,7 +1804,7 @@ export function createMockAccountingApi(): AccountingApi {
           const { declaration, version } = findDeclarationOfVersion(versionId)
           const pfa = findPfa(declaration.pfaId)
           ensureWritable(pfa)
-          if (version.status !== 'SUBMITTED') {
+          if (version.status !== 'SUBMITTED' && version.status !== 'INDEX_RECEIVED') {
             throw conflict('INVALID_TRANSITION', 'Recipisa se încarcă doar pe o declarație depusă.')
           }
           version.receiptFile = await fileRefFrom(request.file, 'receipt')
@@ -1798,11 +1824,60 @@ export function createMockAccountingApi(): AccountingApi {
             throw conflict('INVALID_TRANSITION', 'Rectificativa se creează doar dintr-o versiune cu recipisă validă.')
           }
           const version = newVersion(declaration, 'RECTIFICATIVE', reason)
-          applyCalculation(pfa, declaration, version)
+          if (isAnnual(declaration.type)) version.amount = currentVersion(declaration).amount
+          else applyCalculation(pfa, declaration, version)
           declaration.versions.push(version)
           audit(pfa.id, 'DeclarationVersion', version.id, 'RECTIFICATION', null, { type: declaration.type, versionNo: version.versionNo, amount: version.amount }, reason)
           return toVersion(version)
         }),
+
+      attention: () => respond(() => annualMock.attentionOf(db.pfas.map((pfa) => ({ id: pfa.id, name: pfa.name })))),
+    },
+
+    annual: {
+      get: (pfaId, year) => respond(() => annualView(findPfa(pfaId), year)),
+      generate: (pfaId, year) =>
+        respond(() => {
+          const pfa = findPfa(pfaId)
+          const view = annualView(pfa, year)
+          for (const row of [view.d207, view.d205, view.d212]) {
+            if (!row || !row.ready || row.record) continue
+            const declaration: MockDeclaration = { id: nextId('decl'), pfaId: pfa.id, period: String(year), type: row.type, versions: [] }
+            const version = newVersion(declaration, 'INITIAL', null)
+            version.amount = annualMock.amountOf(row)
+            declaration.versions.push(version)
+            db.declarations.push(declaration)
+            audit(pfa.id, 'DeclarationVersion', version.id, 'GENERATE', null, { type: row.type, period: String(year), amount: version.amount }, null)
+          }
+          return annualView(pfa, year)
+        }),
+      saveAnswers: (pfaId, year, request) => respond(() => annualMock.saveAnnualAnswers(findPfa(pfaId).id, year, request)),
+      listRentalContracts: (pfaId) => respond(() => annualMock.listContracts(findPfa(pfaId).id)),
+      rentRules: () =>
+        respond(() => [
+          { id: 'rule-rent', legalBasis: 'Codul fiscal, Titlul IV (venituri din cedarea folosinței bunurilor), de confirmat', rate: 10, formula: 'WITHHOLD_ON_PAYMENT', confirmed: false, validFrom: '2016-01-01', validTo: null },
+        ]),
+      createRentalContract: (pfaId, request) =>
+        respond(() => {
+          if (!/^[1-9]\d{12}$/.test(request.ownerCnp)) throw badRequest('RENTAL_CONTRACT_CNP', 'CNP-ul proprietarului nu e valid.')
+          return { id: annualMock.createContract(findPfa(pfaId).id, request).id }
+        }),
+      addRentPayment: (contractId, request) =>
+        respond(() => {
+          annualMock.addRentPayment(contractId, request.paymentDate, request.grossAmount)
+          return { id: contractId }
+        }),
+      getC801: (pfaId) => respond(() => annualMock.c801Of(findPfa(pfaId).id, findPfa(pfaId).cui)),
+      updateC801: (pfaId, request) =>
+        respond(() => {
+          try {
+            return annualMock.updateC801(findPfa(pfaId).id, findPfa(pfaId).cui, request)
+          } catch (error) {
+            throw badRequest('C801', (error as Error).message)
+          }
+        }),
+      listNonResidentDecisions: (pfaId, status) => respond(() => annualMock.listDecisions(findPfa(pfaId).id, status)),
+      confirmNonResidentDecision: (id, reason) => respond(() => annualMock.confirmDecision(id, requireReason(reason, 'Motivul confirmării'))),
     },
 
     rules: {

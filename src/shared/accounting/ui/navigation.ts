@@ -49,7 +49,7 @@ export const DOSSIER_SECTION_LABEL: Record<DossierSection, string> = {
  * Secțiunile comune cu dosarul (`declaratii`, `documente`, …) au aceleași nume, ca legăturile din
  * luna fiscală să ducă la fel în ambele.
  */
-export const CLIENT_SECTIONS = ['luna', 'banca', 'venituri', 'cheltuieli', 'registre', 'mesaje', 'anaf', 'setari', 'istoric'] as const
+export const CLIENT_SECTIONS = ['luna', 'banca', 'venituri', 'cheltuieli', 'registre', 'anual', 'mesaje', 'anaf', 'setari', 'istoric'] as const
 export type ClientSection = (typeof CLIENT_SECTIONS)[number]
 
 export const CLIENT_SECTION_LABEL: Record<ClientSection, string> = {
@@ -58,6 +58,7 @@ export const CLIENT_SECTION_LABEL: Record<ClientSection, string> = {
   venituri: 'Venituri și taxe',
   cheltuieli: 'Cheltuieli',
   registre: 'Registre',
+  anual: 'Anual',
   mesaje: 'Mesaje',
   anaf: 'ANAF',
   setari: 'Setări',

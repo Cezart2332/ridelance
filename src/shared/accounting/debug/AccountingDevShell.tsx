@@ -23,7 +23,9 @@ export default function AccountingDevShell() {
   const role: AccountingRole = params.get('rol') === 'Contabil' ? 'Contabil' : 'Admin'
   const tabs = TABS[role]
   const tab = params.get('tab')
-  const view = tab === tabs.declarations ? 'declarations' : tab === tabs.rules ? 'rules' : tab === tabs.pfa ? 'pfa' : null
+  // `vedere=clienti`: fișa clientului (tabelul și tab-urile din dashboard), pe același tab PFA.
+  const clients = params.get('vedere') === 'clienti'
+  const view = tab === tabs.declarations ? 'declarations' : tab === tabs.rules ? 'rules' : tab === tabs.pfa ? (clients ? 'clients' : 'pfa') : null
 
   const open = (nextTab: string | null, nextRole: AccountingRole = role) => {
     const next = new URLSearchParams()
@@ -47,7 +49,7 @@ export default function AccountingDevShell() {
             size="small"
             exclusive
             value={role}
-            onChange={(_, value: AccountingRole | null) => value && open(view ? TABS[value][view === 'pfa' ? 'pfa' : view] : null, value)}
+            onChange={(_, value: AccountingRole | null) => value && open(view ? TABS[value][view === 'pfa' || view === 'clients' ? 'pfa' : view] : null, value)}
           >
             <ToggleButton value="Admin">Admin</ToggleButton>
             <ToggleButton value="Contabil">Contabil</ToggleButton>

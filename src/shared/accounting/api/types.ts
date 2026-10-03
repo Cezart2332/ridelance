@@ -59,17 +59,26 @@ export const DECLARATION_STATUSES = [
   'SUBMITTED',
   'ACCEPTED',
   'REJECTED',
+  /** Depusă, cu indexul de încărcare ANAF; recipisa vine din SPV. */
+  'INDEX_RECEIVED',
 ] as const
 export type DeclarationStatus = (typeof DECLARATION_STATUSES)[number]
 
+/** Declarațiile lunare, calculate din luna fiscală. */
 export const DECLARATION_TYPES = ['D100', 'D301', 'D390'] as const
-export type DeclarationType = (typeof DECLARATION_TYPES)[number]
+export type MonthlyDeclarationType = (typeof DECLARATION_TYPES)[number]
+
+/** Declarațiile anuale (spec declarații F30–F55), pe perioada `yyyy`, depuse manual. */
+export const ANNUAL_DECLARATION_TYPES = ['D207', 'D205', 'D212'] as const
+export type AnnualDeclarationType = (typeof ANNUAL_DECLARATION_TYPES)[number]
+
+export type DeclarationType = MonthlyDeclarationType | AnnualDeclarationType
 
 export const DECLARATION_VERSION_KINDS = ['INITIAL', 'RECTIFICATIVE'] as const
 export type DeclarationVersionKind = (typeof DECLARATION_VERSION_KINDS)[number]
 
 /** Acțiunile din `POST /declaration-versions/{id}/transitions`. Recipisa și rectificativa au endpoint-uri proprii. */
-export const DECLARATION_ACTIONS = ['VALIDATE', 'MARK_SIGNED', 'MARK_SUBMITTED', 'MARK_REJECTED', 'REGENERATE'] as const
+export const DECLARATION_ACTIONS = ['VALIDATE', 'MARK_SIGNED', 'MARK_SUBMITTED', 'MARK_REJECTED', 'REGENERATE', 'RECORD_INDEX'] as const
 export type DeclarationAction = (typeof DECLARATION_ACTIONS)[number]
 
 export const VALIDATION_LEVELS = ['RIDELANCE', 'XSD', 'ANAF'] as const
@@ -482,7 +491,7 @@ export interface OverviewRow {
   blockingReasons: string[]
   bolt: PlatformMonthFigures | null
   uber: PlatformMonthFigures | null
-  declarations: Record<DeclarationType, DeclarationCell>
+  declarations: Record<MonthlyDeclarationType, DeclarationCell>
 }
 
 /** Unde e clientul în colaborare. */
@@ -1343,4 +1352,219 @@ export interface PeriodCorrection {
   stornoEntryId?: string | null
   /** Înregistrarea corectată care o înlocuiește pe cea stornată. */
   replacementEntryId?: string | null
+}
+
+// ---------------------------------------------------------------------------------------------
+// Spec declarații: anualele (D207, D205, D212), C801, nerezidenți, „Necesită atenție”
+// ---------------------------------------------------------------------------------------------
+
+export type NonResidentDecisionStatus = 'AUTO' | 'NEEDS_LEGAL_CONFIRMATION' | 'CONFIRMED'
+
+export interface NonResidentDecision {
+  id: string
+  paymentId: string
+  pfaId: string
+  supplierLegalName: string
+  supplierCountry: string
+  supplierTaxId: string
+  paymentDate: IsoDate
+  grossIncomeRon: number
+  taxRate: number
+  taxDue: number
+  obligationCode: string
+  status: NonResidentDecisionStatus
+  explanation: string
+  confirmedAt: IsoDateTime | null
+  confirmationReason: string | null
+}
+
+export interface DeclarationAttention {
+  pfaId: string
+  pfaName: string
+  period: string
+  type: DeclarationType
+  declarationId: string | null
+  versionId: string | null
+  reason: string
+}
+
+export interface AnnualRecord {
+  declarationId: string
+  versionId: string
+  versionNo: number
+  status: DeclarationStatus
+  amount: number
+}
+
+export interface AnnualDeclaration<T> {
+  type: AnnualDeclarationType
+  ready: boolean
+  blockers: string[]
+  review: string[]
+  model: T
+  record: AnnualRecord | null
+}
+
+export interface D207Beneficiary {
+  supplierName: string
+  country: string
+  taxId: string
+  incomeType: string
+  grossIncome: number
+  taxWithheld: number
+  exemptIncome: number
+  treaty: string | null
+  payments: number
+  declaredInD100: number
+}
+
+export interface D207Model {
+  year: number
+  beneficiaries: D207Beneficiary[]
+  totalGross: number
+  totalTax: number
+  paidTotal: number | null
+}
+
+export interface D205Beneficiary {
+  ownerName: string
+  ownerCnpMasked: string
+  contractNumber: string
+  grossIncome: number
+  taxWithheld: number
+  payments: number
+}
+
+export interface D205Model {
+  year: number
+  beneficiaries: D205Beneficiary[]
+  totalGross: number
+  totalTax: number
+}
+
+export interface D212Model {
+  taxYear: number
+  formYear: number
+  ruleVersion: string | null
+  grossIncome: number
+  deductibleExpenses: number
+  netIncome: number
+  carriedLosses: number
+  casBase: number
+  casDue: number
+  cassBase: number
+  cassDue: number
+  cassDeductible: number
+  incomeTaxBase: number
+  incomeTaxDue: number
+  lossCarriedForward: number
+}
+
+export interface D212Field {
+  section: string
+  label: string
+  value: number
+}
+
+export type PrefillCheck = 'NOT_AVAILABLE' | 'MATCH' | 'NEEDS_REVIEW'
+
+export interface D212View {
+  model: D212Model | null
+  form: D212Field[]
+  formVersion: string | null
+  hasExternalIncome: boolean | null
+  supplementCompleted: boolean
+  anafPrefilledNetIncome: number | null
+  prefill: PrefillCheck
+}
+
+export interface AnnualDeclarations {
+  pfaId: string
+  year: number
+  d207: AnnualDeclaration<D207Model>
+  /** Doar pentru PFA-urile cu contract de chirie de la persoane fizice. */
+  d205: AnnualDeclaration<D205Model> | null
+  d212: AnnualDeclaration<D212View>
+  pendingLegalConfirmations: number
+}
+
+export interface AnnualAnswersRequest {
+  hasExternalIncome: boolean | null
+  supplementCompleted: boolean
+  anafPrefilledNetIncome: number | null
+}
+
+export type C801Status = 'NOT_STARTED' | 'FILED_BY_PROVIDER' | 'FILED' | 'NUI_RECEIVED'
+
+export interface C801 {
+  pfaId: string
+  cui: string | null
+  cashRegisterStatus: CashRegisterStatus
+  activationDate: IsoDate | null
+  activityType: string | null
+  vehiclePlate: string | null
+  status: C801Status
+  documentId: string | null
+  nuiNumber: string | null
+  missing: string[]
+}
+
+export interface ClientAnnual {
+  year: number
+  hasExternalIncome: boolean | null
+  supplementCompleted: boolean
+  incomeTaxDue: number | null
+  casDue: number | null
+  cassDue: number | null
+  dueDate: IsoDate | null
+  d212Status: DeclarationStatus | null
+}
+
+export interface RentPayment {
+  id: string
+  paymentDate: IsoDate
+  grossAmount: number
+  tax: number
+  withholdOnPayment: boolean
+  ruleConfirmed: boolean
+}
+
+export interface RentalContract {
+  id: string
+  ownerName: string
+  ownerCnpMasked: string
+  contractNumber: string
+  contractDate: IsoDate
+  grossRent: number
+  paymentFrequency: string
+  withholdingRuleId: string
+  payments: RentPayment[]
+}
+
+export interface RentalContractRequest {
+  ownerName: string
+  ownerCnp: string
+  contractNumber: string
+  contractDate: IsoDate
+  grossRent: number
+  paymentFrequency: string
+  withholdingRuleId: string
+}
+
+export interface C801Request {
+  status: C801Status
+  documentId: string | null
+  nuiNumber: string | null
+  vehiclePlate: string | null
+}
+
+/** O regulă de reținere pentru chirie (F43: separată de cele de nerezident). */
+export interface RentRule {
+  id: string
+  legalBasis: string
+  rate: number | null
+  formula: string | null
+  confirmed: boolean
+  validFrom: IsoDate
+  validTo: IsoDate | null
 }

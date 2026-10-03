@@ -21,6 +21,7 @@ import { useNotify } from '../notify'
 import type { DossierTabProps } from '../pfa/PfaDossierView'
 import { useDossierMenu } from '../pfa/useDossierMenu'
 import { RegistersTab } from '../registers/RegistersTab'
+import { AnnualTab } from '../annual/AnnualTab'
 import { SettingsTab } from '../settings/SettingsTab'
 import { useApi } from '../useApi'
 import { AnafTab } from './AnafTab'
@@ -134,6 +135,7 @@ export function ClientPageView({ pfaId }: { pfaId: string }) {
           <DeductibleExpensesPanel year={year} month={month} pfaRegistrationId={pfa.id} contabilContext={legacyContext} onSnackbar={notifySnackbar} />
         )}
         {section === 'registre' && <RegistersTab {...tabProps} />}
+        {section === 'anual' && <AnnualTab {...tabProps} />}
         {section === 'mesaje' && userId && <ProfessionalChatBox clientUserId={userId} clientName={pfa.name} />}
         {section === 'anaf' && <AnafTab pfaId={pfa.id} />}
         {section === 'setari' && <SettingsTab {...tabProps} />}

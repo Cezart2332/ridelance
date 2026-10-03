@@ -16,6 +16,7 @@ import { openDocument } from '../../../common/documentViewerBus'
 import { FiscalProfileInviteCard, usePfaFiscalProfile } from '../../../../shared/fiscal-profile'
 import { EstimatedTaxesCard } from '../../../../shared/fiscal-estimates'
 import { useSectionNavigate } from '../../useSectionNavigate'
+import { AnnualQuestionCard } from './AnnualQuestionCard'
 
 const STATUS_TONE: Record<TaxObligation['status'], StatusTone> = {
   InPregatire: 'neutral',
@@ -185,6 +186,8 @@ export function TaxesPage() {
         </>
         )}
       </Paper>
+
+      <AnnualQuestionCard />
 
       {/* ── B. Declarații depuse de contabilă ── */}
       <Box>

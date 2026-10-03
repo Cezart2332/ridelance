@@ -1,5 +1,5 @@
 import { formatAmount, formatCalculation, formatDate, formatLei } from '../../format'
-import type { DeclarationBreakdown, DeclarationLine, DeclarationType, ExtractedFields, IsoDate, Period } from '../types'
+import type { DeclarationBreakdown, DeclarationLine, MonthlyDeclarationType, ExtractedFields, IsoDate, Period } from '../types'
 import { round2, validAt } from './helpers'
 import type { MockDb, MockDocument, MockPfa } from './mockDb'
 
@@ -13,7 +13,7 @@ import type { MockDb, MockDocument, MockPfa } from './mockDb'
 
 export interface MockTaxResult {
   blockingReasons: string[]
-  declarations: Record<DeclarationType, { applicable: boolean; breakdown: DeclarationBreakdown }>
+  declarations: Record<MonthlyDeclarationType, { applicable: boolean; breakdown: DeclarationBreakdown }>
 }
 
 interface ConfirmedDocument {
