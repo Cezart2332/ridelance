@@ -36,12 +36,11 @@ export function PublicPlanCard({ plan, cycle = 'monthly', bcrDiscount, onBcrDisc
   const selected = addons.filter((addon) => !addon.included && selectedAddons.includes(addon.key))
   const extraMonthly = selected.reduce((sum, addon) => sum + addon.monthlyLei, 0) + extraAds * FLEET_EXTRA_AD_LEI
   const annual = cycle === 'annual' && plan.pricing.annualTotalLei != null
-  const baseMonthly = annual ? plan.pricing.annualMonthlyLei! : plan.pricing.monthlyLei
+  const basePrice = annual ? plan.pricing.annualTotalLei! : plan.pricing.monthlyLei
   const discount = bcrDiscount ? BCR_DISCOUNT.monthlyLei * (annual ? BCR_DISCOUNT.months : 1) : 0
   // La anual BCR scade 6 × 50 lei din prima factură, nu 50 lei din fiecare lună a anului.
-  const annualDue = annual ? plan.pricing.annualTotalLei! - discount : 0
-  const displayMonthly = annual ? Math.round(annualDue / 12 * 100) / 100 : baseMonthly - discount
-  const total = displayMonthly + extraMonthly
+  const displayPrice = basePrice - discount
+  const total = displayPrice + (annual ? 0 : extraMonthly)
   const fleet = plan.audience === 'srl' && !plan.comingSoon
 
   return (
@@ -62,18 +61,18 @@ export function PublicPlanCard({ plan, cycle = 'monthly', bcrDiscount, onBcrDisc
           <Typography sx={{ fontSize: '1.5rem', fontWeight: 900, color: TOKENS.primaryStrong }}>Preț la lansare</Typography>
         </Box> : <Box data-testid="plan-price" sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', alignItems: 'center', columnGap: 1.2, height: { xs: 76, sm: 54 }, textAlign: 'left' }}>
           <Box>
-            <Typography component="s" aria-hidden={!bcrDiscount} sx={{ ...smallTextSx, display: 'block', height: 15, visibility: bcrDiscount ? 'visible' : 'hidden' }}>{money(baseMonthly)}</Typography>
+            <Typography component="s" aria-hidden={!bcrDiscount} sx={{ ...smallTextSx, display: 'block', height: 15, visibility: bcrDiscount ? 'visible' : 'hidden' }}>{money(basePrice)}</Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: { xs: 0, sm: 0.5 }, alignItems: { xs: 'flex-start', sm: 'baseline' }, whiteSpace: 'nowrap' }}>
-              <Typography sx={{ color: TOKENS.primaryStrong, fontWeight: 900, fontSize: { xs: '1.45rem', sm: '1.75rem' }, lineHeight: 1.2 }}>{money(displayMonthly)}</Typography>
-              <Typography sx={{ ...smallTextSx, fontWeight: 700 }}>/ lună</Typography>
+              <Typography sx={{ color: TOKENS.primaryStrong, fontWeight: 900, fontSize: { xs: annual ? '1.1rem' : '1.45rem', sm: '1.75rem' }, lineHeight: 1.2 }}>{money(displayPrice)}</Typography>
+              <Typography sx={{ ...smallTextSx, fontWeight: 700 }}>{annual ? '/ an' : '/ lună'}</Typography>
             </Stack>
           </Box>
           <Typography data-testid="bcr-price-note" sx={{ fontSize: '0.73rem', fontWeight: 650, lineHeight: 1.4, color: TOKENS.primaryStrong, visibility: bcrDiscount ? 'visible' : 'hidden' }}>
-            {annual ? `BCR: −${money(discount)} în primul an, apoi ${money(baseMonthly)}/lună.` : `primele 6 luni, apoi ${money(baseMonthly)}/lună.`}
+            {annual ? `primul an, apoi ${money(basePrice)}/an.` : `primele 6 luni, apoi ${money(basePrice)}/lună.`}
           </Typography>
         </Box>}
         <Typography sx={{ ...smallTextSx, fontSize: '0.72rem', minHeight: 18 }}>
-          {plan.comingSoon ? plan.noteMonthly : annual ? `${money(annualDue)} facturați anual · reducere 10%` : 'Abonament lunar, cu reînnoire automată.'}
+          {plan.comingSoon ? plan.noteMonthly : annual ? `${money(displayPrice)} facturați anual · reducere 10%` : 'Abonament lunar, cu reînnoire automată.'}
         </Typography>
         {!plan.comingSoon && <BcrDiscountCheckbox checked={bcrDiscount} onChange={onBcrDiscountChange} align="center" />}
       </Box>
@@ -107,7 +106,7 @@ export function PublicPlanCard({ plan, cycle = 'monthly', bcrDiscount, onBcrDisc
       </Stack>}
       <Stack spacing={1} sx={{ mt: 'auto' }}>
         {!plan.comingSoon && <Box aria-live="polite" sx={{ ...optionSx, py: 1, backgroundColor: TOKENS.surface }}>
-          <SummaryLine label={annual ? 'Echivalent lunar' : 'Total lunar'} value={money(total)} emphasized />
+          <SummaryLine label={annual ? 'Total anual' : 'Total lunar'} value={money(total)} emphasized />
           {extraMonthly > 0 && annual && <Typography sx={smallTextSx}>Opțiuni facturate separat: {money(extraMonthly)}/lună.</Typography>}
           {anonymousAds > 0 && <SummaryLine label={`Plată unică anonimizare (${anonymousAds})`} value={money(anonymousAds * FLEET_ANONYMIZATION_LEI)} />}
         </Box>}
@@ -137,12 +136,11 @@ export function PublicPlanCard({ plan, cycle = 'monthly', bcrDiscount, onBcrDisc
             <Typography sx={smallTextSx}>{addon.alternative}</Typography>
           </Box>)}
           {!plan.comingSoon && <Box sx={{ ...optionSx, mt: 2, p: 2, backgroundColor: TOKENS.surface }}>
-            <SummaryLine label={annual ? 'Abonament anual, cu reducere 10%' : plan.title} value={money(annual ? plan.pricing.annualTotalLei! : baseMonthly)} />
+            <SummaryLine label={annual ? 'Abonament anual, cu reducere 10%' : plan.title} value={money(basePrice)} />
             {bcrDiscount && <SummaryLine label={annual ? 'BCR: 50 lei × 6 luni, în primul an' : 'BCR: reducere lunară, timp de 6 luni'} value={`−${money(discount)}`} />}
-            {annual && <SummaryLine label="Total abonament facturat anual" value={money(annualDue)} emphasized />}
             {selected.map((addon) => <SummaryLine key={addon.key} label={addon.title} value={`+${money(addon.monthlyLei)}/lună`} />)}
             {extraAds > 0 && <SummaryLine label={`Anunțuri suplimentare (${extraAds})`} value={`+${money(extraAds * FLEET_EXTRA_AD_LEI)}/lună`} />}
-            <SummaryLine label={annual ? 'Echivalent lunar, cu opțiuni' : 'Total lunar'} value={money(total)} emphasized />
+            <SummaryLine label={annual ? 'Total anual' : 'Total lunar'} value={money(total)} emphasized />
             {annual && <Typography sx={{ ...smallTextSx, mt: 1 }}>Reducerea de 10% se aplică abonamentului. Opțiunile suplimentare se facturează lunar, separat.</Typography>}
             {anonymousAds > 0 && <SummaryLine label={`Plată unică anonimizare (${anonymousAds})`} value={money(anonymousAds * FLEET_ANONYMIZATION_LEI)} />}
           </Box>}
