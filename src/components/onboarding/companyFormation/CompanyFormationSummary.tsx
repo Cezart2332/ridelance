@@ -85,11 +85,11 @@ export function CompanyFormationSummary({
         </Stack>
       </PanelCard>
 
-      <PanelCard title="Plata abonamentului RIDElance Start">
+      <PanelCard title="Plata abonamentului Start">
         <Typography sx={{ fontSize: '0.92rem', color: TOKENS.ink, lineHeight: 1.6 }}>
           Pentru continuarea procedurii este necesară plata în avans a abonamentului{' '}
           <Box component="strong" sx={{ fontWeight: 800 }}>
-            RIDElance Start — {amount} lei
+            Start — {amount} lei
           </Box>
           .
         </Typography>
@@ -148,7 +148,7 @@ export function CompanyFormationSummary({
           label={
             <Typography sx={{ fontSize: '0.88rem', color: TOKENS.ink, lineHeight: 1.5 }}>
               Am înțeles că suma de {amount} lei reprezintă plata în avans a abonamentului
-              RIDElance Start, că nu se returnează în bani și că se recuperează integral ca
+              Start, că nu se returnează în bani și că se recuperează integral ca
               reducere la primul abonament.
             </Typography>
           }

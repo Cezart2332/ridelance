@@ -23,7 +23,8 @@ import {
 } from '@stripe/react-stripe-js'
 import { useAppSelector } from '../../../store/hooks'
 import { SRL_ROOT } from '../../../config/srlNavigation'
-import { ANNUAL_DISCOUNT, SRL_PLANS } from '../../../data/plans'
+import { ANNUAL_DISCOUNT } from '../../../data/plans'
+import { BILLING_SRL_PLANS as SRL_PLANS } from '../../../data/billingPlans'
 import { PlanCard } from '../../pricing/PlanCard'
 import { PlanPrice } from '../../pricing/PlanPrice'
 import { Switcher } from '../../pricing/Switcher'
@@ -643,7 +644,7 @@ function FleetPayment({
       */}
       <Box>
         <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.9rem' }}>
-          RIDElance Fleet · {annual ? 'abonament anual' : 'abonament lunar'} ·{' '}
+          Fleet · {annual ? 'abonament anual' : 'abonament lunar'} ·{' '}
           {state.progress.company?.name}
         </Typography>
         <PlanPrice

@@ -329,7 +329,7 @@ function PfaReview({ state }: { state: OnboardingState }) {
     <Box>
       <Fact label="Ramura aleasă" value={forming ? 'Nu are PFA — îl înființăm noi' : state.pfaRegistrationId ? 'Are deja PFA' : 'Fără răspuns'} />
       <Fact
-        label="Avans RIDElance Start"
+        label="Avans Start"
         value={
           <Stack direction="row" sx={{ alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <span>

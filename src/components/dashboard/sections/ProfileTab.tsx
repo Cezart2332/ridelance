@@ -64,7 +64,7 @@ export function ProfileTab() {
         { label: 'Telefon', value: profile.phoneNumber || '—' },
         { label: 'Rol', value: formatRole(profile.role) },
         { label: 'Parola', value: '**********' },
-        { label: 'Plan activ', value: 'RIDElance Pro' },
+        { label: 'Plan activ', value: 'Pro' },
       ]
     : []
 
@@ -114,7 +114,7 @@ export function ProfileTab() {
                   />
                 )}
                 <Chip
-                  label="Plan: RIDElance Pro"
+                  label="Plan: Pro"
                   size="small"
                   sx={{ fontWeight: 750, borderRadius: `${DASHBOARD_TOKENS.radius.full}px`, color: DASHBOARD_TOKENS.textMuted, backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.05) }}
                 />

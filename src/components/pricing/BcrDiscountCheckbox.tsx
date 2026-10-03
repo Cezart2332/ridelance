@@ -1,6 +1,7 @@
 import { Box, Checkbox, Stack, Tooltip, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import { useId } from 'react'
 
 import { TOKENS } from '../../constants/tokens'
 import { BCR_DISCOUNT_INFO, BCR_DISCOUNT_LABEL } from '../../data/bcrDiscount'
@@ -38,6 +39,7 @@ export function BcrDiscountCheckbox({
   stopPropagation = false,
   align = 'left',
 }: BcrDiscountCheckboxProps) {
+  const checkboxId = useId()
   return (
     <Stack
       direction="row"
@@ -54,7 +56,7 @@ export function BcrDiscountCheckbox({
         size="small"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        slotProps={{ input: { 'aria-label': BCR_DISCOUNT_LABEL } }}
+        slotProps={{ input: { id: checkboxId, 'aria-label': BCR_DISCOUNT_LABEL } }}
         sx={{
           // Fără padding și cu glifa exact cât rândul: atât cutia, cât și semnul din ea ajung la
           // înălțimea primei linii de text, deci `flex-start` le pune cu adevărat pe aceeași linie.
@@ -70,6 +72,7 @@ export function BcrDiscountCheckbox({
 
       <Typography
         component="label"
+        htmlFor={checkboxId}
         sx={{
           fontSize: '0.76rem',
           fontWeight: 650,
@@ -77,7 +80,7 @@ export function BcrDiscountCheckbox({
           // despart din nou la prima schimbare de mărime a fontului.
           lineHeight: `${ROW}px`,
           color: TOKENS.textMuted,
-          cursor: 'default',
+          cursor: 'pointer',
         }}
       >
         {BCR_DISCOUNT_LABEL}

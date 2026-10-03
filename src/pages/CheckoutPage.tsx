@@ -51,7 +51,7 @@ const ASSURANCES: Record<CheckoutKind, string[]> = {
     'Urmărești fiecare etapă din contul tău RIDElance',
   ],
   advance: [
-    'Avans din abonamentul RIDElance Start, nu un cost în plus',
+    'Avans din abonamentul Start, nu un cost în plus',
     'Factură automată trimisă pe email',
     'Dosarul pleacă la partenerul contabil imediat după plată',
   ],

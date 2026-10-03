@@ -1,6 +1,7 @@
 import { api } from '../lib/axios'
 import type { OwnerType } from '../config/ownerType'
-import { PFA_PLANS, annualSummary, priceFor, type BillingCycle, type Plan, type PlanFeature } from '../data/plans'
+import { annualSummary, priceFor, type BillingCycle, type Plan, type PlanFeature } from '../data/plans'
+import { BILLING_PFA_PLANS as PFA_PLANS } from '../data/billingPlans'
 import { getPartnerBenefit } from '../data/benefits'
 import type { PersoanaFizicaPayload, RegisteredOfficePayload, SignPayload } from './companyFormation.service'
 
@@ -107,7 +108,7 @@ export interface ServiceInfo {
 }
 
 /**
- * Planurile de abonament, derivate din `data/plans.ts`.
+ * Planurile existente de plată, derivate din `data/billingPlans.ts`.
  *
  * Erau scrise a doua oară aici, cu prețurile săptămânale (49/99/149 lei) și cu nota „reînnoire
  * automată în fiecare luni la 15:00" — adică pagina publică și checkoutul anunțau două modele
@@ -278,9 +279,9 @@ export const stripeService = {
         clientSecret: response.data.clientSecret,
         cancelUrl: effectiveCancelUrl,
         kind: 'advance',
-        title: 'Abonament RIDElance Start — avans',
+        title: 'Abonament Start — avans',
         price: priceLabel,
-        desc: 'Plata în avans a abonamentului RIDElance Start. Nerambursabilă.',
+        desc: 'Plata în avans a abonamentului Start. Nerambursabilă.',
       })
     } catch (error) {
       // Refuzul se propagă: de la RL-03 încoace serverul răspunde 422 cu ce mai lipsește din

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ServiceOrderWizard } from '../components/services/ServiceOrderWizard'
 import type { ServiceKey } from '../services/stripe.service'
-import { Box, Button, Card, CardContent, Container, Paper, Stack, Typography } from '@mui/material'
+import { Box, Button, Container, Paper, Stack, Typography } from '@mui/material'
 import { ROUTES } from '../constants/routes'
 import { alpha } from '@mui/material/styles'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
@@ -15,9 +15,7 @@ import {
   partnerLogos,
 } from '../data/constants'
 import { PARTNER_LOGO } from '../data/partnerLogo'
-import { PlanFeatureItem } from '../components/pricing/PlanFeatureItem'
-import { BcrDiscountCheckbox } from '../components/pricing/BcrDiscountCheckbox'
-import { PlanPrice } from '../components/pricing/PlanPrice'
+import { PublicPlanCard } from '../components/pricing/PublicPlanCard'
 import { Switcher } from '../components/pricing/Switcher'
 import { plansFor, type Audience } from '../data/plans'
 import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../data/bcrDiscount'
@@ -293,186 +291,16 @@ export function HomePage() {
           }}
         >
           {plans.map((item) => (
-            <Card
+            <PublicPlanCard
               key={item.key}
-              elevation={0}
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                p: { xs: 3, md: 4.5 },
-                borderRadius: `${TOKENS.radius.xl}px`,
-                backgroundColor: TOKENS.paper,
-                position: 'relative',
-                border:
-                  item.recommended
-                    ? `1.5px solid ${TOKENS.primaryStrong}`
-                    : `1px solid ${alpha(TOKENS.ink, 0.06)}`,
-                boxShadow:
-                  item.recommended
-                    ? '0 16px 40px rgba(92,203,245,0.14)'
-                    : '0 4px 20px rgba(0,0,0,0.01)',
-                transition: `all 0.3s cubic-bezier(0.16, 1, 0.3, 1)`,
-                '&:hover': {
-                  boxShadow:
-                    item.recommended
-                      ? '0 24px 50px rgba(92,203,245,0.22)'
-                      : '0 16px 36px rgba(0,0,0,0.04)',
-                  transform: 'translateY(-4px)',
-                },
+              plan={item}
+              onStart={handleStart}
+              bcrDiscount={bcrDiscount}
+              onBcrDiscountChange={(next) => {
+                setBcrDiscount(next)
+                writeBcrDiscountIntent(next)
               }}
-            >
-              {item.recommended && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 16,
-                    right: 16,
-                    bgcolor: TOKENS.primaryStrong,
-                    color: '#fff',
-                    px: 1.8,
-                    py: 0.5,
-                    borderRadius: `${TOKENS.radius.sm}px`,
-                    fontSize: '0.68rem',
-                    fontWeight: 800,
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                    boxShadow: '0 4px 12px rgba(92,203,245,0.2)',
-                  }}
-                >
-                  Recomandat
-                </Box>
-              )}
-
-              <CardContent
-                sx={{
-                  p: 0,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
-                  gap: 2.5,
-                }}
-              >
-                <Box sx={{ minHeight: { xs: 'auto', md: 180 } }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 800,
-                      fontSize: '1.35rem',
-                      color: TOKENS.ink,
-                    }}
-                  >
-                    {item.title}
-                  </Typography>
-                  <PlanPrice
-                    monthlyLei={item.pricing.monthlyLei}
-                    unit="/ lună"
-                    discounted={bcrDiscount}
-                    size="md"
-                  />
-                  <Typography
-                    sx={{
-                      color: TOKENS.textMuted,
-                      fontSize: '0.78rem',
-                      mt: 0.5,
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    {item.noteMonthly}
-                  </Typography>
-
-                  {/* Bifa lipsea de pe landing, deși aici ajunge lumea întâi: cine compara
-                      prețurile aici nu afla niciodată de reducerea BCR. Starea e aceeași ca pe
-                      pagina de Abonamente, prin `sessionStorage`, deci decizia nu se ia de două ori. */}
-                  <BcrDiscountCheckbox
-                    checked={bcrDiscount}
-                    onChange={(next) => {
-                      setBcrDiscount(next)
-                      writeBcrDiscountIntent(next)
-                    }}
-                  />
-                </Box>
-
-                <Typography
-                  sx={{
-                    color: TOKENS.textMuted,
-                    lineHeight: 1.65,
-                    fontSize: '0.95rem',
-                  }}
-                >
-                  {item.summary}
-                </Typography>
-
-                {item.intro && (
-                  <Typography
-                    sx={{
-                      fontSize: '0.9rem',
-                      fontWeight: 700,
-                      color: TOKENS.ink,
-                    }}
-                  >
-                    {item.intro}
-                  </Typography>
-                )}
-
-                <Box
-                  component="ul"
-                  sx={{ p: 0, m: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 1.4, flexGrow: 1 }}
-                >
-                  {item.features.map((feature, featureIndex) => (
-                    <PlanFeatureItem
-                      key={`${feature.strong ?? ''}-${feature.text ?? ''}-${featureIndex}`}
-                      feature={feature}
-                      // Pe landing, numele partenerului se scrie cu litere. Logourile veneau din
-                      // fișiere de forme și calități diferite și, înghesuite în rândurile listei,
-                      // rupeau ritmul textului. Banda de parteneri de mai jos le arată cum trebuie.
-                      showPartnerLogo={false}
-                    />
-                  ))}
-                </Box>
-
-                {item.footnote && (
-                  <Typography
-                    sx={{
-                      fontSize: '0.8rem',
-                      color: TOKENS.textMuted,
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    {item.footnote}
-                  </Typography>
-                )}
-
-                <Button
-                  onClick={handleStart}
-                  variant={item.recommended ? 'contained' : 'outlined'}
-                  fullWidth
-                  size="large"
-                  sx={{
-                    mt: 2,
-                    py: 1.4,
-                    fontWeight: 800,
-                    fontSize: '0.95rem',
-                    borderRadius: `${TOKENS.radius.lg}px`,
-                    boxShadow: 'none',
-                    transition: 'all 0.2s ease',
-                    color: item.recommended ? '#fff' : TOKENS.ink,
-                    borderColor: item.recommended ? 'transparent' : alpha(TOKENS.ink, 0.12),
-                    '&:hover':
-                      item.recommended
-                        ? {
-                          backgroundColor: TOKENS.primaryStrong,
-                          boxShadow: 'none',
-                        }
-                        : {
-                          borderColor: alpha(TOKENS.ink, 0.3),
-                          backgroundColor: alpha(TOKENS.ink, 0.01),
-                        },
-                  }}
-                >
-                  {item.cta}
-                </Button>
-              </CardContent>
-            </Card>
+            />
           ))}
         </Box>
       </Container>

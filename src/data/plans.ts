@@ -3,12 +3,10 @@ import { getPartnerBenefit } from './benefits'
 /**
  * Planurile RIDElance, ca date.
  *
- * Un plan e descris o singură dată și randat în trei locuri — pagina de Abonamente, secțiunea de
- * pe landing și, mai târziu, alegerea din aplicație. Scris separat în fiecare, ajunsese deja să
- * difere: pagina publică anunța altceva decât dashboardul.
+ * Noua ofertă publică este descrisă o singură dată pentru pagina de Abonamente și landing.
  *
- * Prețurile de aici sunt **de afișare**. Ce se încasează efectiv vine din catalogul Stripe, în
- * backend, iar cele două nu sunt încă aliniate: vezi nota de la `PFA_PLANS`.
+ * Prețurile noii oferte sunt de afișare. Fluxurile existente de plată folosesc billingPlans.ts
+ * până la actualizarea separată a catalogului din backend.
  */
 
 /** Cine cumpără. Slider-ul de pe pagină comută între cele două. */
@@ -47,6 +45,9 @@ export interface Plan {
   key: string
   audience: Audience
   title: string
+  tagline?: string
+  comingSoon?: boolean
+  addons?: PlanAddon[]
   pricing: PlanPricing
   /** Nota de sub preț, pe fiecare ciclu de facturare. */
   noteMonthly: string
@@ -62,6 +63,18 @@ export interface Plan {
   /** Costuri opționale, peste abonament. Doar flota are așa ceva. */
   extras?: { amount: string; text: string }[]
 }
+
+export interface PlanAddon {
+  key: string
+  title: string
+  monthlyLei: number
+  text: string
+  alternative?: string
+  included?: boolean
+}
+
+export const FLEET_EXTRA_AD_LEI = 39.9
+export const FLEET_ANONYMIZATION_LEI = 14.9
 
 /** Reducerea la plata anuală, ca fracție. Folosită și pentru eticheta de pe comutator. */
 export const ANNUAL_DISCOUNT = 0.1
@@ -104,166 +117,104 @@ export function partnerNameFor(slug: string): string | null {
   return getPartnerBenefit(slug)?.name ?? null
 }
 
-/**
- * Planurile pentru PFA.
- *
- * Sumele sunt cele din materialul comercial: lunar, cu 10% reducere la plata anuală. Sunt și
- * sumele pe care le încasează Stripe: catalogul din `Domain/Payments/StripeCatalog.cs` le citește
- * din `Pricing.Plans`, pe ambele cicluri. Până la trecerea de la săptămânal la lunar, pagina
- * anunța un model pe care casa nu-l putea onora (49 / 99 / 149 lei pe săptămână); acum e unul.
- */
+/** Oferta publică de afișare. Catalogul de plată existent este în billingPlans.ts. */
 export const PFA_PLANS: Plan[] = [
   {
-    key: 'solo',
-    audience: 'pfa',
-    title: 'RIDElance Solo',
-    pricing: { monthlyLei: 199, annualMonthlyLei: 179.1, annualTotalLei: 2149.2 },
+    key: 'pfalone', audience: 'pfa', title: 'PFAlone',
+    tagline: 'Tu conduci. RIDElance îți dă instrumentele.',
+    pricing: { monthlyLei: 139 },
     noteMonthly: 'Abonament lunar, cu reînnoire automată.',
-    noteAnnual: 'Abonament anual, cu reînnoire automată și 10% reducere.',
-    summary:
-      'Pentru șoferii care își gestionează singuri contabilitatea, dar vor toată infrastructura RIDElance.',
+    summary: 'Pentru șoferii care vor să își gestioneze singuri obligațiile fiscale, dar vor toată infrastructura RIDElance.',
+    intro: 'Inclus în PFAlone',
     features: [
-      { strong: 'Deschidere PFA GRATUITĂ' },
-      {
-        strong: 'Dashboard RIDElance complet',
-        text: '— încasări, profit real, taxe estimate, ore și performanță',
-      },
-      {
-        strong: 'Documente centralizate',
-        text: '— PFA, personale și auto, cu alerte de expirare',
-      },
-      {
-        partner: 'bcr',
-        text: '50 lei/lună reducere la abonament, 6 luni, pentru contul deschis prin RIDElance + 12 luni fără comisioane bancare',
-      },
-      { partner: 'mol', text: 'reduceri la combustibil și spălătorii' },
-      {
-        partner: 'asigurari-ro',
-        strong: 'Asigurări 100% online',
-        text: 'direct din ecosistemul RIDElance',
-      },
-      {
-        partner: 'oblio',
-        strong: '1 an gratuit',
-        text: '— cont și acces la programul de facturare online',
-      },
-      {
-        partner: 'simplifi',
-        strong: 'Semnătură electronică cloud',
-        text: 'la tarif preferențial, cu suport RIDElance pentru configurare',
-      },
-      { strong: 'Suport direct în platformă' },
+      { strong: 'Deschidere PFA GRATUITĂ', text: '— dosarul și procesul de înființare sunt gestionate prin RIDElance.' },
+      { strong: 'Soft contabil automatizat', text: '— evidență financiară și fiscală pentru transport alternativ.' },
+      { strong: 'Calcul taxe, evidențe și dashboard RIDElance', text: '— încasări, cheltuieli, profit, taxe estimate și situația PFA-ului într-un singur loc.' },
+      { strong: 'Cheltuieli introduse direct din poză', text: '— fotografiezi bonul sau factura, iar RIDElance extrage și organizează informațiile relevante.' },
+      { strong: 'Aplicație mobilă RIDElance', text: '— acces complet pentru iPhone și Android.' },
+      { strong: 'Toate documentele într-un singur loc', text: '— documente PFA, personale, auto și contabile centralizate în platformă.' },
+      { strong: 'Alerte și notificări în timp real', text: '— pentru expirări, obligații fiscale și acțiuni importante.' },
     ],
-    footnote:
-      'Contabilitatea lunară nu este inclusă. Poți folosi propriul contabil și documentele/exporturile disponibile în RIDElance.',
-    cta: 'Alege Solo',
+    addons: [
+      { key: 'open-banking', title: 'Open Banking', monthlyLei: 49, text: 'Conectezi contul bancar PFA, iar tranzacțiile sunt sincronizate automat în RIDElance.', alternative: 'Alternativă gratuită: încarci extrasul bancar lunar.' },
+      { key: 'cash-register', title: 'Automatizare casă de marcat', monthlyLei: 49, text: 'Datele fiscale necesare sunt preluate și procesate automat în fluxul RIDElance.', alternative: 'Alternativă gratuită: încarci rapoartele Z zilnice și raportul lunar.' },
+    ],
+    footnote: 'PFAlone nu include gestionarea și depunerea automată a declarațiilor fiscale. Opțiunile suplimentare pot fi activate sau dezactivate separat.',
+    cta: 'Alege PFAlone',
   },
   {
-    key: 'start',
-    audience: 'pfa',
-    title: 'RIDElance Start',
-    pricing: { monthlyLei: 399, annualMonthlyLei: 359.1, annualTotalLei: 4309.2 },
+    key: 'pfa-full', audience: 'pfa', title: 'PFA Full', recommended: true,
+    tagline: 'Tu conduci. RIDElance se ocupă de restul.',
+    pricing: { monthlyLei: 299 },
     noteMonthly: 'Abonament lunar, cu reînnoire automată.',
-    noteAnnual: 'Abonament anual, cu reînnoire automată și 10% reducere.',
-    summary: 'Pentru șoferii care vor ca RIDElance să se ocupe și de partea contabilă a PFA-ului.',
-    intro: 'Include toate beneficiile Solo, plus:',
+    summary: 'Pentru șoferii care vor ca RIDElance să automatizeze și să gestioneze întreaga parte fiscală și administrativă a PFA-ului.',
+    intro: 'Tot ce include PFAlone, plus:',
     features: [
-      {
-        strong: 'Contabilitate completă pentru PFA inclusă',
-        text: ', prin partener CECCAR specializat în transport alternativ',
-      },
-      { strong: 'Contabil dedicat', text: ', disponibil direct prin chat în Dashboard RIDElance' },
-      {
-        strong: 'Declarații și obligații fiscale lunare gestionate',
-        text: 'împreună cu contabilul',
-      },
-      { strong: 'Cheltuieli și documente contabile centralizate', text: 'direct în platformă' },
-      {
-        strong: 'Estimări automate pentru taxe și profit',
-        text: ', pe baza activității disponibile în RIDElance',
-      },
-      {
-        strong: 'Asistență și consultanță directă',
-        text: '— suport RIDElance + contabil în aceeași platformă',
-      },
+      { strong: 'Declarații fiscale gestionate complet', text: '— generarea și depunerea declarațiilor lunare și anuale necesare PFA-ului.' },
+      { strong: 'Conectare completă cu ANAF și SPV', text: '— e-Facturi, declarații, recipise, obligații, vector fiscal și comunicările relevante din SPV, centralizate automat.' },
+      { strong: 'Obligații fiscale urmărite automat', text: '— termenele, statusul declarațiilor și acțiunile necesare.' },
+      { strong: 'Registre și evidențe contabile generate automat', text: '— RJIP, evidențe fiscale și documentele relevante, actualizate pe baza datelor din platformă.' },
+      { strong: 'Asistență și consultanță pentru transport alternativ', text: '— suport constant pentru situații fiscale, administrative și operaționale specifice ridesharing-ului.' },
     ],
-    footnote:
-      'Deschiderea PFA este GRATUITĂ. Beneficiul BCR este de 50 lei/lună reducere la abonament timp de 6 luni, plus 12 luni fără comisioane bancare, pentru conturile eligibile deschise prin RIDElance.',
-    cta: 'Începe cu Start',
-  },
-  {
-    key: 'pro',
-    audience: 'pfa',
-    title: 'RIDElance Pro',
-    pricing: { monthlyLei: 599, annualMonthlyLei: 539.1, annualTotalLei: 6469.2 },
-    noteMonthly: 'Abonament lunar, cu reînnoire automată.',
-    noteAnnual: 'Abonament anual, cu reînnoire automată și 10% reducere.',
-    summary:
-      'Pentru cei care vor pachetul complet RIDElance, cu beneficii premium și costuri suplimentare eliminate.',
-    intro: 'Include tot ce ai în Start, plus:',
-    features: [
-      {
-        strong: 'Găzduire sediu social GRATUITĂ',
-        text: ', în oricare dintre locațiile RIDElance disponibile, pe toată durata colaborării',
-      },
-      {
-        partner: 'bcr',
-        strong: '150 lei bonus',
-        text: 'la deschiderea contului prin RIDElance + 12 luni fără comisioane',
-      },
-      { strong: 'Reduceri la chiria mașinilor deținute de RIDElance' },
-      { strong: 'Oferte, campanii și promoții exclusive', text: 'pentru membrii PRO' },
-      { strong: 'Early Access', text: 'la integrări, funcționalități și parteneriate noi RIDElance' },
-      { strong: 'Suport prioritar RIDElance' },
+    addons: [
+      { key: 'open-banking', title: 'Open Banking', monthlyLei: 49, included: true, text: 'Contul bancar este conectat direct la RIDElance, iar tranzacțiile sunt sincronizate automat.' },
+      { key: 'cash-register', title: 'Automatizare casă de marcat', monthlyLei: 49, included: true, text: 'Datele casei de marcat sunt integrate automat în fluxul contabil RIDElance.' },
     ],
-    footnote:
-      'Reducerea pentru chirie se aplică exclusiv mașinilor deținute de RIDElance, nu mașinilor publicate de firme partenere.',
-    cta: 'Alege Pro',
-    recommended: true,
+    footnote: 'Fără opțiuni suplimentare necesare pentru automatizările prezentate. Reducerea BCR se aplică în condițiile campaniei și eligibilității contului.',
+    cta: 'Alege PFA Full',
   },
 ]
 
-/**
- * Planul pentru flote.
- *
- * Unul singur, deci fără comparație între variante — cardul stă centrat, nu într-o grilă de trei
- * cu două goluri. Nu are variantă anuală, așa că pe SRL comutatorul lunar/anual nici nu apare.
- */
 export const SRL_PLANS: Plan[] = [
   {
-    key: 'fleet',
-    audience: 'srl',
-    title: 'RIDElance Fleet',
-      pricing: { monthlyLei: 299, annualMonthlyLei: 269.1, annualTotalLei: 3229.2 },
-      noteAnnual: '3.229,20 lei facturați anual, cu reînnoire automată și 10% reducere.',
-    noteMonthly:
-      'Abonament lunar, cu 10 anunțuri active incluse și administrare completă pentru flota ta.',
-    summary:
-      'Pentru flotele care vor administrare digitală completă, organizare mai bună și un mod simplu de a gestiona mașinile și închirierile.',
-    intro: 'Include:',
+    key: 'fleet', audience: 'srl', title: 'SRL Fleet',
+    tagline: 'Flota, mașinile și închirierile într-un singur loc.',
+    pricing: { monthlyLei: 299 },
+    noteMonthly: 'Abonament lunar, cu reînnoire automată.',
+    summary: 'Pentru societățile care administrează mașini pentru ridesharing și vor să gestioneze anunțurile, documentele, șoferii și închirierile direct din RIDElance.',
+    intro: 'Inclus în SRL Fleet',
     features: [
-      { prefix: 'Până la', strong: '10 anunțuri active simultan' },
-      { strong: 'Marketplace RIDElance + mini-site pentru flotă' },
-      { strong: 'Hartă interactivă și locații de preluare' },
-      { strong: 'Dosar digital pentru fiecare vehicul' },
-      { strong: 'Documente vehicul și documente societate' },
-      { strong: 'Alerte pentru RCA, ITP, CASCO și expirări' },
-      { strong: 'Generare contracte și procese-verbale' },
-      { strong: 'Preview și descărcare PDF' },
-      { strong: 'Check-in / Check-out cu poze și istoric complet' },
-      { strong: 'Mentenanță, remindere și timeline per mașină' },
-      { strong: 'Beneficii RIDElance și badge „Flotă verificată”' },
-      { strong: '0% comision', text: 'din valoarea chiriilor' },
+      { strong: '10 anunțuri active incluse', text: '— publici și gestionezi mașinile disponibile direct din dashboard.' },
+      { strong: 'Marketplace RIDElance', text: '— mașinile tale pot fi descoperite de șoferii din ecosistem.' },
+      { strong: 'Pagină publică pentru flotă', text: '— mini-site cu mașini, informații, rating și detalii relevante.' },
+      { strong: 'Documente centralizate', text: '— documente societate și vehicule, cu expirări și notificări.' },
+      { strong: 'Contracte și procese-verbale', text: '— generare și administrare nelimitată pentru închirieri.' },
+      { strong: 'Check-in / check-out cu poze', text: '— starea mașinii documentată la predare și returnare.' },
+      { strong: 'Istoric complet al închirierilor', text: '— timeline pentru fiecare mașină și fiecare șofer.' },
+      { strong: 'Administrarea plăților', text: '— chirii, scadențe și istoricul plăților.' },
+      { strong: 'Mentenanță și remindere', text: '— revizii, intervenții și termene importante pentru flotă.' },
+      { strong: 'Valori contractuale configurabile', text: '— chirie, garanție și alte condiții setate per relație.' },
+      { strong: 'Utilizatori nelimitați', text: '— acces pentru echipa companiei fără tarif per utilizator.' },
+      { strong: '0% comision din chirii', text: '— RIDElance nu reține procent din chiria dintre SRL și PFA.' },
     ],
-    cta: 'Începe acum',
-    recommended: true,
-    extras: [
-      { amount: '39,90 lei / lună', text: 'pentru fiecare anunț activ suplimentar peste cele 10 incluse' },
-      { amount: '14,90 lei / anunț', text: 'pentru anonimizarea numărului de înmatriculare' },
+    addons: [
+      { key: 'open-banking', title: 'Open Banking', monthlyLei: 49, text: 'Conectezi contul bancar al societății și sincronizezi automat tranzacțiile relevante în RIDElance.', alternative: 'Opțional — abonamentul Fleet funcționează și fără conectarea contului bancar.' },
     ],
+    footnote: '10 anunțuri active sunt deja incluse. Taxa de 39,90 lei/lună se aplică fiecărui anunț activ suplimentar. Anonimizarea numărului de înmatriculare este o plată unică, separată de totalul lunar.',
+    cta: 'Alege SRL Fleet',
+  },
+  {
+    key: 'fleet-pro', audience: 'srl', title: 'SRL Fleet Pro', comingSoon: true,
+    tagline: 'Închirierea devine un flux complet digital.',
+    pricing: { monthlyLei: 0 },
+    noteMonthly: 'Disponibil în curând.',
+    summary: 'Pentru flotele care vor să găsească PFA-uri, să încaseze chiria online, să automatizeze plățile și să administreze întreaga relație direct din RIDElance.',
+    intro: 'Tot ce include SRL Fleet, plus:',
+    features: [
+      { strong: 'Încasarea chiriei online direct în contul firmei', text: '— PFA-ul plătește din RIDElance, NETOPIA procesează plata direct pentru SRL, iar RIDElance nu încasează și nu redistribuie banii.' },
+      { strong: 'Plăți recurente și scadențe automatizate', text: '— perioade de chirie, statusul plății, următoarea scadență și eventualele plăți eșuate.' },
+      { strong: 'Rental Management complet, cap-coadă', text: '— contract → check-in → plată inițială → plăți recurente → încetare → check-out → regularizare finală.' },
+      { strong: 'RIDElance Verified Network — PFA-uri disponibile', text: '— găsești PFA-uri care caută mașini și vezi date reale despre închirieri, plăți la timp, restanțe și rating.' },
+      { strong: 'Chat direct PFA ↔ SRL', text: '— discuția păstrează contextul mașinii și poate deveni ofertă, apoi închiriere.' },
+      { strong: 'Disponibilitatea mașinilor sincronizată automat', text: '— la închiriere și returnare, cu republicare decisă de SRL.' },
+      { strong: 'Istoric și reputație din colaborări reale', text: '— plăți confirmate, închirieri finalizate, incidente și recenzii verificate.' },
+      { strong: 'Profil de flotă cu reputație verificată', text: '— mașini disponibile, rating, recenzii din închirieri confirmate și activitate reală.' },
+      { strong: 'Roluri și permisiuni pentru echipă', text: '— administrator, manager flotă, operator, contabil sau service.' },
+    ],
+    footnote: 'Prețul și condițiile comerciale SRL Fleet Pro vor fi afișate la lansarea modulului.',
+    cta: 'În curând',
   },
 ]
-
 export const plansFor = (audience: Audience): Plan[] => (audience === 'pfa' ? PFA_PLANS : SRL_PLANS)
 
 /**
@@ -280,11 +231,11 @@ export interface IncludedBenefit {
 
 export const INCLUDED_IN_ALL: IncludedBenefit[] = [
   { title: 'Deschidere PFA gratuită', text: 'Pentru utilizatorii eligibili RIDElance.' },
-  { partner: 'bcr', title: 'Beneficii BCR', text: 'Bonus la deschiderea contului și 12 luni fără comisioane.' },
+  { partner: 'bcr', title: 'Beneficii BCR', text: '50 lei/lună reducere la abonament timp de 6 luni, pentru conturi eligibile deschise prin RIDElance.' },
   { partner: 'mol', title: 'Reduceri MOL', text: 'Combustibil și spălătorii la tarife dedicate.' },
   { partner: 'asigurari-ro', title: 'Asigurări online', text: 'Acces prin asigurari.ro și suport RIDElance la nevoie.' },
-  { partner: 'oblio', title: '1 an OBLIO gratuit', text: 'Cont și acces la programul de facturare online.' },
-  { partner: 'simplifi', title: 'Simplifi', text: 'Semnătură electronică cloud la tarif preferențial.' },
+  { partner: 'eldrive', title: 'Reduceri Eldrive', text: 'Reducere de 0,80 lei/kWh la stațiile incluse în promoție.' },
+  { partner: 'consulto', title: 'Beneficii Consulto', text: 'Sediu profesional PFA la 349 lei/an și reduceri pentru operațiuni SRL eligibile.' },
   { title: 'Dashboard RIDElance', text: 'Activitate, profit, taxe, documente și conexiuni într-un singur loc.' },
   { title: 'Beneficii parteneri', text: 'Acces la ofertele și avantajele din ecosistemul RIDElance.' },
 ]

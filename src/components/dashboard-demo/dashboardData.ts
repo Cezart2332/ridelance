@@ -29,7 +29,7 @@ export const dashboardProfileFields: ProfileField[] = [
   { label: 'Telefon', value: '0722 456 190' },
   { label: 'Rol', value: 'Client PFA' },
   { label: 'Parola', value: '**********' },
-  { label: 'Plan activ', value: 'RIDElance Pro' },
+  { label: 'Plan activ', value: 'Pro' },
 ]
 
 export const dashboardRideAccounts: RideAccount[] = [
