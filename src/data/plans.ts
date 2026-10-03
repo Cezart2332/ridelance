@@ -79,6 +79,12 @@ export const FLEET_ANONYMIZATION_LEI = 14.9
 /** Reducerea la plata anuală, ca fracție. Folosită și pentru eticheta de pe comutator. */
 export const ANNUAL_DISCOUNT = 0.1
 
+const monthlyPricing = (monthlyLei: number): PlanPricing => ({
+  monthlyLei,
+  annualMonthlyLei: Math.round(monthlyLei * (1 - ANNUAL_DISCOUNT) * 100) / 100,
+  annualTotalLei: Math.round(monthlyLei * (1 - ANNUAL_DISCOUNT) * 12 * 100) / 100,
+})
+
 const formatLei = (value: number) =>
   value.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
@@ -122,7 +128,7 @@ export const PFA_PLANS: Plan[] = [
   {
     key: 'pfalone', audience: 'pfa', title: 'PFAlone',
     tagline: 'Tu conduci. RIDElance îți dă instrumentele.',
-    pricing: { monthlyLei: 139 },
+    pricing: monthlyPricing(139),
     noteMonthly: 'Abonament lunar, cu reînnoire automată.',
     summary: 'Pentru șoferii care vor să își gestioneze singuri obligațiile fiscale, dar vor toată infrastructura RIDElance.',
     intro: 'Inclus în PFAlone',
@@ -145,7 +151,7 @@ export const PFA_PLANS: Plan[] = [
   {
     key: 'pfa-full', audience: 'pfa', title: 'PFA Full', recommended: true,
     tagline: 'Tu conduci. RIDElance se ocupă de restul.',
-    pricing: { monthlyLei: 299 },
+    pricing: monthlyPricing(299),
     noteMonthly: 'Abonament lunar, cu reînnoire automată.',
     summary: 'Pentru șoferii care vor ca RIDElance să automatizeze și să gestioneze întreaga parte fiscală și administrativă a PFA-ului.',
     intro: 'Tot ce include PFAlone, plus:',
@@ -169,7 +175,7 @@ export const SRL_PLANS: Plan[] = [
   {
     key: 'fleet', audience: 'srl', title: 'SRL Fleet',
     tagline: 'Flota, mașinile și închirierile într-un singur loc.',
-    pricing: { monthlyLei: 299 },
+    pricing: monthlyPricing(299),
     noteMonthly: 'Abonament lunar, cu reînnoire automată.',
     summary: 'Pentru societățile care administrează mașini pentru ridesharing și vor să gestioneze anunțurile, documentele, șoferii și închirierile direct din RIDElance.',
     intro: 'Inclus în SRL Fleet',

@@ -17,7 +17,7 @@ import {
 import { PARTNER_LOGO } from '../data/partnerLogo'
 import { PublicPlanCard } from '../components/pricing/PublicPlanCard'
 import { Switcher } from '../components/pricing/Switcher'
-import { plansFor, type Audience } from '../data/plans'
+import { ANNUAL_DISCOUNT, plansFor, type Audience, type BillingCycle } from '../data/plans'
 import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../data/bcrDiscount'
 
 import motto from '../assets/motto.svg'
@@ -46,10 +46,10 @@ export function HomePage() {
    * convins că nu există. Comutatorul e același component ca acolo, ca aceeași alegere să arate
    * la fel în ambele locuri.
    *
-   * Ciclul lunar/anual rămâne doar pe pagina dedicată: aici cardurile sunt un rezumat, iar al
-   * doilea comutator ar fi cerut o a doua decizie înainte ca prima să fie înțeleasă.
+   * Audiența și ciclul lunar/anual folosesc aceleași oferte ca pagina dedicată.
    */
   const [audience, setAudience] = useState<Audience>('pfa')
+  const [cycle, setCycle] = useState<BillingCycle>('monthly')
   const plans = plansFor(audience)
 
   // Serviciile se cumpără fără cont: butonul deschide formularul lor, nu loginul.
@@ -264,7 +264,7 @@ export function HomePage() {
           title="Abonamente"
           subtitle="Alege planul potrivit pentru tine"
         />
-        <Stack sx={{ alignItems: 'center', mt: -2, mb: { xs: 4, md: 5 } }}>
+        <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 1.5, mt: -2, mb: 3 }}>
           <Switcher
             value={audience}
             onChange={setAudience}
@@ -273,6 +273,10 @@ export function HomePage() {
               { value: 'srl', label: 'SRL' },
             ]}
           />
+          <Switcher value={cycle} onChange={setCycle} options={[
+            { value: 'monthly', label: 'Lunar' },
+            { value: 'annual', label: 'Anual', badge: `-${Math.round(ANNUAL_DISCOUNT * 100)}%` },
+          ]} />
         </Stack>
 
         <Box
@@ -294,6 +298,7 @@ export function HomePage() {
             <PublicPlanCard
               key={item.key}
               plan={item}
+              cycle={cycle}
               onStart={handleStart}
               bcrDiscount={bcrDiscount}
               onBcrDiscountChange={(next) => {

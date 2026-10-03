@@ -1,141 +1,175 @@
-import { useState } from 'react'
-import { Box, Button, Card, Checkbox, Chip, FormControlLabel, IconButton, Stack, Typography } from '@mui/material'
+import { useId, useState } from 'react'
+import { Box, Button, Card, Checkbox, Chip, Dialog, DialogContent, DialogTitle, FormControlLabel, IconButton, Stack, Tooltip, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
 import RemoveRoundedIcon from '@mui/icons-material/RemoveRounded'
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import { TOKENS } from '../../constants/tokens'
-import { FLEET_ANONYMIZATION_LEI, FLEET_EXTRA_AD_LEI, type Plan } from '../../data/plans'
+import { FLEET_ANONYMIZATION_LEI, FLEET_EXTRA_AD_LEI, type BillingCycle, type Plan } from '../../data/plans'
 import { BCR_DISCOUNT } from '../../data/bcrDiscount'
 import { BcrDiscountCheckbox } from './BcrDiscountCheckbox'
-import { PlanPrice } from './PlanPrice'
 import { PlanFeatureItem } from './PlanFeatureItem'
 import { PricingPartnersDialog } from './PricingPartnersDialog'
 
 const money = (value: number) => `${value.toLocaleString('ro-RO', {
   minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2,
 })} lei`
-const optionSx = {
-  p: 2, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${TOKENS.border}`,
-  backgroundColor: TOKENS.paper,
-}
+const smallTextSx = { fontSize: '0.76rem', lineHeight: 1.45, color: TOKENS.textMuted }
+const optionSx = { px: 1.2, py: 0.65, borderRadius: `${TOKENS.radius.md}px`, border: `1px solid ${TOKENS.border}` }
 
 /** Oferta publică: opțiunile calculează doar o estimare locală, fără apeluri de plată. */
-export function PublicPlanCard({ plan, bcrDiscount, onBcrDiscountChange, onStart }: {
+export function PublicPlanCard({ plan, cycle = 'monthly', bcrDiscount, onBcrDiscountChange, onStart }: {
   plan: Plan
+  cycle?: BillingCycle
   bcrDiscount: boolean
   onBcrDiscountChange: (checked: boolean) => void
   onStart: () => void
 }) {
+  const detailsId = useId()
   const [selectedAddons, setSelectedAddons] = useState<string[]>([])
   const [extraAds, setExtraAds] = useState(0)
   const [anonymousAds, setAnonymousAds] = useState(0)
   const [partnersOpen, setPartnersOpen] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
   const addons = plan.addons ?? []
   const selected = addons.filter((addon) => !addon.included && selectedAddons.includes(addon.key))
   const extraMonthly = selected.reduce((sum, addon) => sum + addon.monthlyLei, 0) + extraAds * FLEET_EXTRA_AD_LEI
-  const total = plan.pricing.monthlyLei + extraMonthly - (bcrDiscount ? BCR_DISCOUNT.monthlyLei : 0)
+  const annual = cycle === 'annual' && plan.pricing.annualTotalLei != null
+  const baseMonthly = annual ? plan.pricing.annualMonthlyLei! : plan.pricing.monthlyLei
+  const discount = bcrDiscount ? BCR_DISCOUNT.monthlyLei * (annual ? BCR_DISCOUNT.months : 1) : 0
+  // La anual BCR scade 6 × 50 lei din prima factură, nu 50 lei din fiecare lună a anului.
+  const annualDue = annual ? plan.pricing.annualTotalLei! - discount : 0
+  const displayMonthly = annual ? Math.round(annualDue / 12 * 100) / 100 : baseMonthly - discount
+  const total = displayMonthly + extraMonthly
   const fleet = plan.audience === 'srl' && !plan.comingSoon
 
   return (
     <Card component="article" aria-label={plan.title} elevation={0} sx={{
-      p: { xs: 3, md: 4 }, minWidth: 0, height: '100%', boxSizing: 'border-box',
-      borderRadius: `${TOKENS.radius.xl}px`, display: 'flex', flexDirection: 'column', gap: 2.5,
-      backgroundColor: TOKENS.paper,
-      border: `1px solid ${plan.recommended ? TOKENS.primaryStrong : TOKENS.border}`,
-      boxShadow: plan.recommended ? '0 16px 40px rgba(92,203,245,0.14)' : TOKENS.shadow.sm,
+      p: { xs: 2.25, md: 2.5 }, minWidth: 0, height: '100%', boxSizing: 'border-box', position: 'relative',
+      borderRadius: `${TOKENS.radius.xl}px`, display: 'flex', flexDirection: 'column', gap: 1.25,
+      backgroundColor: TOKENS.paper, border: `1px solid ${plan.recommended ? TOKENS.primaryStrong : TOKENS.border}`,
+      boxShadow: plan.recommended ? '0 8px 24px rgba(92,203,245,0.12)' : TOKENS.shadow.sm,
+      overflow: 'visible',
     }}>
-      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap' }}>
-        <Typography variant="h5" sx={{ fontWeight: 800, color: TOKENS.ink }}>{plan.title}</Typography>
-        {(plan.recommended || plan.comingSoon) && <Chip label={plan.comingSoon ? 'În curând' : 'Recomandat'} size="small" sx={{
-          backgroundColor: alpha(TOKENS.primary, 0.12), color: TOKENS.primaryStrong, fontWeight: 800,
-        }} />}
-      </Stack>
-      <Box>
-        <Typography sx={{ fontWeight: 800, fontSize: { xs: '1.25rem', md: '1.45rem' }, lineHeight: 1.3, color: TOKENS.ink }}>{plan.tagline}</Typography>
-        <Typography sx={{ mt: 1, color: TOKENS.textMuted, fontSize: '0.93rem', lineHeight: 1.65 }}>{plan.summary}</Typography>
+      {(plan.recommended || plan.comingSoon) && <Chip label={plan.comingSoon ? 'În curând' : 'Recomandat'} size="small" sx={{
+        position: 'absolute', top: -11, left: '50%', transform: 'translateX(-50%)', height: 22,
+        backgroundColor: TOKENS.surfaceAlt, border: `1px solid ${alpha(TOKENS.primary, 0.4)}`, color: TOKENS.primaryStrong, fontWeight: 800, fontSize: '0.66rem',
+      }} />}
+      <Typography variant="h5" sx={{ fontWeight: 800, color: TOKENS.ink, textAlign: 'center', fontSize: '1.2rem' }}>{plan.title}</Typography>
+      <Box sx={{ textAlign: 'center' }}>
+        {plan.comingSoon ? <Box sx={{ minHeight: 58, display: 'grid', placeItems: 'center' }}>
+          <Typography sx={{ fontSize: '1.5rem', fontWeight: 900, color: TOKENS.primaryStrong }}>Preț la lansare</Typography>
+        </Box> : <Box data-testid="plan-price" sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', alignItems: 'center', columnGap: 1.2, height: { xs: 76, sm: 54 }, textAlign: 'left' }}>
+          <Box>
+            <Typography component="s" aria-hidden={!bcrDiscount} sx={{ ...smallTextSx, display: 'block', height: 15, visibility: bcrDiscount ? 'visible' : 'hidden' }}>{money(baseMonthly)}</Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: { xs: 0, sm: 0.5 }, alignItems: { xs: 'flex-start', sm: 'baseline' }, whiteSpace: 'nowrap' }}>
+              <Typography sx={{ color: TOKENS.primaryStrong, fontWeight: 900, fontSize: { xs: '1.45rem', sm: '1.75rem' }, lineHeight: 1.2 }}>{money(displayMonthly)}</Typography>
+              <Typography sx={{ ...smallTextSx, fontWeight: 700 }}>/ lună</Typography>
+            </Stack>
+          </Box>
+          <Typography data-testid="bcr-price-note" sx={{ fontSize: '0.73rem', fontWeight: 650, lineHeight: 1.4, color: TOKENS.primaryStrong, visibility: bcrDiscount ? 'visible' : 'hidden' }}>
+            {annual ? `BCR: −${money(discount)} în primul an, apoi ${money(baseMonthly)}/lună.` : `primele 6 luni, apoi ${money(baseMonthly)}/lună.`}
+          </Typography>
+        </Box>}
+        <Typography sx={{ ...smallTextSx, fontSize: '0.72rem', minHeight: 18 }}>
+          {plan.comingSoon ? plan.noteMonthly : annual ? `${money(annualDue)} facturați anual · reducere 10%` : 'Abonament lunar, cu reînnoire automată.'}
+        </Typography>
+        {!plan.comingSoon && <BcrDiscountCheckbox checked={bcrDiscount} onChange={onBcrDiscountChange} align="center" />}
       </Box>
       <Box>
-        {plan.comingSoon ? (
-          <Typography sx={{ fontSize: '1.9rem', fontWeight: 900, color: TOKENS.primaryStrong }}>Preț la lansare</Typography>
-        ) : <PlanPrice monthlyLei={plan.pricing.monthlyLei} unit="/ lună" discounted={bcrDiscount} />}
-        <Typography sx={{ color: TOKENS.textMuted, fontSize: '0.78rem', mt: 0.7, fontStyle: 'italic' }}>{plan.noteMonthly}</Typography>
-        {!plan.comingSoon && <BcrDiscountCheckbox checked={bcrDiscount} onChange={onBcrDiscountChange} />}
-      </Box>
-      <Box>
-        <Typography sx={{ mb: 1.5, fontWeight: 800, fontSize: '0.9rem', color: TOKENS.ink }}>{plan.intro}</Typography>
-        <Box component="ul" sx={{ p: 0, m: 0, listStyle: 'none', display: 'grid', gap: 1.3 }}>
-          {plan.features.map((feature, index) => <PlanFeatureItem key={index} feature={feature} showPartnerLogo={false} />)}
+        <Typography sx={{ mb: 0.8, fontWeight: 750, fontSize: '0.8rem', color: TOKENS.ink }}>{plan.intro}</Typography>
+        <Box component="ul" sx={{ p: 0, m: 0, listStyle: 'none', display: 'grid', gap: 0.7,
+          gridTemplateColumns: { xs: '1fr', sm: plan.audience === 'srl' ? 'repeat(2, minmax(0, 1fr))' : '1fr' },
+          '& .MuiTypography-root': { fontSize: '0.79rem', lineHeight: 1.4 },
+          '& .MuiSvgIcon-root': { fontSize: 16, minWidth: 16, mt: 0.1 },
+        }}>
+          {plan.features.map((feature, index) => <PlanFeatureItem key={index} feature={{ ...feature, text: undefined }} showPartnerLogo={false} />)}
         </Box>
       </Box>
-      {!plan.comingSoon && <>
-        <Button variant="outlined" onClick={() => setPartnersOpen(true)} sx={{
-          justifyContent: 'space-between', textAlign: 'left', p: 1.7, borderRadius: `${TOKENS.radius.lg}px`,
-          color: TOKENS.ink, fontWeight: 700, borderColor: alpha(TOKENS.primary, 0.3),
-        }}>Reduceri și beneficii prin partenerii oficiali RIDElance <Box component="span" sx={{ ml: 1, color: TOKENS.primaryStrong }}>→</Box></Button>
-        <PricingPartnersDialog audience={plan.audience} open={partnersOpen} onClose={() => setPartnersOpen(false)} />
-      </>}
-      {addons.length > 0 && <Stack spacing={1.5} sx={{ pt: 2.5, borderTop: `1px solid ${TOKENS.border}` }}>
-        <Typography sx={{ fontSize: '0.9rem', fontWeight: 800, color: TOKENS.ink }}>
-          {addons.every((addon) => addon.included) ? 'Automatizările sunt deja incluse' : fleet ? 'Opțiuni suplimentare' : 'Automatizează și mai mult'}
+      {addons.length > 0 && <Stack spacing={0.75} sx={{ pt: 1.2, borderTop: `1px solid ${TOKENS.border}` }}>
+        <Typography sx={{ fontSize: '0.8rem', fontWeight: 750, color: TOKENS.ink }}>
+          {addons.every((addon) => addon.included) ? 'Automatizări incluse' : 'Opțiuni suplimentare'}
         </Typography>
-        {addons.map((addon) => <Box key={addon.key} sx={optionSx}>
-          {addon.included ? <Stack direction="row" sx={{ alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-            <Typography sx={{ fontSize: '0.9rem', fontWeight: 800 }}>{addon.title}</Typography>
-            <Chip size="small" label="Inclus" color="success" variant="outlined" />
-          </Stack> : <FormControlLabel sx={{ m: 0, alignItems: 'flex-start', width: '100%' }} control={
+        {addons.map((addon) => <Stack key={addon.key} direction="row" sx={{ ...optionSx, alignItems: 'center', gap: 0.7 }}>
+          {addon.included ? <Typography sx={{ fontSize: '0.79rem', fontWeight: 650, flex: 1 }}>{addon.title}</Typography> : <FormControlLabel sx={{ m: 0, flex: 1, gap: 0.8 }} control={
             <Checkbox size="small" checked={selectedAddons.includes(addon.key)} onChange={(_, checked) => {
               setSelectedAddons((previous) => checked ? [...previous, addon.key] : previous.filter((key) => key !== addon.key))
-            }} sx={{ p: 0, mr: 1.2, mt: 0.2 }} />
-          } label={<Typography sx={{ fontSize: '0.9rem', fontWeight: 800 }}>{addon.title} <Box component="span" sx={{ color: TOKENS.primaryStrong }}>+{money(addon.monthlyLei)}/lună</Box></Typography>} />}
-          <Typography sx={{ mt: 0.7, fontSize: '0.8rem', color: TOKENS.textMuted, lineHeight: 1.6 }}>{addon.text}</Typography>
-          {addon.alternative && <Typography sx={{ mt: 0.7, fontSize: '0.75rem', color: TOKENS.textMuted }}>{addon.alternative}</Typography>}
-        </Box>)}
+            }} sx={{ p: 0, '& .MuiSvgIcon-root': { fontSize: 18 } }} />
+          } label={<Typography sx={{ fontSize: '0.79rem', fontWeight: 650 }}>{addon.title}</Typography>} />}
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 750, color: addon.included ? 'success.main' : TOKENS.primaryStrong, whiteSpace: 'nowrap' }}>{addon.included ? 'Inclus' : `+${money(addon.monthlyLei)}/lună`}</Typography>
+          <Tooltip title={`${addon.text} ${addon.alternative ?? ''}`} enterTouchDelay={0} arrow><IconButton size="small" aria-label={`Detalii ${addon.title}`} sx={{ p: 0.2 }}><InfoOutlinedIcon sx={{ fontSize: 15, color: TOKENS.textSubtle }} /></IconButton></Tooltip>
+        </Stack>)}
         {fleet && <>
-          <Box sx={optionSx}>
-            <Typography sx={{ fontSize: '0.9rem', fontWeight: 800 }}>Anunțuri active peste cele 10 incluse</Typography>
-            <Typography sx={{ fontSize: '0.85rem', fontWeight: 800, color: TOKENS.primaryStrong, mt: 0.5 }}>+{money(FLEET_EXTRA_AD_LEI)}/lună / anunț</Typography>
-            <Typography sx={{ mt: 0.7, fontSize: '0.8rem', color: TOKENS.textMuted, lineHeight: 1.6 }}>Adaugi capacitate doar pentru mașinile active peste limita inclusă.</Typography>
-            <Quantity label="Anunțuri suplimentare" value={extraAds} onChange={setExtraAds} />
-          </Box>
-          <Box sx={optionSx}>
-            <Typography sx={{ fontSize: '0.9rem', fontWeight: 800 }}>Anonimizare număr de înmatriculare</Typography>
-            <Typography sx={{ fontSize: '0.85rem', fontWeight: 800, color: TOKENS.primaryStrong, mt: 0.5 }}>{money(FLEET_ANONYMIZATION_LEI)} / anunț · plată unică</Typography>
-            <Typography sx={{ mt: 0.7, fontSize: '0.8rem', color: TOKENS.textMuted, lineHeight: 1.6 }}>Numărul de înmatriculare este mascat în fotografiile publice ale anunțului.</Typography>
-            <Quantity label="Anunțuri anonimizate" value={anonymousAds} onChange={setAnonymousAds} />
-          </Box>
+          <FleetOption title="Anunțuri suplimentare" price={`+${money(FLEET_EXTRA_AD_LEI)}/lună / anunț`} value={extraAds} onChange={setExtraAds} />
+          <FleetOption title="Anunțuri anonimizate" price={`${money(FLEET_ANONYMIZATION_LEI)} / anunț · plată unică`} value={anonymousAds} onChange={setAnonymousAds} />
         </>}
       </Stack>}
-      <Stack spacing={1.5} sx={{ mt: 'auto', pt: 1 }}>
-        {!plan.comingSoon && <Box aria-live="polite" sx={{ ...optionSx, backgroundColor: TOKENS.surface }}>
-          <SummaryLine label={plan.title} value={money(plan.pricing.monthlyLei)} />
-          {addons.filter((addon) => addon.included || selectedAddons.includes(addon.key)).map((addon) => <SummaryLine key={addon.key} label={addon.title} value={addon.included ? 'Inclus' : `+${money(addon.monthlyLei)}`} />)}
-          {extraAds > 0 && <SummaryLine label={`Anunțuri suplimentare (${extraAds})`} value={`+${money(extraAds * FLEET_EXTRA_AD_LEI)}`} />}
-          {bcrDiscount && <SummaryLine label="Reducere BCR · 6 luni" value={`−${money(BCR_DISCOUNT.monthlyLei)}`} />}
-          <Box sx={{ mt: 1, pt: 1, borderTop: `1px solid ${TOKENS.border}` }}>
-            <SummaryLine label="Total lunar" value={money(total)} emphasized />
-            {bcrDiscount && <Typography sx={{ mt: 0.5, color: TOKENS.textMuted, fontSize: '0.75rem' }}>În primele 6 luni eligibile, apoi {money(plan.pricing.monthlyLei + extraMonthly)}/lună.</Typography>}
-          </Box>
-          {anonymousAds > 0 && <Box sx={{ mt: 1, pt: 1, borderTop: `1px solid ${TOKENS.border}` }}><SummaryLine label={`Plată unică anonimizare (${anonymousAds})`} value={money(anonymousAds * FLEET_ANONYMIZATION_LEI)} /></Box>}
+      <Stack spacing={1} sx={{ mt: 'auto' }}>
+        {!plan.comingSoon && <Box aria-live="polite" sx={{ ...optionSx, py: 1, backgroundColor: TOKENS.surface }}>
+          <SummaryLine label={annual ? 'Echivalent lunar' : 'Total lunar'} value={money(total)} emphasized />
+          {extraMonthly > 0 && annual && <Typography sx={smallTextSx}>Opțiuni facturate separat: {money(extraMonthly)}/lună.</Typography>}
+          {anonymousAds > 0 && <SummaryLine label={`Plată unică anonimizare (${anonymousAds})`} value={money(anonymousAds * FLEET_ANONYMIZATION_LEI)} />}
         </Box>}
-        <Button onClick={onStart} disabled={plan.comingSoon} variant={plan.recommended ? 'contained' : 'outlined'} fullWidth size="large" sx={{ py: 1.4, fontWeight: 800, borderRadius: `${TOKENS.radius.lg}px`, boxShadow: 'none' }}>{plan.cta}</Button>
-        <Typography sx={{ fontSize: '0.76rem', lineHeight: 1.6, color: TOKENS.textMuted }}>{plan.footnote}</Typography>
+        <Stack direction="row" sx={{ justifyContent: 'center', alignItems: 'center', gap: 1 }}>
+          <Button size="small" onClick={() => setDetailsOpen(true)} sx={{ fontSize: '0.75rem', color: TOKENS.textMuted, py: 0.25 }}>Detalii și calcul</Button>
+          {!plan.comingSoon && <Button size="small" onClick={() => setPartnersOpen(true)} sx={{ fontSize: '0.75rem', py: 0.25 }}>Beneficii parteneri</Button>}
+        </Stack>
+        <Button onClick={onStart} disabled={plan.comingSoon} variant={plan.recommended ? 'contained' : 'outlined'} fullWidth sx={{ py: 0.8, fontWeight: 800, borderRadius: `${TOKENS.radius.md}px`, boxShadow: 'none' }}>{plan.cta}</Button>
+        <Typography sx={{ ...smallTextSx, fontSize: '0.68rem' }}>
+          {plan.comingSoon ? 'Prețul și condițiile vor fi anunțate la lansare.' : fleet ? '10 anunțuri incluse · 0% comision din chirii.' : plan.recommended ? 'Open Banking și automatizarea casei de marcat sunt incluse.' : 'Depunerea declarațiilor fiscale nu este inclusă.'}
+        </Typography>
       </Stack>
+      <PricingPartnersDialog audience={plan.audience} open={partnersOpen} onClose={() => setPartnersOpen(false)} />
+      <Dialog open={detailsOpen} onClose={() => setDetailsOpen(false)} fullWidth maxWidth="sm" aria-labelledby={detailsId} slotProps={{ paper: { sx: { borderRadius: `${TOKENS.radius.xl}px` } } }}>
+        <DialogTitle id={detailsId} sx={{ fontWeight: 800, pr: 7 }}>{plan.title} — detalii
+          <IconButton aria-label="Închide detaliile" onClick={() => setDetailsOpen(false)} sx={{ position: 'absolute', right: 12, top: 12 }}><CloseRoundedIcon /></IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <Typography sx={{ ...smallTextSx, mb: 2 }}>{plan.summary}</Typography>
+          <Typography sx={{ fontWeight: 800, mb: 1 }}>{plan.intro}</Typography>
+          <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0, display: 'grid', gap: 1.5 }}>
+            {plan.features.map((feature, index) => <PlanFeatureItem key={index} feature={feature} showPartnerLogo={false} />)}
+          </Box>
+          {addons.map((addon) => <Box key={addon.key} sx={{ mt: 2 }}>
+            <Typography sx={{ fontWeight: 750, fontSize: '0.9rem' }}>{addon.title} · {addon.included ? 'inclus' : `+${money(addon.monthlyLei)}/lună`}</Typography>
+            <Typography sx={smallTextSx}>{addon.text}</Typography>
+            <Typography sx={smallTextSx}>{addon.alternative}</Typography>
+          </Box>)}
+          {!plan.comingSoon && <Box sx={{ ...optionSx, mt: 2, p: 2, backgroundColor: TOKENS.surface }}>
+            <SummaryLine label={annual ? 'Abonament anual, cu reducere 10%' : plan.title} value={money(annual ? plan.pricing.annualTotalLei! : baseMonthly)} />
+            {bcrDiscount && <SummaryLine label={annual ? 'BCR: 50 lei × 6 luni, în primul an' : 'BCR: reducere lunară, timp de 6 luni'} value={`−${money(discount)}`} />}
+            {annual && <SummaryLine label="Total abonament facturat anual" value={money(annualDue)} emphasized />}
+            {selected.map((addon) => <SummaryLine key={addon.key} label={addon.title} value={`+${money(addon.monthlyLei)}/lună`} />)}
+            {extraAds > 0 && <SummaryLine label={`Anunțuri suplimentare (${extraAds})`} value={`+${money(extraAds * FLEET_EXTRA_AD_LEI)}/lună`} />}
+            <SummaryLine label={annual ? 'Echivalent lunar, cu opțiuni' : 'Total lunar'} value={money(total)} emphasized />
+            {annual && <Typography sx={{ ...smallTextSx, mt: 1 }}>Reducerea de 10% se aplică abonamentului. Opțiunile suplimentare se facturează lunar, separat.</Typography>}
+            {anonymousAds > 0 && <SummaryLine label={`Plată unică anonimizare (${anonymousAds})`} value={money(anonymousAds * FLEET_ANONYMIZATION_LEI)} />}
+          </Box>}
+          <Typography sx={{ ...smallTextSx, mt: 2 }}>{plan.footnote}</Typography>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
 
-function Quantity({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
-  return <Stack direction="row" sx={{ mt: 1.2, alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-    <IconButton aria-label={`Scade ${label.toLowerCase()}`} size="small" disabled={value === 0} onClick={() => onChange(Math.max(0, value - 1))}><RemoveRoundedIcon fontSize="small" /></IconButton>
-    <Typography aria-label={label} sx={{ minWidth: 24, textAlign: 'center', fontWeight: 800 }}>{value}</Typography>
-    <IconButton aria-label={`Adaugă ${label.toLowerCase()}`} size="small" onClick={() => onChange(value + 1)}><AddRoundedIcon fontSize="small" /></IconButton>
-    <Typography sx={{ fontSize: '0.75rem', color: TOKENS.textMuted }}>{label.toLowerCase()}</Typography>
+function FleetOption({ title, price, value, onChange }: { title: string; price: string; value: number; onChange: (value: number) => void }) {
+  return <Stack direction="row" sx={{ ...optionSx, alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+    <Box sx={{ minWidth: 0 }}>
+      <Typography sx={{ fontSize: '0.79rem', fontWeight: 650 }}>{title}</Typography>
+      <Typography sx={{ ...smallTextSx, fontSize: '0.7rem' }}>{price}</Typography>
+    </Box>
+    <Stack direction="row" sx={{ alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+      <IconButton aria-label={`Scade ${title.toLowerCase()}`} size="small" disabled={value === 0} onClick={() => onChange(Math.max(0, value - 1))}><RemoveRoundedIcon sx={{ fontSize: 16 }} /></IconButton>
+      <Typography aria-label={title} sx={{ minWidth: 18, textAlign: 'center', fontWeight: 750, fontSize: '0.8rem' }}>{value}</Typography>
+      <IconButton aria-label={`Adaugă ${title.toLowerCase()}`} size="small" onClick={() => onChange(value + 1)}><AddRoundedIcon sx={{ fontSize: 16 }} /></IconButton>
+    </Stack>
   </Stack>
 }
 
 function SummaryLine({ label, value, emphasized = false }: { label: string; value: string; emphasized?: boolean }) {
-  return <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 2, py: 0.4, alignItems: 'baseline' }}>
-    <Typography sx={{ fontSize: emphasized ? '0.95rem' : '0.8rem', fontWeight: emphasized ? 800 : 500, color: TOKENS.ink }}>{label}</Typography>
-    <Typography sx={{ fontSize: emphasized ? '1.1rem' : '0.8rem', fontWeight: 800, color: emphasized ? TOKENS.primaryStrong : TOKENS.ink, whiteSpace: 'nowrap' }}>{value}</Typography>
+  return <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 1, py: 0.25, alignItems: 'baseline' }}>
+    <Typography sx={{ fontSize: emphasized ? '0.85rem' : '0.76rem', fontWeight: emphasized ? 750 : 500, color: TOKENS.ink }}>{label}</Typography>
+    <Typography sx={{ fontSize: emphasized ? '1rem' : '0.76rem', fontWeight: 800, color: emphasized ? TOKENS.primaryStrong : TOKENS.ink, whiteSpace: 'nowrap' }}>{value}</Typography>
   </Stack>
 }

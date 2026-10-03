@@ -9,7 +9,7 @@ import { PublicPlanCard } from '../components/pricing/PublicPlanCard'
 import { Switcher } from '../components/pricing/Switcher'
 import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../data/bcrDiscount'
 import { pageFrameSx } from '../constants/layout'
-import { INCLUDED_FOOTNOTE, INCLUDED_IN_ALL, partnerLogoFor, plansFor, type Audience } from '../data/plans'
+import { ANNUAL_DISCOUNT, INCLUDED_FOOTNOTE, INCLUDED_IN_ALL, partnerLogoFor, plansFor, type Audience, type BillingCycle } from '../data/plans'
 import { useAppSelector } from '../store/hooks'
 import ridelanceLogo from '../assets/logo.svg'
 
@@ -17,6 +17,7 @@ export function PricingPage() {
   const navigate = useNavigate()
   const { accessToken, isInitialized } = useAppSelector((s) => s.auth)
   const [audience, setAudience] = useState<Audience>('pfa')
+  const [cycle, setCycle] = useState<BillingCycle>('monthly')
   const [bcrDiscount, setBcrDiscount] = useState(readBcrDiscountIntent)
   const plans = plansFor(audience)
 
@@ -26,18 +27,16 @@ export function PricingPage() {
   }
 
   return (
-    <Box sx={pageFrameSx}>
+    <Box sx={{ ...pageFrameSx, py: 3 }}>
       <Container maxWidth="lg">
-        <Stack spacing={4} sx={{ alignItems: 'center' }}>
+        <Stack spacing={2} sx={{ alignItems: 'center' }}>
           <SectionHeader title="Abonamente" subtitle="Planuri simple. Beneficii reale. Sprijin complet." />
-          <Typography sx={{ textAlign: 'center', color: TOKENS.textMuted, fontSize: '1.05rem', maxWidth: 760 }}>
-            {audience === 'pfa'
-              ? 'PFAlone pentru control și flexibilitate. PFA Full pentru automatizare completă și gestionarea obligațiilor fiscale.'
-              : 'SRL Fleet pentru administrarea zilnică a flotei. SRL Fleet Pro, în curând, pentru un flux complet digital de închiriere.'}
-          </Typography>
-          <Switcher value={audience} onChange={setAudience} options={[{ value: 'pfa', label: 'PFA' }, { value: 'srl', label: 'SRL' }]} />
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, gap: { xs: 3, md: 4 }, width: '100%' }}>
-            {plans.map((plan) => <PublicPlanCard key={plan.key} plan={plan} onStart={handleStart} bcrDiscount={bcrDiscount} onBcrDiscountChange={(next) => {
+          <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 1.5 }}>
+            <Switcher value={audience} onChange={setAudience} options={[{ value: 'pfa', label: 'PFA' }, { value: 'srl', label: 'SRL' }]} />
+            <Switcher value={cycle} onChange={setCycle} options={[{ value: 'monthly', label: 'Lunar' }, { value: 'annual', label: 'Anual', badge: `-${Math.round(ANNUAL_DISCOUNT * 100)}%` }]} />
+          </Stack>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, gap: { xs: 3, md: 3 }, width: '100%', pt: 1 }}>
+            {plans.map((plan) => <PublicPlanCard key={plan.key} plan={plan} cycle={cycle} onStart={handleStart} bcrDiscount={bcrDiscount} onBcrDiscountChange={(next) => {
               setBcrDiscount(next)
               writeBcrDiscountIntent(next)
             }} />)}
