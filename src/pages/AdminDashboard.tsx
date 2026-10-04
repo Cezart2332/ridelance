@@ -53,6 +53,7 @@ import { SrlAccountsView } from '../components/dashboard/sections/admin/SrlAccou
 import { AdminTasksView } from '../components/dashboard/sections/admin/AdminTasksView'
 import { CloseAccountDialog } from '../components/dashboard/sections/admin/CloseAccountDialog'
 import { AdminPfaListView } from '../components/dashboard/sections/admin/AdminPfaListView'
+import { StaffTeamView } from '../components/dashboard/sections/admin/StaffTeamView'
 import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded'
 import { PfaDetailView } from './admin/PfaDetailView'
 import { displayName } from '../utils/displayName'
@@ -272,9 +273,6 @@ export function AdminDashboard() {
   const [statusError, setStatusError] = useState<string | null>(null)
 
   // Invite accountant
-  const [inviteName, setInviteName] = useState('')
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteLoading, setInviteLoading] = useState(false)
 
   // Notifications
   const [testNotifLoading, setTestNotifLoading] = useState(false)
@@ -473,26 +471,6 @@ export function AdminDashboard() {
     }
   }
 
-  const handleInviteContabil = async () => {
-    if (!inviteName || !inviteEmail) {
-      setSnackbar({ open: true, message: 'Te rugăm să completezi toate câmpurile.', severity: 'error' })
-      return
-    }
-
-    setInviteLoading(true)
-    try {
-      await userService.inviteContabil(inviteName, inviteEmail)
-      setSnackbar({ open: true, message: `Invitația a fost trimisă cu succes către ${inviteEmail}.`, severity: 'success' })
-      setInviteName('')
-      setInviteEmail('')
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Eroare la trimiterea invitației. Te rugăm să încerci din nou.'
-      setSnackbar({ open: true, message: msg, severity: 'error' })
-    } finally {
-      setInviteLoading(false)
-    }
-  }
-
   const handleLogout = async () => {
     await authService.logout()
     navigate(ROUTES.login, { replace: true })
@@ -625,7 +603,7 @@ export function AdminDashboard() {
     { id: 'facturare', label: 'Facturare Oblio', group: 'Finanțe', icon: <ReceiptLongRoundedIcon /> },
     { id: 'reduceri', label: 'Coduri de reducere', group: 'Finanțe', icon: <LocalOfferRoundedIcon /> },
     { id: 'calendar', label: 'Calendar birou', group: 'Administrare', icon: <EventAvailableRoundedIcon /> },
-    { id: 'contabili', label: 'Echipa de contabili', group: 'Administrare', icon: <SupervisedUserCircleRoundedIcon /> },
+    { id: 'contabili', label: 'Echipă', group: 'Administrare', icon: <SupervisedUserCircleRoundedIcon /> },
     { id: 'notificari', label: 'Notificări', group: 'Administrare', icon: <NotificationsActiveRoundedIcon /> },
   ]
 
@@ -983,45 +961,6 @@ export function AdminDashboard() {
   )
 
   // ─── Enroll Contabil ─────────────────────────────────────────────────────────
-  const renderContabili = () => (
-    <Box sx={{ maxWidth: 600, py: 4 }}>
-      <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, borderRadius: '10px', border: `1px solid ${TOKENS.border}`, bgcolor: TOKENS.paper }}>
-        <Typography variant="h6" sx={{ mb: 1, fontWeight: 650 }}>Înrolează Contabil Nou</Typography>
-        <Typography variant="body2" sx={{ mb: 4, color: TOKENS.textMuted }}>Trimite o invitație pe email unui contabil pentru a-i oferi acces la platformă.</Typography>
-        <Stack spacing={3}>
-          <TextField 
-            fullWidth 
-            label="Nume complet" 
-            placeholder="Ex: Ion Popescu" 
-            sx={inputSx} 
-            value={inviteName}
-            onChange={(e) => setInviteName(e.target.value)}
-            disabled={inviteLoading}
-          />
-          <TextField 
-            fullWidth 
-            label="Adresă email" 
-            placeholder="nume@contabil.ro" 
-            sx={inputSx} 
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            disabled={inviteLoading}
-          />
-          <Button 
-            variant="contained" 
-            fullWidth 
-            onClick={handleInviteContabil}
-            disabled={inviteLoading}
-            sx={{ py: 1.5, fontWeight: 700, bgcolor: TOKENS.primary, boxShadow: 'none', '&:hover': { bgcolor: TOKENS.primaryStrong, boxShadow: 'none' } }}
-          >
-            {inviteLoading ? <CircularProgress size={24} sx={{ color: 'inherit' }} /> : 'Trimite Invitația'}
-          </Button>
-        </Stack>
-      </Paper>
-    </Box>
-  )
-
-  // ─── Notifications ───────────────────────────────────────────────────────────
   const renderNotificari = () => (
     <Stack spacing={2} sx={{ maxWidth: 600 }}>
       <Paper
@@ -1100,7 +1039,7 @@ export function AdminDashboard() {
       case 'asigurari': return <InsuranceTab />
       case 'calendar': return <OfficeCalendarAdminView />
       case 'chat': return <AdminChatView pfas={pfas} />
-      case 'contabili': return renderContabili()
+      case 'contabili': return <StaffTeamView onNotify={(message, severity) => setSnackbar({ open: true, message, severity })} />
       case 'notificari': return renderNotificari()
       case 'sarcini': return (
         <AdminTasksView

@@ -128,9 +128,4 @@ export const userService = {
   confirmPhone: async (code: string): Promise<void> => {
     await api.post('/users/phone/confirm', { code });
   },
-
-  inviteContabil: async (fullName: string, email: string): Promise<string> => {
-    const response = await api.post<string>('/users/invite-contabil', { fullName, email });
-    return response.data;
-  },
 };

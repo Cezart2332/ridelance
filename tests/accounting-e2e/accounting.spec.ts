@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { expect, test, type Page } from '@playwright/test'
+// @ts-expect-error — modul JS fără tipuri, comun cu scripturile de capturi.
+import { totp } from '../totp.mjs'
 
 /**
  * Scenariile de acceptanță ale contabilității pe API-ul real (spec B9), cu seed-ul
@@ -19,6 +21,9 @@ async function login(page: Page) {
   await page.getByLabel('Email').fill(EMAIL)
   await page.getByLabel('Parolă').fill(PASSWORD)
   await page.getByRole('button', { name: 'Intră în RIDElance' }).click()
+  // Echipa trece prin 2FA: codul se calculează din secretul seed-ului.
+  await page.getByLabel('Cod de autentificare').fill(totp())
+  await page.getByRole('button', { name: 'Verifică' }).click()
   await page.waitForURL(/\/contabil/)
 }
 

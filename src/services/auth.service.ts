@@ -14,22 +14,72 @@ const authAxios = axios.create({
   withCredentials: true, // needed for the refresh token cookie
 })
 
+/** Sesiunea emisă după autentificare. */
+export interface AuthSession {
+  accessToken: string
+  role: string
+  userId: string
+  refreshToken?: string | null
+}
+
+/** Pasul 2FA al echipei (Admin, Contabil): verificare la login sau configurare la primul login. */
+export interface TwoFactorChallenge {
+  twoFactor: 'VERIFY' | 'SETUP'
+  challengeToken: string
+  role: string
+}
+
+export type LoginResult = AuthSession | TwoFactorChallenge
+
+export const isTwoFactorChallenge = (result: LoginResult): result is TwoFactorChallenge => 'challengeToken' in result && Boolean(result.challengeToken)
+
+async function startSession(data: AuthSession): Promise<AuthSession> {
+  // Aplicația mobilă nu primește cookie: păstrează ea tokenul de refresh.
+  await storeRefreshToken(data.refreshToken)
+  // Store in Redux (in memory only — never localStorage)
+  store.dispatch(setCredentials({ accessToken: data.accessToken, role: data.role, userId: data.userId }))
+  return data
+}
+
 export const authService = {
-  login: async (email: string, password: string) => {
-    const response = await authAxios.post<{
-      accessToken: string
-      role: string
-      userId: string
-      refreshToken?: string
-    }>('/users/login', { email, password }, { headers: NATIVE_CLIENT_HEADERS })
+  /** Clienții primesc sesiunea direct; echipa primește pasul 2FA. */
+  login: async (email: string, password: string): Promise<LoginResult> => {
+    const response = await authAxios.post<AuthSession | TwoFactorChallenge>('/users/login', { email, password }, { headers: NATIVE_CLIENT_HEADERS })
+    return isTwoFactorChallenge(response.data) ? response.data : startSession(response.data)
+  },
 
-    const { accessToken, role, userId } = response.data
-    // Aplicația mobilă nu primește cookie: păstrează ea tokenul de refresh.
-    await storeRefreshToken(response.data.refreshToken)
+  /** Login, pasul 2: codul din aplicația de autentificare sau un cod de recuperare. */
+  verifyTwoFactor: async (challengeToken: string, code: string): Promise<AuthSession> => {
+    const response = await authAxios.post<AuthSession>('/users/2fa/verify', { challengeToken, code }, { headers: NATIVE_CLIENT_HEADERS })
+    return startSession(response.data)
+  },
 
-    // Store in Redux (in memory only — never localStorage)
-    store.dispatch(setCredentials({ accessToken, role, userId }))
+  /** Configurare 2FA: secretul și textul codului QR. */
+  startTwoFactorSetup: async (challengeToken: string): Promise<{ secret: string; qrText: string }> => {
+    const response = await authAxios.post<{ secret: string; qrText: string }>('/users/2fa/setup', { challengeToken })
+    return response.data
+  },
 
+  /** Primul cod confirmă configurarea; răspunsul are sesiunea și codurile de recuperare (afișate o singură dată). */
+  confirmTwoFactorSetup: async (challengeToken: string, code: string): Promise<{ session: AuthSession; recoveryCodes: string[] }> => {
+    const response = await authAxios.post<AuthSession & { extra?: { recoveryCodes?: string[] } }>(
+      '/users/2fa/setup/confirm',
+      { challengeToken, code },
+      { headers: NATIVE_CLIENT_HEADERS },
+    )
+    const session = await startSession(response.data)
+    return { session, recoveryCodes: response.data.extra?.recoveryCodes ?? [] }
+  },
+
+  /** Invitația în echipă, citită din link (fără autentificare). */
+  getStaffInvitation: async (token: string): Promise<{ fullName: string; email: string; role: string }> => {
+    const response = await authAxios.get<{ fullName: string; email: string; role: string }>(`/staff-invitations/${encodeURIComponent(token)}`)
+    return response.data
+  },
+
+  /** Creează contul din invitație; urmează configurarea 2FA. */
+  acceptStaffInvitation: async (token: string, password: string): Promise<TwoFactorChallenge> => {
+    const response = await authAxios.post<TwoFactorChallenge>(`/staff-invitations/${encodeURIComponent(token)}/accept`, { password })
     return response.data
   },
 

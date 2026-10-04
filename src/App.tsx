@@ -11,6 +11,7 @@ import LoginPage from './components/auth/LoginPage'
 import RegisterPage from './components/auth/RegisterPage'
 import VerifyEmailPage from './components/auth/VerifyEmailPage'
 import ForgotPasswordPage from './components/auth/ForgotPasswordPage'
+import StaffInvitationPage from './components/auth/StaffInvitationPage'
 import { ROUTES } from './constants/routes'
 import RegistrationSuccessPage from './components/auth/RegistrationSuccessPage'
 import SubscriptionSelectPage from './components/auth/SubscriptionSelectPage'
@@ -112,6 +113,7 @@ function App() {
           {/* Semnarea din email. Fără `ProtectedRoute`: cine semnează n-are cont. */}
           <Route path={ROUTES.signDocument} element={<SignDocumentPage />} />
           <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
+          <Route path="/invitatie/:token" element={<StaffInvitationPage />} />
           <Route path="/auth" element={<Navigate to={ROUTES.login} replace />} />
           <Route path="/inregistrare/pfa" element={<Navigate to="/onboarding/pfa" replace />} />
           <Route path="/inregistrare/abonament" element={<SubscriptionSelectPage />} />

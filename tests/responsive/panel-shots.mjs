@@ -7,6 +7,7 @@
 // Conturile sunt cele din seed-ul e2e (backend/tests/UnitTests/Accounting/AccountingE2ESeed.cs).
 import { chromium, expect } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
+import { totp } from '../totp.mjs'
 
 const role = process.argv[2] ?? 'admin'
 const only = process.argv[3]?.split(',')
@@ -40,6 +41,8 @@ await page.addInitScript((value) => { if (location.protocol === 'http:' || locat
 await page.goto(`${base}/autentificare`)
 await page.getByPlaceholder('Email').fill(account.email)
 await page.getByPlaceholder('Parola').fill(account.password)
+await page.keyboard.press('Enter')
+await page.getByLabel('Cod de autentificare').fill(totp())
 await page.keyboard.press('Enter')
 await page.waitForURL(`**${account.path}**`)
 let clientId

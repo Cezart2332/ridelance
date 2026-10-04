@@ -11,7 +11,8 @@ import { PasswordField } from './shell/PasswordField'
 import { TrustRow } from './shell/TrustRow'
 import { AUTH_COLORS, AUTH_DENSITY, authInputSx, authPrimaryButtonSx } from './shell/authShellSx'
 import { mapAuthError, validateEmail, validateLoginPassword, type AuthErrorInfo } from './authValidation'
-import { authService } from '../../services/auth.service'
+import { authService, isTwoFactorChallenge, type TwoFactorChallenge } from '../../services/auth.service'
+import { TwoFactorStep } from './TwoFactorStep'
 import { ROUTES } from '../../constants/routes'
 import { loginDestination } from './loginDestination'
 
@@ -23,11 +24,18 @@ export default function LoginPage() {
   const [touched, setTouched] = useState({ email: false, password: false })
   const [serverError, setServerError] = useState<AuthErrorInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [challenge, setChallenge] = useState<TwoFactorChallenge | null>(null)
 
   // Validăm la blur doar câmpurile completate; cele goale se validează la trimitere.
   // După prima validare, mesajul se actualizează pe măsură ce utilizatorul corectează valoarea.
   const emailError = touched.email ? validateEmail(email) : null
   const passwordError = touched.password ? validateLoginPassword(password) : null
+
+  const enter = async (role: string) => {
+    // În aplicație, cortina coboară din antet și acoperă ecranul; urcă înapoi peste dashboard.
+    if (IS_NATIVE_APP) await curtain.cover()
+    navigate(loginDestination(location.state?.returnTo, role), { replace: true })
+  }
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -40,15 +48,33 @@ export default function LoginPage() {
 
     setIsLoading(true)
     try {
-      const { role } = await authService.login(email.trim(), password)
-      // În aplicație, cortina coboară din antet și acoperă ecranul; urcă înapoi peste dashboard.
-      if (IS_NATIVE_APP) await curtain.cover()
-      navigate(loginDestination(location.state?.returnTo, role), { replace: true })
+      const result = await authService.login(email.trim(), password)
+      // Echipa (Admin, Contabil) mai are un pas: codul 2FA sau configurarea lui.
+      if (isTwoFactorChallenge(result)) {
+        setChallenge(result)
+        return
+      }
+      await enter(result.role)
     } catch (err) {
       setServerError(mapAuthError(err, 'login'))
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (challenge) {
+    return (
+      <AuthLayout accountForm>
+        <TwoFactorStep
+          challenge={challenge}
+          onDone={(session) => void enter(session.role)}
+          onRestart={() => {
+            setChallenge(null)
+            setPassword('')
+          }}
+        />
+      </AuthLayout>
+    )
   }
 
   return (
