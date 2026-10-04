@@ -226,6 +226,8 @@ export function createHttpAccountingApi(): AccountingApi {
     },
     registers: {
       status: (pfaId, year) => get(`pfas/${pfaId}/registers/status`, { year }),
+      exceptions: (pfaId, year) => get(`pfas/${pfaId}/registers/exceptions`, { year }),
+      classify: (ledgerEntryId, request) => post(`ledger-entries/${ledgerEntryId}/classify`, request),
       getRjip: (pfaId, range, regenerate) => get(`pfas/${pfaId}/registers/rjip`, { ...range, regenerate: regenerate || undefined }),
       exportRjip: (pfaId, range, format) => blob(`pfas/${pfaId}/registers/rjip/export`, { ...range, format }),
       getRef: (pfaId, year) => get(`pfas/${pfaId}/registers/ref`, { year }),

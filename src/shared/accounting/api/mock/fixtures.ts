@@ -479,6 +479,8 @@ interface LedgerSeed {
   amount: number
   category?: string
   status?: LedgerEntry['status']
+  reconciliationStatus?: LedgerEntry['reconciliationStatus']
+  proposedClassification?: LedgerEntry['proposedClassification']
 }
 
 function ledgerSeedsFor(name: string): LedgerSeed[] {
@@ -511,6 +513,20 @@ function ledgerSeedsFor(name: string): LedgerSeed[] {
     paymentMethod: 'BANK',
     amount,
     status,
+  })
+  // Open Banking fără clasificare sigură: propunere din contrapartidă sau încasare neidentificată.
+  const unclassified = (date: IsoDate, counterparty: string | null, details: string, amount: number, proposal?: LedgerEntry['proposedClassification']): LedgerSeed => ({
+    date,
+    documentLabel: `Extras ${date.split('-').reverse().join('.')}`,
+    source: 'BANK',
+    counterparty,
+    description: details,
+    transactionType: 'OTHER',
+    paymentMethod: 'BANK',
+    amount,
+    status: 'NEEDS_REVIEW',
+    reconciliationStatus: 'NEEDS_REVIEW',
+    proposedClassification: proposal ?? null,
   })
   const zReport = (date: IsoDate, zNumber: number, total: number, status?: LedgerEntry['status']): LedgerSeed => ({
     date,
@@ -545,6 +561,11 @@ function ledgerSeedsFor(name: string): LedgerSeed[] {
       payout('2026-10-06', 'BOLT', 1730, 'AUTO_IMPORTED'),
       bank('2026-10-08', 'MOL România', 'Combustibil', -276.9, 'FUEL', 'AUTO_IMPORTED'),
       bank('2026-10-09', 'eMAG', 'Cumpărătură neclasificată', -189.99, undefined, 'NEEDS_REVIEW'),
+      unclassified('2026-10-01', null, 'To Ion Popescu', -200, 'OWNER_WITHDRAWAL'),
+      unclassified('2026-10-02', null, 'Company Free plan fee', -50, 'BANK_FEE'),
+      unclassified('2026-10-03', null, 'From Ion P', 630, 'OWNER_CONTRIBUTION'),
+      unclassified('2026-10-03', null, 'www.ghiseul.ro/mfinante', -567, 'TAX_PAYMENT'),
+      unclassified('2026-10-05', 'Booking.com Bv', 'Payment from Booking.com Bv', 822.28),
     ],
     'Andrei Dumitrescu': [
       payout('2026-08-05', 'BOLT', 1980),
@@ -618,7 +639,8 @@ function buildLedger(pfa: MockPfa, history: SettingHistoryEntry[], categories: E
         status: seed.status ?? 'VERIFIED',
         accountingPeriod: periodOf(seed.date),
         closedPeriodFlag: false,
-        reconciliationStatus: 'MATCHED' as const,
+        reconciliationStatus: seed.reconciliationStatus ?? ('MATCHED' as const),
+        proposedClassification: seed.proposedClassification ?? null,
         settlementGroupId: null,
         eFacturaMessageId: null,
         documentDate: null,

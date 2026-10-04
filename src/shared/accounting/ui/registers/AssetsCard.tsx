@@ -96,7 +96,7 @@ export function AssetsCard({ summary, onChanged }: DossierTabProps & { onChanged
         </Stack>
 
         {(candidates.data?.length ?? 0) > 0 && (
-          <Stack spacing={1}>
+          <Stack spacing={1} id="registers-asset-candidates">
             <Typography variant="subtitle2">Posibile mijloace fixe</Typography>
             <TableContainer sx={{ overflowX: 'auto' }}>
               <Table size="small">

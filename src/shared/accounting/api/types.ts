@@ -960,6 +960,8 @@ export interface LedgerEntry {
   personalAmount: number
   /** Stornarea (§4) înregistrării blocate cu acest id, dintr-o lună închisă. */
   stornoOfEntryId?: string | null
+  /** Clasificarea propusă din contrapartidă (titular, ANAF, comision bancar), încă neconfirmată. */
+  proposedClassification?: BankClassification | null
   /** Înregistrarea blocată pe care aceasta o înlocuiește, corectată, în luna curentă. */
   correctsEntryId?: string | null
 }
@@ -1215,6 +1217,8 @@ export interface RegisterStatus {
   inventoryCountId: string | null
   assetsInClassification: number
   yearStatus: AccountingPeriodStatus
+  /** Încasări și plăți bancare neclasificate: nu intră în REF până la clasificare. */
+  unclassified?: number
 }
 
 export interface RangeQuery {
@@ -1229,12 +1233,71 @@ export interface RangeQuery {
 export interface RjipRow {
   ledgerEntryId: string
   date: IsoDate
+  /** Felul și numărul: „Extras bancar, ref. 8F920511”, „Raport Z nr. 125”. */
   document: string
+  /** Explicația contabilă, din clasificare (niciodată textul băncii). */
   operation: string
   cashIn: number
   cashOut: number
   bankIn: number
   bankOut: number
+  /** Nr. crt., continuu pe lună. */
+  no?: number
+  /** De rezolvat înainte de închiderea lunii. */
+  exception?: RegisterExceptionKind | null
+  /** Textul brut al băncii: doar detaliu în ecran, nu intră în registru. */
+  bankDetails?: string | null
+  /** Clasificarea propusă, încă neconfirmată. */
+  proposal?: BankClassification | null
+}
+
+/** Ce este o tranzacție bancară pentru contabilitate (spec flux contabil §6). */
+export const BANK_CLASSIFICATIONS = [
+  'OWNER_CONTRIBUTION', 'OWNER_WITHDRAWAL', 'INTERNAL_TRANSFER', 'TAX_PAYMENT', 'BANK_FEE', 'ACTIVITY_INCOME', 'NON_TAXABLE', 'EXPENSE',
+] as const
+export type BankClassification = (typeof BANK_CLASSIFICATIONS)[number]
+
+export type RegisterExceptionKind = 'UNIDENTIFIED_INCOME' | 'UNCLASSIFIED_PAYMENT' | 'MISSING_DOCUMENT' | 'TRANSFER_TO_CONFIRM' | 'UNRECONCILED_PAYOUT'
+
+export interface ClassificationOption {
+  classification: BankClassification
+  label: string
+}
+
+export interface RegisterExceptionItem {
+  ledgerEntryId: string
+  date: IsoDate
+  amount: number
+  bankDetails: string
+  proposal: ClassificationOption | null
+  options: ClassificationOption[]
+  /** Are contrapartidă recunoscută: se poate salva regula „Aplică la toate similare”. */
+  canApplyToSimilar: boolean
+}
+
+export interface RegisterExceptionGroup {
+  kind: RegisterExceptionKind
+  label: string
+  items: RegisterExceptionItem[]
+}
+
+export interface RegisterExceptions {
+  pfaId: string
+  year: number
+  /** = `RegisterStatus.rjipExceptions`. */
+  total: number
+  groups: RegisterExceptionGroup[]
+}
+
+export interface ClassifyRequest {
+  classification: BankClassification
+  applyToSimilar: boolean
+}
+
+export interface ClassificationResult {
+  /** Câte înregistrări s-au clasificat, inclusiv cea aleasă. */
+  classified: number
+  ruleId: string | null
 }
 
 export interface RjipMonthTotal {

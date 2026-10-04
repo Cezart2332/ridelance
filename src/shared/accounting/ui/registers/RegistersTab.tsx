@@ -2,6 +2,7 @@ import { Fragment, useState } from 'react'
 import {
   Box,
   Collapse,
+  FormControlLabel,
   IconButton,
   MenuItem,
   Paper,
@@ -12,15 +13,18 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Switch,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material'
-import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material'
+import { alpha } from '@mui/material/styles'
+import { KeyboardArrowDown, KeyboardArrowUp, WarningAmberRounded } from '@mui/icons-material'
 
 import { accountingApi } from '../../api/accountingApi'
 import type { RefRow } from '../../api/types'
 import { formatAmount, formatDate, formatPeriod } from '../../format'
-import { REF_STATUS } from '../../statusLabels'
+import { BANK_CLASSIFICATION_LABEL, REF_STATUS, REGISTER_EXCEPTION_LABEL } from '../../statusLabels'
 import { AccountingBadge, EmptyText, ErrorBlock, LoadingBlock } from '../components'
 import { useAction } from '../notify'
 import type { DossierTabProps } from '../pfa/PfaDossierView'
@@ -40,8 +44,9 @@ function yearsOf(startDate: string, lastYear: number): number[] {
   return Array.from({ length: lastYear - first + 1 }, (_, index) => lastYear - index)
 }
 
-function RjipCard({ summary, year }: DossierTabProps & { year: number }) {
+function RjipCard({ summary, year, version }: DossierTabProps & { year: number; version: number }) {
   const { busy, run } = useAction()
+  const [onlyExceptions, setOnlyExceptions] = useState(false)
   const [mode, setMode] = useState<'year' | 'month' | 'custom'>('year')
   const [month, setMonth] = useState(summary.currentPeriod)
   const [from, setFrom] = useState(`${year}-01-01`)
@@ -52,7 +57,7 @@ function RjipCard({ summary, year }: DossierTabProps & { year: number }) {
   }
   const range =
     mode === 'year' ? { from: `${year}-01-01`, to: `${year}-12-31` } : mode === 'month' ? { from: `${month}-01`, to: monthEnd(month) } : { from, to }
-  const rjip = useApi(() => accountingApi.registers.getRjip(summary.id, range), [summary.id, range.from, range.to])
+  const rjip = useApi(() => accountingApi.registers.getRjip(summary.id, range), [summary.id, range.from, range.to, version])
   const data = rjip.data
   const totals = new Map((data?.monthTotals ?? []).map((total) => [total.period, total]))
   const periods = [...new Set((data?.rows ?? []).map((row) => row.date.slice(0, 7)))]
@@ -88,6 +93,10 @@ function RjipCard({ summary, year }: DossierTabProps & { year: number }) {
               <TextField type="date" size="small" label="Până la" value={to} onChange={(event) => setTo(event.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
             </>
           )}
+          <FormControlLabel
+            control={<Switch size="small" checked={onlyExceptions} onChange={(event) => setOnlyExceptions(event.target.checked)} />}
+            label="Doar excepții"
+          />
         </Stack>
       </Stack>
       {rjip.error && <ErrorBlock message={rjip.error} onRetry={rjip.reload} />}
@@ -102,9 +111,10 @@ function RjipCard({ summary, year }: DossierTabProps & { year: number }) {
           <Table size="small" stickyHeader sx={{ minWidth: 900 }}>
             <TableHead>
               <TableRow>
+                <TableCell sx={{ width: 56 }}>Nr. crt.</TableCell>
                 <TableCell>Data</TableCell>
                 <TableCell>Document</TableCell>
-                <TableCell>Explicații</TableCell>
+                <TableCell sx={{ minWidth: 240 }}>Explicații</TableCell>
                 <TableCell align="right">Încasări numerar</TableCell>
                 <TableCell align="right">Încasări bancă</TableCell>
                 <TableCell align="right">Plăți numerar</TableCell>
@@ -117,21 +127,34 @@ function RjipCard({ summary, year }: DossierTabProps & { year: number }) {
                 return (
                   <Fragment key={period}>
                     {data.rows
-                      .filter((row) => row.date.startsWith(period))
+                      .filter((row) => row.date.startsWith(period) && (!onlyExceptions || row.exception))
                       .map((row, index) => (
-                        <TableRow key={`${row.ledgerEntryId}-${index}`}>
+                        <TableRow key={`${row.ledgerEntryId}-${index}`} sx={row.exception ? { bgcolor: (theme) => alpha(theme.palette.warning.main, 0.06) } : undefined}>
+                          <TableCell sx={{ color: 'text.secondary' }}>{row.no ?? ''}</TableCell>
                           <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(row.date)}</TableCell>
-                          <TableCell>{row.document}</TableCell>
-                          <TableCell>{row.operation}</TableCell>
+                          <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.document}</TableCell>
+                          <TableCell>
+                            <Tooltip title={row.bankDetails ?? ''} disableHoverListener={!row.bankDetails} enterTouchDelay={0}>
+                              <Stack direction="row" sx={{ gap: 0.75, alignItems: 'center' }}>
+                                {row.exception && <WarningAmberRounded fontSize="small" color="warning" aria-hidden />}
+                                <span>{row.operation}</span>
+                              </Stack>
+                            </Tooltip>
+                            {row.exception && (
+                              <Typography variant="caption" color="warning.dark" component="div">
+                                {row.proposal ? `Propunere: ${BANK_CLASSIFICATION_LABEL[row.proposal]}` : REGISTER_EXCEPTION_LABEL[row.exception]}
+                              </Typography>
+                            )}
+                          </TableCell>
                           <TableCell align="right">{cell(row.cashIn)}</TableCell>
                           <TableCell align="right">{cell(row.bankIn)}</TableCell>
                           <TableCell align="right">{cell(row.cashOut)}</TableCell>
                           <TableCell align="right">{cell(row.bankOut)}</TableCell>
                         </TableRow>
                       ))}
-                    {total && (
+                    {total && !onlyExceptions && (
                       <TableRow sx={{ bgcolor: 'action.hover' }}>
-                        <TableCell colSpan={3} sx={{ fontWeight: 600 }}>
+                        <TableCell colSpan={4} sx={{ fontWeight: 600 }}>
                           Total {formatPeriod(period)}
                         </TableCell>
                         <TableCell align="right" sx={{ fontWeight: 600 }}>{formatAmount(total.cashIn)}</TableCell>
@@ -257,9 +280,9 @@ export function RegistersTab(props: DossierTabProps) {
     <Stack spacing={3}>
       <Stack direction="row" sx={{ gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
         <YearSelect years={years} year={year} onChange={setYear} />
-        <RegisterStatusBar key={`status-${year}-${version}`} pfaId={props.summary.id} year={year} />
+        <RegisterStatusBar pfaId={props.summary.id} year={year} version={version} readOnly={props.summary.readOnly} onChanged={changed} />
       </Stack>
-      <RjipCard key={`rjip-${year}`} {...props} year={year} />
+      <RjipCard key={`rjip-${year}`} {...props} year={year} version={version} />
       <RefCard key={`ref-${year}-${version}`} {...props} year={year} />
       <AssetsCard {...props} onChanged={changed} />
       <InventoryCard {...props} year={year} onChanged={changed} />

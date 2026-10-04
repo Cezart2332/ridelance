@@ -1,6 +1,8 @@
 import type { StatusTone } from '../../components/admin/StatusBadge'
 import type {
   AccountingPeriodStatus,
+  BankClassification,
+  RegisterExceptionKind,
   AssetKind,
   AssetStatus,
   InventoryCategory,
@@ -278,4 +280,25 @@ export const DEDUCTIBILITY_TYPE_LABEL: Readonly<Record<DeductibilityType, string
   '50_PERCENT': 'Deductibil 50%',
   NON_DEDUCTIBLE: 'Nedeductibil',
   SPECIAL_RULE: 'Regim special',
+}
+
+/** Explicația din RJIP a fiecărei clasificări bancare (aceeași ca în backend). */
+export const BANK_CLASSIFICATION_LABEL: Readonly<Record<BankClassification, string>> = {
+  OWNER_CONTRIBUTION: 'Aport titular',
+  OWNER_WITHDRAWAL: 'Transfer către titular',
+  INTERNAL_TRANSFER: 'Transfer între conturile PFA',
+  TAX_PAYMENT: 'Plată impozite/contribuții ANAF',
+  BANK_FEE: 'Comision administrare cont bancar',
+  ACTIVITY_INCOME: 'Încasare venit din activitate',
+  NON_TAXABLE: 'Încasare neimpozabilă',
+  EXPENSE: 'Cheltuială din activitate',
+}
+
+/** Marcajul rândului RJIP cu excepție. */
+export const REGISTER_EXCEPTION_LABEL: Readonly<Record<RegisterExceptionKind, string>> = {
+  UNIDENTIFIED_INCOME: 'neidentificată',
+  UNCLASSIFIED_PAYMENT: 'neclasificată',
+  MISSING_DOCUMENT: 'fără document',
+  TRANSFER_TO_CONFIRM: 'transfer de confirmat',
+  UNRECONCILED_PAYOUT: 'payout nereconciliat',
 }

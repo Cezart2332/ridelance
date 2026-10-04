@@ -1,4 +1,7 @@
 import type {
+  ClassificationResult,
+  ClassifyRequest,
+  RegisterExceptions,
   AnnualAnswersRequest,
   AnnualDeclarations,
   C801,
@@ -270,6 +273,10 @@ export interface AccountingApi {
 
   registers: {
     status(pfaId: string, year: number): Promise<RegisterStatus>
+    /** Excepțiile RJIP ale anului, grupate pe tip, cu propunerea de clasificare. */
+    exceptions(pfaId: string, year: number): Promise<RegisterExceptions>
+    /** Confirmă propunerea sau alege altă clasificare; `applyToSimilar` salvează regula pe contrapartidă. */
+    classify(ledgerEntryId: string, request: ClassifyRequest): Promise<ClassificationResult>
     getRjip(pfaId: string, range: RangeQuery, regenerate?: boolean): Promise<RjipView>
     exportRjip(pfaId: string, range: RangeQuery, format: ExportFormat): Promise<Blob>
     getRef(pfaId: string, year: number): Promise<RefView>

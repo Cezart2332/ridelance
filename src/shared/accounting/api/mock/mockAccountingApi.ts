@@ -78,6 +78,7 @@ import { csvBlob, textPdf } from './pdf'
 import { assetAt, candidates, depreciationPlan, isComplete, needsNote, nextInventoryNumber, prefill, reviewOf, withTotals } from './registersMock'
 import { calculate } from './taxEngine'
 import * as annualMock from './annualMock'
+import * as bankMock from './bankClassificationMock'
 
 /**
  * Implementarea mock a `AccountingApi` (Partea A). Ține starea în memorie, pe fixtures, și
@@ -2306,9 +2307,13 @@ export function createMockAccountingApi(): AccountingApi {
           ).length
           const openCount = db.inventoryCounts.filter((count) => count.pfaId === pfaId && count.status !== 'FINAL').sort((a, b) => b.date.localeCompare(a.date))[0]
           const net = ref.rows[ref.rows.length - 1]
+          const unclassified = db.ledger.filter(
+            (entry) => entry.pfaId === pfaId && entry.date.startsWith(String(year)) && !entry.stornoOfEntryId && !entry.closedPeriodFlag && entry.reconciliationStatus === 'NEEDS_REVIEW',
+          ).length
           return {
             pfaId,
             year,
+            unclassified,
             rjipOk: exceptions === 0,
             rjipExceptions: exceptions,
             refStatus: ref.status,
@@ -2320,9 +2325,46 @@ export function createMockAccountingApi(): AccountingApi {
           }
         }),
 
+      exceptions: (pfaId, year) =>
+        respond(() => {
+          findPfa(pfaId)
+          const groups = bankMock.exceptionGroups(db.ledger.filter((entry) => entry.pfaId === pfaId && entry.date.startsWith(String(year))))
+          return { pfaId, year, total: groups.reduce((sum, group) => sum + group.items.length, 0), groups }
+        }),
+
+      classify: (ledgerEntryId, request) =>
+        respond(() => {
+          const entry = db.ledger.find((item) => item.id === ledgerEntryId)
+          if (!entry) throw notFound('Înregistrarea')
+          if (entry.source !== 'BANK') throw badRequest('CLASSIFY_NOT_BANK', 'Se clasifică doar tranzacțiile importate din bancă.')
+          if (entry.closedPeriodFlag || entry.status === 'LOCKED') throw conflict('CLASSIFY_LOCKED', 'Înregistrarea e într-o lună închisă; corecția se face prin stornare.')
+          if (!bankMock.fits(request.classification, entry.amount)) {
+            throw badRequest('CLASSIFY_DIRECTION', 'Clasificarea nu se potrivește cu sensul tranzacției (încasare sau plată).')
+          }
+          bankMock.applyClassification(entry, request.classification)
+          audit(entry.pfaId, 'LedgerEntry', entry.id, 'CLASSIFY', null, { classification: request.classification }, null)
+          let classified = 1
+          if (request.applyToSimilar) {
+            const key = bankMock.nameKey(entry)
+            db.ledger
+              .filter(
+                (other) =>
+                  other.id !== entry.id && other.pfaId === entry.pfaId && other.source === 'BANK' && !other.closedPeriodFlag && other.status !== 'LOCKED' &&
+                  !other.stornoOfEntryId && (other.amount > 0) === (entry.amount > 0) && bankMock.nameKey(other) === key &&
+                  (other.reconciliationStatus === 'NEEDS_REVIEW' || other.reconciliationStatus === 'UNMATCHED'),
+              )
+              .forEach((other) => {
+                bankMock.applyClassification(other, request.classification)
+                classified += 1
+              })
+          }
+          return { classified, ruleId: request.applyToSimilar ? nextId('rule') : null }
+        }),
+
       getRjip: (pfaId, range) =>
         respond(() => {
           findPfa(pfaId)
+          const categoryLabel = (category: string) => db.expenseCategories.find((rule) => rule.category === category)?.label
           const rows = ledgerInRange(pfaId, range.from, range.to).map((entry) => {
             const value = Math.abs(entry.amount)
             const incoming = entry.amount > 0
@@ -2330,17 +2372,27 @@ export function createMockAccountingApi(): AccountingApi {
             return {
               ledgerEntryId: entry.id,
               date: entry.date,
-              // Registre §3: la bancă, „Extras bancar”; justificativul trece în explicații.
-              document: cash ? entry.documentLabel : 'Extras bancar',
-              operation:
-                (entry.counterparty ? `${entry.description} – ${entry.counterparty}` : entry.description) +
-                (!cash && !entry.documentLabel.startsWith('Extras') ? `, ${entry.documentLabel}` : ''),
+              // Felul și numărul: la bancă extrasul cu referința tranzacției; justificativul trece în explicații.
+              document: cash ? entry.documentLabel : bankMock.bankDocument(entry),
+              operation: bankMock.explain(entry, categoryLabel),
               cashIn: cash && incoming ? value : 0,
               cashOut: cash && !incoming ? value : 0,
               bankIn: !cash && incoming ? value : 0,
               bankOut: !cash && !incoming ? value : 0,
+              exception: bankMock.exceptionOf(entry),
+              bankDetails: entry.source === 'BANK' ? [entry.counterparty, entry.description].filter(Boolean).join(' · ') : null,
+              proposal: entry.proposedClassification ?? null,
             }
           })
+          const counters = new Map<string, number>()
+          rows.sort((a, b) => a.date.localeCompare(b.date))
+          const numbered = rows.map((row) => {
+            const period = periodOf(row.date)
+            const no = (counters.get(period) ?? 0) + 1
+            counters.set(period, no)
+            return { ...row, no }
+          })
+          rows.splice(0, rows.length, ...numbered)
           const totals = new Map<Period, { cashIn: number; cashOut: number; bankIn: number; bankOut: number }>()
           rows.forEach((row) => {
             const period = periodOf(row.date)
