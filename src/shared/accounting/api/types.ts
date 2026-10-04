@@ -446,7 +446,7 @@ export interface UploadPlatformDocumentRequest {
 export type PlatformInboxStatus = 'MATCHING' | 'ASSIGNED' | 'NEEDS_REVIEW' | 'UNKNOWN_CUI' | 'DISMISSED' | 'FAILED'
 
 /** Cum s-a găsit clientul. */
-export type PlatformInboxMatch = 'CUI' | 'FILE_NAME' | 'COMMISSION' | 'MANUAL'
+export type PlatformInboxMatch = 'CUI' | 'NAME' | 'FILE_NAME' | 'COMMISSION' | 'MANUAL'
 
 /** Rezultatul unui fișier la încărcare; `status` lipsește când fișierul a fost refuzat (duplicat, nu e PDF). */
 export interface PlatformInboxResult {
