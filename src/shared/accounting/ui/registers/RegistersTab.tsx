@@ -180,10 +180,21 @@ function RefRowView({ row }: { row: RefRow }) {
   const contributions = row.contributions ?? []
   return (
     <>
-      <TableRow hover>
+      <TableRow
+        hover
+        onClick={contributions.length > 0 ? () => setOpen((value) => !value) : undefined}
+        sx={contributions.length > 0 ? { cursor: 'pointer' } : undefined}
+      >
         <TableCell sx={{ width: 48 }}>
           {contributions.length > 0 && (
-            <IconButton size="small" aria-label={open ? 'Ascunde detaliile' : 'Arată detaliile'} onClick={() => setOpen((value) => !value)}>
+            <IconButton
+              size="small"
+              aria-label={open ? 'Ascunde operațiunile' : 'Arată operațiunile'}
+              onClick={(event) => {
+                event.stopPropagation()
+                setOpen((value) => !value)
+              }}
+            >
               {open ? <KeyboardArrowUp fontSize="small" /> : <KeyboardArrowDown fontSize="small" />}
             </IconButton>
           )}
@@ -191,10 +202,10 @@ function RefRowView({ row }: { row: RefRow }) {
         <TableCell>{row.calculationElement}</TableCell>
         <TableCell align="right" sx={{ fontWeight: 600 }}>{formatAmount(row.value)}</TableCell>
       </TableRow>
-      {contributions.length > 0 && (
+      {open && contributions.length > 0 && (
         <TableRow>
-          <TableCell colSpan={3} sx={{ p: 0, borderBottom: open ? undefined : 'none' }}>
-            <Collapse in={open} unmountOnExit>
+          <TableCell colSpan={3} sx={{ p: 0 }}>
+            <Collapse in appear>
               <Box sx={{ maxHeight: 320, overflowY: 'auto', px: 2, py: 1 }}>
                 <Table size="small">
                   <TableBody>

@@ -196,6 +196,54 @@ export function ConfirmDialog({
   )
 }
 
+/**
+ * Data în formatul românesc `zz.ll.aaaa` (QA 18), independent de limba browserului; valoarea rămâne
+ * ISO (`aaaa-ll-zz`). Un text incomplet nu schimbă valoarea.
+ */
+export function DateField({
+  label,
+  value,
+  onChange,
+  fullWidth,
+}: {
+  label: string
+  value: string
+  onChange: (iso: string) => void
+  fullWidth?: boolean
+}) {
+  const shown = /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)}` : value
+  const [text, setText] = useState(shown)
+  const [lastValue, setLastValue] = useState(value)
+  if (value !== lastValue) {
+    setLastValue(value)
+    setText(shown)
+  }
+  const valid = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(text)
+  return (
+    <TextField
+      label={label}
+      value={text}
+      placeholder="zz.ll.aaaa"
+      fullWidth={fullWidth}
+      error={text.length > 0 && !valid}
+      onChange={(event) => {
+        const next = event.target.value
+        setText(next)
+        const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(next)
+        if (match) {
+          const iso = `${match[3]}-${match[2]}-${match[1]}`
+          setLastValue(iso)
+          onChange(iso)
+        } else if (next === '') {
+          setLastValue('')
+          onChange('')
+        }
+      }}
+      slotProps={{ htmlInput: { inputMode: 'numeric' } }}
+    />
+  )
+}
+
 /** O pereche etichetă / valoare, pentru antete și carduri. */
 export function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (

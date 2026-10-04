@@ -18,7 +18,7 @@ import { accountingApi } from '../../api/accountingApi'
 import type { Asset, AssetKind, FixedAssetCandidate, FixedAssetDecision } from '../../api/types'
 import { EMPTY, formatAmount, formatDate, parseAmount } from '../../format'
 import { ASSET_KIND_LABEL, ASSET_STATUS } from '../../statusLabels'
-import { AccountingBadge, EmptyText, ErrorBlock, LoadingBlock, ReasonDialog } from '../components'
+import { AccountingBadge, EmptyText, ErrorBlock, LoadingBlock, ReasonDialog, DateField } from '../components'
 import { useAction } from '../notify'
 import type { DossierTabProps } from '../pfa/PfaDossierView'
 import { downloadBlob, useApi } from '../useApi'
@@ -101,16 +101,21 @@ export function AssetsCard({ summary, onChanged }: DossierTabProps & { onChanged
             <TableContainer sx={{ overflowX: 'auto' }}>
               <Table size="small">
                 <TableBody>
-                  {candidates.data!.map((candidate) => (
-                    <TableRow key={candidate.ledgerEntryId} hover>
+                  {candidates.data!.map((candidate, index) => (
+                    <TableRow key={candidate.ledgerEntryId} hover id={index === 0 ? 'registers-asset-candidate' : undefined}>
                       <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(candidate.date)}</TableCell>
                       <TableCell>{candidate.counterparty ? `${candidate.description} – ${candidate.counterparty}` : candidate.description}</TableCell>
                       <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>{formatAmount(Math.abs(candidate.amount))}</TableCell>
                       <TableCell align="right">
                         {!readOnly && (
-                          <Button size="small" variant="contained" onClick={() => setDeciding({ candidate, decision: 'FIXED_ASSET', name: candidate.description })}>
-                            Decide
-                          </Button>
+                          <Stack direction="row" sx={{ gap: 1, justifyContent: 'flex-end' }}>
+                            <Button size="small" variant="contained" onClick={() => setDeciding({ candidate, decision: 'FIXED_ASSET', name: candidate.description })}>
+                              Mijloc fix
+                            </Button>
+                            <Button size="small" variant="outlined" onClick={() => setDeciding({ candidate, decision: 'EXPENSE', name: candidate.description })}>
+                              Cheltuială curentă
+                            </Button>
+                          </Stack>
                         )}
                       </TableCell>
                     </TableRow>
@@ -147,7 +152,11 @@ export function AssetsCard({ summary, onChanged }: DossierTabProps & { onChanged
             </TableHead>
             <TableBody>
               {assets.data.map((asset) => (
-                <TableRow key={asset.id} hover>
+                <TableRow
+                  key={asset.id}
+                  hover
+                  id={asset.id === assets.data!.find((item) => item.status === 'PENDING_CLASSIFICATION')?.id ? 'registers-asset-pending' : undefined}
+                >
                   <TableCell sx={{ whiteSpace: 'nowrap' }}>{asset.inventoryNumber}</TableCell>
                   <TableCell>{asset.name}</TableCell>
                   <TableCell>{ASSET_KIND_LABEL[asset.kind]}</TableCell>
@@ -261,13 +270,7 @@ export function AssetsCard({ summary, onChanged }: DossierTabProps & { onChanged
               <TextField label="Document de achiziție" value={classifyForm.documentRef} onChange={(event) => setClassify({ documentRef: event.target.value })} fullWidth />
               <TextField label="Furnizor" value={classifyForm.supplierName} onChange={(event) => setClassify({ supplierName: event.target.value })} fullWidth />
             </Stack>
-            <TextField
-              type="date"
-              label="Punere în funcțiune"
-              value={classifyForm.inServiceDate}
-              onChange={(event) => setClassify({ inServiceDate: event.target.value })}
-              slotProps={{ inputLabel: { shrink: true } }}
-            />
+            <DateField label="Punere în funcțiune" value={classifyForm.inServiceDate} onChange={(iso) => setClassify({ inServiceDate: iso })} />
             {classifying.asset.kind === 'FIXED_ASSET' && (
               <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2 }}>
                 <TextField label="Clasa (HG 2139/2004)" value={classifyForm.depreciationClassCode} onChange={(event) => setClassify({ depreciationClassCode: event.target.value })} fullWidth />
@@ -298,13 +301,7 @@ export function AssetsCard({ summary, onChanged }: DossierTabProps & { onChanged
         }}
       >
         {disposing && (
-          <TextField
-            type="date"
-            label="Data ieșirii"
-            value={disposing.date}
-            onChange={(event) => setDisposing({ ...disposing, date: event.target.value })}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
+          <DateField label="Data ieșirii" value={disposing.date} onChange={(iso) => setDisposing({ ...disposing, date: iso })} />
         )}
       </ReasonDialog>
 
@@ -336,14 +333,7 @@ export function AssetsCard({ summary, onChanged }: DossierTabProps & { onChanged
               <MenuItem value="INVENTORY_OBJECT">{ASSET_KIND_LABEL.INVENTORY_OBJECT}</MenuItem>
             </TextField>
             <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2 }}>
-              <TextField
-                type="date"
-                label="Data intrării"
-                value={manual.entryDate}
-                onChange={(event) => setManual({ ...manual, entryDate: event.target.value })}
-                slotProps={{ inputLabel: { shrink: true } }}
-                fullWidth
-              />
+              <DateField label="Data intrării" value={manual.entryDate} onChange={(iso) => setManual({ ...manual, entryDate: iso })} fullWidth />
               <TextField label="Valoare de intrare (lei)" value={manual.entryValue} onChange={(event) => setManual({ ...manual, entryValue: event.target.value })} fullWidth />
             </Stack>
             <TextField label="Document (proces-verbal de aport)" value={manual.documentRef} onChange={(event) => setManual({ ...manual, documentRef: event.target.value })} />

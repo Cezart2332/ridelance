@@ -68,7 +68,7 @@ export function RegisterStatusBar({
         color={data.assetsInClassification > 0 ? 'warning' : 'default'}
         variant={data.assetsInClassification > 0 ? 'filled' : 'outlined'}
         label={`Active în clasificare: ${data.assetsInClassification}`}
-        onClick={data.assetsInClassification > 0 ? () => go('registers-asset-candidates', 'registers-assets') : undefined}
+        onClick={data.assetsInClassification > 0 ? () => go('registers-asset-candidate', 'registers-asset-pending', 'registers-asset-candidates', 'registers-assets') : undefined}
       />
       {data.yearStatus === 'CLOSED' && <Chip size="small" color="success" label={`Anul ${year} închis`} />}
       <RegisterExceptionsDialog
