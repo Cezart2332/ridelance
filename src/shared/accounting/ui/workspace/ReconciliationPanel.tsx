@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Button, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
+import { Box, Button, Dialog, DialogContent, DialogTitle, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 
 import { accountingApi } from '../../api/accountingApi'
 import type { MonthReconciliation, PfaAccountingSummary, ReconciliationControl, ReconciliationControlResult } from '../../api/types'
@@ -31,6 +31,8 @@ export function ReconciliationPanel({ summary, period, onChanged }: { summary: P
   const [closing, setClosing] = useState(false)
   const [reopening, setReopening] = useState(false)
   const [explaining, setExplaining] = useState<ReconciliationControl | null>(null)
+  const [showPayouts, setShowPayouts] = useState(false)
+  const [showAll, setShowAll] = useState(false)
 
   const changed = (message: string) => {
     notify(message, 'success')
@@ -43,17 +45,24 @@ export function ReconciliationPanel({ summary, period, onChanged }: { summary: P
 
   const month: MonthReconciliation = reconciliation.data
   const closed = month.status === 'CLOSED'
-  const failing = month.controls.filter((control) => !control.passed).length
+  const open = month.controls.filter((control) => control.applicable && !control.passed)
+  const visible = showAll ? month.controls : open
+  const okCount = month.controls.filter((control) => control.applicable && control.passed).length
 
   return (
-    <Panel sx={{ px: 2.5, py: 2 }}>
-      <Stack direction="row" sx={{ alignItems: 'center', gap: 1.5, mb: 1.5, flexWrap: 'wrap' }}>
-        <Typography component="h2" sx={{ fontSize: 16, fontWeight: 700, color: INK, flex: 1 }}>
-          Reconciliere {formatPeriod(period)}
+    <Panel>
+      <Stack direction="row" sx={{ alignItems: 'center', gap: 1, px: 2, py: 1.25, flexWrap: 'wrap' }}>
+        <Typography component="h2" sx={{ fontSize: 14, fontWeight: 600, color: INK, flex: 1 }}>
+          Închiderea lunii
         </Typography>
+        {month.payouts.length > 0 && (
+          <Button size="small" onClick={() => setShowPayouts(true)}>
+            Payout-uri ({month.payouts.length})
+          </Button>
+        )}
         {closed ? (
           <>
-            <StatusPill cell={{ tone: 'gray', label: 'Luna e închisă' }} />
+            <StatusPill cell={{ tone: 'gray', label: 'Închisă' }} />
             {nav.role === 'Admin' && !summary.readOnly && (
               <Button size="small" onClick={() => setReopening(true)}>
                 Redeschide
@@ -62,29 +71,25 @@ export function ReconciliationPanel({ summary, period, onChanged }: { summary: P
           </>
         ) : (
           !summary.readOnly && (
-            <Button variant="contained" disabled={!month.canClose} onClick={() => setClosing(true)} sx={DARK}>
+            <Button size="small" variant="contained" disabled={!month.canClose} onClick={() => setClosing(true)} sx={DARK}>
               Închide luna
             </Button>
           )
         )}
       </Stack>
 
-      {!closed && failing > 0 && (
-        <Typography sx={{ fontSize: 13, color: MUTED, mb: 1 }}>
-          {failing === 1 ? 'Un control de rezolvat' : `${failing} controale de rezolvat`}
-        </Typography>
-      )}
-
-      <Stack sx={{ borderTop: `1px solid ${HAIRLINE}` }}>
-        {month.controls.map((control) => (
+      <Stack>
+        {visible.map((control) => (
           <Stack
             key={control.control}
-            direction={{ xs: 'column', sm: 'row' }}
-            sx={{ gap: { xs: 0.5, sm: 2 }, py: 1.25, borderBottom: `1px solid ${HAIRLINE}`, alignItems: { sm: 'center' } }}
+            direction="row"
+            sx={{ gap: 1.5, px: 2, py: 1, borderTop: `1px solid ${HAIRLINE}`, alignItems: 'center' }}
           >
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography sx={{ fontSize: 14, fontWeight: 600, color: INK }}>{RECONCILIATION_CONTROL_LABEL[control.control]}</Typography>
-              <Typography sx={{ fontSize: 13, color: MUTED, overflowWrap: 'anywhere' }}>{control.detail}</Typography>
+              <Typography sx={{ fontSize: 13, fontWeight: 500, color: INK }}>{RECONCILIATION_CONTROL_LABEL[control.control]}</Typography>
+              {control.applicable && !control.passed && control.detail && (
+                <Typography sx={{ fontSize: 12, color: MUTED, overflowWrap: 'anywhere' }}>{control.detail}</Typography>
+              )}
             </Box>
             <Stack direction="row" sx={{ flexShrink: 0, gap: 1, alignItems: 'center' }}>
               {!closed && !control.passed && !summary.readOnly && EXPLAINABLE_CONTROLS.includes(control.control) && (
@@ -96,10 +101,20 @@ export function ReconciliationPanel({ summary, period, onChanged }: { summary: P
             </Stack>
           </Stack>
         ))}
+        <Stack direction="row" sx={{ gap: 1.5, px: 2, py: 1, borderTop: `1px solid ${HAIRLINE}`, alignItems: 'center' }}>
+          <Typography sx={{ flex: 1, fontSize: 13, color: MUTED }}>
+            {open.length === 0 ? 'Toate controalele sunt OK' : `${okCount} controale OK`}
+          </Typography>
+          <Button size="small" onClick={() => setShowAll((value) => !value)}>
+            {showAll ? 'Doar problemele' : 'Toate'}
+          </Button>
+        </Stack>
       </Stack>
 
-      {month.payouts.length > 0 && (
-        <TableContainer sx={{ mt: 2, overflowX: 'auto' }}>
+      <Dialog open={showPayouts} onClose={() => setShowPayouts(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Payout-uri {formatPeriod(period)}</DialogTitle>
+        <DialogContent>
+        <TableContainer sx={{ overflowX: 'auto' }}>
           <Table size="small">
             <TableHead>
               <TableRow>
@@ -127,7 +142,8 @@ export function ReconciliationPanel({ summary, period, onChanged }: { summary: P
             </TableBody>
           </Table>
         </TableContainer>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         open={closing}

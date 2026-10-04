@@ -384,7 +384,7 @@ export function ClientsTableView() {
                         actions={[
                           { label: 'Deschide dosarul', onClick: () => open(row) },
                           { label: 'Sinteză fiscală', onClick: () => open(row, 'fiscal') },
-                          { label: 'Venituri și taxe', onClick: () => open(row, 'venituri') },
+                          { label: 'Taxe', onClick: () => open(row, 'fiscal') },
                           { label: 'Bancă', onClick: () => open(row, 'banca') },
                           { label: 'Registre', onClick: () => open(row, 'registre') },
                           { label: 'Mesaje', onClick: () => open(row, 'mesaje') },

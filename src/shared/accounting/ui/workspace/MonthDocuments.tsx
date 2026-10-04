@@ -26,11 +26,14 @@ export function MonthDocuments({
   period,
   documents,
   onChanged,
+  onClientFiles,
 }: {
   summary: PfaAccountingSummary
   period: string
   documents: PlatformDocumentListItem[]
   onChanged: () => void
+  /** Deschide documentele încărcate de client (bon, facturi, extrase). */
+  onClientFiles?: () => void
 }) {
   const nav = useAccountingNav()
   const notify = useNotify()
@@ -81,12 +84,17 @@ export function MonthDocuments({
 
   return (
     <Panel>
-      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', px: 2.5, pt: 2, pb: 1, gap: 1 }}>
-        <Typography component="h2" sx={{ fontSize: 16, fontWeight: 700, color: INK }}>
-          Documente Uber și Bolt
+      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1.25, gap: 1 }}>
+        <Typography component="h2" sx={{ fontSize: 14, fontWeight: 600, color: INK }}>
+          Documente
         </Typography>
         {!readOnly && (
-          <Stack direction="row" sx={{ gap: 1 }}>
+          <Stack direction="row" sx={{ gap: 0.5 }}>
+            {onClientFiles && (
+              <Button size="small" onClick={onClientFiles}>
+                De la client
+              </Button>
+            )}
             {pending.length > 0 && (
               <Button
                 size="small"
@@ -97,11 +105,11 @@ export function MonthDocuments({
                   onChanged()
                 }}
               >
-                Confirmă tot
+                Confirmă
               </Button>
             )}
             <Button size="small" variant="outlined" disabled={uploading} component="label" htmlFor={uploadInputId(summary.id)}>
-              {uploading ? 'Se încarcă…' : 'Încarcă PDF'}
+              {uploading ? 'Se încarcă…' : 'Încarcă'}
             </Button>
           </Stack>
         )}
@@ -120,7 +128,7 @@ export function MonthDocuments({
       </Stack>
 
       {issues.length > 0 && (
-        <Alert severity="warning" onClose={() => setIssues([])} sx={{ mx: 2.5, mb: 1 }}>
+        <Alert severity="warning" onClose={() => setIssues([])} sx={{ mx: 2, mb: 1 }}>
           {issues.map((issue) => (
             <Box key={issue}>{issue}</Box>
           ))}
@@ -138,13 +146,13 @@ export function MonthDocuments({
               onClick={() => open(group)}
               disabled={!first}
               aria-expanded={multiple ? expanded === group.key : undefined}
-              sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 2, px: 2.5, py: 1.5, textAlign: 'left', fontFamily: 'inherit' }}
+              sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 1.5, px: 2, py: 1, textAlign: 'left', fontFamily: 'inherit' }}
             >
-              <Typography sx={{ flexGrow: 1, fontSize: 14, fontWeight: 600, color: INK }}>{group.label}</Typography>
-              <Typography sx={{ fontSize: 14, color: INK, minWidth: 110, textAlign: 'right' }}>
+              <Typography sx={{ flexGrow: 1, fontSize: 13, fontWeight: 500, color: INK }}>{group.label}</Typography>
+              <Typography sx={{ fontSize: 13, color: INK, textAlign: 'right', whiteSpace: 'nowrap' }}>
                 {first ? formatMoney(multiple ? total : first.mainAmount, first.currency) : ''}
               </Typography>
-              <Box sx={{ minWidth: 130, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5 }}>
+              <Box sx={{ minWidth: 104, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5 }}>
                 <StatusPill cell={first ? STATUS_CELL[first.status] : { tone: 'red', label: 'Lipsă' }} />
                 {multiple && (
                   <ExpandMoreRoundedIcon
@@ -165,17 +173,17 @@ export function MonthDocuments({
             {multiple && expanded === group.key && (
               <Box sx={{ bgcolor: 'var(--rl-card-alt)', pb: 1 }}>
                 {group.documents.map((document) => (
-                  <Stack key={document.id} direction="row" sx={{ alignItems: 'center', gap: 2, px: 2.5, py: 0.75 }}>
+                  <Stack key={document.id} direction="row" sx={{ alignItems: 'center', gap: 1.5, px: 2, py: 0.5 }}>
                     <ButtonBase
                       onClick={() => nav.setParam('document', document.id)}
-                      sx={{ flexGrow: 1, justifyContent: 'flex-start', fontFamily: 'inherit', fontSize: 14, color: 'var(--rl-fg-soft)', textAlign: 'left', minWidth: 0 }}
+                      sx={{ flexGrow: 1, justifyContent: 'flex-start', fontFamily: 'inherit', fontSize: 12, color: 'var(--rl-fg-soft)', textAlign: 'left', minWidth: 0 }}
                     >
                       <Box component="span" sx={{ overflowWrap: 'anywhere' }}>
                         {document.fileName}
                       </Box>
                     </ButtonBase>
-                    <Typography sx={{ fontSize: 14, minWidth: 110, textAlign: 'right' }}>{formatMoney(document.mainAmount, document.currency)}</Typography>
-                    <Box sx={{ minWidth: 130, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Typography sx={{ fontSize: 12, textAlign: 'right', whiteSpace: 'nowrap' }}>{formatMoney(document.mainAmount, document.currency)}</Typography>
+                    <Box sx={{ minWidth: 104, display: 'flex', justifyContent: 'flex-end' }}>
                       <StatusPill cell={STATUS_CELL[document.status]} />
                     </Box>
                     {canDelete && (

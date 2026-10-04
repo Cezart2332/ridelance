@@ -24,7 +24,7 @@ export function MonthDeclarations({
 
   return (
     <Panel>
-      <Typography component="h2" sx={{ px: 2.5, pt: 2, pb: 1, fontSize: 16, fontWeight: 700, color: INK }}>
+      <Typography component="h2" sx={{ px: 2, py: 1.25, fontSize: 14, fontWeight: 600, color: INK }}>
         Declarații
       </Typography>
       {declarations.map((declaration) => {
@@ -39,13 +39,13 @@ export function MonthDeclarations({
             key={declaration.type}
             onClick={() => nav.setParam('declaratie', declaration.type)}
             aria-label={`Deschide ${declaration.type}`}
-            sx={{ width: '100%', display: 'flex', gap: 2, px: 2.5, py: 1.5, borderTop: `1px solid ${HAIRLINE}`, fontFamily: 'inherit', textAlign: 'left' }}
+            sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1.5, px: 2, py: 1, borderTop: `1px solid ${HAIRLINE}`, fontFamily: 'inherit', textAlign: 'left', '&:hover': { bgcolor: 'var(--rl-hover)' } }}
           >
-            <Typography sx={{ flexGrow: 1, fontSize: 14, fontWeight: 600, color: INK }}>{declaration.type}</Typography>
-            <Typography sx={{ fontSize: 14, color: INK }}>
+            <Typography sx={{ flexGrow: 1, fontSize: 13, fontWeight: 500, color: INK }}>{declaration.type}</Typography>
+            <Typography sx={{ fontSize: 13, color: INK, whiteSpace: 'nowrap' }}>
               {declaration.type !== 'D390' && declaration.amount !== null ? formatLei(declaration.amount) : ''}
             </Typography>
-            <Box sx={{ minWidth: 120, display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{ minWidth: 104, display: 'flex', justifyContent: 'flex-end' }}>
               <StatusPill cell={cell} />
             </Box>
           </ButtonBase>

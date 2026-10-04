@@ -49,19 +49,18 @@ export const DOSSIER_SECTION_LABEL: Record<DossierSection, string> = {
  * Secțiunile comune cu dosarul (`declaratii`, `documente`, …) au aceleași nume, ca legăturile din
  * luna fiscală să ducă la fel în ambele.
  */
-export const CLIENT_SECTIONS = ['luna', 'fiscal', 'banca', 'venituri', 'cheltuieli', 'registre', 'anual', 'mesaje', 'anaf', 'setari', 'istoric'] as const
+export const CLIENT_SECTIONS = ['luna', 'fiscal', 'banca', 'cheltuieli', 'registre', 'anual', 'anaf', 'mesaje', 'setari', 'istoric'] as const
 export type ClientSection = (typeof CLIENT_SECTIONS)[number]
 
 export const CLIENT_SECTION_LABEL: Record<ClientSection, string> = {
-  luna: 'Luna aceasta',
-  fiscal: 'Rezumat fiscal',
-  banca: 'Încasări și plăți',
-  venituri: 'Taxe estimate',
+  luna: 'Luna',
+  fiscal: 'Taxe',
+  banca: 'Bancă',
   cheltuieli: 'Cheltuieli',
   registre: 'Registre',
   anual: 'Anual',
+  anaf: 'ANAF',
   mesaje: 'Mesaje',
-  anaf: 'SPV și e-Factura',
   setari: 'Setări',
   istoric: 'Istoric',
 }
@@ -72,7 +71,8 @@ export const CLIENT_SECTION_ALIASES: Record<string, ClientSection> = {
   documente: 'luna',
   declaratii: 'luna',
   tranzactii: 'banca',
-  taxe: 'venituri',
+  taxe: 'fiscal',
+  venituri: 'fiscal',
 }
 
 /** Precompletarea formularului de furnizor, din verificarea „furnizor necunoscut” (F2). */
