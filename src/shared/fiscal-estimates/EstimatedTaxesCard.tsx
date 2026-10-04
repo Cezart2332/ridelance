@@ -466,7 +466,7 @@ function StaffDetails({ data }: { data: EstimatedTaxes }) {
         <Detail label="Snapshot" value={data.financialSnapshotId?.slice(0, 8) ?? '—'} />
         {projection && (
           <>
-            <Detail label="Net realizat" value={formatLei(projection.netRealized)} />
+            <Detail label={`Net realizat în ${data.taxYear}`} value={formatLei(projection.netRealized)} />
             <Detail label="Net anual estimat" value={projection.netAnnualEstimated != null ? formatLei(projection.netAnnualEstimated) : '—'} />
             <Detail label="Medie săptămânală" value={projection.weeklyAverage != null ? formatLei(projection.weeklyAverage) : '—'} />
             <Detail label="Săptămâni folosite / rămase" value={`${projection.weeksUsed} / ${projection.weeksRemaining}`} />
