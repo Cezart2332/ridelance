@@ -25,6 +25,7 @@ backend
 *.sw?
 .github/skills
 .env
+.env.hub
 .agent/
 .specs/
 examplecsv/

@@ -1,0 +1,79 @@
+# Toată aplicația din imaginile publicate în Docker Hub, cu un PostgreSQL local.
+#
+#   cp .env.hub.example .env.hub      # completează DOCKERHUB_NAMESPACE și parolele
+#   docker login                      # dacă imaginile din Docker Hub sunt private
+#   docker compose -f docker-compose.hub.yml --env-file .env.hub up -d
+#
+# Frontend: http://localhost:5173 · API: http://localhost:5000 · Validator ANAF: http://localhost:8090
+#
+# Imaginea de frontend are adresa API-ului coaptă la build în CI (`VITE_API_BASE_URL`); nu se poate
+# schimba la rulare. Frontendul de aici vorbește cu API-ul cu care a fost construit.
+name: ridelance-hub
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ridelance}
+      POSTGRES_USER: ${POSTGRES_USER:-ridelance}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Setează POSTGRES_PASSWORD în .env.hub}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  validator:
+    image: ${DOCKERHUB_NAMESPACE:?Setează DOCKERHUB_NAMESPACE în .env.hub}/ridelance-validator:${RIDELANCE_TAG:-latest}
+    environment:
+      INTERNAL_TOKEN: ${ANAF_VALIDATOR_TOKEN:?Setează ANAF_VALIDATOR_TOKEN în .env.hub}
+      RUNNER_TIMEOUT_SECONDS: ${RUNNER_TIMEOUT_SECONDS:-60}
+      RUNNER_MAX_CONCURRENT: ${RUNNER_MAX_CONCURRENT:-2}
+    ports:
+      - "8090:8080"
+    volumes:
+      # Kitul de validare ANAF nu e în imagine.
+      - ${ANAF_VALIDATORS_PATH:-./backend-anaf/validators}:/validators:ro
+    restart: unless-stopped
+
+  backend:
+    image: ${DOCKERHUB_NAMESPACE}/ridelance-backend:${RIDELANCE_TAG:-latest}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      validator:
+        condition: service_started
+    env_file:
+      # Cheile opționale (Stripe, Resend, OpenRouter, SMS, Oblio, SmartAccounts, ANAF OAuth), ca `Secțiune__Cheie`.
+      - path: ./backend/.env
+        required: false
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__Database: Host=postgres;Port=5432;Database=${POSTGRES_DB:-ridelance};Username=${POSTGRES_USER:-ridelance};Password=${POSTGRES_PASSWORD}
+      Jwt__Secret: ${JWT_SECRET:?Setează JWT_SECRET în .env.hub (minim 32 de caractere)}
+      Encryption__Key: ${ENCRYPTION_KEY:?Setează ENCRYPTION_KEY în .env.hub}
+      AnafValidator__BaseUrl: http://validator:8080
+      AnafValidator__Token: ${ANAF_VALIDATOR_TOKEN}
+      App__BaseUrl: ${APP_BASE_URL:-http://localhost:5173}
+    ports:
+      - "5000:8080"
+    volumes:
+      - backend-uploads:/app/uploads
+    restart: unless-stopped
+
+  frontend:
+    image: ${DOCKERHUB_NAMESPACE}/ridelance-frontend:${RIDELANCE_TAG:-latest}
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  backend-uploads:
