@@ -48,6 +48,9 @@ import type {
   PlatformDocument,
   PlatformDocumentDetail,
   PlatformDocumentListItem,
+  PlatformInboxItem,
+  PlatformInboxResult,
+  PlatformInboxStatus,
   PlatformDocumentStatus,
   RefView,
   RuleInput,
@@ -100,12 +103,56 @@ let generation = 0
 /** Readuce mock-ul la fixtures (pagina de debug, testele). */
 export function resetMockAccountingDb(): void {
   db = createFixtureDb()
+  inbox = []
   vatRequests = null
   anafConnection = null
   anafLinks = {}
   spvRequests = {}
   spvKeys = []
   generation++
+}
+
+/** Încărcarea globală: documentele nealocate și fișierele lor (pentru alocarea manuală). */
+let inbox: { item: PlatformInboxItem; file: File; ref: StoredFileRef }[] = []
+
+const OPEN_INBOX: PlatformInboxStatus[] = ['MATCHING', 'NEEDS_REVIEW', 'UNKNOWN_CUI', 'FAILED']
+
+const foldWords = (text: string) =>
+  text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .split(/[^A-Z0-9]+/)
+    .filter(Boolean)
+
+const COMMON_WORDS = new Set(['PFA', 'II', 'IF', 'SRL', 'RAPORT', 'FACTURA', 'BOLT', 'UBER'])
+
+/** Mock-ul nu citește PDF-ul: CUI-ul sau numele clientului din numele fișierului. */
+function inboxClientOf(fileName: string): { pfa: MockPfa; byCui: boolean } | null {
+  const numbers: string[] = fileName.match(/\d{6,10}/g) ?? []
+  const byCui = db.pfas.filter((pfa) => numbers.includes(pfa.cui.replace(/\D/g, '')))
+  if (byCui.length === 1) return { pfa: byCui[0], byCui: true }
+  const words = new Set(foldWords(fileName))
+  const byName = db.pfas.filter((pfa) => {
+    const parts = foldWords(pfa.name).filter((word) => word.length > 2 && !COMMON_WORDS.has(word))
+    return parts.length >= 2 && parts.every((word) => words.has(word))
+  })
+  return byName.length === 1 ? { pfa: byName[0], byCui: false } : null
+}
+
+function inboxPeriodOf(fileName: string): Period | null {
+  const match = fileName.match(/(?:^|\D)(?:(20\d{2})[-_.](\d{2})|(\d{2})[-_.](20\d{2}))(?!\d)/)
+  if (!match) return null
+  const year = match[1] ?? match[4]
+  const month = match[2] ?? match[3]
+  return Number(month) >= 1 && Number(month) <= 12 ? `${year}-${month}` : null
+}
+
+function inboxEntry(id: string) {
+  const entry = inbox.find(({ item }) => item.id === id)
+  if (!entry) throw notFound('Documentul din coada de alocare')
+  if (!OPEN_INBOX.includes(entry.item.status)) throw conflict('INBOX_RESOLVED', 'Documentul a fost deja alocat sau respins.')
+  return entry
 }
 
 /** SPV în mock: două mesaje aduse „de aplicația desktop” și cererile puse din web. */
@@ -611,6 +658,23 @@ function seedForUpload(pfa: MockPfa, period: Period, file: File, id: string): Mo
 }
 
 /** Confirmarea în bloc: sare peste ce nu se poate confirma și spune de ce. */
+/** Un PDF încărcat devine documentul clientului și intră în citire. */
+function addUploadedDocument(pfa: MockPfa, period: Period, raw: File, file: StoredFileRef): MockDocument {
+  const document = seedForUpload(pfa, period, raw, nextId('doc'))
+  document.file = file
+  document.status = 'EXTRACTING'
+  db.documents.push(document)
+  audit(pfa.id, 'PlatformDocument', document.id, 'UPLOAD', null, { fileName: document.fileName, period }, null)
+
+  const startedIn = generation
+  setTimeout(() => {
+    if (startedIn !== generation) return
+    extract(document)
+    refreshPrecheck(pfa.id, period)
+  }, randomBetween(EXTRACTION_MS))
+  return document
+}
+
 function confirmMany(ids: string[], reason: string): { confirmed: string[]; skipped: { id: string; reason: string }[] } {
   const confirmed: string[] = []
   const skipped: { id: string; reason: string }[] = []
@@ -1359,6 +1423,101 @@ export function createMockAccountingApi(): AccountingApi {
         }),
     },
 
+    platformInbox: {
+      upload: (period, files) =>
+        respond(async (): Promise<PlatformInboxResult[]> => {
+          requirePeriod(period)
+          if (files.length === 0) throw badRequest('NO_FILES', 'Alege cel puțin un fișier PDF.')
+          const results: PlatformInboxResult[] = []
+          const seen = new Set<string>()
+          for (const raw of files) {
+            const result = (message: string, item?: PlatformInboxItem): PlatformInboxResult => ({
+              itemId: item?.id ?? null,
+              fileName: raw.name,
+              status: item?.status ?? null,
+              pfaId: item?.pfaId ?? null,
+              pfaName: item?.pfaName ?? null,
+              matchedBy: item?.matchedBy ?? null,
+              message,
+            })
+            if (!raw.name.toLowerCase().endsWith('.pdf') && !raw.type.includes('pdf')) {
+              results.push(result('Doar fișiere PDF.'))
+              continue
+            }
+            const ref = await fileRefFrom(raw, 'file')
+            const existing = db.documents.find((document) => document.file.hash === ref.hash)
+            const queued = inbox.some((entry) => entry.ref.hash === ref.hash && OPEN_INBOX.includes(entry.item.status))
+            if (existing || queued || seen.has(ref.hash)) {
+              const owner = existing ? db.pfas.find((pfa) => pfa.id === existing.pfaId) : null
+              results.push(result(`Duplicat: fișierul e deja încărcat${owner ? ` la ${owner.name}` : ''}.`))
+              continue
+            }
+            seen.add(ref.hash)
+
+            const item: PlatformInboxItem = {
+              id: nextId('inbox'),
+              fileName: raw.name,
+              period: inboxPeriodOf(raw.name) ?? period,
+              status: 'MATCHING',
+              reason: null,
+              detectedCui: null,
+              platform: /uber/i.test(raw.name) ? 'UBER' : /bolt/i.test(raw.name) ? 'BOLT' : null,
+              documentType: 'UNKNOWN',
+              commissionAmount: null,
+              uploadedAt: nowIso(),
+              pfaId: null,
+              pfaName: null,
+              matchedBy: null,
+            }
+            inbox.push({ item, file: raw, ref })
+            const client = inboxClientOf(raw.name)
+            const strangerCui = raw.name.match(/\d{6,10}/)?.[0] ?? null
+            if (client) {
+              addUploadedDocument(client.pfa, item.period, raw, ref)
+              const reason = client.byCui ? `CUI ${client.pfa.cui} din document` : 'Numele fișierului'
+              Object.assign(item, { status: 'ASSIGNED', pfaId: client.pfa.id, pfaName: client.pfa.name, matchedBy: client.byCui ? 'CUI' : 'FILE_NAME', reason })
+              results.push(result(`Alocat: ${reason}.`, item))
+            } else if (strangerCui) {
+              Object.assign(item, { status: 'UNKNOWN_CUI', detectedCui: strangerCui, reason: `CUI ${strangerCui} nu aparține niciunui client PFA.` })
+              results.push(result(item.reason!, item))
+            } else {
+              item.reason = 'Fără CUI în document: se citește și se caută după comision.'
+              results.push(result(item.reason, item))
+              const startedIn = generation
+              setTimeout(() => {
+                if (startedIn !== generation || item.status !== 'MATCHING') return
+                Object.assign(item, { status: 'NEEDS_REVIEW', documentType: 'PLATFORM_REPORT', reason: 'De verificat: fără CUI și fără comision potrivit cu un client.' })
+              }, randomBetween(EXTRACTION_MS))
+            }
+          }
+          return results
+        }),
+
+      list: () =>
+        respond(() =>
+          inbox
+            .map(({ item }) => item)
+            .filter((item) => OPEN_INBOX.includes(item.status))
+            .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))
+            .map((item) => ({ ...item })),
+        ),
+
+      assign: (id, pfaId) =>
+        respond(() => {
+          const entry = inboxEntry(id)
+          const pfa = findPfa(pfaId)
+          ensureWritable(pfa)
+          ensurePeriodOpen(pfa.id, entry.item.period)
+          addUploadedDocument(pfa, entry.item.period, entry.file, entry.ref)
+          Object.assign(entry.item, { status: 'ASSIGNED', pfaId: pfa.id, pfaName: pfa.name, matchedBy: 'MANUAL', reason: 'Alocat de Admin' })
+        }),
+
+      dismiss: (id) =>
+        respond(() => {
+          inboxEntry(id).item.status = 'DISMISSED'
+        }),
+    },
+
     documents: {
       list: (pfaId, period) =>
         respond(() => {
@@ -1381,19 +1540,7 @@ export function createMockAccountingApi(): AccountingApi {
           if (existing) {
             throw conflict('DUPLICATE_FILE', `Fișierul a fost deja încărcat ca „${existing.fileName}”.`, { existingDocumentId: existing.id })
           }
-          const document = seedForUpload(pfa, period, request.file, nextId('doc'))
-          document.file = file
-          document.status = 'EXTRACTING'
-          db.documents.push(document)
-          audit(pfaId, 'PlatformDocument', document.id, 'UPLOAD', null, { fileName: document.fileName, period }, null)
-
-          const startedIn = generation
-          setTimeout(() => {
-            if (startedIn !== generation) return
-            extract(document)
-            refreshPrecheck(pfaId, period)
-          }, randomBetween(EXTRACTION_MS))
-          return toDocument(document)
+          return toDocument(addUploadedDocument(pfa, period, request.file, file))
         }),
 
       get: (id) => respond(() => toDetail(findDocument(id))),

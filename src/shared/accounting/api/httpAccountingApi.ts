@@ -111,6 +111,16 @@ export function createHttpAccountingApi(): AccountingApi {
       getCashPreference: async () => orNull(await get<CashPreference | ''>('me/cash-preference')),
       setCashPreference: (request) => put('me/cash-preference', request),
     },
+    platformInbox: {
+      upload: (period, files) => {
+        const data = form({ period })
+        files.forEach((file) => data.append('files', file))
+        return post('platform-inbox', data)
+      },
+      list: () => get('platform-inbox'),
+      assign: (id, pfaId) => post(`platform-inbox/${id}/assign`, { pfaId }),
+      dismiss: (id) => post(`platform-inbox/${id}/dismiss`),
+    },
     documents: {
       list: (pfaId, period) => get(`pfas/${pfaId}/platform-documents`, { period }),
       upload: (pfaId, request) => post(`pfas/${pfaId}/platform-documents`, form({ file: request.file, period: request.period })),

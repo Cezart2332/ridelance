@@ -78,6 +78,8 @@ import type {
   UpdateExtractionRequest,
   UpdateLedgerEntryRequest,
   UploadPlatformDocumentRequest,
+  PlatformInboxItem,
+  PlatformInboxResult,
   UploadReceiptRequest,
   ValidationResult,
   VatRate,
@@ -125,6 +127,18 @@ export interface AccountingApi {
   onboarding: {
     getCashPreference(): Promise<CashPreference | null>
     setCashPreference(request: { cashRequested: boolean }): Promise<CashPreference>
+  }
+
+  /**
+   * Încărcarea globală din „Clienți PFA”: fiecare fișier se alocă după CUI, după numele fișierului sau
+   * după comision; ce nu se poate aloca rămâne în listă până îl alocă sau îl respinge Adminul.
+   */
+  platformInbox: {
+    upload(period: Period, files: File[]): Promise<PlatformInboxResult[]>
+    /** Documentele nealocate: în căutare, de verificat, CUI necunoscut. */
+    list(): Promise<PlatformInboxItem[]>
+    assign(id: string, pfaId: string): Promise<void>
+    dismiss(id: string): Promise<void>
   }
 
   /** §4.2 */

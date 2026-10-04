@@ -1,7 +1,8 @@
 import { useDeferredValue, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
-import { Box, ButtonBase, InputAdornment, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from '@mui/material'
+import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded'
+import { Box, Button, ButtonBase, InputAdornment, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from '@mui/material'
 
 import { accountingApi } from '../../api/accountingApi'
 import type { ClientWorkspaceRow } from '../../api/types'
@@ -10,6 +11,7 @@ import { EmptyText, ErrorBlock, LoadingBlock } from '../components'
 import { useAccountingNav, type ClientSection } from '../navigation'
 import { useApi } from '../useApi'
 import { Avatar, MonthSelect, PageTitle, Panel, StatusPill } from './parts'
+import { UnassignedDocuments, UploadDocumentsDialog } from './PlatformInbox'
 import { bankCell, currentFiscalPeriod, DECLARATION_TYPES, declarationCell, documentsCell, HAIRLINE, INK, PRIMARY, TONES, type Tone } from './status'
 
 type Filter = 'ALL' | 'MISSING' | 'REVIEW' | 'READY' | 'INACTIVE'
@@ -36,6 +38,8 @@ export function ClientsTableView() {
   const current = currentFiscalPeriod()
   const period = nav.period ?? current
   const clients = useApi(() => accountingApi.clients.list(period), [period])
+  const inbox = useApi(() => accountingApi.platformInbox.list(), [])
+  const [uploading, setUploading] = useState(false)
   const [search, setSearch] = useState('')
   const query = fold(useDeferredValue(search.trim()))
   const [filter, setFilter] = useState<Filter>(nav.listTab === 'inactive' ? 'INACTIVE' : 'ALL')
@@ -68,8 +72,35 @@ export function ClientsTableView() {
     <Stack spacing={2.5} sx={{ minWidth: 0 }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ justifyContent: 'space-between', alignItems: { sm: 'flex-end' }, gap: 2 }}>
         <PageTitle>Clienți PFA</PageTitle>
-        <MonthSelect value={period} current={current} onChange={(value) => nav.setParam('luna', value)} />
+        <Stack direction="row" sx={{ gap: 1.5, alignItems: 'center' }}>
+          <Button variant="contained" startIcon={<UploadFileRoundedIcon />} onClick={() => setUploading(true)} sx={{ height: 56, whiteSpace: 'nowrap' }}>
+            Încarcă documente
+          </Button>
+          <MonthSelect value={period} current={current} onChange={(value) => nav.setParam('luna', value)} />
+        </Stack>
       </Stack>
+
+      {uploading && (
+        <UploadDocumentsDialog
+          open
+          period={period}
+          current={current}
+          onClose={() => setUploading(false)}
+          onUploaded={() => {
+            inbox.reload()
+            clients.reload()
+          }}
+        />
+      )}
+
+      <UnassignedDocuments
+        items={inbox.data ?? []}
+        clients={rows}
+        onChanged={() => {
+          inbox.reload()
+          clients.reload()
+        }}
+      />
 
       <Stack direction={{ xs: 'column', md: 'row' }} sx={{ gap: 1.5, alignItems: { md: 'center' } }}>
         <TextField

@@ -442,6 +442,40 @@ export interface UploadPlatformDocumentRequest {
   period: Period
 }
 
+/** Încărcarea globală din „Clienți PFA”: unde a ajuns fiecare fișier. */
+export type PlatformInboxStatus = 'MATCHING' | 'ASSIGNED' | 'NEEDS_REVIEW' | 'UNKNOWN_CUI' | 'DISMISSED' | 'FAILED'
+
+/** Cum s-a găsit clientul. */
+export type PlatformInboxMatch = 'CUI' | 'FILE_NAME' | 'COMMISSION' | 'MANUAL'
+
+/** Rezultatul unui fișier la încărcare; `status` lipsește când fișierul a fost refuzat (duplicat, nu e PDF). */
+export interface PlatformInboxResult {
+  itemId: string | null
+  fileName: string
+  status: PlatformInboxStatus | null
+  pfaId: string | null
+  pfaName: string | null
+  matchedBy: PlatformInboxMatch | null
+  message: string
+}
+
+/** Un document încărcat global care așteaptă clientul. */
+export interface PlatformInboxItem {
+  id: string
+  fileName: string
+  period: Period
+  status: PlatformInboxStatus
+  reason: string | null
+  detectedCui: string | null
+  platform: Platform | null
+  documentType: PlatformDocumentType
+  commissionAmount: number | null
+  uploadedAt: IsoDateTime
+  pfaId: string | null
+  pfaName: string | null
+  matchedBy: PlatformInboxMatch | null
+}
+
 export interface UpdateExtractionRequest {
   fields: Partial<ExtractedFields>
   /** Obligatoriu. */
