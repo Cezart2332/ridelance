@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Alert,
   Autocomplete,
@@ -25,7 +25,10 @@ import {
 import { getErrorMessage } from '../../../../utils/errorHandler'
 import { DateField } from '../../../common/DateField'
 
-type Step = 'pick-file' | 'extracting' | 'confirm'
+type Step = 'pick-file' | 'confirm'
+
+/** Ce face documentul în spate: se încarcă, se citește, gata sau necitit. */
+type Reading = 'uploading' | 'reading' | 'done' | 'failed' | null
 
 interface FormState {
   option: DeductibleExpenseOption | null
@@ -87,11 +90,22 @@ export function AddExpenseDialog({
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [reading, setReading] = useState<Reading>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
+  // Citirea continuă în spate; la închiderea dialogului se oprește.
+  const alive = useRef(true)
+  useEffect(() => {
+    alive.current = true
+    return () => {
+      alive.current = false
+    }
+  }, [])
 
   const handleFile = async (file: File) => {
     if (!pfaRegistrationId) return
-    setStep('extracting')
+    // Formularul apare imediat: omul poate completa singur cât documentul se citește.
+    setStep('confirm')
+    setReading('uploading')
     setError(null)
     setNotice(null)
 
@@ -106,18 +120,30 @@ export function AddExpenseDialog({
         month: new Date().getMonth() + 1,
         file,
       })
+      if (!alive.current) return
       setDraft(created)
+      setReading('reading')
 
-      const extracted = await pollExtraction(created.documentId)
+      const extracted = await pollExtraction(created.documentId, () => alive.current)
+      if (!alive.current) return
       if (extracted) {
-        setForm((prev) => ({ ...prev, ...extracted }))
+        // Doar câmpurile încă goale: ce a scris omul între timp rămâne.
+        setForm((prev) => {
+          const next = { ...prev }
+          for (const [key, value] of Object.entries(extracted) as [keyof FormState, string][]) {
+            if (value && !prev[key]) (next as Record<string, unknown>)[key] = value
+          }
+          return next
+        })
+        setReading('done')
       } else {
-        setNotice('Nu am putut citi automat documentul. Completează câmpurile manual.')
+        setReading('failed')
+        setNotice('Documentul nu a putut fi citit automat.')
       }
     } catch (cause) {
+      if (!alive.current) return
+      setReading(null)
       setError(getErrorMessage(cause, 'Documentul nu a putut fi încărcat.'))
-    } finally {
-      setStep('confirm')
     }
   }
 
@@ -209,17 +235,16 @@ export function AddExpenseDialog({
           </Stack>
         )}
 
-        {step === 'extracting' && (
-          <Stack spacing={2} sx={{ alignItems: 'center', py: 5 }}>
-            <CircularProgress size={30} sx={{ color: DASHBOARD_TOKENS.primary }} />
-            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>
-              Citim documentul…
-            </Typography>
-          </Stack>
-        )}
-
         {step === 'confirm' && (
           <Stack spacing={2} sx={{ pt: 1 }}>
+            {(reading === 'uploading' || reading === 'reading') && (
+              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                <CircularProgress size={14} sx={{ color: DASHBOARD_TOKENS.primary }} />
+                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>
+                  {reading === 'uploading' ? 'Se încarcă documentul…' : 'Citim documentul în fundal…'}
+                </Typography>
+              </Stack>
+            )}
             {notice && (
               <Alert severity="info" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
                 {notice}
@@ -323,8 +348,8 @@ export function AddExpenseDialog({
  * Jobul de extragere rulează asincron după upload, deci se așteaptă puțin. Dacă nu vine nimic
  * util, funcția întoarce null și formularul rămâne gol — nu se inventează valori.
  */
-async function pollExtraction(documentId: string): Promise<Partial<FormState> | null> {
-  for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt += 1) {
+async function pollExtraction(documentId: string, active: () => boolean): Promise<Partial<FormState> | null> {
+  for (let attempt = 0; attempt < POLL_ATTEMPTS && active(); attempt += 1) {
     try {
       const response = await documentService.getExtractedFields(documentId)
       const values = new Map(response.fields.map((field) => [field.fieldKey, field.effectiveValue]))
