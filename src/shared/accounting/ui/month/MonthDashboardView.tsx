@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  Alert,
   Box,
   Button,
   FormControlLabel,
@@ -139,6 +140,12 @@ export function MonthDashboardView() {
         <Stat label="Document lipsă" value={data?.stats.missingDocuments} active={statusFilter === 'MISSING_DOCUMENTS'} onClick={() => toggleStatus('MISSING_DOCUMENTS')} />
         <Stat label="Neprocesate" value={data?.stats.notProcessed} active={statusFilter === 'NOT_PROCESSED'} onClick={() => toggleStatus('NOT_PROCESSED')} />
       </Box>
+
+      {(data?.profileAlerts ?? []).map((alert) => (
+        <Alert key={alert.pfaId} severity="warning">
+          {alert.pfaName || 'PFA fără nume'}: {alert.reason}
+        </Alert>
+      ))}
 
       <Paper sx={{ p: 2.5 }}>
         <Stack spacing={2}>

@@ -666,6 +666,8 @@ export interface PeriodOverview {
   period: Period
   stats: PeriodStats
   rows: OverviewRow[]
+  /** PFA-uri care nu intră în lot (de ex. fără CIF), de completat în profil (QA 15). */
+  profileAlerts?: { pfaId: string; pfaName: string; reason: string }[] | null
 }
 
 export interface JobResultItem {
