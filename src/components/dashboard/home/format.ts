@@ -1,15 +1,10 @@
+import { formatLei } from '../../../shared/money'
+
 /**
  * Formatarea ro-RO, o singură implementare (spec §10).
  * Regula: în KPI tiles sumele peste 1000 se afișează fără zecimale; în tabel și în
  * breakdown-uri, mereu cu două zecimale.
  */
-
-const currencyFormatter = new Intl.NumberFormat('ro-RO', {
-  style: 'currency',
-  currency: 'RON',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})
 
 const compactFormatter = new Intl.NumberFormat('ro-RO', {
   minimumFractionDigits: 0,
@@ -26,15 +21,14 @@ const oneDecimalFormatter = new Intl.NumberFormat('ro-RO', {
   maximumFractionDigits: 1,
 })
 
-/** „10.652,00 lei" */
+/** „10.652,00 lei" — formatterul partajat (QA 23). */
 export function formatCurrency(value: number): string {
-  return currencyFormatter.format(value).replace('RON', 'lei').trim()
+  return formatLei(value)
 }
 
-/** „10.652 lei" — pentru KPI tiles; sub 1000 păstrează zecimalele, ca să nu piardă sens. */
+/** „10.652,00 lei" — și în KPI tiles, aceeași formă peste tot (QA 23). */
 export function formatCompact(value: number): string {
-  const rounded = Math.abs(value) >= 1000 ? compactFormatter.format(value) : decimalFormatter.format(value)
-  return `${rounded} lei`
+  return formatLei(value)
 }
 
 /** Etichetele de axă rămân fără zecimale — pe axă contează ordinul de mărime, nu banii. */

@@ -44,8 +44,12 @@ import {
  * Perioada are patru trepte și se poate plimba înainte/înapoi. Ce pleacă spre server sunt două
  * date calendaristice și gruparea coloanelor — vezi `bankPeriod.ts`.
  */
-export function BankActivityPanel({ userId }: { userId?: string }) {
-  const [period, setPeriod] = useState<BankPeriod>({ kind: 'month', anchor: new Date() })
+export function BankActivityPanel({ userId, month }: { userId?: string; month?: string }) {
+  // QA 22: pornește din luna aleasă în antetul paginii (`yyyy-MM`), nu din luna curentă.
+  const [period, setPeriod] = useState<BankPeriod>(() => {
+    const [year, monthNumber] = (month ?? '').split('-').map(Number)
+    return { kind: 'month', anchor: year && monthNumber ? new Date(year, monthNumber - 1, 1) : new Date() }
+  })
   const [page, setPage] = useState(1)
 
   const [activity, setActivity] = useState<BankActivityDto | null>(null)

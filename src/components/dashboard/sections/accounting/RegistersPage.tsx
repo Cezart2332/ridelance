@@ -1,3 +1,4 @@
+import { formatLei } from '../../../../shared/money'
 import { useCallback, useEffect, useState } from 'react'
 import {
   Alert,
@@ -30,8 +31,7 @@ import { INVENTORY_CATEGORIES } from '../../../../shared/accounting/api/types'
 import { ASSET_KIND_LABEL, INVENTORY_CATEGORY_LABEL } from '../../../../shared/accounting/statusLabels'
 import { getErrorMessage } from '../../../../utils/errorHandler'
 
-const lei = (value: number) =>
-  `${value.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} lei`
+const lei = (value: number) => formatLei(value)
 
 const dayLabel = (iso: string) => new Date(iso).toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' })
 

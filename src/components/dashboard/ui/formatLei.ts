@@ -1,9 +1,11 @@
-/** Sumele din dashboard se scriu la fel peste tot: întregi, cu separator românesc. */
+import { formatAmount, formatLei as formatLeiShared } from '../../../shared/money'
+
+/** Sumele din dashboard se scriu la fel peste tot (QA 23): „12.150,00 lei”. */
 export function formatLei(value: number | null | undefined): string {
-  return `${Math.round(value ?? 0).toLocaleString('ro-RO')} lei`
+  return formatLeiShared(value ?? 0)
 }
 
-/** Doar cifra, fără unitate — pentru axe de grafic și tabele strâmte. */
+/** Doar cifra, fără unitate — pentru tabele strâmte și tooltip-urile graficelor: „657,01”. */
 export function formatNumber(value: number | null | undefined): string {
-  return Math.round(value ?? 0).toLocaleString('ro-RO')
+  return formatAmount(value ?? 0)
 }

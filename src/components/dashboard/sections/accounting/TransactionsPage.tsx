@@ -1,3 +1,4 @@
+import { formatLei } from '../../../../shared/money'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Collapse,
@@ -44,8 +45,7 @@ const STATE: Record<ClientTransactionState, { label: string; tone: StatusTone }>
 const iso = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 
-const lei = (value: number) =>
-  `${value > 0 ? '+' : ''}${value.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} lei`
+const lei = (value: number) => `${value > 0 ? '+' : ''}${formatLei(value)}`
 
 const dayLabel = (value: string) => new Date(`${value}T00:00:00`).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short' })
 

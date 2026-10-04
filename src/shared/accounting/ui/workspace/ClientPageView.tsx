@@ -115,7 +115,7 @@ export function ClientPageView({ pfaId }: { pfaId: string }) {
         {section === 'luna' && <MonthTab key={period} summary={pfa} period={period} onSummaryChanged={summary.reload} onOpenSection={openSection} />}
         {section === 'banca' && (
           <Stack spacing={3}>
-            {userId && <BankActivityPanel userId={userId} />}
+            {userId && <BankActivityPanel key={period} userId={userId} month={period} />}
             <Typography component="h2" sx={{ fontSize: 16, fontWeight: 700, color: INK }}>
               Tranzacții contabile
             </Typography>

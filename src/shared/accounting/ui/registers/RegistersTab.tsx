@@ -108,17 +108,18 @@ function RjipCard({ summary, year, version }: DossierTabProps & { year: number; 
       )}
       {data && data.rows.length > 0 && (
         <TableContainer sx={{ overflowX: 'auto', maxHeight: 480 }}>
-          <Table size="small" stickyHeader sx={{ minWidth: 900 }}>
+          {/* QA 24: lățimi fixe; Explicații ia restul și se trunchiază (textul întreg în tooltip), fără coloane ascunse la 1366 px. */}
+          <Table size="small" stickyHeader sx={{ tableLayout: 'fixed', width: '100%', minWidth: 820 }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ width: 56 }}>Nr. crt.</TableCell>
-                <TableCell>Data</TableCell>
-                <TableCell>Document</TableCell>
-                <TableCell sx={{ minWidth: 240 }}>Explicații</TableCell>
-                <TableCell align="right">Încasări numerar</TableCell>
-                <TableCell align="right">Încasări bancă</TableCell>
-                <TableCell align="right">Plăți numerar</TableCell>
-                <TableCell align="right">Plăți bancă</TableCell>
+                <TableCell sx={{ width: 68 }}>Nr. crt.</TableCell>
+                <TableCell sx={{ width: 96 }}>Data</TableCell>
+                <TableCell sx={{ width: 220 }}>Document</TableCell>
+                <TableCell>Explicații</TableCell>
+                <TableCell align="right" sx={{ width: 100 }}>Încasări numerar</TableCell>
+                <TableCell align="right" sx={{ width: 100 }}>Încasări bancă</TableCell>
+                <TableCell align="right" sx={{ width: 100 }}>Plăți numerar</TableCell>
+                <TableCell align="right" sx={{ width: 100 }}>Plăți bancă</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -132,17 +133,17 @@ function RjipCard({ summary, year, version }: DossierTabProps & { year: number; 
                         <TableRow key={`${row.ledgerEntryId}-${index}`} sx={row.exception ? { bgcolor: (theme) => alpha(theme.palette.warning.main, 0.06) } : undefined}>
                           <TableCell sx={{ color: 'text.secondary' }}>{row.no ?? ''}</TableCell>
                           <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(row.date)}</TableCell>
-                          <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.document}</TableCell>
+                          <TableCell sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={row.document}>{row.document}</TableCell>
                           <TableCell>
-                            <Tooltip title={row.bankDetails ?? ''} disableHoverListener={!row.bankDetails} enterTouchDelay={0}>
-                              <Stack direction="row" sx={{ gap: 0.75, alignItems: 'center' }}>
-                                {row.exception && <WarningAmberRounded fontSize="small" color="warning" aria-hidden />}
-                                <span>{row.operation}</span>
+                            <Tooltip title={[row.operation, row.bankDetails].filter(Boolean).join(' · ')} enterTouchDelay={0}>
+                              <Stack direction="row" sx={{ gap: 0.75, alignItems: 'center', minWidth: 0 }}>
+                                {row.exception && <WarningAmberRounded fontSize="small" color="warning" aria-label={REGISTER_EXCEPTION_LABEL[row.exception]} />}
+                                <Typography variant="body2" noWrap sx={{ minWidth: 0 }}>{row.operation}</Typography>
                               </Stack>
                             </Tooltip>
-                            {row.exception && (
+                            {row.proposal && (
                               <Typography variant="caption" color="warning.dark" component="div">
-                                {row.proposal ? `Propunere: ${BANK_CLASSIFICATION_LABEL[row.proposal]}` : REGISTER_EXCEPTION_LABEL[row.exception]}
+                                Propunere: {BANK_CLASSIFICATION_LABEL[row.proposal]}
                               </Typography>
                             )}
                           </TableCell>
