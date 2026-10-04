@@ -16,14 +16,14 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
 import LockOpenRoundedIcon from '@mui/icons-material/LockOpenRounded';
 import EventBusyRoundedIcon from '@mui/icons-material/EventBusyRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
-import { TOKENS } from '../../../../constants/tokens';
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
+import { fade } from '../../../panel/tokens'
 import { ROMANIAN_MONTHS } from '../../../../utils/monthLabels';
 import { getErrorMessage } from '../../../../utils/errorHandler';
 import {
@@ -57,10 +57,10 @@ function formatDateRo(dateKey: string) {
 }
 
 const SLOT_STYLES: Record<string, { label: string; color: string; bg: string }> = {
-  free: { label: 'Liber', color: '#047857', bg: alpha('#10b981', 0.08) },
-  booked: { label: 'Rezervat', color: '#1d4ed8', bg: alpha('#3b82f6', 0.08) },
-  blocked: { label: 'Blocat', color: '#b91c1c', bg: alpha('#ef4444', 0.08) },
-  past: { label: 'Trecut', color: 'rgba(26,26,46,0.4)', bg: alpha(TOKENS.ink, 0.03) },
+  free: { label: 'Liber', color: 'var(--rl-green-text)', bg: fade('var(--rl-green-text)', 0.08) },
+  booked: { label: 'Rezervat', color: 'var(--rl-blue-text)', bg: fade('var(--rl-blue-text)', 0.08) },
+  blocked: { label: 'Blocat', color: 'var(--rl-red-text)', bg: fade('var(--rl-red-text)', 0.08) },
+  past: { label: 'Trecut', color: 'var(--rl-text-subtle)', bg: fade(TOKENS.ink, 0.03) },
 };
 
 export function OfficeCalendarAdminView() {
@@ -284,9 +284,9 @@ export function OfficeCalendarAdminView() {
                         const info = availability.get(dateKey);
                         const isSelected = selectedDate === dateKey;
                         const dotColor =
-                          info?.status === 'available' ? '#059669'
-                          : info?.status === 'full' ? '#b45309'
-                          : info?.status === 'closed' ? '#b91c1c'
+                          info?.status === 'available' ? 'var(--rl-green-text)'
+                          : info?.status === 'full' ? 'var(--rl-yellow-text)'
+                          : info?.status === 'closed' ? 'var(--rl-red-text)'
                           : 'transparent';
                         return (
                           <Box
@@ -308,9 +308,9 @@ export function OfficeCalendarAdminView() {
                               fontWeight: isSelected ? 850 : 650,
                               cursor: 'pointer',
                               border: `1px solid ${isSelected ? TOKENS.primaryStrong : 'transparent'}`,
-                              bgcolor: isSelected ? alpha(TOKENS.primary, 0.18) : 'transparent',
+                              bgcolor: isSelected ? fade(TOKENS.primary, 0.18) : 'transparent',
                               color: info?.status === 'past' ? TOKENS.textSubtle : TOKENS.ink,
-                              '&:hover': { bgcolor: alpha(TOKENS.primary, 0.1) },
+                              '&:hover': { bgcolor: fade(TOKENS.primary, 0.1) },
                             }}
                           >
                             {dayNum}
@@ -333,9 +333,9 @@ export function OfficeCalendarAdminView() {
 
                 <Stack direction="row" spacing={2} sx={{ mt: 2, flexWrap: 'wrap', rowGap: 0.5 }}>
                   {[
-                    { color: '#059669', label: 'Are intervale libere' },
-                    { color: '#b45309', label: 'Ocupat complet' },
-                    { color: '#b91c1c', label: 'Închis / blocat' },
+                    { color: 'var(--rl-green-text)', label: 'Are intervale libere' },
+                    { color: 'var(--rl-yellow-text)', label: 'Ocupat complet' },
+                    { color: 'var(--rl-red-text)', label: 'Închis / blocat' },
                   ].map((item) => (
                     <Stack key={item.label} direction="row" spacing={0.7} sx={{ alignItems: 'center' }}>
                       <Box sx={{ width: 9, height: 9, borderRadius: '50%', bgcolor: item.color }} />
@@ -434,7 +434,7 @@ export function OfficeCalendarAdminView() {
                           <Chip
                             label={style.label}
                             size="small"
-                            sx={{ height: 20, fontSize: '0.66rem', fontWeight: 650, color: style.color, bgcolor: '#fff' }}
+                            sx={{ height: 20, fontSize: '0.66rem', fontWeight: 650, color: style.color, bgcolor: TOKENS.paper }}
                           />
                           <Box sx={{ minWidth: 0, flex: 1 }}>
                             {slot.status === 'booked' && (
@@ -535,8 +535,8 @@ export function OfficeCalendarAdminView() {
                         size="small"
                         sx={{
                           fontWeight: 650,
-                          color: a.status === 'Confirmed' ? '#047857' : '#b91c1c',
-                          bgcolor: a.status === 'Confirmed' ? alpha('#10b981', 0.1) : alpha('#ef4444', 0.08),
+                          color: a.status === 'Confirmed' ? 'var(--rl-green-text)' : 'var(--rl-red-text)',
+                          bgcolor: a.status === 'Confirmed' ? fade('var(--rl-green-text)', 0.1) : fade('var(--rl-red-text)', 0.08),
                         }}
                       />
                       {a.status === 'Confirmed' && (
@@ -580,7 +580,7 @@ export function OfficeCalendarAdminView() {
                           p: 1.5,
                           borderRadius: `${TOKENS.radius.md}px`,
                           border: `1px solid ${TOKENS.border}`,
-                          bgcolor: row.isOpen ? 'transparent' : alpha(TOKENS.ink, 0.025),
+                          bgcolor: row.isOpen ? 'transparent' : fade(TOKENS.ink, 0.025),
                         }}
                       >
                         <Typography sx={{ fontWeight: 650, color: TOKENS.ink, width: 92, flexShrink: 0 }}>
@@ -628,7 +628,7 @@ export function OfficeCalendarAdminView() {
                   variant="contained"
                   onClick={handleSaveSchedule}
                   disabled={scheduleSaving}
-                  sx={{ mt: 2.5, fontWeight: 650, bgcolor: TOKENS.primary, color: '#fff' }}
+                  sx={{ mt: 2.5, fontWeight: 650, bgcolor: TOKENS.primary, color: TOKENS.primaryFg }}
                 >
                   {scheduleSaving ? 'Se salvează…' : 'Salvează programul'}
                 </Button>

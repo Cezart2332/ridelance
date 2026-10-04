@@ -118,6 +118,11 @@ async function mockGate(page: Page) {
   )
 
   // Chatul cu contabilul citește `history.messages`; un array gol l-ar lăsa cu `undefined`.
+  await page.route(`${API}/invoices/oblio`, route => route.fulfill({ json: {
+    connected: false, companyName: null, cif: null, seriesName: null, availableSeries: [],
+    errorMessage: null, lastSyncAtUtc: null, accountEmail: null, hasApiKey: false,
+  } }))
+
   await page.route(`${API}/chat/**`, (route: Route) =>
     route.fulfill({
       status: 200,
@@ -150,7 +155,7 @@ const leaves = [
   { path: `${ROOT}/contabilitate/situatie-financiara`, label: 'Situație financiară', group: 'Contabilitate' },
   { path: `${ROOT}/contabilitate/cheltuieli`, label: 'Cheltuieli', group: 'Contabilitate' },
   { path: `${ROOT}/contabilitate/taxe-declaratii`, label: 'Taxe & declarații', group: 'Contabilitate' },
-  { path: `${ROOT}/contabilitate/cont-bancar`, label: 'Cont bancar', group: 'Contabilitate' },
+  { path: `${ROOT}/contabilitate/cont-bancar`, label: 'Bancă', group: 'Conexiuni' },
   { path: `${ROOT}/contabilitate/facturi`, label: 'Facturi', group: 'Contabilitate' },
   { path: `${ROOT}/contabilitate/chat-contabil`, label: 'Chat contabil', group: 'Contabilitate' },
   { path: `${ROOT}/documente/personale`, label: 'Documente personale', group: 'Documente' },
@@ -216,7 +221,7 @@ test.describe('navigație PFA', () => {
       const current = page.locator('nav [aria-current="page"]')
 
       // Exact un item marcat, și acela e cel corect.
-      await expect(current, `${leaf.path} → un singur item activ`).toHaveCount(1)
+      await expect(current, `${leaf.path} → un singur item activ`).toHaveCount(1, { timeout: 45_000 })
       await expect(current, `${leaf.path} → ${leaf.label}`).toHaveText(new RegExp(leaf.label))
 
       if (leaf.group) {

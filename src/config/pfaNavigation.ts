@@ -49,6 +49,7 @@ export const PFA_PATHS = {
   financialOverview: at('contabilitate/situatie-financiara'),
   transactions: at('contabilitate/tranzactii'),
   registers: at('contabilitate/registre'),
+  anaf: at('contabilitate/spv-efactura'),
   expenses: at('contabilitate/cheltuieli'),
   taxes: at('contabilitate/taxe-declaratii'),
   fiscalProfile: at('contabilitate/profil-fiscal'),
@@ -117,12 +118,12 @@ export const PFA_NAV: NavEntry[] = [
         path: PFA_PATHS.financialOverview,
         hint: 'Analiza detaliată a banilor',
       },
-      { id: 'transactions', label: 'Tranzacții', path: PFA_PATHS.transactions, hint: 'Plăți, bonuri și încasări' },
-      { id: 'registers', label: 'Registre', path: PFA_PATHS.registers, hint: 'Inventar, active, registre anuale' },
+      { id: 'transactions', label: 'Încasări și plăți', path: PFA_PATHS.transactions, hint: 'Bancă, cash și documente justificative' },
+      { id: 'registers', label: 'Registrele mele', path: PFA_PATHS.registers, hint: 'Încasări și plăți, evidență fiscală, inventar și active' },
+      { id: 'anaf', label: 'SPV și e-Factura', path: PFA_PATHS.anaf, hint: 'Mesaje ANAF, facturi și documente sincronizate' },
       { id: 'expenses', label: 'Cheltuieli', path: PFA_PATHS.expenses, hint: 'Ce poți deduce din taxe' },
       { id: 'taxes', label: 'Taxe & declarații', path: PFA_PATHS.taxes, hint: 'Estimări și termene' },
       { id: 'fiscal-profile', label: 'Profil fiscal', path: PFA_PATHS.fiscalProfile, hint: 'Situația ta pentru estimări' },
-      { id: 'bank-account', label: 'Cont bancar', path: PFA_PATHS.bankAccount, hint: 'Cont conectat și tranzacții' },
       { id: 'invoices', label: 'Facturi', path: PFA_PATHS.invoices, hint: 'Emise prin Oblio' },
       {
         id: 'accountant-chat',
@@ -160,7 +161,7 @@ export const PFA_NAV: NavEntry[] = [
       { id: 'conn-bolt', label: 'Bolt', path: PFA_PATHS.connBolt, hint: 'Conexiune API și conturi' },
       { id: 'conn-uber', label: 'Uber', path: PFA_PATHS.connUber, hint: 'Import date și conturi' },
       { id: 'conn-oblio', label: 'OBLIO', path: PFA_PATHS.connOblio, hint: 'Facturare' },
-      { id: 'conn-bank', label: 'Bancă', path: PFA_PATHS.connBank, hint: 'Contul bancar PFA' },
+      { id: 'conn-bank', label: 'Bancă', path: PFA_PATHS.bankAccount, hint: 'Conectează contul bancar PFA' },
       { id: 'conn-eldrive', label: 'Eldrive', path: PFA_PATHS.connEldrive, hint: 'Încărcare cu tarif RIDElance' },
       { id: 'conn-fiscallink', label: 'FiscalLink', path: PFA_PATHS.connFiscalLink, hint: 'Casa de marcat' },
     ],
@@ -237,6 +238,9 @@ export const EXTRA_PAGE_ICONS: Record<string, SvgIconComponent> = {
 
 /** Iconițele per pagină, folosite de hub-ul mobil. Grupurile împrumută iconița categoriei. */
 export const LEAF_ICONS: Record<string, SvgIconComponent> = {
+  [PFA_PATHS.transactions]: AccountBalanceWalletRoundedIcon,
+  [PFA_PATHS.registers]: DescriptionRoundedIcon,
+  [PFA_PATHS.anaf]: AccountBalanceRoundedIcon,
   [PFA_PATHS.financialOverview]: InsertChartRoundedIcon,
   [PFA_PATHS.expenses]: AccountBalanceWalletRoundedIcon,
   [PFA_PATHS.taxes]: CalculateRoundedIcon,

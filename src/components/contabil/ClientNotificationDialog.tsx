@@ -17,7 +17,7 @@ import {
 } from '@mui/material'
 import { isAxiosError } from 'axios'
 
-import { TOKENS } from '../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../panel/tokens'
 import { pfaService, type ClientNotificationDestination } from '../../services/pfa.service'
 import {
   formatAccountingDeadline,

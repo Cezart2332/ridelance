@@ -5,7 +5,8 @@ import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
 import DoneRoundedIcon from '@mui/icons-material/DoneRounded'
 import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '../../store/hooks'
-import { DASHBOARD_TOKENS as T } from '../dashboard/dashboardTheme'
+import { DASHBOARD_TOKENS } from '../dashboard/dashboardTheme'
+import { PANEL_COMPAT_DASHBOARD_TOKENS as T } from '../panel/tokens'
 import { useNotifications } from './useNotifications'
 import { notificationDestination, notificationTitle } from './notificationDestination'
 
@@ -39,7 +40,7 @@ export function NotificationsPanel({ state, compact = false, onNavigate }: { sta
         {items.map((n) => {
           const destination = notificationDestination(n, role)
           return (
-            <Box component="li" key={n.id} sx={{ p: 2, borderBottom: `1px solid ${T.border}`, bgcolor: n.isRead ? 'transparent' : alpha(T.primary, 0.045) }}>
+            <Box component="li" key={n.id} sx={{ p: 2, borderBottom: `1px solid ${T.border}`, bgcolor: n.isRead ? 'transparent' : `var(--rl-hover, ${alpha(DASHBOARD_TOKENS.primary, 0.045)})` }}>
               <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5 }}>
                 {!n.isRead && <Box aria-label="Necitită" sx={{ width: 6, height: 6, flexShrink: 0, borderRadius: '50%', bgcolor: T.accent }} />}
                 <Typography sx={{ flex: 1, fontSize: '0.8rem', fontWeight: 600 }}>{notificationTitle(n)}</Typography>

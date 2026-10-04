@@ -9,11 +9,11 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded'
 import LocalTaxiRoundedIcon from '@mui/icons-material/LocalTaxiRounded'
 
-import { DASHBOARD_TOKENS } from '../../dashboardTheme'
+import { PANEL_COMPAT_DASHBOARD_TOKENS as DASHBOARD_TOKENS } from '../../../panel/tokens'
+import { fade } from '../../../panel/tokens'
 import { uberService, type UberDashboardDto } from '../../../../services/uber.service'
 
 interface UberImportAdminPanelProps {
@@ -94,7 +94,7 @@ export function UberImportAdminPanel({ pfaRegistrationId, clientName }: UberImpo
       sx={{
         p: 3,
         borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
-        border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
+        border: `1px solid ${fade(DASHBOARD_TOKENS.ink, 0.08)}`,
         boxShadow: DASHBOARD_TOKENS.shadow.sm,
       }}
     >
@@ -113,7 +113,7 @@ export function UberImportAdminPanel({ pfaRegistrationId, clientName }: UberImpo
               display: 'grid',
               placeItems: 'center',
               color: DASHBOARD_TOKENS.accent,
-              bgcolor: alpha(DASHBOARD_TOKENS.accent, 0.1),
+              bgcolor: fade(DASHBOARD_TOKENS.accent, 0.1),
             }}
           >
             <LocalTaxiRoundedIcon />

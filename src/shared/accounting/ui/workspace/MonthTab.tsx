@@ -26,7 +26,7 @@ interface NextStep {
   actions: ReactNode
 }
 
-const DARK = { bgcolor: INK, color: '#FFFFFF', '&:hover': { bgcolor: '#2d2d45' } }
+const DARK = { bgcolor: 'var(--rl-primary)', color: 'var(--rl-primary-fg)', '&:hover': { bgcolor: 'var(--rl-fg-soft)' } }
 const SIGNED_OR_LATER: DeclarationStatus[] = ['SIGNED', 'SUBMITTED', 'ACCEPTED']
 
 /** „Luna aceasta”: pasul următor, luna pe pași, documentele, declarațiile, datele clientului. */
@@ -82,7 +82,7 @@ export function MonthTab({
         text: missing,
         actions: (
           <>
-            <Button variant="outlined" onClick={() => setAsking(true)} sx={{ bgcolor: '#FFFFFF' }}>
+            <Button variant="outlined" onClick={() => setAsking(true)} sx={{ bgcolor: 'var(--rl-card)' }}>
               Cere clientului
             </Button>
             <Button variant="contained" component="label" htmlFor={uploadInputId(pfa.id)} sx={DARK}>
@@ -180,8 +180,8 @@ export function MonthTab({
           <Box component="ol" aria-label="Luna pe pași" sx={{ m: 0, p: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(4, minmax(0, 1fr))' }, gap: 1.5 }}>
             {steps.map((item, index) => (
               <Box component="li" key={item.label} sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                <Box sx={{ height: 6, borderRadius: 999, bgcolor: item.tone === 'gray' ? '#E5EEF2' : TONES[item.tone].dot }} />
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: item.tone === 'gray' ? '#6B6B7B' : INK }}>
+                <Box sx={{ height: 6, borderRadius: 999, bgcolor: item.tone === 'gray' ? 'var(--rl-muted)' : TONES[item.tone].dot }} />
+                <Typography sx={{ fontSize: 13, fontWeight: 600, color: item.tone === 'gray' ? 'var(--rl-text-muted)' : INK }}>
                   {index + 1}. {item.label}
                 </Typography>
               </Box>
@@ -218,7 +218,7 @@ export function MonthTab({
           <Stack spacing={1.25}>
             {details.map(([label, value]) => (
               <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 2, fontSize: 14 }}>
-                <Box component="span" sx={{ color: '#6B6B7B' }}>
+                <Box component="span" sx={{ color: 'var(--rl-text-muted)' }}>
                   {label}
                 </Box>
                 <Box component="span" sx={{ textAlign: 'right', overflowWrap: 'anywhere' }}>
@@ -232,7 +232,7 @@ export function MonthTab({
           <Typography component="h2" sx={{ fontSize: 16, fontWeight: 700, color: INK, mb: 1 }}>
             Mesaje
           </Typography>
-          <Button onClick={() => onOpenSection('mesaje')} sx={{ px: 0, color: '#2B8FB8', fontWeight: 600 }}>
+          <Button onClick={() => onOpenSection('mesaje')} sx={{ px: 0, color: 'var(--rl-blue-text)', fontWeight: 600 }}>
             Deschide conversația
           </Button>
         </Panel>

@@ -49,6 +49,8 @@ import type {
   PlatformDocumentDetail,
   PlatformDocumentListItem,
   PlatformInboxItem,
+  FiscalOverview,
+  FiscalOverviewRow,
   PlatformInboxResult,
   PlatformInboxStatus,
   PlatformDocumentStatus,
@@ -1420,6 +1422,30 @@ export function createMockAccountingApi(): AccountingApi {
           db.myCashPreference = { cashRequested: request.cashRequested, answeredAt: nowIso() }
           audit(null, 'CashPreference', 'me', request.cashRequested ? 'CASH_PENDING' : 'CASH_NOT_REQUIRED_CURRENT_CONFIGURATION', before, db.myCashPreference, null)
           return db.myCashPreference
+        }),
+    },
+
+    fiscal: {
+      overview: (year) =>
+        respond((): FiscalOverview => {
+          // Cifre deterministe pe client, ca tabelul să arate toate situațiile: praguri CAS, plafonul TVA.
+          const profiles = ['Standard', 'Salariat ≥ 6 salarii', 'Pensionar', 'Standard', 'Student', 'Salariat < 6 salarii', 'Standard']
+          const rows = db.pfas.map((pfa, index): FiscalOverviewRow => {
+            if (index % 9 === 8) {
+              return { pfaId: pfa.id, profileStatus: index % 2 ? 'DRAFT' : 'NOT_STARTED', profileLabel: null, asOf: null, stale: false, grossIncome: null, expenses: null, netIncome: null, cas: null, cass: null, incomeTax: null, totalTaxes: null }
+            }
+            const gross = 28_000 + ((index * 37_919) % 360_000)
+            const expenses = Math.round(gross * (0.28 + (index % 5) * 0.06))
+            const net = gross - expenses
+            const label = profiles[index % profiles.length]
+            const exempt = label === 'Pensionar'
+            const casBase = exempt || net < 48_600 ? 0 : net < 97_200 ? 48_600 : 97_200
+            const cas = casBase * 0.25
+            const cass = Math.round(Math.min(Math.max(net, label === 'Standard' ? 24_300 : 0), 291_600) * 0.1)
+            const tax = Math.round(Math.max(0, net - cas - cass) * 0.1)
+            return { pfaId: pfa.id, profileStatus: 'COMPLETED', profileLabel: label, asOf: `${year}-09-30`, stale: index % 7 === 3, grossIncome: gross, expenses, netIncome: net, cas, cass, incomeTax: tax, totalTaxes: cas + cass + tax }
+          })
+          return { year, thresholds: { cas12: 48_600, cas24: 97_200, cassMin: 24_300, cassMax: 291_600, vatArt310: 395_000 }, rows }
         }),
     },
 

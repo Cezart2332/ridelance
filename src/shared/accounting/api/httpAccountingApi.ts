@@ -2,7 +2,7 @@ import axios, { type AxiosRequestConfig } from 'axios'
 import { api } from '../../../lib/axios'
 import type { AccountingApi, RuleResource } from './contract'
 import { AccountingApiError } from './errors'
-import type { Asset, CashPreference, ExchangeRate, ValidationResult, VatRegistration } from './types'
+import type { Asset, CashPreference, ExchangeRate, FiscalOverview, ValidationResult, VatRegistration } from './types'
 
 /**
  * Implementarea HTTP a contractului (B9), peste instanța `api` din `lib/axios` (token, refresh).
@@ -110,6 +110,15 @@ export function createHttpAccountingApi(): AccountingApi {
     onboarding: {
       getCashPreference: async () => orNull(await get<CashPreference | ''>('me/cash-preference')),
       setCashPreference: (request) => put('me/cash-preference', request),
+    },
+    fiscal: {
+      overview: async (year) => {
+        const overview = await get<FiscalOverview>('fiscal-overview', { year })
+        if (!overview || !Array.isArray(overview.rows) || overview.year !== year) {
+          throw new AccountingApiError(502, 'INVALID_RESPONSE', 'Rezumatul fiscal nu este disponibil. Verifică versiunea serviciului de contabilitate.')
+        }
+        return overview
+      },
     },
     platformInbox: {
       upload: (period, files) => {

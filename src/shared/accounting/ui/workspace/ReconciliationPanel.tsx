@@ -13,7 +13,7 @@ import { useApi } from '../useApi'
 import { Panel, StatusPill } from './parts'
 import { HAIRLINE, INK, MUTED, type Cell } from './status'
 
-const DARK = { bgcolor: INK, color: '#FFFFFF', '&:hover': { bgcolor: '#2d2d45' } }
+const DARK = { bgcolor: 'var(--rl-primary)', color: 'var(--rl-primary-fg)', '&:hover': { bgcolor: 'var(--rl-fg-soft)' } }
 
 function controlCell(control: ReconciliationControlResult): Cell {
   if (!control.applicable) return { tone: 'gray', label: 'Nu e cazul' }

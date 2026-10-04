@@ -9,7 +9,7 @@ import { downloadBlob, errorMessage, openBlob, useApi } from '../useApi'
 import { StatusPill } from './parts'
 import { HAIRLINE, INK, MUTED, VAT_STATUS_CELL } from './status'
 
-const DARK = { bgcolor: INK, color: '#FFFFFF', '&:hover': { bgcolor: '#2d2d45' } }
+const DARK = { bgcolor: 'var(--rl-primary)', color: 'var(--rl-primary-fg)', '&:hover': { bgcolor: 'var(--rl-fg-soft)' } }
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (

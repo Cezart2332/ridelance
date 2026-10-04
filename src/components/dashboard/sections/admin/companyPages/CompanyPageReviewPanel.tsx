@@ -18,14 +18,14 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
 import BlockRoundedIcon from '@mui/icons-material/BlockRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 
-import { TOKENS } from '../../../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../../panel/tokens'
+import { fade } from '../../../../panel/tokens'
 import { getErrorMessage } from '../../../../../utils/errorHandler'
 import {
   adminCompanyPageService,
@@ -128,7 +128,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
                 sx={{ fontWeight: 700, fontSize: '0.68rem' }}
               />
             </Stack>
-            <Typography sx={{ mt: 0.6, fontSize: '0.85rem', color: alpha(TOKENS.ink, 0.62) }}>
+            <Typography sx={{ mt: 0.6, fontSize: '0.85rem', color: fade(TOKENS.ink, 0.62) }}>
               {detail.ownerEmail}
               {detail.cui && ` · CUI ${detail.cui}`}
               {` · ${detail.publicCarCount} ${detail.publicCarCount === 1 ? 'mașină publică' : 'mașini publice'}`}
@@ -161,7 +161,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
         </Alert>
 
         {detail.moderation.note && (
-          <Typography sx={{ mt: 1.5, fontSize: '0.85rem', color: alpha(TOKENS.ink, 0.7) }}>
+          <Typography sx={{ mt: 1.5, fontSize: '0.85rem', color: fade(TOKENS.ink, 0.7) }}>
             <strong>Ultimul mesaj trimis firmei:</strong> {detail.moderation.note}
           </Typography>
         )}
@@ -229,14 +229,14 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
               </Button>
             </Stack>
 
-            <Typography sx={{ mt: 1.4, fontSize: '0.8rem', color: alpha(TOKENS.ink, 0.6) }}>
+            <Typography sx={{ mt: 1.4, fontSize: '0.8rem', color: fade(TOKENS.ink, 0.6) }}>
               Aprobarea publică versiunea din ciornă, cu secțiunile bifate mai jos oprite.
             </Typography>
           </Card>
 
           <Card>
             <SectionTitle>Secțiuni oprite</SectionTitle>
-            <Typography sx={{ mb: 1.2, fontSize: '0.85rem', color: alpha(TOKENS.ink, 0.62) }}>
+            <Typography sx={{ mb: 1.2, fontSize: '0.85rem', color: fade(TOKENS.ink, 0.62) }}>
               O secțiune oprită nu apare public și nu poate fi reactivată de proprietar. Flota și
               contactul lipsesc din listă: acolo nu se scrie text liber.
             </Typography>
@@ -268,7 +268,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
             >
               Salvează secțiunile
             </Button>
-            <Typography sx={{ mt: 1, fontSize: '0.8rem', color: alpha(TOKENS.ink, 0.6) }}>
+            <Typography sx={{ mt: 1, fontSize: '0.8rem', color: fade(TOKENS.ink, 0.6) }}>
               Se aplică imediat, și pe versiunea deja publicată. Verdictul rămâne neschimbat.
             </Typography>
           </Card>
@@ -288,7 +288,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
                     height: 72,
                     objectFit: 'contain',
                     borderRadius: `${TOKENS.radius.md}px`,
-                    border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+                    border: `1px solid ${fade(TOKENS.ink, 0.08)}`,
                   }}
                 />
                 <Box>
@@ -302,14 +302,14 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
                   >
                     Scoate logo-ul
                   </Button>
-                  <Typography sx={{ mt: 0.8, fontSize: '0.8rem', color: alpha(TOKENS.ink, 0.6) }}>
+                  <Typography sx={{ mt: 0.8, fontSize: '0.8rem', color: fade(TOKENS.ink, 0.6) }}>
                     Se aplică imediat, fără aprobare: logo-ul apare și pe cardurile de anunț din
                     marketplace. Fără el se afișează inițialele firmei.
                   </Typography>
                 </Box>
               </Stack>
             ) : (
-              <Typography sx={{ mb: 2.5, fontSize: '0.85rem', color: alpha(TOKENS.ink, 0.62) }}>
+              <Typography sx={{ mb: 2.5, fontSize: '0.85rem', color: fade(TOKENS.ink, 0.62) }}>
                 Firma n-a încărcat niciun logo.
               </Typography>
             )}
@@ -330,7 +330,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
                     maxHeight: 180,
                     objectFit: 'cover',
                     borderRadius: `${TOKENS.radius.md}px`,
-                    border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+                    border: `1px solid ${fade(TOKENS.ink, 0.08)}`,
                   }}
                 />
                 <Button
@@ -343,12 +343,12 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
                 >
                   Scoate fotografia
                 </Button>
-                <Typography sx={{ fontSize: '0.8rem', color: alpha(TOKENS.ink, 0.6) }}>
+                <Typography sx={{ fontSize: '0.8rem', color: fade(TOKENS.ink, 0.6) }}>
                   Dispare acum și de pe versiunea publicată, nu la următoarea aprobare.
                 </Typography>
               </Stack>
             ) : (
-              <Typography sx={{ fontSize: '0.85rem', color: alpha(TOKENS.ink, 0.62) }}>
+              <Typography sx={{ fontSize: '0.85rem', color: fade(TOKENS.ink, 0.62) }}>
                 Firma n-a încărcat nicio fotografie.
               </Typography>
             )}
@@ -356,7 +356,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
 
           <Card>
             <SectionTitle>Corectează textul</SectionTitle>
-            <Typography sx={{ mb: 2, fontSize: '0.85rem', color: alpha(TOKENS.ink, 0.62) }}>
+            <Typography sx={{ mb: 2, fontSize: '0.85rem', color: fade(TOKENS.ink, 0.62) }}>
               Modifică ciorna firmei. Nu publică nimic — după corectură, apasă „Aprobă și publică”.
             </Typography>
 
@@ -432,7 +432,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
             </Alert>
           )}
 
-          <Typography sx={{ mt: 1.5, fontSize: '0.8rem', color: alpha(TOKENS.ink, 0.6) }}>
+          <Typography sx={{ mt: 1.5, fontSize: '0.8rem', color: fade(TOKENS.ink, 0.6) }}>
             Mașinile lipsesc din previzualizare — au propriul flux de aprobare. Secțiunile bifate
             mai sus sunt deja scoase din ce vezi aici.
           </Typography>
@@ -442,7 +442,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
       <Dialog open={rejectOpen} onClose={() => setRejectOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle sx={{ fontWeight: 800 }}>Refuză pagina</DialogTitle>
         <DialogContent>
-          <Typography sx={{ mb: 2, fontSize: '0.88rem', color: alpha(TOKENS.ink, 0.7) }}>
+          <Typography sx={{ mb: 2, fontSize: '0.88rem', color: fade(TOKENS.ink, 0.7) }}>
             Pagina iese de pe internet imediat. Motivul e obligatoriu: proprietarul îl citește în
             editorul lui și fără el ar retrimite exact aceeași pagină.
           </Typography>
@@ -486,7 +486,7 @@ function Card({ children }: { children: React.ReactNode }) {
       sx={{
         p: { xs: 2, md: 2.5 },
         borderRadius: `${TOKENS.radius.lg}px`,
-        border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+        border: `1px solid ${fade(TOKENS.ink, 0.08)}`,
       }}
     >
       {children}

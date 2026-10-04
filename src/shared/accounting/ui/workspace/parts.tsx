@@ -9,7 +9,7 @@ import { HAIRLINE, INK, initials, recentPeriods, TONES, type Cell, type Tone } f
 export function StatusPill({ cell }: { cell: Cell | null }) {
   if (!cell) {
     return (
-      <Typography component="span" sx={{ color: '#9A9AA8', fontSize: 14 }}>
+      <Typography component="span" sx={{ color: 'var(--rl-text-subtle)', fontSize: 14 }}>
         —
       </Typography>
     )
@@ -53,7 +53,7 @@ export function Dot({ tone, size = 10 }: { tone: Tone; size?: number }) {
 
 export function Panel({ children, sx }: { children: ReactNode; sx?: object }) {
   return (
-    <Box sx={{ bgcolor: '#FFFFFF', border: `1px solid ${HAIRLINE}`, borderRadius: '12px', minWidth: 0, ...sx }}>
+    <Box sx={{ bgcolor: 'var(--rl-card)', border: `1px solid ${HAIRLINE}`, borderRadius: '10px', minWidth: 0, ...sx }}>
       {children}
     </Box>
   )
@@ -68,7 +68,7 @@ export function Avatar({ name, size = 40 }: { name: string; size?: number }) {
         height: size,
         flexShrink: 0,
         borderRadius: '50%',
-        bgcolor: 'rgba(92,203,245,0.16)',
+        bgcolor: 'var(--rl-muted)',
         color: INK,
         display: 'flex',
         alignItems: 'center',
@@ -84,7 +84,7 @@ export function Avatar({ name, size = 40 }: { name: string; size?: number }) {
 
 export function PageTitle({ children }: { children: ReactNode }) {
   return (
-    <Typography component="h1" sx={{ m: 0, fontSize: { xs: 24, md: 30 }, fontWeight: 700, letterSpacing: '-0.03em', color: INK }}>
+    <Typography component="h1" sx={{ m: 0, fontSize: 20, fontWeight: 650, letterSpacing: '-0.025em', color: INK }}>
       {children}
     </Typography>
   )
@@ -94,10 +94,10 @@ export function SectionTitle({ tone, title, count }: { tone?: Tone; title: strin
   return (
     <Stack direction="row" sx={{ alignItems: 'center', gap: 1.25 }}>
       {tone && <Dot tone={tone} />}
-      <Typography component="h2" sx={{ m: 0, fontSize: 16, fontWeight: 700, color: INK }}>
+      <Typography component="h2" sx={{ m: 0, fontSize: 14, fontWeight: 600, color: INK }}>
         {title}
       </Typography>
-      {count !== undefined && <Typography sx={{ fontSize: 14, color: '#6B6B7B' }}>{count}</Typography>}
+      {count !== undefined && <Typography sx={{ fontSize: 14, color: 'var(--rl-text-muted)' }}>{count}</Typography>}
     </Stack>
   )
 }

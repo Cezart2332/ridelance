@@ -7,7 +7,7 @@ import type {
 import type { BlockableSectionId, PublicCompany } from '../../../../../services/company.service'
 import { CompanySite } from '../../../../company/CompanySite'
 import { withoutBlockedSections } from '../../../../company/sections'
-import { TOKENS } from '../../../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../../panel/tokens'
 
 /**
  * Pagina firmei, randată exact cu componenta pe care o vede vizitatorul.
@@ -38,7 +38,7 @@ export function CompanyPagePreview({
     <Box
       sx={{
         borderRadius: `${TOKENS.radius.md}px`,
-        border: `1px solid rgba(0,0,0,0.08)`,
+        border: `1px solid var(--rl-border)`,
         overflow: 'hidden',
         maxHeight,
         overflowY: 'auto',

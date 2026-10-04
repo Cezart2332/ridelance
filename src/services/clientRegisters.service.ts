@@ -5,10 +5,21 @@ import type {
   Asset,
   InventoryCount,
   InventoryItemRequest,
+  RjipView,
+  RefView,
 } from '../shared/accounting/api/types'
 
 /** Registrele văzute de PFA (spec registre §8): inventarul de confirmat, activele, pachetele anuale. */
 export const clientRegistersService = {
+  async rjip(year: number): Promise<RjipView> {
+    return (await api.get<RjipView>('/pfa/accounting/registers/rjip', { params: { from: `${year}-01-01`, to: `${year}-12-31` } })).data
+  },
+  async ref(year: number): Promise<RefView> {
+    return (await api.get<RefView>('/pfa/accounting/registers/ref', { params: { year } })).data
+  },
+  async exportRegister(kind: 'rjip' | 'ref' | 'inventory', year: number): Promise<Blob> {
+    return (await api.get<Blob>(`/pfa/accounting/registers/${kind}/export`, { params: kind === 'rjip' ? { from: `${year}-01-01`, to: `${year}-12-31` } : { year }, responseType: 'blob' })).data
+  },
   /** Inventarierea de confirmat, altfel ultima finală; `null` dacă nu există niciuna. */
   async inventory(): Promise<InventoryCount | null> {
     const response = await api.get<InventoryCount | ''>('/pfa/inventory')

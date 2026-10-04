@@ -12,7 +12,6 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import InboxRoundedIcon from '@mui/icons-material/InboxRounded'
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded'
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
@@ -25,7 +24,8 @@ import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded'
 
-import { TOKENS } from '../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../panel/tokens'
+import { fade } from '../panel/tokens'
 import { documentService, type DocumentSummary } from '../../services/document.service'
 import { formatDocumentCategory } from '../../utils/formatters'
 import { documentStatusColors, documentStatusLabel, normalizeDocumentStatus } from '../../utils/documentStatus'
@@ -58,30 +58,30 @@ function ExpiryBadge({ expiresAtUtc }: { expiresAtUtc?: string | null }) {
     expired: {
       icon: <ErrorRoundedIcon sx={{ fontSize: '13px !important' }} />,
       label: 'Expirat',
-      color: '#dc2626',
-      bg: alpha('#ef4444', 0.1),
-      border: alpha('#ef4444', 0.25),
+      color: 'var(--rl-red-text)',
+      bg: fade('var(--rl-red-text)', 0.1),
+      border: fade('var(--rl-red-text)', 0.25),
     },
     soon7: {
       icon: <WarningAmberRoundedIcon sx={{ fontSize: '13px !important' }} />,
       label: `Exp. ${formatted}`,
-      color: '#dc2626',
-      bg: alpha('#ef4444', 0.08),
-      border: alpha('#ef4444', 0.18),
+      color: 'var(--rl-red-text)',
+      bg: fade('var(--rl-red-text)', 0.08),
+      border: fade('var(--rl-red-text)', 0.18),
     },
     soon30: {
       icon: <WarningAmberRoundedIcon sx={{ fontSize: '13px !important' }} />,
       label: `Exp. ${formatted}`,
-      color: '#b45309',
-      bg: alpha('#f59e0b', 0.1),
-      border: alpha('#f59e0b', 0.22),
+      color: 'var(--rl-yellow-text)',
+      bg: fade('var(--rl-yellow-text)', 0.1),
+      border: fade('var(--rl-yellow-text)', 0.22),
     },
     valid: {
       icon: <CheckCircleOutlineRoundedIcon sx={{ fontSize: '13px !important' }} />,
       label: `Exp. ${formatted}`,
-      color: '#059669',
-      bg: alpha('#10b981', 0.08),
-      border: alpha('#10b981', 0.2),
+      color: 'var(--rl-green-text)',
+      bg: fade('var(--rl-green-text)', 0.08),
+      border: fade('var(--rl-green-text)', 0.2),
     },
   }
 
@@ -220,8 +220,8 @@ export function ContabilDocumentReviewList({
               fontWeight: 600,
               borderRadius: `${TOKENS.radius.full}px`,
               minWidth: 170,
-              '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.12) },
-              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.primary, 0.4) },
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.ink, 0.12) },
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.primary, 0.4) },
               '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: TOKENS.primary },
             }}
           >
@@ -273,8 +273,8 @@ export function ContabilDocumentReviewList({
                   alignItems: 'center',
                   gap: 2,
                   borderRadius: `${TOKENS.radius.md}px`,
-                  bgcolor: alpha(TOKENS.surface, 0.5),
-                  border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+                  bgcolor: fade(TOKENS.surface, 0.5),
+                  border: `1px solid ${fade(TOKENS.ink, 0.08)}`,
                 }}
               >
                 <InsertDriveFileRoundedIcon sx={{ color: TOKENS.primary, fontSize: 24, flexShrink: 0 }} />
@@ -310,7 +310,7 @@ export function ContabilDocumentReviewList({
                         size="small"
                         onClick={() => handleStatus(doc.id, 'Verified')}
                         disabled={statusUpdatingId === doc.id}
-                        sx={{ color: '#10b981' }}
+                        sx={{ color: 'var(--rl-green-text)' }}
                         title="Aprobă"
                       >
                         {statusUpdatingId === doc.id ? (
@@ -323,7 +323,7 @@ export function ContabilDocumentReviewList({
                         size="small"
                         onClick={() => handleStatus(doc.id, 'Rejected')}
                         disabled={statusUpdatingId === doc.id}
-                        sx={{ color: '#ef4444' }}
+                        sx={{ color: 'var(--rl-red-text)' }}
                         title="Respinge"
                       >
                         <CancelRoundedIcon fontSize="small" />

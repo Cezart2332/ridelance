@@ -1,7 +1,7 @@
 import { Chip } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 
 import type { CompanyPageReviewStatus } from '../../../../../services/company.service'
+import { fade } from '../../../../panel/tokens'
 
 /**
  * Verdictul unei pagini, ca etichetă.
@@ -10,10 +10,10 @@ import type { CompanyPageReviewStatus } from '../../../../../services/company.se
  * pentru aceleași patru stări ar fi ajuns, la prima stare nouă, să nu mai coincidă.
  */
 const STATUS_STYLE: Record<CompanyPageReviewStatus, { label: string; color: string }> = {
-  Pending: { label: 'De verificat', color: '#f59e0b' },
-  Approved: { label: 'Publicată', color: '#10b981' },
-  Rejected: { label: 'Refuzată', color: '#ef4444' },
-  Draft: { label: 'Ciornă goală', color: '#94a3b8' },
+  Pending: { label: 'De verificat', color: 'var(--rl-yellow-text)' },
+  Approved: { label: 'Publicată', color: 'var(--rl-green-text)' },
+  Rejected: { label: 'Refuzată', color: 'var(--rl-red-text)' },
+  Draft: { label: 'Ciornă goală', color: 'var(--rl-text-muted)' },
 }
 
 export function statusChip(status: CompanyPageReviewStatus) {
@@ -26,9 +26,9 @@ export function statusChip(status: CompanyPageReviewStatus) {
       sx={{
         fontWeight: 700,
         fontSize: '0.68rem',
-        bgcolor: alpha(style.color, 0.1),
+        bgcolor: fade(style.color, 0.1),
         color: style.color,
-        border: `1px solid ${alpha(style.color, 0.25)}`,
+        border: `1px solid ${fade(style.color, 0.25)}`,
       }}
     />
   )

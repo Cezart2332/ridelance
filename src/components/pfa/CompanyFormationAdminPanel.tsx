@@ -16,11 +16,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import { isAxiosError } from 'axios'
 import { useCallback, useEffect, useState } from 'react'
 
-import { TOKENS } from '../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS, fade as alpha } from '../panel/tokens'
 import {
   companyFormationService,
   type AdminCompanyFormation,
@@ -54,7 +53,7 @@ function formatAddress(a: Adresa): string {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <Stack direction="row" spacing={2} sx={{ alignItems: 'baseline' }}>
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 0.5, sm: 2 }} sx={{ alignItems: 'baseline' }}>
       <Typography variant="body2" sx={{ color: TOKENS.textMuted, minWidth: 168, flexShrink: 0 }}>
         {label}
       </Typography>
@@ -86,7 +85,7 @@ function PersonBlock({
       </Typography>
       <Row label="Nume" value={`${persoana.nume ?? '—'} ${persoana.prenume ?? ''}`.trim()} />
 
-      <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+      <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 1 }}>
         <Typography variant="body2" sx={{ color: TOKENS.textMuted, minWidth: 168, flexShrink: 0 }}>
           CNP
         </Typography>

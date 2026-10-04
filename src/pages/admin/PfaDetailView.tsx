@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Divider, LinearProgress, Paper, Stack, ThemeProvider, Typography } from '@mui/material'
+import { Alert, Box, Button, Divider, LinearProgress, Paper, Stack, Typography } from '@mui/material'
 import { useEffect, useState, type ReactNode } from 'react'
 
 import {
@@ -23,7 +23,6 @@ import { DocumentRejectDialog } from '../../components/dashboard/sections/admin/
 import type { DocumentSummary } from '../../services/document.service'
 import { onboardingService, type OnboardingState } from '../../services/onboarding.service'
 import type { AdminPfaDetail } from '../../services/adminOverview.service'
-import { adminTheme } from '../../theme/adminTheme'
 import { DocumentLibrary } from '../../components/admin/DocumentLibrary'
 
 export interface PfaDetailSubject {
@@ -209,7 +208,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
       ]
 
   return (
-    <ThemeProvider theme={adminTheme}>
+    <>
       <Box sx={{ bgcolor: 'background.default', color: 'text.primary' }}>
         <Stack spacing={2} sx={{ maxWidth: 1400, mx: 'auto' }}>
           <PageHeader
@@ -435,6 +434,6 @@ export function PfaDetailView(props: PfaDetailViewProps) {
         onClose={() => setDocRejectTarget(null)}
         onConfirm={(doc, note) => onUpdateDocStatus(doc.id, 'Rejected', note)}
       />
-    </ThemeProvider>
+    </>
   )
 }

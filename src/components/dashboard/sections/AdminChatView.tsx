@@ -3,12 +3,12 @@ import { useState, useEffect, useRef } from 'react'
 import {
   Alert, Box, Paper, Typography, TextField, IconButton, Stack, CircularProgress, Avatar, Divider
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import SendRoundedIcon from '@mui/icons-material/SendRounded'
 import InboxRoundedIcon from '@mui/icons-material/InboxRounded'
 
-import { TOKENS } from '../../../constants/tokens'
-import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../panel/tokens'
+import { fade } from '../../panel/tokens'
+import { PANEL_COMPAT_DASHBOARD_TOKENS as DASHBOARD_TOKENS } from '../../panel/tokens'
 import { chatService, type ChatMessageDto } from '../../../services/chat.service'
 import { getChatConnection, startChatConnection } from '../../../lib/signalr'
 import { useAppSelector } from '../../../store/hooks'
@@ -86,8 +86,8 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
   return (
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '320px 1fr' }, gap: 3, height: '75vh' }}>
       {/* Sidebar with PFA List */}
-      <Paper elevation={0} sx={{ borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <Box sx={{ p: 2, borderBottom: `1px solid ${alpha(TOKENS.ink, 0.08)}`, bgcolor: alpha(TOKENS.surface, 0.5) }}>
+      <Paper elevation={0} sx={{ borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${fade(TOKENS.ink, 0.08)}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <Box sx={{ p: 2, borderBottom: `1px solid ${fade(TOKENS.ink, 0.08)}`, bgcolor: fade(TOKENS.surface, 0.5) }}>
           <Typography variant="h6" sx={{ fontWeight: 800 }}>Contacte</Typography>
         </Box>
         <Box sx={{ overflowY: 'auto', flex: 1, p: 1 }}>
@@ -100,14 +100,14 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
                 mb: 0.5,
                 borderRadius: `${TOKENS.radius.md}px`,
                 cursor: 'pointer',
-                bgcolor: selectedPfa?.id === pfa.id ? alpha(TOKENS.primary, 0.08) : 'transparent',
-                '&:hover': { bgcolor: alpha(TOKENS.primary, 0.04) },
+                bgcolor: selectedPfa?.id === pfa.id ? fade(TOKENS.primary, 0.08) : 'transparent',
+                '&:hover': { bgcolor: fade(TOKENS.primary, 0.04) },
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1.5
               }}
             >
-              <Avatar sx={{ width: 36, height: 36, bgcolor: alpha(TOKENS.primary, 0.12), color: TOKENS.primaryStrong, fontWeight: 700, fontSize: '0.9rem' }}>
+              <Avatar sx={{ width: 36, height: 36, bgcolor: fade(TOKENS.primary, 0.12), color: TOKENS.primaryStrong, fontWeight: 700, fontSize: '0.9rem' }}>
                 {pfa.userName[0]}
               </Avatar>
               <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -136,11 +136,11 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
       </Paper>
 
       {/* Chat Area */}
-      <Paper elevation={0} sx={{ borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <Paper elevation={0} sx={{ borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${fade(TOKENS.ink, 0.08)}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {selectedPfa ? (
           <>
-            <Box sx={{ p: 2, borderBottom: `1px solid ${alpha(TOKENS.ink, 0.08)}`, bgcolor: alpha(TOKENS.surface, 0.5), display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ bgcolor: alpha(TOKENS.primary, 0.12), color: TOKENS.primaryStrong, fontWeight: 700 }}>
+            <Box sx={{ p: 2, borderBottom: `1px solid ${fade(TOKENS.ink, 0.08)}`, bgcolor: fade(TOKENS.surface, 0.5), display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar sx={{ bgcolor: fade(TOKENS.primary, 0.12), color: TOKENS.primaryStrong, fontWeight: 700 }}>
                 {selectedPfa.userName[0]}
               </Avatar>
               <Box>
@@ -149,7 +149,7 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
               </Box>
             </Box>
 
-            <Box sx={{ flex: 1, p: 2, overflowY: 'auto', bgcolor: alpha(TOKENS.surface, 0.2) }}>
+            <Box sx={{ flex: 1, p: 2, overflowY: 'auto', bgcolor: fade(TOKENS.surface, 0.2) }}>
               {loading ? (
                 <Stack sx={{ alignItems: 'center', justifyContent: 'center', height: '100%' }} component="div">
                   <CircularProgress size={32} sx={{ color: TOKENS.primary }} />
@@ -176,8 +176,8 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
                                   p: 1.5,
                                   maxWidth: '75%',
                                   borderRadius: `${TOKENS.radius.md}px`,
-                                  backgroundColor: isMe ? `rgba(92,203,245,0.12)` : TOKENS.surface,
-                                  border: `1px solid ${isMe ? 'transparent' : alpha(TOKENS.ink, 0.08)}`,
+                                  backgroundColor: isMe ? TOKENS.surfaceAlt : TOKENS.surface,
+                                  border: `1px solid ${isMe ? 'transparent' : fade(TOKENS.ink, 0.08)}`,
                                 }}
                               >
                                 {message.attachment && <ChatAttachmentView messageId={message.id} attachment={message.attachment} />}
@@ -201,7 +201,7 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
               )}
             </Box>
 
-            <Box sx={{ p: 2, borderTop: `1px solid ${alpha(TOKENS.ink, 0.08)}`, bgcolor: TOKENS.paper }}>
+            <Box sx={{ p: 2, borderTop: `1px solid ${fade(TOKENS.ink, 0.08)}`, bgcolor: TOKENS.paper }}>
               {composer.pendingFile && (
                 <Box sx={{ mt: -1.5, mb: 1.5 }}>
                   <PendingAttachment file={composer.pendingFile} progress={composer.progress} onRemove={composer.clearFile} />
@@ -226,10 +226,10 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: `${TOKENS.radius.md}px`,
-                      bgcolor: alpha(TOKENS.surface, 0.8),
+                      bgcolor: fade(TOKENS.surface, 0.8),
                       '& fieldset': { borderColor: 'transparent' },
-                      '&:hover fieldset': { borderColor: alpha(TOKENS.ink, 0.1) },
-                      '&.Mui-focused fieldset': { borderColor: alpha(TOKENS.primary, 0.5) },
+                      '&:hover fieldset': { borderColor: fade(TOKENS.ink, 0.1) },
+                      '&.Mui-focused fieldset': { borderColor: fade(TOKENS.primary, 0.5) },
                     }
                   }}
                 />
@@ -237,9 +237,9 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
                   onClick={handleSend}
                   disabled={sending || !canSend || loading}
                   sx={{
-                    bgcolor: TOKENS.primary, color: '#fff',
+                    bgcolor: TOKENS.primary, color: TOKENS.primaryFg,
                     '&:hover': { bgcolor: TOKENS.primaryStrong },
-                    '&.Mui-disabled': { bgcolor: alpha(TOKENS.ink, 0.1), color: alpha(TOKENS.ink, 0.3) }
+                    '&.Mui-disabled': { bgcolor: fade(TOKENS.ink, 0.1), color: fade(TOKENS.ink, 0.3) }
                   }}
                 >
                   {sending ? <CircularProgress size={20} color="inherit" /> : <SendRoundedIcon fontSize="small" />}
@@ -249,7 +249,7 @@ export function AdminChatView({ pfas }: AdminChatViewProps) {
           </>
         ) : (
           <Stack spacing={2} sx={{ alignItems: 'center', justifyContent: 'center', height: '100%' }} component="div">
-            <InboxRoundedIcon sx={{ fontSize: 48, color: alpha(TOKENS.ink, 0.1) }} />
+            <InboxRoundedIcon sx={{ fontSize: 48, color: fade(TOKENS.ink, 0.1) }} />
             <Typography sx={{ color: TOKENS.textMuted }}>Selectează un client pentru a începe conversația</Typography>
           </Stack>
         )}

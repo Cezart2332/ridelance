@@ -13,7 +13,7 @@ import { Panel, StatusPill } from './parts'
 import { SpvSection } from './SpvSection'
 import { HAIRLINE, INK, MUTED, TONES, type Cell, type Tone } from './status'
 
-const DARK = { bgcolor: INK, color: '#FFFFFF', '&:hover': { bgcolor: '#2d2d45' } }
+const DARK = { bgcolor: 'var(--rl-primary)', color: 'var(--rl-primary-fg)', '&:hover': { bgcolor: 'var(--rl-fg-soft)' } }
 
 /** Plata facturilor primite, legată din bancă (spec flux contabil R03–R04b). */
 const PAYMENT_CELL: Record<InvoicePaymentStatus, Cell> = {
@@ -176,9 +176,9 @@ export function AnafTab({ pfaId }: { pfaId: string }) {
                   fontWeight: 600,
                   fontFamily: 'inherit',
                   border: '1px solid',
-                  borderColor: selected ? INK : (tone?.border ?? 'rgba(0,0,0,0.12)'),
-                  bgcolor: selected ? INK : (tone?.bg ?? '#FFFFFF'),
-                  color: selected ? '#FFFFFF' : (tone?.text ?? INK),
+                  borderColor: selected ? 'var(--rl-border-strong)' : (tone?.border ?? 'var(--rl-border)'),
+                  bgcolor: selected ? 'var(--rl-muted)' : (tone?.bg ?? 'var(--rl-input)'),
+                  color: selected ? 'var(--rl-fg)' : (tone?.text ?? 'var(--rl-text-muted)'),
                 }}
               >
                 {item.label} {messages.filter((message) => item.value === 'ALL' || message.kind === item.value).length}
@@ -221,7 +221,7 @@ export function AnafTab({ pfaId }: { pfaId: string }) {
                         <TableCell>
                           <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', rowGap: 0.5 }}>
                             <StatusPill cell={{ ...KIND_CELL[message.kind], title: message.downloadError ?? undefined }} />
-                            {message.kind === 'RECEIVED' && message.totalAmount !== null && (
+                            {message.kind === 'RECEIVED' && message.totalAmount !== null && PAYMENT_CELL[message.paymentStatus] && (
                               <StatusPill
                                 cell={{
                                   ...PAYMENT_CELL[message.paymentStatus],

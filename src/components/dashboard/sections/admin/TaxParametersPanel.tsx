@@ -17,10 +17,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { TOKENS } from '../../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
+import { fade } from '../../../panel/tokens'
 import {
   adminTaxParametersService,
   type TaxParametersResponse,
@@ -257,7 +257,7 @@ export function TaxParametersPanel() {
         sx={{
           '& .MuiOutlinedInput-root': {
             borderRadius: `${TOKENS.radius.md}px`,
-            backgroundColor: changed ? alpha(TOKENS.primary, 0.05) : TOKENS.paper,
+            backgroundColor: changed ? fade(TOKENS.primary, 0.05) : TOKENS.paper,
           },
         }}
         slotProps={{
@@ -273,7 +273,7 @@ export function TaxParametersPanel() {
       sx={{
         p: { xs: 2, md: 3 },
         borderRadius: `${TOKENS.radius.lg}px`,
-        border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+        border: `1px solid ${fade(TOKENS.ink, 0.08)}`,
         bgcolor: TOKENS.paper,
       }}
     >
@@ -299,7 +299,7 @@ export function TaxParametersPanel() {
               sx={{
                 fontWeight: 700,
                 color: data.isOverridden ? TOKENS.primaryStrong : TOKENS.textMuted,
-                bgcolor: data.isOverridden ? alpha(TOKENS.primary, 0.1) : alpha(TOKENS.ink, 0.05),
+                bgcolor: data.isOverridden ? fade(TOKENS.primary, 0.1) : fade(TOKENS.ink, 0.05),
               }}
             />
             <TextField

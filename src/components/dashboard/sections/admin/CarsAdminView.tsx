@@ -6,7 +6,6 @@ import {
   InputAdornment, MenuItem, Switch,
   Grid, Card, CardContent, LinearProgress
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
@@ -26,7 +25,9 @@ import {
   formatApprovalStatus,
   getApprovalStatusColor,
 } from '../../../../utils/carLabels';
-import { DASHBOARD_TOKENS, responsiveTableContainerSx } from '../../dashboardTheme';
+import { responsiveTableContainerSx } from '../../dashboardTheme'
+import { PANEL_COMPAT_DASHBOARD_TOKENS as DASHBOARD_TOKENS } from '../../../panel/tokens'
+import { fade } from '../../../panel/tokens'
 import { AddCarWizard } from '../../addCar/AddCarWizard'
 import { CarEditDialog } from '../../srl/CarEditDialog'
 
@@ -50,11 +51,11 @@ const PAYMENT_LABELS: Record<string, string> = {
 };
 
 const PAYMENT_COLORS: Record<string, string> = {
-  NotRequired: '#64748b',
-  Pending: '#b45309',
-  Paid: '#047857',
-  PastDue: '#dc2626',
-  Cancelled: '#64748b',
+  NotRequired: 'var(--rl-text-muted)',
+  Pending: 'var(--rl-yellow-text)',
+  Paid: 'var(--rl-green-text)',
+  PastDue: 'var(--rl-red-text)',
+  Cancelled: 'var(--rl-text-muted)',
 };
 
 
@@ -150,8 +151,8 @@ export function CarsAdminView() {
 
 
   const leadStatusColors: Record<string, string> = {
-    'Nou': '#6366f1', 'Contactat': '#f59e0b', 'În discuție': '#3b82f6',
-    'Acceptat': '#10b981', 'Respins': '#ef4444'
+    'Nou': 'var(--rl-blue-text)', 'Contactat': 'var(--rl-yellow-text)', 'În discuție': 'var(--rl-blue-text)',
+    'Acceptat': 'var(--rl-green-text)', 'Respins': 'var(--rl-red-text)'
   };
 
   const handleApproveCar = async (id: string, approve: boolean) => {
@@ -220,11 +221,11 @@ export function CarsAdminView() {
       {loading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
 
 
-      <Paper elevation={0} sx={{ mb: 4, borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`, border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`, overflow: 'hidden' }}>
+      <Paper elevation={0} sx={{ mb: 4, borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`, border: `1px solid ${fade(DASHBOARD_TOKENS.ink, 0.08)}`, overflow: 'hidden' }}>
         <Tabs variant="scrollable" allowScrollButtonsMobile
           value={activeTab}
           onChange={handleTabChange}
-          sx={{ px: 2, borderBottom: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.05)}`, '& .MuiTab-root': { fontWeight: 700, py: 2 } }}
+          sx={{ px: 2, borderBottom: `1px solid ${fade(DASHBOARD_TOKENS.ink, 0.05)}`, '& .MuiTab-root': { fontWeight: 700, py: 2 } }}
         >
           <Tab icon={<DirectionsCarFilledRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label={`Mașini RIDElance (${ridelanceCount})`} />
           <Tab icon={<BusinessRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label={`Mașini SRL (${srlCount})`} />
@@ -238,7 +239,7 @@ export function CarsAdminView() {
             <Stack spacing={3}>
               <TextField placeholder="Caută după brand sau model..." size="small" value={search}
                 onChange={(e) => setSearch(e.target.value)} sx={{ maxWidth: 400 }}
-                slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchRoundedIcon sx={{ color: alpha(DASHBOARD_TOKENS.ink, 0.4) }} /></InputAdornment> } }} />
+                slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchRoundedIcon sx={{ color: fade(DASHBOARD_TOKENS.ink, 0.4) }} /></InputAdornment> } }} />
               <TableContainer sx={responsiveTableContainerSx}>
                 <Table>
                   <TableHead>
@@ -256,11 +257,11 @@ export function CarsAdminView() {
                   </TableHead>
                   <TableBody>
                     {filteredCars.map((car) => (
-                      <TableRow key={car.id} sx={{ '&:hover': { bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.02) } }}>
+                      <TableRow key={car.id} sx={{ '&:hover': { bgcolor: fade(DASHBOARD_TOKENS.primary, 0.02) } }}>
                         <TableCell>
                           <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
                             <Avatar src={getCarImageUrl(car.images[0]?.imageUrl)} variant="rounded"
-                              sx={{ width: 56, height: 56, border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.1)}` }}>
+                              sx={{ width: 56, height: 56, border: `1px solid ${fade(DASHBOARD_TOKENS.ink, 0.1)}` }}>
                               <DirectionsCarFilledRoundedIcon />
                             </Avatar>
                             <Box>
@@ -286,7 +287,7 @@ export function CarsAdminView() {
                               <Avatar key={img.id} src={getCarImageUrl(img.imageUrl)} variant="rounded" sx={{ width: 32, height: 32 }} />
                             ))}
                             {car.images.length > 3 && (
-                              <Box sx={{ width: 32, height: 32, borderRadius: 1, bgcolor: alpha(DASHBOARD_TOKENS.ink, 0.06), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Box sx={{ width: 32, height: 32, borderRadius: 1, bgcolor: fade(DASHBOARD_TOKENS.ink, 0.06), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <Typography variant="caption" sx={{ fontWeight: 650, fontSize: '0.6rem' }}>+{car.images.length - 3}</Typography>
                               </Box>
                             )}
@@ -294,7 +295,7 @@ export function CarsAdminView() {
                         </TableCell>
                         <TableCell>
                           <Chip label={formatCarStatus(car.status)} size="small"
-                            sx={{ fontWeight: 650, fontSize: '0.65rem', bgcolor: alpha(getCarStatusColor(car.status), 0.1), color: getCarStatusColor(car.status), border: `1px solid ${alpha(getCarStatusColor(car.status), 0.2)}` }} />
+                            sx={{ fontWeight: 650, fontSize: '0.65rem', bgcolor: fade(getCarStatusColor(car.status), 0.1), color: getCarStatusColor(car.status), border: `1px solid ${fade(getCarStatusColor(car.status), 0.2)}` }} />
                         </TableCell>
                         <TableCell>
                           <Typography variant="caption" sx={{ fontWeight: 600 }}>
@@ -303,7 +304,7 @@ export function CarsAdminView() {
                         </TableCell>
                         <TableCell>
                           <Chip label={formatApprovalStatus(car.approvalStatus)} size="small"
-                            sx={{ fontWeight: 650, fontSize: '0.65rem', bgcolor: alpha(getApprovalStatusColor(car.approvalStatus), 0.1), color: getApprovalStatusColor(car.approvalStatus) }} />
+                            sx={{ fontWeight: 650, fontSize: '0.65rem', bgcolor: fade(getApprovalStatusColor(car.approvalStatus), 0.1), color: getApprovalStatusColor(car.approvalStatus) }} />
                         </TableCell>
                         <TableCell>
                           <Stack spacing={0.8} sx={{ alignItems: 'flex-start' }}>
@@ -313,8 +314,8 @@ export function CarsAdminView() {
                               sx={{
                                 fontWeight: 650,
                                 fontSize: '0.65rem',
-                                bgcolor: alpha(PAYMENT_COLORS[car.paymentStatus] ?? '#64748b', 0.1),
-                                color: PAYMENT_COLORS[car.paymentStatus] ?? '#64748b',
+                                bgcolor: fade(PAYMENT_COLORS[car.paymentStatus] ?? 'var(--rl-text-muted)', 0.1),
+                                color: PAYMENT_COLORS[car.paymentStatus] ?? 'var(--rl-text-muted)',
                               }}
                             />
                           </Stack>
@@ -337,8 +338,8 @@ export function CarsAdminView() {
                                 height: 20,
                                 fontSize: '0.65rem',
                                 fontWeight: 700,
-                                bgcolor: car.active ? '#dcfce7' : '#f1f5f9',
-                                color: car.active ? '#166534' : '#475569',
+                                bgcolor: car.active ? 'var(--rl-green-bg)' : 'var(--rl-muted)',
+                                color: car.active ? 'var(--rl-green-text)' : 'var(--rl-text-muted)',
                               }}
                             />
                           </Stack>
@@ -348,7 +349,7 @@ export function CarsAdminView() {
                             {car.approvalStatus === 'Pending' && (
                               <>
                                 <Button size="small" variant="contained" onClick={() => handleApproveCar(car.id, true)}
-                                  sx={{ fontWeight: 700, bgcolor: '#10b981', fontSize: '0.7rem', minWidth: 0, px: 1.5 }}>Aprobă</Button>
+                                  sx={{ fontWeight: 700, bgcolor: 'var(--rl-green-text)', fontSize: '0.7rem', minWidth: 0, px: 1.5 }}>Aprobă</Button>
                                 <Button size="small" variant="outlined" color="error" onClick={() => handleApproveCar(car.id, false)}
                                   sx={{ fontWeight: 700, fontSize: '0.7rem', minWidth: 0, px: 1.5 }}>Respinge</Button>
                               </>
@@ -396,7 +397,7 @@ export function CarsAdminView() {
                           {/* Lista de așteptare e altă discuție decât o cerere obișnuită. */}
                           {lead.intent === 'Waitlist' && (
                             <Chip label="Listă de așteptare" size="small"
-                              sx={{ height: 20, fontSize: '0.62rem', fontWeight: 650, bgcolor: alpha('#f59e0b', 0.12), color: '#B54708' }} />
+                              sx={{ height: 20, fontSize: '0.62rem', fontWeight: 650, bgcolor: fade('var(--rl-yellow-text)', 0.12), color: 'var(--rl-yellow-text)' }} />
                           )}
                         </Stack>
                         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
@@ -426,7 +427,7 @@ export function CarsAdminView() {
                       </TableCell>
                       <TableCell>
                         <Chip label={lead.status} size="small"
-                          sx={{ fontWeight: 650, fontSize: '0.65rem', bgcolor: alpha(leadStatusColors[lead.status] ?? '#999', 0.1), color: leadStatusColors[lead.status] ?? '#999', border: `1px solid ${alpha(leadStatusColors[lead.status] ?? '#999', 0.2)}` }} />
+                          sx={{ fontWeight: 650, fontSize: '0.65rem', bgcolor: fade(leadStatusColors[lead.status] ?? 'var(--rl-text-muted)', 0.1), color: leadStatusColors[lead.status] ?? 'var(--rl-text-muted)', border: `1px solid ${fade(leadStatusColors[lead.status] ?? 'var(--rl-text-muted)', 0.2)}` }} />
                       </TableCell>
                       <TableCell align="right">
                         <TextField select size="small" value={lead.status}
@@ -458,8 +459,8 @@ export function CarsAdminView() {
                       sx={{
                         p: 2.5,
                         borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
-                        border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`,
-                        bgcolor: alpha(DASHBOARD_TOKENS.primary, 0.04),
+                        border: `1px solid ${fade(DASHBOARD_TOKENS.ink, 0.08)}`,
+                        bgcolor: fade(DASHBOARD_TOKENS.primary, 0.04),
                       }}
                     >
                       <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
@@ -475,7 +476,7 @@ export function CarsAdminView() {
             <Grid container spacing={3} component="div">
               {cars.map((car) => (
                 <Grid size={{ xs: 12, md: 6, lg: 4 }} key={car.id} component="div">
-                  <Card elevation={0} sx={{ border: `1px solid ${alpha(DASHBOARD_TOKENS.ink, 0.08)}`, borderRadius: `${DASHBOARD_TOKENS.radius.lg}px` }}>
+                  <Card elevation={0} sx={{ border: `1px solid ${fade(DASHBOARD_TOKENS.ink, 0.08)}`, borderRadius: `${DASHBOARD_TOKENS.radius.lg}px` }}>
                     <CardContent>
                       <Stack direction="row" spacing={2} sx={{ mb: 3, alignItems: 'center' }}>
                         <Avatar src={getCarImageUrl(car.images[0]?.imageUrl)} variant="rounded" />
@@ -492,7 +493,7 @@ export function CarsAdminView() {
                         ].map(stat => (
                           <Grid size={4} key={stat.label} component="div">
                             <Stack sx={{ alignItems: 'center' }}>
-                              <Box sx={{ color: alpha(DASHBOARD_TOKENS.ink, 0.4), mb: 0.5 }}>{stat.icon}</Box>
+                              <Box sx={{ color: fade(DASHBOARD_TOKENS.ink, 0.4), mb: 0.5 }}>{stat.icon}</Box>
                               <Typography variant="h6" sx={{ fontWeight: 650 }}>{stat.value}</Typography>
                               <Typography variant="caption" sx={{ color: 'text.secondary' }}>{stat.label}</Typography>
                             </Stack>

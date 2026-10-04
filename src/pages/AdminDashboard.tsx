@@ -4,15 +4,15 @@ import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { useAutoRefresh } from '../hooks/useAutoRefresh'
 import { ROUTES } from '../constants/routes'
 import {
-  Box, Paper, Stack, TextField, Typography, Avatar,
-  CircularProgress, Alert, Chip, Button,
-  Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Snackbar, ThemeProvider,
+  Box, Paper, Stack, TextField, Typography,
+  CircularProgress, Alert, Button,
+  Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Snackbar,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
-import { TOKENS } from '../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../components/panel/tokens'
+import { fade } from '../components/panel/tokens'
 import { AdminLayout } from '../components/admin/AdminLayout'
-import { adminTheme } from '../theme/adminTheme'
+import { PanelThemeProvider } from '../components/panel/PanelThemeProvider'
 import { pfaService } from '../services/pfa.service'
 import { notificationService } from '../services/notification.service'
 import { userService, type UserProfile } from '../services/user.service'
@@ -22,7 +22,6 @@ import { authService } from '../services/auth.service'
 import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded'
 import SupervisedUserCircleRoundedIcon from '@mui/icons-material/SupervisedUserCircleRounded'
 import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded'
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded'
 import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
 import AssignmentTurnedInRoundedIcon from '@mui/icons-material/AssignmentTurnedInRounded'
@@ -53,6 +52,7 @@ import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminO
 import { SrlAccountsView } from '../components/dashboard/sections/admin/SrlAccountsView'
 import { AdminTasksView } from '../components/dashboard/sections/admin/AdminTasksView'
 import { CloseAccountDialog } from '../components/dashboard/sections/admin/CloseAccountDialog'
+import { AdminPfaListView } from '../components/dashboard/sections/admin/AdminPfaListView'
 import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded'
 import { PfaDetailView } from './admin/PfaDetailView'
 import { displayName } from '../utils/displayName'
@@ -64,7 +64,6 @@ import {
 } from '../services/adminOverview.service'
 import { openDocument } from '../components/common/documentViewerBus'
 import type { FiscalProfileStatus } from '../services/fiscalProfile.service'
-import { FiscalProfileStatusChip } from '../shared/fiscal-profile'
 import { reloadOnceOnChunkError } from '../utils/lazyWithRetry'
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
@@ -133,13 +132,6 @@ type FiscalFilter = 'all' | FiscalProfileStatus
 /** Cât de des se reîmprospătează singure lista de dosare PFA și dosarul deschis. */
 const PFA_AUTO_REFRESH_MS = 10_000
 
-const FISCAL_FILTERS: { id: FiscalFilter; label: string }[] = [
-  { id: 'all', label: 'Toate' },
-  { id: 'NOT_STARTED', label: 'Necompletat' },
-  { id: 'DRAFT', label: 'Ciornă' },
-  { id: 'COMPLETED', label: 'Completat' },
-]
-
 const ENROLLED_FILTERS: { id: EnrolledFilter; label: string }[] = [
   { id: 'active', label: 'Active' },
   { id: 'inactive', label: 'Inactive' },
@@ -197,24 +189,6 @@ function relativeTime(utcString: string): string {
   return `Acum ${days} zile`
 }
 
-function statusColor(status: string) {
-  switch (status.toLowerCase()) {
-    case 'approved': return '#10b981'
-    case 'verified': return '#10b981'
-    case 'rejected': return '#ef4444'
-    default: return '#f59e0b'
-  }
-}
-
-function statusLabel(status: string) {
-  switch (status.toLowerCase()) {
-    case 'approved': return 'Aprobat'
-    case 'verified': return 'Verificat'
-    case 'rejected': return 'Respins'
-    default: return 'În așteptare'
-  }
-}
-
 function formatLei(bani: number | null | undefined) {
   const value = (bani ?? 0) / 100
   return `${value.toLocaleString('ro-RO', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} lei`
@@ -239,11 +213,11 @@ function getApiErrorMessage(error: unknown, fallback: string) {
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
-    backgroundColor: alpha(TOKENS.paper, 0.92),
+    backgroundColor: fade(TOKENS.paper, 0.92),
     borderRadius: `${TOKENS.radius.md}px`,
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.08) },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.16) },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.primary, 0.6), borderWidth: 2 },
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.ink, 0.08) },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.ink, 0.16) },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.primary, 0.6), borderWidth: 2 },
   },
 }
 
@@ -834,13 +808,13 @@ export function AdminDashboard() {
                     sx={{
                       height: 56,
                       borderRadius: `${TOKENS.radius.md}px`,
-                      border: `1px dashed ${alpha(TOKENS.ink, 0.2)}`,
+                      border: `1px dashed ${fade(TOKENS.ink, 0.2)}`,
                       color: 'text.secondary',
                       justifyContent: 'flex-start',
                       px: 2,
                       '&:hover': {
                         borderColor: TOKENS.primary,
-                        bgcolor: alpha(TOKENS.primary, 0.04)
+                        bgcolor: fade(TOKENS.primary, 0.04)
                       }
                     }}
                   >
@@ -883,11 +857,11 @@ export function AdminDashboard() {
               disabled={statusUpdating}
               sx={{
                 fontWeight: 700, boxShadow: 'none',
-                bgcolor: statusDialog.action === 'Approved' ? '#10b981' : '#ef4444',
-                '&:hover': { bgcolor: statusDialog.action === 'Approved' ? '#059669' : '#dc2626' },
+                bgcolor: statusDialog.action === 'Approved' ? 'var(--rl-green-text)' : 'var(--rl-red-text)',
+                '&:hover': { bgcolor: statusDialog.action === 'Approved' ? 'var(--rl-green-text)' : 'var(--rl-red-text)' },
               }}
             >
-              {statusUpdating ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : (statusDialog.action === 'Approved' ? 'Aprobă' : 'Respinge')}
+              {statusUpdating ? <CircularProgress size={18} sx={{ color: 'inherit' }} /> : (statusDialog.action === 'Approved' ? 'Aprobă' : 'Respinge')}
             </Button>
           </DialogActions>
         </Dialog>
@@ -948,7 +922,7 @@ export function AdminDashboard() {
               onClick={submitDetailAction}
               sx={{ boxShadow: 'none', bgcolor: TOKENS.primary, fontWeight: 650 }}
             >
-              {detailActionLoading ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Salvează'}
+              {detailActionLoading ? <CircularProgress size={18} sx={{ color: 'inherit' }} /> : 'Salvează'}
             </Button>
           </DialogActions>
         </Dialog>
@@ -959,124 +933,42 @@ export function AdminDashboard() {
   // ─── PFA List ────────────────────────────────────────────────────────────────
   const renderPfaList = () => (
     <Stack spacing={3}>
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
-        <Box>
-          <Typography variant="h1">{activeTab === 'pfa_inrolate' ? 'PFA înrolate' : 'Onboarding'}</Typography>
-          <Typography color="text.secondary" variant="body1" sx={{ mt: 1 }}>Găsește un client, verifică documentele și urmărește progresul dosarului.</Typography>
-        </Box>
-        {refreshButton}
-      </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <SearchRoundedIcon sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} />
-          <TextField variant="outlined" size="small" label="Caută după nume sau email" value={search} onChange={(e) => setSearch(e.target.value)} sx={{ width: { xs: '100%', sm: 300 }, maxWidth: '100%', ...inputSx }} />
-        </Box>
-        {activeTab === 'pfa_inrolate' && ENROLLED_FILTERS.map((entry) => (
-          <Chip
-            key={entry.id}
-            label={`${entry.label} (${enrolledCounts[entry.id]})`}
-            onClick={() => setEnrolledFilter(entry.id)}
-            variant={enrolledFilter === entry.id ? 'filled' : 'outlined'}
-            sx={{
-              fontWeight: 700,
-              cursor: 'pointer',
-              ...(enrolledFilter === entry.id
-                ? { bgcolor: TOKENS.primary, color: '#fff', '&:hover': { bgcolor: TOKENS.primaryStrong } }
-                : { borderColor: alpha(TOKENS.ink, 0.15), color: TOKENS.textMuted }),
-            }}
-          />
-        ))}
-        {activeTab === 'pfa_inrolate' && (
-          <TextField
-            select
-            size="small"
-            label="Profil fiscal"
-            value={fiscalFilter}
-            onChange={(e) => setFiscalFilter(e.target.value as FiscalFilter)}
-            sx={{ minWidth: 170 }}
-          >
-            {FISCAL_FILTERS.map((entry) => (
-              <MenuItem key={entry.id} value={entry.id}>{entry.label}</MenuItem>
-            ))}
-          </TextField>
-        )}
-        {activeTab === 'pfa' && <Chip
-          label={`Așteaptă acțiune admin${awaitingAdminCount > 0 ? ` (${awaitingAdminCount})` : ''}`}
-          onClick={() => setOnlyAwaitingAdmin((v) => !v)}
-          variant={onlyAwaitingAdmin ? 'filled' : 'outlined'}
-          sx={{
-            fontWeight: 700,
-            cursor: 'pointer',
-            ...(onlyAwaitingAdmin
-              ? { bgcolor: TOKENS.primary, color: '#fff', '&:hover': { bgcolor: TOKENS.primaryStrong } }
-              : { borderColor: alpha(TOKENS.ink, 0.15), color: TOKENS.textMuted }),
-          }}
-        />}
-      </Box>
-
-      {pfasLoading && <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress size={32} sx={{ color: TOKENS.primary }} /></Box>}
-      {pfasError && <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>{pfasError}</Alert>}
-      {!pfasLoading && !pfasError && displayPfas.length === 0 && (
-        <Box sx={{ py: 8, textAlign: 'center' }}>
-          <Typography variant="body1" sx={{ color: TOKENS.textMuted }}>{search ? 'Nicio înregistrare găsită.' : 'Nu există înregistrări PFA.'}</Typography>
-        </Box>
-      )}
-      {!pfasLoading && !pfasError && displayPfas.length > 0 && (
-        <Paper sx={{ overflow: 'hidden' }}>
-          <Box sx={{ px: 2.5, py: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-            <Typography variant="body2" color="text.secondary">{displayPfas.length} clienți afișați</Typography>
-          </Box>
-          {displayPfas.map((pfa) => (
-            <Box component="article" key={pfa.id} sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'minmax(220px, 1.6fr) minmax(160px, 1fr) minmax(180px, 1fr) auto' }, gap: 2, p: 2.5, alignItems: 'center', borderBottom: 1, borderColor: 'divider', '&:last-child': { borderBottom: 0 }, '&:hover': { bgcolor: 'grey.50' } }}>
-              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', minWidth: 0 }}>
-                <Avatar variant="rounded" sx={{ width: 40, height: 40, bgcolor: 'primary.light', color: 'text.primary', fontSize: 16 }}>{(pfa.userName || pfa.fullName || '?').charAt(0)}</Avatar>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>{pfa.userName || pfa.fullName || 'PFA fără nume'}</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{pfa.userEmail}</Typography>
-                  {pfa.phone && <Typography variant="caption" color="text.secondary">{pfa.phone}</Typography>}
-                </Box>
-              </Stack>
-              <Box>
-                {pfa.deletedAtUtc
-                  ? <Chip label="Cont închis" size="small" sx={{ bgcolor: alpha('#ef4444', 0.08), color: '#ef4444' }} />
-                  : <Chip label={pfa.awaitingAdminAction ? 'Necesită verificare' : statusLabel(pfa.status)} size="small" sx={{ bgcolor: alpha(statusColor(pfa.status), 0.08), color: statusColor(pfa.status) }} />}
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>{pfa.documentCount} documente · {pfaPlanLabel(pfa)}</Typography>
-                {activeTab === 'pfa_inrolate' && !pfa.deletedAtUtc && (
-                  <Box sx={{ mt: 0.75, display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                    <Typography variant="caption" color="text.secondary">Profil fiscal:</Typography>
-                    <FiscalProfileStatusChip status={pfa.fiscalProfileStatus} />
-                  </Box>
-                )}
-              </Box>
-              <Box>
-                <Typography variant="body2">{subscriptionStatusLabel(pfa.subscriptionStatus)}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {pfa.deletedAtUtc
-                    ? `Închis la ${new Date(pfa.deletedAtUtc).toLocaleDateString('ro-RO')}`
-                    : pfa.lastActivityAtUtc ? relativeTime(pfa.lastActivityAtUtc) : 'Fără activitate'}
-                </Typography>
-              </Box>
-              <Stack direction={{ xs: 'row', lg: 'column' }} sx={{ gap: 0.5, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                <Button variant="outlined" size="small" onClick={() => { setSelectedPfa(pfa); navigate('/admin?tab=' + activeTab + '&user=' + pfa.userId) }}>Deschide dosarul</Button>
-                <Button size="small" disabled={pfa.status.toLowerCase() !== 'approved'} onClick={() => handleImpersonate(pfa.userId, pfa.userName || pfa.userEmail)}>Intră în contul clientului</Button>
-                {activeTab === 'pfa_inrolate' && (
-                  <Button
-                    size="small"
-                    color={pfa.deletedAtUtc ? 'primary' : 'error'}
-                    onClick={() => setAccountAction({
-                      userId: pfa.userId,
-                      name: pfa.userName || pfa.fullName || pfa.userEmail,
-                      action: pfa.deletedAtUtc ? 'reopen' : 'close',
-                    })}
-                  >
-                    {pfa.deletedAtUtc ? 'Redeschide contul' : 'Închide contul'}
-                  </Button>
-                )}
-              </Stack>
-            </Box>
-          ))}
-        </Paper>
-      )}
+      <AdminPfaListView
+        mode={activeTab === 'pfa_inrolate' ? 'enrolled' : 'onboarding'}
+        rows={displayPfas}
+        all={activeTab === 'pfa_inrolate' ? filteredPfas.filter((p) => enrolledFilterOf(p) !== null) : filteredPfas.filter((p) => p.onboardingCompletedAtUtc === null && !p.deletedAtUtc)}
+        loading={pfasLoading}
+        error={pfasError}
+        search={search}
+        onSearch={setSearch}
+        enrolledFilter={enrolledFilter}
+        onEnrolledFilter={setEnrolledFilter}
+        enrolledCounts={enrolledCounts}
+        fiscalFilter={fiscalFilter}
+        onFiscalFilter={setFiscalFilter}
+        onlyAwaitingAdmin={onlyAwaitingAdmin}
+        onOnlyAwaitingAdmin={setOnlyAwaitingAdmin}
+        awaitingAdminCount={awaitingAdminCount}
+        refreshing={manualRefreshing}
+        onRefresh={() => void handleManualRefresh()}
+        onOpen={(row) => {
+          const pfa = pfas.find((item) => item.id === row.id)
+          if (!pfa) return
+          setSelectedPfa(pfa)
+          navigate('/admin?tab=' + activeTab + '&user=' + pfa.userId)
+        }}
+        onImpersonate={(row) => void handleImpersonate(row.userId, row.userName || row.userEmail)}
+        onAccountAction={(row) => setAccountAction({
+          userId: row.userId,
+          name: row.userName || row.fullName || row.userEmail,
+          action: row.deletedAtUtc ? 'reopen' : 'close',
+        })}
+        planLabel={(row) => pfaPlanLabel(row as PfaSummary)}
+        subscriptionLabel={subscriptionStatusLabel}
+        activityLabel={(row) => row.deletedAtUtc
+          ? `Închis la ${new Date(row.deletedAtUtc).toLocaleDateString('ro-RO')}`
+          : row.lastActivityAtUtc ? relativeTime(row.lastActivityAtUtc) : 'Fără activitate'}
+      />
 
       <CloseAccountDialog
         target={accountAction}
@@ -1093,7 +985,7 @@ export function AdminDashboard() {
   // ─── Enroll Contabil ─────────────────────────────────────────────────────────
   const renderContabili = () => (
     <Box sx={{ maxWidth: 600, py: 4 }}>
-      <Paper elevation={0} sx={{ p: 4, borderRadius: `${TOKENS.radius.xl}px`, border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, boxShadow: TOKENS.shadow.sm, background: `linear-gradient(165deg, ${alpha(TOKENS.primary, 0.06)} 0%, ${TOKENS.paper} 35%)` }}>
+      <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, borderRadius: '10px', border: `1px solid ${TOKENS.border}`, bgcolor: TOKENS.paper }}>
         <Typography variant="h6" sx={{ mb: 1, fontWeight: 650 }}>Înrolează Contabil Nou</Typography>
         <Typography variant="body2" sx={{ mb: 4, color: TOKENS.textMuted }}>Trimite o invitație pe email unui contabil pentru a-i oferi acces la platformă.</Typography>
         <Stack spacing={3}>
@@ -1122,7 +1014,7 @@ export function AdminDashboard() {
             disabled={inviteLoading}
             sx={{ py: 1.5, fontWeight: 700, bgcolor: TOKENS.primary, boxShadow: 'none', '&:hover': { bgcolor: TOKENS.primaryStrong, boxShadow: 'none' } }}
           >
-            {inviteLoading ? <CircularProgress size={24} sx={{ color: '#fff' }} /> : 'Trimite Invitația'}
+            {inviteLoading ? <CircularProgress size={24} sx={{ color: 'inherit' }} /> : 'Trimite Invitația'}
           </Button>
         </Stack>
       </Paper>
@@ -1137,9 +1029,9 @@ export function AdminDashboard() {
         sx={{
           p: 2.5,
           borderRadius: `${TOKENS.radius.lg}px`,
-          border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+          border: `1px solid ${fade(TOKENS.ink, 0.08)}`,
           boxShadow: TOKENS.shadow.sm,
-          bgcolor: alpha(TOKENS.primary, 0.04),
+          bgcolor: fade(TOKENS.primary, 0.04),
         }}
       >
         <Typography variant="subtitle1" sx={{ fontWeight: 650, mb: 2 }}>
@@ -1157,7 +1049,7 @@ export function AdminDashboard() {
           }}
         >
           {testNotifLoading ? (
-            <CircularProgress size={22} sx={{ color: '#fff' }} />
+            <CircularProgress size={22} sx={{ color: 'inherit' }} />
           ) : (
             'Test notifications'
           )}
@@ -1225,7 +1117,7 @@ export function AdminDashboard() {
   const userName = profile ? displayName(profile) : '...'
 
   return (
-    <ThemeProvider theme={adminTheme}>
+    <PanelThemeProvider>
     <AdminLayout
       navItems={navItems}
       activeId={activeTab}
@@ -1245,6 +1137,6 @@ export function AdminDashboard() {
         </Alert>
       </Snackbar>
     </AdminLayout>
-    </ThemeProvider>
+    </PanelThemeProvider>
   )
 }

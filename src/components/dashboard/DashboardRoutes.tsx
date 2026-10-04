@@ -7,6 +7,7 @@ import { BeneficiiTab } from './sections/BeneficiiTab'
 import { ExpensesPage } from './sections/accounting/ExpensesPage'
 import { FinancialOverviewPage } from './sections/accounting/FinancialOverviewPage'
 import { RegistersPage } from './sections/accounting/RegistersPage'
+import { AnafMessagesPage } from './sections/accounting/AnafMessagesPage'
 import { TransactionsPage } from './sections/accounting/TransactionsPage'
 import { TaxesPage } from './sections/accounting/TaxesPage'
 import { FiscalProfilePage } from './sections/accounting/FiscalProfilePage'
@@ -57,6 +58,7 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
       <Route path={rel(PFA_PATHS.financialOverview)} element={<FinancialOverviewPage />} />
       <Route path={rel(PFA_PATHS.transactions)} element={<TransactionsPage />} />
       <Route path={rel(PFA_PATHS.registers)} element={<RegistersPage />} />
+      <Route path={rel(PFA_PATHS.anaf)} element={<AnafMessagesPage />} />
       <Route path={rel(PFA_PATHS.expenses)} element={<ExpensesPage pfaRegistrationId={pfaRegistrationId} />} />
       <Route path={rel(PFA_PATHS.taxes)} element={<TaxesPage />} />
       <Route path={rel(PFA_PATHS.fiscalProfile)} element={<FiscalProfilePage />} />

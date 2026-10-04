@@ -16,19 +16,22 @@ import type {
  */
 export type Tone = 'green' | 'yellow' | 'red' | 'blue' | 'gray'
 
+const toneVars = (name: Tone) => ({ bg: `var(--rl-${name}-bg)`, border: `var(--rl-${name}-border)`, text: `var(--rl-${name}-text)`, dot: `var(--rl-${name}-dot)` })
+
+/** Culorile vin din tema panoului (`--rl-*`), ca tonurile să se potrivească în tema închisă și în cea deschisă. */
 export const TONES: Record<Tone, { bg: string; border: string; text: string; dot: string }> = {
-  green: { bg: '#F0FDF4', border: '#BBF7D0', text: '#15803D', dot: '#16A34A' },
-  yellow: { bg: '#FEFCE8', border: '#FEF08A', text: '#A16207', dot: '#EAB308' },
-  red: { bg: '#FEF2F2', border: '#FECACA', text: '#B91C1C', dot: '#DC2626' },
-  blue: { bg: 'rgba(92,203,245,0.14)', border: 'rgba(92,203,245,0.45)', text: '#2B8FB8', dot: '#5CCBF5' },
-  gray: { bg: '#F3F5F7', border: '#E3E7EB', text: '#6B6B7B', dot: '#9A9AA8' },
+  green: toneVars('green'),
+  yellow: toneVars('yellow'),
+  red: toneVars('red'),
+  blue: toneVars('blue'),
+  gray: toneVars('gray'),
 }
 
-export const INK = '#1a1a2e'
-export const MUTED = '#6B6B7B'
-export const BODY = '#4A4A5E'
-export const HAIRLINE = 'rgba(0,0,0,0.06)'
-export const PRIMARY = '#5CCBF5'
+export const INK = 'var(--rl-fg)'
+export const MUTED = 'var(--rl-text-muted)'
+export const BODY = 'var(--rl-fg-soft)'
+export const HAIRLINE = 'var(--rl-border)'
+export const PRIMARY = 'var(--rl-brand)'
 
 export const DECLARATION_TYPES: DeclarationType[] = ['D100', 'D301', 'D390']
 

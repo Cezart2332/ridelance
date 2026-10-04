@@ -8,7 +8,7 @@ import { formatDate } from '../../format'
 import { EmptyText, ErrorBlock, LoadingBlock } from '../components'
 import { useApi } from '../useApi'
 import { Avatar, PageTitle, Panel, StatusPill } from './parts'
-import { INK, TONES, VAT_STATUS_CELL, type Tone } from './status'
+import { TONES, VAT_STATUS_CELL, type Tone } from './status'
 import { VatRegistrationCard } from './VatRegistrationCard'
 
 type Filter = 'ALL' | 'REVIEW' | 'BLOCKED' | 'TO_FILE' | 'FILED' | 'DONE'
@@ -67,9 +67,9 @@ export function VatRegistrationsView() {
                 fontWeight: 600,
                 fontFamily: 'inherit',
                 border: '1px solid',
-                borderColor: selected ? INK : (tone?.border ?? 'rgba(0,0,0,0.12)'),
-                bgcolor: selected ? INK : (tone?.bg ?? '#FFFFFF'),
-                color: selected ? '#FFFFFF' : (tone?.text ?? INK),
+                borderColor: selected ? 'var(--rl-border-strong)' : (tone?.border ?? 'var(--rl-border)'),
+                bgcolor: selected ? 'var(--rl-muted)' : (tone?.bg ?? 'var(--rl-input)'),
+                color: selected ? 'var(--rl-fg)' : (tone?.text ?? 'var(--rl-text-muted)'),
               }}
             >
               {item.label} {rows.filter((row) => !item.statuses || item.statuses.includes(row.status)).length}
@@ -85,7 +85,7 @@ export function VatRegistrationsView() {
           </Stack>
         ) : (
           <TableContainer>
-            <Table sx={{ '& td, & th': { borderColor: 'rgba(0,0,0,0.06)' } }}>
+            <Table sx={{ '& td, & th': { borderColor: 'var(--rl-border)' } }}>
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ pl: 2.5 }}>Client</TableCell>

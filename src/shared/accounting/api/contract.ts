@@ -79,6 +79,7 @@ import type {
   UpdateLedgerEntryRequest,
   UploadPlatformDocumentRequest,
   PlatformInboxItem,
+  FiscalOverview,
   PlatformInboxResult,
   UploadReceiptRequest,
   ValidationResult,
@@ -133,6 +134,11 @@ export interface AccountingApi {
    * Încărcarea globală din „Clienți PFA”: fiecare fișier se alocă după CUI, după numele fișierului sau
    * după comision; ce nu se poate aloca rămâne în listă până îl alocă sau îl respinge Adminul.
    */
+  /** Coloanele fiscale ale anului: venituri și taxe estimate pe fiecare PFA. */
+  fiscal: {
+    overview(year: number): Promise<FiscalOverview>
+  }
+
   platformInbox: {
     upload(period: Period, files: File[]): Promise<PlatformInboxResult[]>
     /** Documentele nealocate: în căutare, de verificat, CUI necunoscut. */

@@ -30,6 +30,8 @@ import type {
 import { INVENTORY_CATEGORIES } from '../../../../shared/accounting/api/types'
 import { ASSET_KIND_LABEL, INVENTORY_CATEGORY_LABEL } from '../../../../shared/accounting/statusLabels'
 import { getErrorMessage } from '../../../../utils/errorHandler'
+import { RegisterGuide, type RegisterSection } from '../../../../shared/accounting/ui/registers/RegisterGuide'
+import { CurrentRegisters } from './CurrentRegisters'
 
 const lei = (value: number) => formatLei(value)
 
@@ -59,6 +61,8 @@ type Editing = { item: InventoryItem; mode: 'adjust' | 'remove'; value: string; 
  * elemente”), activele cu fișele MF și pachetele anuale ale anilor închiși. Doar citire, în rest.
  */
 export function RegistersPage() {
+  const [section, setSection] = useState<RegisterSection>('rjip')
+  const [year, setYear] = useState(new Date().getFullYear())
   const [inventory, setInventory] = useState<InventoryCount | null>(null)
   const [assets, setAssets] = useState<Asset[]>([])
   const [years, setYears] = useState<AccountingYear[]>([])
@@ -108,7 +112,12 @@ export function RegistersPage() {
 
   return (
     <Stack spacing={2.5}>
-      <PageHeader title="Registre" />
+      <PageHeader title="Registrele mele" subtitle="Vezi datele pregătite de contabil, documentele și starea lor. Pentru corecții, trimite documentul sau discută cu contabilul." />
+      <RegisterGuide value={section} onChange={setSection} />
+      {(section === 'rjip' || section === 'ref') && <TextField label="An contabil" select size="small" value={year} onChange={event => setYear(Number(event.target.value))} sx={{ width: 180 }}>
+        {Array.from({ length: new Date().getFullYear() - 1999 }, (_, index) => new Date().getFullYear() - index).map(value => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+      </TextField>}
+      {(section === 'rjip' || section === 'ref') && <CurrentRegisters key={`${section}-${year}`} kind={section} year={year} />}
       {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
       {loading && (
         <Stack sx={{ alignItems: 'center', py: 4 }}>
@@ -116,7 +125,7 @@ export function RegistersPage() {
         </Stack>
       )}
 
-      {toConfirm && (
+      {section === 'inventory' && toConfirm && (
         <Paper elevation={0} sx={{ borderRadius: `${T.radius.lg}px`, border: `1px solid ${T.primary}`, overflow: 'hidden' }}>
           <Stack direction="row" useFlexGap sx={{ p: 2, gap: 1.5, alignItems: 'center', flexWrap: 'wrap', borderBottom: `1px solid ${T.border}` }}>
             <Typography sx={{ fontWeight: 700, color: T.ink, flex: 1 }}>
@@ -171,17 +180,22 @@ export function RegistersPage() {
         </Paper>
       )}
 
-      {inventory && !toConfirm && (
+      {section === 'inventory' && inventory && !toConfirm && (
         <Paper elevation={0} sx={{ p: 2, borderRadius: `${T.radius.lg}px`, border: `1px solid ${T.border}` }}>
           <Stack direction="row" useFlexGap sx={{ gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
             <Typography sx={{ fontWeight: 700, color: T.ink, flex: 1 }}>Inventar la {dayLabel(inventory.date)}</Typography>
             <Typography sx={{ fontWeight: 700, color: T.ink }}>{lei(inventory.total)}</Typography>
             <StatusChip label={inventory.status === 'FINAL' ? 'Final ✓' : 'La contabil'} tone={inventory.status === 'FINAL' ? 'active' : 'neutral'} size="sm" />
+            {inventory.status === 'FINAL' && <Button onClick={() => void act(async () => download(await clientRegistersService.exportRegister('inventory', Number(inventory.date.slice(0, 4))), 'Registru_inventar.pdf'))} disabled={busy}>Descarcă registrul</Button>}
           </Stack>
+          {inventory.items.map(item => <Stack key={item.id} direction="row" sx={{ justifyContent: 'space-between', gap: 2, pt: 1.5, mt: 1.5, borderTop: 1, borderColor: 'divider', flexWrap: 'wrap' }}>
+            <Box><Typography sx={{ fontWeight: 600 }}>{item.description}</Typography><Typography variant="caption" color="text.secondary">{INVENTORY_CATEGORY_LABEL[item.category]} · {ITEM_STATE[item.status].label}</Typography></Box>
+            <Typography sx={{ fontWeight: 600 }}>{lei(item.confirmedValue ?? item.systemValue)}</Typography>
+          </Stack>)}
         </Paper>
       )}
 
-      {assets.length > 0 && (
+      {section === 'assets' && assets.length > 0 && (
         <Paper elevation={0} sx={{ borderRadius: `${T.radius.lg}px`, border: `1px solid ${T.border}`, overflow: 'hidden' }}>
           <Typography sx={{ p: 2, fontWeight: 700, color: T.ink, borderBottom: `1px solid ${T.border}` }}>Active</Typography>
           {assets.map((asset) => (
@@ -189,7 +203,7 @@ export function RegistersPage() {
               <Typography sx={{ color: T.textMuted, fontSize: '0.82rem', width: 64, flexShrink: 0 }}>{asset.inventoryNumber}</Typography>
               <Typography sx={{ flex: '1 1 180px', minWidth: 0, fontWeight: 600, color: T.ink }}>{asset.name}</Typography>
               <Typography sx={{ color: T.textMuted, fontSize: '0.82rem' }}>{ASSET_KIND_LABEL[asset.kind]}</Typography>
-              <Typography sx={{ fontWeight: 700, color: T.ink, whiteSpace: 'nowrap' }}>{lei(asset.remaining)}</Typography>
+              <Stack sx={{ textAlign: 'right' }}><Typography sx={{ fontWeight: 700, color: T.ink, whiteSpace: 'nowrap' }}>{lei(asset.remaining)}</Typography><Typography variant="caption" color="text.secondary">Valoare rămasă la {dayLabel(asset.asOf)}</Typography></Stack>
               {asset.kind === 'FIXED_ASSET' && (
                 <Button size="small" disabled={busy} onClick={() => void act(async () => download(await clientRegistersService.assetSheet(asset.id), `Fisa_MF_${asset.inventoryNumber}.pdf`))}>
                   Fișa MF
@@ -200,7 +214,7 @@ export function RegistersPage() {
         </Paper>
       )}
 
-      {years.length > 0 && (
+      {section === 'year' && years.length > 0 && (
         <Paper elevation={0} sx={{ borderRadius: `${T.radius.lg}px`, border: `1px solid ${T.border}`, overflow: 'hidden' }}>
           {years.map((year) => (
             <Stack key={year.year} direction="row" useFlexGap sx={{ alignItems: 'center', gap: 1.5, px: 2, py: 1.25, borderBottom: `1px solid ${T.border}`, '&:last-of-type': { borderBottom: 'none' } }}>
@@ -215,8 +229,8 @@ export function RegistersPage() {
         </Paper>
       )}
 
-      {!loading && !inventory && assets.length === 0 && years.length === 0 && (
-        <Typography sx={{ color: T.textMuted }}>Nimic de confirmat.</Typography>
+      {!loading && ((section === 'inventory' && !inventory) || (section === 'assets' && !assets.length) || (section === 'year' && !years.length)) && (
+        <Typography sx={{ color: T.textMuted }}>{section === 'inventory' ? 'Contabilul nu a pornit încă o inventariere.' : section === 'assets' ? 'Nu sunt active înregistrate de contabil.' : 'Nu există ani contabili arhivați.'}</Typography>
       )}
 
       <Dialog open={editing !== null} onClose={() => setEditing(null)} fullWidth maxWidth="xs">

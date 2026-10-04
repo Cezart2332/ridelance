@@ -5,7 +5,7 @@ import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 
 import { documentService } from '../../services/document.service'
-import { TOKENS } from '../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../panel/tokens'
 
 /**
  * Vizualizarea unui document, în aplicație.

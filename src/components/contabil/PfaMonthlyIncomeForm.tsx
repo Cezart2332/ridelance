@@ -12,9 +12,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import CalculateRoundedIcon from '@mui/icons-material/CalculateRounded';
-import { TOKENS } from '../../constants/tokens';
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../panel/tokens'
+import { fade } from '../panel/tokens'
 import { pfaService, type PfaMonthlyIncome } from '../../services/pfa.service';
 import {
   ROMANIAN_MONTHS,
@@ -123,7 +123,7 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
 
   const inputSx = {
     '& .MuiOutlinedInput-root': {
-      bgcolor: alpha(TOKENS.paper, 0.9),
+      bgcolor: fade(TOKENS.paper, 0.9),
       borderRadius: `${TOKENS.radius.md}px`,
     },
   };
@@ -141,9 +141,9 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
       sx={{
         p: 3,
         borderRadius: `${TOKENS.radius.xl}px`,
-        border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+        border: `1px solid ${fade(TOKENS.ink, 0.08)}`,
         boxShadow: TOKENS.shadow.sm,
-        background: `linear-gradient(165deg, ${alpha(TOKENS.primary, 0.05)} 0%, ${TOKENS.paper} 35%)`,
+        bgcolor: TOKENS.paper,
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
@@ -198,8 +198,8 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
                 sx={{
                   p: 2,
                   borderRadius: `${TOKENS.radius.lg}px`,
-                  border: `1px solid ${highlight ? alpha(TOKENS.primary, 0.35) : alpha(TOKENS.ink, 0.08)}`,
-                  bgcolor: highlight ? alpha(TOKENS.primary, 0.05) : TOKENS.paper,
+                  border: `1px solid ${highlight ? fade(TOKENS.primary, 0.35) : fade(TOKENS.ink, 0.08)}`,
+                  bgcolor: highlight ? fade(TOKENS.primary, 0.05) : TOKENS.paper,
                   minWidth: 0,
                 }}
               >
@@ -242,8 +242,8 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
             sx={{
               p: 2,
               borderRadius: `${TOKENS.radius.md}px`,
-              bgcolor: alpha(TOKENS.primary, 0.06),
-              border: `1px solid ${alpha(TOKENS.primary, 0.15)}`,
+              bgcolor: fade(TOKENS.primary, 0.06),
+              border: `1px solid ${fade(TOKENS.primary, 0.15)}`,
             }}
           >
             <Typography sx={{ fontSize: '0.8rem', color: TOKENS.textMuted, fontWeight: 700, mb: 0.5 }}>
@@ -262,17 +262,17 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
                 sx={{
                   p: 2,
                   borderRadius: `${TOKENS.radius.md}px`,
-                  bgcolor: alpha('#f59e0b', 0.06),
-                  border: `1px solid ${alpha('#f59e0b', 0.2)}`,
+                  bgcolor: fade('var(--rl-yellow-text)', 0.06),
+                  border: `1px solid ${fade('var(--rl-yellow-text)', 0.2)}`,
                 }}
               >
                 <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5 }}>
-                  <CalculateRoundedIcon sx={{ fontSize: 18, color: '#b45309' }} />
-                  <Typography sx={{ fontSize: '0.8rem', color: '#b45309', fontWeight: 700 }}>
+                  <CalculateRoundedIcon sx={{ fontSize: 18, color: 'var(--rl-yellow-text)' }} />
+                  <Typography sx={{ fontSize: '0.8rem', color: 'var(--rl-yellow-text)', fontWeight: 700 }}>
                     Taxe estimate anuale (calculat automat)
                   </Typography>
                 </Stack>
-                <Typography sx={{ fontWeight: 900, fontSize: '1.4rem', color: '#92400e' }}>
+                <Typography sx={{ fontWeight: 900, fontSize: '1.4rem', color: 'var(--rl-yellow-text)' }}>
                   {income.taxeEstimate.toLocaleString('ro-RO')} lei
                 </Typography>
                 <Typography sx={{ fontSize: '0.72rem', color: TOKENS.textSubtle, mt: 0.5 }}>

@@ -20,10 +20,10 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded'
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded'
-import { TOKENS } from '../../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
+import { fade } from '../../../panel/tokens'
 import { getErrorMessage } from '../../../../utils/errorHandler'
 import { discountsService, type DiscountCode } from '../../../../services/discounts.service'
 import { DateField } from '../../../common/DateField'
@@ -31,11 +31,11 @@ import { FleetBcrRequests } from './FleetBcrRequests'
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
-    backgroundColor: alpha(TOKENS.paper, 0.92),
+    backgroundColor: fade(TOKENS.paper, 0.92),
     borderRadius: `${TOKENS.radius.md}px`,
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.08) },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.16) },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.primary, 0.6), borderWidth: 2 },
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.ink, 0.08) },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.ink, 0.16) },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.primary, 0.6), borderWidth: 2 },
   },
 }
 
@@ -66,17 +66,17 @@ function statusChip(code: DiscountCode) {
   const expired = code.expiresAtUtc !== null && new Date(code.expiresAtUtc) <= new Date()
 
   let label = 'Activ'
-  let color = '#10b981'
+  let color = 'var(--rl-green-text)'
 
   if (!code.active) {
     label = 'Dezactivat'
-    color = '#94a3b8'
+    color = 'var(--rl-text-muted)'
   } else if (exhausted) {
     label = 'Epuizat'
-    color = '#f59e0b'
+    color = 'var(--rl-yellow-text)'
   } else if (expired) {
     label = 'Expirat'
-    color = '#f59e0b'
+    color = 'var(--rl-yellow-text)'
   }
 
   return (
@@ -86,9 +86,9 @@ function statusChip(code: DiscountCode) {
       sx={{
         fontWeight: 700,
         fontSize: '0.68rem',
-        bgcolor: alpha(color, 0.1),
+        bgcolor: fade(color, 0.1),
         color,
-        border: `1px solid ${alpha(color, 0.25)}`,
+        border: `1px solid ${fade(color, 0.25)}`,
       }}
     />
   )
@@ -239,10 +239,10 @@ export function DiscountsAdminView() {
                   fontWeight: 700,
                   textTransform: 'none',
                   borderRadius: `${TOKENS.radius.md}px`,
-                  borderColor: alpha(TOKENS.ink, 0.08),
+                  borderColor: fade(TOKENS.ink, 0.08),
                 },
                 '& .Mui-selected': {
-                  backgroundColor: alpha(TOKENS.primary, 0.12),
+                  backgroundColor: fade(TOKENS.primary, 0.12),
                   color: TOKENS.primaryStrong,
                 },
               }}
@@ -312,7 +312,7 @@ export function DiscountsAdminView() {
                 '&:hover': { bgcolor: TOKENS.primaryStrong, boxShadow: 'none' },
               }}
             >
-              {submitting ? <CircularProgress size={22} sx={{ color: '#fff' }} /> : 'Creează codul'}
+              {submitting ? <CircularProgress size={22} sx={{ color: 'inherit' }} /> : 'Creează codul'}
             </Button>
           </Stack>
         </Paper>}

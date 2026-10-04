@@ -26,6 +26,7 @@ import { FISCAL_PROFILE_CHANGED, currentTaxYear, type FiscalProfileMode } from '
 import { getErrorMessage } from '../../utils/errorHandler'
 import { TaxPaymentsPanel } from './TaxPaymentsPanel'
 import { COMPONENT_LABEL, accountantCompletes, coverageGapText, formatLei, reasonText } from './texts'
+import { PFA_PATHS } from '../../config/pfaNavigation'
 
 interface Props {
   mode: FiscalProfileMode
@@ -34,6 +35,7 @@ interface Props {
   onEditProfile?: () => void
   /** Duce la chatul cu contabilul — CTA-ul pentru date lipsă. */
   onContactAccountant?: () => void
+  onPlatformTaxes?: () => void
   /**
    * Umple înălțimea celulei în care stă (grila de pe Acasă, lângă profitul real). Implicit nu: pe
    * „Taxe & declarații” cardul stă sub un titlu, iar cu înălțimea părintelui ieșea din chenar exact
@@ -49,7 +51,7 @@ const POLL_MS = 5000
  * statusul lor. Aceeași componentă pe Acasă, în Taxe estimate și, cu
  * detaliile de calcul, în fișa PFA din admin și contabilitate (§11.3).
  */
-export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccountant, fill = false }: Props) {
+export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccountant, onPlatformTaxes, fill = false }: Props) {
   const taxYear = currentTaxYear()
   const isStaff = mode !== 'pfa'
   const [data, setData] = useState<EstimatedTaxes | null>(null)
@@ -149,6 +151,10 @@ export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccoun
         </Alert>
       )}
 
+      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 1 }}>
+        Estimare pentru anul {taxYear}, pe baza datelor fiscale disponibile.
+      </Typography>
+
       {/* ── Recomandarea ── */}
       <Box sx={{ mt: 1.5 }} aria-live="polite">
         {calculating ? (
@@ -211,6 +217,8 @@ export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccoun
             taxYear={taxYear}
             showBreakdown={isStaff}
             onEditProfile={isStaff ? undefined : onEditProfile}
+            onPlatformTaxes={onPlatformTaxes}
+            platformTaxesHref={isStaff ? undefined : PFA_PATHS.taxes + '#declaratii-lunare'}
           />
         ))}
       </Stack>
@@ -342,12 +350,16 @@ function ComponentRow({
   taxYear,
   showBreakdown,
   onEditProfile,
+  onPlatformTaxes,
+  platformTaxesHref,
 }: {
   component: EstimatedTaxComponent
   calculating: boolean
   taxYear: number
   showBreakdown: boolean
   onEditProfile?: () => void
+  onPlatformTaxes?: () => void
+  platformTaxesHref?: string
 }) {
   const [open, setOpen] = useState(false)
   const label = COMPONENT_LABEL[component.component] ?? component.component
@@ -355,7 +367,7 @@ function ComponentRow({
 
   let value: React.ReactNode
   if (platform || component.status === 'NOT_CONFIGURED') {
-    value = <Typography variant="body2" sx={{ color: 'text.secondary' }}>În curs de configurare</Typography>
+    value = <Typography variant="body2" sx={{ color: 'text.secondary' }}>{platform ? 'Separat, în declarațiile lunare' : 'Calcul indisponibil'}</Typography>
   } else if (calculating || component.status === 'CALCULATING') {
     value = <Skeleton variant="text" width={72} />
   } else if (component.status === 'ESTIMATED') {
@@ -405,6 +417,17 @@ function ComponentRow({
         </Stack>
         <Box sx={{ ml: 'auto', textAlign: 'right' }}>{value}</Box>
       </Stack>
+      {platform && (
+        <Box sx={{ mt: 1, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            Acest calculator nu include TVA și taxele aferente platformelor în suma de pus deoparte. Nu există un comutator care să le activeze aici.
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+            Contabilul verifică regimul fiscal și codul special TVA din Setări, facturile de comision Uber/Bolt și declarațiile lunare aplicabile. După pregătire, PFA-ul vede sumele și starea declarațiilor în „Taxe & declarații”.
+          </Typography>
+          {(onPlatformTaxes || platformTaxesHref) && <Button size="small" sx={{ mt: 1 }} onClick={onPlatformTaxes} href={platformTaxesHref}>Vezi declarațiile lunare</Button>}
+        </Box>
+      )}
       {detail && (
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.25 }}>
           {detail}

@@ -30,7 +30,7 @@ import {
 } from '../../../utils/deductibleExpenseCatalog'
 import { documentStatusColors, documentStatusLabel, normalizeDocumentStatus } from '../../../utils/documentStatus'
 import { currentMonthYear } from '../../../utils/monthLabels'
-import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme'
+import { PANEL_COMPAT_DASHBOARD_TOKENS as DASHBOARD_TOKENS, panelCompatInputSx as dashboardInputSx } from '../../panel/tokens'
 import { openDocument } from '../../common/documentViewerBus'
 
 type DeductibleExpensesPanelProps = {
@@ -270,6 +270,7 @@ export function DeductibleExpensesPanel({
               fontWeight: 700,
               borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
               bgcolor: DASHBOARD_TOKENS.primary,
+              color: DASHBOARD_TOKENS.primaryFg,
               boxShadow: 'none', // Replaced glow shadow with flat style
               '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong },
             }}

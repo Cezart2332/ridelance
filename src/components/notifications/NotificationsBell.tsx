@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Badge, IconButton, Popover } from '@mui/material'
 import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded'
-import { DASHBOARD_TOKENS as T } from '../dashboard/dashboardTheme'
+import { PANEL_COMPAT_DASHBOARD_TOKENS as T } from '../panel/tokens'
 import { useNotifications } from './useNotifications'
 import { NotificationsPanel } from './NotificationsPanel'
 

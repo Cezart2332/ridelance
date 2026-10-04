@@ -149,7 +149,7 @@ export function MonthDocuments({
                 {multiple && (
                   <ExpandMoreRoundedIcon
                     fontSize="small"
-                    sx={{ color: '#6B6B7B', transform: expanded === group.key ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }}
+                    sx={{ color: 'var(--rl-text-muted)', transform: expanded === group.key ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }}
                   />
                 )}
               </Box>
@@ -163,12 +163,12 @@ export function MonthDocuments({
               )}
             </Stack>
             {multiple && expanded === group.key && (
-              <Box sx={{ bgcolor: '#FBFDFE', pb: 1 }}>
+              <Box sx={{ bgcolor: 'var(--rl-card-alt)', pb: 1 }}>
                 {group.documents.map((document) => (
                   <Stack key={document.id} direction="row" sx={{ alignItems: 'center', gap: 2, px: 2.5, py: 0.75 }}>
                     <ButtonBase
                       onClick={() => nav.setParam('document', document.id)}
-                      sx={{ flexGrow: 1, justifyContent: 'flex-start', fontFamily: 'inherit', fontSize: 14, color: '#4A4A5E', textAlign: 'left', minWidth: 0 }}
+                      sx={{ flexGrow: 1, justifyContent: 'flex-start', fontFamily: 'inherit', fontSize: 14, color: 'var(--rl-fg-soft)', textAlign: 'left', minWidth: 0 }}
                     >
                       <Box component="span" sx={{ overflowWrap: 'anywhere' }}>
                         {document.fileName}

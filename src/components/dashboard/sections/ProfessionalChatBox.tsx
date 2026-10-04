@@ -2,11 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import {
   Alert, Box, Paper, Typography, TextField, IconButton, Stack, CircularProgress, Divider
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import SendRoundedIcon from '@mui/icons-material/SendRounded'
 import InboxRoundedIcon from '@mui/icons-material/InboxRounded'
 
-import { TOKENS } from '../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS, fade as alpha } from '../../panel/tokens'
 import { chatService, type ChatMessageDto } from '../../../services/chat.service'
 import { getChatConnection, startChatConnection } from '../../../lib/signalr'
 import { useAppSelector } from '../../../store/hooks'
@@ -25,6 +24,7 @@ export function ProfessionalChatBox({ clientUserId, clientName }: ProfessionalCh
   const [messages, setMessages] = useState<ChatMessageDto[]>([])
   const [chatMessage, setChatMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const composer = useChatComposer(roomId, (sent) => setMessages((prev) => [...prev, sent]))
   const sending = composer.sending
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -33,43 +33,51 @@ export function ProfessionalChatBox({ clientUserId, clientName }: ProfessionalCh
 
   useEffect(() => {
     let currentRoomId: string | null = null
+    let disposed = false
+    let joined = false
+    const conn = getChatConnection()
+    const onMessage = (msg: ChatMessageDto) => {
+      if (disposed || (myRole === 'Contabil' && msg.senderRole === 'Admin')) return
+      setMessages((prev) => [...prev, msg])
+    }
 
     const loadChat = async () => {
       setLoading(true)
+      setLoadError(null)
       try {
         const id = await chatService.getOrCreateRoom(clientUserId)
+        if (disposed) return
         currentRoomId = id
         setRoomId(id)
 
         const history = await chatService.getMessages(id)
+        if (disposed) return
         setMessages(history.messages)
 
-        const conn = getChatConnection()
-        conn.off('ReceiveMessage') // Clear previous listeners
-        conn.on('ReceiveMessage', (msg: ChatMessageDto) => {
-          if (myRole === 'Contabil' && msg.senderRole === 'Admin') {
-            return // Contabil cannot see Admin's messages
-          }
-          setMessages((prev) => [...prev, msg])
-        })
+        conn.on('ReceiveMessage', onMessage)
         await startChatConnection()
+        if (disposed) return
         await conn.invoke('JoinRoom', id)
+        joined = true
       } catch (err) {
+        if (disposed) return
         console.error('Eroare la încărcarea chat-ului', err)
+        setLoadError('Conversația nu a putut fi încărcată complet. Redeschide fila Mesaje pentru a reîncerca.')
       } finally {
-        setLoading(false)
+        if (!disposed) setLoading(false)
       }
     }
 
     loadChat()
 
     return () => {
-      if (currentRoomId) {
-        const conn = getChatConnection()
+      disposed = true
+      conn.off('ReceiveMessage', onMessage)
+      if (currentRoomId && joined) {
         conn.invoke('LeaveRoom', currentRoomId).catch(() => {})
       }
     }
-  }, [clientUserId])
+  }, [clientUserId, myRole])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -86,7 +94,7 @@ export function ProfessionalChatBox({ clientUserId, clientName }: ProfessionalCh
     <Paper
       elevation={0}
       sx={{
-        p: 3,
+        p: { xs: 2, sm: 3 },
         height: { xs: 'min(70vh, 520px)', md: 600 },
         minHeight: { xs: 360, md: 600 },
         display: 'flex',
@@ -96,7 +104,7 @@ export function ProfessionalChatBox({ clientUserId, clientName }: ProfessionalCh
         boxShadow: TOKENS.shadow.sm,
       }}
     >
-      <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>Mesaje Client ({clientName})</Typography>
+      <Typography variant="h6" sx={{ fontWeight: 650, mb: 2 }}>Mesaje · {clientName}</Typography>
       
       <Box sx={{ flex: 1, overflowY: 'auto', mb: 3, display: 'flex', flexDirection: 'column', pr: 1 }}>
         {loading ? (
@@ -130,7 +138,7 @@ export function ProfessionalChatBox({ clientUserId, clientName }: ProfessionalCh
                             p: 1.5,
                             maxWidth: '85%',
                             borderRadius: `${TOKENS.radius.md}px`,
-                            backgroundColor: isMe ? `rgba(92,203,245,0.12)` : TOKENS.surface,
+                            backgroundColor: isMe ? 'var(--rl-muted, rgba(92,203,245,0.12))' : TOKENS.surface,
                             border: `1px solid ${isMe ? 'transparent' : alpha(TOKENS.ink, 0.08)}`,
                           }}
                         >
@@ -155,6 +163,7 @@ export function ProfessionalChatBox({ clientUserId, clientName }: ProfessionalCh
         )}
       </Box>
 
+      {loadError && <Alert severity="error" sx={{ mb: 1.5 }}>{loadError}</Alert>}
       {composer.pendingFile && (
         <Box sx={{ mt: -1.5, mb: 1.5 }}>
           <PendingAttachment file={composer.pendingFile} progress={composer.progress} onRemove={composer.clearFile} />
@@ -169,6 +178,7 @@ export function ProfessionalChatBox({ clientUserId, clientName }: ProfessionalCh
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
         <ChatAttachButton disabled={!roomId || sending} onPick={composer.pickFile} onError={composer.setError} />
         <TextField
+          slotProps={{ htmlInput: { 'aria-label': `Mesaj pentru ${clientName}` } }}
           fullWidth
           size="small"
           placeholder={composer.pendingFile ? 'Adaugă o descriere (opțional)...' : 'Scrie un mesaj...'}
@@ -188,10 +198,11 @@ export function ProfessionalChatBox({ clientUserId, clientName }: ProfessionalCh
           }}
         />
         <IconButton 
+          aria-label="Trimite mesaj"
           onClick={handleSend} 
-          disabled={!canSend || sending}
+          disabled={!roomId || !canSend || sending}
           sx={{ 
-            bgcolor: TOKENS.primary, color: '#fff',
+            bgcolor: TOKENS.primary, color: 'var(--rl-primary-fg, #fff)',
             '&:hover': { bgcolor: TOKENS.primaryStrong },
             '&.Mui-disabled': { bgcolor: alpha(TOKENS.ink, 0.1), color: alpha(TOKENS.ink, 0.3) }
           }}

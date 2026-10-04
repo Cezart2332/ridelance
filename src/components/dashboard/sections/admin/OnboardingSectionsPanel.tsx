@@ -21,10 +21,10 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
-import { TOKENS } from '../../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
+import { fade } from '../../../panel/tokens'
 import AdminExtractedFields from './AdminExtractedFields'
 import { VatRegistrationBlock } from '../../../../shared/accounting/ui/workspace/VatRegistrationCard'
 import { DocumentRejectDialog } from './DocumentRejectDialog'
@@ -83,11 +83,11 @@ interface OnboardingSectionsPanelProps {
 type Tone = 'success' | 'warning' | 'error' | 'info' | 'neutral'
 
 const TONE_COLOR: Record<Tone, string> = {
-  success: '#0f9d6b',
-  warning: '#b7791f',
-  error: '#d64545',
+  success: 'var(--rl-green-text)',
+  warning: 'var(--rl-yellow-text)',
+  error: 'var(--rl-red-text)',
   info: TOKENS.primaryStrong,
-  neutral: 'rgba(26,26,46,0.5)',
+  neutral: 'var(--rl-text-subtle)',
 }
 
 /**
@@ -119,7 +119,7 @@ function StatePill({ tone, label }: { tone: Tone; label: string }) {
         px: 1.25,
         py: 0.4,
         borderRadius: `${TOKENS.radius.sm}px`,
-        bgcolor: alpha(color, 0.1),
+        bgcolor: fade(color, 0.1),
         color,
         fontSize: '0.75rem',
         fontWeight: 700,
@@ -150,7 +150,7 @@ function Subheading({ children, action }: { children: ReactNode; action?: ReactN
 /** Un rând etichetă–valoare, pentru datele completate de client. */
 function Fact({ label, value, emphasis }: { label: string; value: ReactNode; emphasis?: Tone }) {
   return (
-    <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ py: 1, gap: { xs: 0.25, sm: 2 }, borderBottom: `1px solid ${alpha(TOKENS.ink, 0.05)}`, '&:last-of-type': { borderBottom: 0 } }}>
+    <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ py: 1, gap: { xs: 0.25, sm: 2 }, borderBottom: `1px solid ${fade(TOKENS.ink, 0.05)}`, '&:last-of-type': { borderBottom: 0 } }}>
       <Typography variant="body2" sx={{ color: TOKENS.textMuted, width: { sm: 200 }, flexShrink: 0 }}>
         {label}
       </Typography>
@@ -267,7 +267,7 @@ function FiscalReview({ pfaId, refreshKey }: { pfaId: string; refreshKey: number
       />
       {/* „Nu”: codul îl obținem noi, cu D700 generat automat și verificat de contabil. */}
       {step2.fiscal?.vatAnswer === 'No' && (
-        <Box sx={{ my: 1.5, p: 2, border: '1px solid rgba(0,0,0,0.08)', borderRadius: 2 }}>
+        <Box sx={{ my: 1.5, p: 2, border: '1px solid var(--rl-border)', borderRadius: 2 }}>
           <VatRegistrationBlock pfaId={pfaId} />
         </Box>
       )}
@@ -737,7 +737,7 @@ function ValidateBar({
   secondary?: ReactNode
 }) {
   return (
-    <Box sx={{ mt: 1, p: 2, borderRadius: `${TOKENS.radius.md}px`, bgcolor: alpha(TOKENS.ink, 0.025) }}>
+    <Box sx={{ mt: 1, p: 2, borderRadius: `${TOKENS.radius.md}px`, bgcolor: fade(TOKENS.ink, 0.025) }}>
       {warning && (
         <Alert severity="warning" sx={{ mb: 1.5 }}>
           {warning}
@@ -756,7 +756,7 @@ function ValidateBar({
             disabled={busy}
             startIcon={busy ? <CircularProgress size={16} color="inherit" /> : <CheckCircleRoundedIcon />}
             onClick={onValidate}
-            sx={{ fontWeight: 700, boxShadow: 'none', bgcolor: TONE_COLOR.success, '&:hover': { bgcolor: '#0b7f56', boxShadow: 'none' } }}
+            sx={{ fontWeight: 700, boxShadow: 'none', bgcolor: TONE_COLOR.success, '&:hover': { bgcolor: 'var(--rl-green-text)', boxShadow: 'none' } }}
           >
             {label}
           </Button>
@@ -818,7 +818,7 @@ function DossierDocumentsValidation({
   const ready = readiness.missing.length === 0 && readiness.awaitingValidation.length === 0
 
   return (
-    <Box data-testid={`dossier-documents-${step}`} sx={{ p: 2, borderRadius: `${TOKENS.radius.md}px`, bgcolor: alpha(TOKENS.ink, 0.025) }}>
+    <Box data-testid={`dossier-documents-${step}`} sx={{ p: 2, borderRadius: `${TOKENS.radius.md}px`, bgcolor: fade(TOKENS.ink, 0.025) }}>
       <Typography sx={{ fontWeight: 700, mb: 0.75 }}>Actele pentru dosar</Typography>
       {ready ? (
         <Typography variant="body2" sx={{ color: TONE_COLOR.success, fontWeight: 600 }}>
@@ -968,7 +968,7 @@ export function OnboardingSectionsPanel({
   }
 
   const renderDocRow = (doc: DocumentSummary) => (
-    <Box key={doc.id} sx={{ '& + &': { borderTop: `1px solid ${alpha(TOKENS.ink, 0.06)}` } }}>
+    <Box key={doc.id} sx={{ '& + &': { borderTop: `1px solid ${fade(TOKENS.ink, 0.06)}` } }}>
       <DocumentRow
         name={doc.originalFileName}
         meta={[
@@ -1027,7 +1027,7 @@ export function OnboardingSectionsPanel({
             const { tone, label } = presentationOf(step)
             return (
               <Tooltip key={group.key} title={`${group.order + 1}. ${group.label} — ${label}`}>
-                <Box sx={{ height: 6, borderRadius: `${TOKENS.radius.xs}px`, bgcolor: tone === 'neutral' ? alpha(TOKENS.ink, 0.08) : alpha(TONE_COLOR[tone], tone === 'success' ? 1 : 0.55) }} />
+                <Box sx={{ height: 6, borderRadius: `${TOKENS.radius.xs}px`, bgcolor: tone === 'neutral' ? fade(TOKENS.ink, 0.08) : fade(TONE_COLOR[tone], tone === 'success' ? 1 : 0.55) }} />
               </Tooltip>
             )
           })}
@@ -1059,7 +1059,7 @@ export function OnboardingSectionsPanel({
             variant="outlined"
             sx={{
               overflow: 'hidden',
-              borderColor: step?.state === 'pending_admin' ? alpha(TONE_COLOR.warning, 0.45) : undefined,
+              borderColor: step?.state === 'pending_admin' ? fade(TONE_COLOR.warning, 0.45) : undefined,
               opacity: isLocked ? 0.72 : 1,
             }}
           >
@@ -1081,7 +1081,7 @@ export function OnboardingSectionsPanel({
                 background: 'transparent',
                 fontFamily: 'inherit',
                 cursor: 'pointer',
-                '&:hover': { bgcolor: alpha(TOKENS.ink, 0.02) },
+                '&:hover': { bgcolor: fade(TOKENS.ink, 0.02) },
                 '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: -2 },
               }}
             >
@@ -1093,7 +1093,7 @@ export function OnboardingSectionsPanel({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  bgcolor: alpha(TONE_COLOR[tone], 0.1),
+                  bgcolor: fade(TONE_COLOR[tone], 0.1),
                   color: TONE_COLOR[tone],
                   fontWeight: 800,
                   flexShrink: 0,
@@ -1165,7 +1165,7 @@ export function OnboardingSectionsPanel({
                         Niciun document încărcat încă.
                       </Typography>
                     ) : (
-                      <Box sx={{ border: `1px solid ${alpha(TOKENS.ink, 0.08)}`, borderRadius: `${TOKENS.radius.md}px`, overflow: 'hidden' }}>
+                      <Box sx={{ border: `1px solid ${fade(TOKENS.ink, 0.08)}`, borderRadius: `${TOKENS.radius.md}px`, overflow: 'hidden' }}>
                         {groupDocs.map(renderDocRow)}
                       </Box>
                     )}

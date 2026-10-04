@@ -105,7 +105,8 @@ export function TransactionsPage() {
   return (
     <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
       <PageHeader
-        title="Tranzacții"
+        title="Încasări și plăți"
+        subtitle="Bancă și numerar într-un singur loc. Vezi ce a identificat contabilitatea și asociază documentele lipsă."
         keepTitleOnMobile
         actions={
           <Button

@@ -11,7 +11,7 @@ import { Panel, StatusPill } from './parts'
 import { SPV_FIELD_LABEL, SPV_MESSAGE_CELL, SPV_REQUEST_CELL, SPV_REQUEST_TYPES, spvTypeLabel } from './spv'
 import { HAIRLINE, INK, MUTED } from './status'
 
-const DARK = { bgcolor: INK, color: '#FFFFFF', '&:hover': { bgcolor: '#2d2d45' } }
+const DARK = { bgcolor: 'var(--rl-primary)', color: 'var(--rl-primary-fg)', '&:hover': { bgcolor: 'var(--rl-fg-soft)' } }
 
 /** Mesajele SPV ale clientului (aduse de aplicația desktop) și cererile către SPV. */
 export function SpvSection({ pfaId }: { pfaId: string }) {

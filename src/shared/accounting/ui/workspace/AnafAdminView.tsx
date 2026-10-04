@@ -10,7 +10,7 @@ import { PageTitle, Panel, StatusPill } from './parts'
 import { SpvAppCard } from './SpvAppCard'
 import { HAIRLINE, INK, MUTED, type Cell } from './status'
 
-const DARK = { bgcolor: INK, color: '#FFFFFF', '&:hover': { bgcolor: '#2d2d45' } }
+const DARK = { bgcolor: 'var(--rl-primary)', color: 'var(--rl-primary-fg)', '&:hover': { bgcolor: 'var(--rl-fg-soft)' } }
 
 /**
  * „ANAF” (doar admin): conexiunile globale, nu ale unui client. Contul ANAF pentru e-Factura

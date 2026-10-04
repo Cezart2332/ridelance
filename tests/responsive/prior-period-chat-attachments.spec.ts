@@ -104,7 +104,11 @@ async function mockContabil(page: Page) {
   await page.route(`${API}/chat/messages/*/attachment`, (route) => route.fulfill({ status: 200, contentType: 'image/jpeg', body: PHOTO }))
   await page.route(`${API}/chat/rooms/${ROOM_ID}/attachments`, async (route) => {
     state.uploads.push(route.request().postData() ?? '')
-    return json(route, {})
+    return json(route, {
+      id: 'm-sent', senderId: 'contabil-1', senderName: 'Ana Contabil', senderRole: 'Contabil',
+      content: 'Factura pe septembrie', sentAtUtc: `${YEAR}-09-23T09:02:00Z`, isRead: false,
+      attachment: { fileName: 'factura.pdf', contentType: 'application/pdf', size: 13 },
+    })
   })
   await mockAccountingClient(page, { pfaId: PFA_ID, userId: CLIENT_USER_ID, name: 'POPESCU ION PFA', email: 'ion@example.test' })
 
@@ -191,6 +195,7 @@ test('chatul arată pozele și fișierele și trimite un fișier atașat', async
   expect(state.uploads[0]).toContain('filename="factura.pdf"')
   expect(state.uploads[0]).toContain('Factura pe septembrie')
   await expect(page.getByText(/factura\.pdf · 13 B/)).toHaveCount(0)
+  await expect(page.getByText('Factura pe septembrie', { exact: true })).toBeVisible()
 })
 
 test('contabilul completează sumele pe care PFA-ul le-a lăsat cu „Da” în profil', async ({ page }, info) => {

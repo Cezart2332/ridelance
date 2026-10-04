@@ -35,6 +35,7 @@ import { RegisterStatusBar } from './RegisterStatusBar'
 import { YearCard } from './YearCard'
 import { exportName } from './exportName'
 import { ExportButtons, YearSelect } from './registerParts'
+import { RegisterGuide, type RegisterSection } from './RegisterGuide'
 
 const cell = (value: number) => (value ? formatAmount(value) : '')
 
@@ -176,7 +177,7 @@ function RjipCard({ summary, year, version }: DossierTabProps & { year: number; 
 }
 
 /** Un rând REF cu drill-down până la înregistrări și lunile de amortizare. */
-function RefRowView({ row }: { row: RefRow }) {
+export function RefRowView({ row }: { row: RefRow }) {
   const [open, setOpen] = useState(false)
   const contributions = row.contributions ?? []
   return (
@@ -286,19 +287,21 @@ export function RegistersTab(props: DossierTabProps) {
   const years = yearsOf(props.summary.engagement.startDate, lastYear)
   const [year, setYear] = useState(years[0])
   const [version, setVersion] = useState(0)
+  const [section, setSection] = useState<RegisterSection>('rjip')
   const changed = () => setVersion((value) => value + 1)
 
   return (
     <Stack spacing={3}>
+      <RegisterGuide value={section} onChange={setSection} />
       <Stack direction="row" sx={{ gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
         <YearSelect years={years} year={year} onChange={setYear} />
         <RegisterStatusBar pfaId={props.summary.id} year={year} version={version} readOnly={props.summary.readOnly} onChanged={changed} />
       </Stack>
-      <RjipCard key={`rjip-${year}`} {...props} year={year} version={version} />
-      <RefCard key={`ref-${year}-${version}`} {...props} year={year} />
-      <AssetsCard {...props} onChanged={changed} />
-      <InventoryCard {...props} year={year} onChanged={changed} />
-      <YearCard key={`year-${year}-${version}`} {...props} year={year} onChanged={changed} />
+      {section === 'rjip' && <RjipCard key={`rjip-${year}`} {...props} year={year} version={version} />}
+      {section === 'ref' && <RefCard key={`ref-${year}-${version}`} {...props} year={year} />}
+      {section === 'assets' && <AssetsCard {...props} onChanged={changed} />}
+      {section === 'inventory' && <InventoryCard {...props} year={year} onChanged={changed} />}
+      {section === 'year' && <YearCard key={`year-${year}-${version}`} {...props} year={year} onChanged={changed} />}
     </Stack>
   )
 }

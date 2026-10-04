@@ -15,17 +15,17 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
-import { TOKENS } from '../../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
+import { fade } from '../../../panel/tokens'
 import { serviceOrdersService, type ServiceOrder } from '../../../../services/serviceOrders.service'
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
-    backgroundColor: alpha(TOKENS.paper, 0.92),
+    backgroundColor: fade(TOKENS.paper, 0.92),
     borderRadius: `${TOKENS.radius.md}px`,
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.08) },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.16) },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.primary, 0.6), borderWidth: 2 },
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.ink, 0.08) },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.ink, 0.16) },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.primary, 0.6), borderWidth: 2 },
   },
 }
 
@@ -36,7 +36,7 @@ function formatAmount(bani: number | null): string {
 
 function statusChip(status: string) {
   const paid = status.toLowerCase() === 'paid'
-  const color = paid ? '#10b981' : '#f59e0b'
+  const color = paid ? 'var(--rl-green-text)' : 'var(--rl-yellow-text)'
   const label = paid ? 'Plătit' : 'În așteptare'
   return (
     <Chip
@@ -45,9 +45,9 @@ function statusChip(status: string) {
       sx={{
         fontWeight: 700,
         fontSize: '0.68rem',
-        bgcolor: alpha(color, 0.1),
+        bgcolor: fade(color, 0.1),
         color,
-        border: `1px solid ${alpha(color, 0.25)}`,
+        border: `1px solid ${fade(color, 0.25)}`,
       }}
     />
   )
@@ -113,13 +113,13 @@ export function ServicesAdminView() {
             width: '100%',
             maxWidth: '100%',
             borderRadius: `${TOKENS.radius.lg}px`,
-            border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+            border: `1px solid ${fade(TOKENS.ink, 0.08)}`,
             boxShadow: TOKENS.shadow.sm,
           }}
         >
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ bgcolor: alpha(TOKENS.surface, 0.7) }}>
+              <TableRow sx={{ bgcolor: fade(TOKENS.surface, 0.7) }}>
                 <TableCell sx={{ fontWeight: 650 }}>Client</TableCell>
                 <TableCell sx={{ fontWeight: 650 }}>Serviciu</TableCell>
                 <TableCell sx={{ fontWeight: 650 }}>Sumă</TableCell>
@@ -129,7 +129,7 @@ export function ServicesAdminView() {
             </TableHead>
             <TableBody>
               {orders.map((order) => (
-                <TableRow key={order.id} sx={{ '&:hover': { bgcolor: alpha(TOKENS.primary, 0.03) } }}>
+                <TableRow key={order.id} sx={{ '&:hover': { bgcolor: fade(TOKENS.primary, 0.03) } }}>
                   <TableCell>
                     <Typography sx={{ fontWeight: 650 }}>{order.customerName}</Typography>
                     <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>

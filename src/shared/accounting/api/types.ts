@@ -442,6 +442,45 @@ export interface UploadPlatformDocumentRequest {
   period: Period
 }
 
+/** Profilul fiscal al anului: necompletat, început sau confirmat de PFA. */
+export type FiscalProfileState = 'NOT_STARTED' | 'DRAFT' | 'COMPLETED'
+
+/**
+ * Coloanele fiscale din „Clienți PFA”, din ultima rulare a taxelor estimate. `null` = necalculat
+ * (profil necompletat sau fără rulare), niciodată 0 inventat.
+ */
+export interface FiscalOverviewRow {
+  pfaId: string
+  profileStatus: FiscalProfileState
+  /** „Standard”, „Pensionar”, „Salariat ≥ 6 salarii” …; doar cu profilul confirmat. */
+  profileLabel: string | null
+  asOf: IsoDate | null
+  /** Datele s-au schimbat de la rulare: cifrele se recalculează. */
+  stale: boolean
+  grossIncome: number | null
+  expenses: number | null
+  netIncome: number | null
+  cas: number | null
+  cass: number | null
+  incomeTax: number | null
+  totalTaxes: number | null
+}
+
+/** Plafoanele anului (din parametrii fiscali ai backend-ului). */
+export interface FiscalThresholds {
+  cas12: number
+  cas24: number
+  cassMin: number
+  cassMax: number
+  vatArt310: number
+}
+
+export interface FiscalOverview {
+  year: number
+  thresholds: FiscalThresholds | null
+  rows: FiscalOverviewRow[]
+}
+
 /** Încărcarea globală din „Clienți PFA”: unde a ajuns fiecare fișier. */
 export type PlatformInboxStatus = 'MATCHING' | 'ASSIGNED' | 'NEEDS_REVIEW' | 'UNKNOWN_CUI' | 'DISMISSED' | 'FAILED'
 

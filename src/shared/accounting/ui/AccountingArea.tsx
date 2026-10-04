@@ -1,8 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Alert, Box, Snackbar } from '@mui/material'
-import { ThemeProvider } from '@mui/material/styles'
 
-import { adminTheme } from '../../../theme/adminTheme'
+import { PanelThemeProvider } from '../../../components/panel/PanelThemeProvider'
 import type { AccountingRole } from '../api/types'
 import { MonthDashboardView } from './month/MonthDashboardView'
 import { AccountingConfigContext, useAccountingNav, type AccountingTabs } from './navigation'
@@ -38,7 +37,7 @@ function AccountingContent({ view }: { view: AccountingView }) {
  * Modulul de contabilitate PFA, același în dashboard-ul ADMIN și în cel al contabilului
  * (spec §0 pct. 6): rolul și numele tab-urilor vin ca props, restul e comun.
  *
- * Tema e cea de admin, aplicată și sub layout-ul contabilului, ca modulul să arate la fel oriunde.
+ * Tema e cea a panoului (Admin/Contabil); pusă și aici, ca modulul să arate la fel și pe pagina de dev.
  */
 export default function AccountingArea({ role, view, tabs }: { role: AccountingRole; view: AccountingView; tabs: AccountingTabs }) {
   const config = useMemo(() => ({ role, tabs }), [role, tabs])
@@ -48,7 +47,7 @@ export default function AccountingArea({ role, view, tabs }: { role: AccountingR
   }, [])
 
   return (
-    <ThemeProvider theme={adminTheme}>
+    <PanelThemeProvider>
       <AccountingConfigContext.Provider value={config}>
         <NotifyContext.Provider value={notify}>
           <Box sx={{ minWidth: 0 }}>
@@ -67,6 +66,6 @@ export default function AccountingArea({ role, view, tabs }: { role: AccountingR
           </Snackbar>
         </NotifyContext.Provider>
       </AccountingConfigContext.Provider>
-    </ThemeProvider>
+    </PanelThemeProvider>
   )
 }

@@ -130,7 +130,9 @@ test('PFA înrolate: active, inactive și șterse, fiecare cu numărul lui', asy
   await page.getByRole('button', { name: 'Șterse (1)', exact: true }).click()
   await expect(page.getByText('Client inchis', { exact: true })).toBeVisible()
   await expect(page.getByText('Cont închis')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Redeschide contul' })).toBeVisible()
+  await page.getByRole('button', { name: 'Acțiuni pentru Client inchis' }).click()
+  await expect(page.getByRole('menuitem', { name: 'Redeschide contul' })).toBeVisible()
+  await page.keyboard.press('Escape')
 
   // Contul închis nu mai apare în onboarding.
   await page.goto('/admin?tab=pfa')

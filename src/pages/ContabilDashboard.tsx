@@ -3,12 +3,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import ChecklistRoundedIcon from '@mui/icons-material/ChecklistRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded'
-import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded'
 import RuleRoundedIcon from '@mui/icons-material/RuleRounded'
 import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded'
 
 import { RouteFallback } from '../components/common/RouteFallback'
-import { DashboardLayout } from '../components/layout/DashboardLayout'
+import { PanelLayout, type PanelNavItem } from '../components/panel/PanelLayout'
+import { PanelThemeProvider } from '../components/panel/PanelThemeProvider'
 import { NotificationsInbox } from '../components/notifications/NotificationsPanel'
 import { ROUTES } from '../constants/routes'
 import { authService } from '../services/auth.service'
@@ -52,17 +52,18 @@ export function ContabilDashboard() {
     navigate(ROUTES.login, { replace: true })
   }
 
-  const navItems = [
-    { id: ACCOUNTING_TABS.today, label: 'Rezumat', icon: <ChecklistRoundedIcon /> },
-    { id: ACCOUNTING_TABS.pfa, label: 'Clienți PFA', icon: <GroupsRoundedIcon /> },
-    { id: ACCOUNTING_TABS.declarations, label: 'Declarații', icon: <DescriptionRoundedIcon /> },
-    { id: ACCOUNTING_TABS.vat, label: 'Cod TVA', icon: <VerifiedRoundedIcon /> },
-    { id: ACCOUNTING_TABS.rules, label: 'Reguli fiscale', icon: <RuleRoundedIcon /> },
-    { id: 'notificari', label: 'Notificări', icon: <NotificationsActiveRoundedIcon /> },
+  const navItems: PanelNavItem[] = [
+    { id: ACCOUNTING_TABS.today, label: 'Rezumat', group: 'Contabilitate', icon: <ChecklistRoundedIcon /> },
+    { id: ACCOUNTING_TABS.pfa, label: 'Clienți PFA', group: 'Contabilitate', icon: <GroupsRoundedIcon /> },
+    { id: ACCOUNTING_TABS.declarations, label: 'Declarații', group: 'Contabilitate', icon: <DescriptionRoundedIcon /> },
+    { id: ACCOUNTING_TABS.vat, label: 'Cod TVA', group: 'Contabilitate', icon: <VerifiedRoundedIcon /> },
+    { id: ACCOUNTING_TABS.rules, label: 'Reguli fiscale', group: 'Contabilitate', icon: <RuleRoundedIcon /> },
   ]
 
   return (
-    <DashboardLayout
+    <PanelThemeProvider>
+    <PanelLayout
+      workspace="Contabil"
       navItems={navItems}
       activeId={activeTab}
       onNavClick={(id) => {
@@ -80,6 +81,7 @@ export function ContabilDashboard() {
           <AccountingArea role="Contabil" tabs={ACCOUNTING_TABS} view={VIEW_OF[activeTab] ?? 'today'} />
         </Suspense>
       )}
-    </DashboardLayout>
+    </PanelLayout>
+    </PanelThemeProvider>
   )
 }

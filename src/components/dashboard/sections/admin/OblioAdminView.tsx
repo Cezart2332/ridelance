@@ -18,13 +18,13 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
-import { TOKENS } from '../../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
+import { fade } from '../../../panel/tokens'
 import { getErrorMessage } from '../../../../utils/errorHandler'
 import {
   oblioService,
@@ -34,11 +34,11 @@ import {
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
-    backgroundColor: alpha(TOKENS.paper, 0.92),
+    backgroundColor: fade(TOKENS.paper, 0.92),
     borderRadius: `${TOKENS.radius.md}px`,
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.08) },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.16) },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.primary, 0.6), borderWidth: 2 },
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.ink, 0.08) },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.ink, 0.16) },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.primary, 0.6), borderWidth: 2 },
   },
 }
 
@@ -58,7 +58,7 @@ function formatDate(iso: string): string {
 
 function invoiceStatusChip(invoice: IssuedInvoice) {
   const ok = invoice.status === 'Issued'
-  const color = ok ? '#10b981' : '#ef4444'
+  const color = ok ? 'var(--rl-green-text)' : 'var(--rl-red-text)'
   return (
     <Chip
       label={ok ? 'Emisă' : 'Eșuată'}
@@ -66,9 +66,9 @@ function invoiceStatusChip(invoice: IssuedInvoice) {
       sx={{
         fontWeight: 700,
         fontSize: '0.68rem',
-        bgcolor: alpha(color, 0.1),
+        bgcolor: fade(color, 0.1),
         color,
-        border: `1px solid ${alpha(color, 0.25)}`,
+        border: `1px solid ${fade(color, 0.25)}`,
       }}
     />
   )
@@ -198,9 +198,9 @@ export function OblioAdminView() {
             <Stack spacing={1.5}>
               <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                 {status.connectionOk ? (
-                  <CheckCircleRoundedIcon sx={{ color: '#10b981', fontSize: 22 }} />
+                  <CheckCircleRoundedIcon sx={{ color: 'var(--rl-green-text)', fontSize: 22 }} />
                 ) : (
-                  <ErrorRoundedIcon sx={{ color: '#ef4444', fontSize: 22 }} />
+                  <ErrorRoundedIcon sx={{ color: 'var(--rl-red-text)', fontSize: 22 }} />
                 )}
                 <Typography sx={{ fontWeight: 600, color: TOKENS.ink }}>
                   {status.connectionOk
@@ -281,7 +281,7 @@ export function OblioAdminView() {
                 fontWeight: 650,
                 py: 1.1,
                 bgcolor: TOKENS.primary,
-                color: '#fff',
+                color: TOKENS.primaryFg,
                 textTransform: 'none',
                 '&:hover': { bgcolor: TOKENS.primaryStrong },
               }}
@@ -375,8 +375,8 @@ export function OblioAdminView() {
                             height: 18,
                             fontSize: '0.6rem',
                             fontWeight: 650,
-                            bgcolor: alpha('#8b5cf6', 0.12),
-                            color: '#8b5cf6',
+                            bgcolor: fade('var(--rl-blue-text)', 0.12),
+                            color: 'var(--rl-blue-text)',
                           }}
                         />
                       )}
@@ -385,7 +385,7 @@ export function OblioAdminView() {
                     <TableCell sx={{ fontSize: '0.82rem', maxWidth: 260 }}>
                       {invoice.description}
                       {invoice.errorMessage && (
-                        <Typography sx={{ color: '#ef4444', fontSize: '0.72rem', mt: 0.3 }}>
+                        <Typography sx={{ color: 'var(--rl-red-text)', fontSize: '0.72rem', mt: 0.3 }}>
                           {invoice.errorMessage}
                         </Typography>
                       )}

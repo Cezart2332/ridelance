@@ -13,7 +13,6 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded'
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded'
@@ -24,7 +23,8 @@ import {
   type BankActivityDto,
   type BankTransactionsDto,
 } from '../../services/bank.service'
-import { DASHBOARD_TOKENS as T, responsiveTableContainerSx } from '../dashboard/dashboardTheme'
+import { responsiveTableContainerSx } from '../dashboard/dashboardTheme'
+import { PANEL_COMPAT_DASHBOARD_TOKENS as T, fade as alpha } from '../panel/tokens'
 import {
   BANK_PERIOD_LABELS,
   isCurrent,

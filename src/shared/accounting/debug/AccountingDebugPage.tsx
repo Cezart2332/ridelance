@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Chip,
-  CssBaseline,
   LinearProgress,
   MenuItem,
   Stack,
@@ -17,10 +16,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { ThemeProvider } from '@mui/material/styles'
 
 import { Section, StatusBadge } from '../../../components/admin'
-import { adminTheme } from '../../../theme/adminTheme'
 import { accountingApi, accountingApiMode } from '../api/accountingApi'
 import { resetMockAccountingDb } from '../api/mock/mockAccountingApi'
 import type {
@@ -562,9 +559,7 @@ export default function AccountingDebugPage() {
   }
 
   return (
-    <ThemeProvider theme={adminTheme}>
-      <CssBaseline />
-      <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', px: { xs: 2, md: 4 }, py: { xs: 2, md: 4 } }}>
+    <Box>
         <Stack spacing={3} sx={{ maxWidth: 1400, mx: 'auto' }}>
           <Stack direction="row" sx={{ gap: 2, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
             <Box>
@@ -584,6 +579,5 @@ export default function AccountingDebugPage() {
           <RulesSection version={version} />
         </Stack>
       </Box>
-    </ThemeProvider>
   )
 }

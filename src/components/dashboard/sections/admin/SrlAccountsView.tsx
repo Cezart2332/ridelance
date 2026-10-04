@@ -14,10 +14,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { TOKENS } from '../../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
+import { fade } from '../../../panel/tokens'
 import { adminAccountsService, type AdminSrlAccount } from '../../../../services/adminAccounts.service'
 import { ActionMenu, StatusBadge, type StatusTone } from '../../../admin'
 import { CloseAccountDialog } from './CloseAccountDialog'
@@ -145,8 +145,8 @@ export function SrlAccountsView({
               sx={{
                 fontWeight: 700,
                 ...(filter === entry.id
-                  ? { bgcolor: TOKENS.primary, color: '#fff', '&:hover': { bgcolor: TOKENS.primaryStrong } }
-                  : { borderColor: alpha(TOKENS.ink, 0.15), color: TOKENS.textMuted }),
+                  ? { bgcolor: TOKENS.primary, color: TOKENS.primaryFg, '&:hover': { bgcolor: TOKENS.primaryStrong } }
+                  : { borderColor: fade(TOKENS.ink, 0.15), color: TOKENS.textMuted }),
               }}
             />
           ))}

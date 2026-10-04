@@ -18,10 +18,10 @@ import {
   TableRow,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
-import { TOKENS } from '../../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
 import { getErrorMessage } from '../../../../utils/errorHandler'
 import { eldriveService, type EldriveInviteAdmin } from '../../../../services/eldrive.service'
+import { fade } from '../../../panel/tokens'
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -32,7 +32,7 @@ function Tag({ label, color }: { label: string; color: string }) {
     <Chip
       label={label}
       size="small"
-      sx={{ fontWeight: 700, fontSize: '0.68rem', bgcolor: alpha(color, 0.1), color, border: `1px solid ${alpha(color, 0.25)}` }}
+      sx={{ fontWeight: 700, fontSize: '0.68rem', bgcolor: fade(color, 0.1), color, border: `1px solid ${fade(color, 0.25)}` }}
     />
   )
 }
@@ -110,14 +110,14 @@ export function EldriveAdminView() {
                       <TableCell>{invite.eldriveInviteId}</TableCell>
                       <TableCell>
                         {invite.subscriptionActive
-                          ? <Tag label="Activ" color="#10b981" />
-                          : <Tag label={invite.subscriptionStatus === 'Cancelled' ? 'Anulat' : 'Inactiv'} color="#ef4444" />}
+                          ? <Tag label="Activ" color="var(--rl-green-text)" />
+                          : <Tag label={invite.subscriptionStatus === 'Cancelled' ? 'Anulat' : 'Inactiv'} color="var(--rl-red-text)" />}
                       </TableCell>
                       <TableCell>{formatDate(invite.createdAtUtc)}</TableCell>
                       <TableCell>
                         {active
-                          ? <Tag label="Activ" color="#10b981" />
-                          : <Tag label={`Șters ${formatDate(invite.removedAtUtc!)}`} color="#64748b" />}
+                          ? <Tag label="Activ" color="var(--rl-green-text)" />
+                          : <Tag label={`Șters ${formatDate(invite.removedAtUtc!)}`} color="var(--rl-text-muted)" />}
                       </TableCell>
                       <TableCell align="right">
                         {active && (

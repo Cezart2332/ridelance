@@ -23,7 +23,6 @@ import {
 } from '@mui/material'
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 import { usePageTabs, SectionSkeleton } from '../../../admin'
-import { alpha } from '@mui/material/styles'
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded'
@@ -32,7 +31,8 @@ import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded'
 import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
-import { TOKENS } from '../../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
+import { fade } from '../../../panel/tokens'
 import {
   adminOverviewService,
   type AdminOverviewData,
@@ -54,11 +54,11 @@ interface AdminOverviewViewProps {
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
-    backgroundColor: alpha(TOKENS.paper, 0.92),
+    backgroundColor: fade(TOKENS.paper, 0.92),
     borderRadius: `${TOKENS.radius.md}px`,
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.08) },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.ink, 0.16) },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: alpha(TOKENS.primary, 0.6), borderWidth: 2 },
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.ink, 0.08) },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.ink, 0.16) },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: fade(TOKENS.primary, 0.6), borderWidth: 2 },
   },
 }
 
@@ -90,10 +90,10 @@ function formatDate(utc: string | null | undefined) {
 
 function statusColor(status: string) {
   const s = status.toLowerCase()
-  if (s.includes('reuș') || s.includes('activ') || s.includes('plătit') || s === 'paid') return '#047857'
-  if (s.includes('eșuat') || s.includes('blocaj') || s.includes('suspend') || s.includes('past')) return '#dc2626'
-  if (s.includes('pending') || s.includes('aștept') || s.includes('verificare') || s.includes('trial')) return '#b45309'
-  if (s.includes('refund') || s.includes('anulat')) return '#64748b'
+  if (s.includes('reuș') || s.includes('activ') || s.includes('plătit') || s === 'paid') return 'var(--rl-green-text)'
+  if (s.includes('eșuat') || s.includes('blocaj') || s.includes('suspend') || s.includes('past')) return 'var(--rl-red-text)'
+  if (s.includes('pending') || s.includes('aștept') || s.includes('verificare') || s.includes('trial')) return 'var(--rl-yellow-text)'
+  if (s.includes('refund') || s.includes('anulat')) return 'var(--rl-text-muted)'
   return TOKENS.primaryStrong
 }
 
@@ -107,8 +107,8 @@ function StatusChip({ status }: { status: string }) {
         fontWeight: 650,
         fontSize: '0.68rem',
         color,
-        bgcolor: alpha(color, 0.1),
-        border: `1px solid ${alpha(color, 0.22)}`,
+        bgcolor: fade(color, 0.1),
+        border: `1px solid ${fade(color, 0.22)}`,
       }}
     />
   )
@@ -148,7 +148,7 @@ function MetricCard({
       sx={{
         p: 2.25,
         borderRadius: `${TOKENS.radius.lg}px`,
-        border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+        border: `1px solid ${fade(TOKENS.ink, 0.08)}`,
         boxShadow: 'none',
         bgcolor: TOKENS.paper,
         minWidth: 0,
@@ -177,7 +177,7 @@ function MetricCard({
             placeItems: 'center',
             flexShrink: 0,
             color,
-            bgcolor: alpha(color, 0.1),
+            bgcolor: fade(color, 0.1),
           }}
         >
           {icon}
@@ -196,8 +196,8 @@ function SmallStatList({ items }: { items: Array<{ label: string; value: number;
           sx={{
             p: 1.4,
             borderRadius: `${TOKENS.radius.md}px`,
-            bgcolor: alpha(TOKENS.surface, 0.75),
-            border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
+            bgcolor: fade(TOKENS.surface, 0.75),
+            border: `1px solid ${fade(TOKENS.ink, 0.06)}`,
           }}
         >
           <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 650 }}>
@@ -232,7 +232,7 @@ function PaymentsTable({ rows, failedOnly = false }: { rows: AdminPaymentRow[]; 
     <TableContainer sx={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
       <Table size="small">
         <TableHead>
-          <TableRow sx={{ bgcolor: alpha(TOKENS.surface, 0.7) }}>
+          <TableRow sx={{ bgcolor: fade(TOKENS.surface, 0.7) }}>
             {['Client', 'Produs / serviciu', 'Tip plată', 'Sumă', 'Status', 'Data', 'Metodă plată'].map((header) => (
               <TableCell key={header} sx={{ fontWeight: 650, color: TOKENS.textMuted }}>
                 {header}
@@ -242,7 +242,7 @@ function PaymentsTable({ rows, failedOnly = false }: { rows: AdminPaymentRow[]; 
         </TableHead>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.id} sx={{ '&:hover': { bgcolor: alpha(TOKENS.primary, 0.03) } }}>
+            <TableRow key={row.id} sx={{ '&:hover': { bgcolor: fade(TOKENS.primary, 0.03) } }}>
               <TableCell sx={{ fontWeight: 600 }}>{row.client}</TableCell>
               <TableCell>{row.productOrService}</TableCell>
               <TableCell>{row.paymentType}</TableCell>
@@ -271,7 +271,7 @@ function ServicesTable({ rows }: { rows: AdminServiceSaleRow[] }) {
     <TableContainer sx={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
       <Table size="small">
         <TableHead>
-          <TableRow sx={{ bgcolor: alpha(TOKENS.surface, 0.7) }}>
+          <TableRow sx={{ bgcolor: fade(TOKENS.surface, 0.7) }}>
             {['Client', 'Serviciu', 'Preț', 'Status plată', 'Status livrare', 'Responsabil', 'Data comandă'].map((header) => (
               <TableCell key={header} sx={{ fontWeight: 650, color: TOKENS.textMuted }}>
                 {header}
@@ -281,7 +281,7 @@ function ServicesTable({ rows }: { rows: AdminServiceSaleRow[] }) {
         </TableHead>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.id} sx={{ '&:hover': { bgcolor: alpha(TOKENS.primary, 0.03) } }}>
+            <TableRow key={row.id} sx={{ '&:hover': { bgcolor: fade(TOKENS.primary, 0.03) } }}>
               <TableCell sx={{ fontWeight: 600 }}>{row.client}</TableCell>
               <TableCell>{row.service}</TableCell>
               <TableCell sx={{ fontWeight: 650 }}>{formatLei(row.priceBani)}</TableCell>
@@ -303,7 +303,7 @@ function DataPaper({ children }: { children: React.ReactNode }) {
       elevation={0}
       sx={{
         borderRadius: `${TOKENS.radius.lg}px`,
-        border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+        border: `1px solid ${fade(TOKENS.ink, 0.08)}`,
         boxShadow: 'none',
         overflow: 'hidden',
         bgcolor: TOKENS.paper,
@@ -359,35 +359,35 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
         value: data.pfaStats.active.toLocaleString('ro-RO'),
         helper: `${data.pfaStats.newRequests.toLocaleString('ro-RO')} cereri noi`,
         icon: <PeopleAltRoundedIcon />,
-        color: '#047857',
+        color: 'var(--rl-green-text)',
       },
       {
         label: 'SRL-uri active',
         value: (data.srlStats?.active ?? 0).toLocaleString('ro-RO'),
         helper: data.srlStats ? `${formatLei(data.srlStats.subscriptionMonthlyRevenueBani)} lunar` : 'fără date',
         icon: <BusinessRoundedIcon />,
-        color: '#1d4ed8',
+        color: 'var(--rl-blue-text)',
       },
       {
         label: 'Anunțuri auto plătite',
         value: data.carStats.paidActive.toLocaleString('ro-RO'),
         helper: `${formatLei(data.carStats.monthlyRevenueBani)} lunar`,
         icon: <DirectionsCarFilledRoundedIcon />,
-        color: '#0f766e',
+        color: 'var(--rl-green-text)',
       },
       {
         label: 'Servicii one-time',
         value: data.serviceSales.length.toLocaleString('ro-RO'),
         helper: formatLei(data.financialKpis.oneTimeCurrentMonthRevenueBani),
         icon: <ReceiptLongRoundedIcon />,
-        color: '#7c3aed',
+        color: 'var(--rl-blue-text)',
       },
       {
         label: 'Atenție plăți',
         value: data.financialKpis.failedPayments.toLocaleString('ro-RO'),
         helper: 'plăți eșuate',
         icon: <ErrorOutlineRoundedIcon />,
-        color: '#dc2626',
+        color: 'var(--rl-red-text)',
       },
     ]
   }, [data])
@@ -399,7 +399,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
         sx={{
           p: { xs: 2.5, md: 3.5 },
           borderRadius: `${TOKENS.radius.xl}px`,
-          border: `1px solid ${alpha(TOKENS.ink, 0.06)}`,
+          border: `1px solid ${fade(TOKENS.ink, 0.06)}`,
           boxShadow: 'none',
           bgcolor: 'background.paper',
         }}
@@ -415,9 +415,9 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
           </Box>
 
           {data && !loading && (
-            <Box sx={{ minWidth: { xs: '100%', sm: 360 }, p: 2.2, borderRadius: `${TOKENS.radius.lg}px`, bgcolor: alpha(TOKENS.paper, 0.82), border: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
+            <Box sx={{ minWidth: { xs: '100%', sm: 360 }, p: 2.2, borderRadius: `${TOKENS.radius.lg}px`, bgcolor: fade(TOKENS.paper, 0.82), border: `1px solid ${fade(TOKENS.ink, 0.06)}` }}>
               <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 1 }}>
-                <Box sx={{ width: 42, height: 42, borderRadius: `${TOKENS.radius.md}px`, display: 'grid', placeItems: 'center', bgcolor: alpha('#0f766e', 0.1), color: '#0f766e' }}>
+                <Box sx={{ width: 42, height: 42, borderRadius: `${TOKENS.radius.md}px`, display: 'grid', placeItems: 'center', bgcolor: fade('var(--rl-green-text)', 0.1), color: 'var(--rl-green-text)' }}>
                   <AccountBalanceWalletRoundedIcon />
                 </Box>
                 <Box>
@@ -433,7 +433,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                   ['One-time', formatLei(data.financialKpis.oneTimeCurrentMonthRevenueBani)],
                   ['Comisioane', formatLei(data.financialKpis.partnerCommissionsBani)],
                 ].map(([label, value]) => (
-                  <Box key={label} sx={{ p: 1, borderRadius: `${TOKENS.radius.sm}px`, bgcolor: alpha(TOKENS.surface, 0.7) }}>
+                  <Box key={label} sx={{ p: 1, borderRadius: `${TOKENS.radius.sm}px`, bgcolor: fade(TOKENS.surface, 0.7) }}>
                     <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 650 }}>{label}</Typography>
                     <Typography variant="caption" sx={{ display: 'block', color: TOKENS.ink, fontWeight: 650, fontVariantNumeric: 'tabular-nums' }}>{value}</Typography>
                   </Box>
@@ -525,7 +525,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                         <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 650 }}>{category.label}</Typography>
                         <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 650 }}>{formatLei(category.amountBani)}</Typography>
                       </Stack>
-                      <Box sx={{ height: 8, borderRadius: `${TOKENS.radius.full}px`, bgcolor: alpha(TOKENS.ink, 0.06), overflow: 'hidden' }}>
+                      <Box sx={{ height: 8, borderRadius: `${TOKENS.radius.full}px`, bgcolor: fade(TOKENS.ink, 0.06), overflow: 'hidden' }}>
                         <Box sx={{ width: `${Math.min(100, Math.max(3, category.amountBani / Math.max(1, data.financialKpis.totalCurrentMonthRevenueBani) * 100))}%`, height: '100%', bgcolor: TOKENS.primaryStrong }} />
                       </Box>
                       {category.count != null && (
@@ -634,21 +634,21 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
 
           {view === 'plati' && <>
           <DataPaper>
-            <Box sx={{ p: 2.5, borderBottom: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
+            <Box sx={{ p: 2.5, borderBottom: `1px solid ${fade(TOKENS.ink, 0.06)}` }}>
               <SectionTitle title="Plăți recente" subtitle="Ultimele tranzacții din platformă." />
             </Box>
             <PaymentsTable rows={data.recentPayments} />
           </DataPaper>
 
           <DataPaper>
-            <Box sx={{ p: 2.5, borderBottom: `1px solid ${alpha(TOKENS.ink, 0.06)}`, bgcolor: alpha('#dc2626', 0.04) }}>
+            <Box sx={{ p: 2.5, borderBottom: `1px solid ${fade(TOKENS.ink, 0.06)}`, bgcolor: fade('var(--rl-red-text)', 0.04) }}>
               <SectionTitle title="Plăți eșuate" subtitle="Risc direct de pierdere venit. Necesită follow-up rapid." />
             </Box>
             <PaymentsTable rows={data.failedPayments} failedOnly />
           </DataPaper>
 
           <DataPaper>
-            <Box sx={{ p: 2.5, borderBottom: `1px solid ${alpha(TOKENS.ink, 0.06)}` }}>
+            <Box sx={{ p: 2.5, borderBottom: `1px solid ${fade(TOKENS.ink, 0.06)}` }}>
               <SectionTitle title="Servicii individuale vândute" subtitle="Start Ride, deschidere PFA, sediu social, casă de marcat, atestat / partener și consultanță." />
             </Box>
             <ServicesTable rows={data.serviceSales} />
@@ -659,10 +659,10 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
             <SectionTitle title="PFA-uri înrolate" subtitle="Cardurile operaționale pentru clienții PFA activi sau în lucru." />
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' }, gap: 2, mt: 2 }}>
               {data.enrolledPfas.map((pfa) => (
-                <Paper key={pfa.id} elevation={0} sx={{ p: 2.25, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${alpha(TOKENS.ink, 0.07)}`, boxShadow: 'none', bgcolor: TOKENS.paper, '&:hover': { borderColor: alpha(TOKENS.primary, 0.35), boxShadow: 'none' } }}>
+                <Paper key={pfa.id} elevation={0} sx={{ p: 2.25, borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${fade(TOKENS.ink, 0.07)}`, boxShadow: 'none', bgcolor: TOKENS.paper, '&:hover': { borderColor: fade(TOKENS.primary, 0.35), boxShadow: 'none' } }}>
                   <Stack spacing={1.4}>
                     <Stack direction="row" spacing={1.4} sx={{ alignItems: 'flex-start' }}>
-                      <Avatar variant="rounded" sx={{ width: 40, height: 40, borderRadius: `${TOKENS.radius.md}px`, bgcolor: alpha(TOKENS.primary, 0.12), color: TOKENS.primaryStrong, fontWeight: 650 }}>
+                      <Avatar variant="rounded" sx={{ width: 40, height: 40, borderRadius: `${TOKENS.radius.md}px`, bgcolor: fade(TOKENS.primary, 0.12), color: TOKENS.primaryStrong, fontWeight: 650 }}>
                         {pfa.companyName.slice(0, 1).toUpperCase()}
                       </Avatar>
                       <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -681,12 +681,12 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                           key={label}
                           label={label}
                           size="small"
-                          sx={{ height: 24, borderRadius: `${TOKENS.radius.sm}px`, bgcolor: alpha(TOKENS.ink, 0.04), color: TOKENS.ink, fontSize: '0.68rem', fontWeight: 650 }}
+                          sx={{ height: 24, borderRadius: `${TOKENS.radius.sm}px`, bgcolor: fade(TOKENS.ink, 0.04), color: TOKENS.ink, fontSize: '0.68rem', fontWeight: 650 }}
                         />
                       ))}
                     </Stack>
 
-                    <Divider sx={{ borderColor: alpha(TOKENS.ink, 0.06) }} />
+                    <Divider sx={{ borderColor: fade(TOKENS.ink, 0.06) }} />
 
                     <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
                       {[
@@ -716,7 +716,7 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
                 </Paper>
               ))}
               {data.enrolledPfas.length === 0 && (
-                <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: `${TOKENS.radius.lg}px`, border: `1px dashed ${alpha(TOKENS.ink, 0.16)}` }}>
+                <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: `${TOKENS.radius.lg}px`, border: `1px dashed ${fade(TOKENS.ink, 0.16)}` }}>
                   <Typography sx={{ color: TOKENS.textMuted }}>Nu există PFA-uri înrolate pentru filtrul curent.</Typography>
                 </Paper>
               )}

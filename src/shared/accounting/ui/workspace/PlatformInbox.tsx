@@ -106,8 +106,8 @@ export function UploadDocumentsDialog({
               py: 4,
               borderRadius: '12px',
               border: '1.5px dashed',
-              borderColor: dragging ? '#5CCBF5' : 'rgba(0,0,0,0.2)',
-              bgcolor: dragging ? 'rgba(92,203,245,0.08)' : '#FBFDFE',
+              borderColor: dragging ? 'var(--rl-fg)' : 'var(--rl-border-strong)',
+              bgcolor: dragging ? 'var(--rl-hover)' : 'var(--rl-card-alt)',
               color: INK,
               fontFamily: 'inherit',
             }}
@@ -128,7 +128,7 @@ export function UploadDocumentsDialog({
               void upload(files)
             }}
           />
-          {error && <Typography sx={{ color: '#B91C1C', fontSize: 14 }}>{error}</Typography>}
+          {error && <Typography sx={{ color: 'var(--rl-red-text)', fontSize: 14 }}>{error}</Typography>}
           {results.length > 0 && (
             <Stack divider={<Box sx={{ borderTop: `1px solid ${HAIRLINE}` }} />}>
               {results.map((result, index) => (
@@ -137,7 +137,7 @@ export function UploadDocumentsDialog({
                     <Typography sx={{ fontWeight: 600, fontSize: 14, overflowWrap: 'anywhere' }}>{result.fileName}</Typography>
                     <StatusPill cell={resultCell(result)} />
                   </Stack>
-                  {result.status !== 'ASSIGNED' && <Typography sx={{ fontSize: 13, color: '#6B6B7B' }}>{withoutStatus(result.message)}</Typography>}
+                  {result.status !== 'ASSIGNED' && <Typography sx={{ fontSize: 13, color: 'var(--rl-text-muted)' }}>{withoutStatus(result.message)}</Typography>}
                 </Stack>
               ))}
             </Stack>
@@ -169,10 +169,10 @@ function InboxRow({
       <Stack sx={{ flex: 1, minWidth: 0, gap: 0.5 }}>
         <Stack direction="row" sx={{ alignItems: 'center', gap: 1.25, flexWrap: 'wrap' }}>
           <Typography sx={{ fontWeight: 600, fontSize: 14, overflowWrap: 'anywhere' }}>{item.fileName}</Typography>
-          <Typography sx={{ fontSize: 13, color: '#6B6B7B' }}>{formatPeriod(item.period)}</Typography>
+          <Typography sx={{ fontSize: 13, color: 'var(--rl-text-muted)' }}>{formatPeriod(item.period)}</Typography>
           <StatusPill cell={STATUS_CELL[item.status]} />
         </Stack>
-        {item.reason && <Typography sx={{ fontSize: 13, color: '#6B6B7B' }}>{withoutStatus(item.reason)}</Typography>}
+        {item.reason && <Typography sx={{ fontSize: 13, color: 'var(--rl-text-muted)' }}>{withoutStatus(item.reason)}</Typography>}
       </Stack>
       {item.status !== 'MATCHING' && (
         <Stack direction="row" sx={{ gap: 1, alignItems: 'center' }}>

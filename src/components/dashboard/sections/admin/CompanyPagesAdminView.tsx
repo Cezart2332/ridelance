@@ -18,11 +18,11 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 
-import { TOKENS } from '../../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
+import { fade } from '../../../panel/tokens'
 import { getErrorMessage } from '../../../../utils/errorHandler'
 import {
   adminCompanyPageService,
@@ -132,7 +132,7 @@ export function CompanyPagesAdminView() {
         <Typography sx={{ fontWeight: 650, fontSize: '1.3rem', color: TOKENS.ink }}>
           Pagini firme
         </Typography>
-        <Typography sx={{ mt: 0.4, fontSize: '0.9rem', color: alpha(TOKENS.ink, 0.62) }}>
+        <Typography sx={{ mt: 0.4, fontSize: '0.9rem', color: fade(TOKENS.ink, 0.62) }}>
           Mini-site-urile publice ale flotelor. Nimic din ce scrie o firmă nu ajunge public fără o
           aprobare de aici.
         </Typography>
@@ -143,7 +143,7 @@ export function CompanyPagesAdminView() {
         sx={{
           p: 2,
           borderRadius: `${TOKENS.radius.lg}px`,
-          border: `1px solid ${alpha(TOKENS.ink, 0.08)}`,
+          border: `1px solid ${fade(TOKENS.ink, 0.08)}`,
         }}
       >
         <Stack
@@ -178,7 +178,7 @@ export function CompanyPagesAdminView() {
               slotProps={{
                 input: {
                   startAdornment: (
-                    <SearchRoundedIcon sx={{ mr: 1, fontSize: 18, color: alpha(TOKENS.ink, 0.45) }} />
+                    <SearchRoundedIcon sx={{ mr: 1, fontSize: 18, color: fade(TOKENS.ink, 0.45) }} />
                   ),
                 },
               }}
@@ -216,7 +216,7 @@ export function CompanyPagesAdminView() {
         <TableContainer
           component={Paper}
           elevation={0}
-          sx={{ borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${alpha(TOKENS.ink, 0.08)}` }}
+          sx={{ borderRadius: `${TOKENS.radius.lg}px`, border: `1px solid ${fade(TOKENS.ink, 0.08)}` }}
         >
           <Table size="small">
             <TableHead>
@@ -235,7 +235,7 @@ export function CompanyPagesAdminView() {
                     <Typography sx={{ fontWeight: 700, fontSize: '0.88rem' }}>
                       {item.legalName}
                     </Typography>
-                    <Typography sx={{ fontSize: '0.78rem', color: alpha(TOKENS.ink, 0.6) }}>
+                    <Typography sx={{ fontSize: '0.78rem', color: fade(TOKENS.ink, 0.6) }}>
                       {item.ownerEmail}
                       {item.cui && ` · CUI ${item.cui}`}
                       {` · ${item.publicCarCount} ${item.publicCarCount === 1 ? 'mașină' : 'mașini'}`}
@@ -276,7 +276,7 @@ export function CompanyPagesAdminView() {
 
                   <TableCell>
                     {item.blockedSections.length === 0 ? (
-                      <Typography sx={{ fontSize: '0.8rem', color: alpha(TOKENS.ink, 0.45) }}>—</Typography>
+                      <Typography sx={{ fontSize: '0.8rem', color: fade(TOKENS.ink, 0.45) }}>—</Typography>
                     ) : (
                       <Typography sx={{ fontSize: '0.8rem' }}>
                         {item.blockedSections
@@ -287,7 +287,7 @@ export function CompanyPagesAdminView() {
                   </TableCell>
 
                   <TableCell>
-                    <Typography sx={{ fontSize: '0.8rem', color: alpha(TOKENS.ink, 0.62) }}>
+                    <Typography sx={{ fontSize: '0.8rem', color: fade(TOKENS.ink, 0.62) }}>
                       {formatDate(item.submittedAtUtc)}
                     </Typography>
                   </TableCell>

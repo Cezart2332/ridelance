@@ -193,7 +193,7 @@ export function TaxesPage() {
       <AnnualQuestionCard />
 
       {/* ── B. Declarații depuse de contabilă ── */}
-      <Box>
+      <Box id="declaratii-lunare" sx={{ scrollMarginTop: 100 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5, flexWrap: 'wrap' }}>
           <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800 }}>
             Declarații depuse de contabilă

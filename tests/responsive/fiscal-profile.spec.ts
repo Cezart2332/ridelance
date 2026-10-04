@@ -295,7 +295,8 @@ test('cardul „Cât să pui deoparte”: parțial, componente, fără TVA în t
   await expect(card.locator('[data-component="CASS"]')).toContainText('De clarificat')
   await expect(card.locator('[data-component="CASS"]')).toContainText('Contabilul verifică dacă plătești deja CASS')
   await expect(card.locator('[data-component="CASS"]')).not.toContainText('0 lei')
-  await expect(card.locator('[data-component="PLATFORM_TAXES"]')).toContainText('În curs de configurare')
+  await expect(card.locator('[data-component="PLATFORM_TAXES"]')).toContainText('Separat, în declarațiile lunare')
+  await expect(card.locator('[data-component="PLATFORM_TAXES"]')).toContainText('Nu există un comutator')
   await expect(card.getByText('Venitul tău se apropie de un plafon CAS. Suma de pus deoparte poate crește.')).toBeVisible()
   // Fără „Cum calculăm?” și fără „Am deja pus deoparte”: cardul arată doar sumele.
   await expect(card.getByRole('button', { name: 'Cum calculăm?' })).toHaveCount(0)

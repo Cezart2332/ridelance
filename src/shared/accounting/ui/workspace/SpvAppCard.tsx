@@ -8,7 +8,7 @@ import { errorMessage, useApi } from '../useApi'
 import { Panel, StatusPill } from './parts'
 import { HAIRLINE, INK, MUTED, type Cell } from './status'
 
-const DARK = { bgcolor: INK, color: '#FFFFFF', '&:hover': { bgcolor: '#2d2d45' } }
+const DARK = { bgcolor: 'var(--rl-primary)', color: 'var(--rl-primary-fg)', '&:hover': { bgcolor: 'var(--rl-fg-soft)' } }
 const STALE_DAYS = 7
 
 /** Aplicația desktop RIDElance SPV, pentru admin: ultima sincronizare și cheile ei. */

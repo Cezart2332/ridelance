@@ -14,14 +14,13 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 
 import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 
-import { DASHBOARD_TOKENS as T } from '../dashboard/dashboardTheme'
+import { PANEL_COMPAT_DASHBOARD_TOKENS as T, fade as alpha } from '../panel/tokens'
 import {
   bankService,
   type BankConnectionDto,

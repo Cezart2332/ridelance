@@ -1,7 +1,7 @@
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
 
-import { TOKENS } from '../../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
 import type { DocumentSummary } from '../../../../services/document.service'
 import { formatDocumentCategory } from '../../../../utils/formatters'
 

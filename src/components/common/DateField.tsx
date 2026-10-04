@@ -1,12 +1,11 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { Box, IconButton, InputAdornment, Popover, Stack, TextField, Typography } from '@mui/material'
 import type { SxProps, Theme } from '@mui/material/styles'
-import { alpha } from '@mui/material/styles'
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded'
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded'
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded'
 
-import { TOKENS } from '../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS, fade as alpha } from '../panel/tokens'
 import { MONTH_CHART_LABELS, ROMANIAN_MONTHS } from '../../utils/monthLabels'
 import {
   buildMonthGrid,
@@ -368,7 +367,7 @@ export function DateField({
                       color: blocked
                         ? TOKENS.textSubtle
                         : isSelected
-                          ? '#FFFFFF'
+                          ? 'var(--rl-primary-fg, #FFFFFF)'
                           : outside
                             ? TOKENS.textSubtle
                             : TOKENS.ink,
@@ -528,7 +527,7 @@ function GridChoice({
         fontSize: '0.82rem',
         fontWeight: selected ? 800 : 600,
         fontVariantNumeric: 'tabular-nums',
-        color: selected ? '#FFFFFF' : TOKENS.ink,
+        color: selected ? 'var(--rl-primary-fg, #FFFFFF)' : TOKENS.ink,
         backgroundColor: selected ? TOKENS.primary : 'transparent',
         '&:hover': {
           backgroundColor: selected ? TOKENS.primaryStrong : alpha(TOKENS.primary, 0.14),

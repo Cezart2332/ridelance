@@ -13,11 +13,11 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import { useEffect, useState } from 'react'
 
 import { documentService, type ExtractedField } from '../../../../services/document.service'
-import { TOKENS } from '../../../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
+import { fade } from '../../../panel/tokens'
 
 const FIELD_LABELS: Record<string, string> = {
   cui: 'CUI',
@@ -42,7 +42,7 @@ function FieldRow({ field, onSaved }: { field: ExtractedField; onSaved: () => vo
   const lowConfidence = field.reviewState === 'NeedsManualReview'
   const confirmed = field.confirmedSource !== 'None'
 
-  const chipColor = confirmed ? '#10b981' : lowConfidence ? '#f59e0b' : TOKENS.textMuted
+  const chipColor = confirmed ? 'var(--rl-green-text)' : lowConfidence ? 'var(--rl-yellow-text)' : TOKENS.textMuted
   const chipLabel = confirmed
     ? `Confirmat (${field.confirmedSource === 'Admin' ? 'admin' : 'client'})`
     : lowConfidence
@@ -74,7 +74,7 @@ function FieldRow({ field, onSaved }: { field: ExtractedField; onSaved: () => vo
         <Chip
           size="small"
           label={chipLabel}
-          sx={{ fontSize: '0.62rem', fontWeight: 700, bgcolor: alpha(chipColor, 0.1), color: chipColor, flexShrink: 0 }}
+          sx={{ fontSize: '0.62rem', fontWeight: 700, bgcolor: fade(chipColor, 0.1), color: chipColor, flexShrink: 0 }}
         />
         {!field.isSensitive && !editing && (
           <IconButton size="small" onClick={() => { setValue(field.effectiveValue ?? ''); setEditing(true) }} title="Corectează">
@@ -88,7 +88,7 @@ function FieldRow({ field, onSaved }: { field: ExtractedField; onSaved: () => vo
           <TextField size="small" label="Valoare corectă" value={value} onChange={(e) => setValue(e.target.value)} sx={{ flex: 1 }} />
           <TextField size="small" label="Motiv (obligatoriu)" value={reason} onChange={(e) => setReason(e.target.value)} sx={{ flex: 1 }} />
           <Button size="small" variant="contained" disabled={busy || !reason.trim()} startIcon={<CheckRoundedIcon />} onClick={save}
-            sx={{ fontWeight: 700, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: 'none' }}>
+            sx={{ fontWeight: 700, bgcolor: 'var(--rl-green-text)', '&:hover': { bgcolor: 'var(--rl-green-text)' }, boxShadow: 'none' }}>
             Salvează
           </Button>
           <Button size="small" onClick={() => setEditing(false)} sx={{ color: TOKENS.textMuted }}>Renunță</Button>

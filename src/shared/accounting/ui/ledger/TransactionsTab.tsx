@@ -145,13 +145,13 @@ function EntryDetails({ entry, categoryLabel }: { entry: LedgerEntry; categoryLa
 }
 
 /** F6: tranzacțiile (ledger) PFA-ului, cu filtre, verificare, modificare cu motiv, încărcări. */
-export function TransactionsTab({ summary, onSummaryChanged }: DossierTabProps) {
+export function TransactionsTab({ summary, onSummaryChanged, period }: DossierTabProps & { period?: string }) {
   const notify = useNotify()
   const { busy, run } = useAction()
   const readOnly = summary.readOnly
   const [filters, setFilters] = useState<{ from: string; to: string; source: LedgerSource | ''; type: LedgerTransactionType | ''; onlyReview: boolean }>({
-    from: '',
-    to: '',
+    from: period ? `${period}-01` : '',
+    to: period ? `${period}-${String(new Date(Number(period.slice(0, 4)), Number(period.slice(5)), 0).getDate()).padStart(2, '0')}` : '',
     source: '',
     type: '',
     onlyReview: false,

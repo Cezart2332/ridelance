@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
-import { Box, Button, Stack, Typography } from '@mui/material'
+import { Box, Button, Stack } from '@mui/material'
 
+import { Initials, PageHeading, StatCard, StatGrid } from '../../../../components/panel/ui'
 import { ClientNotificationDialog } from '../../../../components/contabil/ClientNotificationDialog'
 import { accountingApi } from '../../api/accountingApi'
 import type { ClientWorkspaceRow } from '../../api/types'
@@ -8,8 +9,8 @@ import { EmptyText, ErrorBlock, LoadingBlock } from '../components'
 import { useAccountingNav, type ClientSection } from '../navigation'
 import { useNotify } from '../notify'
 import { useApi } from '../useApi'
-import { Avatar, MonthSelect, PageTitle, Panel, SectionTitle } from './parts'
-import { currentFiscalPeriod, HAIRLINE, INK, isFinished, laggingDeclaration, TONES, type Tone } from './status'
+import { MonthSelect, Panel, SectionTitle } from './parts'
+import { currentFiscalPeriod, HAIRLINE, INK, isFinished, laggingDeclaration, type Tone } from './status'
 import { useClientJob } from './useClientJob'
 
 interface Task {
@@ -18,7 +19,7 @@ interface Task {
   actions: ReactNode
 }
 
-const PRIMARY_BUTTON = { bgcolor: '#5CCBF5', color: INK, '&:hover': { bgcolor: '#45B8E2' } }
+const PRIMARY_BUTTON = { bgcolor: 'var(--rl-primary)', color: 'var(--rl-primary-fg)', '&:hover': { bgcolor: 'var(--rl-fg-soft)' } }
 
 /** „Rezumat”: ce e de făcut în lună, grupat pe tip, fiecare cu butonul lui. */
 export function TodayView() {
@@ -37,7 +38,7 @@ export function TodayView() {
   const open = (row: ClientWorkspaceRow, section: ClientSection = 'luna', extra: Record<string, string> = {}) =>
     nav.openPfa(row.pfaId, section, { luna: period, ...extra })
   const primary = (label: string, onClick: () => void, key?: string) => (
-    <Button variant="contained" disabled={jobs.busy !== null} onClick={onClick} sx={PRIMARY_BUTTON}>
+    <Button size="small" variant="contained" disabled={jobs.busy !== null} onClick={onClick} sx={PRIMARY_BUTTON}>
       {key && jobs.busy === key ? 'Se lucrează…' : label}
     </Button>
   )
@@ -49,7 +50,7 @@ export function TodayView() {
       text: row.reason ?? 'Lipsesc documente.',
       actions: (
         <>
-          <Button variant="outlined" onClick={() => setAsking(row)}>
+          <Button size="small" variant="outlined" onClick={() => setAsking(row)}>
             Cere clientului
           </Button>
           {primary('Încarcă', () => open(row))}
@@ -142,19 +143,15 @@ export function TodayView() {
   const total = groups.reduce((sum, group) => sum + group.tasks.length, 0)
 
   return (
-    <Stack spacing={3} sx={{ minWidth: 0 }}>
-      <Stack direction={{ xs: 'column', lg: 'row' }} sx={{ justifyContent: 'space-between', alignItems: { lg: 'flex-end' }, gap: 2 }}>
-        <PageTitle>Rezumat</PageTitle>
-        <Stack direction="row" sx={{ gap: 1.25, flexWrap: 'wrap', alignItems: 'center' }}>
+    <Stack spacing={2.5} sx={{ minWidth: 0 }}>
+      <Box>
+        <PageHeading title="Rezumat" actions={<MonthSelect value={period} current={current} onChange={(value) => nav.setParam('luna', value)} />} />
+        <StatGrid>
           {stats.map((stat) => (
-            <Panel key={stat.label} sx={{ px: 2, py: 1.25, minWidth: 116 }}>
-              <Typography sx={{ fontSize: 12, color: '#6B6B7B' }}>{stat.label}</Typography>
-              <Typography sx={{ fontSize: 22, fontWeight: 700, color: TONES[stat.tone].text, lineHeight: 1.3 }}>{stat.value}</Typography>
-            </Panel>
+            <StatCard key={stat.label} label={stat.label} value={stat.value} toneName={stat.value > 0 ? stat.tone : undefined} />
           ))}
-          <MonthSelect value={period} current={current} onChange={(value) => nav.setParam('luna', value)} />
-        </Stack>
-      </Stack>
+        </StatGrid>
+      </Box>
 
       {total === 0 && (
         <Panel sx={{ px: 2.5, py: 1 }}>
@@ -175,11 +172,11 @@ export function TodayView() {
                 <Stack
                   key={`${task.row.pfaId}-${index}`}
                   direction={{ xs: 'column', sm: 'row' }}
-                  sx={{ alignItems: { sm: 'center' }, gap: 2, px: 2.5, py: 2, borderTop: index === 0 ? 'none' : `1px solid ${HAIRLINE}` }}
+                  sx={{ alignItems: { sm: 'center' }, gap: 1.5, px: 2, py: 1.25, minHeight: 56, borderTop: index === 0 ? 'none' : `1px solid ${HAIRLINE}`, '&:hover': { bgcolor: 'var(--rl-hover)' } }}
                 >
-                  <Stack direction="row" sx={{ alignItems: 'center', gap: 2, flexGrow: 1, minWidth: 0 }}>
-                    <Avatar name={task.row.name} />
-                    <Box sx={{ minWidth: 0, fontSize: 15, display: 'flex', flexWrap: 'wrap', columnGap: 1.25, alignItems: 'baseline' }}>
+                  <Stack direction="row" sx={{ alignItems: 'center', gap: 1.25, flexGrow: 1, minWidth: 0 }}>
+                    <Initials name={task.row.name} />
+                    <Box sx={{ minWidth: 0, fontSize: 13, display: 'flex', flexWrap: 'wrap', columnGap: 1.25, alignItems: 'baseline' }}>
                       <Box
                         component="a"
                         href="#"
@@ -187,11 +184,11 @@ export function TodayView() {
                           event.preventDefault()
                           open(task.row)
                         }}
-                        sx={{ fontWeight: 600, color: INK, textDecoration: 'none', '&:hover': { color: '#2B8FB8' } }}
+                        sx={{ fontWeight: 600, color: INK, textDecoration: 'none', '&:hover': { color: 'var(--rl-blue-text)' } }}
                       >
                         {task.row.name}
                       </Box>
-                      <Box component="span" sx={{ color: '#4A4A5E' }}>
+                      <Box component="span" sx={{ color: 'var(--rl-fg-soft)' }}>
                         {task.text}
                       </Box>
                     </Box>

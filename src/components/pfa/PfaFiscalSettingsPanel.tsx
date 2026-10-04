@@ -14,7 +14,6 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import { isAxiosError } from 'axios'
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded'
@@ -27,7 +26,7 @@ import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded'
 import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined'
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
 
-import { TOKENS } from '../../constants/tokens'
+import { PANEL_COMPAT_TOKENS as TOKENS, fade as alpha } from '../panel/tokens'
 import {
   pfaService,
   type PfaFiscalSettings,

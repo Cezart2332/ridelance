@@ -4,6 +4,7 @@ import { store } from '../store/store'
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 let connection: signalR.HubConnection | null = null
+let starting: Promise<void> | null = null
 
 export function getChatConnection(): signalR.HubConnection {
   if (!connection) {
@@ -21,9 +22,13 @@ export function getChatConnection(): signalR.HubConnection {
 }
 
 export async function startChatConnection(): Promise<void> {
-  const conn = getChatConnection();
+  const conn = getChatConnection()
+  // Toți consumatorii așteaptă aceeași conectare înainte să intre în cameră.
+  if (starting) return starting
   if (conn.state === signalR.HubConnectionState.Disconnected) {
-    await conn.start();
+    const pending = conn.start()
+    starting = pending
+    try { await pending } finally { if (starting === pending) starting = null }
   }
 }
 
