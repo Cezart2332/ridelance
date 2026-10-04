@@ -17,6 +17,7 @@ import { FiscalProfileInviteCard, usePfaFiscalProfile } from '../../../../shared
 import { EstimatedTaxesCard } from '../../../../shared/fiscal-estimates'
 import { useSectionNavigate } from '../../useSectionNavigate'
 import { AnnualQuestionCard } from './AnnualQuestionCard'
+import { MonthlyDeclarations } from './MonthlyDeclarations'
 
 const STATUS_TONE: Record<TaxObligation['status'], StatusTone> = {
   InPregatire: 'neutral',
@@ -72,6 +73,8 @@ export function TaxesPage() {
     }
   }, [])
 
+  // QA 11: declarațiile lunare vin din înregistrările lor; obligațiile manuale rămân doar ca completare.
+  const [declarationCount, setDeclarationCount] = useState<number | null>(null)
   const reserve = data?.taxReserve
   // Fără profil fiscal confirmat, backendul nu trimite estimări: secțiunea e doar invitația.
   const estimatesLocked = data?.taxProfile?.estimatesLocked === true || (!!data && !data.taxProfile && !data.taxReserve)
@@ -201,6 +204,8 @@ export function TaxesPage() {
           Sume stabilite și declarate de contabila ta. Acestea se plătesc până la termenul afișat.
         </Typography>
 
+        <Stack spacing={2}>
+        <MonthlyDeclarations year={new Date().getFullYear()} onLoaded={setDeclarationCount} />
         {obligations === null ? (
           <Stack sx={{ alignItems: 'center', py: 4 }}>
             <CircularProgress size={24} sx={{ color: DASHBOARD_TOKENS.primary }} />
@@ -209,7 +214,7 @@ export function TaxesPage() {
           <Typography sx={{ color: DASHBOARD_TOKENS.stateError, fontSize: '0.86rem' }}>
             {obligations.error}
           </Typography>
-        ) : obligations.items.length === 0 ? (
+        ) : obligations.items.length === 0 && (declarationCount ?? 0) > 0 ? null : obligations.items.length === 0 ? (
           <Paper
             elevation={0}
             sx={{
@@ -318,6 +323,7 @@ export function TaxesPage() {
             ))}
           </Box>
         )}
+        </Stack>
       </Box>
     </Stack>
   )
