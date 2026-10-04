@@ -22,7 +22,7 @@ import type { DeclarationAction, DeclarationStatus, DeclarationSummary, Declarat
 import { availableOperations, DECLARATION_STEPPER, type DeclarationOperation } from '../../declarationWorkflow'
 import { formatDateTime, formatLei, formatPeriod } from '../../format'
 import { DECLARATION_STATUS, DECLARATION_TYPE_LABEL, VALIDATION_LEVEL_LABEL } from '../../statusLabels'
-import { AccountingBadge, ConfirmDialog, ReasonDialog } from '../components'
+import { AccountingBadge, ReasonDialog } from '../components'
 import { useAccountingNav } from '../navigation'
 import { useAction } from '../notify'
 import { openBlob, useApi } from '../useApi'
@@ -83,7 +83,11 @@ export function DeclarationCard({
 
   const current = detail.data?.versions.find((version) => version.id === versionId) ?? null
   const status = summary.status
-  const operations = !readOnly && status && current ? availableOperations(status) : []
+  // QA 5: schimbările manuale de status (semnat, depus, respins, index) le face doar Adminul, cu motiv.
+  const manual: DeclarationOperation[] = ['MARK_SIGNED', 'MARK_SUBMITTED', 'MARK_REJECTED', 'RECORD_INDEX']
+  const operations = !readOnly && status && current
+    ? availableOperations(status).filter((operation) => nav.role === 'Admin' || !manual.includes(operation))
+    : []
   const title = DECLARATION_TYPE_LABEL[summary.type]
   const isD390 = summary.type === 'D390'
   // Avertismentele calculului (corelarea cu raportul, reținerea la sursă) stau în defalcare; se
@@ -293,21 +297,22 @@ export function DeclarationCard({
       {dialog === 'xml' && versionId && current && (
         <XmlDialog versionId={versionId} title={`${summary.type} · ${formatPeriod(summary.period)} · ${versionLabel(current)}`} onClose={() => setDialog(null)} />
       )}
-      <ConfirmDialog
+      <ReasonDialog
         open={dialog === 'sign'}
         title={`Marchează ${summary.type} ca semnată`}
-        message="Semnarea se face în afara RIDElance, cu certificatul digital. Aici doar se consemnează."
+        reasonLabel="Motiv"
         confirmLabel="Marchează semnat"
         onClose={() => setDialog(null)}
-        onConfirm={() => transition('MARK_SIGNED')}
+        onSubmit={(reason) => transition('MARK_SIGNED', reason)}
       />
-      <ConfirmDialog
+      <ReasonDialog
         open={dialog === 'submit'}
         title={`Marchează ${summary.type} ca depusă`}
-        message="Depus nu înseamnă acceptat: statusul devine „Recipisă validă” abia după încărcarea recipisei."
+        description="Statusul devine „Recipisă validă” doar după recipisă."
+        reasonLabel="Motiv"
         confirmLabel="Marchează depus"
         onClose={() => setDialog(null)}
-        onConfirm={() => transition('MARK_SUBMITTED')}
+        onSubmit={(reason) => transition('MARK_SUBMITTED', reason)}
       />
       <ReasonDialog
         open={dialog === 'reject'}

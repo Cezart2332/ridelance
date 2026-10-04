@@ -1,3 +1,4 @@
+import { DECLARATION_STATUS, type StatusDescriptor } from '../../statusLabels'
 import type {
   BankConnectionStatus,
   ClientWorkspaceRow,
@@ -98,22 +99,21 @@ export function bankCell(status: BankConnectionStatus | null): Cell {
   }
 }
 
-const DECLARATION_WORD: Partial<Record<DeclarationStatus, Cell>> = {
-  DRAFT: { tone: 'gray', label: 'Negenerată' },
-  GENERATED: { tone: 'blue', label: 'De validat' },
-  VALIDATION_FAILED: { tone: 'red', label: 'Validare picată' },
-  VALIDATED: { tone: 'blue', label: 'De semnat' },
-  READY_TO_SIGN: { tone: 'blue', label: 'De semnat' },
-  SIGNED: { tone: 'blue', label: 'De depus' },
-  SUBMITTED: { tone: 'yellow', label: 'Fără recipisă' },
-  ACCEPTED: { tone: 'green', label: 'Depusă' },
-  REJECTED: { tone: 'red', label: 'Respinsă' },
+const TONE_OF: Record<StatusDescriptor['tone'], Tone> = {
+  success: 'green',
+  warning: 'yellow',
+  error: 'red',
+  neutral: 'gray',
 }
 
-/** Starea unei declarații într-un cuvânt; `null` = nimic de arătat încă. */
+/**
+ * Starea unei declarații, cu aceeași etichetă ca peste tot (QA 5): un singur dicționar,
+ * `DECLARATION_STATUS`. `null` = nimic de arătat încă.
+ */
 export function declarationCell(cell: DeclarationCell | undefined): Cell | null {
   if (!cell?.status || cell.status === 'NOT_APPLICABLE' || cell.status.startsWith('BLOCKED')) return null
-  return DECLARATION_WORD[cell.status] ?? null
+  const descriptor = DECLARATION_STATUS[cell.status]
+  return { tone: TONE_OF[descriptor.tone] ?? 'gray', label: descriptor.label }
 }
 
 /** Declarațiile care contează în lună (fără N/A și fără cele blocate). */
