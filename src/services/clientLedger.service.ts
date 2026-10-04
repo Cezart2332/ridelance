@@ -28,6 +28,8 @@ export interface ClientTransaction {
 
 export interface ClientTransactions {
   attentionCount: number
+  /** Încasările de identificat, separat de cheltuieli (QA 10). */
+  incomeAttentionCount?: number
   rows: ClientTransaction[]
   proposals: MatchProposal[]
 }

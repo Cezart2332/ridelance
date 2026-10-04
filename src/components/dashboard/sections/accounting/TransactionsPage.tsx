@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  Collapse,
   Alert,
   Box,
   Button,
@@ -130,9 +131,14 @@ export function TransactionsPage() {
           </IconButton>
         </Stack>
         {data && (
-          <Typography sx={{ fontWeight: 700, color: data.attentionCount > 0 ? T.ink : T.textMuted }}>
-            Cheltuieli care necesită atenție – {data.attentionCount}
-          </Typography>
+          <Stack direction="row" useFlexGap sx={{ gap: 2, flexWrap: 'wrap' }}>
+            <Typography sx={{ fontWeight: 700, color: data.attentionCount > 0 ? T.ink : T.textMuted }}>
+              Cheltuieli care necesită atenție – {data.attentionCount}
+            </Typography>
+            {(data.incomeAttentionCount ?? 0) > 0 && (
+              <Typography sx={{ fontWeight: 700, color: T.ink }}>Încasări de identificat – {data.incomeAttentionCount}</Typography>
+            )}
+          </Stack>
         )}
       </Stack>
 
@@ -177,11 +183,23 @@ export function TransactionsPage() {
 
 function TransactionRow({ row, onAttach, busy }: { row: ClientTransaction; onAttach: (ledgerEntryId: string) => void; busy: boolean }) {
   const state = STATE[row.state]
+  const [open, setOpen] = useState(false)
   return (
+    <Box sx={{ borderBottom: `1px solid ${T.border}`, '&:last-of-type': { borderBottom: 'none' } }}>
     <Stack
       direction="row"
       useFlexGap
-      sx={{ alignItems: 'center', gap: 1.5, px: 2, py: 1.5, borderBottom: `1px solid ${T.border}`, flexWrap: 'wrap', '&:last-of-type': { borderBottom: 'none' } }}
+      role="button"
+      tabIndex={0}
+      aria-expanded={open}
+      onClick={() => setOpen((value) => !value)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          setOpen((value) => !value)
+        }
+      }}
+      sx={{ alignItems: 'center', gap: 1.5, px: 2, py: 1.5, flexWrap: 'wrap', cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
     >
       <Typography sx={{ color: T.textMuted, fontSize: '0.82rem', width: 52, flexShrink: 0 }}>{dayLabel(row.date)}</Typography>
       <Box sx={{ flex: '1 1 180px', minWidth: 0 }}>
@@ -192,14 +210,32 @@ function TransactionRow({ row, onAttach, busy }: { row: ClientTransaction; onAtt
       <Stack direction="row" useFlexGap sx={{ gap: 1, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', flex: '0 1 auto' }}>
         <StatusChip label={state.label} tone={state.tone} size="sm" />
         {row.ledgerEntryId && (
-          <Button size="small" disabled={busy} onClick={() => onAttach(row.ledgerEntryId!)}>
+          <Button
+            size="small"
+            disabled={busy}
+            onClick={(event) => {
+              event.stopPropagation()
+              onAttach(row.ledgerEntryId!)
+            }}
+          >
             Asociază bon
           </Button>
         )}
       </Stack>
     </Stack>
+      <Collapse in={open} unmountOnExit>
+        <Stack spacing={0.5} sx={{ px: 2, pb: 1.5, pl: { sm: '76px' } }}>
+          <Typography sx={{ color: T.textMuted, fontSize: '0.85rem' }}>
+            {new Date(`${row.date}T00:00:00`).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' })} · {PAYMENT_LABEL[row.paymentMethod]}
+          </Typography>
+          {row.detail && <Typography sx={{ color: T.ink, fontSize: '0.88rem', wordBreak: 'break-word' }}>{row.detail}</Typography>}
+        </Stack>
+      </Collapse>
+    </Box>
   )
 }
+
+const PAYMENT_LABEL: Record<ClientTransaction['paymentMethod'], string> = { BANK: 'Bancă', CASH: 'Numerar', MANUAL: 'Card sau cont neconectat' }
 
 /**
  * Confirmarea bonului: ce s-a citit, liniile personale (R30) și „Cum ai plătit?” (R34). Asociat unei
@@ -218,7 +254,8 @@ function ReceiptDialog({
 }) {
   const { extracted, proposedMatch } = upload
   const [lines, setLines] = useState(extracted.lines ?? [])
-  const [payment, setPayment] = useState<ExpensePaymentChoice | ''>(ledgerEntryId ? 'BANK' : proposedMatch ? 'BANK' : '')
+  // QA 9: întrebarea e obligatorie și fără preselecție; doar asocierea pornită de pe rândul plății știe plata.
+  const [payment, setPayment] = useState<ExpensePaymentChoice | ''>(ledgerEntryId ? 'BANK' : '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const bankEntryId = ledgerEntryId ?? proposedMatch?.id ?? null
