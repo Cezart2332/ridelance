@@ -6,7 +6,7 @@ import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded'
 
 import { DASHBOARD_TOKENS as T } from '../../dashboardTheme'
 import { PageHeader, StatusChip } from '../../ui'
-import { fiscalLinkService, type FiscalLinkConnection, type FiscalLinkRegister } from '../../../../services/fiscalLink.service'
+import { fiscalLinkService, type FiscalLinkAccountingSync, type FiscalLinkConnection, type FiscalLinkRegister } from '../../../../services/fiscalLink.service'
 import { getErrorMessage } from '../../../../utils/errorHandler'
 
 const cardSx = {
@@ -32,6 +32,9 @@ export function FiscalLinkConnectionPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [sync, setSync] = useState<FiscalLinkAccountingSync | null>(null)
+  const [syncing, setSyncing] = useState(false)
+  const [syncError, setSyncError] = useState('')
 
   const fetchConnection = useCallback(() =>
     fiscalLinkService.get()
@@ -41,9 +44,28 @@ export function FiscalLinkConnectionPage() {
 
   useEffect(() => { void fetchConnection() }, [fetchConnection])
 
+  const fetchSync = useCallback(() => fiscalLinkService.getAccountingSync()
+    .then((value) => { setSync(value); setSyncError('') })
+    .catch((err) => setSyncError(getErrorMessage(err, 'Nu am putut încărca starea sincronizării contabile.'))), [])
+
+  useEffect(() => { if (connection?.connected) void fetchSync() }, [connection?.connected, fetchSync])
+
+  const synchronize = async () => {
+    setSyncing(true)
+    setSyncError('')
+    try {
+      setSync(await fiscalLinkService.syncAccounting())
+    } catch (err) {
+      setSyncError(getErrorMessage(err, 'Sincronizarea documentelor fiscale nu a reușit.'))
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   const reload = () => {
     setLoading(true)
     void fetchConnection()
+    if (connection?.connected) void fetchSync()
   }
 
   const connect = async () => {
@@ -125,6 +147,39 @@ export function FiscalLinkConnectionPage() {
 
         {liveError && <Alert severity="error" sx={{ mt: 2 }}>{liveError}</Alert>}
       </Paper>
+
+      {connected && (
+        <Paper elevation={0} sx={cardSx}>
+          <Stack spacing={2}>
+            <Stack direction="row" useFlexGap spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+              <Typography sx={{ fontWeight: 800, flex: 1 }}>Bonuri și rapoarte Z</Typography>
+              <Button variant="outlined" startIcon={syncing ? <CircularProgress size={16} /> : <RefreshRoundedIcon />}
+                onClick={synchronize} disabled={syncing || !sync?.configured}>
+                {syncing ? 'Se sincronizează…' : 'Sincronizează acum'}
+              </Button>
+            </Stack>
+            <Typography variant="body2" color="text.secondary">
+              Documentele emise cu succes prin FiscalLink Cloud se importă automat zilnic. Fiecare raport Z
+              înregistrează o singură încasare cash în contabilitate; bonurile îi verifică totalul.
+              Plățile cu cardul încasate prin Bolt sau Uber se verifică separat cu banca și rapoartele platformelor.
+            </Typography>
+            {sync && !sync.configured && <Alert severity="info">
+              Importul automat nu este activat încă. Echipa RIDElance trebuie să configureze conexiunea contabilă FiscalLink.
+            </Alert>}
+            {sync?.configured && <Stack direction="row" spacing={3} useFlexGap sx={{ flexWrap: 'wrap' }}>
+              <Typography variant="body2"><strong>{sync.receipts}</strong> bonuri importate</Typography>
+              <Typography variant="body2"><strong>{sync.zReports}</strong> rapoarte Z</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {sync.lastSyncAtUtc ? `Ultima sincronizare: ${new Date(sync.lastSyncAtUtc).toLocaleString('ro-RO')}` : 'Așteaptă prima sincronizare.'}
+              </Typography>
+            </Stack>}
+            {(syncError || sync?.error) && <Alert severity="warning">{syncError || sync?.error}</Alert>}
+            <Typography variant="caption" color="text.secondary">
+              Sincronizarea citește documentele existente. Nu emite bonuri și nu închide ziua fiscală.
+            </Typography>
+          </Stack>
+        </Paper>
+      )}
 
       {connected && (
         <Paper elevation={0} sx={cardSx}>

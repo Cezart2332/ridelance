@@ -20,6 +20,15 @@ export interface FiscalLinkConnection {
   error: string | null
 }
 
+export interface FiscalLinkAccountingSync {
+  configured: boolean
+  lastAttemptAtUtc: string | null
+  lastSyncAtUtc: string | null
+  error: string | null
+  receipts: number
+  zReports: number
+}
+
 export const fiscalLinkService = {
   async get(): Promise<FiscalLinkConnection> {
     return (await api.get<FiscalLinkConnection>('/connections/fiscallink')).data
@@ -27,5 +36,13 @@ export const fiscalLinkService = {
 
   async connect(): Promise<FiscalLinkConnection> {
     return (await api.post<FiscalLinkConnection>('/connections/fiscallink')).data
+  },
+
+  async getAccountingSync(): Promise<FiscalLinkAccountingSync> {
+    return (await api.get<FiscalLinkAccountingSync>('/connections/fiscallink/accounting')).data
+  },
+
+  async syncAccounting(): Promise<FiscalLinkAccountingSync> {
+    return (await api.post<FiscalLinkAccountingSync>('/connections/fiscallink/accounting/sync')).data
   },
 }
