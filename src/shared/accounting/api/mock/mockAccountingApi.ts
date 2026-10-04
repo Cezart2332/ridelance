@@ -2598,7 +2598,22 @@ export function createMockAccountingApi(): AccountingApi {
       list: (pfaId) =>
         respond((): AccountingPeriod[] => {
           findPfa(pfaId)
-          return db.periods.filter((item) => item.pfaId === pfaId).sort((a, b) => b.period.localeCompare(a.period))
+          const today = todayIso().slice(0, 7)
+          return db.periods
+            .filter((item) => item.pfaId === pfaId)
+            .sort((a, b) => b.period.localeCompare(a.period))
+            .map((item) => {
+              if (item.status !== 'OPEN') return { ...item, canClose: false, blockers: [] }
+              // Aceleași reguli ca reconcilierea lunii (QA 6).
+              const entries = db.ledger.filter((entry) => entry.pfaId === pfaId && entry.accountingPeriod === item.period)
+              const blockers: string[] = []
+              if (item.period >= today) blockers.push('Luna nu s-a încheiat.')
+              const loose = entries.filter((entry) => entry.reconciliationStatus === 'UNMATCHED' || entry.reconciliationStatus === 'NEEDS_REVIEW').length
+              if (loose > 0) blockers.push(`${loose} tranzacții deschise.`)
+              const open = entries.filter((entry) => entry.transactionType === 'PLATFORM_SETTLEMENT').length
+              if (open > 0) blockers.push(`${open} payout-uri nereconciliate.`)
+              return { ...item, canClose: blockers.length === 0, blockers }
+            })
         }),
 
       close: (pfaId, period) =>

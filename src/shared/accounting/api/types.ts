@@ -1354,6 +1354,10 @@ export interface AccountingPeriod {
   status: AccountingPeriodStatus
   closedBy: UserRef | null
   closedAt: IsoDateTime | null
+  /** „Închide luna” permis: aceleași controale ca reconcilierea lunii (QA 6). */
+  canClose?: boolean
+  /** Ce oprește închiderea. */
+  blockers?: string[] | null
 }
 
 /** Spec flux contabil §8: controalele reconcilierii lunare. */

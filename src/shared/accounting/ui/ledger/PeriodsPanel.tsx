@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import LockRoundedIcon from '@mui/icons-material/LockRounded'
-import { Button, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
+import { Button, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography } from '@mui/material'
 
 import { accountingApi } from '../../api/accountingApi'
 import type { AccountingPeriod, PfaAccountingSummary } from '../../api/types'
@@ -57,9 +57,13 @@ export function PeriodsPanel({ summary, onChanged }: { summary: PfaAccountingSum
                   <TableCell>{period.closedAt ? `${formatDateTime(period.closedAt)} · ${period.closedBy?.name ?? ''}` : EMPTY}</TableCell>
                   <TableCell align="right">
                     {period.status === 'OPEN' && !summary.readOnly && (
-                      <Button size="small" onClick={() => setClosing(period)}>
-                        Închide luna
-                      </Button>
+                      <Tooltip title={period.canClose ? '' : (period.blockers ?? []).join(' ')} enterTouchDelay={0}>
+                        <span>
+                          <Button size="small" disabled={!period.canClose} onClick={() => setClosing(period)}>
+                            Închide luna
+                          </Button>
+                        </span>
+                      </Tooltip>
                     )}
                   </TableCell>
                 </TableRow>
