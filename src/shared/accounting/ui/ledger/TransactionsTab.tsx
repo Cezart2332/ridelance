@@ -1,6 +1,7 @@
 import { Fragment, useRef, useState } from 'react'
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 import LockRoundedIcon from '@mui/icons-material/LockRounded'
+import WarningAmberRounded from '@mui/icons-material/WarningAmberRounded'
 import {
   Alert,
   Box,
@@ -46,6 +47,7 @@ import {
   LEDGER_SOURCE_LABEL,
   LEDGER_TRANSACTION_TYPE_LABEL,
   PAYMENT_METHOD_LABEL,
+  REGISTER_EXCEPTION_LABEL,
 } from '../../statusLabels'
 import { AccountingBadge, EmptyText, ErrorBlock, LoadingBlock, ReasonDialog } from '../components'
 import { useAction, useNotify } from '../notify'
@@ -59,6 +61,10 @@ import { PeriodsPanel } from './PeriodsPanel'
 const PAGE_SIZE = 25
 
 type EntryDialog = { mode: 'edit' | 'correction'; entry: LedgerEntry } | { mode: 'manual' } | null
+
+/** QA 8: „Verifică” confirmă o clasificare; încasarea neidentificată și propunerea se clasifică întâi (RJIP → de rezolvat). */
+const needsClassification = (entry: LedgerEntry) =>
+  entry.exception === 'UNIDENTIFIED_INCOME' || entry.exception === 'UNCLASSIFIED_PAYMENT' || entry.exception === 'TRANSFER_TO_CONFIRM'
 
 /** Detaliile unui rând: documentul justificativ, calculul deductibilității și auditul. */
 function EntryDetails({ entry, categoryLabel }: { entry: LedgerEntry; categoryLabel: string | null }) {
@@ -344,16 +350,17 @@ export function TransactionsTab({ summary, onSummaryChanged }: DossierTabProps) 
                               {formatDate(entry.date)}
                             </Stack>
                           </TableCell>
-                          <TableCell>{entry.documentLabel}</TableCell>
+                          <TableCell sx={{ whiteSpace: 'nowrap' }}>{entry.documentRef ?? entry.documentLabel}</TableCell>
                           <TableCell>{LEDGER_SOURCE_LABEL[entry.source]}</TableCell>
                           <TableCell>{entry.counterparty ?? EMPTY}</TableCell>
                           <TableCell>
-                            {entry.description}
-                            {entry.category && (
-                              <Typography variant="caption" color="text.secondary" component="div">
-                                {categoryLabel(entry.category)}
-                              </Typography>
-                            )}
+                            {/* QA 1: aceeași explicație ca RJIP; textul băncii doar ca detaliu. */}
+                            <Tooltip title={entry.explanation && entry.explanation !== entry.description ? entry.description : ''} enterTouchDelay={0}>
+                              <Stack direction="row" sx={{ gap: 0.5, alignItems: 'center' }}>
+                                {entry.exception && <WarningAmberRounded fontSize="small" color="warning" aria-label={REGISTER_EXCEPTION_LABEL[entry.exception]} />}
+                                <span>{entry.explanation ?? entry.description}</span>
+                              </Stack>
+                            </Tooltip>
                           </TableCell>
                           <TableCell>{LEDGER_TRANSACTION_TYPE_LABEL[entry.transactionType]}</TableCell>
                           <TableCell>{PAYMENT_METHOD_LABEL[entry.paymentMethod]}</TableCell>
@@ -361,7 +368,10 @@ export function TransactionsTab({ summary, onSummaryChanged }: DossierTabProps) 
                             {formatLei(entry.amount)}
                           </TableCell>
                           <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                            {entry.deductibleAmount !== null ? formatLei(entry.deductibleAmount) : EMPTY}
+                            {/* În REF intră doar cheltuiala justificată cu document (R01): aceeași cifră ca registrul. */}
+                            {entry.refDeductibleAmount != null
+                              ? formatLei(entry.refDeductibleAmount)
+                              : entry.deductibleAmount !== null ? formatLei(entry.deductibleAmount) : EMPTY}
                             {entry.deductibilityType && (
                               <Typography variant="caption" color="text.secondary" component="div">
                                 {DEDUCTIBILITY_TYPE_LABEL[entry.deductibilityType]}
@@ -372,7 +382,7 @@ export function TransactionsTab({ summary, onSummaryChanged }: DossierTabProps) 
                             <AccountingBadge descriptor={LEDGER_ENTRY_STATUS[entry.status]} />
                           </TableCell>
                           <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                            {!readOnly && !locked && entry.status !== 'VERIFIED' && (
+                            {!readOnly && !locked && entry.status !== 'VERIFIED' && !needsClassification(entry) && (
                               <Button
                                 size="small"
                                 disabled={busy !== null}

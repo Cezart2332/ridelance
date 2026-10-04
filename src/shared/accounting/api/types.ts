@@ -962,6 +962,14 @@ export interface LedgerEntry {
   stornoOfEntryId?: string | null
   /** Clasificarea propusă din contrapartidă (titular, ANAF, comision bancar), încă neconfirmată. */
   proposedClassification?: BankClassification | null
+  /** Explicația din RJIP, din clasificare (QA 1). */
+  explanation?: string | null
+  /** Documentul din RJIP: „Extras bancar, ref. …” (QA 21). */
+  documentRef?: string | null
+  /** Excepția RJIP a rândului, dacă există. */
+  exception?: RegisterExceptionKind | null
+  /** Cât intră în REF: doar cheltuiala justificată cu document. */
+  refDeductibleAmount?: number | null
   /** Înregistrarea blocată pe care aceasta o înlocuiește, corectată, în luna curentă. */
   correctsEntryId?: string | null
 }
