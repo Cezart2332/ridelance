@@ -125,6 +125,7 @@ function expenseCategories(): ExpenseCategoryRule[] {
     rule('PHONE', 'Telefonie mobilă', false, '100_PERCENT', 'ORANGE|VODAFONE|DIGI'),
     rule('CASH_REGISTER', 'Casă de marcat și consumabile', false, '100_PERCENT', 'DATECS|TREMOL'),
     rule('PLATFORM_COMMISSION', 'Comision platformă (Uber, Bolt)', false, '100_PERCENT', null),
+    rule('NON_RECOVERABLE_VAT', 'TVA nerecuperabil (D301)', false, '100_PERCENT', null),
     // DE CONFIRMAT (§6 pct. 9): amortizarea nu se deduce prin procentul auto.
     rule('DEPRECIATION', 'Amortizare', true, 'SPECIAL_RULE', null),
     rule('PERSONAL', 'Cheltuieli personale', false, 'NON_DEDUCTIBLE', null),

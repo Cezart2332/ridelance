@@ -59,7 +59,7 @@ export function LedgerEntryForm({
       {values.transactionType === 'EXPENSE' && (
         <TextField select label="Categorie" value={values.category} onChange={(event) => set('category', event.target.value)}>
           <MenuItem value="">Neclasificată</MenuItem>
-          {categories.map((category) => (
+          {categories.filter((category) => category.category !== 'NON_RECOVERABLE_VAT' || values.category === category.category).map((category) => (
             <MenuItem key={category.id} value={category.category}>
               {category.label}
             </MenuItem>

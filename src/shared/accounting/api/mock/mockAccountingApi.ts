@@ -2151,6 +2151,41 @@ export function createMockAccountingApi(): AccountingApi {
           return updated
         }),
 
+      associateD301Payment: (pfaId, id, request) =>
+        respond(() => {
+          const entry = findLedgerEntry(id)
+          const { declaration, version } = findDeclarationOfVersion(request.versionId)
+          ensureWritable(findPfa(pfaId))
+          ensurePeriodOpen(pfaId, entry.accountingPeriod)
+          const reason = requireReason(request.reason)
+          if (entry.pfaId !== pfaId || declaration.pfaId !== pfaId || declaration.type !== 'D301' ||
+            currentVersion(declaration).id !== version.id || !version.hasPdf || version.status === 'REJECTED' ||
+            !request.confirmNonRecoverable || entry.source !== 'BANK' || entry.closedPeriodFlag ||
+            entry.settlementGroupId || entry.stornoOfEntryId || entry.amount >= 0 || entry.paymentMethod !== 'BANK' ||
+            entry.currency !== 'RON' || entry.personalAmount || !['TAX', 'OTHER', 'EXPENSE'].includes(entry.transactionType)) {
+            throw badRequest('D301_PAYMENT', 'Alege o plată bancară și versiunea curentă D301 din același dosar; confirmă TVA-ul nerecuperabil.')
+          }
+          const docId = `d301-pdf-${version.id}`
+          if (entry.sourceDocumentId && entry.sourceDocumentId !== docId) throw conflict('D301_PAYMENT', 'Plata are deja alt document justificativ.')
+          const docs = declaration.versions.map((item) => `d301-pdf-${item.id}`)
+          const paid = Math.abs(entry.amount) - db.ledger.filter((item) => item.pfaId === pfaId && item.id !== id &&
+            item.category === 'NON_RECOVERABLE_VAT' && item.sourceDocumentId && docs.includes(item.sourceDocumentId) && !item.closedPeriodFlag)
+            .reduce((sum, item) => sum + item.amount, 0)
+          if (paid > Math.round(version.amount)) throw conflict('D301_PAYMENT', 'Plățile asociate depășesc suma D301.')
+          const updated = withDeductibility({ ...entry, transactionType: 'EXPENSE', category: 'NON_RECOVERABLE_VAT',
+            sourceDocumentId: docId, description: `TVA nerecuperabil achitat la ANAF, D301 ${declaration.period} v${version.versionNo}`,
+            proposedClassification: null, reconciliationStatus: 'MATCHED', status: 'VERIFIED',
+            rowVersion: String(Number(entry.rowVersion) + 1) })
+          replaceLedgerEntry(updated)
+          audit(pfaId, 'LedgerEntry', id, 'ASSOCIATE_D301_PAYMENT', entry, updated, reason)
+          return updated
+        }),
+
+      import: (pfaId) => respond(() => {
+        ensureWritable(findPfa(pfaId))
+        return [{ source: 'BANK', created: 0, updated: 0, notes: ['Mod demonstrativ: sincronizarea surselor externe este disponibilă pe API-ul real.'] }]
+      }),
+
       createManual: (pfaId, request) =>
         respond(() => {
           const pfa = findPfa(pfaId)

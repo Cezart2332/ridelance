@@ -21,6 +21,7 @@ const ENTITY_LABEL: Record<string, string> = {
 }
 
 const ACTION_LABEL: Record<string, string> = {
+  ASSOCIATE_D301_PAYMENT: 'Asociere plată D301 — TVA nerecuperabil',
   UPLOAD: 'Încărcare',
   CONFIRM: 'Confirmare',
   MANUAL_EDIT: 'Modificare manuală',

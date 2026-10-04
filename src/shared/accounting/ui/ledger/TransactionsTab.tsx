@@ -57,6 +57,7 @@ import { useApi } from '../useApi'
 import { LedgerEntryForm } from './LedgerEntryForm'
 import { emptyLedgerForm, ledgerFormFrom, ledgerFormValues, type LedgerFormValues } from './ledgerForm'
 import { PeriodsPanel } from './PeriodsPanel'
+import { D301PaymentDialog } from './D301PaymentDialog'
 
 const PAGE_SIZE = 25
 
@@ -159,6 +160,8 @@ export function TransactionsTab({ summary, onSummaryChanged, period }: DossierTa
   const [page, setPage] = useState(0)
   const [open, setOpen] = useState<string | null>(null)
   const [dialog, setDialog] = useState<EntryDialog>(null)
+  const [vatPayment, setVatPayment] = useState<LedgerEntry | null>(null)
+  const [importNotes, setImportNotes] = useState<string[] | null>(null)
   const [form, setForm] = useState<LedgerFormValues>(emptyLedgerForm(''))
   const [expense, setExpense] = useState<ExpenseDocumentUploadResult | null>(null)
   const [zReport, setZReport] = useState<ZReportUploadResult | null>(null)
@@ -234,6 +237,7 @@ export function TransactionsTab({ summary, onSummaryChanged, period }: DossierTa
 
   return (
     <Stack spacing={3}>
+      <Alert severity="info">Încasări și plăți și RJIP folosesc aceleași tranzacții. „Modifică” editează datele; „Clarifică RJIP” stabilește încadrarea contabilă. În REF intră veniturile impozabile și cheltuielile deductibile justificate. Viramentele Uber/Bolt se reconciliază cu rapoartele și facturile de comision.</Alert>
       <Paper sx={{ p: 2.5 }}>
         <Stack spacing={2}>
           <Stack direction={{ xs: 'column', md: 'row' }} sx={{ gap: 2, flexWrap: 'wrap' }}>
@@ -264,6 +268,13 @@ export function TransactionsTab({ summary, onSummaryChanged, period }: DossierTa
             <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
               <Button variant="contained" onClick={() => openDialog({ mode: 'manual' })}>
                 Adaugă manual
+              </Button>
+              <Button variant="outlined" disabled={busy !== null} onClick={() => run('import', async () => {
+                const results = await accountingApi.ledger.import(summary.id)
+                setImportNotes(results.flatMap((item) => item.notes))
+                changed()
+              }, 'Sursele au fost sincronizate; verifică rezultatul reconcilierii.')}>
+                {busy === 'import' ? 'Se sincronizează…' : 'Sincronizează și reconciliază'}
               </Button>
               <Button variant="outlined" disabled={busy !== null} onClick={() => expenseInput.current?.click()}>
                 {busy === 'expense' ? 'Se citește…' : 'Încarcă document cheltuială'}
@@ -299,6 +310,12 @@ export function TransactionsTab({ summary, onSummaryChanged, period }: DossierTa
           )}
         </Stack>
       </Paper>
+
+      {importNotes !== null && (importNotes.length === 0 ? <Alert severity="success">Sincronizarea s-a încheiat fără observații. Verifică tranzacțiile și registrele.</Alert> :
+        <Alert severity="warning"><Stack spacing={0.5}>
+          <Typography variant="subtitle2">Observații la reconciliere</Typography>
+          {importNotes.map((note, index) => <Typography key={index} variant="body2">{note}</Typography>)}
+        </Stack></Alert>)}
 
       <Paper>
         {ledger.error && <ErrorBlock message={ledger.error} onRetry={ledger.reload} />}
@@ -401,6 +418,12 @@ export function TransactionsTab({ summary, onSummaryChanged, period }: DossierTa
                                 Modifică
                               </Button>
                             )}
+                            {!readOnly && !locked && !entry.closedPeriodFlag && entry.source === 'BANK' && entry.amount < 0 &&
+                              !entry.settlementGroupId && ['TAX', 'OTHER', 'EXPENSE'].includes(entry.transactionType) &&
+                              (entry.transactionType === 'TAX' || entry.proposedClassification === 'TAX_PAYMENT' || entry.category === 'NON_RECOVERABLE_VAT' ||
+                                /anaf|trezorer|d301/i.test(`${entry.counterparty ?? ''} ${entry.description}`)) && (
+                                <Button size="small" disabled={busy !== null} onClick={() => setVatPayment(entry)}>Asociază D301</Button>
+                              )}
                             {!readOnly && locked && (
                               <Button size="small" onClick={() => openDialog({ mode: 'correction', entry })}>
                                 Corecție controlată
@@ -435,6 +458,7 @@ export function TransactionsTab({ summary, onSummaryChanged, period }: DossierTa
       </Paper>
 
       <PeriodsPanel summary={summary} onChanged={changed} />
+      {vatPayment && <D301PaymentDialog key={vatPayment.id} entry={vatPayment} onClose={() => setVatPayment(null)} onChanged={changed} />}
 
       <ReasonDialog
         open={dialog !== null}

@@ -154,6 +154,7 @@ export function RegisterExceptionsDialog({
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>{data ? `RJIP ${year}: ${data.total} de rezolvat` : `RJIP ${year}`}</DialogTitle>
       <DialogContent dividers>
+        <Alert severity="info" sx={{ mb: 2 }}>Clasifici aceleași tranzacții din „Încasări și plăți”. Încadrarea stabilește ce reprezintă banii și efectul în REF; pentru dată, sumă, categorie sau document folosește „Modifică”. Pentru TVA nerecuperabil achitat, folosește „Asociază D301” la plata bancară.</Alert>
         {exceptions.error && <ErrorBlock message={exceptions.error} onRetry={exceptions.reload} />}
         {!data && !exceptions.error && <LoadingBlock />}
         {data && data.total === 0 && <EmptyText>Nimic de rezolvat.</EmptyText>}

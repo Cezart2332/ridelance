@@ -221,6 +221,8 @@ export function createHttpAccountingApi(): AccountingApi {
       list: (pfaId, query) => get(`pfas/${pfaId}/ledger`, query),
       update: (id, request) => patch(`ledger/${id}`, request),
       verify: (id) => post(`ledger/${id}/verify`),
+      import: (pfaId) => post(`pfas/${pfaId}/ledger/import`),
+      associateD301Payment: (pfaId, id, request) => post(`pfas/${pfaId}/ledger/${id}/d301-payment`, request),
       createManual: (pfaId, request) => post(`pfas/${pfaId}/ledger/manual`, request),
       uploadExpenseDocument: (pfaId, file) => post(`pfas/${pfaId}/expense-documents`, form({ file })),
       confirmExpenseDocument: (pfaId, id, request) => post(`pfas/${pfaId}/expense-documents/${id}/confirm`, request),

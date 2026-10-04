@@ -268,6 +268,8 @@ export interface AccountingApi {
     list(pfaId: string, query?: LedgerQuery): Promise<Paged<LedgerEntry>>
     update(id: string, request: UpdateLedgerEntryRequest): Promise<LedgerEntry>
     verify(id: string): Promise<LedgerEntry>
+    import(pfaId: string): Promise<{ source: string; created: number; updated: number; notes: string[] }[]>
+    associateD301Payment(pfaId: string, id: string, request: { versionId: string; confirmNonRecoverable: boolean; reason: string }): Promise<LedgerEntry>
     createManual(pfaId: string, request: ManualLedgerEntryRequest): Promise<LedgerEntry>
     uploadExpenseDocument(pfaId: string, file: File): Promise<ExpenseDocumentUploadResult>
     confirmExpenseDocument(pfaId: string, expenseDocumentId: string, request: ConfirmExpenseDocumentRequest): Promise<LedgerEntry>
