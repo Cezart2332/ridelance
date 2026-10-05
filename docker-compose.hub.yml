@@ -5,6 +5,9 @@
 #   ${VAR:-x}    opțională, cu valoarea implicită x
 #   ${VAR:-}     opțională, goală implicit (funcția respectivă rămâne oprită)
 #
+# Imaginile sunt pe Docker Hub (cezarique/…), publicate de CI doar ca `sha-<commit>` (nu există
+# `latest`). Pentru o versiune nouă se schimbă BACKEND_TAG / FRONTEND_TAG / VALIDATOR_TAG.
+#
 # Local: docker compose -f docker-compose.hub.yml --env-file .env.hub up -d
 #
 # Imaginea de frontend are adresa API-ului coaptă la build în CI (`VITE_API_BASE_URL`); nu se poate
@@ -28,7 +31,7 @@ services:
     restart: unless-stopped
 
   validator:
-    image: ${DOCKERHUB_NAMESPACE:?Setează DOCKERHUB_NAMESPACE}/ridelance-validator:${RIDELANCE_TAG:-latest}
+    image: cezarique/ridelance-validator:${VALIDATOR_TAG:-sha-22df4312e302}
     environment:
       PORT: "8080"
       INTERNAL_TOKEN: ${ANAF_VALIDATOR_TOKEN:?Setează ANAF_VALIDATOR_TOKEN}
@@ -40,7 +43,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: ${DOCKERHUB_NAMESPACE}/ridelance-backend:${RIDELANCE_TAG:-latest}
+    image: cezarique/ridelance-backend:${BACKEND_TAG:-sha-89d7fdf4afd6}
     depends_on:
       postgres:
         condition: service_healthy
@@ -137,7 +140,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ${DOCKERHUB_NAMESPACE}/ridelance-frontend:${RIDELANCE_TAG:-latest}
+    image: cezarique/ridelance-frontend:${FRONTEND_TAG:-sha-9d82b8d8b022}
     depends_on:
       - backend
     ports:
