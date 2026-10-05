@@ -3,7 +3,7 @@ import { Box, MenuItem, Stack, TextField, Tooltip, Typography } from '@mui/mater
 
 import type { Period } from '../../api/types'
 import { formatPeriod } from '../../format'
-import { HAIRLINE, INK, initials, recentPeriods, TONES, type Cell, type Tone } from './status'
+import { currentCalendarPeriod, HAIRLINE, INK, initials, recentPeriods, TONES, type Cell, type Tone } from './status'
 
 /** Bulină + un cuvânt, pe fundalul tonului. */
 export function StatusPill({ cell }: { cell: Cell | null }) {
@@ -103,13 +103,14 @@ export function SectionTitle({ tone, title, count }: { tone?: Tone; title: strin
 }
 
 export function MonthSelect({ value, current, onChange }: { value: Period; current: Period; onChange: (period: Period) => void }) {
-  const options = recentPeriods(current)
+  const calendar = currentCalendarPeriod()
+  const options = recentPeriods(calendar > current ? calendar : current)
   if (!options.includes(value)) options.unshift(value)
   return (
     <TextField select label="Luna" value={value} onChange={(event) => onChange(event.target.value)} sx={{ minWidth: 180 }}>
       {options.map((option) => (
         <MenuItem key={option} value={option}>
-          {formatPeriod(option)}
+          {formatPeriod(option)}{option === calendar ? ' · în curs' : ''}
         </MenuItem>
       ))}
     </TextField>

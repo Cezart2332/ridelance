@@ -17,7 +17,6 @@ import { DASHBOARD_TOKENS, dashboardInputSx, responsiveTableContainerSx } from '
 import { PageHeader, StatusChip, formatLei, type StatusTone } from '../../ui'
 import { tabularNums } from '../../home/tokens'
 import { expenseService, type DeductibleExpense } from '../../../../services/expense.service'
-import { deductibleExpensesData } from '../../../../data/cheltuieliDeductibile'
 import { getErrorMessage } from '../../../../utils/errorHandler'
 import { AddExpenseDialog } from './AddExpenseDialog'
 import { openDocument } from '../../../common/documentViewerBus'
@@ -63,6 +62,7 @@ export function ExpensesPage({ pfaRegistrationId }: { pfaRegistrationId: string 
   const [status, setStatus] = useState<StatusFilter>('all')
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editing, setEditing] = useState<DeductibleExpense | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
   // „Încarcă o cheltuială” din meniul „+” deschide direct dialogul.
   const { intent, clearIntent } = useQuickActionIntent()
@@ -111,9 +111,7 @@ export function ExpensesPage({ pfaRegistrationId }: { pfaRegistrationId: string 
     })
   }, [loaded.items, status, category, search])
 
-  const confirmedTotal = visible
-    .filter((expense) => expense.status === 'Confirmed')
-    .reduce((sum, expense) => sum + (expense.amountRon ?? 0), 0)
+  const confirmedTotal = visible.reduce((sum, expense) => sum + (expense.deductibleAmount ?? 0), 0)
 
   const years = Array.from({ length: 5 }, (_, index) => now.getFullYear() - index)
 
@@ -121,7 +119,7 @@ export function ExpensesPage({ pfaRegistrationId }: { pfaRegistrationId: string 
     <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
       <PageHeader
         title="Cheltuieli"
-        subtitle="Cheltuielile deductibile ale PFA-ului. Cele confirmate intră imediat în profitul real estimat."
+        subtitle="Documentele și plățile PFA-ului. Partea deductibilă a plăților justificate alimentează REF și profitul estimat."
         actions={
           <Button
             variant="contained"
@@ -182,8 +180,8 @@ export function ExpensesPage({ pfaRegistrationId }: { pfaRegistrationId: string 
 
           <TextField select size="small" label="Categorie" value={category} onChange={(e) => setCategory(e.target.value)} sx={dashboardInputSx}>
             <MenuItem value="all">Toate categoriile</MenuItem>
-            {deductibleExpensesData.map((cat) => (
-              <MenuItem key={cat.name} value={cat.name}>{cat.name}</MenuItem>
+            {[...new Map(loaded.items.map((item) => [item.catalogCategory, item.itemName])).entries()].map(([code, label]) => (
+              <MenuItem key={code} value={code}>{label}</MenuItem>
             ))}
           </TextField>
 
@@ -298,6 +296,8 @@ export function ExpensesPage({ pfaRegistrationId }: { pfaRegistrationId: string 
                       </Box>
                       <Box component="td" sx={{ px: 2, py: 1.5 }}>
                         <StatusChip tone={chip.tone} label={chip.label} size="sm" />
+                        <Typography variant="caption" sx={{ display: 'block' }}>{expense.ledgerEntryId ? `Plată în RJIP · ${expense.deductibleAmount == null ? 'REF de verificat' : `${formatLei(expense.deductibleAmount)} în REF`}` : 'Plată de asociat în RJIP'}</Typography>
+                        <Button size="small" onClick={() => setEditing(expense)}>Verifică / modifică</Button>
                       </Box>
                     </Box>
                   )
@@ -310,15 +310,17 @@ export function ExpensesPage({ pfaRegistrationId }: { pfaRegistrationId: string 
 
       {!loading && visible.length > 0 && (
         <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.86rem', textAlign: 'right', ...tabularNums }}>
-          Total confirmat: <strong>{formatLei(confirmedTotal)}</strong>
+          Total deductibil în REF: <strong>{formatLei(confirmedTotal)}</strong>
         </Typography>
       )}
 
-      {showDialog && (
+      {(showDialog || editing) && (
         <AddExpenseDialog
           pfaRegistrationId={pfaRegistrationId}
+          expense={editing ?? undefined}
           onClose={() => {
             setDialogOpen(false)
+            setEditing(null)
             clearIntent()
           }}
           onSaved={() => setReloadToken((token) => token + 1)}

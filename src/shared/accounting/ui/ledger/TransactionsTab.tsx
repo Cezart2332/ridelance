@@ -495,6 +495,7 @@ export function TransactionsTab({ summary, onSummaryChanged, period }: DossierTa
               ) : (
                 <Alert severity="warning">Nicio tranzacție potrivită. Poți adăuga plata manual.</Alert>
               )}
+              {(expense.suggestedPersonalAmount ?? 0) > 0 && <Alert severity="warning">Articole personale identificate: {formatLei(expense.suggestedPersonalAmount)}. Această parte rămâne nedeductibilă.</Alert>}
             </Stack>
           )}
         </DialogContent>
@@ -506,9 +507,10 @@ export function TransactionsTab({ summary, onSummaryChanged, period }: DossierTa
               disabled={busy !== null}
               onClick={() =>
                 run('match', async () => {
-                  await accountingApi.ledger.update(expense.proposedMatch!.id, {
-                    fields: { sourceDocumentId: expense.documentId },
-                    reason: 'Document de cheltuială atașat (potrivire confirmată)',
+                  if (!expense.expenseDocumentId) throw new Error('Documentul nu are identificatorul necesar pentru confirmarea plății.')
+                  await accountingApi.ledger.confirmExpenseDocument(summary.id, expense.expenseDocumentId, {
+                    payment: 'BANK', ledgerEntryId: expense.proposedMatch!.id,
+                    personalAmount: expense.suggestedPersonalAmount ?? null, category: expense.proposedMatch!.category ?? null,
                   })
                   setExpense(null)
                   changed()

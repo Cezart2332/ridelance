@@ -32,6 +32,10 @@ export interface DeductibleExpense {
   documentTypeLabel: string | null;
   source: ExpenseSource;
   status: ExpenseStatus;
+  ledgerEntryId?: string | null;
+  deductibleAmount?: number | null;
+  paymentMethod?: string | null;
+  paymentDate?: string | null;
 }
 
 export interface CreateDeductibleExpensePayload {
@@ -61,9 +65,39 @@ export interface UpdateDeductibleExpensePayload {
   documentTypeLabel: string | null;
   /** `false` lasă cheltuiala ciornă: salvată, dar în afara calculelor. */
   confirm: boolean;
+  paymentMethod?: 'Cash' | 'Bank' | 'Unpaid';
+  paymentDate?: string | null;
+  ledgerEntryId?: string | null;
+  accountingCategory?: string | null;
+  personalAmount?: number;
+  documentNumber?: string | null;
+  reason?: string;
+  approveDocument?: boolean;
+}
+
+export interface ExpenseSuggestion {
+  supplierName: string | null;
+  date: string | null;
+  total: number | null;
+  vat: number | null;
+  documentType: string | null;
+  category: string | null;
+  number: string | null;
+  personalAmount: number;
+  currency: string | null;
+  ready: boolean;
+  categories: { category: string; label: string; percent: number | null }[];
+  payments: { id: string; date: string; amount: number; description: string }[];
+  ledgerEntryId: string | null;
+  paymentMethod: string | null;
+  paymentDate: string | null;
 }
 
 export const expenseService = {
+  syncSources: async (pfaId: string): Promise<string[]> =>
+    (await api.post<string[]>(`/pfa-registrations/${pfaId}/deductible-expenses/sync-sources`)).data,
+  getSuggestion: async (pfaId: string, expenseId: string, total?: number): Promise<ExpenseSuggestion> =>
+    (await api.get<ExpenseSuggestion>(`/pfa-registrations/${pfaId}/deductible-expenses/${expenseId}/suggestion`, { params: { total } })).data,
   getByPfa: async (
     pfaRegistrationId: string,
     year?: number,

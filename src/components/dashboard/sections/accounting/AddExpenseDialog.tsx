@@ -1,374 +1,189 @@
-import { useEffect, useRef, useState } from 'react'
-import {
-  Alert,
-  Autocomplete,
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
-import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded'
-
-import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
-import { documentService } from '../../../../services/document.service'
-import { expenseService, type DeductibleExpense } from '../../../../services/expense.service'
-import {
-  deductibleExpenseOptions,
-  type DeductibleExpenseOption,
-} from '../../../../utils/deductibleExpenseCatalog'
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
+import { Alert, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from '@mui/material'
+import { expenseService, type DeductibleExpense, type ExpenseSuggestion } from '../../../../services/expense.service'
 import { getErrorMessage } from '../../../../utils/errorHandler'
-import { DateField } from '../../../common/DateField'
+import { openDocument } from '../../../common/documentViewerBus'
 
-type Step = 'pick-file' | 'confirm'
+type Payment = '' | 'Cash' | 'Bank' | 'Unpaid'
 
-/** Ce face documentul în spate: se încarcă, se citește, gata sau necitit. */
-type Reading = 'uploading' | 'reading' | 'done' | 'failed' | null
-
-interface FormState {
-  option: DeductibleExpenseOption | null
-  supplierName: string
-  expenseDate: string
-  amount: string
-  vat: string
-  documentTypeLabel: string
-}
-
-const EMPTY_FORM: FormState = {
-  option: null,
-  supplierName: '',
-  expenseDate: '',
-  amount: '',
-  vat: '',
-  documentTypeLabel: '',
-}
-
-/** Câte încercări de citire a extragerii, la 1,5s — jobul AI rulează asincron. */
-const POLL_ATTEMPTS = 12
-const POLL_DELAY_MS = 1500
-
-const toNumber = (value: string): number | null => {
-  const normalized = value.replace(/\s/g, '').replace(',', '.')
-  if (!normalized) return null
-  const parsed = Number(normalized)
-  return Number.isFinite(parsed) ? parsed : null
-}
-
-/** Data de pe document decide luna contabilă; fără ea, luna curentă. */
-function periodFrom(expenseDate: string): { year: number; month: number } {
-  const date = expenseDate ? new Date(expenseDate) : new Date()
-  const valid = Number.isNaN(date.getTime()) ? new Date() : date
-  return { year: valid.getFullYear(), month: valid.getMonth() + 1 }
-}
-
-/**
- * Fluxul din spec §7.2: încarci documentul, OCR-ul citește, tu confirmi.
- *
- * Extragerea eșuată nu blochează nimic — formularul rămâne complet editabil, iar cheltuiala
- * se salvează la fel. OCR-ul e o scutire de tastat, nu o condiție.
- *
- * Se montează doar cât e deschis (vezi `ExpensesPage`), deci starea pornește curată de
- * fiecare dată, fără efect care să o reseteze.
- */
-export function AddExpenseDialog({
-  pfaRegistrationId,
-  onClose,
-  onSaved,
-}: {
+/** The same review form for the PFA and accountant: document, classification, actual payment. */
+export function AddExpenseDialog({ pfaRegistrationId, expense, approveDocument = false, onClose, onSaved }: {
   pfaRegistrationId: string | null
+  expense?: DeductibleExpense
+  approveDocument?: boolean
   onClose: () => void
   onSaved: (expense: DeductibleExpense) => void
 }) {
-  const [step, setStep] = useState<Step>('pick-file')
-  const [form, setForm] = useState<FormState>(EMPTY_FORM)
-  const [draft, setDraft] = useState<DeductibleExpense | null>(null)
+  const [draft, setDraft] = useState<DeductibleExpense | null>(expense ?? null)
+  const [suggestion, setSuggestion] = useState<ExpenseSuggestion | null>(null)
+  const [loading, setLoading] = useState(Boolean(expense))
+  const [reading, setReading] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [reading, setReading] = useState<Reading>(null)
-  const inputRef = useRef<HTMLInputElement | null>(null)
-  // Citirea continuă în spate; la închiderea dialogului se oprește.
+  const [supplier, setSupplier] = useState(expense?.supplierName ?? '')
+  const [date, setDate] = useState(expense?.expenseDate ?? '')
+  const [amount, setAmount] = useState(expense?.amountRon?.toString() ?? '')
+  const [vat, setVat] = useState(expense?.vatAmount?.toString() ?? '')
+  const [category, setCategory] = useState('')
+  const [documentType, setDocumentType] = useState(expense?.documentTypeLabel ?? '')
+  const [number, setNumber] = useState('')
+  const [personal, setPersonal] = useState('0')
+  const [payment, setPayment] = useState<Payment>('')
+  const [paidOn, setPaidOn] = useState('')
+  const [bankId, setBankId] = useState('')
+  const [reason, setReason] = useState('')
+  const input = useRef<HTMLInputElement>(null)
   const alive = useRef(true)
-  useEffect(() => {
-    alive.current = true
-    return () => {
-      alive.current = false
+  const touched = useRef(new Set<string>())
+  useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
+
+  function edit(key: string, setter: Dispatch<SetStateAction<string>>, value: string) {
+    touched.current.add(key); setter(value)
+  }
+
+  function apply(read: ExpenseSuggestion, preserve = false) {
+    setSuggestion(read)
+    const put = (key: string, setter: Dispatch<SetStateAction<string>>, value: string) => {
+      if (!preserve || !touched.current.has(key)) setter(value)
     }
-  }, [])
+    put('supplier', setSupplier, read.supplierName ?? '')
+    put('date', setDate, read.date ?? '')
+    put('amount', setAmount, read.total?.toString() ?? '')
+    put('vat', setVat, read.vat?.toString() ?? '')
+    put('category', setCategory, read.category ?? '')
+    put('type', setDocumentType, read.documentType ?? '')
+    put('number', setNumber, read.number ?? '')
+    put('personal', setPersonal, read.personalAmount.toString())
+    if (!preserve || !touched.current.has('payment')) setPayment(read.paymentMethod === 'Cash' || read.paymentMethod === 'Bank' ? read.paymentMethod : '')
+    put('paidOn', setPaidOn, read.paymentDate ?? read.date ?? '')
+    put('bankId', setBankId, read.paymentMethod === 'Bank' ? read.ledgerEntryId ?? '' : '')
+  }
 
-  const handleFile = async (file: File) => {
+  useEffect(() => {
+    if (!expense || !pfaRegistrationId) return
+    let cancelled = false
+    expenseService.getSuggestion(pfaRegistrationId, expense.id).then((read) => {
+      if (!cancelled) apply(read)
+    }).catch((cause) => { if (!cancelled) setError(getErrorMessage(cause, 'Nu am putut încărca datele cheltuielii.')) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [expense, pfaRegistrationId])
+
+  async function upload(file: File) {
     if (!pfaRegistrationId) return
-    // Formularul apare imediat: omul poate completa singur cât documentul se citește.
-    setStep('confirm')
-    setReading('uploading')
-    setError(null)
-    setNotice(null)
-
+    setLoading(true); setError(null)
     try {
-      // Cheltuiala se creează fără sumă: rămâne ciornă până la confirmare, deci nu atinge
-      // niciun calcul cât timp datele sunt încă ale modelului, nu ale omului.
+      const now = new Date()
       const created = await expenseService.createForPfa(pfaRegistrationId, {
-        catalogCategory: 'Nedefinit',
-        itemName: file.name,
-        deductibleLabel: '100%',
-        year: new Date().getFullYear(),
-        month: new Date().getMonth() + 1,
-        file,
+        catalogCategory: 'Nedefinit', itemName: file.name, deductibleLabel: 'De clasificat',
+        year: now.getFullYear(), month: now.getMonth() + 1, file,
       })
       if (!alive.current) return
       setDraft(created)
-      setReading('reading')
-
-      const extracted = await pollExtraction(created.documentId, () => alive.current)
+      let read = await expenseService.getSuggestion(pfaRegistrationId, created.id)
       if (!alive.current) return
-      if (extracted) {
-        // Doar câmpurile încă goale: ce a scris omul între timp rămâne.
-        setForm((prev) => {
-          const next = { ...prev }
-          for (const [key, value] of Object.entries(extracted) as [keyof FormState, string][]) {
-            if (value && !prev[key]) (next as Record<string, unknown>)[key] = value
-          }
-          return next
-        })
-        setReading('done')
-      } else {
-        setReading('failed')
-        setNotice('Documentul nu a putut fi citit automat.')
+      apply(read, true)
+      setLoading(false); setReading(!read.ready)
+      for (let attempt = 0; !read.ready && attempt < 12 && alive.current; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+        if (!alive.current) return
+        read = await expenseService.getSuggestion(pfaRegistrationId, created.id)
       }
-    } catch (cause) {
       if (!alive.current) return
-      setReading(null)
-      setError(getErrorMessage(cause, 'Documentul nu a putut fi încărcat.'))
-    }
+      apply(read, true)
+      if (!read.ready || !read.category) setNotice('Verifică datele citite. Completează manual câmpurile pe care nu le-am putut identifica.')
+    } catch (cause) {
+      if (alive.current) setError(getErrorMessage(cause, 'Încărcarea sau citirea documentului a eșuat.'))
+    } finally { if (alive.current) { setLoading(false); setReading(false) } }
   }
 
-  const handleSave = async () => {
-    if (!pfaRegistrationId || !draft) return
+  const chosen = suggestion?.categories.find((item) => item.category === category)
+  const numeric = (value: string) => Number(value.trim().replace(',', '.'))
+  const canSave = Boolean(draft && suggestion && category && date && amount.trim() && payment &&
+    (payment === 'Unpaid' || (paidOn && (payment !== 'Bank' || bankId))) &&
+    (!suggestion.ledgerEntryId || reason.trim())) && !loading && !saving
 
-    const amount = toNumber(form.amount)
-    const vat = toNumber(form.vat)
-
-    if (amount === null) {
-      setError('Completează suma totală ca să poți confirma cheltuiala.')
-      return
+  async function save() {
+    if (!pfaRegistrationId || !draft || !chosen || !canSave || !payment) return
+    const total = numeric(amount), privatePart = numeric(personal), tax = vat.trim() ? numeric(vat) : null
+    if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(privatePart) || privatePart < 0 || privatePart > total ||
+      (tax !== null && (!Number.isFinite(tax) || tax < 0 || tax > total))) {
+      setError('Verifică suma totală, TVA-ul și partea personală.'); return
     }
-    if (vat !== null && vat > amount) {
-      setError('TVA-ul nu poate depăși suma totală.')
-      return
-    }
-    if (!form.option) {
-      setError('Alege categoria cheltuielii.')
-      return
-    }
-
-    setSaving(true)
-    setError(null)
+    setSaving(true); setError(null)
     try {
-      const period = periodFrom(form.expenseDate)
+      const [year, month] = date.split('-').map(Number)
       const saved = await expenseService.updateForPfa(pfaRegistrationId, draft.id, {
-        catalogCategory: form.option.category,
-        itemName: form.option.name,
-        deductibleLabel: form.option.deductible,
-        amountRon: amount,
-        year: period.year,
-        month: period.month,
-        expenseDate: form.expenseDate || null,
-        supplierName: form.supplierName || null,
-        vatAmount: vat,
-        documentTypeLabel: form.documentTypeLabel || null,
-        confirm: true,
+        catalogCategory: category, itemName: chosen.label, deductibleLabel: 'Calculat din regulile PFA',
+        amountRon: total, year, month, expenseDate: date, supplierName: supplier || null,
+        vatAmount: tax, documentTypeLabel: documentType || null, confirm: true,
+        paymentMethod: payment, paymentDate: payment === 'Unpaid' ? null : paidOn,
+        ledgerEntryId: payment === 'Bank' ? bankId : null, accountingCategory: category,
+        personalAmount: privatePart, documentNumber: number || null, reason: reason || undefined, approveDocument,
       })
-      onSaved(saved)
-      onClose()
-    } catch (cause) {
-      setError(getErrorMessage(cause, 'Cheltuiala nu a putut fi salvată.'))
-    } finally {
-      setSaving(false)
-    }
+      onSaved(saved); onClose()
+    } catch (cause) { setError(getErrorMessage(cause, 'Cheltuiala nu a putut fi confirmată.')) }
+    finally { setSaving(false) }
   }
 
-  return (
-    <Dialog open onClose={saving ? undefined : onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: 800 }}>Adaugă cheltuială</DialogTitle>
-
-      <DialogContent>
-        {step === 'pick-file' && (
-          <Stack spacing={2} sx={{ alignItems: 'center', py: 3, textAlign: 'center' }}>
-            <UploadFileRoundedIcon sx={{ fontSize: 40, color: DASHBOARD_TOKENS.primaryStrong }} />
-            <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>
-              Încarcă bonul, factura sau chitanța. Citim automat data, furnizorul, suma și TVA-ul,
-              iar tu doar confirmi.
-            </Typography>
-            <input
-              ref={inputRef}
-              type="file"
-              hidden
-              accept="image/*,application/pdf"
-              onChange={(event) => {
-                const file = event.target.files?.[0]
-                if (file) void handleFile(file)
-                event.target.value = ''
-              }}
-            />
-            <Button
-              variant="contained"
-              onClick={() => inputRef.current?.click()}
-              disabled={!pfaRegistrationId}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 750,
-                borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
-                px: 3,
-                bgcolor: DASHBOARD_TOKENS.primary,
-                color: DASHBOARD_TOKENS.ink,
-                boxShadow: 'none',
-                '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong, boxShadow: 'none' },
-              }}
-            >
-              Alege document
-            </Button>
-          </Stack>
-        )}
-
-        {step === 'confirm' && (
-          <Stack spacing={2} sx={{ pt: 1 }}>
-            {(reading === 'uploading' || reading === 'reading') && (
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                <CircularProgress size={14} sx={{ color: DASHBOARD_TOKENS.primary }} />
-                <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem' }}>
-                  {reading === 'uploading' ? 'Se încarcă documentul…' : 'Citim documentul în fundal…'}
-                </Typography>
-              </Stack>
-            )}
-            {notice && (
-              <Alert severity="info" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
-                {notice}
-              </Alert>
-            )}
-
-            <Autocomplete
-              options={deductibleExpenseOptions}
-              value={form.option}
-              onChange={(_, option) => setForm((prev) => ({ ...prev, option }))}
-              getOptionLabel={(option) => option.label}
-              isOptionEqualToValue={(a, b) => a.id === b.id}
-              renderInput={(params) => (
-                <TextField {...params} label="Categorie" size="small" sx={dashboardInputSx} />
-              )}
-            />
-
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-              <DateField
-                label="Data documentului"
-                size="small"
-                value={form.expenseDate}
-                onChange={(expenseDate) => setForm((prev) => ({ ...prev, expenseDate }))}
-                sx={dashboardInputSx}
-              />
-              <TextField
-                label="Furnizor"
-                size="small"
-                value={form.supplierName}
-                onChange={(e) => setForm((prev) => ({ ...prev, supplierName: e.target.value }))}
-                sx={dashboardInputSx}
-              />
-              <TextField
-                label="Sumă totală (lei)"
-                size="small"
-                value={form.amount}
-                onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
-                sx={dashboardInputSx}
-              />
-              <TextField
-                label="TVA (lei)"
-                size="small"
-                value={form.vat}
-                onChange={(e) => setForm((prev) => ({ ...prev, vat: e.target.value }))}
-                sx={dashboardInputSx}
-              />
-              <TextField
-                label="Tip document"
-                size="small"
-                placeholder="Bon fiscal, factură…"
-                value={form.documentTypeLabel}
-                onChange={(e) => setForm((prev) => ({ ...prev, documentTypeLabel: e.target.value }))}
-                sx={dashboardInputSx}
-              />
-            </Box>
-
-            {error && (
-              <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px` }}>
-                {error}
-              </Alert>
-            )}
-          </Stack>
-        )}
-
-        {step !== 'confirm' && error && (
-          <Alert severity="error" sx={{ borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, mt: 2 }}>
-            {error}
-          </Alert>
-        )}
-      </DialogContent>
-
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} disabled={saving} sx={{ textTransform: 'none', fontWeight: 700 }}>
-          Renunță
-        </Button>
-        {step === 'confirm' && (
-          <Button
-            variant="contained"
-            onClick={handleSave}
-            disabled={saving || !draft}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 750,
-              borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
-              px: 3,
-              bgcolor: DASHBOARD_TOKENS.primary,
-              color: DASHBOARD_TOKENS.ink,
-              boxShadow: 'none',
-              '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong, boxShadow: 'none' },
-            }}
-          >
-            {saving ? <CircularProgress size={20} color="inherit" /> : 'Confirmă cheltuiala'}
-          </Button>
-        )}
-      </DialogActions>
-    </Dialog>
-  )
-}
-
-/**
- * Jobul de extragere rulează asincron după upload, deci se așteaptă puțin. Dacă nu vine nimic
- * util, funcția întoarce null și formularul rămâne gol — nu se inventează valori.
- */
-async function pollExtraction(documentId: string, active: () => boolean): Promise<Partial<FormState> | null> {
-  for (let attempt = 0; attempt < POLL_ATTEMPTS && active(); attempt += 1) {
-    try {
-      const response = await documentService.getExtractedFields(documentId)
-      const values = new Map(response.fields.map((field) => [field.fieldKey, field.effectiveValue]))
-
-      if (values.size > 0) {
-        return {
-          supplierName: values.get('supplier_name') ?? '',
-          expenseDate: values.get('document_date') ?? '',
-          amount: values.get('total_amount') ?? '',
-          vat: values.get('vat_amount') ?? '',
-          documentTypeLabel: values.get('document_type') ?? '',
-        }
-      }
-    } catch {
-      // 404 cât timp extragerea nu s-a încheiat — se reîncearcă.
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, POLL_DELAY_MS))
-  }
-
-  return null
+  return <Dialog open fullWidth maxWidth="sm" onClose={saving ? undefined : onClose}>
+    <DialogTitle>{expense ? 'Verifică și modifică cheltuiala' : 'Adaugă cheltuială'}</DialogTitle>
+    <DialogContent><Stack spacing={2} sx={{ pt: 1 }}>
+      {error && <Alert severity="error">{error}</Alert>}
+      {notice && <Alert severity="info">{notice}</Alert>}
+      {loading && <Stack direction="row" spacing={2}><CircularProgress size={24} /><Typography>Citim documentul și propunem categoria…</Typography></Stack>}
+      {reading && <Alert severity="info">Documentul se citește în fundal. Poți completa formularul; datele scrise de tine vor fi păstrate.</Alert>}
+      {!draft && <>
+        <Typography>Încarcă bonul sau factura. Citim datele și propunem categoria; regulile PFA-ului stabilesc deductibilitatea.</Typography>
+        <input ref={input} type="file" hidden accept="image/*,application/pdf" onChange={(e) => { const file = e.target.files?.[0]; if (file) void upload(file); e.target.value = '' }} />
+        <Button variant="contained" disabled={loading || !pfaRegistrationId} onClick={() => input.current?.click()}>Alege document</Button>
+      </>}
+      {draft && !loading && <>
+        <Button onClick={() => openDocument(draft.documentId, draft.originalFileName)}>Deschide documentul</Button>
+        <TextField label="Furnizor" value={supplier} onChange={(e) => edit('supplier', setSupplier, e.target.value)} />
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <TextField fullWidth label="Data documentului" type="date" value={date} onChange={(e) => edit('date', setDate, e.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
+          <TextField fullWidth label="Număr document" value={number} onChange={(e) => edit('number', setNumber, e.target.value)} />
+        </Stack>
+        <TextField label="Tip document" value={documentType} onChange={(e) => edit('type', setDocumentType, e.target.value)} />
+        <TextField select label="Categorie contabilă" value={category} onChange={(e) => edit('category', setCategory, e.target.value)}>
+          <MenuItem value="">Alege categoria</MenuItem>
+          {suggestion?.categories.map((item) => <MenuItem key={item.category} value={item.category}>{item.label}</MenuItem>)}
+        </TextField>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <TextField fullWidth label="Total plătit / de plată (lei)" value={amount} onChange={(e) => edit('amount', setAmount, e.target.value)} />
+          <TextField fullWidth label="TVA înscris pe document (lei)" value={vat} onChange={(e) => edit('vat', setVat, e.target.value)} />
+        </Stack>
+        <TextField label="Articole personale, nedeductibile (lei)" value={personal} onChange={(e) => edit('personal', setPersonal, e.target.value)} helperText="Cafeaua, alimentele și alte cumpărături personale nu se includ în combustibil." />
+        {chosen && <Alert severity="info">Deductibilitate propusă: {chosen.percent == null ? 'necesită verificare / amortizare' : `${chosen.percent}% din partea pentru activitate`}. Se recalculează la data plății după regulile PFA-ului.</Alert>}
+        {suggestion?.currency && suggestion.currency !== 'RON' && <Alert severity="warning">Document în valută: plata necesită conversie și verificare contabilă.</Alert>}
+        <TextField select label="Cum a fost plătită?" value={payment} onChange={(e) => { touched.current.add('payment'); setPayment(e.target.value as Payment); edit('bankId', setBankId, '') }}>
+          <MenuItem value="">Alege situația plății</MenuItem><MenuItem value="Cash">Numerar</MenuItem>
+          <MenuItem value="Bank">Card / transfer bancar din OpenBanking</MenuItem><MenuItem value="Unpaid">Factură încă neplătită</MenuItem>
+        </TextField>
+        {payment === 'Bank' && <>
+          <Button disabled={saving || loading} onClick={async () => {
+            if (!pfaRegistrationId || !draft) return
+            setSaving(true); setError(null)
+            try {
+              const notes = await expenseService.syncSources(pfaRegistrationId)
+              const read = await expenseService.getSuggestion(pfaRegistrationId, draft.id, numeric(amount))
+              setSuggestion(read); setNotice(notes.join(' '))
+            } catch (cause) { setError(getErrorMessage(cause, 'Nu am putut actualiza plățile și facturile.')) }
+            finally { setSaving(false) }
+          }}>Actualizează plățile și facturile ANAF</Button>
+          <TextField select label="Plata din bancă" value={bankId} onChange={(e) => { const item = suggestion?.payments.find((p) => p.id === e.target.value); edit('bankId', setBankId, e.target.value); if (item) edit('paidOn', setPaidOn, item.date) }}>
+            <MenuItem value="">Selectează tranzacția existentă</MenuItem>
+            {suggestion?.payments.map((item) => <MenuItem key={item.id} value={item.id}>{item.date} · {item.amount} lei · {item.description}</MenuItem>)}
+          </TextField>
+          {!suggestion?.payments.length && <Alert severity="info">Nu există o plată disponibilă cu suma documentului. Sincronizează banca sau verifică suma; documentul rămâne salvat pentru verificare.</Alert>}
+        </>}
+        {payment && payment !== 'Unpaid' && <TextField label="Data plății" type="date" value={paidOn} disabled={payment === 'Bank'} onChange={(e) => edit('paidOn', setPaidOn, e.target.value)} slotProps={{ inputLabel: { shrink: true } }} />}
+        {payment === 'Unpaid' && <Alert severity="info">Factura rămâne în lista de documente. În RJIP și REF intră după înregistrarea plății.</Alert>}
+        {suggestion?.ledgerEntryId && <TextField required label="Motivul corecției" value={reason} onChange={(e) => setReason(e.target.value)} />}
+      </>}
+    </Stack></DialogContent>
+    <DialogActions><Button disabled={saving} onClick={onClose}>Închide</Button><Button variant="contained" disabled={!canSave} onClick={() => void save()}>{saving ? 'Se salvează…' : approveDocument ? 'Aprobă cheltuiala și plata' : 'Confirmă cheltuiala și plata'}</Button></DialogActions>
+  </Dialog>
 }

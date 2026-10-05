@@ -1,417 +1,85 @@
-import { useCallback, useEffect, useState } from 'react'
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Paper,
-  Stack,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  TextField,
-  Typography,
-} from '@mui/material'
-import AddRoundedIcon from '@mui/icons-material/AddRounded'
-import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
-import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
-import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
-import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
-
-import { documentService } from '../../../services/document.service'
+import { useEffect, useState } from 'react'
+import { Alert, Button, Chip, CircularProgress, MenuItem, Paper, Stack, TextField, Typography } from '@mui/material'
 import { expenseService, type DeductibleExpense } from '../../../services/expense.service'
-import {
-  deductibleExpenseOptions,
-  findDeductibleOption,
-  type DeductibleExpenseOption,
-} from '../../../utils/deductibleExpenseCatalog'
-import { documentStatusColors, documentStatusLabel, normalizeDocumentStatus } from '../../../utils/documentStatus'
-import { currentMonthYear } from '../../../utils/monthLabels'
-import { PANEL_COMPAT_DASHBOARD_TOKENS as DASHBOARD_TOKENS, panelCompatInputSx as dashboardInputSx } from '../../panel/tokens'
+import { documentService } from '../../../services/document.service'
 import { openDocument } from '../../common/documentViewerBus'
+import { AddExpenseDialog } from './accounting/AddExpenseDialog'
+import { documentStatusLabel } from '../../../utils/documentStatus'
+import { getErrorMessage } from '../../../utils/errorHandler'
 
-type DeductibleExpensesPanelProps = {
-  year?: number
-  month?: number
-  pfaRegistrationId: string | null
-  contabilContext?: {
-    userId: string
-    pfaRegistrationId: string
-  }
+export function DeductibleExpensesPanel({ year: propYear, month: propMonth, pfaRegistrationId, contabilContext, onSnackbar, onChanged }: {
+  year?: number; month?: number; pfaRegistrationId: string | null
+  contabilContext?: { userId: string; pfaRegistrationId: string }
   onSnackbar?: (message: string, severity: 'success' | 'error') => void
   onChanged?: () => void
-}
-
-export function DeductibleExpensesPanel({
-  year: propYear,
-  month: propMonth,
-  pfaRegistrationId,
-  contabilContext,
-  onSnackbar,
-  onChanged,
-}: DeductibleExpensesPanelProps) {
-  const effectivePfaId = contabilContext?.pfaRegistrationId ?? pfaRegistrationId
-  const { year: defaultYear, month: defaultMonth } = currentMonthYear()
-
-  const [expenses, setExpenses] = useState<DeductibleExpense[]>([])
-  const [loading, setLoading] = useState(true)
-  const [uploading, setUploading] = useState(false)
-  const [openingId, setOpeningId] = useState<string | null>(null)
-  const [downloadingId, setDownloadingId] = useState<string | null>(null)
-  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null)
-
-  const [selectedOption, setSelectedOption] = useState<DeductibleExpenseOption | null>(null)
-  const [customName, setCustomName] = useState('')
-  const [amount, setAmount] = useState('')
-  const [localYear, setLocalYear] = useState(defaultYear)
-  const [localMonth, setLocalMonth] = useState(defaultMonth)
-
-  const year = propYear ?? localYear
-  const month = propMonth ?? localMonth
-
-  const loadExpenses = useCallback(async () => {
-    if (!effectivePfaId) {
-      setExpenses([])
-      setLoading(false)
-      return
-    }
-
-    setLoading(true)
-    try {
-      const data = await expenseService.getByPfa(effectivePfaId, year, month)
-      setExpenses(data)
-    } catch {
-      onSnackbar?.('Nu s-au putut încărca cheltuielile.', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }, [effectivePfaId, year, month, onSnackbar])
-
+}) {
+  const now = new Date()
+  const pfaId = contabilContext?.pfaRegistrationId ?? pfaRegistrationId
+  const [year, setYear] = useState(now.getFullYear())
+  const [month, setMonth] = useState(now.getMonth() + 1)
+  const [loaded, setLoaded] = useState<{ key: string; items: DeductibleExpense[]; error: string | null }>({ key: '', items: [], error: null })
+  const [error, setError] = useState<string | null>(null)
+  const [revision, setRevision] = useState(0)
+  const [editing, setEditing] = useState<DeductibleExpense | 'new' | null>(null)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [syncNotes, setSyncNotes] = useState<string[]>([])
+  const actualYear = propYear ?? year, actualMonth = propMonth ?? month
+  const key = `${pfaId}|${actualYear}|${actualMonth}|${revision}`
+  const items = pfaId && loaded.key === key ? loaded.items : []
+  const loading = Boolean(pfaId) && loaded.key !== key
   useEffect(() => {
-    void loadExpenses()
-  }, [loadExpenses])
-
-  const handleAdd = async (file: File) => {
-    if (!effectivePfaId) {
-      onSnackbar?.('Nu există o înregistrare PFA activă.', 'error')
-      return
-    }
-
-    const name = selectedOption?.name ?? customName.trim()
-    if (!name) {
-      onSnackbar?.('Selectează sau introdu tipul cheltuielii.', 'error')
-      return
-    }
-
-    const category = selectedOption?.category ?? 'Altele'
-    const deductible = selectedOption?.deductible ?? '—'
-    const parsedAmount = amount.trim() ? parseFloat(amount) : null
-
-    setUploading(true)
-    try {
-      await expenseService.createForPfa(effectivePfaId, {
-        catalogCategory: category,
-        itemName: name,
-        deductibleLabel: deductible,
-        amountRon: parsedAmount && !Number.isNaN(parsedAmount) ? parsedAmount : null,
-        year,
-        month,
-        file,
-      })
-
-      setSelectedOption(null)
-      setCustomName('')
-      setAmount('')
-      await loadExpenses()
-      onChanged?.()
-      onSnackbar?.('Cheltuiala a fost adăugată.', 'success')
-    } catch {
-      onSnackbar?.('Încărcarea cheltuielii a eșuat.', 'error')
-    } finally {
-      setUploading(false)
-    }
+    let cancelled = false
+    if (!pfaId) return
+    expenseService.getByPfa(pfaId, actualYear, actualMonth).then((data) => { if (!cancelled) setLoaded({ key, items: data, error: null }) })
+      .catch((cause) => { if (!cancelled) setLoaded({ key, items: [], error: getErrorMessage(cause, 'Nu am putut încărca cheltuielile.') }) })
+    return () => { cancelled = true }
+  }, [pfaId, actualYear, actualMonth, key])
+  const reload = () => { setRevision((value) => value + 1); onChanged?.() }
+  async function review(item: DeductibleExpense, status: 'Verified' | 'Rejected') {
+    setBusy(item.id)
+    try { await documentService.updateStatus(item.documentId, status); reload(); onSnackbar?.('Document verificat.', 'success') }
+    catch (cause) { setError(getErrorMessage(cause, 'Verificarea nu a putut fi salvată.')) }
+    finally { setBusy(null) }
   }
-
-  const handleDownload = async (expense: DeductibleExpense) => {
-    setDownloadingId(expense.documentId)
-    try {
-      await documentService.downloadAndSave(expense.documentId, expense.originalFileName)
-    } finally {
-      setDownloadingId(null)
-    }
-  }
-
-  const handleStatus = async (expense: DeductibleExpense, status: 'Verified' | 'Rejected') => {
-    if (!contabilContext) return
-
-    setStatusUpdatingId(expense.documentId)
-    try {
-      await documentService.updateStatus(expense.documentId, status)
-      await loadExpenses()
-      onChanged?.()
-      onSnackbar?.(status === 'Verified' ? 'Cheltuială aprobată.' : 'Cheltuială respinsă.', 'success')
-    } catch {
-      onSnackbar?.('Actualizarea statusului a eșuat.', 'error')
-    } finally {
-      setStatusUpdatingId(null)
-    }
-  }
-
-  if (!effectivePfaId) {
-    return (
-      <Paper
-        elevation={0}
-        sx={{
-          p: 2.5,
-          borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
-          border: `1px solid ${DASHBOARD_TOKENS.border}`,
-        }}
-      >
-        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>
-          Nu există o înregistrare PFA activă pentru cheltuieli deductibile.
-        </Typography>
-      </Paper>
-    )
-  }
-
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: { xs: 2.5, md: 3 },
-        borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`,
-        border: `1px solid ${DASHBOARD_TOKENS.border}`,
-        boxShadow: DASHBOARD_TOKENS.shadow.sm,
-      }}
-    >
-      <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 800, mb: contabilContext ? 2 : 0 }}>
-        Cheltuieli deductibile
-      </Typography>
-      {!contabilContext && (
-        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.7, fontSize: '0.85rem', mb: 2 }}>
-          Alege tipul din catalog, suma în lei (opțional) și încarcă factura.
-        </Typography>
-      )}
-
-      {propYear === undefined || propMonth === undefined ? (
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
-          <FormControl size="small" sx={{ minWidth: 110 }}>
-            <InputLabel>An</InputLabel>
-            <Select label="An" value={year} onChange={(e) => setLocalYear(Number(e.target.value))}>
-              {[defaultYear - 1, defaultYear, defaultYear + 1].map((y) => (
-                <MenuItem key={y} value={y}>{y}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={{ minWidth: 90 }}>
-            <InputLabel>Lună</InputLabel>
-            <Select label="Lună" value={month} onChange={(e) => setLocalMonth(Number(e.target.value))}>
-              {Array.from({ length: 12 }, (_, i) => (
-                <MenuItem key={i + 1} value={i + 1}>{i + 1}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+  return <Stack spacing={2}>
+    <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
+      <Typography component="h2" sx={{ fontWeight: 650 }}>Cheltuieli și documente justificative</Typography>
+      <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
+        <Button disabled={!pfaId || busy === 'sync'} onClick={async () => {
+          if (!pfaId) return
+          setBusy('sync'); setError(null)
+          try { setSyncNotes(await expenseService.syncSources(pfaId)); reload() }
+          catch (cause) { setError(getErrorMessage(cause, 'Sincronizarea a eșuat.')) }
+          finally { setBusy(null) }
+        }}>Sincronizează plăți și facturi ANAF</Button>
+        <Button variant="contained" disabled={!pfaId} onClick={() => setEditing('new')}>Adaugă cheltuială</Button>
+      </Stack>
+    </Stack>
+    <Alert severity="info">Poți verifica și corecta cheltuielile pe parcursul lunii. Confirmarea documentului și înregistrarea plății se fac din „Verifică / modifică”. Categoria și regulile PFA-ului stabilesc partea deductibilă din REF.</Alert>
+    {propYear == null && propMonth == null && <Stack direction="row" spacing={2}>
+      <TextField select label="An" value={year} onChange={(e) => setYear(Number(e.target.value))}>{[now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2].map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}</TextField>
+      <TextField select label="Lună" value={month} onChange={(e) => setMonth(Number(e.target.value))}>{Array.from({ length: 12 }, (_, i) => <MenuItem key={i} value={i + 1}>{new Date(2026, i, 1).toLocaleDateString('ro-RO', { month: 'long' })}</MenuItem>)}</TextField>
+    </Stack>}
+    {error && <Alert severity="error">{error}</Alert>}
+    {loaded.key === key && loaded.error && <Alert severity="error">{loaded.error}</Alert>}
+    {syncNotes.map((note, index) => <Alert severity="info" key={index}>{note}</Alert>)}
+    {loading ? <CircularProgress size={24} /> : !items.length ? <Typography>Nu există cheltuieli pentru {actualMonth}/{actualYear}.</Typography> : items.map((item) => <Paper key={item.id} variant="outlined" sx={{ p: 2 }}>
+      <Stack spacing={1}>
+        <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+          <Typography sx={{ fontWeight: 600 }}>{item.itemName}</Typography><Chip size="small" label={documentStatusLabel(item.documentStatus)} />
         </Stack>
-      ) : null}
-
-      {!contabilContext && (
-        <Stack spacing={1.5} sx={{ mb: 2 }}>
-          <Autocomplete
-            options={deductibleExpenseOptions}
-            groupBy={(o) => o.category}
-            getOptionLabel={(o) => o.label}
-            value={selectedOption}
-            onChange={(_, v) => {
-              setSelectedOption(v)
-              if (v) setCustomName(v.name)
-            }}
-            onInputChange={(_, value) => {
-              if (!selectedOption) setCustomName(value)
-              const match = findDeductibleOption(value)
-              if (match) setSelectedOption(match)
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Tip cheltuială (catalog deductibil)"
-                placeholder="ex. Combustibil auto, Chirie auto..."
-                sx={dashboardInputSx}
-              />
-            )}
-            slotProps={{
-              paper: { sx: { borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, maxHeight: 320 } },
-            }}
-          />
-          <TextField
-            label="Sumă (lei) — opțional"
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
-            sx={dashboardInputSx}
-          />
-          <Button
-            variant="contained"
-            component="label"
-            disabled={uploading}
-            startIcon={
-              uploading ? (
-                <CircularProgress size={18} color="inherit" />
-              ) : (
-                <AddRoundedIcon />
-              )
-            }
-            sx={{
-              alignSelf: 'flex-start',
-              textTransform: 'none',
-              fontWeight: 700,
-              borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
-              bgcolor: DASHBOARD_TOKENS.primary,
-              color: DASHBOARD_TOKENS.primaryFg,
-              boxShadow: 'none', // Replaced glow shadow with flat style
-              '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong },
-            }}
-          >
-            Adaugă factură
-            <input
-              type="file"
-              hidden
-              accept=".pdf,.png,.jpg,.jpeg"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) void handleAdd(file)
-                e.target.value = ''
-              }}
-            />
-          </Button>
+        <Typography variant="body2">{item.supplierName ?? 'Furnizor de completat'} · {item.expenseDate ?? 'Dată de completat'} · {item.amountRon == null ? 'Sumă de completat' : `${item.amountRon.toLocaleString('ro-RO')} lei`} · {item.deductibleLabel}</Typography>
+        <Typography variant="body2" color="text.secondary">{item.ledgerEntryId ? `Plată în RJIP: ${item.paymentDate ?? '—'} · ${item.paymentMethod === 'Cash' ? 'numerar' : 'bancă'} · ${item.deductibleAmount == null ? 'Deductibilitatea necesită verificare' : `Deductibil în REF: ${item.deductibleAmount.toLocaleString('ro-RO')} lei`}` : 'Document salvat; plata nu este încă asociată în RJIP. Verifică situația plății.'}</Typography>
+        <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
+          <Button onClick={() => openDocument(item.documentId, item.originalFileName)}>Vezi documentul</Button>
+          <Button variant="outlined" onClick={() => setEditing(item)}>Verifică / modifică</Button>
+          {contabilContext && <>
+            <Button disabled={busy === item.id} onClick={() => setEditing(item)}>Aprobă cheltuiala</Button>
+            <Button color="error" disabled={busy === item.id} onClick={() => void review(item, 'Rejected')}>Respinge</Button>
+          </>}
         </Stack>
-      )}
-
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-          <CircularProgress size={28} sx={{ color: DASHBOARD_TOKENS.primary }} />
-        </Box>
-      ) : expenses.length === 0 ? (
-        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>
-          Nici o cheltuială pentru {month}/{year}.
-        </Typography>
-      ) : (
-        <Stack spacing={1}>
-          {expenses.map((expense) => {
-            const colors = documentStatusColors(expense.documentStatus)
-            return (
-              <Paper
-                key={expense.id}
-                elevation={0}
-                sx={{
-                  p: 1.4,
-                  borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
-                  border: `1px solid ${DASHBOARD_TOKENS.border}`,
-                  bgcolor: DASHBOARD_TOKENS.surface,
-                }}
-              >
-                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
-                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography sx={{ fontWeight: 700, color: DASHBOARD_TOKENS.ink, fontSize: '0.88rem' }}>
-                      {expense.itemName}
-                    </Typography>
-                    <Typography sx={{ fontSize: '0.75rem', color: DASHBOARD_TOKENS.textMuted }}>
-                      {expense.catalogCategory} · {expense.deductibleLabel}
-                      {expense.amountRon != null && expense.amountRon > 0
-                        ? ` · ${expense.amountRon.toLocaleString('ro-RO')} lei`
-                        : ''}
-                    </Typography>
-                    <Typography sx={{ fontSize: '0.72rem', color: DASHBOARD_TOKENS.textSubtle }} noWrap>
-                      {expense.originalFileName}
-                    </Typography>
-                  </Box>
-                  <Chip
-                    label={documentStatusLabel(expense.documentStatus)}
-                    size="small"
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: '0.7rem',
-                      color: colors.color,
-                      bgcolor: colors.bg,
-                      borderRadius: `${DASHBOARD_TOKENS.radius.sm}px`,
-                      height: 24,
-                    }}
-                  />
-                </Stack>
-                <Stack direction="row" spacing={0.5} sx={{ mt: 1 }}>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    onClick={async () => {
-                      setOpeningId(expense.documentId)
-                      try {
-                        openDocument(expense.documentId, expense.originalFileName)
-                      } finally {
-                        setOpeningId(null)
-                      }
-                    }}
-                    disabled={openingId === expense.documentId}
-                    startIcon={
-                      openingId === expense.documentId ? (
-                        <CircularProgress size={14} color="inherit" />
-                      ) : (
-                        <OpenInNewRoundedIcon sx={{ fontSize: 16 }} />
-                      )
-                    }
-                    sx={{
-                      textTransform: 'none',
-                      borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
-                      fontSize: '0.8rem',
-                      boxShadow: 'none',
-                    }}
-                  >
-                    Deschide
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => handleDownload(expense)}
-                    disabled={downloadingId === expense.documentId}
-                    startIcon={
-                      downloadingId === expense.documentId ? (
-                        <CircularProgress size={14} />
-                      ) : (
-                        <FileDownloadRoundedIcon sx={{ fontSize: 16 }} />
-                      )
-                    }
-                    sx={{ textTransform: 'none', borderRadius: `${DASHBOARD_TOKENS.radius.full}px`, fontSize: '0.8rem' }}
-                  >
-                    Descarcă
-                  </Button>
-                  {contabilContext && normalizeDocumentStatus(expense.documentStatus) === 'pending' && (
-                    <>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleStatus(expense, 'Verified')}
-                        disabled={statusUpdatingId === expense.documentId}
-                        sx={{ color: DASHBOARD_TOKENS.stateActive }}
-                      >
-                        <CheckCircleRoundedIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleStatus(expense, 'Rejected')}
-                        disabled={statusUpdatingId === expense.documentId}
-                        sx={{ color: DASHBOARD_TOKENS.stateError }}
-                      >
-                        <CancelRoundedIcon fontSize="small" />
-                      </IconButton>
-                    </>
-                  )}
-                </Stack>
-              </Paper>
-            )
-          })}
-        </Stack>
-      )}
-    </Paper>
-  )
+      </Stack>
+    </Paper>)}
+    {editing && <AddExpenseDialog pfaRegistrationId={pfaId} expense={editing === 'new' ? undefined : editing} approveDocument={Boolean(contabilContext)} onClose={() => setEditing(null)} onSaved={() => reload()} />}
+  </Stack>
 }

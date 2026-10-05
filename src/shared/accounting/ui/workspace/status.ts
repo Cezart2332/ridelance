@@ -60,6 +60,10 @@ export function currentFiscalPeriod(today = new Date()): Period {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 
+export function currentCalendarPeriod(today = new Date()): Period {
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Bucharest', year: 'numeric', month: '2-digit' }).format(today)
+}
+
 export function recentPeriods(last: Period, count = 12): Period[] {
   const [year, month] = last.split('-').map(Number)
   return Array.from({ length: count }, (_, index) => {

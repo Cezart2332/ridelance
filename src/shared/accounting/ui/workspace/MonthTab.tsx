@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Box, Button, Stack, Tooltip, Typography } from '@mui/material'
+import { Alert, Box, Button, Stack, Tooltip, Typography } from '@mui/material'
 
 import { ClientNotificationDialog } from '../../../../components/contabil/ClientNotificationDialog'
 import { SideSheet } from '../../../../components/panel/ui'
@@ -15,7 +15,7 @@ import { MonthDeclarations } from './MonthDeclarations'
 import { MonthDocuments } from './MonthDocuments'
 import { Panel } from './parts'
 import { ReconciliationPanel } from './ReconciliationPanel'
-import { laggingDeclaration, TONES, type Tone } from './status'
+import { currentCalendarPeriod, laggingDeclaration, TONES, type Tone } from './status'
 import { useClientJob } from './useClientJob'
 
 interface NextStep {
@@ -50,6 +50,7 @@ export function MonthTab({
     onSummaryChanged()
   }
   const jobs = useClientJob(reload)
+  const inProgress = period >= currentCalendarPeriod()
 
   if (documents.error && !documents.data) return <ErrorBlock message={documents.error} onRetry={documents.reload} />
   if (declarations.error && !declarations.data) return <ErrorBlock message={declarations.error} onRetry={declarations.reload} />
@@ -57,7 +58,7 @@ export function MonthTab({
 
   const docs = documents.data
   const decls = declarations.data
-  const step = nextStep(summary, docs, decls)
+  const step = inProgress ? null : nextStep(summary, docs, decls)
   const steps = monthSteps(summary, docs, decls)
 
   function nextStep(pfa: PfaAccountingSummary, items: PlatformDocumentListItem[], list: DeclarationSummary[]): NextStep | null {
@@ -150,10 +151,11 @@ export function MonthTab({
   }
 
   const done: Tone = 'green'
-  const header = step ?? (summary.readOnly ? { tone: 'gray' as Tone, text: 'Dosar inactiv', actions: null } : { tone: done, text: 'Luna e încheiată', actions: null })
+  const header = inProgress ? { tone: 'blue' as Tone, text: 'Lună în curs · documente și cheltuieli', actions: null } : step ?? (summary.readOnly ? { tone: 'gray' as Tone, text: 'Dosar inactiv', actions: null } : { tone: done, text: 'Luna e încheiată', actions: null })
 
   return (
     <Stack spacing={1.5}>
+      {inProgress && <Alert severity="info">Poți încărca, verifica și corecta documentele acestei luni. Procesarea declarațiilor și închiderea lunii devin disponibile după încheierea lunii calendaristice.</Alert>}
       <Panel sx={{ px: 2, py: 1.25 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} sx={{ alignItems: { md: 'center' }, gap: 1.5 }}>
           <Stack direction="row" sx={{ alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
@@ -173,8 +175,8 @@ export function MonthTab({
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, gap: 1.5, alignItems: 'start' }}>
         <MonthDocuments summary={summary} period={period} documents={docs} onChanged={reload} onClientFiles={() => setClientFiles(true)} />
-        <MonthDeclarations declarations={decls} readOnly={summary.readOnly} onChanged={reload} />
-        <ReconciliationPanel summary={summary} period={period} onChanged={reload} />
+        {!inProgress && <MonthDeclarations declarations={decls} readOnly={summary.readOnly} onChanged={reload} />}
+        {!inProgress && <ReconciliationPanel summary={summary} period={period} onChanged={reload} />}
       </Box>
 
       <SideSheet open={clientFiles} title="Încărcate de client" onClose={() => setClientFiles(false)} width={640}>
