@@ -1,10 +1,11 @@
-# Toată aplicația din imaginile publicate în Docker Hub, cu un PostgreSQL local.
+# Toată aplicația din imaginile publicate în Docker Hub, cu un PostgreSQL inclus.
 #
-#   cp .env.hub.example .env.hub      # completează DOCKERHUB_NAMESPACE și parolele
-#   docker login                      # dacă imaginile din Docker Hub sunt private
-#   docker compose -f docker-compose.hub.yml --env-file .env.hub up -d
+# Toate variabilele stau aici, ca în Coolify să apară în „Environment Variables”:
+#   ${VAR:?...}  obligatorie — fără ea stack-ul nu pornește
+#   ${VAR:-x}    opțională, cu valoarea implicită x
+#   ${VAR:-}     opțională, goală implicit (funcția respectivă rămâne oprită)
 #
-# Frontend: http://localhost:5173 · API: http://localhost:5000 · Validator ANAF: http://localhost:8090
+# Local: docker compose -f docker-compose.hub.yml --env-file .env.hub up -d
 #
 # Imaginea de frontend are adresa API-ului coaptă la build în CI (`VITE_API_BASE_URL`); nu se poate
 # schimba la rulare. Frontendul de aici vorbește cu API-ul cu care a fost construit.
@@ -16,9 +17,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-ridelance}
       POSTGRES_USER: ${POSTGRES_USER:-ridelance}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Setează POSTGRES_PASSWORD în .env.hub}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Setează POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -29,15 +28,14 @@ services:
     restart: unless-stopped
 
   validator:
-    image: ${DOCKERHUB_NAMESPACE:?Setează DOCKERHUB_NAMESPACE în .env.hub}/ridelance-validator:${RIDELANCE_TAG:-latest}
+    image: ${DOCKERHUB_NAMESPACE:?Setează DOCKERHUB_NAMESPACE}/ridelance-validator:${RIDELANCE_TAG:-latest}
     environment:
-      INTERNAL_TOKEN: ${ANAF_VALIDATOR_TOKEN:?Setează ANAF_VALIDATOR_TOKEN în .env.hub}
+      PORT: "8080"
+      INTERNAL_TOKEN: ${ANAF_VALIDATOR_TOKEN:?Setează ANAF_VALIDATOR_TOKEN}
       RUNNER_TIMEOUT_SECONDS: ${RUNNER_TIMEOUT_SECONDS:-60}
       RUNNER_MAX_CONCURRENT: ${RUNNER_MAX_CONCURRENT:-2}
-    ports:
-      - "8090:8080"
     volumes:
-      # Kitul de validare ANAF nu e în imagine.
+      # Kitul de validare ANAF (DUKIntegrator și validatoarele) nu e în imagine.
       - ${ANAF_VALIDATORS_PATH:-./backend-anaf/validators}:/validators:ro
     restart: unless-stopped
 
@@ -48,20 +46,92 @@ services:
         condition: service_healthy
       validator:
         condition: service_started
-    env_file:
-      # Cheile opționale (Stripe, Resend, OpenRouter, SMS, Oblio, SmartAccounts, ANAF OAuth), ca `Secțiune__Cheie`.
-      - path: ./backend/.env
-        required: false
     environment:
+      # ─── Bază ───────────────────────────────────────────────────────────────────────────
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__Database: Host=postgres;Port=5432;Database=${POSTGRES_DB:-ridelance};Username=${POSTGRES_USER:-ridelance};Password=${POSTGRES_PASSWORD}
-      Jwt__Secret: ${JWT_SECRET:?Setează JWT_SECRET în .env.hub (minim 32 de caractere)}
-      Encryption__Key: ${ENCRYPTION_KEY:?Setează ENCRYPTION_KEY în .env.hub}
+      # Adresa publică a frontendului: linkuri din emailuri, redirecturi Stripe/ANAF, CORS.
+      App__BaseUrl: ${APP_BASE_URL:?Setează APP_BASE_URL (ex. https://ridelance.ro)}
+      FileStorage__BasePath: /app/uploads
+
+      # ─── Securitate ─────────────────────────────────────────────────────────────────────
+      Jwt__Secret: ${JWT_SECRET:?Setează JWT_SECRET (openssl rand -base64 48)}
+      Jwt__Issuer: ${JWT_ISSUER:-ridelance}
+      Jwt__Audience: ${JWT_AUDIENCE:-ridelance-frontend}
+      Jwt__ExpirationInMinutes: ${JWT_EXPIRATION_MINUTES:-15}
+      # Criptează documentele și secretele. Nu se mai schimbă după primul upload.
+      Encryption__Key: ${ENCRYPTION_KEY:?Setează ENCRYPTION_KEY (openssl rand -base64 32)}
+      # Primul admin: link de creare a contului, trimis pe email și scris în log, doar cât nu există niciun admin.
+      Bootstrap__AdminEmail: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      # Urgență: șterge 2FA-ul contului de echipă cu adresa asta la pornire. Se scoate după folosire.
+      Security__ResetTwoFactorEmail: ${RESET_TWO_FACTOR_EMAIL:-}
+      Cars__ViewSalt: ${CARS_VIEW_SALT:-}
+
+      # ─── Onboarding (uneltele de test rămân oprite în producție) ────────────────────────
+      Onboarding__EnableTestSkip: ${ONBOARDING_ENABLE_TEST_SKIP:-false}
+      Onboarding__DevTools__Enabled: ${ONBOARDING_DEV_TOOLS:-false}
+      Onboarding__AutoApproveDocuments: ${ONBOARDING_AUTO_APPROVE_DOCUMENTS:-false}
+      Onboarding__RequireContactVerification: ${ONBOARDING_REQUIRE_CONTACT_VERIFICATION:-false}
+
+      # ─── Email (Resend) ─────────────────────────────────────────────────────────────────
+      Resend__ApiKey: ${RESEND_API_KEY:-}
+
+      # ─── Plăți (Stripe) ─────────────────────────────────────────────────────────────────
+      Stripe__SecretKey: ${STRIPE_SECRET_KEY:?Setează STRIPE_SECRET_KEY}
+      Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET:?Setează STRIPE_WEBHOOK_SECRET}
+
+      # ─── AI (OpenRouter): citirea documentelor și verificarea actelor ───────────────────
+      OpenRouter__ApiKey: ${OPENROUTER_API_KEY:-}
+      OpenRouter__Model: ${OPENROUTER_MODEL:-google/gemini-3.8-flash}
+      OpenRouter__ReasoningEffort: ${OPENROUTER_REASONING_EFFORT:-low}
+      OpenRouter__DocumentReasoningEffort: ${OPENROUTER_DOCUMENT_REASONING_EFFORT:-low}
+
+      # ─── ANAF ───────────────────────────────────────────────────────────────────────────
       AnafValidator__BaseUrl: http://validator:8080
       AnafValidator__Token: ${ANAF_VALIDATOR_TOKEN}
-      App__BaseUrl: ${APP_BASE_URL:-http://localhost:5173}
+      AnafValidator__TimeoutSeconds: ${ANAF_VALIDATOR_TIMEOUT_SECONDS:-90}
+      AnafOAuth__ClientId: ${ANAF_OAUTH_CLIENT_ID:-}
+      AnafOAuth__ClientSecret: ${ANAF_OAUTH_CLIENT_SECRET:-}
+      AnafOAuth__RedirectUri: ${ANAF_OAUTH_REDIRECT_URI:-https://api.ridelance.ro/anaf/oauth/callback}
+
+      # ─── Facturare (Oblio) ──────────────────────────────────────────────────────────────
+      Oblio__ClientId: ${OBLIO_CLIENT_ID:-}
+      Oblio__ClientSecret: ${OBLIO_CLIENT_SECRET:-}
+      Oblio__Cif: ${OBLIO_CIF:-}
+      Oblio__SeriesName: ${OBLIO_SERIES_NAME:-}
+      Oblio__SendToSpv: ${OBLIO_SEND_TO_SPV:-false}
+
+      # ─── Open Banking (SmartAccounts) ───────────────────────────────────────────────────
+      SmartAccounts__ClientId: ${SMARTACCOUNTS_CLIENT_ID:-}
+      SmartAccounts__ApiBaseUrl: ${SMARTACCOUNTS_API_BASE_URL:-https://api.sandboxaccounts.smartfintech.eu}
+      SmartAccounts__MtlsBaseUrl: ${SMARTACCOUNTS_MTLS_BASE_URL:-https://mtls.sandboxaccounts.smartfintech.eu}
+      # Certificatul mTLS și cheia, ca text PEM (cu rândurile păstrate).
+      SmartAccounts__CertificatePem: ${SMARTACCOUNTS_CERTIFICATE_PEM:-}
+      SmartAccounts__PrivateKeyPem: ${SMARTACCOUNTS_PRIVATE_KEY_PEM:-}
+      SmartAccounts__ConsentValidDays: ${SMARTACCOUNTS_CONSENT_VALID_DAYS:-180}
+      SmartAccounts__InitialHistoryDays: ${SMARTACCOUNTS_INITIAL_HISTORY_DAYS:-365}
+      SmartAccounts__MaxTransactionPages: ${SMARTACCOUNTS_MAX_TRANSACTION_PAGES:-50}
+
+      # ─── Casa de marcat cloud (FiscalLink) ──────────────────────────────────────────────
+      FiscalLink__ManagementKey: ${FISCALLINK_MANAGEMENT_KEY:-}
+      FiscalLink__CommandKey: ${FISCALLINK_COMMAND_KEY:-}
+
+      # ─── Eldrive ────────────────────────────────────────────────────────────────────────
+      Eldrive__ApiKey: ${ELDRIVE_API_KEY:-}
+      Eldrive__PartnerId: ${ELDRIVE_PARTNER_ID:-1452}
+
+      # ─── SMS ────────────────────────────────────────────────────────────────────────────
+      Sms__ApiKey: ${SMS_API_KEY:-}
+      Sms__ApiSecret: ${SMS_API_SECRET:-}
+      Sms__From: ${SMS_FROM:-}
+
+      # ─── Notificări push (Web Push / VAPID) ─────────────────────────────────────────────
+      WebPush__PublicKey: ${WEBPUSH_PUBLIC_KEY:-}
+      WebPush__PrivateKey: ${WEBPUSH_PRIVATE_KEY:-}
+      WebPush__Subject: ${WEBPUSH_SUBJECT:-mailto:contact@ridelance.ro}
     ports:
-      - "5000:8080"
+      - "${BACKEND_PORT:-5000}:8080"
     volumes:
       - backend-uploads:/app/uploads
     restart: unless-stopped
@@ -71,7 +141,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "5173:80"
+      - "${FRONTEND_PORT:-5173}:80"
     restart: unless-stopped
 
 volumes:
