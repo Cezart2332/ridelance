@@ -1,0 +1,28 @@
+# Reviewed historical findings only; new secrets in the same files still fail CI.
+# Gitleaks scans the full Git history, including deleted files.
+# 2026-10-05: fixed E2E credentials, UI identifiers, public Mapbox token,
+# ephemeral localhost Vite WebSocket tokens in historical Playwright traces.
+# Historical PEM key: owner confirmed it was revoked/replaced on 2026-10-05.
+# Do not add findings without reviewing their content and purpose.
+
+6642a28214352d7c6d81577cf4e89257a4cd4251:tests/totp.mjs:generic-api-key:5
+b57f75cad3371e2a5049b9451d4447845c1e283b:tests/responsive/anaf-efactura.spec.ts:generic-api-key:140
+6755309b5228d3df2827ecc4b102c15210b3b1c4:src/components/dashboard/sections/admin/TaxParametersPanel.tsx:generic-api-key:54
+6755309b5228d3df2827ecc4b102c15210b3b1c4:src/components/dashboard/sections/admin/TaxParametersPanel.tsx:generic-api-key:55
+61ecf38b85b0cdb9c15a2909d225988604839f64:Pagina de masini Home page.html:generic-api-key:1531
+9909fe723745b1d9aa0ffed37798902c1c06e2d9:src/config/pfaNavigation.ts:generic-api-key:261
+25c61fd0a182d5525cb0597543323cee1bf9154d:NOTES-srl-restructure.md:generic-api-key:44
+803b00f9ca02017aca436546cf0b4439b4b9c746:src/config/pfaNavigation.ts:generic-api-key:309
+65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-0/traces/86a5e4e303644cf814e4-110b2924f0db226dd810-recording2.network:generic-api-key:209
+65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-0/traces/86a5e4e303644cf814e4-9b3dcdb6c6bf62f025d3-recording1.network:generic-api-key:209
+65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-0/traces/86a5e4e303644cf814e4-9c14c18ce7673e37a523-recording3.network:generic-api-key:209
+65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-1/traces/fe534f0825407f213faa-781e24ed8082d0cc0ddc-recording1.network:generic-api-key:265
+65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-2/traces/86a5e4e303644cf814e4-792e43b5d143361d5a5b-recording3.network:generic-api-key:209
+65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-1/traces/fe534f0825407f213faa-9a9db310a373b0f66012.network:generic-api-key:265
+65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-2/traces/86a5e4e303644cf814e4-b4b04b53f08d4c55272c-recording1.network:generic-api-key:209
+65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-2/traces/86a5e4e303644cf814e4-f728ff489c0ef45fd297-recording2.network:generic-api-key:209
+65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-0/traces/86a5e4e303644cf814e4-bdab4e8a6f5628a6b65c.network:generic-api-key:208
+65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-3/traces/fe534f0825407f213faa-7671841b341b6b5cb695-recording1.network:generic-api-key:263
+65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-3/traces/fe534f0825407f213faa-a0541215a7111b38fc39.network:generic-api-key:263
+65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-2/traces/86a5e4e303644cf814e4-81aa6638ff2de2f8f71d.network:generic-api-key:207
+734fff892e0c2f1ecc3e697c5641c5ed472d7398:4213cde4-c0ce-4288-b03f-f598c636982d.pem:private-key:1

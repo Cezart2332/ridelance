@@ -229,7 +229,7 @@ jobs:
         # Același uid ca proprietarul checkout-ului, altfel git refuză repo-ul („dubious ownership").
         run: |
           docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo" "$GITLEAKS" \
-            git /repo --redact --report-format sarif --report-path /repo/gitleaks.sarif --exit-code 1
+            git /repo --gitleaks-ignore-path /repo/.gitleaksignore --redact --report-format sarif --report-path /repo/gitleaks.sarif --exit-code 1
 
       - name: Normalize Gitleaks SARIF regions
         if: always() && hashFiles('gitleaks.sarif') != ''

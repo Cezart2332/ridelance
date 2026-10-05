@@ -47,3 +47,6 @@ backend-anaf/
 
 # Fișierele backend-ului rulat pentru testele e2e (B9)
 .e2e/
+
+# Generated Playwright reports and traces; keep new captures out of Git history.
+/test-results/
