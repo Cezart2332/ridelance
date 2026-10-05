@@ -24,7 +24,6 @@ import { AnnualTab } from '../annual/AnnualTab'
 import { SettingsTab } from '../settings/SettingsTab'
 import { useApi } from '../useApi'
 import { AnafTab } from './AnafTab'
-import { ClientFiscalSummary } from './ClientFiscalSummary'
 import { MonthTab } from './MonthTab'
 import { MonthSelect } from './parts'
 import { currentFiscalPeriod } from './status'
@@ -43,7 +42,6 @@ export function ClientPageView({ pfaId }: { pfaId: string }) {
   const current = currentFiscalPeriod()
   const period = nav.period ?? summary.data?.currentPeriod ?? current
   const [year, month] = period.split('-').map(Number)
-  const fiscal = useApi(() => accountingApi.fiscal.overview(year), [year])
   usePanelTrail(summary.data ? [summary.data.name] : [])
 
   if (summary.error && !summary.data) return <ErrorBlock message={summary.error} onRetry={summary.reload} />
@@ -110,14 +108,6 @@ export function ClientPageView({ pfaId }: { pfaId: string }) {
 
       <Box sx={{ minWidth: 0 }}>
         {section === 'luna' && <MonthTab key={period} summary={pfa} period={period} onSummaryChanged={summary.reload} />}
-        {section === 'fiscal' &&
-          (fiscal.error ? (
-            <ErrorBlock message={fiscal.error} onRetry={fiscal.reload} />
-          ) : !fiscal.data ? (
-            <LoadingBlock />
-          ) : (
-            <ClientFiscalSummary pfa={pfa} overview={fiscal.data} year={year} onOpenProfile={() => setProfileOpen(true)} />
-          ))}
         {section === 'banca' && <TransactionsTab key={period} {...tabProps} period={period} />}
         {section === 'cheltuieli' && (
           <DeductibleExpensesPanel

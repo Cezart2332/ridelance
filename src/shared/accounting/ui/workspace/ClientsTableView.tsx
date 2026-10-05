@@ -383,8 +383,6 @@ export function ClientsTableView() {
                         label={`Acțiuni pentru ${row.name}`}
                         actions={[
                           { label: 'Deschide dosarul', onClick: () => open(row) },
-                          { label: 'Sinteză fiscală', onClick: () => open(row, 'fiscal') },
-                          { label: 'Taxe', onClick: () => open(row, 'fiscal') },
                           { label: 'Bancă', onClick: () => open(row, 'banca') },
                           { label: 'Registre', onClick: () => open(row, 'registre') },
                           { label: 'Mesaje', onClick: () => open(row, 'mesaje') },

@@ -54,7 +54,7 @@ if (clientSections) {
   await page.waitForURL('**pfa=**')
   clientId = new URL(page.url()).searchParams.get('pfa')
 }
-for (const tab of only ?? (clientSections ? ['luna', 'fiscal', 'banca', 'venituri', 'cheltuieli', 'registre', 'anual', 'mesaje', 'anaf', 'setari', 'istoric'] : tabs[role])) {
+for (const tab of only ?? (clientSections ? ['luna', 'banca', 'cheltuieli', 'registre', 'anual', 'mesaje', 'anaf', 'setari', 'istoric'] : tabs[role])) {
   const query = clientSections ? `tab=${role === 'admin' ? 'contab_pfa' : 'clienti'}&pfa=${encodeURIComponent(clientId)}&sectiune=${tab}` : `tab=${tab}`
   await page.goto(`${base}${account.path}?${query}`)
   await page.waitForTimeout(2500)
