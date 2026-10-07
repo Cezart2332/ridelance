@@ -38,7 +38,7 @@ export function AboutPage() {
             component="img"
             src={logoWithMotto}
             alt="RIDElance — Independent. Dar nu singur."
-            sx={{ width: '100%', maxWidth: 520, height: 'auto', mx: 'auto' }}
+            sx={{ width: '100%', maxWidth: { xs: 260, md: 320 }, height: 'auto', mx: 'auto' }}
           />
 
           <Box sx={{ position: 'relative', width: '100%', maxWidth: 1000, mx: 'auto', py: 2 }}>
