@@ -88,7 +88,7 @@ services:
       OpenRouter__ApiKey: ${OPENROUTER_API_KEY:-}
       OpenRouter__Model: ${OPENROUTER_MODEL:-google/gemini-3.8-flash}
       OpenRouter__ReasoningEffort: ${OPENROUTER_REASONING_EFFORT:-low}
-      OpenRouter__DocumentReasoningEffort: ${OPENROUTER_DOCUMENT_REASONING_EFFORT:-low}
+      OpenRouter__DocumentReasoningEffort: ${OPENROUTER_DOCUMENT_REASONING_EFFORT:-medium}
 
       # ─── ANAF ───────────────────────────────────────────────────────────────────────────
       AnafValidator__BaseUrl: http://validator:8080

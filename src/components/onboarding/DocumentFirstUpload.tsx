@@ -215,7 +215,7 @@ export function DocumentFirstUpload({
 
       {needsHumanCheck && (
         <Alert severity="warning" sx={{ mb: 1, borderRadius: `${TOKENS.radius.md}px` }}>
-          Îl verificăm manual. Nu trebuie să faci nimic.
+          {current?.aiSuspicionReasons?.[0] ?? 'Îl verificăm manual. Nu trebuie să faci nimic.'}
         </Alert>
       )}
 

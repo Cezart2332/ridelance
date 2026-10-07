@@ -194,10 +194,16 @@ function AiVerdictChip({ doc }: { doc: DocumentSummary }) {
     Failed: { label: 'AI: respins', tone: 'error' },
     Error: { label: 'AI: indisponibil', tone: 'neutral' },
   }
-  const entry = config[doc.aiStatus]
+  const reasons = doc.aiSuspicionReasons ?? []
+  // Trecut, dar suspect: fără ștampilă, PDF din Word, titular diferit de buletin. Nu „AI: OK”.
+  const entry =
+    doc.aiStatus === 'Passed' && reasons.length > 0
+      ? { label: 'AI: suspect', tone: 'warning' as Tone }
+      : config[doc.aiStatus]
   if (!entry) return null
 
   const details = [
+    ...reasons,
     doc.aiSummary,
     doc.aiDetectedType ? `Detectat: ${doc.aiDetectedType}` : null,
     doc.aiExtractedExpiresAtUtc

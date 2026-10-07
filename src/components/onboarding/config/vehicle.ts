@@ -184,7 +184,7 @@ export const vehicleMicroSteps: MicroStepDef[] = [
     document: {
       category: 'Talon',
       label: 'Talon (certificat de înmatriculare)',
-      hint: 'Numărul de înmatriculare și seria de șasiu trebuie să fie lizibile — le citim de acolo.',
+      hint: 'Talonul deschis, cu rubrica ITP din dreapta vizibilă.',
     },
     visibleWhen: hasVehicle,
     isDone: (c) => hasDocument(c, ['Talon', 'ITP']),

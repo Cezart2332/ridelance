@@ -90,43 +90,6 @@ export const pfaMicroSteps: MicroStepDef[] = [
 
   // ── Ramura „Am PFA" ──
   {
-    id: 'pfa_contact',
-    macroStep: 'pfa',
-    kind: 'text',
-    eyebrow: EYEBROW,
-    icon: 'user',
-    railLabel: 'Date de contact',
-    title: 'La ce număr te putem suna?',
-    // Doar telefonul. Numele îl citim din buletinul încărcat la pasul de eligibilitate, deci
-    // cerut și aici ar fi a doua sursă pentru aceeași informație — exact ce desființează fluxul
-    // document-first. Vezi `ExtractedFieldApplier.ApplyToUserAsync`.
-    fields: [
-      {
-        key: 'telefon',
-        label: 'Telefon',
-        type: 'tel',
-        placeholder: '07XX XXX XXX',
-        // Numărul dat la crearea contului: omul îl confirmă sau îl schimbă, nu-l scrie a doua oară.
-        initialValue: (c) => c.state?.contactPhone ?? '',
-      },
-    ],
-    // Salvarea creează dosarul PFA: un „Continuă” direct pe numărul precompletat trebuie să-l creeze.
-    persistPrefilledOnContinue: true,
-    // Dosarul se creează cu datele de contact; documentele se încarcă pe el, la ecranele următoare.
-    persist: async (values) => {
-      if (!values.telefon?.trim()) return
-      await pfaService.create({
-        registrationType: 'AmPfa',
-        phone: values.telefon.trim(),
-        isOwner: false,
-      })
-    },
-    visibleWhen: answeredYes,
-    // Doar dosarul creat închide ecranul. Cu telefonul precompletat, câmpul e plin din prima clipă —
-    // după el, ecranul ar fi părut rezolvat fără ca dosarul să existe.
-    isDone: (c) => c.state?.pfaRegistrationId != null,
-  },
-  {
     id: 'certificat_inregistrare',
     macroStep: 'pfa',
     kind: 'upload',
@@ -139,8 +102,16 @@ export const pfaMicroSteps: MicroStepDef[] = [
       label: 'Certificat de înregistrare',
       hint: 'Documentul de la ONRC. CUI-ul și denumirea trebuie să fie lizibile — le citim de acolo.',
     },
+    // Dosarul se deschide singur aici. Ecranul de „Date de contact” care îl crea a dispărut:
+    // telefonul îl știm din cont, iar serverul îl copiază pe dosar.
+    onArrive: {
+      when: (c) => c.state?.pfaRegistrationId == null,
+      run: () => pfaService.create({ registrationType: 'AmPfa', isOwner: false }),
+      errorMessage: 'Nu am putut deschide dosarul PFA. Încearcă din nou.',
+    },
     visibleWhen: answeredYes,
-    isDone: (c) => hasDocument(c, CERTIFICAT),
+    // Fără dosar, documentul n-ar avea de ce se lega; ecranul nu se închide până nu există.
+    isDone: (c) => c.state?.pfaRegistrationId != null && hasDocument(c, CERTIFICAT),
   },
   {
     id: 'certificat_constatator',

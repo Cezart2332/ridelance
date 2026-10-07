@@ -362,15 +362,36 @@ test.describe('pasul 1 pe micro-pași', () => {
     expect(saved[1]).toMatchObject({ body: { value: 'yes', valueLabel: 'Da' } })
   })
 
-  test('cu carte de identitate electronică se cere PDF-ul din RO CEI Reader', async ({ page }, info) => {
+  /**
+   * Cartea electronică: poza față-verso și PDF-ul din RO CEI Reader, ca serverul să le compare —
+   * un PDF singur putea fi al oricui.
+   */
+  test('cu carte de identitate electronică se cer poza față-verso și PDF-ul din RO CEI Reader', async ({ page }, info) => {
     await stubEligibility(page)
     await page.goto('/onboarding/eligibility?pas=ci_electronic', { waitUntil: 'networkidle' })
 
     await page.getByRole('radio', { name: 'Da' }).click()
 
-    await expect(page.getByRole('heading', { name: 'Încarcă PDF-ul din aplicația RO CEI Reader' })).toBeVisible()
-    await expect(page.getByText(/Acolo se află toate datele/)).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Fotografiază cartea de identitate' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Încarcă cartea de identitate' })).toHaveCount(0)
+
+    // La revenire, răspunsul vine de pe server, iar ecranul PDF-ului rămâne pe traseu.
+    const saved = [
+      { stepKey: 'eligibility', questionId: 'ci_electronic', question: 'Ai carte de identitate electronică?', value: 'yes', valueLabel: 'Da', answeredAtUtc: '2026-10-07T10:00:00Z', previousLabels: [] },
+    ]
+    await page.route(`${API}/onboarding/answers`, async (route: Route) => {
+      const headers = {
+        'Access-Control-Allow-Origin': (await route.request().headerValue('origin')) ?? '*',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Headers': 'authorization,content-type',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+      }
+      return route.request().method() === 'OPTIONS'
+        ? route.fulfill({ status: 204, headers })
+        : route.fulfill({ status: 200, headers, contentType: 'application/json', body: JSON.stringify(saved) })
+    })
+    await page.goto('/onboarding/eligibility?pas=ci_electronic_pdf_upload', { waitUntil: 'networkidle' })
+    await expect(page.getByRole('heading', { name: 'Încarcă PDF-ul din aplicația RO CEI Reader' })).toBeVisible()
     await page.screenshot({ path: `test-results/onboarding-cei-${info.project.name}.png` })
   })
 
@@ -705,13 +726,12 @@ test.describe('pasul fiscal — banca conectată', () => {
   })
 })
 
-test.describe('pasul 2 — datele de contact', () => {
+test.describe('pasul 2 — dosarul PFA', () => {
   /**
-   * Telefonul e cerut la crearea contului, deci ecranul „La ce număr te putem suna?” îl propune
-   * deja. Dosarul PFA se creează abia la salvarea lui, așa că un „Continuă” direct, fără nicio
-   * modificare, trebuie să-l trimită la server — altfel dosarul nu s-ar mai crea deloc.
+   * Telefonul îl știm de la crearea contului, deci nu mai există ecranul „Date de contact”. Dosarul
+   * se deschide singur când omul ajunge la certificat, fără telefon — serverul îl ia din cont.
    */
-  test('telefonul contului e precompletat și, fără nicio modificare, ecranul creează dosarul singur', async ({ page }) => {
+  test('„Da, am PFA” duce direct la certificat și deschide dosarul singur', async ({ page }) => {
     const noRegistration = {
       ...onboardingState,
       pfaRegistrationId: null,
@@ -740,17 +760,13 @@ test.describe('pasul 2 — datele de contact', () => {
 
     await page.goto('/onboarding/pfa', { waitUntil: 'networkidle' })
     await page.getByRole('radio').filter({ hasText: 'Da, am PFA' }).click()
-    const contactTitle = page.getByRole('heading', { name: 'La ce număr te putem suna?' })
     // Alegerea avansează singură, după o scurtă pauză.
-    await expect(contactTitle).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Încarcă certificatul de înregistrare' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'La ce număr te putem suna?' })).toHaveCount(0)
 
-    const phone = page.getByLabel('Telefon')
-    await expect(phone).toHaveValue('0722123456')
-
-    // Fără „Continuă”: numărul propus e valid, deci ecranul trece singur și trimite precompletarea.
-    await expect(page.getByRole('button', { name: /Continuă/ })).toHaveCount(0)
     await expect.poll(() => created.length, { timeout: 15_000 }).toBe(1)
-    expect(created[0]).toMatchObject({ registrationType: 'AmPfa', phone: '0722123456' })
+    expect(created[0]).toMatchObject({ registrationType: 'AmPfa' })
+    expect(created[0]).not.toHaveProperty('phone')
   })
 })
 

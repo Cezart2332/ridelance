@@ -411,8 +411,6 @@ export function BankConnectPanel({
               }}
             />
 
-            <TermsCheckbox checked={termsAccepted} onChange={setTermsAccepted} />
-
             {error && <Alert severity="error">{error}</Alert>}
 
             <Box
@@ -449,39 +447,56 @@ export function BankConnectPanel({
                     '&:hover': { borderColor: T.primary, boxShadow: T.shadow.glow },
                   }}
                 >
-                  {inst.logo ? (
-                    <Box
-                      component="img"
-                      src={inst.logo}
-                      alt=""
-                      sx={{ width: 34, height: 34, borderRadius: '8px', objectFit: 'contain', flexShrink: 0 }}
-                    />
-                  ) : (
-                    <Box
-                      sx={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: '8px',
-                        display: 'grid',
-                        placeItems: 'center',
-                        backgroundColor: T.surfaceAlt,
-                        color: T.textMuted,
-                        flexShrink: 0,
-                      }}
-                    >
-                      <AccountBalanceRoundedIcon sx={{ fontSize: 20 }} />
-                    </Box>
-                  )}
+                  <BankLogo src={inst.logo} />
                   <Typography sx={{ fontWeight: 700, color: T.ink, fontSize: 14, minWidth: 0 }}>
                     {inst.name}
                   </Typography>
                 </Paper>
               ))}
             </Box>
+
+            <TermsCheckbox checked={termsAccepted} onChange={setTermsAccepted} />
           </>
         )}
       </Stack>
     </Paper>
+  )
+}
+
+/**
+ * Logo-ul unei bănci, cu iconița generică în loc când lipsește sau nu se poate desena — altfel o
+ * imagine stricată lasă un pătrat gol în listă.
+ */
+function BankLogo({ src }: { src: string | null }) {
+  const [broken, setBroken] = useState(false)
+
+  if (src && !broken) {
+    return (
+      <Box
+        component="img"
+        src={src}
+        alt=""
+        onError={() => setBroken(true)}
+        sx={{ width: 34, height: 34, borderRadius: '8px', objectFit: 'contain', flexShrink: 0 }}
+      />
+    )
+  }
+
+  return (
+    <Box
+      sx={{
+        width: 34,
+        height: 34,
+        borderRadius: '8px',
+        display: 'grid',
+        placeItems: 'center',
+        backgroundColor: T.surfaceAlt,
+        color: T.textMuted,
+        flexShrink: 0,
+      }}
+    >
+      <AccountBalanceRoundedIcon sx={{ fontSize: 20 }} />
+    </Box>
   )
 }
 

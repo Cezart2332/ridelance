@@ -22,6 +22,11 @@ export interface DocumentSummary {
    * încredere prea mică. Documentul rămâne acceptat — doar că îl verifică un om.
    */
   aiRequiresManualReview: boolean;
+  /**
+   * De ce îl verifică un om, pe rânduri: fără ștampilă, PDF din Word, titular diferit de buletin.
+   * Șoferul vede primul rând; adminul pe toate.
+   */
+  aiSuspicionReasons?: string[] | null;
   /** `UserUpload` | `Prefilled` | `Inherited` | `SystemGenerated`. */
   origin: 'UserUpload' | 'Prefilled' | 'Inherited' | 'SystemGenerated';
   /**

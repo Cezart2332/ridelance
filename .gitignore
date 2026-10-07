@@ -50,3 +50,6 @@ backend-anaf/
 
 # Generated Playwright reports and traces; keep new captures out of Git history.
 /test-results/
+
+# Documente de onboarding reale/false pentru DocumentAiLiveEval — date personale, nu se urcă.
+test-data/onboarding-docs/

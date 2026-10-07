@@ -47,6 +47,11 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
       originStep: 'eligibility',
     },
     {
+      category: 'CeiReaderPdf',
+      label: 'PDF RO CEI Reader',
+      originStep: 'eligibility',
+    },
+    {
       category: 'PermisConducere',
       label: 'Permis de conducere',
       originStep: 'eligibility',

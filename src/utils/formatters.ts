@@ -67,6 +67,8 @@ export function formatDocumentCategory(category: string | null | undefined): str
       return 'Permis de Conducere';
     case 'CarteIdentitate':
       return 'Carte de Identitate';
+    case 'CeiReaderPdf':
+      return 'PDF RO CEI Reader';
     case 'EcusonUber':
       return 'Ecuson Uber';
     case 'EcusonBolt':

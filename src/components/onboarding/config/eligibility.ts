@@ -29,11 +29,21 @@ function hasDocument(c: MicroStepContext, categories: string[]): boolean {
 }
 
 const CI = ['CarteIdentitate']
+const CEI_PDF = ['CeiReaderPdf']
 const PERMIS = ['PermisConducere']
 // Backendul acceptă ambele categorii pentru atestat (`OnboardingSectionCatalog.cs`).
 const ATESTAT = ['AtestatSofer', 'AtestatTransport']
 
 const EYEBROW = 'ELIGIBILITATE'
+
+const isElectronicCard = (c: MicroStepContext) => c.answers.ci_electronic === 'yes'
+
+/**
+ * Buletinul e complet: poza cărții și, pentru cartea electronică, și PDF-ul din RO CEI Reader.
+ * Comparația celor două arată dacă PDF-ul e chiar al cărții fotografiate.
+ */
+const hasIdentity = (c: MicroStepContext) =>
+  hasDocument(c, CI) && (!isElectronicCard(c) || hasDocument(c, CEI_PDF))
 
 export const eligibilityMicroSteps: MicroStepDef[] = [
   {
@@ -60,8 +70,8 @@ export const eligibilityMicroSteps: MicroStepDef[] = [
     isDone: (c) => c.answers.age !== undefined || hasDocument(c, CI),
   },
   {
-    // Cartea electronică nu are adresa tipărită: domiciliul stă doar în cip. PDF-ul din RO CEI
-    // Reader le are pe toate, deci pe ramura asta cerem PDF-ul, nu o fotografie.
+    // Cartea electronică nu are adresa tipărită: domiciliul stă doar în cip. Pe ramura asta cerem
+    // și poza cărții (față-verso), și PDF-ul din RO CEI Reader, iar serverul le compară.
     id: 'ci_electronic',
     macroStep: 'eligibility',
     kind: 'question',
@@ -98,14 +108,31 @@ export const eligibilityMicroSteps: MicroStepDef[] = [
     eyebrow: EYEBROW,
     icon: 'idCard',
     railLabel: 'Carte de identitate',
-    title: 'Încarcă PDF-ul din aplicația RO CEI Reader',
+    title: 'Fotografiază cartea de identitate',
     document: {
       category: 'CarteIdentitate',
       label: 'Carte de identitate electronică',
-      hint: 'Citește cartea în aplicația RO CEI Reader și încarcă PDF-ul generat. Acolo se află toate datele, inclusiv domiciliul.',
+      hint: 'Față și verso, cu toate cele 4 colțuri vizibile.',
+      requireBothSides: true,
     },
-    visibleWhen: (c) => c.answers.ci_electronic === 'yes',
+    visibleWhen: isElectronicCard,
     isDone: (c) => hasDocument(c, CI),
+  },
+  {
+    id: 'ci_electronic_pdf_upload',
+    macroStep: 'eligibility',
+    kind: 'upload',
+    eyebrow: EYEBROW,
+    icon: 'idCard',
+    railLabel: 'PDF RO CEI Reader',
+    title: 'Încarcă PDF-ul din aplicația RO CEI Reader',
+    document: {
+      category: 'CeiReaderPdf',
+      label: 'PDF RO CEI Reader',
+      hint: 'Citește cartea în aplicația RO CEI Reader și încarcă PDF-ul generat.',
+    },
+    visibleWhen: (c) => isElectronicCard(c) || hasDocument(c, CEI_PDF),
+    isDone: (c) => hasDocument(c, CEI_PDF),
   },
   {
     id: 'license',
@@ -208,7 +235,7 @@ export const eligibilityMicroSteps: MicroStepDef[] = [
      */
     isDone: (c) =>
       c.eligibility?.status !== 'Ineligible' &&
-      hasDocument(c, CI) &&
+      hasIdentity(c) &&
       hasDocument(c, PERMIS) &&
       hasDocument(c, ATESTAT),
   },

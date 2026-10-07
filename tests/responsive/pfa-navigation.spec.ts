@@ -306,6 +306,42 @@ test.describe('navigație PFA', () => {
     expect(linkRequested).toBe(true)
   })
 
+  /**
+   * Furnizorul trimite logo-urile ca SVG inline; serverul le repară tipul, iar un logo care tot nu
+   * se desenează cade pe iconița de bancă — nu rămâne pătrat gol. Acordul stă sub listă.
+   */
+  test('logo-urile băncilor se văd, iar acordul stă sub listă', async ({ page }) => {
+    const svg = Buffer.from(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34"><rect width="34" height="34" fill="#0a5"/></svg>',
+    ).toString('base64')
+
+    await page.route(`${API}/bank/connection`, (route: Route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: 'null' }),
+    )
+    await page.route(`${API}/bank/institutions`, (route: Route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { id: 'BT', name: 'Banca Transilvania', logo: `data:image/svg+xml;base64,${svg}`, requiresPsuId: false, requiresPsuIdType: false, requiresIban: false },
+          { id: 'ING', name: 'ING', logo: 'data:image/svg;base64,stricat', requiresPsuId: false, requiresPsuIdType: false, requiresIban: false },
+        ]),
+      }),
+    )
+
+    await page.goto(`${ROOT}/contabilitate/cont-bancar`, { waitUntil: 'networkidle' })
+    const main = page.getByRole('main')
+
+    const logo = main.locator('button', { hasText: 'Banca Transilvania' }).locator('img')
+    await expect(logo).toBeVisible()
+    expect(await logo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
+    await expect(main.locator('button', { hasText: 'ING' }).locator('img')).toHaveCount(0)
+
+    const lastBank = await main.locator('button', { hasText: 'ING' }).boundingBox()
+    const terms = await main.getByRole('checkbox').boundingBox()
+    expect(terms!.y).toBeGreaterThan(lastBank!.y)
+  })
+
   test('banca cere date în plus: cerem exact ce cere ea, înainte de autorizare', async ({ page }) => {
     // BRD, ProCredit și Intesa cer numele de utilizator de la bancă înainte de consimțământ, iar
     // API-ul ne spune per bancă ce lipsește. Fără ecranul ăsta, omul ar ajunge la bancă și ar fi
