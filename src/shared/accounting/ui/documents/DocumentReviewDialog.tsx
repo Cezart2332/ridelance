@@ -61,10 +61,78 @@ function fieldSpecs(detail: PlatformDocumentDetail): FieldSpec[] {
     ...(report ? [] : [{ key: 'taxPointDate', label: 'Data impozitării', kind: 'date' } as const]),
     { key: 'currency', label: 'Monedă', kind: 'text' },
     { key: 'commissionAmount', label: 'Comision', kind: 'amount' },
-    { key: 'amount', label: report ? 'Venituri totale înainte de comision' : 'Total servicii facturate', kind: 'amount' },
+    { key: 'amount', label: report ? 'Venit brut (înainte de comision)' : 'Total servicii facturate', kind: 'amount' },
     ...(report ? [{ key: 'withheldTax', label: 'Reținere la sursă', kind: 'amount' } as const] : []),
     ...(report ? [{ key: 'cashAmount', label: 'Venit numerar', kind: 'amount' } as const] : []),
   ]
+}
+
+/** Etichetele componentelor raportului Bolt, ca pe server (`ReportComponents`). */
+const FARE_TOTAL = 'Total tarif curse'
+const OTHER_INCOME_TOTAL = 'Total alte venituri'
+const CUSTOMER_REFUNDS = 'Rambursări clienți'
+const COMPONENT_LABELS = [FARE_TOTAL, OTHER_INCOME_TOTAL, CUSTOMER_REFUNDS]
+
+/** Cota standard de TVA, Codul fiscal art. 291 alin. (1). D301-ul îl calculează serverul; aici e doar afișarea. */
+const VAT_RATE = 0.21
+/** Convenția România–Estonia, art. 12 alin. (2): cel mult 2% din comision. */
+const BOLT_WITHHOLDING_RATE = 0.02
+
+const round2 = (value: number) => Math.round(value * 100) / 100
+
+const componentOf = (fields: ExtractedFields, label: string) =>
+  fields.otherAmounts.find((item) => item.label.toLowerCase() === label.toLowerCase())?.amount ?? null
+
+/**
+ * Calculul lunii din raport, pe rânduri: de la brut la net și la suma care trebuie să intre în
+ * bancă. Brutul e venitul (art. 68 alin. (2) lit. a)); comisionul și TVA-ul plătit pe D301 sunt
+ * cheltuieli; impozitul de 2% e al Bolt, reținut din comision.
+ */
+function ReportCalculation({ fields, bolt }: { fields: ExtractedFields; bolt: boolean }) {
+  if (fields.amount === null || fields.commissionAmount === null) return null
+
+  const currency = fields.currency
+  const gross = fields.amount
+  const fares = componentOf(fields, FARE_TOTAL)
+  const otherIncome = componentOf(fields, OTHER_INCOME_TOTAL)
+  const refunds = Math.abs(componentOf(fields, CUSTOMER_REFUNDS) ?? 0)
+  const cash = fields.cashAmount ?? 0
+  const commission = Math.abs(fields.commissionAmount)
+  const vat = round2(commission * VAT_RATE)
+  const withholding = round2(commission * BOLT_WITHHOLDING_RATE)
+  const returned = bolt ? Math.abs(fields.withheldTax ?? 0) : 0
+  const online = round2(gross - cash - refunds)
+
+  const rows: [string, number, boolean?][] = [
+    ...(fares !== null ? [['Tarif curse', fares] as [string, number]] : []),
+    ...(otherIncome !== null ? [['Alte venituri', otherIncome] as [string, number]] : []),
+    ['Venit brut', gross, true],
+    ['Numerar', cash],
+    ...(refunds > 0 ? [['Rambursări clienți', -refunds] as [string, number]] : []),
+    ['Online', online],
+    ['Comision', -commission],
+    ['TVA taxare inversă 21% (D301)', -vat],
+    ['Net după comision și TVA', round2(gross - refunds - commission - vat), true],
+    ...(bolt ? [['Impozit nerezidenți 2% (D100)', withholding] as [string, number]] : []),
+    ...(bolt ? [['Returnat de Bolt pentru D100', returned] as [string, number]] : []),
+    ['Plată așteptată în bancă', round2(online - commission + returned), true],
+  ]
+
+  return (
+    <Stack spacing={0.5}>
+      <Typography variant="subtitle2">Calculul lunii</Typography>
+      {rows.map(([label, value, strong]) => (
+        <Stack key={label} direction="row" sx={{ justifyContent: 'space-between', gap: 1 }}>
+          <Typography variant="body2" color={strong ? 'text.primary' : 'text.secondary'} sx={{ fontWeight: strong ? 700 : 400 }}>
+            {label}
+          </Typography>
+          <Typography variant="body2" sx={{ fontWeight: strong ? 700 : 500, fontVariantNumeric: 'tabular-nums' }}>
+            {formatMoney(value, currency)}
+          </Typography>
+        </Stack>
+      ))}
+    </Stack>
+  )
 }
 
 function displayValue(spec: FieldSpec, fields: ExtractedFields): string {
@@ -301,10 +369,21 @@ export function DocumentReviewDialog({
                       </Box>
                     )
                   })}
-                  {extraction.fields.otherAmounts.length > 0 && !editing && (
-                    <Typography variant="body2" color="text.secondary">
-                      Alte sume: {extraction.fields.otherAmounts.map((item) => `${item.label} ${formatMoney(item.amount, extraction.fields.currency)}`).join(' · ')}
-                    </Typography>
+                  {!editing &&
+                    extraction.fields.otherAmounts.some((item) => !COMPONENT_LABELS.includes(item.label)) && (
+                      <Typography variant="body2" color="text.secondary">
+                        Alte sume:{' '}
+                        {extraction.fields.otherAmounts
+                          .filter((item) => !COMPONENT_LABELS.includes(item.label))
+                          .map((item) => `${item.label} ${formatMoney(item.amount, extraction.fields.currency)}`)
+                          .join(' · ')}
+                      </Typography>
+                    )}
+                  {!editing && doc.documentType === 'PLATFORM_REPORT' && (
+                    <>
+                      <Divider />
+                      <ReportCalculation fields={extraction.fields} bolt={doc.platform === 'BOLT'} />
+                    </>
                   )}
                 </Stack>
               )}
