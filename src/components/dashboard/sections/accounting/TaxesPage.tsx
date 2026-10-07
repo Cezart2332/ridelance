@@ -116,7 +116,6 @@ export function TaxesPage() {
 
         {estimatesLocked ? (
           <FiscalProfileInviteCard
-            status={fiscal?.status ?? data?.taxProfile?.status ?? 'NOT_STARTED'}
             onStart={fiscal?.openForm}
           />
         ) : engineEstimates ? (

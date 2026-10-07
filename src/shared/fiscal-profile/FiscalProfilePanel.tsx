@@ -14,7 +14,7 @@ import {
 import { getErrorMessage } from '../../utils/errorHandler'
 import { FiscalProfileForm } from './FiscalProfileForm'
 import { FiscalProfileHistoryDialog } from './FiscalProfileHistoryDialog'
-import { ROLE_LABEL, STATUS_LABEL } from './schema'
+import { ROLE_LABEL, STATUS_LABEL, situationLabel } from './schema'
 
 export function FiscalProfileStatusChip({ status }: { status: FiscalProfileStatus }) {
   return (
@@ -98,13 +98,7 @@ export function FiscalProfilePanel({ mode, pfaId, onOpenForm, onOpenHistory, pro
   const openForm = onOpenForm ?? (() => setFormOpen(true))
   const openHistory = onOpenHistory ?? (() => setHistoryOpen(true))
 
-  const primaryLabel = isStaff
-    ? 'Editează profilul'
-    : profile?.status === 'COMPLETED'
-      ? 'Editează profilul'
-      : profile?.status === 'DRAFT'
-        ? 'Continuă completarea'
-        : 'Completează profilul'
+  const primaryLabel = profile?.status === 'COMPLETED' ? 'Schimbă situația' : 'Alege situația'
 
   const openCorrections = profile?.corrections.filter((c) => c.state === 'Open') ?? []
 
@@ -123,20 +117,16 @@ export function FiscalProfilePanel({ mode, pfaId, onOpenForm, onOpenHistory, pro
             </Typography>
             {profile && <FiscalProfileStatusChip status={profile.status} />}
           </Stack>
-          {profile && (
-            <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-              {profile.status === 'NOT_STARTED'
-                ? isStaff
-                  ? 'Estimările apar după confirmarea PFA-ului.'
-                  : 'Completează profilul ca să vezi estimările de taxe. Durează câteva minute.'
-                : `Ultima modificare: ${new Date(profile.updatedAtUtc).toLocaleString('ro-RO', { dateStyle: 'medium', timeStyle: 'short' })}${
-                    profile.lastChangedBy ? ` · ${profile.lastChangedBy.name} (${ROLE_LABEL[profile.lastChangedBy.role]})` : ''
-                  }`}
+          {profile && profile.status === 'COMPLETED' && (
+            <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }} data-testid="fiscal-situation">
+              {situationLabel(profile.answers)}
             </Typography>
           )}
-          {isStaff && profile && profile.status !== 'COMPLETED' && (
+          {profile && profile.status !== 'NOT_STARTED' && (
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-              Modificările tale rămân ciornă până confirmă PFA-ul.
+              {`Ultima modificare: ${new Date(profile.updatedAtUtc).toLocaleString('ro-RO', { dateStyle: 'medium', timeStyle: 'short' })}${
+                profile.lastChangedBy ? ` · ${profile.lastChangedBy.name} (${ROLE_LABEL[profile.lastChangedBy.role]})` : ''
+              }`}
             </Typography>
           )}
         </Box>

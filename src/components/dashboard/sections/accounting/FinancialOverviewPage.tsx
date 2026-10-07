@@ -77,7 +77,6 @@ export function FinancialOverviewPage() {
                   <EstimatedTaxesCard mode="pfa" onEditProfile={fiscal?.openForm} />
                 ) : (
                   <FiscalProfileInviteCard
-                    status={fiscal?.status ?? data.taxProfile?.status ?? 'NOT_STARTED'}
                     onStart={fiscal?.openForm}
                   />
                 )}

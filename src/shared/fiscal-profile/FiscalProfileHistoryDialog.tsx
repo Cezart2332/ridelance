@@ -91,7 +91,7 @@ export function FiscalProfileHistoryDialog({ open, mode, taxYear, pfaId, onClose
                 )}
                 {revision.changes.map((change) => (
                   <Typography key={change.field} component="li" variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                    {fieldLabel(change.field, taxYear)}: <s>{answerLabel(change.field, change.oldValue)}</s> →{' '}
+                    {fieldLabel(change.field)}: <s>{answerLabel(change.field, change.oldValue)}</s> →{' '}
                     <strong>{answerLabel(change.field, change.newValue)}</strong>
                   </Typography>
                 ))}

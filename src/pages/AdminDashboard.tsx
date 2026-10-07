@@ -64,7 +64,7 @@ import {
   type AdminPlanFilter,
 } from '../services/adminOverview.service'
 import { openDocument } from '../components/common/documentViewerBus'
-import type { FiscalProfileStatus } from '../services/fiscalProfile.service'
+import type { FiscalProfileAnswers, FiscalProfileStatus } from '../services/fiscalProfile.service'
 import { reloadOnceOnChunkError } from '../utils/lazyWithRetry'
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
@@ -122,6 +122,8 @@ interface PfaSummary {
   deletedAtUtc: string | null
   /** Profilul fiscal al anului curent. */
   fiscalProfileStatus: FiscalProfileStatus
+  /** Situația fiscală a anului curent (pensionar, student, angajat). */
+  fiscalSituation?: FiscalProfileAnswers | null
 }
 
 /** Filtrul listei „PFA înrolate”. */

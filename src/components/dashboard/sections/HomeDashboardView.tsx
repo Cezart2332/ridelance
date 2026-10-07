@@ -155,7 +155,6 @@ export function HomeDashboardContent({
   // Profil confirmat: „Cât să pui deoparte” vine din motorul de taxe estimate. Demo-ul public
   // n-are profil și rămâne pe cardul vechi, cu date mock.
   const engineEstimates = !!data?.taxProfile && !estimatesLocked
-  const profileStatus = fiscal?.status ?? data?.taxProfile?.status ?? 'NOT_STARTED'
   const showBanner = !!fiscal && fiscal.status !== null && fiscal.status !== 'COMPLETED' && !hideBanner
 
   const activationLabel = [
@@ -354,7 +353,7 @@ export function HomeDashboardContent({
                     </>
                   ) : estimatesLocked ? (
                     <Box sx={{ gridColumn: { lg: 'span 12' }, minWidth: 0 }}>
-                      <FiscalProfileInviteCard status={profileStatus} onStart={fiscal?.openForm} />
+                      <FiscalProfileInviteCard onStart={fiscal?.openForm} />
                     </Box>
                   ) : engineEstimates || !data.taxReserve || !data.realProfit ? (
                     <>

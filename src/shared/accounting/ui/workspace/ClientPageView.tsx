@@ -8,7 +8,7 @@ import { Badge, SideSheet } from '../../../../components/panel/ui'
 import { ClientNotificationDialog } from '../../../../components/contabil/ClientNotificationDialog'
 import { DeductibleExpensesPanel } from '../../../../components/dashboard/sections/DeductibleExpensesPanel'
 import { ProfessionalChatBox } from '../../../../components/dashboard/sections/ProfessionalChatBox'
-import { EstimatedTaxesCard, StaffTaxInputsPanel } from '../../../fiscal-estimates'
+import { EstimatedTaxesCard } from '../../../fiscal-estimates'
 import { FiscalProfilePanel } from '../../../fiscal-profile'
 import { accountingApi } from '../../api/accountingApi'
 import { formatDate } from '../../format'
@@ -129,7 +129,6 @@ export function ClientPageView({ pfaId }: { pfaId: string }) {
       <SideSheet open={profileOpen} title="Profil fiscal" onClose={() => setProfileOpen(false)} width={640}>
         <Stack spacing={2}>
           <FiscalProfilePanel mode={staffMode} pfaId={pfa.id} />
-          <StaffTaxInputsPanel mode={staffMode} pfaId={pfa.id} />
           <EstimatedTaxesCard mode={staffMode} pfaId={pfa.id} onPlatformTaxes={() => openSection('luna')} />
         </Stack>
       </SideSheet>

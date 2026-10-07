@@ -8,66 +8,22 @@ import { api } from '../lib/axios'
 export type FiscalProfileMode = 'pfa' | 'admin' | 'accounting'
 export type FiscalProfileStatus = 'NOT_STARTED' | 'DRAFT' | 'COMPLETED'
 
-/** Cheile din spec §4, exact. Datele sunt `yyyy-MM-dd`. */
+/**
+ * Situația fiscală: fiecare `yes` / `no`. „Niciuna” = toate trei `no`. Se pot combina (un
+ * pensionar angajat are ambele excepții).
+ */
 export interface FiscalProfileAnswers {
-  dataCorrect?: string | null
-  correctionDetails?: string | null
-  priorDocs?: string | null
-  priorDocsLocation?: string | null
-  employment?: string | null
-  employmentStart?: string | null
-  employmentEnd?: string | null
-  salaryAboveCassMin?: string | null
   pensioner?: string | null
-  pensionerSince?: string | null
   student?: string | null
-  ownPensionSystem?: string | null
-  privateContact?: string | null
-  otherIndependent?: string | null
-  otherIndependentRecords?: string | null
-  otherIncome?: string | null
-  taxPaymentsMade?: string | null
-  carriedLosses?: string | null
-  cassOptIn?: string | null
-  casVoluntary?: string | null
-  /** Lei pe an. Singurul răspuns numeric. */
-  casVoluntaryBase?: number | null
-  crossBorder?: string | null
-  notes?: string | null
+  employedFullTime?: string | null
 }
 
 export type FiscalProfileKey = keyof FiscalProfileAnswers
-
-/** Sumele pe care le trece contabilul; `null` = necompletat. */
-export interface StaffTaxInputValues {
-  otherIndependentNetAnnual: number | null
-  /** `yes` · `no` */
-  otherIncomeCassInsured: string | null
-  carriedLossesAmount: number | null
-  cassOptInBase: number | null
-}
-
-/** Datele contabilului și care contează: `ask…` = PFA-ul a răspuns „Da” la întrebarea de care țin. */
-export interface StaffTaxInputs extends StaffTaxInputValues {
-  taxYear: number
-  revision: number
-  askOtherIndependentNetAnnual: boolean
-  askOtherIncomeCassInsured: boolean
-  askCarriedLossesAmount: boolean
-  askCassOptInBase: boolean
-}
 
 export interface FiscalProfileFact<T> {
   value: T | null
   source: string
   observedAtUtc: string | null
-}
-
-export interface FiscalProfileConditions {
-  askPriorDocs: boolean
-  priorFrom: string | null
-  priorTo: string | null
-  askCarriedLosses: boolean
 }
 
 export interface FiscalProfileActor {
@@ -106,10 +62,7 @@ export interface FiscalProfile {
     accessGrantedAt: FiscalProfileFact<string>
     regime: string
   }
-  conditions: FiscalProfileConditions
   corrections: DataCorrection[]
-  /** Pragul minim CASS al anului, din configurația fiscală. */
-  cassMinThreshold: number | null
 }
 
 export interface FiscalProfileRevision {
@@ -177,18 +130,6 @@ export const fiscalProfileService = {
 
   revisions: async (mode: FiscalProfileMode, year: number, pfaId?: string): Promise<FiscalProfileRevision[]> =>
     (await api.get<FiscalProfileRevision[]>(`${base(mode, year, pfaId)}/revisions`)).data,
-
-  /** Ce completează contabilul din evidența lui (nu e în formularul PFA-ului). */
-  staffInputs: async (mode: Exclude<FiscalProfileMode, 'pfa'>, year: number, pfaId: string): Promise<StaffTaxInputs> =>
-    (await api.get<StaffTaxInputs>(`${base(mode, year, pfaId)}/staff-inputs`)).data,
-
-  saveStaffInputs: async (
-    mode: Exclude<FiscalProfileMode, 'pfa'>,
-    year: number,
-    pfaId: string,
-    values: StaffTaxInputValues,
-    revision: number,
-  ): Promise<StaffTaxInputs> => (await api.put<StaffTaxInputs>(`${base(mode, year, pfaId)}/staff-inputs`, values, ifMatch(revision))).data,
 
   resolveCorrection: async (mode: Exclude<FiscalProfileMode, 'pfa'>, id: string): Promise<DataCorrection> =>
     (await api.post<DataCorrection>(`/${mode}/data-corrections/${id}/resolve`)).data,

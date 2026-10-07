@@ -34,9 +34,7 @@ function newProfile(): Profile {
       accessGrantedAt: { value: `${YEAR}-03-15T08:00:00Z`, source: 'RIDElance', observedAtUtc: null },
       regime: 'REAL',
     },
-    conditions: { askPriorDocs: true, priorFrom: `${YEAR}-01-01`, priorTo: `${YEAR}-03-14`, askCarriedLosses: true },
     corrections: [],
-    cassMinThreshold: 24_300,
   }
 }
 
@@ -159,28 +157,18 @@ async function mockApi(page: Page, initial: Partial<Profile> = {}) {
   return state
 }
 
-async function choose(page: Page, question: string, option: string) {
-  const card = page.locator('section', { has: page.getByRole('heading', { name: question }) })
-  await card.getByRole('radio', { name: option, exact: true }).check()
-}
-
 test('fără profil: modal automat o singură dată, invitație în loc de estimări', async ({ page }) => {
   const state = await mockApi(page)
   await page.goto(ROOT)
 
-  const dialog = page.getByRole('dialog', { name: `Profil fiscal ${YEAR}` })
+  const dialog = page.getByRole('dialog', { name: `Situația ta fiscală ${YEAR}` })
   // Prima vizită compilează dashboardul în Vite: la rece durează.
   await expect(dialog).toBeVisible({ timeout: 45_000 })
-  await expect(dialog.getByText('Am preluat aceste date din contul tău.')).toBeVisible()
-  await expect(dialog.getByText('POPESCU ION PFA')).toBeVisible()
-  // Intervalul neacoperit apare în titlul întrebării.
-  await expect(dialog.getByRole('heading', { name: `Ai documentele contabile pentru perioada 01.01.${YEAR} – 14.03.${YEAR}?` })).toBeVisible()
-  await expect(dialog.getByText(/nu știu/i)).toHaveCount(0)
-  await expect(dialog.getByText(/normă de venit/i)).toHaveCount(0)
-
-  // „Continuă” fără răspuns: eroare inline, nu trece mai departe.
-  await dialog.getByRole('button', { name: 'Continuă' }).click()
-  await expect(dialog.getByText('Alege un răspuns.').first()).toBeVisible()
+  for (const label of ['Pensionar', 'Student (sub 26 de ani)', 'Angajat cu normă întreagă', 'Niciuna']) {
+    await expect(dialog.getByRole('checkbox', { name: label })).toBeVisible()
+  }
+  // Fără nicio bifă nu se poate confirma.
+  await expect(dialog.getByRole('button', { name: 'Confirmă' })).toBeDisabled()
 
   // Esc închide; dashboardul merge normal, fără nicio sumă de taxe.
   await page.keyboard.press('Escape')
@@ -190,7 +178,6 @@ test('fără profil: modal automat o singură dată, invitație în loc de estim
   await expect(page.getByTestId('fiscal-profile-invite')).toBeVisible()
   await expect(page.getByText('Activează estimările de taxe')).toBeVisible()
   await expect(page.getByText('Cât trebuie să pui deoparte')).toHaveCount(0)
-  await expect(page.getByText('Profilul tău fiscal nu este completat.')).toBeVisible()
 
   // Refresh: modalul nu se mai deschide.
   await page.reload()
@@ -198,80 +185,46 @@ test('fără profil: modal automat o singură dată, invitație în loc de estim
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
-test('completarea: condiționale, ciornă pe fiecare pas, confirmare care deblochează estimările', async ({ page }, info) => {
+test('situația: bife combinabile, „Niciuna” le golește, confirmarea deblochează estimările', async ({ page }, info) => {
   const state = await mockApi(page, { firstPromptShownAtUtc: `${YEAR}-03-16T08:00:00Z` })
   await page.goto(ROOT)
 
-  await page.getByTestId('fiscal-profile-invite').getByRole('button', { name: 'Completează profilul' }).click()
-  const dialog = page.getByRole('dialog', { name: `Profil fiscal ${YEAR}` })
+  await page.getByTestId('fiscal-profile-invite').getByRole('button', { name: 'Alege situația' }).click()
+  const dialog = page.getByRole('dialog', { name: `Situația ta fiscală ${YEAR}` })
 
-  // Pasul 1
-  await choose(page, 'Datele de mai sus sunt corecte?', 'Da')
-  await choose(page, `Ai documentele contabile pentru perioada 01.01.${YEAR} – 14.03.${YEAR}?`, 'Nu le am')
-  await expect(dialog.getByRole('heading', { name: 'Unde se află documentele?' })).toHaveCount(0)
-  await dialog.getByRole('button', { name: 'Continuă' }).click()
+  const pensioner = dialog.getByRole('checkbox', { name: 'Pensionar' })
+  const employed = dialog.getByRole('checkbox', { name: 'Angajat cu normă întreagă' })
+  const none = dialog.getByRole('checkbox', { name: 'Niciuna' })
 
-  // Pasul 2: data angajării apare doar cu contract, și dispare la loc.
-  await choose(page, 'Ai și un contract de muncă?', 'Da, normă întreagă')
-  await expect(dialog.getByRole('heading', { name: 'De când ești angajat?' })).toBeVisible()
-  // Pragul CASS vine din configurația anului, nu din cod.
-  await expect(dialog.getByRole('heading', { name: `Veniturile tale salariale brute din ${YEAR} vor fi de cel puțin 24.300 lei?` })).toBeVisible()
-  await choose(page, 'Ai și un contract de muncă?', 'Nu')
-  await expect(dialog.getByRole('heading', { name: 'De când ești angajat?' })).toHaveCount(0)
-  for (const q of ['Ești pensionar?', 'Ești elev sau student și ai sub 26 de ani?', 'Ești asigurat într-un sistem propriu de pensii?']) {
-    await choose(page, q, 'Nu')
-  }
-  await choose(page, 'Ai o situație specială pe care vrei s-o discuți cu contabilul?', 'Nu')
-  await dialog.getByRole('button', { name: 'Continuă' }).click()
+  // Pensionar și angajat se pot bifa împreună.
+  await pensioner.check()
+  await employed.check()
+  await expect(pensioner).toBeChecked()
+  // „Niciuna” le scoate pe celelalte; o bifă nouă scoate „Niciuna”.
+  await none.check()
+  await expect(pensioner).not.toBeChecked()
+  await expect(employed).not.toBeChecked()
+  await pensioner.check()
+  await expect(none).not.toBeChecked()
 
-  // Pasul 3
-  for (const q of [
-    'Mai ai și alte activități independente, în afara celor din RIDElance?',
-    'Ai venituri din chirii, dividende, investiții sau alte surse?',
-    `Ai făcut deja plăți de taxe pentru ${YEAR}?`,
-    'Ai pierderi fiscale reportate din anii anteriori?',
-    `Ai optat pentru plata CASS în ${YEAR}?`,
-    `În ${YEAR} ai avut rezidență fiscală sau asigurare socială în alt stat?`,
-  ]) {
-    await choose(page, q, 'Nu')
-  }
-  // CAS voluntar: baza apare doar la „Da”.
-  await choose(page, 'Ai ales să plătești CAS la o bază mai mare decât minimul?', 'Da')
-  await expect(dialog.getByRole('heading', { name: 'Baza aleasă pentru CAS (lei/an)' })).toBeVisible()
-  await choose(page, 'Ai ales să plătești CAS la o bază mai mare decât minimul?', 'Nu')
-  // „Da” la alte activități nu cere suma: pe ea o completează contabilul, din evidența lui.
-  await choose(page, 'Mai ai și alte activități independente, în afara celor din RIDElance?', 'Da')
-  await expect(dialog.getByRole('heading', { name: 'Ai evidența acestor activități?' })).toBeVisible()
-  await expect(dialog.getByRole('textbox')).toHaveCount(1)
-  await expect(dialog.getByRole('spinbutton')).toHaveCount(0)
-  await choose(page, 'Mai ai și alte activități independente, în afara celor din RIDElance?', 'Nu')
-  await dialog.getByRole('button', { name: 'Continuă' }).click()
-
-  // Pasul 4: rezumat, confirmare obligatorie.
-  await expect(dialog.getByRole('heading', { name: 'Situația ta' })).toBeVisible()
-  const submit = dialog.getByRole('button', { name: 'Confirmă și activează' })
-  await expect(submit).toBeDisabled()
-  await page.screenshot({ path: `test-results/fiscal-profile-confirm-${info.project.name}.png` })
-  await dialog.getByRole('checkbox').check()
-  await submit.click()
+  await page.screenshot({ path: `test-results/fiscal-profile-situation-${info.project.name}.png` })
+  await dialog.getByRole('button', { name: 'Confirmă' }).click()
 
   await expect(page.getByText('Profil fiscal completat. Estimările de taxe sunt acum disponibile.')).toBeVisible()
   const card = page.getByTestId('estimated-taxes-card')
   await expect(card.getByText('Cât să pui deoparte')).toBeVisible()
   await expect(page.getByTestId('fiscal-profile-invite')).toHaveCount(0)
 
-  // Ciorna s-a salvat la fiecare „Continuă”, cu revizia în If-Match; ascunsele nu au plecat.
-  expect(state.calls.filter((c) => c.startsWith('PATCH /draft'))).toHaveLength(3)
-  expect(state.calls.at(-1)).toBe('POST /complete if-match="3"')
-  expect(state.profile.answers.employmentStart ?? null).toBeNull()
-  expect(state.profile.answers.priorDocsLocation ?? null).toBeNull()
+  // O singură cerere, de confirmare, cu revizia în If-Match și toate trei răspunsurile.
+  expect(state.calls).toContain('POST /complete if-match="0"')
+  expect(state.profile.answers).toEqual({ pensioner: 'yes', student: 'no', employedFullTime: 'no' })
 })
 
 test('formularul nu are scroll orizontal la 360px', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 })
   await mockApi(page)
   await page.goto(ROOT)
-  const dialog = page.getByRole('dialog', { name: `Profil fiscal ${YEAR}` })
+  const dialog = page.getByRole('dialog', { name: `Situația ta fiscală ${YEAR}` })
   await expect(dialog).toBeVisible()
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
   expect(overflow).toBeLessThanOrEqual(0)

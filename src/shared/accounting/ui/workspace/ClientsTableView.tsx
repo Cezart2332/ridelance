@@ -17,6 +17,8 @@ import {
   TablePager,
   type FilterTab,
 } from '../../../../components/panel/ui'
+import { currentTaxYear } from '../../../../services/fiscalProfile.service'
+import { FiscalProfileForm } from '../../../fiscal-profile'
 import { accountingApi } from '../../api/accountingApi'
 import type { ClientWorkspaceRow, FiscalOverviewRow, FiscalThresholds } from '../../api/types'
 import { formatLei } from '../../format'
@@ -236,6 +238,8 @@ export function ClientsTableView() {
     })
   const { rows: page, pager } = usePaged(visible)
   const open = (row: ClientWorkspaceRow, section: ClientSection = 'luna') => nav.openPfa(row.pfaId, section, { luna: period })
+  // Selectorul rapid al situației fiscale (pensionar, student, angajat), din meniul rândului.
+  const [situationFor, setSituationFor] = useState<ClientWorkspaceRow | null>(null)
   const toggleFilter = (value: Filter) => setFilter((currentFilter) => (currentFilter === value ? 'ALL' : value))
   const reloadAll = () => {
     inbox.reload()
@@ -386,6 +390,7 @@ export function ClientsTableView() {
                           { label: 'Bancă', onClick: () => open(row, 'banca') },
                           { label: 'Registre', onClick: () => open(row, 'registre') },
                           { label: 'Mesaje', onClick: () => open(row, 'mesaje') },
+                          { label: 'Situația fiscală', onClick: () => setSituationFor(row) },
                         ]}
                       />
                     </TableCell>
@@ -396,6 +401,15 @@ export function ClientsTableView() {
           </TableContainer>
         )}
       </DataPanel>
+
+      <FiscalProfileForm
+        open={situationFor !== null}
+        mode={nav.role === 'Admin' ? 'admin' : 'accounting'}
+        taxYear={currentTaxYear()}
+        pfaId={situationFor?.pfaId}
+        onClose={() => setSituationFor(null)}
+        onSaved={() => fiscal.reload()}
+      />
     </Box>
   )
 }

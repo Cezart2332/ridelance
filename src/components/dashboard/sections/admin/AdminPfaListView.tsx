@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { Box, Button, CircularProgress, MenuItem, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material'
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded'
 
 import { panelTableSx, usePaged, type PanelTone } from '../../../panel/panelUtils'
 import { Badge, DataPanel, FilterTabs, PageHeading, PersonCell, RowActions, SearchField, StatCard, StatGrid, TablePager, type FilterTab } from '../../../panel/ui'
-import type { FiscalProfileStatus } from '../../../../services/fiscalProfile.service'
+import { currentTaxYear, type FiscalProfileAnswers, type FiscalProfileStatus } from '../../../../services/fiscalProfile.service'
+import { FiscalProfileForm } from '../../../../shared/fiscal-profile'
+import { situationLabel } from '../../../../shared/fiscal-profile/schema'
 
 /** Ce afișează lista despre un client; `PfaSummary` din dashboard-ul de admin. */
 export interface AdminPfaRow {
@@ -21,6 +24,8 @@ export interface AdminPfaRow {
   lastActivityAtUtc: string | null
   deletedAtUtc: string | null
   fiscalProfileStatus: FiscalProfileStatus
+  /** Situația fiscală a anului curent (pensionar, student, angajat), cât timp există profilul. */
+  fiscalSituation?: FiscalProfileAnswers | null
 }
 
 export type EnrolledFilter = 'active' | 'inactive' | 'deleted'
@@ -101,6 +106,9 @@ export function AdminPfaListView({
   subscriptionLabel: (status: string | null) => string
   activityLabel: (row: AdminPfaRow) => string
 }) {
+  // Selectorul rapid al situației fiscale, din meniul rândului.
+  const [situationFor, setSituationFor] = useState<AdminPfaRow | null>(null)
+
   const { rows: page, pager } = usePaged(rows)
   const enrolled = mode === 'enrolled'
   const enrolledTabs: FilterTab<EnrolledFilter>[] = [
@@ -221,7 +229,15 @@ export function AdminPfaListView({
                         <Badge toneName={status.tone}>{status.label}</Badge>
                       </TableCell>
                       {enrolled && (
-                        <TableCell>{row.deletedAtUtc ? <Box component="span" sx={{ color: 'var(--rl-text-subtle)' }}>—</Box> : <Badge toneName={fiscal.tone}>{fiscal.label}</Badge>}</TableCell>
+                        <TableCell>
+                          {row.deletedAtUtc ? (
+                            <Box component="span" sx={{ color: 'var(--rl-text-subtle)' }}>—</Box>
+                          ) : row.fiscalProfileStatus === 'COMPLETED' ? (
+                            <Badge toneName="green">{situationLabel(row.fiscalSituation)}</Badge>
+                          ) : (
+                            <Badge toneName={fiscal.tone}>{fiscal.label}</Badge>
+                          )}
+                        </TableCell>
                       )}
                       <TableCell>{planLabel(row)}</TableCell>
                       <TableCell>{subscriptionLabel(row.subscriptionStatus)}</TableCell>
@@ -233,6 +249,7 @@ export function AdminPfaListView({
                           actions={[
                             { label: 'Deschide dosarul', onClick: () => onOpen(row) },
                             { label: 'Intră în contul clientului', onClick: () => onImpersonate(row), disabled: row.status.toLowerCase() !== 'approved' },
+                            ...(enrolled && !row.deletedAtUtc ? [{ label: 'Situația fiscală', onClick: () => setSituationFor(row) }] : []),
                             ...(enrolled ? [{ label: row.deletedAtUtc ? 'Redeschide contul' : 'Închide contul', onClick: () => onAccountAction(row), danger: !row.deletedAtUtc }] : []),
                           ]}
                         />
@@ -245,6 +262,15 @@ export function AdminPfaListView({
           </TableContainer>
         )}
       </DataPanel>
+
+      <FiscalProfileForm
+        open={situationFor !== null}
+        mode="admin"
+        taxYear={currentTaxYear()}
+        pfaId={situationFor?.id}
+        onClose={() => setSituationFor(null)}
+        onSaved={() => onRefresh()}
+      />
     </Box>
   )
 }
