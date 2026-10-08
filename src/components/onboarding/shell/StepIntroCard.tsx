@@ -56,7 +56,7 @@ export function StepIntroCard({
         mx: 'auto',
         mb: { xs: 2, md: 2.5 },
         p: { xs: 2.5, sm: 3.5, md: 4 },
-        borderRadius: `${TOKENS.radius.md}px`,
+        borderRadius: `${TOKENS.radius.card}px`,
         border: `1px solid ${TOKENS.border}`,
         // Un strop de accent în fundal, ca antetul să nu pară un al doilea card de conținut.
         background: `linear-gradient(135deg, ${alpha(TOKENS.primary, 0.07)} 0%, ${TOKENS.paper} 62%)`,
@@ -97,11 +97,11 @@ export function StepIntroCard({
             <Box
               key={chip}
               sx={{
-                px: 1.4,
-                py: 0.5,
-                borderRadius: `${TOKENS.radius.sm}px`,
+                px: 1.5,
+                py: 0.55,
+                borderRadius: `${TOKENS.radius.full}px`,
                 border: `1px solid ${TOKENS.border}`,
-                backgroundColor: TOKENS.paper,
+                backgroundColor: alpha(TOKENS.paper, 0.85),
                 fontSize: '0.74rem',
                 fontWeight: 750,
                 color: TOKENS.textMuted,

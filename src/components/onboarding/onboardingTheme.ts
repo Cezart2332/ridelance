@@ -20,9 +20,16 @@ export const TOKENS = {
   borderHover: GLOBAL.borderHover,
   textMuted: 'rgba(26, 26, 46, 0.55)',
   textSubtle: GLOBAL.textSubtle,
-  /** `button: 10` e singurul radius pe care specul îl cere și care nu există în scara globală. */
-  radius: { ...GLOBAL.radius, button: 10 },
-  shadow: GLOBAL.shadow,
+  /**
+   * Scara onboardingului, mai rotundă decât cea globală (4/6/8/12): cu 8px pe carduri și câmpuri,
+   * fluxul arăta pătrățos. `card` e doar pentru suprafețele mari (cardul central, antetul pasului).
+   */
+  radius: { ...GLOBAL.radius, xs: 6, sm: 10, md: 14, lg: 16, xl: 24, card: 24, button: 12 },
+  shadow: {
+    ...GLOBAL.shadow,
+    /** Umbra cardurilor: o margine fină și o adâncime moale, nu o linie. */
+    card: '0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -14px rgba(15, 23, 42, 0.12)',
+  },
   easing: GLOBAL.easing,
   duration: GLOBAL.duration,
 

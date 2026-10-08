@@ -43,7 +43,7 @@ export function OnboardingCard({ eyebrow, icon, title, subtitle, tone = 'accent'
         width: '100%',
         maxWidth: 720,
         mx: 'auto',
-        borderRadius: `${TOKENS.radius.md}px`,
+        borderRadius: `${TOKENS.radius.card}px`,
         border: `1px solid ${TOKENS.border}`,
         backgroundColor: TOKENS.paper,
         p: { xs: 2.5, sm: 4, md: 5 },
@@ -52,9 +52,9 @@ export function OnboardingCard({ eyebrow, icon, title, subtitle, tone = 'accent'
       <Box
         aria-hidden
         sx={{
-          width: 48,
-          height: 48,
-          borderRadius: `${TOKENS.radius.md}px`,
+          width: 52,
+          height: 52,
+          borderRadius: `${TOKENS.radius.lg}px`,
           backgroundColor: colors.bg,
           display: 'grid',
           placeItems: 'center',

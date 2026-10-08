@@ -101,6 +101,19 @@ function FilePreview({
  * - **amânat** (`files` + `onFilesChange`): fișierul rămâne aici, cu previzualizare, până când
  *   formularul din jur e trimis (ex. certificatul PFA, care merge împreună cu numele și telefonul).
  */
+/** Butoanele din zona de încărcare: pastile albe peste fundalul colorat, nu text plutind. */
+const pickButtonSx = {
+  flex: 1,
+  py: 1,
+  fontWeight: 650,
+  color: TOKENS.ink,
+  justifyContent: 'center',
+  borderRadius: `${TOKENS.radius.full}px`,
+  backgroundColor: TOKENS.paper,
+  border: `1px solid ${TOKENS.border}`,
+  '&:hover': { backgroundColor: TOKENS.paper, borderColor: TOKENS.primaryEdge },
+} as const
+
 export function UploadField({
   label,
   files,
@@ -194,16 +207,32 @@ export function UploadField({
         sx={{
           borderRadius: `${spacious ? TOKENS.radius.lg : TOKENS.radius.md}px`,
           border: `1.5px dashed ${dragging || hasFiles ? TOKENS.primary : TOKENS.borderHover}`,
-          backgroundColor: dragging ? alpha(TOKENS.primary, 0.06) : TOKENS.paper,
+          backgroundColor: dragging ? alpha(TOKENS.primary, 0.08) : alpha(TOKENS.primary, 0.03),
           transition: `border-color ${TOKENS.duration}, background-color ${TOKENS.duration}`,
           opacity: disabled ? 0.6 : 1,
           p: spacious ? { xs: 3, sm: 5 } : 1.5,
-          '&:hover': spacious && !disabled ? { borderColor: TOKENS.primary } : undefined,
+          '&:hover': spacious && !disabled
+            ? { borderColor: TOKENS.primary, backgroundColor: alpha(TOKENS.primary, 0.05) }
+            : undefined,
         }}
       >
         {spacious && (
           <Stack spacing={1} sx={{ alignItems: 'center', textAlign: 'center', mb: 2.5 }}>
-            <UploadFileRoundedIcon sx={{ fontSize: 32, color: TOKENS.primary }} />
+            <Box
+              aria-hidden
+              sx={{
+                width: 56,
+                height: 56,
+                borderRadius: '50%',
+                display: 'grid',
+                placeItems: 'center',
+                backgroundColor: TOKENS.paper,
+                boxShadow: TOKENS.shadow.md,
+                mb: 0.5,
+              }}
+            >
+              <UploadFileRoundedIcon sx={{ fontSize: 28, color: TOKENS.primary }} />
+            </Box>
             {hint && (
               <Typography variant="body2" sx={{ color: TOKENS.ink, fontWeight: 600 }}>
                 {hint}
@@ -215,14 +244,18 @@ export function UploadField({
           </Stack>
         )}
 
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: 'stretch' }}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          sx={{ alignItems: 'stretch', ...(spacious ? { maxWidth: 380, mx: 'auto' } : {}) }}
+        >
           {/* Butonul de fișiere e un <label> peste un input real — rămâne accesibil din tastatură. */}
           <Button
             component="label"
             htmlFor={inputId}
             disabled={disabled}
             startIcon={<UploadFileRoundedIcon sx={{ fontSize: 18 }} />}
-            sx={{ flex: 1, fontWeight: 650, color: TOKENS.ink, justifyContent: 'center' }}
+            sx={pickButtonSx}
           >
             Alege fișier
             <input
@@ -248,7 +281,7 @@ export function UploadField({
                 onClick={() => cameraRef.current?.click()}
                 disabled={disabled}
                 startIcon={<PhotoCameraRoundedIcon sx={{ fontSize: 18 }} />}
-                sx={{ flex: 1, fontWeight: 650, color: TOKENS.ink, justifyContent: 'center' }}
+                sx={pickButtonSx}
               >
                 Fă poză
               </Button>

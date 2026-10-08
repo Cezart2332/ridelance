@@ -1,3 +1,4 @@
+import HourglassTopRoundedIcon from '@mui/icons-material/HourglassTopRounded'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import { ROUTES } from '../../constants/routes'
 import {
@@ -353,16 +354,6 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
                     {currentStepView.reason}
                   </Alert>
                 )}
-                {/* Fiecare pas se deschide doar pe validarea adminului: fără mesajul ăsta clientul
-                    rămâne pe ultimul ecran fără buton și fără să știe că așteaptă pe cineva. */}
-                {currentStepView?.state === 'pending_review' && (
-                  <Alert severity="info" sx={{ mb: 2, maxWidth: 720, mx: 'auto' }}>
-                    <Box component="span" sx={{ fontWeight: 700 }}>
-                      Pasul „{currentStepView.label}” e în verificare.
-                    </Box>{' '}
-                    Echipa verifică documentele; pasul următor se deschide automat după validare.
-                  </Alert>
-                )}
                 <StepIntroCard
                   stepKey={location.pathname === currentStepView?.path ? activeKey : null}
                   position={Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)}
@@ -371,6 +362,21 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
                   estimate={stepEstimate(currentStepView)}
                 />
                 <Outlet />
+                {/* Fiecare pas se deschide doar pe validarea adminului: fără mesajul ăsta clientul
+                    rămâne pe ultimul ecran fără buton și fără să știe că așteaptă pe cineva. Sub
+                    card, nu deasupra antetului: e o notă despre ce urmează, nu primul lucru citit. */}
+                {currentStepView?.state === 'pending_review' && (
+                  <Alert
+                    severity="info"
+                    icon={<HourglassTopRoundedIcon fontSize="inherit" />}
+                    sx={{ mt: 2, maxWidth: 720, mx: 'auto', alignItems: 'center' }}
+                  >
+                    <Box component="span" sx={{ fontWeight: 700 }}>
+                      Pasul „{currentStepView.label}” e în verificare.
+                    </Box>{' '}
+                    Un agent RIDElance se uită peste documente; pasul următor se deschide automat după validare.
+                  </Alert>
+                )}
               </motion.div>
             </AnimatePresence>
           )}

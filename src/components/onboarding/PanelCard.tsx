@@ -64,7 +64,7 @@ export function PanelCard({
       elevation={0}
       sx={{
         p: { xs: 2.25, md: 3 },
-        borderRadius: `${TOKENS.radius.lg}px`,
+        borderRadius: `${TOKENS.radius.xl}px`,
         border: `1px solid ${TOKENS.border}`,
       }}
     >

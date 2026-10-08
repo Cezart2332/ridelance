@@ -27,7 +27,11 @@ export const SHELL = {
   neg: HOME_TOKENS.neg[600],
   negSoft: HOME_TOKENS.neg[50],
 
-  radius: HOME_TOKENS.radius,
+  /**
+   * În pixeli, ca numere: componentele scriu `${SHELL.radius.card}px`. Cu stringurile din
+   * `HOME_TOKENS` („14px”) ieșea `14pxpx`, CSS invalid — de aici colțurile drepte din rail-uri.
+   */
+  radius: { card: 18, tile: 14, input: 12, pill: 999 },
 
   /** Exact două niveluri de umbră, ca în spec: suprafețe și elemente ridicate. */
   shadow: { card: HOME_TOKENS.shadow.card, raised: HOME_TOKENS.shadow.hover },

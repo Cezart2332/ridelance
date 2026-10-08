@@ -80,12 +80,13 @@ export function MicroActionStep({
           sx={{
             alignSelf: 'flex-start',
             py: 1.2,
-            px: 3,
+            px: 3.5,
             fontWeight: 700,
             textTransform: 'none',
-            borderRadius: `${TOKENS.radius.button}px`,
+            borderRadius: `${TOKENS.radius.full}px`,
             backgroundColor: TOKENS.primary,
-            '&:hover': { backgroundColor: TOKENS.primaryStrong },
+            boxShadow: `0 6px 16px -6px ${TOKENS.primaryEdge}`,
+            '&:hover': { backgroundColor: TOKENS.primaryStrong, boxShadow: `0 8px 20px -6px ${TOKENS.primaryEdge}` },
           }}
         >
           {busy ? def.action.busyLabel : def.action.label}

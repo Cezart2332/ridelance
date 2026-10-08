@@ -26,7 +26,7 @@ const shadows = [...base.shadows] as typeof base.shadows
 for (let level = 1; level <= 7; level++) {
   shadows[level] = 'none'
 }
-shadows[1] = TOKENS.shadow.sm // cardul central
+shadows[1] = TOKENS.shadow.card // cardul central
 shadows[8] = TOKENS.shadow.lg // Menu / Popover
 shadows[16] = TOKENS.shadow.xl // Dialog / Drawer
 
@@ -110,7 +110,7 @@ export const onboardingMuiTheme = createTheme({
       },
     },
     MuiChip: {
-      styleOverrides: { root: { borderRadius: `${TOKENS.radius.md}px`, fontWeight: 600 } },
+      styleOverrides: { root: { borderRadius: `${TOKENS.radius.full}px`, fontWeight: 600 } },
     },
     MuiDivider: { styleOverrides: { root: { borderColor: TOKENS.border } } },
     MuiLinearProgress: {
@@ -159,6 +159,15 @@ export const onboardingMuiTheme = createTheme({
             backgroundColor: 'rgba(237, 108, 2, 0.08)',
             border: '1px solid rgba(237, 108, 2, 0.22)',
             '& .MuiAlert-icon': { color: TOKENS.pendingBase },
+          },
+        },
+        {
+          props: { variant: 'standard', severity: 'info' },
+          style: {
+            color: TOKENS.ink,
+            backgroundColor: TOKENS.primarySoft,
+            border: `1px solid ${TOKENS.primaryTint}`,
+            '& .MuiAlert-icon': { color: TOKENS.primaryStrong },
           },
         },
         {

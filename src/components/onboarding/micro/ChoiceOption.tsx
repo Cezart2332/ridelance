@@ -47,13 +47,15 @@ export function ChoiceOption({ choice, selected, tabIndex, onSelect }: ChoiceOpt
         borderRadius: `${TOKENS.radius.lg}px`,
         border: `1.5px solid ${selected ? TOKENS.primary : TOKENS.border}`,
         backgroundColor: selected ? TOKENS.primarySoft : TOKENS.paper,
+        boxShadow: selected ? `0 0 0 4px ${TOKENS.primarySoft}` : 'none',
         opacity: disabled ? 0.7 : 1,
-        transition: `border-color ${TOKENS.duration} ${TOKENS.easing}, background-color ${TOKENS.duration} ${TOKENS.easing}`,
+        transition: `border-color ${TOKENS.duration} ${TOKENS.easing}, background-color ${TOKENS.duration} ${TOKENS.easing}, box-shadow ${TOKENS.duration} ${TOKENS.easing}, transform ${TOKENS.duration} ${TOKENS.easing}`,
         '&:hover': disabled
           ? {}
           : {
               borderColor: selected ? TOKENS.primary : TOKENS.primaryEdge,
               backgroundColor: selected ? TOKENS.primarySoft : 'rgba(92, 203, 245, 0.04)',
+              transform: 'translateY(-1px)',
             },
         '&:active': disabled ? {} : { transform: 'scale(0.99)' },
         '&:focus-visible': { outline: `2px solid ${TOKENS.primary}`, outlineOffset: 2 },
