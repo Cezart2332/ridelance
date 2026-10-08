@@ -577,12 +577,17 @@ function VehicleReview({ pfaId, refreshKey }: { pfaId: string; refreshKey: numbe
 function SignaturePacketReview({
   pfaId,
   stepState,
+  mandate,
   onDone,
+  onMandateRegenerated,
   onSnackbar,
 }: {
   pfaId: string
   stepState: string | undefined
+  /** Împuternicirea ANAF generată la trimiterea pasului; nota ei spune ce date lipsesc. */
+  mandate: DocumentSummary | undefined
   onDone: () => Promise<void>
+  onMandateRegenerated: () => Promise<void>
   onSnackbar: (message: string, severity: 'success' | 'error') => void
 }) {
   const [rejectOpen, setRejectOpen] = useState(false)
@@ -603,6 +608,24 @@ function SignaturePacketReview({
       await onDone()
     } catch (err) {
       onSnackbar(getErrorMessage(err, 'Nu am putut valida pasul. Încearcă din nou.'), 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const regenerate = async () => {
+    setSaving(true)
+    try {
+      const result = await onboardingService.regenerateAnafMandate(pfaId)
+      onSnackbar(
+        result.missing.length === 0
+          ? `Împuternicirea ${result.number} e completă.`
+          : `Împuternicirea ${result.number}: lipsește ${result.missing.join(', ')}.`,
+        result.missing.length === 0 ? 'success' : 'error',
+      )
+      await onMandateRegenerated()
+    } catch (err) {
+      onSnackbar(getErrorMessage(err, 'Nu am putut genera împuternicirea ANAF.'), 'error')
     } finally {
       setSaving(false)
     }
@@ -630,13 +653,19 @@ function SignaturePacketReview({
     <>
       <ValidateBar
         hint="Pachetul se trimite și se primește semnat pe email. După ce l-ai primit, validează — asta deschide pasul următor."
+        warning={mandate?.reviewNote ? `Împuternicire ANAF — ${mandate.reviewNote}` : null}
         busy={saving}
         label="Validează pasul"
         onValidate={() => void complete()}
         secondary={
-          <Button size="small" color="error" disabled={saving} startIcon={<CancelRoundedIcon />} onClick={() => setRejectOpen(true)}>
-            Întoarce pachetul
-          </Button>
+          <>
+            <Button size="small" disabled={saving} onClick={() => void regenerate()}>
+              {mandate ? 'Regenerează împuternicirea' : 'Generează împuternicirea'}
+            </Button>
+            <Button size="small" color="error" disabled={saving} startIcon={<CancelRoundedIcon />} onClick={() => setRejectOpen(true)}>
+              Întoarce pachetul
+            </Button>
+          </>
         }
       />
 
@@ -1222,7 +1251,19 @@ export function OnboardingSectionsPanel({
                 )}
 
                 {group.key === 'fiscal' && (
-                  <SignaturePacketReview pfaId={pfaId} stepState={step?.state} onDone={loadState} onSnackbar={onSnackbar} />
+                  <SignaturePacketReview
+                    pfaId={pfaId}
+                    stepState={step?.state}
+                    mandate={documents
+                      .filter((d) => d.category === 'ImputernicireAnaf')
+                      .sort((a, b) => b.uploadedAtUtc.localeCompare(a.uploadedAtUtc))[0]}
+                    onDone={loadState}
+                    onMandateRegenerated={async () => {
+                      await onDocumentsChanged?.()
+                      await loadState()
+                    }}
+                    onSnackbar={onSnackbar}
+                  />
                 )}
 
                 {(group.key === 'arr' || group.key === 'vehicle') && !isLocked && step?.state !== 'completed' && (

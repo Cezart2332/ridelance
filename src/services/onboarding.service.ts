@@ -663,6 +663,14 @@ export const onboardingService = {
     await api.post(`/admin/onboarding/${pfaId}/steps/signatures/complete`, payload)
   },
 
+  /** Admin — refă împuternicirea ANAF cu datele completate între timp; numărul rămâne același. */
+  async regenerateAnafMandate(pfaId: string): Promise<{ documentId: string; number: string; missing: string[] }> {
+    const { data } = await api.post<{ documentId: string; number: string; missing: string[] }>(
+      `/admin/onboarding/${pfaId}/anaf-mandate/regenerate`,
+    )
+    return data
+  },
+
   /** Admin — întoarce pasul fiscal la șofer, cu motiv. */
   async rejectSignaturePacket(pfaId: string, reason: string, adminNote?: string | null): Promise<void> {
     await api.post(`/admin/onboarding/${pfaId}/steps/signatures/reject`, { reason, adminNote })

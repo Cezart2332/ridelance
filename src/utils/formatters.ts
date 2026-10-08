@@ -79,6 +79,8 @@ export function formatDocumentCategory(category: string | null | undefined): str
       return 'Extras Bancar';
     case 'DocumenteSemnate':
       return 'Pachet de semnături semnat';
+    case 'ImputernicireAnaf':
+      return 'Împuternicire ANAF';
     case 'RaportUber':
       return 'Raport venituri Uber';
     case 'RaportBolt':
