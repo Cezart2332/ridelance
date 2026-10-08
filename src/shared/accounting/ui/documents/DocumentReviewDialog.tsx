@@ -85,16 +85,16 @@ const componentOf = (fields: ExtractedFields, label: string) =>
 
 /**
  * Calculul lunii din raport, pe rânduri: de la brut la net și la suma care trebuie să intre în
- * bancă. Brutul e venitul (art. 68 alin. (2) lit. a)); comisionul și TVA-ul plătit pe D301 sunt
- * cheltuieli; impozitul de 2% e al Bolt, reținut din comision.
+ * bancă. Brutul e TOTAL-ul de tarif din raport (art. 68 alin. (2) lit. a)); comisionul și TVA-ul
+ * plătit pe D301 sunt cheltuieli; impozitul de 2% e al Bolt, reținut din comision. „Alte venituri”
+ * intră în venit doar dacă apar în decontul din bancă.
  */
 function ReportCalculation({ fields, bolt }: { fields: ExtractedFields; bolt: boolean }) {
   if (fields.amount === null || fields.commissionAmount === null) return null
 
   const currency = fields.currency
   const gross = fields.amount
-  const fares = componentOf(fields, FARE_TOTAL)
-  const otherIncome = componentOf(fields, OTHER_INCOME_TOTAL)
+  const otherIncome = Math.abs(componentOf(fields, OTHER_INCOME_TOTAL) ?? 0)
   const refunds = Math.abs(componentOf(fields, CUSTOMER_REFUNDS) ?? 0)
   const cash = fields.cashAmount ?? 0
   const commission = Math.abs(fields.commissionAmount)
@@ -104,8 +104,6 @@ function ReportCalculation({ fields, bolt }: { fields: ExtractedFields; bolt: bo
   const online = round2(gross - cash - refunds)
 
   const rows: [string, number, boolean?][] = [
-    ...(fares !== null ? [['Tarif curse', fares] as [string, number]] : []),
-    ...(otherIncome !== null ? [['Alte venituri', otherIncome] as [string, number]] : []),
     ['Venit brut', gross, true],
     ['Numerar', cash],
     ...(refunds > 0 ? [['Rambursări clienți', -refunds] as [string, number]] : []),
@@ -116,6 +114,7 @@ function ReportCalculation({ fields, bolt }: { fields: ExtractedFields; bolt: bo
     ...(bolt ? [['Impozit nerezidenți 2% (D100)', withholding] as [string, number]] : []),
     ...(bolt ? [['Returnat de Bolt pentru D100', returned] as [string, number]] : []),
     ['Plată așteptată în bancă', round2(online - commission + returned), true],
+    ...(otherIncome > 0 ? [['Alte venituri, dacă apar în bancă', otherIncome] as [string, number]] : []),
   ]
 
   return (
