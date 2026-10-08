@@ -6,12 +6,14 @@ import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
 
 import type { OnboardingChecklistItem } from '../../../services/onboarding.service'
+import { suspicionOf } from '../documentSuspicion'
 import { AutosaveIndicator } from '../AutosaveIndicator'
 import { useAutosaveSnapshot } from '../autosaveStore'
 import { useMotionTokens } from '../motion'
 import { SHELL } from '../shellTokens'
 import type { StepView } from '../stepModel'
 import { useMicroSteps } from '../useMicroSteps'
+import { useOnboarding } from '../useOnboarding'
 
 /**
  * Rail-ul dreapta: pasul curent, desfăcut în ecranele lui.
@@ -28,8 +30,12 @@ import { useMicroSteps } from '../useMicroSteps'
  * upload, iar repetată pe fiecare ecran devine zgomot. Politica de date își are locul ei.
  */
 
-/** Starea unui rând din listă: parcursul (done/current/todo) sau verdictul serverului. */
-type ItemState = 'done' | 'current' | 'todo' | 'verifying' | 'rejected'
+/**
+ * Starea unui rând din listă: parcursul (done/current/todo) sau verdictul serverului. `suspect`:
+ * documentul a trecut, dar AI-ul a văzut ceva (CNP diferit de buletin, fără ștampilă) — un „?” cu
+ * motivul, nu o bifă care l-ar ascunde până deschide cineva ecranul documentului.
+ */
+type ItemState = 'done' | 'current' | 'todo' | 'verifying' | 'rejected' | 'suspect'
 
 interface RailItem {
   key: string
@@ -58,6 +64,15 @@ const ITEM_STATE: Record<ItemState, { label: string | null; icon: ReactNode | nu
       label: 'Respins',
       icon: <CloseRoundedIcon sx={{ fontSize: 13 }} />,
       color: SHELL.neg,
+    },
+    suspect: {
+      label: 'De verificat',
+      icon: (
+        <Box component="span" aria-hidden sx={{ fontSize: 12, fontWeight: 800, lineHeight: 1 }}>
+          ?
+        </Box>
+      ),
+      color: SHELL.warn,
     },
   }
 
@@ -122,6 +137,7 @@ export function RightRail({ step, loading }: { step: StepView | null; loading: b
  */
 function useRailItems(step: StepView | null): RailItem[] {
   const micro = useMicroSteps()
+  const { documents } = useOnboarding()
   const checklist = step?.checklist ?? []
 
   if (micro.steps.length === 0) {
@@ -142,7 +158,7 @@ function useRailItems(step: StepView | null): RailItem[] {
 
     // Documentul are verdict propriu doar după ce a fost încărcat; „missing" n-ar spune nimic în
     // plus față de poziția în parcurs.
-    const state: ItemState =
+    const derived: ItemState =
       verdict && verdict.state !== 'missing'
         ? SERVER_STATE[verdict.state]
         : view.done
@@ -150,12 +166,15 @@ function useRailItems(step: StepView | null): RailItem[] {
           : view.current
             ? 'current'
             : 'todo'
+    // Un document trecut, dar suspect, nu primește bifă: „?” și motivul, direct pe rând.
+    const suspicion = category && derived === 'done' ? suspicionOf(documents, [category]) : null
+    const state: ItemState = suspicion ? 'suspect' : derived
 
     return {
       key: view.def.id,
       label: view.def.railLabel,
       state,
-      note: verdict?.note,
+      note: suspicion ?? verdict?.note,
       goTo:
         view.index <= currentIndex || view.done ? () => micro.goTo(view.def.id) : undefined,
     }
@@ -169,7 +188,8 @@ function ChecklistCard({ step }: { step: StepView | null }) {
     return null
   }
 
-  const done = items.filter((i) => i.state === 'done').length
+  // Un document suspect e încărcat: contează la „gata”, chiar dacă îl verifică un om.
+  const done = items.filter((i) => i.state === 'done' || i.state === 'suspect').length
 
   return (
     <Card>

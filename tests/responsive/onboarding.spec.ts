@@ -325,6 +325,30 @@ test.describe('pasul 1 pe micro-pași', () => {
     ).toBeVisible()
   })
 
+  /**
+   * Un document trecut, dar suspect (aici: permisul altcuiva), nu primește bifă: „?” și motivul,
+   * direct în listă și în rezumat — nu abia când deschizi ecranul documentului.
+   */
+  test('documentul suspect are „?” și motivul, nu bifă', async ({ page }, info) => {
+    test.skip(info.project.name === 'mobile', 'Lista pașilor stă în rail-ul de desktop.')
+    const reason = 'CNP-ul de pe „Permis de conducere” nu e cel din buletin.'
+    await stubEligibility(
+      page,
+      [
+        uploadedDoc('CarteIdentitate', 'ci.pdf'),
+        { ...uploadedDoc('PermisConducere', 'permis.pdf'), aiRequiresManualReview: true, aiSuspicionReasons: [reason] },
+        uploadedDoc('AtestatSofer', 'atestat.pdf'),
+      ],
+      eligibilityProfile(),
+    )
+    await page.goto('/onboarding/eligibility?pas=eligibility_summary', { waitUntil: 'networkidle' })
+
+    await expect(page.getByText('De verificat').first()).toBeVisible()
+    await expect(page.getByText(reason).first()).toBeVisible()
+    await expect(page.getByText('? De verificat')).toBeVisible()
+    await page.screenshot({ path: `test-results/onboarding-suspect-${info.project.name}.png` })
+  })
+
   test('„Nu" la atestat deschide un pop-up cu motivul și rămâne pe întrebare', async ({ page }, info) => {
     await stubEligibility(
       page,
