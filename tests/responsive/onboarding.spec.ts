@@ -918,3 +918,52 @@ test.describe('pasul 6 — vehicul', () => {
     await expect(page.getByRole('heading', { name: 'Cum deții mașina?' })).toBeVisible()
   })
 })
+
+test.describe('pasul fiscal: acordul pentru împuterniciri', () => {
+  /**
+   * Ultimul ecran al pasului fiscal: omul e de acord cu împuternicirea ANAF și află că pachetul de
+   * semnături vine pe email. Acordul trimite pasul la noi; nu mai pleacă singur la sosire.
+   */
+  test('„Sunt de acord” trimite pasul, apoi ecranul spune ce urmează pe email', async ({ page }, info) => {
+    let submitted = false
+    const step2 = () => ({
+      pfaRegistrationId: onboardingState.pfaRegistrationId,
+      fiscal: { vatAnswer: 'No', vatRegistrationKind: null },
+      bank: null,
+      oblio: { allConsentsAccepted: true },
+      signature: submitted
+        ? { provider: 'EasyStreamTransSped', status: 'Draft', documents: [], submittedForReviewAtUtc: '2026-10-08T10:00:00Z', rejectionReason: null }
+        : null,
+    })
+
+    await stubBackend(page)
+    await page.route(`${API}/onboarding/step2`, async (route) => {
+      const headers = {
+        'Access-Control-Allow-Origin': (await route.request().headerValue('origin')) ?? '*',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Headers': 'authorization,content-type',
+      }
+      if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers })
+      return route.fulfill({ status: 200, contentType: 'application/json', headers, body: JSON.stringify(step2()) })
+    })
+    page.on('request', (request) => {
+      if (request.method() === 'POST' && request.url().endsWith('/onboarding/step2/submit-for-review')) submitted = true
+    })
+
+    await page.goto('/onboarding/step2?pas=pachet_semnaturi', { waitUntil: 'networkidle' })
+
+    await expect(page.getByRole('heading', { name: 'Acordul pentru împuterniciri' })).toBeVisible()
+    await expect(page.getByText(/Ești de acord să te reprezentăm la ANAF/)).toBeVisible()
+    await expect(page.getByText(/E valabilă 10 ani și o poți revoca oricând/)).toBeVisible()
+    await expect(page.getByText(/Pe email primești pachetul de semnături/)).toBeVisible()
+    // Nimic nu pleacă înainte de acord.
+    expect(submitted).toBe(false)
+    await page.screenshot({ path: `test-results/onboarding-acord-anaf-${info.project.name}.png` })
+
+    await page.getByRole('button', { name: 'Sunt de acord' }).click()
+
+    await expect.poll(() => submitted).toBe(true)
+    await expect(page.getByText(/Îți trimitem pe email pachetul de semnături/)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Sunt de acord' })).toHaveCount(0)
+  })
+})

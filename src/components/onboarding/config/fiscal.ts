@@ -8,8 +8,8 @@ import { cashMicroStep } from './cash'
  * Pasul 3 — Fiscal, bancă și semnături, ca întrebări.
  *
  * Trei zone care înainte stăteau una sub alta pe același ecran: TVA, contul bancar și Oblio.
- * Pachetul de semnături nu e o întrebare — îl alocăm noi (RL-02), deci pasul se termină cu o
- * trimitere la verificare și un ecran de așteptare.
+ * Pachetul de semnături îl alocăm noi (RL-02): pasul se termină cu acordul pentru împuterniciri,
+ * care trimite pasul la verificare, apoi ecranul spune ce urmează pe email.
  */
 
 const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
@@ -240,35 +240,36 @@ export const fiscalMicroSteps: MicroStepDef[] = [
     isDone: (c) => step2Of(c)?.oblio?.allConsentsAccepted === true,
   },
 
-  // ── Semnături: ale noastre, nu ale userului (RL-02) ──
+  // ── Semnături: acordul userului, apoi pachetul pleacă de la noi pe email (RL-02) ──
   {
     id: 'pachet_semnaturi',
     macroStep: 'fiscal',
-    kind: 'info',
+    kind: 'action',
     eyebrow: EYEBROW,
     icon: 'checkCircle',
     railLabel: 'Pachetul de semnături',
-    title: 'Pregătim pachetul de semnături',
+    title: 'Acordul pentru împuterniciri',
     lines: (c) => {
-      const reason = step2Of(c)?.signature?.rejectionReason
-      if (reason) {
+      if (isAtAdmin(c) || step2Of(c)?.signature?.status === 'Completed') {
         return [
-          `Am întors dosarul: ${reason}`,
-          'Retrimite-l semnat corect, pe emailul de pe care l-ai primit. Nu ai ce încărca aici.',
+          'Îți trimitem pe email pachetul de semnături: împuternicirile pentru ARR și ANAF, contractul de servicii și acordul GDPR. Durează de obicei 1–2 zile lucrătoare.',
+          'Îl semnezi o singură dată și ni-l trimiți înapoi tot pe email — nu ai nimic de încărcat aici. Între timp poți merge mai departe.',
         ]
       }
 
-      // Fostul ecran „Trimite pentru verificare” și cel de așteptare, într-unul singur: trimiterea
-      // pleacă singură la sosire (`onArrive`), deci nu mai e nimic de apăsat.
+      const reason = step2Of(c)?.signature?.rejectionReason
       return [
-        'Îți trimitem pe email pachetul de semnături: împuternicirile pentru ARR și ANAF, contractul de servicii și acordul GDPR. Durează de obicei 1–2 zile lucrătoare.',
-        'Îl semnezi o singură dată și ni-l trimiți înapoi tot pe email — nu ai nimic de încărcat aici. Între timp poți merge mai departe.',
+        ...(reason ? [`Am întors dosarul: ${reason}`] : []),
+        'Ești de acord să te reprezentăm la ANAF pentru PFA-ul tău: depunem declarațiile fiscale cu certificatul nostru digital, folosim Spațiul Privat Virtual și e-Factura și primim deciziile și notificările ANAF.',
+        'Împuternicirea nu ne dă acces la conturile sau banii tăi și nici dreptul de a semna contracte în numele tău. E valabilă 10 ani și o poți revoca oricând.',
+        'Pe email primești pachetul de semnături: împuternicirile pentru ARR și ANAF, contractul de servicii și acordul GDPR. Îl semnezi electronic și ni-l trimiți înapoi tot pe email.',
       ]
     },
-    // Mereu vizibil după Oblio: e ecranul care spune ce urmează. Dacă lipsește ceva, serverul
-    // refuză trimiterea și eroarea apare pe ecran.
-    onArrive: {
-      when: (c) => !isAtAdmin(c) && step2Of(c)?.signature?.status !== 'Completed',
+    // Acordul trimite pasul la noi: serverul generează împuternicirea ANAF cu datele omului și
+    // pregătim pachetul. Dacă lipsește ceva din pas, serverul refuză și eroarea apare pe ecran.
+    action: {
+      label: 'Sunt de acord',
+      busyLabel: 'Se trimite...',
       run: async (c) => {
         // Un „Da” la TVA rămas nespus (dosarele de dinainte de corectura din `tva_document`): cu
         // certificatul încărcat, se trimite acum, altfel serverul refuză pasul pentru TVA lipsă.
@@ -278,9 +279,9 @@ export const fiscalMicroSteps: MicroStepDef[] = [
         }
         await onboardingService.submitFiscalForReview()
       },
-      errorMessage: 'Nu am putut trimite pasul la verificare. Încearcă din nou.',
     },
-    isDone: (c) => step2Of(c)?.signature?.status === 'Completed',
+    // Rezolvat odată trimis: o respingere a pachetului șterge trimiterea, iar acordul se cere din nou.
+    isDone: (c) => isAtAdmin(c) || step2Of(c)?.signature?.status === 'Completed',
   },
 ]
 
