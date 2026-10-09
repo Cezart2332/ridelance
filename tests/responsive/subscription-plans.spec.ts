@@ -18,13 +18,15 @@ test('PFAlone bifează opțiunile la plată și ele ajung în checkout', async (
   await page.goto('/inregistrare/abonament')
   await expect(page.getByText('PFAlone', { exact: true }).first()).toBeVisible({ timeout: 45_000 })
 
-  await page.getByRole('checkbox', { name: /Open Banking/ }).check()
+  await expect(page.getByText(/Open Banking · gratuit prima lună/)).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: /Open Banking/ })).toHaveCount(0)
+  await page.getByRole('checkbox', { name: /casă de marcat/ }).check()
   await page.getByRole('checkbox', { name: /accept/i }).first().check()
   await page.getByRole('checkbox', { name: /accept/i }).nth(1).check().catch(() => undefined)
   await page.screenshot({ path: `test-results/subscription-select-${info.project.name}.png`, fullPage: true })
   await page.getByRole('button', { name: /Continuă cu/ }).click()
   await expect.poll(() => bodies.length).toBe(1)
-  expect(bodies[0]).toMatchObject({ plan: 'pfalone', addons: ['open-banking'] })
+  expect(bodies[0]).toMatchObject({ plan: 'pfalone', addons: ['cash-register'] })
 })
 
 test('PFAlone fără Open Banking vede opțiunea de cumpărat pe pagina băncii', async ({ page }) => {
@@ -32,4 +34,29 @@ test('PFAlone fără Open Banking vede opțiunea de cumpărat pe pagina băncii'
   await page.goto('/app/dashboard/contabilitate/cont-bancar')
   await expect(page.getByText(/Opțiune PFAlone · \+49 lei/)).toBeVisible({ timeout: 45_000 })
   await expect(page.getByRole('button', { name: 'Adaugă opțiunea' })).toBeVisible()
+})
+
+test('după luna gratuită, PFAlone alege: renunță și banca se deconectează', async ({ page }, info) => {
+  await client(page, { status: 'Active', dashboardAccessGranted: true, plan: 'PfaAlone', canManageRegisters: true, includesOpenBanking: false, openBankingDecisionDue: true })
+  const declined = page.waitForRequest(request => request.method() === 'POST' && request.url().endsWith('/payments/subscription/open-banking/decline'))
+  await page.route(`${API}/payments/subscription/open-banking/decline`, route => route.fulfill({ status: 204 }))
+  await page.goto('/app/dashboard')
+  await expect(page.getByRole('heading', { name: 'Păstrezi Open Banking?' })).toBeVisible({ timeout: 45_000 })
+  await expect(page.getByRole('button', { name: /Păstrez · \+49 lei/ })).toBeDisabled()
+  await page.screenshot({ path: `test-results/open-banking-decision-${info.project.name}.png`, fullPage: true })
+  await page.getByRole('button', { name: 'Renunț și deconectez banca' }).click()
+  await declined
+  await expect(page.getByRole('heading', { name: 'Păstrezi Open Banking?' })).toHaveCount(0)
+})
+
+test('după luna gratuită, PFAlone păstrează Open Banking prin plată, cu opțiunile pe care le avea', async ({ page }) => {
+  await client(page, { status: 'Active', dashboardAccessGranted: true, plan: 'PfaAlone', canManageRegisters: true, openBankingDecisionDue: true, hasCashRegisterAddon: true })
+  const bodies: Record<string, unknown>[] = []
+  await page.route(`${API}/payments/checkout-session`, route => { bodies.push(route.request().postDataJSON()); return route.fulfill({ status: 500, json: {} }) })
+  await page.goto('/app/dashboard')
+  await expect(page.getByRole('heading', { name: 'Păstrezi Open Banking?' })).toBeVisible({ timeout: 45_000 })
+  await page.getByRole('checkbox', { name: /accept/i }).check()
+  await page.getByRole('button', { name: /Păstrez · \+49 lei/ }).click()
+  await expect.poll(() => bodies.length).toBe(1)
+  expect(bodies[0]).toMatchObject({ plan: 'pfalone', isPlanChange: true, addons: ['open-banking', 'cash-register'] })
 })

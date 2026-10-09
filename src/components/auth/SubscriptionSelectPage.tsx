@@ -252,7 +252,14 @@ export default function SubscriptionSelectPage() {
                     {plan.addons.some((addon) => !addon.included) && (
                       // Bifa nu selectează cardul prin click, dar o opțiune bifată alege planul.
                       <Box onClick={(event) => event.stopPropagation()} sx={{ mt: 1, display: 'flex', flexDirection: 'column' }}>
-                        {plan.addons.filter((addon) => !addon.included).map((addon) => (
+                        {plan.addons.some((addon) => addon.key === 'open-banking' && !addon.included) && (
+                          // Open Banking se conectează în onboarding și merge gratuit prima lună;
+                          // după, îl întrebăm dacă îl plătește.
+                          <Typography sx={{ fontSize: '0.85rem', color: TOKENS.ink, py: 0.75 }}>
+                            Open Banking · <b>gratuit prima lună</b>
+                          </Typography>
+                        )}
+                        {plan.addons.filter((addon) => !addon.included && addon.key !== 'open-banking').map((addon) => (
                           <FormControlLabel
                             key={addon.key}
                             sx={{ mr: 0 }}

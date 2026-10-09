@@ -88,10 +88,15 @@ export function AbonamenteTab() {
 
   // PFAlone: opțiunile plătite acum, ca să se vadă ce se schimbă.
   const paidAddons: AddonKey[] = [
-    ...(subStatus?.includesOpenBanking ? (['open-banking'] as const) : []),
-    ...(subStatus?.includesCashRegister ? (['cash-register'] as const) : []),
+    ...(subStatus?.hasOpenBankingAddon ? (['open-banking'] as const) : []),
+    ...(subStatus?.hasCashRegisterAddon ? (['cash-register'] as const) : []),
   ]
   const chosenAddons = addonChoice ?? paidAddons
+  // Luna gratuită de Open Banking, cât încă ține.
+  const trialEnds =
+    subStatus?.openBankingTrialEndsAtUtc && new Date(subStatus.openBankingTrialEndsAtUtc) > new Date()
+      ? new Date(subStatus.openBankingTrialEndsAtUtc)
+      : null
   const addonsChanged =
     chosenAddons.length !== paidAddons.length || chosenAddons.some((key) => !paidAddons.includes(key))
   const toggleAddon = (key: AddonKey) =>
@@ -255,6 +260,9 @@ export function AbonamenteTab() {
                 label={
                   <Typography sx={{ fontSize: '0.88rem', color: T.ink }}>
                     {addon.title} · <b>+{addon.monthlyLei} lei / lună</b>
+                    {addon.key === 'open-banking' && trialEnds && !chosenAddons.includes('open-banking') && (
+                      <> · gratuit până la {formatRomanianDate(trialEnds)}</>
+                    )}
                   </Typography>
                 }
               />

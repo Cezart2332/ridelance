@@ -8,7 +8,8 @@ import { PfaFiscalProfileProvider } from '../../shared/fiscal-profile'
 
 import { authService } from '../../services/auth.service'
 import { userService } from '../../services/user.service'
-import { stripeService } from '../../services/stripe.service'
+import { stripeService, type SubscriptionResponse } from '../../services/stripe.service'
+import { OpenBankingDecision } from './OpenBankingDecision'
 import { canAccessDashboard, resolveClientPath } from '../../utils/clientOnboarding'
 import { useRecurringDocumentationReminder } from '../../hooks/useRecurringDocumentationReminder'
 import { LEGACY_SECTION_ROUTES, PFA_PATHS, pfaNavConfigFor } from '../../config/pfaNavigation'
@@ -54,6 +55,8 @@ export default function DashboardPage() {
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'error' })
   const [pfaRegistrationId, setPfaRegistrationId] = useState<string | null>(null)
   const [planAccess, setPlanAccess] = useState<PlanAccess>(DEFAULT_PLAN_ACCESS)
+  // PFAlone la finalul lunii gratuite de Open Banking: abonamentul, ca ecranul de decizie să-l știe.
+  const [openBankingDecision, setOpenBankingDecision] = useState<SubscriptionResponse | null>(null)
 
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity })
@@ -88,6 +91,10 @@ export default function DashboardPage() {
           return
         }
         setPlanAccess(planAccessOf(sub))
+        // Întoarcerea din plata opțiunii: webhookul poate întârzia, deci nu întrebăm din nou.
+        // În aplicația mobilă nu se plătește nimic, deci nici nu blocăm acolo.
+        const justPaidOpenBanking = new URLSearchParams(window.location.search).get('open_banking') === '1'
+        setOpenBankingDecision(sub?.openBankingDecisionDue && !justPaidOpenBanking && !IS_NATIVE_APP ? sub : null)
         setPfaStatus(summary.pfaStatus)
         setPfaRegistrationId(summary.pfaRegistrationId ?? null)
       } catch {
@@ -107,6 +114,18 @@ export default function DashboardPage() {
   const legacyTarget = resolveLegacyTarget(location.pathname, searchParams)
   if (legacyTarget) {
     return <Navigate to={legacyTarget} replace />
+  }
+
+  if (openBankingDecision) {
+    return (
+      <OpenBankingDecision
+        subscription={openBankingDecision}
+        onDeclined={() => {
+          setOpenBankingDecision(null)
+          setPlanAccess((access) => ({ ...access, includesOpenBanking: false }))
+        }}
+      />
+    )
   }
 
   // Show spinner while checking PFA status

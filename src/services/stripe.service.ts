@@ -81,6 +81,13 @@ export interface SubscriptionResponse {
   canManageRegisters?: boolean
   /** PFAlone: are generatorul de declarații. */
   canGenerateDeclarations?: boolean
+  /** PFAlone: până când Open Banking e gratuit. */
+  openBankingTrialEndsAtUtc?: string | null
+  /** PFAlone: luna gratuită s-a terminat; alege dacă plătește Open Banking sau renunță. */
+  openBankingDecisionDue?: boolean
+  /** Opțiunile plătite pe abonament (nu cele incluse sau gratuite). */
+  hasOpenBankingAddon?: boolean
+  hasCashRegisterAddon?: boolean
 }
 
 
@@ -420,6 +427,11 @@ export const stripeService = {
 
   getSelectedPlan(): PlanKey | null {
     return sessionStorage.getItem('selected_plan') as PlanKey | null
+  },
+
+  /** PFAlone renunță la Open Banking după luna gratuită; serverul deconectează banca. */
+  async declineOpenBanking(): Promise<void> {
+    await api.post('/payments/subscription/open-banking/decline')
   },
 
   /** Get subscription status from the backend */
