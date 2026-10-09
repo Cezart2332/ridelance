@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { microStepsOf, screenCountOf } from './config'
+import { MICRO_RESOURCES } from './config/resources'
 import { useMicroResources } from './useMicroResources'
 import type { MicroStepAnswer, MicroStepAnswers, MicroStepContext, MicroStepView } from './microStepTypes'
 import { MicroStepsContext, type MicroStepsValue } from './microStepsContext'
@@ -117,12 +118,20 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
    * `replace`, ca normalizarea să nu se adauge în istoric — Back-ul trebuie să ducă la ecranul
    * anterior, nu la aceeași pagină fără parametru.
    */
+  /**
+   * Sub-stările pasului au sosit. Până atunci predicatele care le citesc (platforme alese, mod de
+   * deținere) răspund „nu", deci „primul ecran nerezolvat" ar fi greșit — iar ancorat în URL ar
+   * rămâne greșit și după ce sosesc datele. Tot de aici, un link direct către un ecran condiționat
+   * nu se pierde cât ecranul încă nu e vizibil.
+   */
+  const resourcesReady = (MICRO_RESOURCES[activeKey ?? ''] ?? []).every((entry) => entry.key in resources)
+
   useEffect(() => {
-    if (!current || current.def.id === requested) return
+    if (!current || current.def.id === requested || !resourcesReady) return
     const next = new URLSearchParams(searchParams)
     next.set(PARAM, current.def.id)
     setSearchParams(next, { replace: true })
-  }, [current, requested, searchParams, setSearchParams])
+  }, [current, requested, resourcesReady, searchParams, setSearchParams])
 
   /**
    * Ieșirea din pasul mare. Înainte, mersul înainte căuta primul pas nelocked — o a doua părere

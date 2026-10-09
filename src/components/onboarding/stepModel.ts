@@ -53,9 +53,7 @@ const STEP_SECTION_KEYS: Record<string, string[]> = {
   eligibility: [],
   pfa: ['Pfa'],
   fiscal: [],
-  arr: ['AutorizatieTransport'],
-  platforms: [],
-  vehicle: ['CopieConforma', 'Vehicul'],
+  arr_fleet: [],
 }
 
 const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
@@ -208,9 +206,7 @@ const STEP_ESTIMATES: Record<string, string> = {
   eligibility: '~5 minute',
   pfa: '~10 minute',
   fiscal: '~5 minute',
-  arr: '~10 minute',
-  platforms: '~5 minute',
-  vehicle: '~10 minute',
+  arr_fleet: '~15 minute',
 }
 
 /** Estimarea pasului curent, sau `null` dacă nu mai e nimic de completat acolo. */

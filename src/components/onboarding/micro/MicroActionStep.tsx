@@ -1,5 +1,5 @@
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
-import { Alert, Button, Stack, Typography } from '@mui/material'
+import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material'
 import { useState } from 'react'
 
 import { getErrorMessage } from '../../../utils/errorHandler'
@@ -31,14 +31,18 @@ export function MicroActionStep({
 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   if (!def.action) return null
+
+  const enabled = def.action.enabledWhen?.(context) ?? true
 
   const run = async () => {
     setBusy(true)
     setError(null)
     try {
       await def.action?.run(context)
+      if (def.action?.successDialog) setDialogOpen(true)
       await onDone()
     } catch (err) {
       setError(getErrorMessage(err, 'Nu am putut face asta. Încearcă din nou.'))
@@ -76,7 +80,7 @@ export function MicroActionStep({
           variant="contained"
           size="large"
           onClick={() => void run()}
-          disabled={busy}
+          disabled={busy || !enabled}
           sx={{
             alignSelf: 'flex-start',
             py: 1.2,
@@ -91,6 +95,20 @@ export function MicroActionStep({
         >
           {busy ? def.action.busyLabel : def.action.label}
         </Button>
+      )}
+
+      {def.action.successDialog && (
+        <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
+          <DialogTitle sx={{ fontWeight: 800 }}>{def.action.successDialog.title}</DialogTitle>
+          <DialogContent>
+            <Typography sx={{ color: TOKENS.textMuted, lineHeight: 1.6 }}>{def.action.successDialog.message}</Typography>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button variant="contained" onClick={() => setDialogOpen(false)}>
+              Am înțeles
+            </Button>
+          </DialogActions>
+        </Dialog>
       )}
     </Stack>
   )

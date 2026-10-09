@@ -1,9 +1,7 @@
 import type { MicroStepDef } from '../microStepTypes'
 import { eligibilityMicroSteps } from './eligibility'
-import { arrMicroSteps } from './arr'
+import { arrFleetMicroSteps } from './arrFleet'
 import { fiscalMicroSteps } from './fiscal'
-import { platformsMicroSteps } from './platforms'
-import { vehicleMicroSteps } from './vehicle'
 import { pfaMicroSteps } from './pfa'
 
 /**
@@ -16,9 +14,7 @@ export const MICRO_STEPS: Record<string, MicroStepDef[]> = {
   eligibility: eligibilityMicroSteps,
   pfa: pfaMicroSteps,
   fiscal: fiscalMicroSteps,
-  arr: arrMicroSteps,
-  platforms: platformsMicroSteps,
-  vehicle: vehicleMicroSteps,
+  arr_fleet: arrFleetMicroSteps,
 }
 
 export const microStepsOf = (macroKey: string | null): MicroStepDef[] =>
@@ -34,7 +30,5 @@ export {
   eligibilityMicroSteps,
   pfaMicroSteps,
   fiscalMicroSteps,
-  arrMicroSteps,
-  platformsMicroSteps,
-  vehicleMicroSteps,
+  arrFleetMicroSteps,
 }

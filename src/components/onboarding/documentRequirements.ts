@@ -82,71 +82,20 @@ export const DOCUMENT_REQUIREMENTS: Record<string, DocumentRequirement[]> = {
       originStep: 'fiscal',
     },
   ],
-  arr: [
-    {
-      category: 'CertificatInregistrare',
-      label: 'Certificat de înregistrare (CAEN 4933)',
-      originStep: 'pfa',
-    },
-    {
-      category: 'CertificatConstatator',
-      label: 'Certificat constatator (CAEN 4933)',
-      originStep: 'arr',
-    },
-    {
-      category: 'AtestatTransport',
-      label: 'Certificat de atestare profesională (atestat)',
-      alsoAccepts: ['AtestatSofer'],
-      originStep: 'eligibility',
-    },
-    {
-      category: 'CazierJudiciar',
-      label: 'Cazier judiciar',
-      originStep: 'arr',
-    },
-    // Două avize distincte: emise de instituții diferite, cu valabilități proprii. Erau tratate
-    // ca unul singur, deci un aviz expirat nu se putea distinge de celălalt (spec fix-uri §7).
-    {
-      category: 'AdeverintaMedicala',
-      label: 'Aviz medical',
-      originStep: 'arr',
-    },
-    {
-      category: 'AvizPsihologic',
-      label: 'Aviz psihologic',
-      originStep: 'arr',
-    },
-    {
-      category: 'DovadaPlataArr',
-      label: 'Dovada plății tarifului ARR',
-      originStep: 'arr',
-    },
-    {
-      category: 'AutorizatieTransportAlternativ',
-      label: 'Autorizația de transport alternativ',
-      originStep: 'arr',
-    },
-  ],
-  platforms: [],
-  vehicle: [
-    {
-      category: 'Talon',
-      label: 'Talon / ITP',
-      alsoAccepts: ['ITP'],
-      originStep: 'vehicle',
-    },
-    { category: 'CarteIdentitateAuto', label: 'Carte de identitate auto', originStep: 'vehicle' },
-    { category: 'ContractVehicul', label: 'Contract vehicul', originStep: 'vehicle' },
-    { category: 'RCA', label: 'RCA', originStep: 'vehicle' },
-    { category: 'AsigurareCalatori', label: 'Asigurare călători', originStep: 'vehicle' },
-    {
-      category: 'DovadaPlataCopieConformaEcusoane',
-      label: 'Dovada plății copiei conforme și a ecusoanelor',
-      originStep: 'vehicle',
-    },
-    { category: 'CopieConforma', label: 'Copie conformă', originStep: 'vehicle' },
-    { category: 'EcusonUber', label: 'Ecuson Uber', originStep: 'vehicle' },
-    { category: 'EcusonBolt', label: 'Ecuson Bolt', originStep: 'vehicle' },
+  // Pasul „ARR & Cont Flotă”: actele clientului. Autorizația, copia conformă și ecusoanele le
+  // încarcă agentul din admin, deci nu sunt cerințe aici.
+  arr_fleet: [
+    { category: 'AdeverintaMedicala', label: 'Aviz medical', originStep: 'arr_fleet' },
+    { category: 'AvizPsihologic', label: 'Aviz psihologic', originStep: 'arr_fleet' },
+    { category: 'CazierJudiciar', label: 'Cazier judiciar', originStep: 'arr_fleet' },
+    { category: 'DovadaPlataArr', label: 'Dovada plății', originStep: 'arr_fleet' },
+    { category: 'ContractComodat', label: 'Comodat autentificat la notariat', originStep: 'arr_fleet' },
+    { category: 'ContractInchiriere', label: 'Contract de închiriere', originStep: 'arr_fleet' },
+    { category: 'ContractLeasing', label: 'Contract de leasing', originStep: 'arr_fleet' },
+    { category: 'Talon', label: 'Talon', originStep: 'arr_fleet' },
+    { category: 'RCA', label: 'Asigurare RCA', originStep: 'arr_fleet' },
+    { category: 'AsigurareCalatori', label: 'Asigurare de călători și bagaje', originStep: 'arr_fleet' },
+    { category: 'Casco', label: 'CASCO', originStep: 'arr_fleet' },
   ],
 }
 

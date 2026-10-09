@@ -26,6 +26,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
 import { fade } from '../../../panel/tokens'
 import AdminExtractedFields from './AdminExtractedFields'
+import { ArrFleetReview } from './ArrFleetReview'
 import { VatRegistrationBlock } from '../../../../shared/accounting/ui/workspace/VatRegistrationCard'
 import { DocumentRejectDialog } from './DocumentRejectDialog'
 import { DocumentRow, SectionSkeleton } from '../../../admin'
@@ -33,12 +34,9 @@ import { documentService, type DocumentSummary } from '../../../../services/docu
 import {
   onboardingService,
   type AdminFiscalReview,
-  type DossierReadiness,
   type OnboardingAnswerRecord,
   type OnboardingState,
   type OnboardingStep,
-  type PlatformOnboardingState,
-  type VehicleState,
 } from '../../../../services/onboarding.service'
 import { formatDocumentCategory } from '../../../../utils/formatters'
 import { getErrorMessage } from '../../../../utils/errorHandler'
@@ -183,6 +181,7 @@ const ORIGIN_LABELS: Record<DocumentSummary['origin'], string> = {
   Prefilled: 'Precompletat',
   Inherited: 'Moștenit',
   SystemGenerated: 'Generat de sistem',
+  AdminUpload: 'Încărcat de agent',
 }
 
 /** Chip cu verdictul prevalidării AI + tooltip cu detaliile extrase. */
@@ -351,219 +350,6 @@ function PfaReview({ state }: { state: OnboardingState }) {
         <Fact label="Poate plăti?" value={state.canPay ? 'Da — dosarul e semnat' : 'Nu încă — dosarul nu e semnat'} />
       )}
       {forming && <Fact label="Dosar înființare" value={[state.companyFormationStatus, state.companyFormationStage].filter(Boolean).join(' · ')} />}
-    </Box>
-  )
-}
-
-/* ── Pasul 5: conturile Uber / Bolt ── */
-
-const EXISTING_ACCOUNT_LABELS: Record<string, string> = {
-  HasOperatorAccount: 'Are deja cont de operator',
-  None: 'Nu are cont',
-  DriverOnly: 'Are doar cont de șofer',
-  Unknown: 'Nu știe',
-}
-
-/**
- * Ce a completat clientul la pasul Uber & Bolt. Validarea pasului trece conturile alese pe „Activ" —
- * asta bifează pasul la client. Nu mai există un status de cont ales de mână: era un pas intermediar
- * pe care nu-l folosea nimeni, iar validarea îl suprascria oricum.
- */
-function PlatformAccountsReview({
-  pfaId,
-  canValidate,
-  onDone,
-  onSnackbar,
-}: {
-  pfaId: string
-  canValidate: boolean
-  onDone: () => Promise<void>
-  onSnackbar: (message: string, severity: 'success' | 'error') => void
-}) {
-  const [platforms, setPlatforms] = useState<PlatformOnboardingState | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    onboardingService
-      .getPlatformOnboardingForRegistration(pfaId)
-      .then((data) => {
-        if (!cancelled) setPlatforms(data)
-      })
-      .catch(() => {
-        if (!cancelled) setPlatforms(null)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [pfaId])
-
-  const reload = async () => setPlatforms(await onboardingService.getPlatformOnboardingForRegistration(pfaId))
-
-  const validateAll = async () => {
-    setSaving('all')
-    try {
-      for (const account of (platforms?.platforms ?? []).filter((p) => p.isSelectedByUser)) {
-        if (account.onboardingStatus !== 'Active') {
-          await onboardingService.advancePlatformOnboarding(pfaId, account.provider, 'Active')
-        }
-      }
-      await reload()
-      onSnackbar('Pasul Uber & Bolt e validat: conturile sunt active.', 'success')
-      await onDone()
-    } catch (err) {
-      onSnackbar(getErrorMessage(err, 'Nu am putut valida pasul. Încearcă din nou.'), 'error')
-    } finally {
-      setSaving(null)
-    }
-  }
-
-  if (loading) return <CircularProgress size={20} />
-
-  const chosen = (platforms?.platforms ?? []).filter((p) => p.isSelectedByUser)
-  const requested = chosen.length === 2 ? 'Uber și Bolt' : `Doar ${chosen[0]?.provider ?? ''}`
-
-  if (chosen.length === 0) {
-    return <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>Clientul nu a ales încă nicio platformă.</Typography>
-  }
-
-  return (
-    <Stack spacing={3}>
-      <Fact label="Conturi cerute" value={requested} emphasis="info" />
-      {chosen.map((account) => (
-        <Box key={account.provider}>
-          <Typography sx={{ fontWeight: 800, color: TOKENS.ink, mb: 1 }}>{account.provider}</Typography>
-          <Fact label="Are cont?" value={EXISTING_ACCOUNT_LABELS[account.existingAccountAnswer ?? ''] ?? '—'} />
-          <Fact label="Email flotă" value={account.email ?? '—'} />
-          <Fact label="Telefon flotă" value={account.phone ?? '—'} />
-          <Fact label="Parolă flotă" value={account.hasPassword ? 'Salvată' : 'Lipsește'} emphasis={account.hasPassword ? undefined : 'warning'} />
-          <Fact label="ID operator" value={account.operatorAccountId ?? '—'} />
-          <Fact
-            label="Are cont de șofer?"
-            value={account.driverHasExistingAccount == null ? '—' : account.driverHasExistingAccount ? 'Da' : 'Nu'}
-          />
-          <Fact label="Nume șofer" value={account.driverFullName ?? '—'} />
-          <Fact label="Email șofer" value={account.driverEmail ?? '—'} />
-          <Fact label="Telefon șofer" value={account.driverPhone ?? '—'} />
-        </Box>
-      ))}
-
-      <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
-        <StatePill
-          tone={platforms?.fleetAccountsAccepted ? 'success' : 'warning'}
-          label={platforms?.fleetAccountsAccepted ? 'Permisiune conturi fleet: acceptată' : 'Permisiune conturi fleet: lipsă'}
-        />
-        {chosen.some((p) => p.provider === 'Bolt') && (
-          <StatePill
-            tone={platforms?.boltApiAccepted ? 'success' : 'warning'}
-            label={platforms?.boltApiAccepted ? 'Bolt Fleet API: acceptat' : 'Bolt Fleet API: lipsă'}
-          />
-        )}
-      </Stack>
-
-      {canValidate && chosen.some((p) => p.onboardingStatus !== 'Active') && (
-        <ValidateBar
-          hint={'Validarea trece conturile alese pe „Activ" și deschide pasul următor.'}
-          busy={saving !== null}
-          label="Validează pasul (activează conturile)"
-          onValidate={() => void validateAll()}
-        />
-      )}
-    </Stack>
-  )
-}
-
-/* ── Pasul 6: vehiculul, copia conformă și ecusoanele ── */
-
-const OWNERSHIP_LABELS: Record<string, string> = {
-  Owned: 'Proprietate',
-  Rented: 'Închiriată',
-  Leased: 'Leasing',
-  Comodat: 'Comodat',
-  AddedLater: 'O adaugă mai târziu',
-}
-
-const COPY_STATUS_LABELS: Record<string, string> = {
-  Draft: 'Dosar negenerat',
-  DossierGenerated: 'Dosar generat',
-  Submitted: 'Depus',
-  Issued: 'Eliberată',
-  Rejected: 'Respinsă',
-}
-
-/**
- * Ce a cerut clientul la pasul 6. Adminul vedea doar actele, deci nu știa pe ce perioadă vrea copia
- * conformă — exact datele cu care se depune dosarul.
- */
-function VehicleReview({ pfaId, refreshKey }: { pfaId: string; refreshKey: number }) {
-  const [vehicle, setVehicle] = useState<VehicleState | null>(null)
-  const [failed, setFailed] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    onboardingService
-      .getVehicleReview(pfaId)
-      .then((data) => {
-        if (!cancelled) setVehicle(data)
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [pfaId, refreshKey])
-
-  if (failed) return <Alert severity="warning">Nu am putut încărca datele vehiculului.</Alert>
-  if (!vehicle) return <CircularProgress size={20} />
-
-  const copy = vehicle.copyRequest
-  const car = [vehicle.plateNumber, vehicle.make, vehicle.model, vehicle.firstRegistrationYear].filter(Boolean).join(' · ')
-  const pending = vehicle.dossierPendingReview ?? []
-
-  return (
-    <Box>
-      <Fact
-        label="Mașina"
-        value={vehicle.addLater ? 'O adaugă mai târziu' : car || '—'}
-        emphasis={car || vehicle.addLater ? undefined : 'warning'}
-      />
-      <Fact label="Regim" value={OWNERSHIP_LABELS[vehicle.ownershipMode] ?? vehicle.ownershipMode} />
-      {vehicle.vin && <Fact label="VIN" value={vehicle.vin} />}
-      <Fact
-        label="Copie conformă"
-        value={copy ? `${copy.years} ${copy.years === 1 ? 'an' : 'ani'} · ${lei(copy.totalFeeSnapshotBani)}` : 'Perioada nu e aleasă încă'}
-        emphasis={copy ? 'info' : 'warning'}
-      />
-      {copy && (
-        <Fact
-          label="Dosar copie"
-          value={[
-            COPY_STATUS_LABELS[copy.status] ?? copy.status,
-            copy.dossierGeneratedAtUtc ? `generat ${new Date(copy.dossierGeneratedAtUtc).toLocaleDateString('ro-RO')}` : null,
-            copy.submittedAtUtc ? `depus ${new Date(copy.submittedAtUtc).toLocaleDateString('ro-RO')}` : null,
-            copy.copyConformaNumber ? `nr. ${copy.copyConformaNumber}` : null,
-          ]
-            .filter(Boolean)
-            .join(' · ')}
-        />
-      )}
-      {vehicle.badges.length === 0 ? (
-        <Fact label="Ecusoane" value="Niciunul cerut" />
-      ) : (
-        vehicle.badges.map((badge) => (
-          <Fact
-            key={badge.provider}
-            label={`Ecusoane ${badge.provider}`}
-            value={`${badge.setCount} ${badge.setCount === 1 ? 'set' : 'seturi'} · ${lei(badge.totalFeeSnapshotBani)} · ${badge.status}`}
-          />
-        ))
-      )}
-      {pending.length > 0 && <Fact label="Dosarul așteaptă" value={pending.join(', ')} emphasis="warning" />}
     </Box>
   )
 }
@@ -801,94 +587,6 @@ function ValidateBar({
   )
 }
 
-/* ── Pașii 4 și 6: actele dosarului ── */
-
-/**
- * Înainte de dosar: clientul încarcă actele, echipa le validează dintr-un clic, abia apoi clientul
- * poate genera dosarul. E altceva decât „Validează pasul”, care vine la final — după ce clientul
- * depune dosarul și încarcă autorizația (sau copia conformă) primită.
- */
-function DossierDocumentsValidation({
-  pfaId,
-  step,
-  refreshKey,
-  onDone,
-  onSnackbar,
-}: {
-  pfaId: string
-  step: 'arr' | 'vehicle'
-  refreshKey: number
-  onDone: () => Promise<void>
-  onSnackbar: (message: string, severity: 'success' | 'error') => void
-}) {
-  const [readiness, setReadiness] = useState<DossierReadiness | null>(null)
-  const [busy, setBusy] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    onboardingService
-      .getDossierReadiness(pfaId, step)
-      .then((loaded) => !cancelled && setReadiness(loaded))
-      .catch(() => !cancelled && setReadiness(null))
-    return () => {
-      cancelled = true
-    }
-  }, [pfaId, step, refreshKey])
-
-  if (!readiness) return null
-
-  const validate = async () => {
-    setBusy(true)
-    try {
-      setReadiness(await onboardingService.validateDossierDocuments(pfaId, step))
-      onSnackbar('Actele pentru dosar sunt validate. Clientul poate genera dosarul.', 'success')
-      await onDone()
-    } catch (err) {
-      onSnackbar(getErrorMessage(err, 'Nu am putut valida actele pentru dosar.'), 'error')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const ready = readiness.missing.length === 0 && readiness.awaitingValidation.length === 0
-
-  return (
-    <Box data-testid={`dossier-documents-${step}`} sx={{ p: 2, borderRadius: `${TOKENS.radius.md}px`, bgcolor: fade(TOKENS.ink, 0.025) }}>
-      <Typography sx={{ fontWeight: 700, mb: 0.75 }}>Actele pentru dosar</Typography>
-      {ready ? (
-        <Typography variant="body2" sx={{ color: TONE_COLOR.success, fontWeight: 600 }}>
-          Validate. Clientul poate genera dosarul; pasul se validează după ce încarcă{' '}
-          {step === 'arr' ? 'autorizația primită de la ARR' : 'copia conformă și ecusoanele'}.
-        </Typography>
-      ) : (
-        <Stack spacing={1.25}>
-          {readiness.missing.length > 0 && (
-            <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
-              Clientul n-a încărcat încă: {readiness.missing.join(', ')}.
-            </Typography>
-          )}
-          {readiness.awaitingValidation.length > 0 && (
-            <Typography variant="body2" sx={{ color: TOKENS.textMuted }}>
-              De validat: {readiness.awaitingValidation.join(', ')}.
-            </Typography>
-          )}
-          <Box>
-            <Button
-              variant="contained"
-              disabled={busy || readiness.missing.length > 0}
-              startIcon={busy ? <CircularProgress size={16} color="inherit" /> : <CheckCircleRoundedIcon />}
-              onClick={() => void validate()}
-              sx={{ fontWeight: 700, boxShadow: 'none' }}
-            >
-              Validează documentele pentru dosar
-            </Button>
-          </Box>
-        </Stack>
-      )}
-    </Box>
-  )
-}
-
 /* ── Panoul ── */
 
 export function OnboardingSectionsPanel({
@@ -1010,6 +708,9 @@ export function OnboardingSectionsPanel({
           formatDocumentCategory(doc.category),
           doc.expiresAtUtc ? 'Expiră ' + new Date(doc.expiresAtUtc).toLocaleDateString('ro-RO') : null,
           !doc.isUserFacing ? (ORIGIN_LABELS[doc.origin] ?? doc.origin) + ' · ascuns clientului' : null,
+          doc.origin === 'AdminUpload' ? ORIGIN_LABELS.AdminUpload : null,
+          doc.documentNumber ? `Nr. ${doc.documentNumber}` : null,
+          doc.isSuperseded ? 'Înlocuit' : null,
         ]
           .filter(Boolean)
           .join(' · ')}
@@ -1177,18 +878,16 @@ export function OnboardingSectionsPanel({
                   </Box>
                 )}
 
-                {group.key === 'vehicle' && (
-                  <Box>
-                    <Subheading>Ce a cerut clientul</Subheading>
-                    <VehicleReview pfaId={pfaId} refreshKey={reviewTick} />
-                  </Box>
-                )}
-
-                {group.key === 'platforms' && (
-                  <Box>
-                    <Subheading>Conturile alese</Subheading>
-                    <PlatformAccountsReview pfaId={pfaId} canValidate={canValidate} onDone={loadState} onSnackbar={onSnackbar} />
-                  </Box>
+                {group.key === 'arr_fleet' && hasRegistration && (
+                  <ArrFleetReview
+                    pfaId={pfaId}
+                    refreshKey={reviewTick}
+                    onChanged={async () => {
+                      await onDocumentsChanged?.()
+                      await loadState()
+                    }}
+                    onSnackbar={onSnackbar}
+                  />
                 )}
 
                 {/* Documente */}
@@ -1259,19 +958,6 @@ export function OnboardingSectionsPanel({
                       .sort((a, b) => b.uploadedAtUtc.localeCompare(a.uploadedAtUtc))[0]}
                     onDone={loadState}
                     onMandateRegenerated={async () => {
-                      await onDocumentsChanged?.()
-                      await loadState()
-                    }}
-                    onSnackbar={onSnackbar}
-                  />
-                )}
-
-                {(group.key === 'arr' || group.key === 'vehicle') && !isLocked && step?.state !== 'completed' && (
-                  <DossierDocumentsValidation
-                    pfaId={pfaId}
-                    step={group.key}
-                    refreshKey={reviewTick}
-                    onDone={async () => {
                       await onDocumentsChanged?.()
                       await loadState()
                     }}

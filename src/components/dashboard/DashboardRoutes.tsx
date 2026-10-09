@@ -72,6 +72,7 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
       <Route path={rel(PFA_PATHS.docsPersonal)} element={<DocumentsGroupPage group="personal" />} />
       <Route path={rel(PFA_PATHS.docsPfa)} element={<DocumentsGroupPage group="pfa" />} />
       <Route path={rel(PFA_PATHS.docsVehicle)} element={<DocumentsGroupPage group="vehicle" />} />
+      <Route path={rel(PFA_PATHS.docsTransport)} element={<DocumentsGroupPage group="transport" />} />
       <Route
         path={rel(PFA_PATHS.docsRecurring)}
         element={

@@ -44,6 +44,11 @@ const GROUP_COPY: Record<DocumentGroup, { title: string; subtitle: string; categ
     subtitle: 'Actele autoturismului cu care lucrezi pe platforme.',
     category: 'Talon',
   },
+  transport: {
+    title: 'Documente transport',
+    subtitle: 'Autorizația de transport, copia conformă și ecusoanele, obținute de agentul RIDElance.',
+    category: 'AutorizatieTransportAlternativ',
+  },
 }
 
 /** Categoria în care se încarcă un document nou pentru fiecare tip din registry. */
@@ -62,9 +67,7 @@ const UPLOAD_CATEGORY: Record<string, string> = {
   rca: 'RCA',
   'passenger-insurance': 'AsigurareCalatori',
   casco: 'Casco',
-  'copie-conforma': 'CopieConforma',
-  'ecuson-uber': 'EcusonUber',
-  'ecuson-bolt': 'EcusonBolt',
+  'vehicle-contract': 'ContractInchiriere',
 }
 
 /**
@@ -110,12 +113,15 @@ function DocumentRow({
   onView,
   onDownload,
   onReplace,
+  readOnly = false,
 }: {
   item: DocumentOverviewItem
   busy: boolean
   onView: () => void
   onDownload: () => void
   onReplace: (file: File) => void
+  /** Actele obținute de agent (transport): clientul le vede, nu le încarcă. */
+  readOnly?: boolean
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null)
   const hasDocument = item.documentId !== null
@@ -162,7 +168,7 @@ function DocumentRow({
             )}
             {!hasDocument && (
               <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.8rem' }}>
-                Nu avem încă acest document.
+                {readOnly ? 'Îl obține agentul RIDElance.' : 'Nu avem încă acest document.'}
               </Typography>
             )}
           </Stack>
@@ -188,40 +194,44 @@ function DocumentRow({
             </>
           )}
 
-          <input
-            ref={inputRef}
-            type="file"
-            hidden
-            accept="image/*,application/pdf"
-            onChange={(event) => {
-              const file = event.target.files?.[0]
-              if (file) onReplace(file)
-              event.target.value = ''
-            }}
-          />
-          <Button
-            size="small"
-            variant={hasDocument ? 'outlined' : 'contained'}
-            startIcon={busy ? <CircularProgress size={14} color="inherit" /> : <UploadRoundedIcon />}
-            onClick={() => inputRef.current?.click()}
-            disabled={busy}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 700,
-              borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
-              whiteSpace: 'nowrap',
-              ...(hasDocument
-                ? {}
-                : {
-                    bgcolor: DASHBOARD_TOKENS.primary,
-                    color: DASHBOARD_TOKENS.ink,
-                    boxShadow: 'none',
-                    '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong, boxShadow: 'none' },
-                  }),
-            }}
-          >
-            {hasDocument ? 'Înlocuiește' : 'Încarcă'}
-          </Button>
+          {!readOnly && (
+            <>
+            <input
+              ref={inputRef}
+              type="file"
+              hidden
+              accept="image/*,application/pdf"
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                if (file) onReplace(file)
+                event.target.value = ''
+              }}
+            />
+            <Button
+              size="small"
+              variant={hasDocument ? 'outlined' : 'contained'}
+              startIcon={busy ? <CircularProgress size={14} color="inherit" /> : <UploadRoundedIcon />}
+              onClick={() => inputRef.current?.click()}
+              disabled={busy}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 700,
+                borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
+                whiteSpace: 'nowrap',
+                ...(hasDocument
+                  ? {}
+                  : {
+                      bgcolor: DASHBOARD_TOKENS.primary,
+                      color: DASHBOARD_TOKENS.ink,
+                      boxShadow: 'none',
+                      '&:hover': { bgcolor: DASHBOARD_TOKENS.primaryStrong, boxShadow: 'none' },
+                    }),
+              }}
+            >
+              {hasDocument ? 'Înlocuiește' : 'Încarcă'}
+            </Button>
+            </>
+          )}
         </Stack>
       </Stack>
     </Paper>
@@ -334,6 +344,7 @@ export function DocumentsGroupPage({ group }: { group: DocumentGroup }) {
               onView={() => item.documentId && openDocument(item.documentId, item.originalFileName ?? item.label)}
               onDownload={() => withDocument(item, documentService.downloadAndSave)}
               onReplace={(file) => handleReplace(item, file)}
+              readOnly={group === 'transport'}
             />
           ))}
         </Stack>

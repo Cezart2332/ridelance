@@ -55,15 +55,16 @@ export function notificationDestination(notification: Notification, role: string
   if (type === 'ChatRoomMessage') return notification.sectionKey === 'Contabil' ? PFA_PATHS.accountantChat : PFA_PATHS.support
   if (type === 'PaymentConfirmed') return PFA_PATHS.paymentHistoryAnchor
   if (type === 'BankConnection') return PFA_PATHS.bankAccount
-  if (type === 'FleetAccountConfigured') return '/onboarding/platforms'
+  if (type === 'FleetAccountConfigured') return '/onboarding/arr-fleet'
   if (type.startsWith('Onboarding') || type === 'PfaStatusUpdate') {
-    const steps: Record<string, string> = { Pfa: 'pfa', Fiscal: 'step2', AutorizatieTransport: 'arr', CopieConforma: 'vehicle', Vehicul: 'vehicle' }
+    const steps: Record<string, string> = { Pfa: 'pfa', Fiscal: 'step2', ArrFleet: 'arr-fleet' }
     return steps[notification.sectionKey ?? ''] ? `/onboarding/${steps[notification.sectionKey!]}` : '/onboarding'
   }
   if (type.startsWith('Document')) {
     const category = notification.sectionKey ?? ''
-    if (['Talon', 'CarteIdentitateAuto', 'RCA', 'ITP', 'AsigurareCalatori', 'Casco', 'CopieConforma', 'EcusonUber', 'EcusonBolt', 'ContractVehicul', 'AcordLeasing'].includes(category)) return PFA_PATHS.docsVehicle
-    if (['CertificatInregistrare', 'CertificatConstatator', 'CertificatTvaIntracomunitar', 'AutorizatieTransportAlternativ', 'RezolutieOnrc', 'AlteDocumenteInfiintare'].includes(category)) return PFA_PATHS.docsPfa
+    if (['AutorizatieTransportAlternativ', 'CopieConforma', 'EcusonUber', 'EcusonBolt'].includes(category)) return PFA_PATHS.docsTransport
+    if (['Talon', 'CarteIdentitateAuto', 'RCA', 'ITP', 'AsigurareCalatori', 'Casco', 'ContractVehicul', 'AcordLeasing', 'ContractComodat', 'ContractInchiriere', 'ContractLeasing'].includes(category)) return PFA_PATHS.docsVehicle
+    if (['CertificatInregistrare', 'CertificatConstatator', 'CertificatTvaIntracomunitar', 'RezolutieOnrc', 'AlteDocumenteInfiintare'].includes(category)) return PFA_PATHS.docsPfa
     if (['ExtrasBancar', 'RaportUber', 'RaportBolt', 'Cheltuiala', 'FacturaComisionUber', 'FacturaComisionBolt'].includes(category)) return PFA_PATHS.docsRecurring
     return PFA_PATHS.documents
   }

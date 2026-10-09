@@ -74,7 +74,7 @@ export interface MicroStepContext {
   eligibility: EligibilityProfile | null
   state: OnboardingState | null
   /**
-   * Sub-stările pașilor (`step2`, `arr`, `platforms`, `vehicle`), încărcate prin
+   * Sub-stările pașilor (`step2`, `arrFleet`), încărcate prin
    * `MICRO_RESOURCES`. Un predicat le citește ca să știe ce a confirmat serverul — altfel
    * „dosarul e generat?" ar trebui ghicit din răspunsurile din sesiune.
    */
@@ -198,6 +198,10 @@ export interface MicroStepDef {
     label: string
     busyLabel: string
     run: (c: MicroStepContext) => Promise<unknown>
+    /** Pop-up arătat după ce acțiunea a reușit — ce urmează de aici (trimiterea pasului). */
+    successDialog?: { title: string; message: string }
+    /** Butonul e activ doar când predicatul e adevărat (toate câmpurile obligatorii completate). */
+    enabledWhen?: (c: MicroStepContext) => boolean
   }
 
   /**
@@ -267,15 +271,14 @@ export type MicroStepSlot =
   | 'bankAccountCta'
   /** Conectarea contului prin open banking: alegerea băncii, datele cerute de ea, autorizarea. */
   | 'bankConnect'
-  /** Contul de trezorerie ARR pentru județul ales, cu butoane de copiere. */
-  | 'arrPaymentDetails'
-  /** Dosarul generat: previzualizare, descărcare și starea „descărcat cel puțin o dată". */
-  | 'arrDossier'
-  | 'vehicleDossier'
+  /** Plata pasului „ARR & Cont Flotă”: suma, ce include și contul. */
+  | 'arrFleetPayment'
+  /** Statusul procedurii „ARR & Cont Flotă” după trimitere. */
+  | 'arrFleetStatus'
   /** Avansul de plătit, cu ce include și butonul care deschide checkoutul Stripe. */
   | 'onboardingAdvance'
-  /** Oferta asigurari.ro pentru RCA, deasupra uploadului poliței. */
-  | 'rcaOffer'
+  /** Linkul către asigurari.ro pentru RCA, asigurarea de călători și CASCO. */
+  | 'insuranceOffer'
   /** Dosarul PFA e la noi: ce am citit din certificate și cât mai durează validarea. */
   | 'pfaPending'
 
@@ -288,8 +291,6 @@ export type MicroStepSlot =
  * pe care n-o poate primi e o fundătură.
  */
 export const BLOCKING_SLOTS = new Set<MicroStepSlot>([
-  'arrDossier',
-  'vehicleDossier',
   // Plata nu se sare: tot ce urmează e lucru pe care îl începem după ce e achitată.
   'onboardingAdvance',
   // Nici conectarea băncii: de când extrasul de cont a ieșit din flux, ea e singura cale prin care
@@ -299,8 +300,6 @@ export const BLOCKING_SLOTS = new Set<MicroStepSlot>([
 
 /** De ce nu se poate continua de pe un ecran cu slot blocant, pe fiecare slot. */
 export const BLOCKING_SLOT_REASONS: Record<string, string> = {
-  arrDossier: 'Generează dosarul, descarcă-l și marchează depunerea ca să poți continua.',
-  vehicleDossier: 'Generează dosarul, descarcă-l și marchează depunerea ca să poți continua.',
   onboardingAdvance: 'Achită avansul ca să putem începe.',
   bankConnect: 'Conectează contul bancar și așteaptă confirmarea băncii.',
 }

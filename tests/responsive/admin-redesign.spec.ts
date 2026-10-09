@@ -126,32 +126,65 @@ test('admin: răspunsurile din onboarding apar la fiecare pas, cu Da/Nu și schi
   await eligibility.screenshot({ path: `test-results/admin-onboarding-answers-${info.project.name}.png` })
 })
 
-test('admin: „Validează documentele pentru dosar” e separat de validarea pasului ARR', async ({ page }) => {
+test('admin: ARR & Cont Flotă — apel telefonic, status cu document oficial și upload tipizat', async ({ page }, info) => {
   await mockAdmin(page)
-  let validated = false
   await page.route('**/pfa-registrations/*/onboarding', (route) => route.fulfill({ json: { pfaRegistrationId: client.id, pfaStatus: 'Validated', sections: [], steps: [
     { key: 'eligibility', status: 'Completed', state: 'completed' },
     { key: 'pfa', status: 'Completed', state: 'completed' },
     { key: 'fiscal', status: 'Completed', state: 'completed' },
-    { key: 'arr', status: 'InProgress', state: 'in_progress' },
+    { key: 'arr_fleet', status: 'AwaitingValidation', state: 'pending_admin' },
   ] } }))
-  await page.route('**/admin/onboarding/*/steps/arr/dossier', (route) => route.fulfill({ json: validated
-    ? { step: 'arr', missing: [], awaitingValidation: [] }
-    : { step: 'arr', missing: [], awaitingValidation: ['Cazier judiciar', 'Aviz psihologic'] } }))
-  await page.route('**/admin/onboarding/*/steps/arr/dossier/validate', (route) => {
-    validated = true
-    return route.fulfill({ json: { step: 'arr', missing: [], awaitingValidation: [] } })
+  let arrFleet = {
+    pfaRegistrationId: client.id, status: 'DocumentsSubmitted', statusLabel: 'Documente primite',
+    platforms: ['Uber', 'Bolt'],
+    driverAccounts: [
+      { platform: 'Uber', hasAccount: true, email: 'sofer@example.test', phone: '+40712345678', fullName: 'Andrei Ionescu', requiresPhoneCall: false },
+      { platform: 'Bolt', hasAccount: false, email: null, phone: null, fullName: null, requiresPhoneCall: true },
+    ],
+    vehicleOwnership: 'Rental', paymentAmountBani: 41600, paymentExplanation: '', paymentDetails: { beneficiary: null, iban: null, bank: null },
+    paymentProofOutdated: false, submittedAtUtc: '2026-10-09T08:00:00Z', reopenedReason: null, missing: [], statusLog: [] as unknown[],
+  }
+  const uploads: string[] = []
+  await page.route('**/admin/onboarding/*/arr-fleet', (route) => route.fulfill({ json: arrFleet }))
+  await page.route('**/admin/onboarding/*/arr-fleet/status', (route) => {
+    const status = route.request().postDataJSON().status
+    if (status === 'AuthorizationIssued') {
+      return route.fulfill({ status: 400, json: { title: 'ArrFleet.OfficialDocumentMissing', detail: 'Încarcă întâi documentul oficial: Autorizație de transport.' } })
+    }
+    arrFleet = { ...arrFleet, status, statusLog: [{ fromStatus: 'DocumentsSubmitted', toStatus: status, changedBy: 'Cezar Popescu', changedAtUtc: '2026-10-09T09:00:00Z' }] }
+    return route.fulfill({ json: arrFleet })
+  })
+  await page.route('**/admin/onboarding/*/arr-fleet/official-documents', (route) => {
+    uploads.push(route.request().postData() ?? '')
+    return route.fulfill({ json: arrFleet })
   })
   await page.goto('/admin?tab=pfa&user=client-review')
 
-  // Pasul la care e clientul se deschide singur.
-  const box = page.getByTestId('dossier-documents-arr')
-  await expect(box.getByText('De validat: Cazier judiciar, Aviz psihologic.')).toBeVisible()
-  // Pasul are, separat, propriul „Validează pasul” — pentru după autorizație.
-  await expect(page.getByRole('button', { name: 'Validează pasul', exact: true })).toBeVisible()
-  await box.getByRole('button', { name: 'Validează documentele pentru dosar' }).click()
-  await expect(box.getByText(/Validate\. Clientul poate genera dosarul/)).toBeVisible()
-  expect(validated).toBe(true)
+  const step = page.locator('#step-arr_fleet')
+  await expect(step.getByText('Necesită apel telefonic — nu are cont')).toBeVisible()
+  await expect(step.getByText('sofer@example.test · +40712345678 · Andrei Ionescu')).toBeVisible()
+  await expect(step.getByText('Contract de închiriere', { exact: true })).toBeVisible()
+  await expect(step.getByText('416 lei')).toBeVisible()
+
+  // Autorizația cere documentul oficial: serverul refuză, iar mesajul ajunge la admin.
+  await step.getByLabel('Status').click()
+  await page.getByRole('option', { name: 'Autorizație obținută' }).click()
+  await step.getByRole('button', { name: 'Salvează statusul' }).click()
+  await expect(page.getByText('Încarcă întâi documentul oficial: Autorizație de transport.')).toBeVisible()
+
+  await step.getByLabel('Status').click()
+  await page.getByRole('option', { name: 'În lucru (ARR / conturi flotă)' }).click()
+  await step.getByRole('button', { name: 'Salvează statusul' }).click()
+  await expect(step.getByText(/Documente primite → În lucru \(ARR \/ conturi flotă\) · Cezar Popescu/)).toBeVisible()
+
+  // Ecusoanele se oferă doar pentru platformele alese; aici ambele.
+  await step.getByLabel('Document').click()
+  await expect(page.getByRole('option', { name: 'Ecuson Bolt' })).toBeVisible()
+  await page.getByRole('option', { name: 'Ecuson Uber' }).click()
+  await step.locator('input[type=file]').setInputFiles({ name: 'ecuson.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') })
+  await expect.poll(() => uploads.length).toBe(1)
+  expect(uploads[0]).toContain('UberBadge')
+  await step.screenshot({ path: `test-results/admin-arr-fleet-${info.project.name}.png` })
 })
 
 test('admin: lista și dosarul PFA se reîmprospătează singure la 10 secunde și din buton', async ({ page }) => {

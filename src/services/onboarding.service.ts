@@ -85,17 +85,6 @@ export interface OnboardingState {
 /** Ce readuce la zero un reset din panoul dev. */
 export type OnboardingDevResetScope = 'step' | 'section' | 'all'
 
-/** Contul de trezorerie al unei agenții teritoriale ARR (spec fix-uri §8.2). */
-export interface ArrAccount {
-  countyCode: string
-  countyName: string
-  beneficiaryName: string
-  treasury: string
-  fiscalCode: string
-  /** Fără spații. Gruparea în blocuri de 4 e decizie de afișare. */
-  iban: string
-}
-
 export type OnboardingStepStatus = 'Locked' | 'InProgress' | 'AwaitingValidation' | 'Completed'
 
 /**
@@ -255,136 +244,59 @@ export interface Step2State {
   canSubmitForReview: boolean
 }
 
-// --- Pasul 3: autorizația ARR ---
-export type ArrStatus = 'Draft' | 'DossierGenerated' | 'Submitted' | 'Issued' | 'Rejected'
-export type ArrSubmissionMethod = 'InPersonByClient' | 'OnlineByRidelance'
-
-export interface ArrState {
-  pfaRegistrationId: string | null
-  agencyName: string | null
-  feeSnapshotBani: number
-  submissionMethod: ArrSubmissionMethod
-  status: ArrStatus
-  hasDossier: boolean
-  dossierDocumentId: string | null
-  dossierGeneratedAtUtc: string | null
-  submittedAtUtc: string | null
-  authorizationDocumentId: string | null
-  authorizationNumber: string | null
-  authorizationIssuedOn: string | null
-  authorizationExpiresOn: string | null
-  adminNote: string | null
-  /** Actele după care așteaptă dosarul: lipsă sau neverificate de echipă. Goală = se poate genera. */
-  dossierPendingReview?: string[] | null
-  /** Acte cerute de dosar care n-au fost încărcate încă. */
-  dossierMissing?: string[] | null
-  /** Acte încărcate, încă nevalidate de echipă („Validează documentele pentru dosar”). */
-  dossierAwaitingValidation?: string[] | null
-}
-
-// --- Pasul 4: conturi Uber & Bolt ---
+// --- Pasul 4: ARR & Cont Flotă ---
 export type PlatformProvider = 'Uber' | 'Bolt'
-export type PlatformOnboardingStatus =
-  | 'NotStarted'
-  | 'Selected'
-  | 'AccountLinked'
-  | 'ContractSigned'
-  | 'Active'
-  | 'Skipped'
 
-export type ExistingAccountAnswer = 'HasOperatorAccount' | 'None' | 'DriverOnly' | 'Unknown'
+export type ArrFleetStatus =
+  | 'Draft'
+  | 'DocumentsSubmitted'
+  | 'InReview'
+  | 'InProgress'
+  | 'AuthorizationIssued'
+  | 'CertifiedCopyIssued'
+  | 'BadgesIssued'
+  | 'Completed'
 
-export interface PlatformAccount {
-  provider: PlatformProvider
-  isSelectedByUser: boolean
-  hasExistingAccount: boolean
-  operatorAccountId: string | null
-  hasAffiliationContract: boolean
-  onboardingStatus: PlatformOnboardingStatus
-  existingAccountAnswer: ExistingAccountAnswer | null
+export type ArrFleetVehicleOwnership = 'Ownership' | 'Loan' | 'Rental' | 'Leasing'
+
+export type ArrFleetOfficialDocumentType = 'TransportAuthorization' | 'CertifiedCopy' | 'UberBadge' | 'BoltBadge'
+
+/** Contul de șofer pe o platformă aleasă. `hasAccount: false` = „Nu am cont”: agentul îl sună pe client. */
+export interface ArrFleetDriverAccount {
+  platform: PlatformProvider
+  hasAccount: boolean | null
   email: string | null
   phone: string | null
-  /** Doar dacă există o parolă salvată — valoarea nu părăsește niciodată serverul. */
-  hasPassword: boolean
-  /** Contul de ȘOFER de pe aceeași platformă — alt cont decât cel de flotă. */
-  /** Are deja cont de șofer: datele sunt ale lui. Null = fără răspuns (dosare vechi). */
-  driverHasExistingAccount?: boolean | null
-  driverEmail: string | null
-  driverPhone: string | null
-  driverFullName: string | null
-  /** Istoric: nu se mai cere în onboarding, dar dosarele vechi îl au. */
-  driverExternalId: string | null
+  fullName: string | null
+  requiresPhoneCall: boolean
 }
 
-export interface PlatformOnboardingState {
-  pfaRegistrationId: string | null
-  platforms: PlatformAccount[]
-  /** Permisiunea de administrare a conturilor de flotă, cerută tot la pasul 5. */
-  fleetAccountsAccepted: boolean
-  /** Integrarea Bolt Fleet API. Doar Bolt o are. */
-  boltApiAccepted: boolean
-}
-
-// --- Pasul 5: vehicul, copie conformă & ecusoane ---
-export type VehicleOwnershipMode = 'Owned' | 'Rented' | 'Leased' | 'Comodat' | 'AddedLater'
-export type VehicleStatus = 'Draft' | 'DocumentsPending' | 'Active'
-export type CopyRequestStatus = 'Draft' | 'DossierGenerated' | 'Submitted' | 'Issued' | 'Rejected'
-export type BadgeStatus = 'Requested' | 'Paid' | 'Issued'
-
-export interface VehicleBadge {
-  provider: PlatformProvider
-  setCount: number
-  feePerSetSnapshotBani: number
-  totalFeeSnapshotBani: number
-  status: BadgeStatus
-  badgeDocumentId: string | null
-}
-
-export interface CopyRequest {
-  years: number
-  feePerYearSnapshotBani: number
-  totalFeeSnapshotBani: number
-  status: CopyRequestStatus
-  hasDossier: boolean
-  dossierDocumentId: string | null
-  dossierGeneratedAtUtc: string | null
+/** Starea pasului „ARR & Cont Flotă”, aceeași pentru client și admin. */
+export interface ArrFleetState {
+  pfaRegistrationId: string
+  status: ArrFleetStatus
+  statusLabel: string
+  platforms: PlatformProvider[]
+  driverAccounts: ArrFleetDriverAccount[]
+  vehicleOwnership: ArrFleetVehicleOwnership | null
+  /** Calculată pe server: 408 lei pentru o platformă, 416 pentru ambele. */
+  paymentAmountBani: number
+  paymentExplanation: string
+  paymentDetails: { beneficiary: string | null; iban: string | null; bank: string | null }
+  /** Dovada plății e pentru o sumă care între timp s-a schimbat. */
+  paymentProofOutdated: boolean
   submittedAtUtc: string | null
-  copyConformaDocumentId: string | null
-  copyConformaNumber: string | null
-  issuedOn: string | null
-  expiresOn: string | null
-  adminNote: string | null
-}
-
-export interface VehicleState {
-  vehicleId: string | null
-  ownershipMode: VehicleOwnershipMode
-  addLater: boolean
-  plateNumber: string | null
-  vin: string | null
-  make: string | null
-  model: string | null
-  firstRegistrationYear: number | null
-  marketplaceCarId: string | null
-  status: VehicleStatus
-  copyRequest: CopyRequest | null
-  badges: VehicleBadge[]
-  copyFeePerYearBani: number
-  badgeFeePerSetBani: number
-  maxCopyYears: number
-  /** Actele după care așteaptă dosarul: lipsă sau neverificate de echipă. Goală = se poate genera. */
-  dossierPendingReview?: string[] | null
-  /** Acte cerute de dosar care n-au fost încărcate încă. */
-  dossierMissing?: string[] | null
-  /** Acte încărcate, încă nevalidate de echipă („Validează documentele pentru dosar”). */
-  dossierAwaitingValidation?: string[] | null
-}
-
-/** Actele unui dosar din admin: ce n-a încărcat clientul și ce așteaptă validarea echipei. */
-export interface DossierReadiness {
-  step: 'arr' | 'vehicle'
+  /** Motivul pentru care un agent a redeschis pasul. */
+  reopenedReason: string | null
+  /** Ce mai lipsește până la trimitere. */
   missing: string[]
-  awaitingValidation: string[]
+  statusLog: { fromStatus: ArrFleetStatus; toStatus: ArrFleetStatus; changedBy: string | null; changedAtUtc: string }[]
+}
+
+export interface ArrFleetDraft {
+  platforms?: PlatformProvider[]
+  driverAccounts?: { platform: PlatformProvider; hasAccount: boolean; email?: string | null; phone?: string | null; fullName?: string | null }[]
+  vehicleOwnership?: ArrFleetVehicleOwnership
 }
 
 /** Un răspuns din onboarding, cum îl vede adminul: ultimul dat și, dacă s-a schimbat, cele dinainte. */
@@ -405,37 +317,54 @@ export const onboardingService = {
     return data
   },
 
-  /** Pasul 4 — starea conturilor de platformă. */
-  async getPlatformOnboarding(): Promise<PlatformOnboardingState> {
-    const { data } = await api.get<PlatformOnboardingState>('/onboarding/platforms')
+  /** Pasul „ARR & Cont Flotă” — starea curentă. */
+  async getArrFleetState(): Promise<ArrFleetState> {
+    const { data } = await api.get<ArrFleetState>('/onboarding/arr-fleet')
     return data
   },
 
-  /** Pasul 4 — selectează platformele. */
-  async selectPlatforms(uberSelected: boolean, boltSelected: boolean): Promise<PlatformOnboardingState> {
-    const { data } = await api.post<PlatformOnboardingState>('/onboarding/platforms/select', { uberSelected, boltSelected })
+  /** Salvează progresul; câmpurile lipsă rămân neschimbate. Suma se recalculează pe server. */
+  async saveArrFleetDraft(draft: ArrFleetDraft): Promise<ArrFleetState> {
+    const { data } = await api.put<ArrFleetState>('/onboarding/arr-fleet', draft)
     return data
   },
 
-  /** Pasul 4 — completează detaliile contului de operator. */
-  async submitPlatformAccount(payload: {
-    provider: PlatformProvider
-    hasExistingAccount: boolean
-    operatorAccountId?: string | null
-    affiliationContractDocumentId?: string | null
-    existingAccountAnswer?: ExistingAccountAnswer | null
-    email?: string | null
-    phone?: string | null
-    /** Se trimite doar când userul o completează; gol înseamnă „păstreaz-o pe cea salvată". */
-    password?: string | null
-    driverEmail?: string | null
-    driverPhone?: string | null
-    driverFullName?: string | null
-    /** Are deja cont de șofer; fără cont, serverul pune datele contului RIDElance. */
-    driverHasExistingAccount?: boolean | null
-    driverExternalId?: string | null
-  }): Promise<PlatformOnboardingState> {
-    const { data } = await api.post<PlatformOnboardingState>('/onboarding/platforms/account', payload)
+  /** Trimite pasul. Serverul validează actele obligatorii. */
+  async submitArrFleet(): Promise<ArrFleetState> {
+    const { data } = await api.post<ArrFleetState>('/onboarding/arr-fleet/submit')
+    return data
+  },
+
+  /** Admin — pasul „ARR & Cont Flotă” al unui dosar. */
+  async getAdminArrFleet(pfaId: string): Promise<ArrFleetState> {
+    const { data } = await api.get<ArrFleetState>(`/admin/onboarding/${pfaId}/arr-fleet`)
+    return data
+  },
+
+  /** Admin — avansează procedura. Statusurile de la autorizație încolo cer documentul oficial. */
+  async changeArrFleetStatus(pfaId: string, status: ArrFleetStatus): Promise<ArrFleetState> {
+    const { data } = await api.patch<ArrFleetState>(`/admin/onboarding/${pfaId}/arr-fleet/status`, { status })
+    return data
+  },
+
+  /** Admin — redeschide pasul pentru corecturi, cu motivul pe care îl vede clientul. */
+  async reopenArrFleet(pfaId: string, reason: string): Promise<ArrFleetState> {
+    const { data } = await api.post<ArrFleetState>(`/admin/onboarding/${pfaId}/arr-fleet/reopen`, { reason })
+    return data
+  },
+
+  /** Admin — încarcă un document oficial; tipul decide unde apare în dashboardul clientului. */
+  async uploadArrFleetOfficialDocument(
+    pfaId: string,
+    payload: { file: File; type: ArrFleetOfficialDocumentType; documentNumber?: string; issuedAt?: string; expiresAt?: string },
+  ): Promise<ArrFleetState> {
+    const form = new FormData()
+    form.append('file', payload.file)
+    form.append('type', payload.type)
+    if (payload.documentNumber) form.append('documentNumber', payload.documentNumber)
+    if (payload.issuedAt) form.append('issuedAt', payload.issuedAt)
+    if (payload.expiresAt) form.append('expiresAt', payload.expiresAt)
+    const { data } = await api.post<ArrFleetState>(`/admin/onboarding/${pfaId}/arr-fleet/official-documents`, form)
     return data
   },
 
@@ -450,26 +379,6 @@ export const onboardingService = {
     consent: { fleetAccountsAccepted: boolean; boltApiAccepted: boolean },
   ): Promise<void> {
     await api.post(`/pfa-registrations/${pfaId}/fleet-consent`, consent)
-  },
-
-  /** Admin — ce a completat șoferul la pasul 5. Pasul n-are documente, deci nu se vede altfel. */
-  async getPlatformOnboardingForRegistration(pfaId: string): Promise<PlatformOnboardingState> {
-    const { data } = await api.get<PlatformOnboardingState>(`/pfa-registrations/${pfaId}/platforms`)
-    return data
-  },
-
-  /** Admin — avansează statusul de onboarding al unei platforme. */
-  async advancePlatformOnboarding(pfaId: string, provider: PlatformProvider, onboardingStatus: PlatformOnboardingStatus): Promise<void> {
-    await api.put(`/pfa-registrations/${pfaId}/platforms/advance`, { provider, onboardingStatus })
-  },
-
-  /**
-   * Pasul 3 — conturile de trezorerie ARR, pentru toate județele. Lista e fixă și mică; se
-   * încarcă o dată și alimentează cardul de plată pe toate ramurile.
-   */
-  async getArrAccounts(): Promise<ArrAccount[]> {
-    const { data } = await api.get<ArrAccount[]>('/onboarding/arr/accounts')
-    return data
   },
 
   /**
@@ -490,108 +399,6 @@ export const onboardingService = {
     targetId?: string,
   ): Promise<void> {
     await api.post(`/dev/onboarding/${onboardingId}/reset`, { scope, targetId: targetId ?? null })
-  },
-
-  /** Pasul 3 — starea cererii ARR (null dacă nu a fost inițiată). */
-  async getArrState(): Promise<ArrState | null> {
-    const { data } = await api.get<ArrState | null>('/onboarding/arr')
-    return data
-  },
-
-  /** Pasul 3 — inițiază/actualizează cererea ARR. */
-  async submitArrRequest(agencyName: string | null, submissionMethod: ArrSubmissionMethod): Promise<ArrState> {
-    const { data } = await api.post<ArrState>('/onboarding/arr', { agencyName, submissionMethod })
-    return data
-  },
-
-  /** Pasul 3 — generează dosarul PDF ARR. */
-  async generateArrDossier(): Promise<ArrState> {
-    const { data } = await api.post<ArrState>('/onboarding/arr/dossier', {})
-    return data
-  },
-
-  /** Pasul 3 — „Am depus dosarul" la ARR. */
-  async markArrSubmitted(): Promise<void> {
-    await api.post('/onboarding/arr/submitted', {})
-  },
-
-  /** Admin — înregistrează autorizația ARR emisă. */
-  async recordArrAuthorization(
-    pfaId: string,
-    payload: {
-      authorizationDocumentId?: string | null
-      authorizationNumber?: string | null
-      authorizationIssuedOn?: string | null
-      authorizationExpiresOn?: string | null
-      adminNote?: string | null
-    },
-  ): Promise<void> {
-    await api.put(`/pfa-registrations/${pfaId}/arr/authorization`, payload)
-  },
-
-  /** Pasul 5 — starea vehiculului, copiei conforme și ecusoanelor. */
-  async getVehicleState(): Promise<VehicleState> {
-    const { data } = await api.get<VehicleState>('/onboarding/vehicle')
-    return data
-  },
-
-  /** Pasul 5 — declară/actualizează vehiculul. */
-  async submitVehicle(payload: {
-    ownershipMode: VehicleOwnershipMode
-    addLater: boolean
-    plateNumber?: string | null
-    vin?: string | null
-    make?: string | null
-    model?: string | null
-    firstRegistrationYear?: number | null
-    marketplaceCarId?: string | null
-  }): Promise<VehicleState> {
-    const { data } = await api.post<VehicleState>('/onboarding/vehicle', payload)
-    return data
-  },
-
-  /** Pasul 5 — solicită copia conformă (perioada) și ecusoanele (per platformă). */
-  async submitCopyRequest(
-    years: number,
-    badges: { provider: PlatformProvider; setCount: number }[],
-  ): Promise<VehicleState> {
-    const { data } = await api.post<VehicleState>('/onboarding/vehicle/copy-request', { years, badges })
-    return data
-  },
-
-  /** Pasul 5 — generează dosarul PDF copie conformă & ecusoane. */
-  async generateVehicleDossier(): Promise<VehicleState> {
-    const { data } = await api.post<VehicleState>('/onboarding/vehicle/dossier', {})
-    return data
-  },
-
-  /** Pasul 5 — „Am depus dosarul" copie conformă la ARR. */
-  async markVehicleSubmitted(): Promise<void> {
-    await api.post('/onboarding/vehicle/submitted', {})
-  },
-
-  /** Admin — înregistrează copia conformă emisă. */
-  async recordCopyConforma(
-    pfaId: string,
-    payload: {
-      copyConformaDocumentId?: string | null
-      copyConformaNumber?: string | null
-      issuedOn?: string | null
-      expiresOn?: string | null
-      adminNote?: string | null
-    },
-  ): Promise<void> {
-    await api.put(`/pfa-registrations/${pfaId}/vehicle/copy-conforma`, payload)
-  },
-
-  /** Admin — avansează statusul unui set de ecusoane. */
-  async advanceBadge(
-    pfaId: string,
-    provider: PlatformProvider,
-    status: BadgeStatus,
-    badgeDocumentId?: string | null,
-  ): Promise<void> {
-    await api.put(`/pfa-registrations/${pfaId}/vehicle/badges/advance`, { provider, status, badgeDocumentId })
   },
 
   /** Pasul 2 — starea combinată (TVA, bancă, Oblio, semnături). */
@@ -740,18 +547,6 @@ export const onboardingService = {
     return data
   },
 
-  /** Actele dosarului ARR (`arr`) sau de copie conformă (`vehicle`): ce lipsește și ce așteaptă validarea. */
-  async getDossierReadiness(pfaId: string, step: 'arr' | 'vehicle'): Promise<DossierReadiness> {
-    const { data } = await api.get<DossierReadiness>(`/admin/onboarding/${pfaId}/steps/${step}/dossier`)
-    return data
-  },
-
-  /** „Validează documentele pentru dosar”: clientul poate genera dosarul. Nu validează pasul. */
-  async validateDossierDocuments(pfaId: string, step: 'arr' | 'vehicle'): Promise<DossierReadiness> {
-    const { data } = await api.post<DossierReadiness>(`/admin/onboarding/${pfaId}/steps/${step}/dossier/validate`)
-    return data
-  },
-
   /** Toate răspunsurile din onboarding ale unui dosar, în ordinea în care au fost date (admin). */
   async getAnswersForRegistration(pfaId: string): Promise<OnboardingAnswerRecord[]> {
     const { data } = await api.get<OnboardingAnswerRecord[]>(`/pfa-registrations/${pfaId}/onboarding/answers`)
@@ -778,12 +573,6 @@ export const onboardingService = {
   /** Ce a făcut clientul la pasul 3 — TVA, banca legată, Oblio — ca adminul să vadă ce validează. */
   async getFiscalReview(pfaId: string): Promise<AdminFiscalReview> {
     const { data } = await api.get<AdminFiscalReview>(`/admin/onboarding/${pfaId}/steps/fiscal`)
-    return data
-  },
-
-  /** Pasul 6 din admin: perioada copiei conforme, ecusoanele și dosarul, cum le vede clientul. */
-  async getVehicleReview(pfaId: string): Promise<VehicleState> {
-    const { data } = await api.get<VehicleState>(`/admin/onboarding/${pfaId}/steps/vehicle`)
     return data
   },
 

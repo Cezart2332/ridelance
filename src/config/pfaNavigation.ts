@@ -61,6 +61,7 @@ export const PFA_PATHS = {
   docsPersonal: at('documente/personale'),
   docsPfa: at('documente/pfa'),
   docsVehicle: at('documente/masina'),
+  docsTransport: at('documente/transport'),
   docsRecurring: at('documente/recurente'),
 
   connections: at('conexiuni'),
@@ -143,6 +144,7 @@ export const PFA_NAV: NavEntry[] = [
       { id: 'docs-personal', label: 'Documente personale', path: PFA_PATHS.docsPersonal, hint: 'Actele tale' },
       { id: 'docs-pfa', label: 'Documente PFA', path: PFA_PATHS.docsPfa, hint: 'Actele firmei' },
       { id: 'docs-vehicle', label: 'Documente mașină', path: PFA_PATHS.docsVehicle, hint: 'Actele autoturismului' },
+      { id: 'docs-transport', label: 'Documente transport', path: PFA_PATHS.docsTransport, hint: 'Autorizație, copie conformă, ecusoane' },
       {
         id: 'docs-recurring',
         label: 'Documentație recurentă',
@@ -251,6 +253,7 @@ export const LEAF_ICONS: Record<string, SvgIconComponent> = {
   [PFA_PATHS.docsPersonal]: FolderRoundedIcon,
   [PFA_PATHS.docsPfa]: FolderRoundedIcon,
   [PFA_PATHS.docsVehicle]: DirectionsCarFilledRoundedIcon,
+  [PFA_PATHS.docsTransport]: ShieldRoundedIcon,
   [PFA_PATHS.docsRecurring]: FolderSpecialRoundedIcon,
   [PFA_PATHS.connBolt]: LinkRoundedIcon,
   [PFA_PATHS.connUber]: LinkRoundedIcon,
@@ -310,7 +313,7 @@ const EXTRA_PAGE_TITLES: Record<string, string> = {
  * Meniul „+” din antet. Fiecare acțiune duce pe pagina care o face; unde pagina are un formular,
  * `?actiune=` i-l deschide (vezi `useQuickActionIntent`).
  */
-const DOCUMENT_PAGES: readonly string[] = [PFA_PATHS.docsPersonal, PFA_PATHS.docsPfa, PFA_PATHS.docsVehicle]
+const DOCUMENT_PAGES: readonly string[] = [PFA_PATHS.docsPersonal, PFA_PATHS.docsPfa, PFA_PATHS.docsVehicle, PFA_PATHS.docsTransport]
 
 const PFA_QUICK_ACTIONS: QuickActionsMenu = {
   title: 'Dashboard PFA',

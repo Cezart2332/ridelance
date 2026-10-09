@@ -1,6 +1,6 @@
 import { api } from '../lib/axios'
 
-export type DocumentGroup = 'personal' | 'pfa' | 'vehicle'
+export type DocumentGroup = 'personal' | 'pfa' | 'vehicle' | 'transport'
 
 /**
  * Starea vine gata calculată de server. Frontendul nu deduce nimic din date: „expiră în X zile"

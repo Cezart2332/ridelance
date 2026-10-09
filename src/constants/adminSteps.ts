@@ -7,7 +7,7 @@ interface AdminStepSection {
   label?: string
 }
 
-/** Cei 6 pași văzuți de admin — oglinda pașilor clientului. Documentele se grupează pe pas;
+/** Cei 4 pași văzuți de admin — oglinda pașilor clientului. Documentele se grupează pe pas;
  *  validarea rămâne pe secțiunile server care declanșează înrolarea. */
 export interface AdminStep {
   key: string
@@ -50,19 +50,14 @@ export const ADMIN_STEPS: AdminStep[] = [
     guidedNote: 'TVA, contul bancar conectat prin open banking și contul Oblio le face clientul. Pachetul de semnături îl trimiți și îl primești înapoi semnat pe email — clientul nu mai are ce încărca aici. Pasul se închide când validezi secțiunea, mai jos.',
   },
   {
-    key: 'arr', order: 3, label: 'Autorizație transport (ARR)',
-    categories: ['CazierJudiciar', 'AdeverintaMedicala', 'AvizPsihologic', 'DovadaPlataArr', 'AutorizatieTransportAlternativ', 'DosarAutorizatieArr'],
-    sections: [{ key: 'AutorizatieTransport' }],
-  },
-  {
-    key: 'platforms', order: 4, label: 'Uber & Bolt',
-    categories: [],
-    guidedNote: 'Pasul n-are documente: clientul completează conturile de flotă și de șofer, iar avansul până la „Activ" îl faci tu, mai jos.',
-  },
-  {
-    key: 'vehicle', order: 5, label: 'Vehicul, copie conformă & ecusoane',
-    categories: ['Talon', 'CarteIdentitateAuto', 'ContractVehicul', 'AcordLeasing', 'ITP', 'RCA', 'CopieConforma', 'EcusonUber', 'EcusonBolt', 'DovadaPlataCopieConformaEcusoane', 'AsigurareCalatori', 'DosarCopieConformaEcusoane'],
-    sections: [{ key: 'CopieConforma', label: 'Copie conformă & ecusoane' }, { key: 'Vehicul', label: 'Documentele mașinii' }],
+    key: 'arr_fleet', order: 3, label: 'ARR & Cont Flotă',
+    categories: [
+      'AdeverintaMedicala', 'AvizPsihologic', 'CazierJudiciar', 'DovadaPlataArr',
+      'ContractComodat', 'ContractInchiriere', 'ContractLeasing',
+      'Talon', 'RCA', 'AsigurareCalatori', 'Casco',
+      'AutorizatieTransportAlternativ', 'CopieConforma', 'EcusonUber', 'EcusonBolt',
+    ],
+    guidedNote: 'Clientul încarcă actele, alege platformele și plătește. Contul ARR, conturile de flotă, autorizația, copia conformă și ecusoanele le obții tu: încarci actele oficiale mai sus și avansezi statusul. Pasul se închide la „Finalizat”.',
   },
 ]
 

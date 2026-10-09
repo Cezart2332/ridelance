@@ -1,20 +1,13 @@
 import { Alert, Box, Stack, Typography } from '@mui/material'
 import { useEffect, useState, type ReactNode } from 'react'
 
-import {
-  onboardingService,
-  type ArrState,
-  type VehicleState,
-} from '../../../services/onboarding.service'
+import type { ArrFleetState } from '../../../services/onboarding.service'
 import { stripeService } from '../../../services/stripe.service'
 import { bankService, type BankConnectionDto, type BankTransactionDto } from '../../../services/bank.service'
 import { getErrorMessage } from '../../../utils/errorHandler'
-import { canonicalCounty } from '../../../data/counties'
 import { BankAccountCta } from '../../common/BankAccountCta'
 import { BankConnectPanel } from '../../banking/BankConnectPanel'
 import { InsuranceLinksGrid } from '../../insurance/InsuranceLinksGrid'
-import { ArrPaymentDetailsCard } from '../arr/ArrPaymentDetailsCard'
-import { DossierPanel } from '../arr/DossierPanel'
 import { CompanyFormationSummary } from '../companyFormation/CompanyFormationSummary'
 import { PfaPendingCard } from '../pfa/PfaPendingCard'
 import type { MicroStepContext, MicroStepSlot } from '../microStepTypes'
@@ -41,29 +34,19 @@ export function MicroStepSlotContent({
       return <BankAccountCta />
     case 'bankConnect':
       return <BankConnectSlot context={context} />
-    case 'arrPaymentDetails': {
-      const isVehicle = context.state?.currentStep === 'vehicle'
-      return (
-        <ArrPaymentDetailsCard
-          county={arrCounty(context)}
-          amountBani={isVehicle ? amountFor(context) : null}
-          amountLabel={isVehicle ? amountLabelFor(context) : undefined}
-        />
-      )
-    }
-    case 'arrDossier':
-      return <ArrDossierSlot />
-    case 'vehicleDossier':
-      return <VehicleDossierSlot />
+    case 'arrFleetPayment':
+      return <ArrFleetPaymentSlot context={context} />
+    case 'arrFleetStatus':
+      return <ArrFleetStatusSlot context={context} />
     case 'onboardingAdvance':
       return <OnboardingAdvanceSlot />
     case 'pfaPending':
       return <PfaPendingSlot />
-    case 'rcaOffer':
+    case 'insuranceOffer':
       return (
         <InsuranceOffer
-          note="N-ai încă poliță? O poți face prin asigurari.ro, la tarifele negociate pentru RIDElance."
-          slugs={['rca', 'casco_econom']}
+          note="RCA-ul, asigurarea de călători și bagaje și CASCO le poți face pe asigurari.ro."
+          slugs={['rca', 'accidents_traveler', 'casco']}
         />
       )
   }
@@ -416,78 +399,95 @@ function InsuranceOffer({ note, slugs }: { note: string; slugs: readonly string[
   )
 }
 
-/**
- * Județul agenției: ce a ales userul acum, altfel ce s-a salvat pe cerere, altfel județul
- * sediului social venit de la server (spec fix-uri §8.1).
- */
-function arrCounty(c: MicroStepContext): string | null {
-  const answered = c.answers['arr_agentie.county']
-  if (typeof answered === 'string' && answered !== '') return answered
+const arrFleetOf = (c: MicroStepContext) => (c.resources.arrFleet as ArrFleetState | undefined) ?? null
 
-  const arr = (c.resources.arr as ArrState | undefined) ?? null
-  return arr?.agencyName || canonicalCounty(c.state?.primaryCounty)
-}
+const lei = (bani: number) => `${(bani / 100).toLocaleString('ro-RO')} lei`
 
 /**
- * Ce se plătește în contul ARR, în funcție de pasul pe care e utilizatorul. Ambele sume sunt
- * stampilate pe cerere la deschiderea ei (`app_settings`) — nu se inventează nimic aici.
+ * Plata pasului „ARR & Cont Flotă”: suma calculată pe server din platformele alese, ce include și
+ * contul în care se plătește. Contul vine din configurarea serverului, nu din cod.
  */
-function amountFor(c: MicroStepContext): number | null {
-  if (c.state?.currentStep === 'vehicle') {
-    const copy = (c.resources.vehicle as VehicleState | undefined)?.copyRequest ?? null
-    return copy ? copy.totalFeeSnapshotBani : null
-  }
+function ArrFleetPaymentSlot({ context }: { context: MicroStepContext }) {
+  const state = arrFleetOf(context)
+  if (!state) return null
 
-  const arr = (c.resources.arr as ArrState | undefined) ?? null
-  return arr ? arr.feeSnapshotBani : null
-}
-
-const amountLabelFor = (c: MicroStepContext) =>
-  c.state?.currentStep === 'vehicle' ? 'copie conformă și ecusoane' : 'tarif autorizație ARR'
-
-function ArrDossierSlot() {
-  const { resources, refresh } = useOnboarding()
-  const arr = (resources.arr as ArrState | undefined) ?? null
+  const { beneficiary, iban, bank } = state.paymentDetails
+  const rows = [
+    { label: 'Beneficiar', value: beneficiary },
+    { label: 'IBAN', value: iban },
+    { label: 'Bancă', value: bank },
+  ].filter((row): row is { label: string; value: string } => Boolean(row.value))
 
   return (
-    <DossierPanel
-      dossier={{
-        hasDossier: arr?.hasDossier === true,
-        documentId: arr?.dossierDocumentId ?? null,
-        generatedAtUtc: arr?.dossierGeneratedAtUtc ?? null,
-        submittedAtUtc: arr?.submittedAtUtc ?? null,
-      }}
-      fileName="Dosar-autorizatie-transport-alternativ.pdf"
-      generate={() => onboardingService.generateArrDossier()}
-      markSubmitted={() => onboardingService.markArrSubmitted()}
-      onChanged={refresh}
-      pendingReview={arr?.dossierPendingReview}
-      missing={arr?.dossierMissing}
-      awaitingValidation={arr?.dossierAwaitingValidation}
-    />
+    <Stack spacing={1.5}>
+      <Box
+        sx={{
+          p: 2.5,
+          borderRadius: `${TOKENS.radius.lg}px`,
+          border: `1px solid ${TOKENS.primaryTint}`,
+          backgroundColor: TOKENS.primarySoft,
+        }}
+      >
+        <Typography sx={{ fontSize: '0.78rem', fontWeight: 800, color: TOKENS.textMuted }}>DE PLATĂ</Typography>
+        <Typography sx={{ fontSize: '2rem', fontWeight: 800, color: TOKENS.ink, lineHeight: 1.2 }}>
+          {lei(state.paymentAmountBani)}
+        </Typography>
+        <Typography sx={{ mt: 1, fontSize: '0.85rem', color: TOKENS.textMuted, lineHeight: 1.6 }}>
+          {state.paymentExplanation}
+        </Typography>
+      </Box>
+
+      {rows.length > 0 && (
+        <Box sx={{ borderRadius: `${TOKENS.radius.md}px`, border: `1px solid ${TOKENS.border}`, overflow: 'hidden' }}>
+          {rows.map((row) => (
+            <Stack
+              key={row.label}
+              direction="row"
+              spacing={2}
+              sx={{
+                justifyContent: 'space-between',
+                px: 2,
+                py: 1.1,
+                borderBottom: `1px solid ${TOKENS.border}`,
+                '&:last-of-type': { borderBottom: 'none' },
+              }}
+            >
+              <Typography sx={{ fontSize: '0.85rem', color: TOKENS.textMuted }}>{row.label}</Typography>
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: TOKENS.ink, textAlign: 'right', wordBreak: 'break-word' }}>
+                {row.value}
+              </Typography>
+            </Stack>
+          ))}
+        </Box>
+      )}
+
+      {state.paymentProofOutdated && (
+        <Alert severity="warning">
+          Ai schimbat platformele după ce ai încărcat dovada plății. Suma de plată e acum {lei(state.paymentAmountBani)}:
+          încarcă dovada pentru suma nouă.
+        </Alert>
+      )}
+    </Stack>
   )
 }
 
-function VehicleDossierSlot() {
-  const { resources, refresh } = useOnboarding()
-  const vehicle = (resources.vehicle as VehicleState | undefined) ?? null
-  const copy = vehicle?.copyRequest ?? null
+/** Statusul procedurii după trimitere, cum îl setează agentul RIDElance. */
+function ArrFleetStatusSlot({ context }: { context: MicroStepContext }) {
+  const state = arrFleetOf(context)
+  // Înainte de trimitere pasul n-are încă un status de procedură.
+  if (!state?.submittedAtUtc) return null
 
   return (
-    <DossierPanel
-      dossier={{
-        hasDossier: copy?.hasDossier === true,
-        documentId: copy?.dossierDocumentId ?? null,
-        generatedAtUtc: copy?.dossierGeneratedAtUtc ?? null,
-        submittedAtUtc: copy?.submittedAtUtc ?? null,
+    <Box
+      sx={{
+        p: 2.5,
+        borderRadius: `${TOKENS.radius.lg}px`,
+        border: `1px solid ${TOKENS.border}`,
+        backgroundColor: TOKENS.surface,
       }}
-      fileName="Dosar-copie-conforma-si-ecusoane.pdf"
-      generate={() => onboardingService.generateVehicleDossier()}
-      markSubmitted={() => onboardingService.markVehicleSubmitted()}
-      onChanged={refresh}
-      pendingReview={vehicle?.dossierPendingReview}
-      missing={vehicle?.dossierMissing}
-      awaitingValidation={vehicle?.dossierAwaitingValidation}
-    />
+    >
+      <Typography sx={{ fontSize: '0.78rem', fontWeight: 800, color: TOKENS.textMuted }}>STATUS</Typography>
+      <Typography sx={{ fontSize: '1.15rem', fontWeight: 800, color: TOKENS.ink }}>{state.statusLabel}</Typography>
+    </Box>
   )
 }

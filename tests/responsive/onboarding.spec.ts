@@ -44,36 +44,14 @@ const steps = [
   },
   {
     order: 3,
-    key: 'arr',
-    label: 'Autorizație transport',
-    status: 'InProgress',
-    state: 'available',
-    ownedBy: 'admin',
-    userPartDone: false,
-    blockReason: null,
-    path: '/onboarding/arr',
-  },
-  {
-    order: 4,
-    key: 'platforms',
-    label: 'Uber & Bolt',
-    status: 'InProgress',
-    state: 'available',
-    ownedBy: 'admin',
-    userPartDone: false,
-    blockReason: null,
-    path: '/onboarding/platforms',
-  },
-  {
-    order: 5,
-    key: 'vehicle',
-    label: 'Vehicul, copie conformă & ecusoane',
+    key: 'arr_fleet',
+    label: 'ARR & Cont Flotă',
     status: 'Locked',
     state: 'locked',
-    ownedBy: 'user',
+    ownedBy: 'admin',
     userPartDone: false,
-    blockReason: 'Finalizează întâi pasul „Autorizație transport”.',
-    path: '/onboarding/vehicle',
+    blockReason: 'Finalizează întâi pasul „Fiscal, bancă & semnături”.',
+    path: '/onboarding/arr-fleet',
   },
 ]
 
@@ -195,7 +173,7 @@ test.describe('onboarding rail', () => {
     await page.setViewportSize(mobile ? { width: 375, height: 812 } : { width: 1440, height: 1000 })
 
     await stubBackend(page)
-    await page.goto('/onboarding/arr', { waitUntil: 'networkidle' })
+    await page.goto('/onboarding/step2', { waitUntil: 'networkidle' })
 
     // Rail-ul (desktop) sau sheet-ul (mobil) conțin aceeași listă semantică de pași.
     if (mobile) {
@@ -230,38 +208,31 @@ test.describe('onboarding rail', () => {
 
   test('un pas în verificare nu blochează pașii independenți', async ({ page }, testInfo) => {
     await stubBackend(page)
-    await page.goto('/onboarding/arr', { waitUntil: 'networkidle' })
+    await page.goto('/onboarding/step2', { waitUntil: 'networkidle' })
 
     // Pe telefon lista de pași stă în sheet-ul de jos, nu în rail.
     if (testInfo.project.name === 'mobile') {
       await page.getByRole('button', { name: 'Vezi toți pașii înrolării' }).click()
     }
 
-    // pfa e AwaitingValidation, dar fiscal/arr/platforms rămân accesibile; doar vehicle e blocat.
-    for (const label of ['Fiscal, bancă & semnături', 'Autorizație transport', 'Uber & Bolt']) {
-      await expect(page.getByRole('button', { name: new RegExp(label) }).first()).toBeEnabled()
-    }
-    await expect(page.getByRole('button', { name: /Vehicul, copie conformă/ }).first()).toBeDisabled()
+    // pfa e AwaitingValidation, dar fiscal rămâne accesibil; ARR & Cont Flotă e blocat.
+    await expect(page.getByRole('button', { name: /Fiscal, bancă & semnături/ }).first()).toBeEnabled()
+    await expect(page.getByRole('button', { name: /ARR & Cont Flotă/ }).first()).toBeDisabled()
   })
 
-  test('documentele din pașii anteriori apar deja încărcate', async ({ page }) => {
-    // De când pasul e spart în micro-pași, documentul se vede pe ecranul care îl cere, nu într-o
-    // listă a întregului pas — deci ecranul se deschide direct, prin `?pas`.
-    await stubBackend(page, [
-      // Încărcat la pasul PFA, cerut din nou la ARR.
-      uploadedDoc('CertificatInregistrare', 'certificat.pdf'),
-      // Încărcat la eligibilitate; la ARR cerința se numește „AtestatTransport", categorie echivalentă.
-      uploadedDoc('AtestatSofer', 'atestat.pdf'),
-    ])
+  test('documentul deja încărcat apare pe ecranul care îl cere', async ({ page }) => {
+    // Documentul se vede pe ecranul care îl cere, deschis direct prin `?pas`.
+    await stubBackend(page, [uploadedDoc('CazierJudiciar', 'cazier.pdf')], {
+      state: {
+        ...onboardingState,
+        steps: steps.map((step) =>
+          step.key === 'arr_fleet' ? { ...step, status: 'InProgress', state: 'available', blockReason: null } : step,
+        ),
+      },
+    })
 
-    await page.goto('/onboarding/arr?pas=arr_CertificatInregistrare', { waitUntil: 'networkidle' })
-    await expect(page.getByText('certificat.pdf')).toBeVisible()
-    await expect(page.getByText(/de la .PFA./)).toBeVisible()
-
-    // Categoria echivalentă contează: atestatul urcat la eligibilitate satisface cerința de la ARR.
-    await page.goto('/onboarding/arr?pas=arr_AtestatTransport', { waitUntil: 'networkidle' })
-    await expect(page.getByText('atestat.pdf')).toBeVisible()
-    await expect(page.getByText(/de la .Eligibilitate./)).toBeVisible()
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_cazier', { waitUntil: 'networkidle' })
+    await expect(page.getByText('cazier.pdf')).toBeVisible()
   })
 })
 
@@ -603,7 +574,7 @@ test.describe('finalul onboardingului', () => {
     steps: steps.map((step) =>
       step.key === 'eligibility'
         ? step
-        : step.key === 'arr'
+        : step.key === 'arr_fleet'
           ? {
               ...step,
               status: 'InProgress',
@@ -616,13 +587,13 @@ test.describe('finalul onboardingului', () => {
   }
 
   test('fără nimic de completat, rădăcina duce la ecranul de final', async ({ page }, testInfo) => {
-    await stubBackend(page, [], { state: { ...doneState, steps: doneState.steps.map((s) => s.key === 'arr' ? { ...s, status: 'AwaitingValidation', state: 'pending_admin', userPartDone: true } : s) } })
+    await stubBackend(page, [], { state: { ...doneState, steps: doneState.steps.map((s) => s.key === 'arr_fleet' ? { ...s, status: 'AwaitingValidation', state: 'pending_admin', userPartDone: true } : s) } })
     await page.goto('/onboarding', { waitUntil: 'networkidle' })
 
     await expect(page).toHaveURL(/\/onboarding\/finalizat/)
     await expect(page.getByRole('heading', { name: 'Ai terminat onboardingul' })).toBeVisible()
     await expect(page.getByText('Un om din echipa RIDElance se uită acum')).toBeVisible()
-    await expect(page.getByText('1 din 6 pași validați')).toBeVisible()
+    await expect(page.getByText('1 din 4 pași validați')).toBeVisible()
     // Captura după tranziția de intrare a pasului, nu în mijlocul ei.
     await page.waitForTimeout(800)
 
@@ -636,7 +607,7 @@ test.describe('finalul onboardingului', () => {
     await page.goto('/onboarding/finalizat', { waitUntil: 'networkidle' })
 
     await page.getByRole('button', { name: 'Corectează' }).click()
-    await expect(page).toHaveURL(/\/onboarding\/arr/)
+    await expect(page).toHaveURL(/\/onboarding\/arr-fleet/)
   })
 })
 
@@ -655,15 +626,15 @@ test.describe('pas respins', () => {
     }
     const arrRejected = {
       ...onboardingState,
-      currentStep: 'arr',
+      currentStep: 'arr_fleet',
       steps: steps.map((step) =>
-        step.key === 'arr' ? { ...step, status: 'InProgress', state: 'rejected', userPartDone: false } : step,
+        step.key === 'arr_fleet' ? { ...step, status: 'InProgress', state: 'rejected', userPartDone: false } : step,
       ),
     }
 
     await page.setViewportSize(mobile ? { width: 375, height: 812 } : { width: 1440, height: 1000 })
     await stubBackend(page, [rejectedCazier], { state: arrRejected })
-    await page.goto('/onboarding/arr', { waitUntil: 'networkidle' })
+    await page.goto('/onboarding/arr-fleet', { waitUntil: 'networkidle' })
 
     // Banner deasupra pasului, pe orice dispozitiv.
     await expect(page.getByRole('alert').filter({ hasText: 'Cazierul e mai vechi de 6 luni.' })).toBeVisible()
@@ -671,7 +642,7 @@ test.describe('pas respins', () => {
     if (!mobile) {
       // Și pe rândul din rail, fără hover.
       await expect(
-        page.getByRole('listitem').filter({ hasText: 'Autorizație transport' }).getByText(/Cazierul e mai vechi/),
+        page.getByRole('listitem').filter({ hasText: 'ARR & Cont Flotă' }).getByText(/Cazierul e mai vechi/),
       ).toBeVisible()
     }
 
@@ -866,59 +837,6 @@ test.describe('pasul 2 — nu am PFA', () => {
   })
 })
 
-test.describe('pasul 6 — vehicul', () => {
-  const vehicleSteps = steps.map((step) =>
-    step.key === 'vehicle'
-      ? { ...step, status: 'InProgress', state: 'in_progress', blockReason: null }
-      : { ...step, status: 'Completed', state: 'completed' },
-  )
-  const json = (body: unknown) => async (route: Route) => {
-    const headers = {
-      'Access-Control-Allow-Origin': (await route.request().headerValue('origin')) ?? '*',
-      'Access-Control-Allow-Credentials': 'true',
-      'Access-Control-Allow-Headers': 'authorization,content-type',
-      'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-    }
-    return route.request().method() === 'OPTIONS'
-      ? route.fulfill({ status: 204, headers })
-      : route.fulfill({ status: 200, headers, contentType: 'application/json', body: JSON.stringify(body) })
-  }
-  const platforms = {
-    pfaRegistrationId: 'reg-1', fleetAccountsAccepted: true, boltApiAccepted: false,
-    platforms: [{ provider: 'Uber', isSelectedByUser: true }, { provider: 'Bolt', isSelectedByUser: false }],
-  }
-
-  test('tot parcursul se vede de la început, cu copia conformă și ecusonul', async ({ page }, info) => {
-    test.skip(info.project.name === 'mobile', 'Lista pasului stă în coloana din dreapta, pe desktop.')
-    await stubBackend(page, [], { state: { ...onboardingState, steps: vehicleSteps } })
-    await page.route(`${API}/onboarding/platforms`, json(platforms))
-    await page.route(`${API}/onboarding/vehicle`, json({
-      vehicleId: 'v1', ownershipMode: 'Owned', status: 'Draft', copyRequest: null, badges: [],
-      copyFeePerYearBani: 10000, badgeFeePerSetBani: 800,
-    }))
-
-    await page.goto('/onboarding/vehicle', { waitUntil: 'networkidle' })
-    const list = page.getByRole('complementary', { name: 'Progresul pasului curent' })
-    for (const label of ['Confirmă cererea', 'Dovada plății', 'Dosarul', 'Copia conformă', 'Ecuson Uber']) {
-      await expect(list.getByText(label, { exact: true })).toBeVisible()
-    }
-    // Doar platformele alese: fără Bolt, fără ecuson Bolt.
-    await expect(list.getByText('Ecuson Bolt', { exact: true })).toHaveCount(0)
-  })
-
-  test('un răspuns vechi fără mașina salvată readuce întrebarea', async ({ page }) => {
-    await stubBackend(page, [], { state: { ...onboardingState, steps: vehicleSteps } })
-    await page.route(`${API}/onboarding/platforms`, json(platforms))
-    await page.route(`${API}/onboarding/vehicle`, json({ vehicleId: null, ownershipMode: null, copyRequest: null, badges: [] }))
-    await page.route(`${API}/onboarding/answers`, json([
-      { stepKey: 'vehicle', questionId: 'mod_detinere', question: 'Cum deții mașina?', value: 'Owned', valueLabel: 'Proprietate', answeredAtUtc: '2026-09-20T10:00:00Z', previousLabels: [] },
-    ]))
-
-    await page.goto('/onboarding/vehicle', { waitUntil: 'networkidle' })
-    await expect(page.getByRole('heading', { name: 'Cum deții mașina?' })).toBeVisible()
-  })
-})
-
 test.describe('pasul fiscal: acordul pentru împuterniciri', () => {
   /**
    * Ultimul ecran al pasului fiscal: omul e de acord cu împuternicirea ANAF și află că pachetul de
@@ -965,5 +883,142 @@ test.describe('pasul fiscal: acordul pentru împuterniciri', () => {
     await expect.poll(() => submitted).toBe(true)
     await expect(page.getByText(/Îți trimitem pe email pachetul de semnături/)).toBeVisible()
     await expect(page.getByRole('button', { name: 'Sunt de acord' })).toHaveCount(0)
+  })
+})
+
+test.describe('pasul 4 — ARR & Cont Flotă', () => {
+  const arrFleetSteps = steps.map((step) =>
+    step.key === 'arr_fleet'
+      ? { ...step, status: 'InProgress', state: 'in_progress', blockReason: null }
+      : { ...step, status: 'Completed', state: 'completed' },
+  )
+
+  const arrFleet = (overrides: Record<string, unknown> = {}) => ({
+    pfaRegistrationId: onboardingState.pfaRegistrationId,
+    status: 'Draft',
+    statusLabel: 'În completare',
+    platforms: ['Uber'],
+    driverAccounts: [{ platform: 'Uber', hasAccount: null, email: null, phone: null, fullName: null, requiresPhoneCall: false }],
+    vehicleOwnership: 'Ownership',
+    paymentAmountBani: 40800,
+    paymentExplanation:
+      'Plata este o sumă întreagă formată din: 300 lei autorizația de transport (valabilă 3 ani), 100 lei copia conformă (valabilă 1 an), 8 lei ecusoane Uber.',
+    paymentDetails: { beneficiary: 'RIDElance SRL', iban: 'RO49AAAA1B31007593840000', bank: 'Banca Test' },
+    paymentProofOutdated: false,
+    submittedAtUtc: null,
+    reopenedReason: null,
+    missing: [],
+    statusLog: [],
+    ...overrides,
+  })
+
+  const personalDocuments = [
+    uploadedDoc('AdeverintaMedicala', 'aviz-medical.pdf'),
+    uploadedDoc('AvizPsihologic', 'aviz-psihologic.pdf'),
+    uploadedDoc('CazierJudiciar', 'cazier.pdf'),
+  ]
+
+  /** Răspunsul serverului pentru `/onboarding/arr-fleet*`, cu cererile reținute pentru verificare. */
+  async function stubArrFleet(page: Page, initial: Record<string, unknown>, documents: unknown[] = []) {
+    let current = initial
+    const requests: { method: string; url: string; body: unknown }[] = []
+    await stubBackend(page, documents, { state: { ...onboardingState, steps: arrFleetSteps } })
+    await page.route(`${API}/onboarding/arr-fleet**`, async (route) => {
+      const request = route.request()
+      const headers = {
+        'Access-Control-Allow-Origin': (await request.headerValue('origin')) ?? '*',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Headers': 'authorization,content-type',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+      }
+      if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers })
+      if (request.method() !== 'GET') {
+        requests.push({ method: request.method(), url: request.url(), body: request.postDataJSON() })
+        if (request.url().endsWith('/submit')) {
+          current = { ...current, submittedAtUtc: '2026-10-09T10:00:00Z', status: 'DocumentsSubmitted', statusLabel: 'Documente primite' }
+        }
+      }
+      return route.fulfill({ status: 200, headers, contentType: 'application/json', body: JSON.stringify(current) })
+    })
+    return requests
+  }
+
+  test('plata arată suma pentru platformele alese și doar ecusoanele lor', async ({ page }, info) => {
+    await stubArrFleet(page, arrFleet())
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata', { waitUntil: 'networkidle' })
+
+    await expect(page.getByText('408 lei', { exact: true })).toBeVisible()
+    await expect(page.getByText(/8 lei ecusoane Uber\./)).toBeVisible()
+    await expect(page.getByText(/ecusoane Bolt/)).toHaveCount(0)
+    await expect(page.getByText('RO49AAAA1B31007593840000')).toBeVisible()
+    await page.screenshot({ path: `test-results/onboarding-arr-fleet-plata-${info.project.name}.png` })
+  })
+
+  test('cu ambele platforme suma e 416 lei, iar o dovadă pentru suma veche e semnalată', async ({ page }) => {
+    await stubArrFleet(
+      page,
+      arrFleet({
+        platforms: ['Uber', 'Bolt'],
+        paymentAmountBani: 41600,
+        paymentProofOutdated: true,
+        paymentExplanation:
+          'Plata este o sumă întreagă formată din: 300 lei autorizația de transport (valabilă 3 ani), 100 lei copia conformă (valabilă 1 an), 8 lei ecusoane Bolt, 8 lei ecusoane Uber.',
+      }),
+      [uploadedDoc('DovadaPlataArr', 'plata.pdf')],
+    )
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata', { waitUntil: 'networkidle' })
+
+    await expect(page.getByText('416 lei', { exact: true })).toBeVisible()
+    await expect(page.getByText(/încarcă dovada pentru suma nouă/)).toBeVisible()
+  })
+
+  test('„Nu am cont” nu mai cere datele contului', async ({ page }) => {
+    // Actele de dinainte sunt încărcate, deci primul ecran nerezolvat e contul Uber.
+    const requests = await stubArrFleet(page, arrFleet(), personalDocuments)
+    await page.goto('/onboarding/arr-fleet', { waitUntil: 'networkidle' })
+    await expect(page.getByRole('heading', { name: 'Ai cont de șofer pe Uber?' })).toBeVisible()
+
+    await page.getByRole('radio', { name: 'Nu am cont pe această platformă' }).click()
+
+    await expect.poll(() => requests.length).toBe(1)
+    expect(requests[0].body).toMatchObject({ driverAccounts: [{ platform: 'Uber', hasAccount: false }] })
+    await expect(page.getByRole('heading', { name: 'Datele contului de șofer Uber' })).toHaveCount(0)
+  })
+
+  test('contractul se cere doar pentru modul de deținere ales', async ({ page }, info) => {
+    test.skip(info.project.name === 'mobile', 'Lista pasului stă în coloana din dreapta, pe desktop.')
+    await stubArrFleet(
+      page,
+      arrFleet({
+        vehicleOwnership: 'Leasing',
+        driverAccounts: [{ platform: 'Uber', hasAccount: false, email: null, phone: null, fullName: null, requiresPhoneCall: true }],
+      }),
+      [...personalDocuments, uploadedDoc('DovadaPlataArr', 'plata.pdf')],
+    )
+    await page.goto('/onboarding/arr-fleet', { waitUntil: 'networkidle' })
+
+    await expect(page.getByRole('heading', { name: 'Încarcă: Contract de leasing' })).toBeVisible()
+    await expect(page.getByText('Contract de închiriere')).toHaveCount(0)
+    await expect(page.getByText('Comodat autentificat la notariat')).toHaveCount(0)
+  })
+
+  test('„Trimite” e activ doar cu tot completat, apoi apare pop-up-ul final', async ({ page }, info) => {
+    const incomplete = await stubArrFleet(page, arrFleet({ missing: ['Cazier judiciar'] }))
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_trimite', { waitUntil: 'networkidle' })
+    await expect(page.getByText('Mai lipsește: Cazier judiciar.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Trimite', exact: true })).toBeDisabled()
+    expect(incomplete).toHaveLength(0)
+
+    await page.unrouteAll({ behavior: 'ignoreErrors' })
+    const requests = await stubArrFleet(page, arrFleet())
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_trimite', { waitUntil: 'networkidle' })
+    await page.getByRole('button', { name: 'Trimite', exact: true }).click()
+
+    await expect.poll(() => requests.some((r) => r.url.endsWith('/onboarding/arr-fleet/submit'))).toBe(true)
+    const dialog = page.getByRole('dialog', { name: 'Am primit documentele' })
+    await expect(dialog).toContainText('se ocupă de deschiderea contului ARR')
+    await page.screenshot({ path: `test-results/onboarding-arr-fleet-trimis-${info.project.name}.png` })
+    await dialog.getByRole('button', { name: 'Am înțeles' }).click()
+    await expect(page.getByText('Documente primite')).toBeVisible()
   })
 })

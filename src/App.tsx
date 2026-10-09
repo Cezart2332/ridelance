@@ -72,9 +72,7 @@ const CompanyFormationConsentPage = lazyWithRetry(
   () => import('./components/onboarding/companyFormation/CompanyFormationConsentPage'),
 )
 const OnboardingStep2Page = lazyWithRetry(() => import('./components/onboarding/OnboardingStep2Page'))
-const OnboardingArrPage = lazyWithRetry(() => import('./components/onboarding/OnboardingArrPage'))
-const OnboardingPlatformsPage = lazyWithRetry(() => import('./components/onboarding/OnboardingPlatformsPage'))
-const OnboardingVehiclePage = lazyWithRetry(() => import('./components/onboarding/OnboardingVehiclePage'))
+const OnboardingArrFleetPage = lazyWithRetry(() => import('./components/onboarding/OnboardingArrFleetPage'))
 const OnboardingDonePage = lazyWithRetry(() => import('./components/onboarding/OnboardingDonePage'))
 const OnboardingSubscriptionsPage = lazyWithRetry(
   () => import('./components/onboarding/OnboardingSubscriptionsPage'),
@@ -137,9 +135,11 @@ function App() {
               <Route path="pfa/sediu" element={<CompanyFormationOfficePage />} />
               <Route path="pfa/consimtamant" element={<CompanyFormationConsentPage />} />
               <Route path="step2" element={<OnboardingStep2Page />} />
-              <Route path="arr" element={<OnboardingArrPage />} />
-              <Route path="platforms" element={<OnboardingPlatformsPage />} />
-              <Route path="vehicle" element={<OnboardingVehiclePage />} />
+              <Route path="arr-fleet" element={<OnboardingArrFleetPage />} />
+              {/* Fostele pagini ARR, Uber & Bolt și Vehicul: linkurile vechi duc la pasul care le-a înlocuit. */}
+              <Route path="arr" element={<Navigate to="/onboarding/arr-fleet" replace />} />
+              <Route path="platforms" element={<Navigate to="/onboarding/arr-fleet" replace />} />
+              <Route path="vehicle" element={<Navigate to="/onboarding/arr-fleet" replace />} />
               {/* Anunțată în rail cu lacăt; conținutul se definește separat. */}
               <Route path="finalizat" element={<OnboardingDonePage />} />
               <Route path="abonamente" element={<OnboardingSubscriptionsPage />} />

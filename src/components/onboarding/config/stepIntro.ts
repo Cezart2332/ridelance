@@ -47,22 +47,10 @@ export const STEP_INTRO: Record<string, StepIntro> = {
     subtitle: 'Cont bancar, TVA și semnătura electronică.',
     tags: ['Poți reveni oricând'],
   },
-  arr: {
-    lead: 'Obține',
-    accent: 'autorizația ARR.',
-    subtitle: 'Dosarul de transport alternativ și copia conformă.',
-    tags: ['Depunere prin RIDElance'],
-  },
-  platforms: {
-    lead: 'Conectează',
-    accent: 'Uber și Bolt.',
-    subtitle: 'Contul de flotă, pe care îl administrăm noi, și contul tău de șofer.',
-    tags: ['Fără parole partajate'],
-  },
-  vehicle: {
-    lead: 'Adaugă',
-    accent: 'mașina.',
-    subtitle: 'Talon, asigurare și copia conformă a vehiculului.',
-    tags: ['Citire automată'],
+  arr_fleet: {
+    lead: 'Pregătim',
+    accent: 'ARR și contul de flotă.',
+    subtitle: 'Avize, platforme, plată și actele mașinii. Restul îl facem noi.',
+    tags: ['Agent RIDElance'],
   },
 }

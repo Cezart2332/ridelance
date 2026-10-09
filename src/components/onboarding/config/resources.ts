@@ -22,11 +22,5 @@ export const MICRO_RESOURCES: Record<string, MicroResource[]> = {
     // Răspunsul la întrebarea despre numerar, salvat prin modulul de contabilitate.
     cashPreferenceResource,
   ],
-  arr: [{ key: 'arr', fetch: () => onboardingService.getArrState() }],
-  platforms: [{ key: 'platforms', fetch: () => onboardingService.getPlatformOnboarding() }],
-  vehicle: [
-    { key: 'vehicle', fetch: () => onboardingService.getVehicleState() },
-    // Numărul de seturi de ecusoane se derivă din platformele alese la pasul anterior.
-    { key: 'platforms', fetch: () => onboardingService.getPlatformOnboarding() },
-  ],
+  arr_fleet: [{ key: 'arrFleet', fetch: () => onboardingService.getArrFleetState() }],
 }

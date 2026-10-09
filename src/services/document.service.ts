@@ -28,7 +28,11 @@ export interface DocumentSummary {
    */
   aiSuspicionReasons?: string[] | null;
   /** `UserUpload` | `Prefilled` | `Inherited` | `SystemGenerated`. */
-  origin: 'UserUpload' | 'Prefilled' | 'Inherited' | 'SystemGenerated';
+  origin: 'UserUpload' | 'Prefilled' | 'Inherited' | 'SystemGenerated' | 'AdminUpload';
+  /** Înlocuit (contractul unui mod de deținere părăsit, un act oficial reîncărcat): nu mai contează. */
+  isSuperseded?: boolean;
+  /** Numărul documentului oficial (autorizație, copie conformă), când îl are. */
+  documentNumber?: string | null;
   /**
    * Se arată în onboarding. Calculat pe server (RL-07): frontendul filtrează exclusiv după el,
    * fără reguli proprii — altfel două ecrane ar ascunde lucruri diferite.
