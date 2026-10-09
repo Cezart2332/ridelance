@@ -135,6 +135,10 @@ services:
       Sms__ApiKey: ${SMS_API_KEY:-}
       Sms__ApiSecret: ${SMS_API_SECRET:-}
       Sms__From: ${SMS_FROM:-}
+      # Codurile de confirmare a telefonului prin Twilio Verify (fără număr cumpărat). Completat, înlocuiește SMS-ul de mai sus.
+      Twilio__AccountSid: ${TWILIO_ACCOUNT_SID:-}
+      Twilio__AuthToken: ${TWILIO_AUTH_TOKEN:-}
+      Twilio__VerifyServiceSid: ${TWILIO_VERIFY_SERVICE_SID:-}
 
       # ─── Notificări push (Web Push / VAPID) ─────────────────────────────────────────────
       WebPush__PublicKey: ${WEBPUSH_PUBLIC_KEY:-}
