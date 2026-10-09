@@ -215,7 +215,7 @@ export function SrlCarsPage() {
 
   const rentedCount = cars.filter((car) => currentRentals.has(car.id)).length
   const cancelExtra = async (id: string) => {
-    if (!window.confirm('Oprești anunțul extra? Abonamentul de 40 lei pe lună se oprește, iar anunțul trece pe pauză dacă nu mai ai loc în cele incluse.')) return
+    if (!window.confirm('Oprești anunțul extra? Abonamentul de 39,90 lei pe lună se oprește, iar anunțul trece pe pauză dacă nu mai ai loc în cele incluse.')) return
     try {
       await carsService.cancelExtraListing(id)
       reload()

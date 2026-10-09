@@ -24,8 +24,8 @@ import { DASHBOARD_TOKENS } from '../dashboardTheme'
 const stripePromise = loadStripe(import.meta.env.VITE_PUBLIC_STRIPE || '')
 
 /** Prețurile afișate. Sumele reale le stabilește serverul (`Pricing.PaidExtras`). */
-const EXTRA_LISTING_LEI = 40
-const HIDDEN_PLATE_LEI = 15
+const EXTRA_LISTING_LEI = '39,90'
+const HIDDEN_PLATE_LEI = '14,90'
 
 type Step =
   | { kind: 'choose' }
@@ -35,10 +35,10 @@ type Step =
 /**
  * Publicarea unui anunț de flotă, cu cele două opțiuni plătite.
  *
- * - **Anunț extra** — când s-au folosit toate anunțurile incluse în abonament: 40 lei pe lună
+ * - **Anunț extra** — când s-au folosit toate anunțurile incluse în abonament: 39,90 lei pe lună
  *   pentru mașina asta. Nu se publică nimic automat: firma alege să plătească, iar după plată
  *   anunțul intră în piață pe locul lui.
- * - **Număr ascuns** — 15 lei o singură dată; numărul nu mai apare în anunț, nici la republicare.
+ * - **Număr ascuns** — 14,90 lei o singură dată; numărul nu mai apare în anunț, nici la republicare.
  *
  * Plata se face aici, în dialog (checkout Stripe integrat), ca firma să nu piardă pagina.
  */

@@ -287,7 +287,7 @@ export function FleetCarCard({
               Publică anunțul
               {noListingsLeft && !archived && car.paymentStatus !== 'Paid' && (
                 <Typography sx={{ fontSize: '0.74rem', fontWeight: 600, color: DASHBOARD_TOKENS.textMuted }}>
-                  Anunț extra: 40 lei / lună
+                  Anunț extra: 39,90 lei / lună
                 </Typography>
               )}
             </Box>

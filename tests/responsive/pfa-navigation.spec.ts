@@ -41,7 +41,7 @@ async function mockGate(page: Page) {
         onboardingSectionsValidated: true,
         status: 'Active',
         dashboardAccessGranted: true,
-        plan: 'pro',
+        plan: 'PfaFull',
       }),
     }),
   )

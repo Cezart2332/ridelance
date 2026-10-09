@@ -65,7 +65,7 @@ async function mockApi(page: Page, body: unknown) {
   await page.route(`${API}/users/refresh-token`, (route) => json(route, { accessToken: 't', role: 'Client', userId: 'user-1' }))
   await page.route(`${API}/users/dashboard-summary`, (route) => json(route, { pfaStatus: 'Approved', pfaRegistrationId: 'pfa-1' }))
   await page.route(`${API}/payments/subscription`, (route) =>
-    json(route, { pfaStatus: 'Approved', onboardingSectionsValidated: true, status: 'Active', dashboardAccessGranted: true, plan: 'pro' }),
+    json(route, { pfaStatus: 'Approved', onboardingSectionsValidated: true, status: 'Active', dashboardAccessGranted: true, plan: 'PfaFull' }),
   )
   await page.route(`${API}/pfa/dashboard/summary*`, (route) => json(route, body))
   await page.route(`${API}/pfa/dashboard/rides*`, (route) => json(route, { items: [], page: 1, pageSize: 20, total: 0, uberRidesAvailable: false }))

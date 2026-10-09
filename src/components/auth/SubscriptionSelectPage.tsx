@@ -4,8 +4,10 @@ import {
   Alert,
   Box,
   Button,
+  Checkbox,
   CircularProgress,
   Container,
+  FormControlLabel,
   Paper,
   Typography,
 } from '@mui/material'
@@ -13,7 +15,7 @@ import { alpha } from '@mui/material/styles'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
-import { subscriptionPlansFor, type PlanKey, stripeService } from '../../services/stripe.service'
+import { subscriptionPlansFor, type AddonKey, type PlanKey, stripeService } from '../../services/stripe.service'
 import { canAccessDashboard } from '../../utils/clientOnboarding'
 import { ANNUAL_DISCOUNT, type BillingCycle } from '../../data/plans'
 import { Switcher } from '../pricing/Switcher'
@@ -64,6 +66,8 @@ export default function SubscriptionSelectPage() {
   const [advancePaid, setAdvancePaid] = useState(false)
   // Pornește de la ce a bifat omul pe pagina publică, dacă a trecut pe acolo în sesiunea asta.
   const [bcrDiscount, setBcrDiscount] = useState(readBcrDiscountIntent)
+  // Opțiunile PFAlone bifate. La PFA Full sunt incluse, deci nu se trimit.
+  const [addons, setAddons] = useState<AddonKey[]>([])
 
   // Abonamentul se alege doar după onboarding complet; cu abonament activ → dashboard.
   useEffect(() => {
@@ -85,6 +89,8 @@ export default function SubscriptionSelectPage() {
   }, [navigate])
 
   const handleSelect = (key: PlanKey) => {
+    // Opțiunile țin de PFAlone: trecerea pe alt plan le golește.
+    if (key !== selected) setAddons([])
     setSelected(key)
     stripeService.setSelectedPlan(key)
   }
@@ -92,7 +98,7 @@ export default function SubscriptionSelectPage() {
   const handleContinue = () => {
     if (!selected || !termsAccepted || !paymentPolicyAccepted) return
     setCheckoutError(null)
-    stripeService.redirectToPlan(selected, undefined, undefined, { cycle, bcrDiscountRequested: bcrDiscount }).catch(() => {
+    stripeService.redirectToPlan(selected, undefined, undefined, { cycle, bcrDiscountRequested: bcrDiscount, addons }).catch(() => {
       setCheckoutError('Nu am putut deschide plata. Încearcă din nou în câteva momente.')
     })
   }
@@ -198,9 +204,10 @@ export default function SubscriptionSelectPage() {
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+              gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
               gap: 3,
               width: '100%',
+              maxWidth: 880,
             }}
           >
             {plans.map((plan) => (
@@ -233,14 +240,44 @@ export default function SubscriptionSelectPage() {
                 }
                 priceNote={plan.priceNote}
                 belowPrice={
-                  <BcrDiscountCheckbox
-                    checked={bcrDiscount}
-                    onChange={(next) => {
-                      setBcrDiscount(next)
-                      writeBcrDiscountIntent(next)
-                    }}
-                    stopPropagation
-                  />
+                  <>
+                    <BcrDiscountCheckbox
+                      checked={bcrDiscount}
+                      onChange={(next) => {
+                        setBcrDiscount(next)
+                        writeBcrDiscountIntent(next)
+                      }}
+                      stopPropagation
+                    />
+                    {plan.addons.some((addon) => !addon.included) && (
+                      // Bifa nu selectează cardul prin click, dar o opțiune bifată alege planul.
+                      <Box onClick={(event) => event.stopPropagation()} sx={{ mt: 1, display: 'flex', flexDirection: 'column' }}>
+                        {plan.addons.filter((addon) => !addon.included).map((addon) => (
+                          <FormControlLabel
+                            key={addon.key}
+                            sx={{ mr: 0 }}
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={selected === plan.key && addons.includes(addon.key)}
+                                onChange={(_, checked) => {
+                                  handleSelect(plan.key)
+                                  setAddons((previous) =>
+                                    checked ? [...previous.filter((k) => k !== addon.key), addon.key] : previous.filter((k) => k !== addon.key),
+                                  )
+                                }}
+                              />
+                            }
+                            label={
+                              <Typography sx={{ fontSize: '0.85rem', color: TOKENS.ink }}>
+                                {addon.title} · <b>+{addon.monthlyLei} lei / lună</b>
+                              </Typography>
+                            }
+                          />
+                        ))}
+                      </Box>
+                    )}
+                  </>
                 }
                 summary={plan.summary}
                 intro={plan.intro}

@@ -12,7 +12,7 @@ async function mockFiscalLink(page: Page, configured = true) {
     json: { pfaStatus: 'Approved', pfaRegistrationId: 'pfa-1' },
   }))
   await page.route(`${API}/payments/subscription`, route => route.fulfill({
-    json: { pfaStatus: 'Approved', onboardingSectionsValidated: true, status: 'Active', dashboardAccessGranted: true, plan: 'pro' },
+    json: { pfaStatus: 'Approved', onboardingSectionsValidated: true, status: 'Active', dashboardAccessGranted: true, plan: 'PfaFull' },
   }))
   await page.route(`${API}/connections/fiscallink`, route => route.fulfill({
     json: { connected: true, activationCode: 'TEST-1234', activationLink: null, error: null,

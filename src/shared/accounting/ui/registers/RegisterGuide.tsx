@@ -9,7 +9,8 @@ const REGISTER_GUIDE = {
 } as const
 export type RegisterSection = keyof typeof REGISTER_GUIDE
 
-export function RegisterGuide({ value, onChange }: { value: RegisterSection; onChange: (value: RegisterSection) => void }) {
+/** `selfManaged`: PFAlone își ține singur registrele, deci explicațiile despre contabil nu i se aplică. */
+export function RegisterGuide({ value, onChange, selfManaged = false }: { value: RegisterSection; onChange: (value: RegisterSection) => void; selfManaged?: boolean }) {
   const guide = REGISTER_GUIDE[value]
   return <Paper variant="outlined" sx={{ overflow: 'hidden', borderRadius: 2 }}>
     <Tabs value={value} onChange={(_, next: RegisterSection) => onChange(next)} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile aria-label="Tip de registru" sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -17,7 +18,7 @@ export function RegisterGuide({ value, onChange }: { value: RegisterSection; onC
     </Tabs>
     <Stack spacing={1} sx={{ p: { xs: 2, md: 2.5 } }}>
       <Typography component="h2" sx={{ fontWeight: 700, fontSize: 16 }}>{guide.title}</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 960, lineHeight: 1.7 }}>{guide.description}</Typography>
+      {!selfManaged && <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 960, lineHeight: 1.7 }}>{guide.description}</Typography>}
     </Stack>
   </Paper>
 }

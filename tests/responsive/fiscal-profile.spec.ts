@@ -118,7 +118,7 @@ async function mockApi(page: Page, initial: Partial<Profile> = {}) {
   await page.route(`${API}/users/refresh-token`, (route) => json(route, { accessToken: 't', role: 'Client', userId: 'user-1' }))
   await page.route(`${API}/users/dashboard-summary`, (route) => json(route, { pfaStatus: 'Approved', pfaRegistrationId: 'pfa-1' }))
   await page.route(`${API}/payments/subscription`, (route) =>
-    json(route, { pfaStatus: 'Approved', onboardingSectionsValidated: true, status: 'Active', dashboardAccessGranted: true, plan: 'pro' }),
+    json(route, { pfaStatus: 'Approved', onboardingSectionsValidated: true, status: 'Active', dashboardAccessGranted: true, plan: 'PfaFull' }),
   )
   await page.route(`${API}/pfa/dashboard/summary*`, (route) => json(route, summary(state.profile.status !== 'COMPLETED')))
   await page.route(`${API}/pfa/dashboard/rides*`, (route) =>

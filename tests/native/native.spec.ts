@@ -18,7 +18,7 @@ async function mockApi(page: Page, opts: { active: boolean }) {
   await page.route(`${API}/payments/subscription`, (route) =>
     route.fulfill({
       json: {
-        id: 's', plan: 'pro', status: opts.active ? 'Active' : null, stripeSubscriptionId: null, firstBillingDateUtc: null,
+        id: 's', plan: 'PfaFull', status: opts.active ? 'Active' : null, stripeSubscriptionId: null, firstBillingDateUtc: null,
         nextBillingDateUtc: null, createdAtUtc: null, dashboardAccessGranted: opts.active, billingCycle: null,
         pfaStatus: opts.active ? 'Approved' : 'Pending', pfaRegistrationType: 'AmPfa', pendingPlan: null,
         hasPaidInfiintare: false, onboardingSectionsValidated: opts.active,

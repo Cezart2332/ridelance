@@ -5,13 +5,13 @@
  * aici doar se ANUNȚĂ ce urmează să se întâmple, deci formele trebuie ținute identice: dacă una
  * se schimbă fără cealaltă, pagina promite o reducere pe care casa n-o dă.
  *
- * De ce nu un singur cupon de 399 lei: Stripe nu reportează restul unei reduceri pe factura
- * următoare. Pe Solo (199/lună) un cupon „once" de 399 ar fi acoperit o singură factură, iar a
+ * De ce nu un singur cupon de 299 lei: Stripe nu reportează restul unei reduceri pe factura
+ * următoare. Pe PFAlone (139/lună) un cupon „once" de 299 ar fi acoperit o singură factură, iar a
  * doua lună s-ar fi facturat întreagă. De aceea fiecare plan are forma lui.
  */
 
-/** Avansul, în lei. Aceeași valoare ca `Pricing.RidelanceStart.OnboardingAdvanceBani`. */
-export const ONBOARDING_ADVANCE_LEI = 399
+/** Avansul, în lei: prima lună de PFA Full. Aceeași valoare ca `Pricing.OnboardingAdvance.OnboardingAdvanceBani`. */
+export const ONBOARDING_ADVANCE_LEI = 299
 
 /** Forma reducerii pe un plan: cât se scade și de pe câte facturi. */
 interface CreditShape {
@@ -20,12 +20,10 @@ interface CreditShape {
 }
 
 const SHAPES: Record<string, CreditShape> = {
-  // Două luni întregi. 2 × 199 = 398, cu un leu sub avans — 399 nu se împarte la 199.
-  solo: { amountOffLei: 199, months: 2 },
+  // Două luni întregi. 2 × 139 = 278, sub avans — 299 nu se împarte la 139.
+  pfalone: { amountOffLei: 139, months: 2 },
   // Avansul E prețul planului: exact o lună.
-  start: { amountOffLei: 399, months: 1 },
-  // 599 − 399 = 200 în prima lună.
-  pro: { amountOffLei: 399, months: 1 },
+  'pfa-full': { amountOffLei: 299, months: 1 },
 }
 
 export interface AdvanceCredit {

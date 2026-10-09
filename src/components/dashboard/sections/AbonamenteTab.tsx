@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Box, Button, Paper, Typography, CircularProgress, Snackbar, Alert } from '@mui/material'
+import { Box, Button, Checkbox, FormControlLabel, Paper, Typography, CircularProgress, Snackbar, Alert } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
 import { alpha } from '@mui/material/styles'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
@@ -10,6 +10,7 @@ import StarRoundedIcon from '@mui/icons-material/StarRounded'
 import {
   subscriptionPlansFor,
   stripeService,
+  type AddonKey,
   type PlanKey,
   type SubscriptionResponse,
 } from '../../../services/stripe.service'
@@ -44,6 +45,8 @@ export function AbonamenteTab() {
   const [planChangeNotice, setPlanChangeNotice] = useState(false)
   const [paymentPolicyAccepted, setPaymentPolicyAccepted] = useState(false)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  // Opțiunile alese pe ecran; null = încă cele din abonament.
+  const [addonChoice, setAddonChoice] = useState<AddonKey[] | null>(null)
 
   useEffect(() => {
     if (searchParams.get('plan_changed') === '1') {
@@ -80,11 +83,21 @@ export function AbonamenteTab() {
     ? new Date(subStatus.nextBillingDateUtc)
     : projectNextBilling(new Date(), subStatus?.billingCycle ?? 'Monthly')
 
-  // Default to start plan if no active plan
-  const currentPlanKey: PlanKey = activePlan || 'start'
-  const currentPlan = plans.find(p => p.key === currentPlanKey) || plans[1]
+  const currentPlanKey: PlanKey = activePlan ?? 'pfa-full'
+  const currentPlan = plans.find(p => p.key === currentPlanKey) ?? plans[0]
 
-  const handleUpgrade = (key: PlanKey) => {
+  // PFAlone: opțiunile plătite acum, ca să se vadă ce se schimbă.
+  const paidAddons: AddonKey[] = [
+    ...(subStatus?.includesOpenBanking ? (['open-banking'] as const) : []),
+    ...(subStatus?.includesCashRegister ? (['cash-register'] as const) : []),
+  ]
+  const chosenAddons = addonChoice ?? paidAddons
+  const addonsChanged =
+    chosenAddons.length !== paidAddons.length || chosenAddons.some((key) => !paidAddons.includes(key))
+  const toggleAddon = (key: AddonKey) =>
+    setAddonChoice(chosenAddons.includes(key) ? chosenAddons.filter((k) => k !== key) : [...chosenAddons, key])
+
+  const handleUpgrade = (key: PlanKey, addons: AddonKey[] = []) => {
     if (!paymentPolicyAccepted) return
     const origin = window.location.origin
     setCheckoutError(null)
@@ -93,7 +106,8 @@ export function AbonamenteTab() {
         key,
         `${origin}${PFA_PATHS.svcSubscriptions}?plan_changed=1`,
         `${origin}${PFA_PATHS.svcSubscriptions}`,
-        { isPlanChange: true, cycle },
+        // Opțiunile se schimbă tot printr-o plată nouă: abonamentul vechi se închide în webhook.
+        { isPlanChange: true, cycle, addons },
       )
       .catch(() => {
         setCheckoutError('Nu am putut deschide plata. Încearcă din nou în câteva momente.')
@@ -223,6 +237,44 @@ export function AbonamenteTab() {
             </Box>
           ))}
         </Box>
+
+        {currentPlanKey === 'pfalone' && currentPlan.addons.length > 0 && (
+          <Box sx={{ mt: 3, pt: 2.5, borderTop: `1px solid ${T.border}` }}>
+            <Typography sx={{ fontWeight: 700, color: T.ink, fontSize: '0.88rem', mb: 1 }}>Opțiuni</Typography>
+            {currentPlan.addons.map((addon) => (
+              <FormControlLabel
+                key={addon.key}
+                sx={{ display: 'flex', mr: 0 }}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={chosenAddons.includes(addon.key)}
+                    onChange={() => toggleAddon(addon.key)}
+                  />
+                }
+                label={
+                  <Typography sx={{ fontSize: '0.88rem', color: T.ink }}>
+                    {addon.title} · <b>+{addon.monthlyLei} lei / lună</b>
+                  </Typography>
+                }
+              />
+            ))}
+            {addonsChanged && (
+              <Box sx={{ mt: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5, alignItems: 'flex-start' }}>
+                <PaymentPolicyAcceptance checked={paymentPolicyAccepted} onChange={setPaymentPolicyAccepted} />
+                <Button
+                  variant="contained"
+                  size="small"
+                  disabled={!paymentPolicyAccepted}
+                  onClick={() => handleUpgrade('pfalone', chosenAddons)}
+                  sx={{ borderRadius: `${T.radius.full}px`, fontWeight: 700, backgroundColor: T.primary }}
+                >
+                  Actualizează opțiunile
+                </Button>
+              </Box>
+            )}
+          </Box>
+        )}
       </Paper>
 
       {/* Upgrade/Downgrade section */}
@@ -237,7 +289,7 @@ export function AbonamenteTab() {
               onChange={setPaymentPolicyAccepted}
             />
           </Box>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
             {plans.map((plan) => {
               const isCurrent = plan.key === currentPlanKey
               return (

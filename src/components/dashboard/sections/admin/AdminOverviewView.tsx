@@ -488,9 +488,8 @@ export function AdminOverviewView({ onImpersonate, onOpenPfaDetails }: AdminOver
           </TextField>
           <TextField select size="small" label="Plan" value={filters.plan ?? ''} onChange={(e) => updateFilter('plan', e.target.value as AdminPlanFilter)} sx={inputSx}>
             <MenuItem value="">Toate</MenuItem>
-            <MenuItem value="solo">Solo</MenuItem>
-            <MenuItem value="start">Start</MenuItem>
-            <MenuItem value="pro">Pro</MenuItem>
+            <MenuItem value="pfaalone">PFAlone</MenuItem>
+            <MenuItem value="pfafull">PFA Full</MenuItem>
           </TextField>
           <TextField size="small" label="Oraș" value={filters.city ?? ''} onChange={(e) => updateFilter('city', e.target.value)} sx={inputSx} />
           <TextField size="small" label="Partener" value={filters.partner ?? ''} onChange={(e) => updateFilter('partner', e.target.value)} sx={inputSx} />

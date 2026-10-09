@@ -114,7 +114,7 @@ async function mockApi(page: Page, summaryQueries: string[]) {
         onboardingSectionsValidated: true,
         status: 'Active',
         dashboardAccessGranted: true,
-        plan: 'pro',
+        plan: 'PfaFull',
       }),
     }),
   )

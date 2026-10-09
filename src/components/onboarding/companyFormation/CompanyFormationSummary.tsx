@@ -85,11 +85,11 @@ export function CompanyFormationSummary({
         </Stack>
       </PanelCard>
 
-      <PanelCard title="Plata abonamentului Start">
+      <PanelCard title="Avansul abonamentului">
         <Typography sx={{ fontSize: '0.92rem', color: TOKENS.ink, lineHeight: 1.6 }}>
-          Pentru continuarea procedurii este necesară plata în avans a abonamentului{' '}
+          Pentru continuarea procedurii este necesară plata în avans a primei luni de abonament{' '}
           <Box component="strong" sx={{ fontWeight: 800 }}>
-            Start — {amount} lei
+            — {amount} lei
           </Box>
           .
         </Typography>
@@ -100,14 +100,13 @@ export function CompanyFormationSummary({
 
         {/*
           Partea care schimbă natura sumei: nu e un cost în plus, e prima lună de abonament
-          plătită mai devreme. Fără rândul ăsta, ecranul cerea 399 de lei pentru „ceva", iar
+          plătită mai devreme. Fără rândul ăsta, ecranul cerea 299 de lei pentru „ceva", iar
           reducerea de la final apărea ca o surpriză nelegată de plata asta.
         */}
         <Typography sx={{ fontSize: '0.92rem', color: TOKENS.ink, lineHeight: 1.6, mt: 1.5 }}>
           Suma se întoarce integral la finalul înrolării, ca reducere pe primul abonament:{' '}
           <Box component="strong" sx={{ fontWeight: 800 }}>
-            Solo — două luni gratuite, Start — o lună gratuită, Pro — {amount} lei reducere în
-            prima lună
+            PFA Full — o lună gratuită, PFAlone — două luni gratuite
           </Box>
           . Din luna următoare, prețul e cel normal.
         </Typography>

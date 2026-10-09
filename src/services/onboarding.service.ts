@@ -56,7 +56,7 @@ export interface OnboardingState {
    */
   primaryCounty: string | null
 
-  /** Avansul RIDElance Start, în bani. Vine din `Pricing` — UI-ul nu are sume scrise în el. */
+  /** Avansul de abonament (prima lună de PFA Full), în bani. Vine din `Pricing` — UI-ul nu are sume scrise în el. */
   onboardingAdvanceBani: number
   onboardingAdvanceIsRefundable: boolean
 

@@ -271,7 +271,7 @@ const carsService = {
   },
 
   /**
-   * Anunț extra peste cele incluse în abonament: 40 lei pe lună, per mașină. Întoarce secretul
+   * Anunț extra peste cele incluse în abonament: 39,90 lei pe lună, per mașină. Întoarce secretul
    * pentru plata Stripe din pagină; după plată, anunțul aprobat se publică singur.
    */
   async createExtraListingCheckout(id: string): Promise<string> {
@@ -284,7 +284,7 @@ const carsService = {
     await api.post(`/cars/${id}/extra-listing/cancel`);
   },
 
-  /** Numărul de înmatriculare ascuns în anunț: 15 lei, o singură dată per mașină. */
+  /** Numărul de înmatriculare ascuns în anunț: 14,90 lei, o singură dată per mașină. */
   async createHiddenPlateCheckout(id: string): Promise<string> {
     const res = await api.post<{ clientSecret: string }>(`/cars/${id}/hidden-plate/checkout`);
     return res.data.clientSecret;

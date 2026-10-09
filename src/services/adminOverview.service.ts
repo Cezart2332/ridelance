@@ -4,7 +4,7 @@ export type AdminPeriodPreset = 'today' | '7d' | 'current_month' | 'last_month' 
 export type AdminRevenueType = '' | 'recurring' | 'one_time' | 'commission'
 export type AdminProductFilter = '' | 'pfa' | 'cars' | 'services' | 'partners'
 export type AdminPaymentStatusFilter = '' | 'succeeded' | 'failed' | 'pending' | 'refund'
-export type AdminPlanFilter = '' | 'solo' | 'start' | 'pro'
+export type AdminPlanFilter = '' | 'pfaalone' | 'pfafull'
 
 export interface AdminOverviewFilters {
   periodPreset: AdminPeriodPreset
@@ -126,7 +126,7 @@ export interface AdminSrlStats {
   /** Încasările din anunțuri plătite separat, în perioada aleasă. */
   extraListingsRevenueBani: number
   extraListingsPayments: number
-  /** Mașini cu numărul de înmatriculare ascuns (plătit, 15 lei o dată). */
+  /** Mașini cu numărul de înmatriculare ascuns (plătit, 14,90 lei o dată). */
   hiddenPlates?: number
   hiddenPlatesRevenueBani?: number
   hiddenPlatesPayments?: number
@@ -287,9 +287,8 @@ function normalizeStatus(status: string | null | undefined) {
 
 function normalizePlan(plan: string | null | undefined) {
   switch (plan?.toLowerCase()) {
-    case 'solo': return 'Solo'
-    case 'start': return 'Start'
-    case 'pro': return 'Pro'
+    case 'pfaalone': return 'PFAlone'
+    case 'pfafull': return 'PFA Full'
     default: return 'Fără plan'
   }
 }
@@ -472,7 +471,7 @@ export const adminOverviewService = {
     return response.data
   },
 
-  async changePfaPlan(pfaId: string, plan: 'solo' | 'start' | 'pro', effective: 'immediate' | 'next_cycle') {
+  async changePfaPlan(pfaId: string, plan: 'pfaalone' | 'pfafull', effective: 'immediate' | 'next_cycle') {
     const response = await api.post(`/admin/pfas/${pfaId}/change-plan`, { plan, effective })
     return response.data
   },

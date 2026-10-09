@@ -54,7 +54,7 @@ export const pfaMicroSteps: MicroStepDef[] = [
     /*
      * Avansul, primul ecran — înaintea întrebării „ai deja PFA?".
      *
-     * Nu depinde de ce urmează să aleagă omul: e o lună de RIDElance Start plătită mai devreme,
+     * Nu depinde de ce urmează să aleagă omul: e o lună de PFA Full plătită mai devreme,
      * aceeași sumă pe ambele ramuri. Stătea pe ramura „Nu am PFA", ca ecran care înlocuia tot
      * runnerul, deci se cerea după alegere și doar de la jumătate din clienți.
      *

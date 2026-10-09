@@ -4,6 +4,7 @@ import type {
   AddInventoryItemRequest,
   Asset,
   InventoryCount,
+  ManualLedgerEntryRequest,
   InventoryItemRequest,
   RjipView,
   RefView,
@@ -16,6 +17,13 @@ export const clientRegistersService = {
   },
   async ref(year: number): Promise<RefView> {
     return (await api.get<RefView>('/pfa/accounting/registers/ref', { params: { year } })).data
+  },
+  /** PFAlone: o încasare sau o plată trecută de el în registru. */
+  async addEntry(request: Omit<ManualLedgerEntryRequest, 'reason'>): Promise<void> {
+    await api.post('/pfa/accounting/registers/entries', { ...request, reason: '' })
+  },
+  async deleteEntry(id: string): Promise<void> {
+    await api.delete(`/pfa/accounting/registers/entries/${id}`)
   },
   async exportRegister(kind: 'rjip' | 'ref' | 'inventory', year: number): Promise<Blob> {
     return (await api.get<Blob>(`/pfa/accounting/registers/${kind}/export`, { params: kind === 'rjip' ? { from: `${year}-01-01`, to: `${year}-12-31` } : { year }, responseType: 'blob' })).data

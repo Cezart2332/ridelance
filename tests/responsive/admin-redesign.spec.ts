@@ -16,7 +16,7 @@ async function mockAdmin(page: Page, failFirst = false) {
   await page.route(/\/pfa-registrations(\?.*)?$/, (route) => route.fulfill({ json: { items: [client] } }))
   await page.route('**/pfa-registrations/*/onboarding', (route) => route.fulfill({ json: { pfaRegistrationId: client.id, pfaStatus: 'Pending', sections: [], steps: [{ key: 'eligibility', status: eligibilityValidated ? 'Completed' : 'AwaitingValidation', state: eligibilityValidated ? 'completed' : 'pending_admin' }, { key: 'pfa', status: 'Locked', state: 'locked' }] } }))
   await page.route('**/pfa-registrations/*/eligibility/validate', (route) => { eligibilityValidated = true; return route.fulfill({ status: 204 }) })
-  await page.route('**/admin/pfas/*/details', (route) => route.fulfill({ json: { ...client, companyName: 'Andrei Ionescu PFA', email: client.userEmail, plan: 'Start', subscriptionStatus: 'Trial', activityLog: [{ id: 'event1', description: 'Clientul a încărcat documentele de eligibilitate.', performedBy: 'Andrei Ionescu', createdAtUtc: '2026-09-14T08:00:00Z' }] } }))
+  await page.route('**/admin/pfas/*/details', (route) => route.fulfill({ json: { ...client, companyName: 'Andrei Ionescu PFA', email: client.userEmail, plan: 'PFA Full', subscriptionStatus: 'Trial', activityLog: [{ id: 'event1', description: 'Clientul a încărcat documentele de eligibilitate.', performedBy: 'Andrei Ionescu', createdAtUtc: '2026-09-14T08:00:00Z' }] } }))
   await page.route('**/admin/documents/*/extracted-fields', (route) => route.fulfill({ json: { fields: [] } }))
   await page.route(/\/documents(?:\?.*)?$/, (route) => route.fulfill({ json: docs }))
   await page.route('**/documents/*/status', async (route) => {

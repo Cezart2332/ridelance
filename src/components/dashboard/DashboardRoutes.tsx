@@ -7,6 +7,9 @@ import { BeneficiiTab } from './sections/BeneficiiTab'
 import { ExpensesPage } from './sections/accounting/ExpensesPage'
 import { FinancialOverviewPage } from './sections/accounting/FinancialOverviewPage'
 import { RegistersPage } from './sections/accounting/RegistersPage'
+import { OwnDeclarationsPage } from './sections/accounting/OwnDeclarationsPage'
+import { AddonGate } from './AddonGate'
+import { usePlanAccess } from './planAccess'
 import { AnafMessagesPage } from './sections/accounting/AnafMessagesPage'
 import { TransactionsPage } from './sections/accounting/TransactionsPage'
 import { TaxesPage } from './sections/accounting/TaxesPage'
@@ -45,6 +48,7 @@ type DashboardRoutesProps = {
  */
 export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRoutesProps) {
   const navigateToSection = useSectionNavigate()
+  const { managesOwnBooks } = usePlanAccess()
 
   // Rutele se declară relativ la `/app/dashboard/*`, splat-ul din App.tsx.
   const rel = (path: string) => path.slice(`${PFA_PATHS.home}/`.length)
@@ -57,15 +61,20 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
       <Route path={rel(PFA_PATHS.accounting)} element={<Navigate to={PFA_PATHS.financialOverview} replace />} />
       <Route path={rel(PFA_PATHS.financialOverview)} element={<FinancialOverviewPage />} />
       <Route path={rel(PFA_PATHS.transactions)} element={<TransactionsPage />} />
-      <Route path={rel(PFA_PATHS.registers)} element={<RegistersPage />} />
+      {/* Registrele și generatorul sunt ale PFAlone; la PFA Full le ține contabilul. */}
+      <Route path={rel(PFA_PATHS.registers)} element={managesOwnBooks ? <RegistersPage /> : <Navigate to={PFA_PATHS.home} replace />} />
+      <Route path={rel(PFA_PATHS.ownDeclarations)} element={managesOwnBooks ? <OwnDeclarationsPage /> : <Navigate to={PFA_PATHS.taxes} replace />} />
       <Route path={rel(PFA_PATHS.anaf)} element={<AnafMessagesPage />} />
       <Route path={rel(PFA_PATHS.expenses)} element={<ExpensesPage pfaRegistrationId={pfaRegistrationId} />} />
       <Route path={rel(PFA_PATHS.taxes)} element={<TaxesPage />} />
       <Route path={rel(PFA_PATHS.fiscalProfile)} element={<FiscalProfilePage />} />
-      <Route path={rel(PFA_PATHS.bankAccount)} element={<BankTab onNavigate={navigateToSection} />} />
+      <Route
+        path={rel(PFA_PATHS.bankAccount)}
+        element={<AddonGate addon="open-banking" title="Cont bancar"><BankTab onNavigate={navigateToSection} /></AddonGate>}
+      />
       {/* Construită o singură dată, folosită de ambele dashboard-uri (spec §3.3.1). */}
       <Route path={rel(PFA_PATHS.invoices)} element={<InvoicesPage />} />
-      <Route path={rel(PFA_PATHS.accountantChat)} element={<AccountantChatTab />} />
+      <Route path={rel(PFA_PATHS.accountantChat)} element={managesOwnBooks ? <Navigate to={PFA_PATHS.support} replace /> : <AccountantChatTab />} />
 
       {/* ── Documente ── */}
       <Route path={rel(PFA_PATHS.documents)} element={<Navigate to={PFA_PATHS.docsPersonal} replace />} />
@@ -90,7 +99,10 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
       <Route path={rel(PFA_PATHS.connUber)} element={<UberConnectionPage />} />
       <Route path={rel(PFA_PATHS.connOblio)} element={<OblioConnectionPage />} />
       <Route path={rel(PFA_PATHS.connEldrive)} element={<EldriveConnectionPage />} />
-      <Route path={rel(PFA_PATHS.connFiscalLink)} element={<FiscalLinkConnectionPage />} />
+      <Route
+        path={rel(PFA_PATHS.connFiscalLink)}
+        element={<AddonGate addon="cash-register" title="FiscalLink"><FiscalLinkConnectionPage /></AddonGate>}
+      />
       {/* Banca e o singură pagină; sub Conexiuni apare doar ca punct de intrare. */}
       <Route path={rel(PFA_PATHS.connBank)} element={<Navigate to={PFA_PATHS.bankAccount} replace />} />
 

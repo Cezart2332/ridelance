@@ -11,7 +11,8 @@ import { userService } from '../../services/user.service'
 import { stripeService } from '../../services/stripe.service'
 import { canAccessDashboard, resolveClientPath } from '../../utils/clientOnboarding'
 import { useRecurringDocumentationReminder } from '../../hooks/useRecurringDocumentationReminder'
-import { LEGACY_SECTION_ROUTES, PFA_NAV_CONFIG, PFA_PATHS } from '../../config/pfaNavigation'
+import { LEGACY_SECTION_ROUTES, PFA_PATHS, pfaNavConfigFor } from '../../config/pfaNavigation'
+import { DEFAULT_PLAN_ACCESS, PlanAccessContext, planAccessOf, type PlanAccess } from './planAccess'
 import { IS_NATIVE_APP, nativeUnavailablePath } from '../../native/platform'
 
 import { Box, CircularProgress, Snackbar, Alert } from '@mui/material'
@@ -52,6 +53,7 @@ export default function DashboardPage() {
   const [searchParams] = useSearchParams()
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'error' })
   const [pfaRegistrationId, setPfaRegistrationId] = useState<string | null>(null)
+  const [planAccess, setPlanAccess] = useState<PlanAccess>(DEFAULT_PLAN_ACCESS)
 
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity })
@@ -85,6 +87,7 @@ export default function DashboardPage() {
           navigate(IS_NATIVE_APP ? '/app' : resolveClientPath(sub), { replace: true })
           return
         }
+        setPlanAccess(planAccessOf(sub))
         setPfaStatus(summary.pfaStatus)
         setPfaRegistrationId(summary.pfaRegistrationId ?? null)
       } catch {
@@ -116,25 +119,27 @@ export default function DashboardPage() {
   }
 
   return (
-    <AppLayout
-      nav={PFA_NAV_CONFIG}
-      onLogout={handleLogout}
-      showNotifications
-      onOpenRecurringDocumentation={() => navigate(PFA_PATHS.docsRecurring)}
-    >
-      <PfaFiscalProfileProvider>
-        <DashboardRoutes pfaRegistrationId={pfaRegistrationId} onSnackbar={showSnackbar} />
-      </PfaFiscalProfileProvider>
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+    <PlanAccessContext.Provider value={planAccess}>
+      <AppLayout
+        nav={pfaNavConfigFor(planAccess.managesOwnBooks)}
+        onLogout={handleLogout}
+        showNotifications
+        onOpenRecurringDocumentation={() => navigate(PFA_PATHS.docsRecurring)}
       >
-        <Alert severity={snackbar.severity} sx={{ width: '100%', borderRadius: 2, fontWeight: 600 }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </AppLayout>
+        <PfaFiscalProfileProvider>
+          <DashboardRoutes pfaRegistrationId={pfaRegistrationId} onSnackbar={showSnackbar} />
+        </PfaFiscalProfileProvider>
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={4000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert severity={snackbar.severity} sx={{ width: '100%', borderRadius: 2, fontWeight: 600 }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </AppLayout>
+    </PlanAccessContext.Provider>
   )
 }

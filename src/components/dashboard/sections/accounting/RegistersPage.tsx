@@ -112,8 +112,8 @@ export function RegistersPage() {
 
   return (
     <Stack spacing={2.5}>
-      <PageHeader title="Registrele mele" subtitle="Vezi datele pregătite de contabil, documentele și starea lor. Pentru corecții, trimite documentul sau discută cu contabilul." />
-      <RegisterGuide value={section} onChange={setSection} />
+      <PageHeader title="Registrele mele" />
+      <RegisterGuide value={section} onChange={setSection} selfManaged />
       {(section === 'rjip' || section === 'ref') && <TextField label="An contabil" select size="small" value={year} onChange={event => setYear(Number(event.target.value))} sx={{ width: 180 }}>
         {Array.from({ length: new Date().getFullYear() - 1999 }, (_, index) => new Date().getFullYear() - index).map(value => <MenuItem key={value} value={value}>{value}</MenuItem>)}
       </TextField>}

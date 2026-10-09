@@ -52,6 +52,7 @@ export const PFA_PATHS = {
   anaf: at('contabilitate/spv-efactura'),
   expenses: at('contabilitate/cheltuieli'),
   taxes: at('contabilitate/taxe-declaratii'),
+  ownDeclarations: at('contabilitate/declaratii'),
   fiscalProfile: at('contabilitate/profil-fiscal'),
   bankAccount: at('contabilitate/cont-bancar'),
   invoices: at('contabilitate/facturi'),
@@ -124,6 +125,7 @@ export const PFA_NAV: NavEntry[] = [
       { id: 'anaf', label: 'SPV și e-Factura', path: PFA_PATHS.anaf, hint: 'Mesaje ANAF, facturi și documente sincronizate' },
       { id: 'expenses', label: 'Cheltuieli', path: PFA_PATHS.expenses, hint: 'Ce poți deduce din taxe' },
       { id: 'taxes', label: 'Taxe & declarații', path: PFA_PATHS.taxes, hint: 'Estimări și termene' },
+      { id: 'own-declarations', label: 'Declarații', path: PFA_PATHS.ownDeclarations, hint: 'Generează XML-urile de depus' },
       { id: 'fiscal-profile', label: 'Profil fiscal', path: PFA_PATHS.fiscalProfile, hint: 'Situația ta pentru estimări' },
       { id: 'invoices', label: 'Facturi', path: PFA_PATHS.invoices, hint: 'Emise prin Oblio' },
       {
@@ -246,6 +248,7 @@ export const LEAF_ICONS: Record<string, SvgIconComponent> = {
   [PFA_PATHS.financialOverview]: InsertChartRoundedIcon,
   [PFA_PATHS.expenses]: AccountBalanceWalletRoundedIcon,
   [PFA_PATHS.taxes]: CalculateRoundedIcon,
+  [PFA_PATHS.ownDeclarations]: DescriptionRoundedIcon,
   [PFA_PATHS.fiscalProfile]: AccountBalanceRoundedIcon,
   [PFA_PATHS.bankAccount]: AccountBalanceRoundedIcon,
   [PFA_PATHS.invoices]: ReceiptLongRoundedIcon,
@@ -362,6 +365,20 @@ const PFA_QUICK_ACTIONS: QuickActionsMenu = {
 }
 
 /**
+ * Paginile care depind de plan. PFAlone își ține singur registrele și își generează declarațiile,
+ * fără contabil; la PFA Full le face contabilul, iar clientul nu le mai vede.
+ */
+const OWN_BOOKS_PATHS: readonly string[] = [PFA_PATHS.registers, PFA_PATHS.ownDeclarations]
+const ACCOUNTANT_PATHS: readonly string[] = [PFA_PATHS.accountantChat]
+
+function forPlan(entries: NavEntry[], managesOwnBooks: boolean): NavEntry[] {
+  const hidden = managesOwnBooks ? ACCOUNTANT_PATHS : OWN_BOOKS_PATHS
+  return entries.map((entry) =>
+    entry.kind === 'group' ? { ...entry, children: entry.children.filter((child) => !hidden.includes(child.path)) } : entry,
+  )
+}
+
+/**
  * Configul complet al dashboard-ului PFA. Layout-ul primește doar obiectul ăsta — nu importă
  * nimic din fișierul de față și nu știe că PFA-ul există.
  */
@@ -395,4 +412,15 @@ export const PFA_NAV_CONFIG: DashboardNavConfig = {
   fallbackTitle: 'Dashboard PFA',
   quickActions: PFA_QUICK_ACTIONS,
   documentTitle: 'RIDElance — Dashboard PFA',
+}
+
+/** Configul după plan: meniul și acțiunile rapide fără paginile pe care planul nu le are. */
+export function pfaNavConfigFor(managesOwnBooks: boolean): DashboardNavConfig {
+  return {
+    ...PFA_NAV_CONFIG,
+    entries: forPlan(PFA_NAV_CONFIG.entries, managesOwnBooks),
+    quickActions: managesOwnBooks
+      ? { ...PFA_QUICK_ACTIONS, items: PFA_QUICK_ACTIONS.items.filter((item) => item.id !== 'accountant') }
+      : PFA_QUICK_ACTIONS,
+  }
 }

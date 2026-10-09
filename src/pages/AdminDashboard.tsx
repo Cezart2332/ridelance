@@ -260,7 +260,7 @@ export function AdminDashboard() {
   const [detailAction, setDetailAction] = useState<DetailAction>(null)
   const [detailActionError, setDetailActionError] = useState<string | null>(null)
   const [detailActionLoading, setDetailActionLoading] = useState(false)
-  const [planActionValue, setPlanActionValue] = useState<AdminPlanFilter>('start')
+  const [planActionValue, setPlanActionValue] = useState<AdminPlanFilter>('pfafull')
   const [discountType, setDiscountType] = useState<'percent' | 'fixed'>('percent')
   const [discountValue, setDiscountValue] = useState('10')
   const [detailActionNote, setDetailActionNote] = useState('')
@@ -527,7 +527,7 @@ export function AdminDashboard() {
   const openDetailAction = (action: DetailAction) => {
     setDetailAction(action)
     setDetailActionError(null)
-    setPlanActionValue('start')
+    setPlanActionValue('pfafull')
     setDiscountType('percent')
     setDiscountValue('10')
     setDetailActionNote(action === 'note' ? pfaDetail?.internalNote ?? '' : '')
@@ -539,7 +539,7 @@ export function AdminDashboard() {
     setDetailActionError(null)
     try {
       if (detailAction === 'plan') {
-        await adminOverviewService.changePfaPlan(selectedPfa.id, planActionValue as 'solo' | 'start' | 'pro', 'next_cycle')
+        await adminOverviewService.changePfaPlan(selectedPfa.id, planActionValue as 'pfaalone' | 'pfafull', 'next_cycle')
       } else if (detailAction === 'discount') {
         await adminOverviewService.applyPfaDiscount(selectedPfa.id, {
           type: discountType,
@@ -680,9 +680,8 @@ export function AdminDashboard() {
 
   const pfaPlanLabel = (pfa: PfaSummary) => {
     switch (pfa.subscriptionPlan?.toLowerCase()) {
-      case 'solo': return 'Solo'
-      case 'start': return 'Start'
-      case 'pro': return 'Pro'
+      case 'pfaalone': return 'PFAlone'
+      case 'pfafull': return 'PFA Full'
       default: return 'Fără plan'
     }
   }
@@ -861,9 +860,8 @@ export function AdminDashboard() {
               {detailAction === 'plan' && (
                 <>
                   <TextField select label="Plan nou" value={planActionValue} onChange={(event) => setPlanActionValue(event.target.value as AdminPlanFilter)} sx={inputSx}>
-                    <MenuItem value="solo">Solo</MenuItem>
-                    <MenuItem value="start">Start</MenuItem>
-                    <MenuItem value="pro">Pro</MenuItem>
+                    <MenuItem value="pfaalone">PFAlone</MenuItem>
+                    <MenuItem value="pfafull">PFA Full</MenuItem>
                   </TextField>
                   <TextField select label="Aplicare" value="next_cycle" sx={inputSx} disabled>
                     <MenuItem value="next_cycle">Din următorul ciclu</MenuItem>

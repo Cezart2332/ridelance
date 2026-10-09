@@ -64,7 +64,7 @@ export function ProfileTab() {
         { label: 'Telefon', value: profile.phoneNumber || '—' },
         { label: 'Rol', value: formatRole(profile.role) },
         { label: 'Parola', value: '**********' },
-        { label: 'Plan activ', value: 'Pro' },
+        { label: 'Plan activ', value: 'PFA Full' },
       ]
     : []
 

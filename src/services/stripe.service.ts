@@ -1,7 +1,7 @@
 import { api } from '../lib/axios'
 import type { OwnerType } from '../config/ownerType'
-import { annualSummary, priceFor, type BillingCycle, type Plan, type PlanFeature } from '../data/plans'
-import { BILLING_PFA_PLANS as PFA_PLANS } from '../data/billingPlans'
+import { ANNUAL_DISCOUNT, annualSummary, priceFor, type BillingCycle, type Plan, type PlanFeature } from '../data/plans'
+import { PFA_PLANS } from '../data/plans'
 import { getPartnerBenefit } from '../data/benefits'
 import type { PersoanaFizicaPayload, RegisteredOfficePayload, SignPayload } from './companyFormation.service'
 
@@ -10,7 +10,24 @@ import type { PersoanaFizicaPayload, RegisteredOfficePayload, SignPayload } from
  * Redirects users to pre-built Stripe-hosted checkout pages.
  */
 
-export type PlanKey = 'solo' | 'start' | 'pro'
+export type PlanKey = 'pfalone' | 'pfa-full'
+
+/** Opțiunile plătite ale PFAlone. La PFA Full sunt incluse. */
+export type AddonKey = 'open-banking' | 'cash-register'
+
+/** Numele planului de pe server („PfaAlone”) în cheia folosită peste tot în frontend. */
+export const planKeyOf = (serverPlan: string | null | undefined): PlanKey | null => {
+  switch ((serverPlan ?? '').toLowerCase()) {
+    case 'pfaalone':
+    case 'pfalone':
+      return 'pfalone'
+    case 'pfafull':
+    case 'pfa-full':
+      return 'pfa-full'
+    default:
+      return null
+  }
+}
 export type ServiceKey = 'infiintare_pfa' | 'sediu_social' | 'start_ride'
 
 /**
@@ -56,6 +73,14 @@ export interface SubscriptionResponse {
   pendingPlan: PlanKey | null
   hasPaidInfiintare: boolean
   onboardingSectionsValidated: boolean
+  /** Conectarea băncii: inclusă în PFA Full, plătită separat la PFAlone. */
+  includesOpenBanking?: boolean
+  /** Automatizarea casei de marcat: inclusă în PFA Full, plătită separat la PFAlone. */
+  includesCashRegister?: boolean
+  /** PFAlone: își ține singur registrele și le vede. */
+  canManageRegisters?: boolean
+  /** PFAlone: are generatorul de declarații. */
+  canGenerateDeclarations?: boolean
 }
 
 
@@ -89,6 +114,8 @@ export interface PlanInfo {
   footnote?: string
   cta: string
   highlighted: boolean
+  /** Opțiunile planului: de cumpărat (PFAlone) sau incluse (PFA Full). */
+  addons: { key: AddonKey; title: string; monthlyLei: number; text: string; alternative?: string; included: boolean }[]
 }
 
 export interface ServiceInfo {
@@ -148,6 +175,14 @@ const toPlanInfo = (plan: Plan, cycle: BillingCycle): PlanInfo => {
     footnote: plan.footnote,
     cta: plan.cta,
     highlighted: plan.recommended === true,
+    addons: (plan.addons ?? []).map((addon) => ({
+      key: addon.key as AddonKey,
+      title: addon.title,
+      monthlyLei: addon.monthlyLei,
+      text: addon.text,
+      alternative: addon.alternative,
+      included: addon.included === true,
+    })),
   }
 }
 
@@ -162,18 +197,25 @@ export const subscriptionPlansFor = (cycle: BillingCycle): PlanInfo[] =>
  * de plată stă lângă formularul Stripe, care pe anual cere tot anul dintr-o dată: „179,10 lei /
  * lună" lângă un buton care ia 2.149,20 lei ar fi două sume diferite pe același ecran.
  */
-function chargedPriceLabel(key: PlanKey, cycle: BillingCycle): string | undefined {
+function chargedPriceLabel(key: PlanKey, cycle: BillingCycle, addons: AddonKey[] = []): string | undefined {
   const plan = PFA_PLANS.find((p) => p.key === key)
   if (!plan) return undefined
 
+  // Opțiunile se facturează pe același abonament, deci intră în suma încasată acum. Anual, cu
+  // aceeași reducere ca planul (ca pe server: `Pricing.Addons`).
+  const addonMonthly = (plan.addons ?? [])
+    .filter((addon) => !addon.included && addons.includes(addon.key as AddonKey))
+    .reduce((sum, addon) => sum + addon.monthlyLei, 0)
+
   if (cycle === 'annual' && plan.pricing.annualTotalLei != null) {
-    return `${plan.pricing.annualTotalLei.toLocaleString('ro-RO', {
+    const addonAnnual = Math.round(addonMonthly * 12 * (1 - ANNUAL_DISCOUNT) * 100) / 100
+    return `${(plan.pricing.annualTotalLei + addonAnnual).toLocaleString('ro-RO', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })} lei / an`
   }
 
-  return `${plan.pricing.monthlyLei.toLocaleString('ro-RO')} lei / lună`
+  return `${(plan.pricing.monthlyLei + addonMonthly).toLocaleString('ro-RO')} lei / lună`
 }
 
 export const SUBSCRIPTION_PLANS: PlanInfo[] = subscriptionPlansFor('monthly')
@@ -279,9 +321,9 @@ export const stripeService = {
         clientSecret: response.data.clientSecret,
         cancelUrl: effectiveCancelUrl,
         kind: 'advance',
-        title: 'Abonament Start — avans',
+        title: 'Abonament RIDElance — avans',
         price: priceLabel,
-        desc: 'Plata în avans a abonamentului Start. Nerambursabilă.',
+        desc: 'Plata în avans a primei luni de abonament. Se scade din primul abonament ales. Nerambursabilă.',
       })
     } catch (error) {
       // Refuzul se propagă: de la RL-03 încoace serverul răspunde 422 cu ce mai lipsește din
@@ -298,7 +340,7 @@ export const stripeService = {
     key: PlanKey,
     successUrl?: string,
     cancelUrl?: string,
-    options?: { isPlanChange?: boolean; cycle?: BillingCycle; bcrDiscountRequested?: boolean },
+    options?: { isPlanChange?: boolean; cycle?: BillingCycle; bcrDiscountRequested?: boolean; addons?: AddonKey[] },
   ): Promise<void> {
     const cycle: BillingCycle = options?.cycle ?? 'monthly'
     const plan = subscriptionPlansFor(cycle).find(p => p.key === key)
@@ -316,6 +358,8 @@ export const stripeService = {
       // Nu schimbă suma încasată acum: serverul o reține pe abonament, iar reducerea pornește
       // după confirmarea BCR.
       bcrDiscountRequested: options?.bcrDiscountRequested ?? false,
+      // Doar PFAlone le cumpără; la PFA Full sunt incluse, iar serverul refuză altfel.
+      addons: key === 'pfalone' ? (options?.addons ?? []) : [],
       successUrl: effectiveSuccessUrl,
       cancelUrl: effectiveCancelUrl
     })
@@ -324,7 +368,7 @@ export const stripeService = {
       cancelUrl: effectiveCancelUrl,
       kind: 'subscription',
       title: plan.title,
-      price: chargedPriceLabel(key, cycle),
+      price: chargedPriceLabel(key, cycle, key === 'pfalone' ? (options?.addons ?? []) : []),
       desc: plan.summary,
       renewal:
         cycle === 'annual'
@@ -383,12 +427,9 @@ export const stripeService = {
     try {
       const response = await api.get<SubscriptionResponse>('/payments/subscription')
       if (response.data) {
-        if (response.data.plan) {
-          response.data.plan = response.data.plan.toLowerCase() as PlanKey
-        }
-        if (response.data.pendingPlan) {
-          response.data.pendingPlan = response.data.pendingPlan.toLowerCase() as PlanKey
-        }
+        // Serverul trimite numele planului („PfaAlone”); frontendul lucrează cu cheile ofertei.
+        response.data.plan = planKeyOf(response.data.plan)
+        response.data.pendingPlan = planKeyOf(response.data.pendingPlan)
       }
       return response.data
     } catch (error) {

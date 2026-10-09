@@ -5,8 +5,8 @@ import { getPartnerBenefit } from './benefits'
  *
  * Noua ofertă publică este descrisă o singură dată pentru pagina de Abonamente și landing.
  *
- * Prețurile noii oferte sunt de afișare. Fluxurile existente de plată folosesc billingPlans.ts
- * până la actualizarea separată a catalogului din backend.
+ * Planurile PFA de aici sunt și cele încasate: backendul (`Pricing.Plans`, `StripeCatalog`) are
+ * aceleași chei („pfalone”, „pfa-full”) și aceleași sume.
  */
 
 /** Cine cumpără. Slider-ul de pe pagină comută între cele două. */
@@ -123,7 +123,7 @@ export function partnerNameFor(slug: string): string | null {
   return getPartnerBenefit(slug)?.name ?? null
 }
 
-/** Oferta publică de afișare. Catalogul de plată existent este în billingPlans.ts. */
+/** Planurile PFA: oferta publică și catalogul de plată, aceleași. */
 export const PFA_PLANS: Plan[] = [
   {
     key: 'pfalone', audience: 'pfa', title: 'PFAlone',
