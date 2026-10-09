@@ -26,7 +26,7 @@ export function formatDocumentCategory(category: string | null | undefined): str
     case 'CertificatConstatator':
       return 'Certificat constatator';
     case 'DovadaPlataArr':
-      return 'Dovada plății ARR & Cont Flotă';
+      return 'Dovada plății tarif ARR';
     case 'AutorizatieTransportAlternativ':
       return 'Autorizație transport alternativ';
     case 'Talon':
@@ -87,6 +87,12 @@ export function formatDocumentCategory(category: string | null | undefined): str
       return 'Contract de închiriere';
     case 'ContractLeasing':
       return 'Contract de leasing';
+    case 'ArrAuthorizationPaymentProof':
+      return 'Dovada plății autorizației (ARR)';
+    case 'ArrCertifiedCopyPaymentProof':
+      return 'Dovada plății copiei conforme (ARR)';
+    case 'ArrBadgesPaymentProof':
+      return 'Dovada plății ecusoanelor (ARR)';
     case 'RaportUber':
       return 'Raport venituri Uber';
     case 'RaportBolt':

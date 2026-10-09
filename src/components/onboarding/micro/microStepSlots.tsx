@@ -1,4 +1,6 @@
-import { Alert, Box, Stack, Typography } from '@mui/material'
+import { Alert, Box, IconButton, Stack, Tooltip, Typography } from '@mui/material'
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
+import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded'
 import { useEffect, useState, type ReactNode } from 'react'
 
 import type { ArrFleetState } from '../../../services/onboarding.service'
@@ -25,9 +27,12 @@ import { useOnboarding } from '../useOnboarding'
 export function MicroStepSlotContent({
   slot,
   context,
+  category,
 }: {
   slot: MicroStepSlot
   context: MicroStepContext
+  /** Categoria documentului de pe ecran: plata a cărei dovadă se încarcă acolo. */
+  category?: string
 }): ReactNode {
   switch (slot) {
     case 'bankAccountCta':
@@ -35,7 +40,7 @@ export function MicroStepSlotContent({
     case 'bankConnect':
       return <BankConnectSlot context={context} />
     case 'arrFleetPayment':
-      return <ArrFleetPaymentSlot context={context} />
+      return <ArrFleetPaymentSlot context={context} category={category} />
     case 'arrFleetStatus':
       return <ArrFleetStatusSlot context={context} />
     case 'onboardingAdvance':
@@ -403,20 +408,59 @@ const arrFleetOf = (c: MicroStepContext) => (c.resources.arrFleet as ArrFleetSta
 
 const lei = (bani: number) => `${(bani / 100).toLocaleString('ro-RO')} lei`
 
-/**
- * Plata pasului „ARR & Cont Flotă”: suma calculată pe server din platformele alese, ce include și
- * contul în care se plătește. Contul vine din configurarea serverului, nu din cod.
- */
-function ArrFleetPaymentSlot({ context }: { context: MicroStepContext }) {
-  const state = arrFleetOf(context)
-  if (!state) return null
+/** IBAN-ul se citește în grupuri de patru; se copiază fără spații, cum îl vrea banca. */
+const groupIban = (iban: string) => iban.replace(/(.{4})/g, '$1 ').trim()
 
-  const { beneficiary, iban, bank } = state.paymentDetails
-  const rows = [
-    { label: 'Beneficiar', value: beneficiary },
-    { label: 'IBAN', value: iban },
-    { label: 'Bancă', value: bank },
-  ].filter((row): row is { label: string; value: string } => Boolean(row.value))
+function CopyableRow({ label, value, copyValue }: { label: string; value: string; copyValue?: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const copy = async () => {
+    await navigator.clipboard.writeText(copyValue ?? value)
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1800)
+  }
+
+  return (
+    <Stack
+      direction="row"
+      spacing={2}
+      sx={{
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        px: 2,
+        py: 1,
+        borderBottom: `1px solid ${TOKENS.border}`,
+        '&:last-of-type': { borderBottom: 'none' },
+      }}
+    >
+      <Box sx={{ minWidth: 0 }}>
+        <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: TOKENS.textMuted }}>{label}</Typography>
+        <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: TOKENS.ink, wordBreak: 'break-word' }}>{value}</Typography>
+      </Box>
+      <Tooltip title={copied ? 'Copiat' : `Copiază ${label.toLowerCase()}`}>
+        <IconButton
+          size="small"
+          onClick={() => void copy()}
+          aria-label={`Copiază ${label.toLowerCase()}`}
+          sx={{ flexShrink: 0, color: copied ? TOKENS.success : TOKENS.textMuted }}
+        >
+          {copied ? <CheckRoundedIcon fontSize="small" /> : <ContentCopyRoundedIcon fontSize="small" />}
+        </IconButton>
+      </Tooltip>
+    </Stack>
+  )
+}
+
+/**
+ * O plată către ARR: suma exactă, ce acoperă și contul de trezorerie al agenției din județul
+ * sediului social. ARR cere plăți separate, deci fiecare ecran de dovadă are plata lui.
+ */
+function ArrFleetPaymentSlot({ context, category }: { context: MicroStepContext; category?: string }) {
+  const state = arrFleetOf(context)
+  const payment = state?.payments.find((p) => p.proofCategory === category)
+  if (!state || !payment) return null
+
+  const agency = state.agency
 
   return (
     <Stack spacing={1.5}>
@@ -428,42 +472,31 @@ function ArrFleetPaymentSlot({ context }: { context: MicroStepContext }) {
           backgroundColor: TOKENS.primarySoft,
         }}
       >
-        <Typography sx={{ fontSize: '0.78rem', fontWeight: 800, color: TOKENS.textMuted }}>DE PLATĂ</Typography>
-        <Typography sx={{ fontSize: '2rem', fontWeight: 800, color: TOKENS.ink, lineHeight: 1.2 }}>
-          {lei(state.paymentAmountBani)}
+        <Typography sx={{ fontSize: '0.78rem', fontWeight: 800, color: TOKENS.textMuted }}>
+          {payment.label.toUpperCase()}
         </Typography>
-        <Typography sx={{ mt: 1, fontSize: '0.85rem', color: TOKENS.textMuted, lineHeight: 1.6 }}>
-          {state.paymentExplanation}
+        <Typography sx={{ fontSize: '2rem', fontWeight: 800, color: TOKENS.ink, lineHeight: 1.2 }}>
+          {lei(payment.amountBani)}
+        </Typography>
+        <Typography sx={{ mt: 0.5, fontSize: '0.85rem', color: TOKENS.textMuted }}>
+          {payment.explanation} Plătește exact suma asta, separat de celelalte.
         </Typography>
       </Box>
 
-      {rows.length > 0 && (
+      {agency ? (
         <Box sx={{ borderRadius: `${TOKENS.radius.md}px`, border: `1px solid ${TOKENS.border}`, overflow: 'hidden' }}>
-          {rows.map((row) => (
-            <Stack
-              key={row.label}
-              direction="row"
-              spacing={2}
-              sx={{
-                justifyContent: 'space-between',
-                px: 2,
-                py: 1.1,
-                borderBottom: `1px solid ${TOKENS.border}`,
-                '&:last-of-type': { borderBottom: 'none' },
-              }}
-            >
-              <Typography sx={{ fontSize: '0.85rem', color: TOKENS.textMuted }}>{row.label}</Typography>
-              <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: TOKENS.ink, textAlign: 'right', wordBreak: 'break-word' }}>
-                {row.value}
-              </Typography>
-            </Stack>
-          ))}
+          <CopyableRow label="Beneficiar" value={agency.beneficiaryName} />
+          <CopyableRow label="CIF" value={agency.fiscalCode} />
+          <CopyableRow label="IBAN" value={groupIban(agency.iban)} copyValue={agency.iban} />
+          <CopyableRow label="Trezoreria" value={agency.treasury} />
         </Box>
+      ) : (
+        <Alert severity="error">{state.agencyError ?? 'Nu știm agenția ARR la care plătești. Scrie-ne la suport.'}</Alert>
       )}
 
-      {state.paymentProofOutdated && (
+      {payment.kind === 'Badges' && state.paymentProofOutdated && (
         <Alert severity="warning">
-          Ai schimbat platformele după ce ai încărcat dovada plății. Suma de plată e acum {lei(state.paymentAmountBani)}:
+          Ai schimbat platformele după ce ai încărcat dovada. Suma pentru ecusoane e acum {lei(payment.amountBani)}:
           încarcă dovada pentru suma nouă.
         </Alert>
       )}

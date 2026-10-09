@@ -105,11 +105,6 @@ services:
       AnafMandatar__IdNumber: ${ANAF_MANDATAR_ID_NUMBER:-}
       AnafMandatar__Email: ${ANAF_MANDATAR_EMAIL:-}
 
-      # ─── Pasul „ARR & Cont Flotă”: contul în care plătește clientul (408 / 416 lei) ──────
-      ArrFleet__PaymentBeneficiary: ${ARR_FLEET_PAYMENT_BENEFICIARY:-}
-      ArrFleet__PaymentIban: ${ARR_FLEET_PAYMENT_IBAN:-}
-      ArrFleet__PaymentBank: ${ARR_FLEET_PAYMENT_BANK:-}
-
       # ─── Facturare (Oblio) ──────────────────────────────────────────────────────────────
       Oblio__ClientId: ${OBLIO_CLIENT_ID:-}
       Oblio__ClientSecret: ${OBLIO_CLIENT_SECRET:-}

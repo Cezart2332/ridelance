@@ -475,11 +475,11 @@ export function OnboardingRunner() {
               >
                 <Stack spacing={2.5}>
                   {def.slotBeforeBody && def.slot && (
-                    <MicroStepSlotContent slot={def.slot} context={context} />
+                    <MicroStepSlotContent slot={def.slot} context={context} category={def.document?.category} />
                   )}
                   {body()}
                   {def.slot && !def.slotBeforeBody && (
-                    <MicroStepSlotContent slot={def.slot} context={context} />
+                    <MicroStepSlotContent slot={def.slot} context={context} category={def.document?.category} />
                   )}
                 </Stack>
               </OnboardingCard>

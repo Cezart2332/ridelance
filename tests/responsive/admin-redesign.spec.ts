@@ -141,7 +141,14 @@ test('admin: ARR & Cont Flotă — apel telefonic, status cu document oficial ș
       { platform: 'Uber', hasAccount: true, email: 'sofer@example.test', phone: '+40712345678', fullName: 'Andrei Ionescu', requiresPhoneCall: false },
       { platform: 'Bolt', hasAccount: false, email: null, phone: null, fullName: null, requiresPhoneCall: true },
     ],
-    vehicleOwnership: 'Rental', paymentAmountBani: 41600, paymentExplanation: '', paymentDetails: { beneficiary: null, iban: null, bank: null },
+    vehicleOwnership: 'Rental', paymentAmountBani: 41600,
+    payments: [
+      { kind: 'Authorization', label: 'Autorizația de transport', explanation: '', amountBani: 30000, proofCategory: 'ArrAuthorizationPaymentProof', proofUploaded: true },
+      { kind: 'CertifiedCopy', label: 'Copia conformă', explanation: '', amountBani: 10000, proofCategory: 'ArrCertifiedCopyPaymentProof', proofUploaded: true },
+      { kind: 'Badges', label: 'Ecusoanele', explanation: '', amountBani: 1600, proofCategory: 'ArrBadgesPaymentProof', proofUploaded: false },
+    ],
+    agency: { countyCode: 'CJ', countyName: 'Cluj', beneficiaryName: 'A.R.R. — Agenția Teritorială Cluj', treasury: 'Trezoreria Cluj-Napoca', fiscalCode: '23826223', iban: 'RO93TREZ216501701X030552' },
+    agencyError: null,
     paymentProofOutdated: false, submittedAtUtc: '2026-10-09T08:00:00Z', reopenedReason: null, missing: [], statusLog: [] as unknown[],
   }
   const uploads: string[] = []
@@ -165,6 +172,8 @@ test('admin: ARR & Cont Flotă — apel telefonic, status cu document oficial ș
   await expect(step.getByText('sofer@example.test · +40712345678 · Andrei Ionescu')).toBeVisible()
   await expect(step.getByText('Contract de închiriere', { exact: true })).toBeVisible()
   await expect(step.getByText('416 lei')).toBeVisible()
+  await expect(step.getByText(/A\.R\.R\. — Agenția Teritorială Cluj · CIF 23826223/)).toBeVisible()
+  await expect(step.getByText('16 lei · fără dovadă')).toBeVisible()
 
   // Autorizația cere documentul oficial: serverul refuză, iar mesajul ajunge la admin.
   await step.getByLabel('Status').click()

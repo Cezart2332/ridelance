@@ -901,9 +901,20 @@ test.describe('pasul 4 — ARR & Cont Flotă', () => {
     driverAccounts: [{ platform: 'Uber', hasAccount: null, email: null, phone: null, fullName: null, requiresPhoneCall: false }],
     vehicleOwnership: 'Ownership',
     paymentAmountBani: 40800,
-    paymentExplanation:
-      'Plata este o sumă întreagă formată din: 300 lei autorizația de transport (valabilă 3 ani), 100 lei copia conformă (valabilă 1 an), 8 lei ecusoane Uber.',
-    paymentDetails: { beneficiary: 'RIDElance SRL', iban: 'RO49AAAA1B31007593840000', bank: 'Banca Test' },
+    payments: [
+      { kind: 'Authorization', label: 'Autorizația de transport', explanation: 'Valabilă 3 ani.', amountBani: 30000, proofCategory: 'ArrAuthorizationPaymentProof', proofUploaded: false },
+      { kind: 'CertifiedCopy', label: 'Copia conformă', explanation: 'Valabilă 1 an.', amountBani: 10000, proofCategory: 'ArrCertifiedCopyPaymentProof', proofUploaded: false },
+      { kind: 'Badges', label: 'Ecusoanele', explanation: 'Câte 8 lei pe platformă: 8 lei Uber.', amountBani: 800, proofCategory: 'ArrBadgesPaymentProof', proofUploaded: false },
+    ],
+    agency: {
+      countyCode: 'CJ',
+      countyName: 'Cluj',
+      beneficiaryName: 'A.R.R. — Agenția Teritorială Cluj',
+      treasury: 'Trezoreria Cluj-Napoca',
+      fiscalCode: '23826223',
+      iban: 'RO93TREZ216501701X030552',
+    },
+    agencyError: null,
     paymentProofOutdated: false,
     submittedAtUtc: null,
     reopenedReason: null,
@@ -943,33 +954,59 @@ test.describe('pasul 4 — ARR & Cont Flotă', () => {
     return requests
   }
 
-  test('plata arată suma pentru platformele alese și doar ecusoanele lor', async ({ page }, info) => {
+  test('fiecare plată către ARR are suma ei exactă și contul agenției din județul sediului', async ({ page }, info) => {
     await stubArrFleet(page, arrFleet())
-    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata', { waitUntil: 'networkidle' })
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata_autorizatie', { waitUntil: 'networkidle' })
 
-    await expect(page.getByText('408 lei', { exact: true })).toBeVisible()
-    await expect(page.getByText(/8 lei ecusoane Uber\./)).toBeVisible()
-    await expect(page.getByText(/ecusoane Bolt/)).toHaveCount(0)
-    await expect(page.getByText('RO49AAAA1B31007593840000')).toBeVisible()
+    await expect(page.getByText('300 lei', { exact: true })).toBeVisible()
+    await expect(page.getByText('A.R.R. — Agenția Teritorială Cluj')).toBeVisible()
+    await expect(page.getByText('RO93 TREZ 2165 0170 1X03 0552')).toBeVisible()
+    await expect(page.getByText('Trezoreria Cluj-Napoca')).toBeVisible()
     await page.screenshot({ path: `test-results/onboarding-arr-fleet-plata-${info.project.name}.png` })
+
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata_copie', { waitUntil: 'networkidle' })
+    await expect(page.getByText('100 lei', { exact: true })).toBeVisible()
+
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata_ecusoane', { waitUntil: 'networkidle' })
+    await expect(page.getByText('8 lei', { exact: true })).toBeVisible()
+    await expect(page.getByText(/8 lei Uber\./)).toBeVisible()
   })
 
-  test('cu ambele platforme suma e 416 lei, iar o dovadă pentru suma veche e semnalată', async ({ page }) => {
+  test('cu ambele platforme ecusoanele costă 16 lei, iar o dovadă pentru suma veche e semnalată', async ({ page }) => {
+    const base = arrFleet()
     await stubArrFleet(
       page,
-      arrFleet({
+      {
+        ...base,
         platforms: ['Uber', 'Bolt'],
         paymentAmountBani: 41600,
         paymentProofOutdated: true,
-        paymentExplanation:
-          'Plata este o sumă întreagă formată din: 300 lei autorizația de transport (valabilă 3 ani), 100 lei copia conformă (valabilă 1 an), 8 lei ecusoane Bolt, 8 lei ecusoane Uber.',
-      }),
-      [uploadedDoc('DovadaPlataArr', 'plata.pdf')],
+        payments: (base.payments as { kind: string }[]).map((payment) =>
+          payment.kind === 'Badges'
+            ? { ...payment, amountBani: 1600, explanation: 'Câte 8 lei pe platformă: 8 lei Uber, 8 lei Bolt.' }
+            : payment,
+        ),
+      },
+      [uploadedDoc('ArrBadgesPaymentProof', 'ecusoane.pdf')],
     )
-    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata', { waitUntil: 'networkidle' })
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata_ecusoane', { waitUntil: 'networkidle' })
 
-    await expect(page.getByText('416 lei', { exact: true })).toBeVisible()
+    await expect(page.getByText('16 lei', { exact: true })).toBeVisible()
     await expect(page.getByText(/încarcă dovada pentru suma nouă/)).toBeVisible()
+  })
+
+  test('fără județul sediului nu propunem niciun cont', async ({ page }) => {
+    await stubArrFleet(
+      page,
+      arrFleet({
+        agency: null,
+        agencyError: 'Nu știm județul sediului social al PFA-ului, deci nici agenția ARR la care plătești. Scrie-ne la suport și îl completăm.',
+      }),
+    )
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata_autorizatie', { waitUntil: 'networkidle' })
+
+    await expect(page.getByText(/Nu știm județul sediului social/)).toBeVisible()
+    await expect(page.getByText('IBAN')).toHaveCount(0)
   })
 
   test('„Nu am cont” nu mai cere datele contului', async ({ page }) => {
@@ -993,7 +1030,12 @@ test.describe('pasul 4 — ARR & Cont Flotă', () => {
         vehicleOwnership: 'Leasing',
         driverAccounts: [{ platform: 'Uber', hasAccount: false, email: null, phone: null, fullName: null, requiresPhoneCall: true }],
       }),
-      [...personalDocuments, uploadedDoc('DovadaPlataArr', 'plata.pdf')],
+      [
+        ...personalDocuments,
+        uploadedDoc('ArrAuthorizationPaymentProof', 'plata-autorizatie.pdf'),
+        uploadedDoc('ArrCertifiedCopyPaymentProof', 'plata-copie.pdf'),
+        uploadedDoc('ArrBadgesPaymentProof', 'plata-ecusoane.pdf'),
+      ],
     )
     await page.goto('/onboarding/arr-fleet', { waitUntil: 'networkidle' })
 
