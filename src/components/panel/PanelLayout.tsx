@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
-import { Avatar, Box, ButtonBase, Drawer, IconButton, Stack, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material'
+import { Avatar, Box, ButtonBase, Collapse, Drawer, IconButton, Stack, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded'
@@ -24,6 +25,58 @@ export interface PanelNavItem {
 
 const SIDEBAR = 240
 const RAIL = 64
+
+const groupHeadingSx = { px: 1.25, pt: 2, pb: 0.75, fontSize: 10, fontWeight: 600, letterSpacing: '0.09em', textTransform: 'uppercase', color: 'var(--rl-text-subtle)' } as const
+
+/** Grupurile strânse de utilizator, ținute per panou: adminul și contabilul au meniuri diferite. */
+function readClosedGroups(workspace: string): string[] {
+  try {
+    const raw = localStorage.getItem(`rl-panel-closed-groups:${workspace}`)
+    const parsed: unknown = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+function writeClosedGroups(workspace: string, groups: string[]) {
+  try { localStorage.setItem(`rl-panel-closed-groups:${workspace}`, JSON.stringify(groups)) } catch { /* Stocarea este opțională. */ }
+}
+
+/**
+ * Titlul unui grup care se poate strânge. Strâns, arată totalul contoarelor din el, ca un
+ * document nealocat să nu dispară din vedere odată cu grupul.
+ */
+function GroupToggle({ group, open, count, controls, onToggle }: { group: string; open: boolean; count: number; controls: string; onToggle: () => void }) {
+  return (
+    <ButtonBase
+      onClick={onToggle}
+      aria-expanded={open}
+      aria-controls={controls}
+      sx={{
+        ...groupHeadingSx,
+        width: '100%',
+        gap: 0.5,
+        justifyContent: 'flex-start',
+        borderRadius: '6px',
+        fontFamily: 'inherit',
+        textAlign: 'left',
+        '&:hover': { color: 'var(--rl-fg-soft)' },
+        '&:focus-visible': { outline: '2px solid var(--rl-primary)', outlineOffset: 1 },
+      }}
+    >
+      <Box component="h2" sx={{ m: 0, flex: 1, minWidth: 0, font: 'inherit', letterSpacing: 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {group}
+      </Box>
+      {!open && count > 0 && (
+        <Box component="span" sx={{ px: 0.75, borderRadius: 999, bgcolor: 'var(--rl-muted)', color: 'var(--rl-fg)', fontSize: 10, fontWeight: 600, letterSpacing: 0, lineHeight: '16px' }}>
+          {count}
+        </Box>
+      )}
+      <ExpandMoreRoundedIcon sx={{ fontSize: 16, transition: 'transform 150ms', transform: open ? 'none' : 'rotate(-90deg)' }} />
+    </ButtonBase>
+  )
+}
 
 function Brand({ compact }: { compact?: boolean }) {
   const { mode } = usePanelTheme()
@@ -100,6 +153,7 @@ export function PanelLayout({
   userName,
   userRole,
   actions,
+  collapsibleGroups = false,
 }: {
   children: ReactNode
   /** Primul pas din breadcrumb: „Admin” sau „Contabil”. */
@@ -111,6 +165,8 @@ export function PanelLayout({
   userName: string
   userRole: string
   actions?: ReactNode
+  /** Grupurile din bara laterală devin dropdown-uri care se pot strânge. */
+  collapsibleGroups?: boolean
 }) {
   const { mode, toggle } = usePanelTheme()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -131,6 +187,26 @@ export function PanelLayout({
   const groups = [...new Set(navItems.map((item) => item.group))]
   const crumbs = [workspace, active?.group, active?.label, ...trail].filter((part): part is string => Boolean(part))
 
+  const [closedGroups, setClosedGroups] = useState(() => readClosedGroups(workspace))
+  const toggleGroup = (group: string) => {
+    const next = closedGroups.includes(group) ? closedGroups.filter((item) => item !== group) : [...closedGroups, group]
+    setClosedGroups(next)
+    writeClosedGroups(workspace, next)
+  }
+
+  // Grupul paginii deschise se desface singur când se ajunge la ea din altă parte (link din
+  // notificare, sarcină, privirea de ansamblu): altfel pagina activă ar sta ascunsă în meniu.
+  // Ajustat în timpul randării, nu într-un efect, ca să nu existe un cadru cu grupul strâns.
+  const activeGroup = active?.group ?? null
+  // Pornește de la `null`, ca regula să se aplice și la prima randare (link deschis direct).
+  const [revealedGroup, setRevealedGroup] = useState<string | null>(null)
+  if (activeGroup !== revealedGroup) {
+    setRevealedGroup(activeGroup)
+    if (activeGroup && closedGroups.includes(activeGroup)) {
+      setClosedGroups(closedGroups.filter((item) => item !== activeGroup))
+    }
+  }
+
   const sidebar = (compact: boolean, mobile: boolean) => (
     <Stack sx={{ height: '100%', bgcolor: 'var(--rl-sidebar)', color: 'var(--rl-fg-soft)' }}>
       <Stack direction="row" sx={{ px: compact ? 0 : 2, pt: 2, pb: 1.5, alignItems: 'center', justifyContent: compact ? 'center' : 'space-between', minHeight: 56 }}>
@@ -142,31 +218,59 @@ export function PanelLayout({
         )}
       </Stack>
       <Box component="nav" aria-label={`Navigare ${workspace.toLowerCase()}`} sx={{ flex: 1, overflowY: 'auto', px: compact ? 1 : 1.5, pb: 2 }}>
-        {groups.map((group) => (
-          <Box component="section" key={group}>
-            {compact ? (
-              <Box sx={{ my: 1.25, mx: 1, borderTop: '1px solid var(--rl-border)' }} />
-            ) : (
-              <Typography component="h2" sx={{ px: 1.25, pt: 2, pb: 0.75, fontSize: 10, fontWeight: 600, letterSpacing: '0.09em', textTransform: 'uppercase', color: 'var(--rl-text-subtle)' }}>
-                {group}
-              </Typography>
-            )}
-            {navItems
-              .filter((item) => item.group === group)
-              .map((item) => (
-                <NavButton
-                  key={item.id}
-                  item={item}
-                  active={item.id === activeId}
-                  compact={compact}
-                  onClick={() => {
-                    onNavClick(item.id)
-                    setMobileOpen(false)
-                  }}
-                />
-              ))}
-          </Box>
-        ))}
+        {groups.map((group) => {
+          const items = navItems.filter((item) => item.group === group)
+          const buttons = items.map((item) => (
+            <NavButton
+              key={item.id}
+              item={item}
+              active={item.id === activeId}
+              compact={compact}
+              onClick={() => {
+                onNavClick(item.id)
+                setMobileOpen(false)
+              }}
+            />
+          ))
+
+          if (compact) {
+            return (
+              <Box component="section" key={group}>
+                <Box sx={{ my: 1.25, mx: 1, borderTop: '1px solid var(--rl-border)' }} />
+                {buttons}
+              </Box>
+            )
+          }
+
+          // Un grup cu o singură intrare n-are ce strânge.
+          if (!collapsibleGroups || items.length < 2) {
+            return (
+              <Box component="section" key={group}>
+                <Typography component="h2" sx={groupHeadingSx}>
+                  {group}
+                </Typography>
+                {buttons}
+              </Box>
+            )
+          }
+
+          const open = !closedGroups.includes(group)
+          const listId = `panel-group-${mobile ? 'm' : 'd'}-${group.replace(/\W+/g, '-')}`
+          return (
+            <Box component="section" key={group}>
+              <GroupToggle
+                group={group}
+                open={open}
+                count={items.reduce((sum, item) => sum + (item.count ?? 0), 0)}
+                controls={listId}
+                onToggle={() => toggleGroup(group)}
+              />
+              <Collapse in={open} id={listId}>
+                {buttons}
+              </Collapse>
+            </Box>
+          )
+        })}
       </Box>
       <Stack direction={compact ? 'column' : 'row'} sx={{ p: compact ? 1 : 1.5, gap: 1, alignItems: 'center', borderTop: '1px solid var(--rl-border)' }}>
         <Avatar sx={{ width: 30, height: 30, fontSize: 12, fontWeight: 700, bgcolor: 'var(--rl-muted)', color: 'var(--rl-fg)', border: '1px solid var(--rl-border-strong)' }}>

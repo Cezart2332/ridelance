@@ -66,13 +66,12 @@ import {
 import { openDocument } from '../components/common/documentViewerBus'
 import type { FiscalProfileAnswers, FiscalProfileStatus } from '../services/fiscalProfile.service'
 import { reloadOnceOnChunkError } from '../utils/lazyWithRetry'
-import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded'
-import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import RuleRoundedIcon from '@mui/icons-material/RuleRounded'
 import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded'
 import CloudSyncRoundedIcon from '@mui/icons-material/CloudSyncRounded'
 import ChecklistRoundedIcon from '@mui/icons-material/ChecklistRounded'
 import { RouteFallback } from '../components/common/RouteFallback'
+import { FilterTabs } from '../components/panel/ui'
 
 // Modulul de contabilitate PFA (spec contabilitate), comun cu dashboard-ul contabilului.
 const AccountingArea = lazy(() => import('../shared/accounting/ui/AccountingArea').catch(reloadOnceOnChunkError))
@@ -85,6 +84,20 @@ const ACCOUNTING_VIEW: Record<string, 'today' | 'clients' | 'declarations' | 'va
   [ACCOUNTING_TABS.anaf]: 'anaf',
   [ACCOUNTING_TABS.rules]: 'rules',
 }
+
+/**
+ * „Clienți PFA”: o singură intrare în meniu pentru conturile înrolate, fișa contabilă și
+ * declarații. Erau trei locuri pentru aceiași clienți, în două grupuri diferite. Fiecare sub-tab
+ * își păstrează id-ul din URL, ca legăturile vechi (notificări, sarcini, luna fiscală) să ducă
+ * tot acolo.
+ */
+const PFA_HUB_NAV_ID = 'pfa_inrolate'
+const PFA_HUB_TABS = [
+  { value: 'pfa_inrolate', label: 'Conturi' },
+  { value: ACCOUNTING_TABS.pfa, label: 'Fișe contabile' },
+  { value: ACCOUNTING_TABS.declarations, label: 'Declarații' },
+]
+const isPfaHubTab = (tab: string) => PFA_HUB_TABS.some((item) => item.value === tab)
 
 interface PfaSummary {
   id: string
@@ -586,13 +599,11 @@ export function AdminDashboard() {
   const navItems = [
     { id: 'overview', label: 'Privire de ansamblu', group: 'Spațiu de lucru', icon: <HomeRoundedIcon /> },
     { id: 'pfa', label: 'Onboarding', group: 'Clienți', icon: <PeopleAltRoundedIcon /> },
-    { id: 'pfa_inrolate', label: 'PFA înrolate', group: 'Clienți', icon: <HowToRegRoundedIcon /> },
+    { id: PFA_HUB_NAV_ID, label: 'Clienți PFA', group: 'Clienți', icon: <HowToRegRoundedIcon /> },
     { id: 'srl_inrolate', label: 'SRL înrolate', group: 'Clienți', icon: <BusinessRoundedIcon /> },
     { id: 'chat', label: 'Chat', group: 'Clienți', icon: <ChatRoundedIcon /> },
     { id: 'sarcini', label: 'Sarcini', group: 'Clienți', icon: <AssignmentTurnedInRoundedIcon /> },
     { id: ACCOUNTING_TABS.today, label: 'Rezumat', group: 'Contabilitate', icon: <ChecklistRoundedIcon /> },
-    { id: ACCOUNTING_TABS.pfa, label: 'Clienți PFA', group: 'Contabilitate', icon: <AccountBalanceWalletRoundedIcon /> },
-    { id: ACCOUNTING_TABS.declarations, label: 'Declarații', group: 'Contabilitate', icon: <DescriptionRoundedIcon /> },
     { id: ACCOUNTING_TABS.vat, label: 'Cod TVA', group: 'Contabilitate', icon: <VerifiedRoundedIcon /> },
     { id: ACCOUNTING_TABS.anaf, label: 'ANAF', group: 'Contabilitate', icon: <CloudSyncRoundedIcon /> },
     { id: ACCOUNTING_TABS.rules, label: 'Reguli fiscale', group: 'Contabilitate', icon: <RuleRoundedIcon /> },
@@ -999,6 +1010,17 @@ export function AdminDashboard() {
     </Stack>
   )
 
+  const openTab = (id: string) => {
+    navigate(`/admin?tab=${id}`)
+    setActiveTab(id)
+    setSelectedPfa(null)
+    setSearch('')
+    setOnlyAwaitingAdmin(false)
+  }
+
+  // Sub-taburile „Clienți PFA” stau deasupra listelor; într-o fișă deschisă are deja „Înapoi”.
+  const pfaHubTabsVisible = isPfaHubTab(activeTab) && !selectedPfa && !notificationParams.get('pfa')
+
   const renderContent = () => {
     if ((activeTab === 'pfa' || activeTab === 'pfa_inrolate') && selectedPfa) return renderPfaDetail()
     switch (activeTab) {
@@ -1059,11 +1081,16 @@ export function AdminDashboard() {
     <PanelThemeProvider>
     <AdminLayout
       navItems={navItems}
-      activeId={activeTab}
-      onNavClick={(id) => { navigate(`/admin?tab=${id}`); setActiveTab(id); setSelectedPfa(null); setSearch(''); setOnlyAwaitingAdmin(false) }}
+      activeId={isPfaHubTab(activeTab) ? PFA_HUB_NAV_ID : activeTab}
+      onNavClick={openTab}
       onLogout={handleLogout}
       userName={userName}
     >
+      {pfaHubTabsVisible && (
+        <Box sx={{ mb: 2.5, pb: 1.5, borderBottom: '1px solid var(--rl-border)' }}>
+          <FilterTabs label="Secțiune Clienți PFA" items={PFA_HUB_TABS} value={activeTab} onChange={openTab} />
+        </Box>
+      )}
       {renderContent()}
       <Snackbar
         open={snackbar.open}

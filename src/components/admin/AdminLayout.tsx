@@ -14,7 +14,7 @@ export function AdminLayout({ children, navItems, activeId, onNavClick, onLogout
   userName: string
 }) {
   return (
-    <PanelLayout workspace="Admin" navItems={navItems} activeId={activeId} onNavClick={onNavClick} onLogout={onLogout} userName={userName} userRole="Administrator">
+    <PanelLayout workspace="Admin" navItems={navItems} activeId={activeId} onNavClick={onNavClick} onLogout={onLogout} userName={userName} userRole="Administrator" collapsibleGroups>
       {children}
     </PanelLayout>
   )

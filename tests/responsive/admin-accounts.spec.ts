@@ -121,7 +121,9 @@ test('PFA înrolate: active, inactive și șterse, fiecare cu numărul lui', asy
   await page.goto('/admin?tab=pfa_inrolate')
 
   await expect(page.getByRole('heading', { name: 'PFA înrolate' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'PFA înrolate' })).toBeVisible()
+  // În meniu, conturile stau sub „Clienți PFA”, primul sub-tab.
+  await expect(page.getByRole('button', { name: 'Clienți PFA', exact: true })).toHaveAttribute('aria-current', 'page')
+  await expect(page.getByRole('button', { name: 'Conturi', exact: true })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByRole('button', { name: 'Active (1)', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Inactive (1)', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Șterse (1)', exact: true })).toBeVisible()
@@ -138,6 +140,50 @@ test('PFA înrolate: active, inactive și șterse, fiecare cu numărul lui', asy
   await page.goto('/admin?tab=pfa')
   await expect(page.getByText('Client onboarding', { exact: true })).toBeVisible()
   await expect(page.getByText('Client inchis', { exact: true })).toHaveCount(0)
+})
+
+test('Clienți PFA: conturile, fișele contabile și declarațiile sub o singură intrare', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'bara laterală e sertar pe telefon; navigarea e aceeași')
+  await mockAdmin(page)
+  await page.goto('/admin?tab=pfa_inrolate')
+
+  const sidebar = page.getByRole('navigation', { name: 'Navigare admin' })
+  const hubItem = sidebar.getByRole('button', { name: 'Clienți PFA', exact: true })
+  await expect(hubItem).toHaveAttribute('aria-current', 'page')
+  // Fișele și declarațiile nu mai au intrări separate în grupul „Contabilitate”.
+  await expect(sidebar.getByRole('button', { name: 'Declarații', exact: true })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Declarații', exact: true }).click()
+  await expect(page).toHaveURL(/tab=contab_declaratii/)
+  await expect(hubItem).toHaveAttribute('aria-current', 'page')
+  await expect(page.getByRole('button', { name: 'Declarații', exact: true })).toHaveAttribute('aria-pressed', 'true')
+
+  await page.getByRole('button', { name: 'Fișe contabile', exact: true }).click()
+  await expect(page).toHaveURL(/tab=contab_pfa/)
+  await expect(hubItem).toHaveAttribute('aria-current', 'page')
+})
+
+test('grupurile din meniul adminului se strâng și rămân strânse', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'bara laterală e sertar pe telefon')
+  await mockAdmin(page)
+  await page.goto('/admin?tab=overview')
+
+  const sidebar = page.getByRole('navigation', { name: 'Navigare admin' })
+  const group = sidebar.getByRole('button', { name: 'Finanțe' })
+  await expect(group).toHaveAttribute('aria-expanded', 'true')
+  await expect(sidebar.getByRole('button', { name: 'Facturare Oblio' })).toBeVisible()
+
+  await group.click()
+  await expect(group).toHaveAttribute('aria-expanded', 'false')
+  await expect(sidebar.getByRole('button', { name: 'Facturare Oblio' })).toBeHidden()
+
+  await page.reload()
+  await expect(sidebar.getByRole('button', { name: 'Finanțe' })).toHaveAttribute('aria-expanded', 'false')
+
+  // Ajuns la o pagină dintr-un grup strâns, grupul se desface singur.
+  await page.goto('/admin?tab=reduceri')
+  await expect(sidebar.getByRole('button', { name: 'Finanțe' })).toHaveAttribute('aria-expanded', 'true')
+  await expect(sidebar.getByRole('button', { name: 'Coduri de reducere' })).toHaveAttribute('aria-current', 'page')
 })
 
 test('SRL înrolate: filtrele, detaliile și închiderea unui cont', async ({ page }, info) => {
