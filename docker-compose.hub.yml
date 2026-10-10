@@ -156,6 +156,15 @@ services:
       - "${BACKEND_PORT:-5000}:8080"
     volumes:
       - backend-uploads:/app/uploads
+    # Proxy-ul nu trimite trafic spre API până nu e „healthy”. Verificarea la 5s îl bagă în
+    # rotație imediat ce răspunde; la 30s (valoarea din imaginile vechi), fiecare redeploy îl ținea
+    # invizibil cel puțin jumătate de minut, iar browserul arăta asta ca eroare de CORS.
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 6
+      start_period: 120s
     restart: unless-stopped
 
   frontend:
