@@ -8,6 +8,7 @@ import { announceFiscalProfileChanged, currentTaxYear } from '../../services/fis
 import { ROMANIAN_MONTHS } from '../../utils/monthLabels'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { formatLei } from './texts'
+import { cardShellSx } from '../cardShell'
 
 type Draft = Record<number, { income: string; expenses: string }>
 
@@ -105,7 +106,7 @@ export function PriorPeriodPanel({ mode, pfaId }: { mode: StaffMode; pfaId: stri
       component="section"
       aria-labelledby="prior-period-title"
       data-testid="prior-period-panel"
-      sx={(theme) => ({ bgcolor: 'background.paper', borderRadius: 2, boxShadow: theme.shadows[1], p: { xs: 2, sm: 3 }, minWidth: 0 })}
+      sx={(theme) => ({ bgcolor: 'background.paper', ...cardShellSx(theme), p: { xs: 2, sm: 3 }, minWidth: 0 })}
     >
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 0.5 }}>
         <Box

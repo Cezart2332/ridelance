@@ -1,34 +1,43 @@
 /**
  * „Pielea” dashboardului: ce set de tokeni folosește `DASHBOARD_TOKENS`.
  *
- * - `default` — dashboardul PFA și tot restul, exact ca până acum;
- * - `srl-light` / `srl-dark` — dashboardul SRL, în stilul panoului de lucru (shadcn/ui: borduri de
- *   1px în loc de umbre, colțuri mici), alb cu albastru sau negru cu albastru.
+ * - `default` — tot ce nu e dashboard de client (admin, site-ul public), exact ca până acum;
+ * - `panel-light` / `panel-dark` — dashboardurile PFA și SRL, în stilul panoului de lucru
+ *   (shadcn/ui: borduri de 1px în loc de umbre, colțuri mici), alb cu albastru sau negru cu
+ *   albastru.
  *
  * Se alege **o singură dată, la încărcarea paginii**, din adresă și din preferința salvată. De ce
  * nu la rulare: peste o sută de fișiere citesc `DASHBOARD_TOKENS` la nivel de modul, în constante
  * de stil, și le trec prin `alpha()` — care are nevoie de culori concrete, nu de variabile CSS.
- * O piele aleasă la încărcare le dă tuturor valori reale, fără să atingem niciun ecran PFA.
+ * O piele aleasă la încărcare le dă tuturor valori reale, fără să rescriem fiecare ecran.
  *
- * Prețul: schimbarea temei și trecerea între SRL și restul aplicației reîncarcă pagina
- * (`SkinBoundary`). E o reîncărcare obișnuită, o dată.
+ * Prețul: schimbarea temei și trecerea între un dashboard de client și restul aplicației
+ * reîncarcă pagina (`SkinBoundary`). E o reîncărcare obișnuită, o dată.
  */
-export type DashboardSkin = 'default' | 'srl-light' | 'srl-dark'
+export type DashboardSkin = 'default' | 'panel-light' | 'panel-dark'
 
-export type SrlThemeMode = 'light' | 'dark'
+export type DashboardThemeMode = 'light' | 'dark'
 
-const STORAGE_KEY = 'rl-srl-theme'
+const STORAGE_KEY = 'rl-dashboard-theme'
 
-/** Rădăcinile dashboardului SRL. Aceleași ca în `srlNavigation`, scrise aici ca modulul să n-aibă importuri. */
-const SRL_ROOTS = ['/app/dashboard-srl', '/poster']
+/** Cheia de dinainte, când doar SRL avea temă închisă. Citită ca preferința să nu se piardă. */
+const LEGACY_STORAGE_KEY = 'rl-srl-theme'
 
-export function isSrlPath(pathname: string): boolean {
-  return SRL_ROOTS.some((root) => pathname === root || pathname.startsWith(`${root}/`))
+/**
+ * Rădăcinile dashboardurilor cu piele de panou: PFA (`PFA_PATHS.home`) și SRL (`srlNavigation`).
+ * Scrise aici ca modulul să n-aibă importuri. `/app/dashboard-srl` nu e prins de PFA: potrivirea
+ * cere rădăcina exactă sau un `/` după ea.
+ */
+const PANEL_ROOTS = ['/app/dashboard', '/app/dashboard-srl', '/poster']
+
+export function isPanelPath(pathname: string): boolean {
+  return PANEL_ROOTS.some((root) => pathname === root || pathname.startsWith(`${root}/`))
 }
 
-export function storedSrlThemeMode(): SrlThemeMode {
+export function storedThemeMode(): DashboardThemeMode {
   try {
-    return window.localStorage.getItem(STORAGE_KEY) === 'dark' ? 'dark' : 'light'
+    const value = window.localStorage.getItem(STORAGE_KEY) ?? window.localStorage.getItem(LEGACY_STORAGE_KEY)
+    return value === 'dark' ? 'dark' : 'light'
   } catch {
     return 'light'
   }
@@ -36,8 +45,8 @@ export function storedSrlThemeMode(): SrlThemeMode {
 
 /** Pielea potrivită unei adrese, cu preferința de acum. */
 export function skinFor(pathname: string): DashboardSkin {
-  if (!isSrlPath(pathname)) return 'default'
-  return storedSrlThemeMode() === 'dark' ? 'srl-dark' : 'srl-light'
+  if (!isPanelPath(pathname)) return 'default'
+  return storedThemeMode() === 'dark' ? 'panel-dark' : 'panel-light'
 }
 
 function initialSkin(): DashboardSkin {
@@ -51,9 +60,9 @@ function initialSkin(): DashboardSkin {
 /** Pielea cu care s-a încărcat pagina. Nu se schimbă până la următoarea încărcare. */
 export const ACTIVE_SKIN: DashboardSkin = initialSkin()
 
-export const IS_SRL_SKIN = ACTIVE_SKIN !== 'default'
+export const IS_PANEL_SKIN = ACTIVE_SKIN !== 'default'
 
-export const IS_DARK_SKIN = ACTIVE_SKIN === 'srl-dark'
+export const IS_DARK_SKIN = ACTIVE_SKIN === 'panel-dark'
 
 /**
  * Fundalul paginii, pus imediat ce se încarcă modulul. Fără el, în tema închisă pagina ar clipi
@@ -70,10 +79,11 @@ if (IS_DARK_SKIN) {
   }
 }
 
-/** Schimbă tema SRL și reîncarcă pagina, ca toate stilurile să pornească de la tokenii noi. */
-export function setSrlThemeMode(mode: SrlThemeMode): void {
+/** Schimbă tema dashboardului și reîncarcă pagina, ca toate stilurile să pornească de la tokenii noi. */
+export function setDashboardThemeMode(mode: DashboardThemeMode): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, mode)
+    window.localStorage.removeItem(LEGACY_STORAGE_KEY)
   } catch {
     // Fără stocare (fereastră privată) tema nu are unde să rămână; nu reîncărcăm degeaba.
     return

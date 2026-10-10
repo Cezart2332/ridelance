@@ -8,7 +8,7 @@ import { OwnerAvatar } from '../components/common/OwnerAvatar'
 import AppLayout from '../components/dashboard/layout/AppLayout'
 import { DASHBOARD_TOKENS } from '../components/dashboard/dashboardTheme'
 import { PendingBackendProvider } from '../components/dashboard/srl/PendingBackend'
-import { SrlThemeProvider } from '../components/dashboard/srl/SrlThemeProvider'
+import { DashboardThemeProvider } from '../components/dashboard/DashboardThemeProvider'
 import { SrlRoutes } from '../components/dashboard/srl/SrlRoutes'
 import { useCompanyProfile } from '../components/dashboard/srl/useCompanyProfile'
 import { ROUTES } from '../constants/routes'
@@ -121,7 +121,7 @@ export function CarPosterDashboard() {
   }
 
   return (
-    <SrlThemeProvider>
+    <DashboardThemeProvider>
       <PendingBackendProvider>
         <AppLayout
           nav={SRL_NAV_CONFIG}
@@ -141,6 +141,6 @@ export function CarPosterDashboard() {
           <SrlRoutes />
         </AppLayout>
       </PendingBackendProvider>
-    </SrlThemeProvider>
+    </DashboardThemeProvider>
   )
 }

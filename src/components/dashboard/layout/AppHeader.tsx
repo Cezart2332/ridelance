@@ -4,7 +4,7 @@ import { alpha } from '@mui/material/styles';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
-import { IS_DARK_SKIN, IS_SRL_SKIN, setSrlThemeMode } from '../dashboardSkin';
+import { IS_DARK_SKIN, IS_PANEL_SKIN, setDashboardThemeMode } from '../dashboardSkin';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import { NotificationsBell } from '../../notifications/NotificationsBell';
 import { QuickActionsButton } from './QuickActionsButton';
@@ -119,13 +119,13 @@ export default function AppHeader({
       </Stack>
 
       <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', flexShrink: 0, ml: 1 }}>
-        {/* Tema există doar în dashboardul SRL. Schimbarea ei reîncarcă pagina (vezi `dashboardSkin`). */}
-        {IS_SRL_SKIN && (
+        {/* Tema există în dashboardurile PFA și SRL. Schimbarea ei reîncarcă pagina (vezi `dashboardSkin`). */}
+        {IS_PANEL_SKIN && (
           <Tooltip title={IS_DARK_SKIN ? 'Temă deschisă' : 'Temă închisă'}>
             <IconButton
               size="small"
               aria-label={IS_DARK_SKIN ? 'Treci la tema deschisă' : 'Treci la tema închisă'}
-              onClick={() => setSrlThemeMode(IS_DARK_SKIN ? 'light' : 'dark')}
+              onClick={() => setDashboardThemeMode(IS_DARK_SKIN ? 'light' : 'dark')}
               sx={{
                 width: 36,
                 height: 36,

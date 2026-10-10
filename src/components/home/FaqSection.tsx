@@ -4,6 +4,7 @@ import { alpha } from '@mui/material/styles'
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
 
 import { TOKENS } from '../../constants/tokens'
+import { IS_DARK_SKIN } from '../dashboard/dashboardSkin'
 import { HOME_FAQ, type FaqItem as FaqEntry } from '../../data/faq'
 import questionSticker from '../../assets/Stickers/character 3.png'
 
@@ -187,7 +188,8 @@ function FaqItem({
             placeItems: 'center',
             borderRadius: `${TOKENS.radius.md}px`,
             bgcolor: isOpen ? TOKENS.primary : alpha(TOKENS.primary, 0.12),
-            color: isOpen ? '#fff' : TOKENS.primaryStrong,
+            // Pe albastrul plin, textul e închis în tema închisă a dashboardului (ca butoanele de acolo).
+            color: isOpen ? (IS_DARK_SKIN ? '#06202B' : '#fff') : TOKENS.primaryStrong,
             transition: `background-color .3s ${EASE}, color .3s ${EASE}`,
             '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
           }}

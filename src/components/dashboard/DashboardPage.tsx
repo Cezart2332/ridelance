@@ -3,6 +3,7 @@ import { ROUTES } from '../../constants/routes'
 import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { DashboardRoutes } from './DashboardRoutes'
+import { DashboardThemeProvider } from './DashboardThemeProvider'
 import AppLayout from './layout/AppLayout'
 import { PfaFiscalProfileProvider } from '../../shared/fiscal-profile'
 
@@ -48,7 +49,19 @@ function resolveLegacyTarget(pathname: string, params: URLSearchParams): string 
   return null
 }
 
+/**
+ * Tema închisă sau deschisă îmbracă tot dashboardul, inclusiv ecranul de așteptare și decizia
+ * Open Banking: altfel acestea ar clipi în alb înaintea unui dashboard negru.
+ */
 export default function DashboardPage() {
+  return (
+    <DashboardThemeProvider>
+      <DashboardPageContent />
+    </DashboardThemeProvider>
+  )
+}
+
+function DashboardPageContent() {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()

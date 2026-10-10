@@ -1,5 +1,6 @@
 import { alpha } from '@mui/material/styles'
 
+import { IS_DARK_SKIN } from '../../../dashboardSkin'
 import { HOME_TOKENS } from '../../tokens'
 
 /**
@@ -16,10 +17,10 @@ export const CHART = {
   1: HOME_TOKENS.brand[600],
   /** Serie secundară. */
   2: '#4FA9C9',
-  /** Serie terțiară / fundal de arie. */
-  3: '#B3DDEC',
+  /** Serie terțiară / fundal de arie. Pe negru, albastrul pal ar străluci mai tare decât seria 1. */
+  3: IS_DARK_SKIN ? '#2B6F88' : '#B3DDEC',
   /** A doua categorie reală — indigo tras spre hue-ul brandului. */
-  4: '#3F5FA8',
+  4: IS_DARK_SKIN ? '#7C9BE6' : '#3F5FA8',
   /** A treia categorie reală. */
   5: '#0E9F8F',
   /** Taxe și obligații fiscale. Niciodată o serie oarecare. */

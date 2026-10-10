@@ -57,10 +57,10 @@ const DEFAULT_TOKENS = {
 }
 
 /**
- * Dashboardul SRL, deschis: același alb cu albastru, în structura panoului de lucru (shadcn/ui).
+ * Dashboardurile PFA și SRL, deschis: același alb cu albastru, în structura panoului de lucru (shadcn/ui).
  * Suprafețele se despart prin borduri de 1px, nu prin umbre, iar colțurile sunt mici.
  */
-const SRL_LIGHT_TOKENS: typeof DEFAULT_TOKENS = {
+const PANEL_LIGHT_TOKENS: typeof DEFAULT_TOKENS = {
   ...DEFAULT_TOKENS,
   paper: '#FFFFFF',
   surface: '#F8FAFC',
@@ -79,12 +79,12 @@ const SRL_LIGHT_TOKENS: typeof DEFAULT_TOKENS = {
 }
 
 /**
- * Dashboardul SRL, închis: negru cu același albastru. Aceeași structură ca varianta deschisă;
+ * Dashboardurile PFA și SRL, închis: negru cu același albastru. Aceeași structură ca varianta deschisă;
  * se schimbă doar culorile. Albastrul de accent e cel de brand (pe negru, cel închis din varianta
  * deschisă nu s-ar citi), iar textul de pe butoanele pline e închis, nu alb.
  */
-const SRL_DARK_TOKENS: typeof DEFAULT_TOKENS = {
-  ...SRL_LIGHT_TOKENS,
+const PANEL_DARK_TOKENS: typeof DEFAULT_TOKENS = {
+  ...PANEL_LIGHT_TOKENS,
   ink: '#FAFAFA',
   primary: '#5CCBF5',
   primaryStrong: '#8ADAF8',
@@ -112,8 +112,8 @@ const SRL_DARK_TOKENS: typeof DEFAULT_TOKENS = {
 
 const SKINS: Record<DashboardSkin, typeof DEFAULT_TOKENS> = {
   default: DEFAULT_TOKENS,
-  'srl-light': SRL_LIGHT_TOKENS,
-  'srl-dark': SRL_DARK_TOKENS,
+  'panel-light': PANEL_LIGHT_TOKENS,
+  'panel-dark': PANEL_DARK_TOKENS,
 }
 
 /** Tokenii dashboardului, în pielea cu care s-a încărcat pagina (vezi `dashboardSkin`). */

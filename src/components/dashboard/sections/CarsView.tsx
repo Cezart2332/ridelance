@@ -145,7 +145,7 @@ export function CarsView() {
                 width: { xs: '100%', sm: 'auto' },
                 px: 3,
                 borderColor: alpha(DASHBOARD_TOKENS.ink, 0.1),
-                color: showFilters ? '#fff' : DASHBOARD_TOKENS.ink,
+                color: showFilters ? DASHBOARD_TOKENS.paper : DASHBOARD_TOKENS.ink,
                 bgcolor: showFilters ? DASHBOARD_TOKENS.ink : 'transparent',
                 '&:hover': {
                   bgcolor: showFilters ? alpha(DASHBOARD_TOKENS.ink, 0.9) : alpha(DASHBOARD_TOKENS.ink, 0.04),
@@ -187,7 +187,7 @@ export function CarsView() {
                     size="small"
                     value={f.value}
                     onChange={(e) => f.setter(e.target.value)}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, bgcolor: '#fff' } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: `${DASHBOARD_TOKENS.radius.md}px`, bgcolor: DASHBOARD_TOKENS.paper } }}
                   >
                     {f.options.map(opt => (
                       <MenuItem key={opt} value={opt}>{opt}</MenuItem>

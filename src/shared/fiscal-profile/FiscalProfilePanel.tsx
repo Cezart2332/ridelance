@@ -15,6 +15,7 @@ import { getErrorMessage } from '../../utils/errorHandler'
 import { FiscalProfileForm } from './FiscalProfileForm'
 import { FiscalProfileHistoryDialog } from './FiscalProfileHistoryDialog'
 import { ROLE_LABEL, STATUS_LABEL, situationLabel } from './schema'
+import { cardShellSx } from '../cardShell'
 
 export function FiscalProfileStatusChip({ status }: { status: FiscalProfileStatus }) {
   return (
@@ -107,7 +108,7 @@ export function FiscalProfilePanel({ mode, pfaId, onOpenForm, onOpenHistory, pro
       component="section"
       aria-labelledby="fp-panel-title"
       data-testid="fiscal-profile-panel"
-      sx={(theme) => ({ bgcolor: 'background.paper', borderRadius: 2, boxShadow: theme.shadows[1], p: { xs: 2, sm: 3 } })}
+      sx={(theme) => ({ bgcolor: 'background.paper', ...cardShellSx(theme), p: { xs: 2, sm: 3 } })}
     >
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ justifyContent: 'space-between', alignItems: { sm: 'center' } }}>
         <Box sx={{ minWidth: 0 }}>

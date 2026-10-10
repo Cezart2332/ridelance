@@ -5,12 +5,12 @@ import { IS_DARK_SKIN } from '../components/dashboard/dashboardSkin'
 import { fontStack } from './fontStack'
 
 /**
- * Tema MUI a dashboardului SRL, în stilul panoului de lucru (shadcn/ui): borduri de 1px în loc de
+ * Tema MUI a dashboardurilor PFA și SRL, în stilul panoului de lucru (shadcn/ui): borduri de 1px în loc de
  * umbre, colțuri mici, butoane plate. Culorile vin din `DASHBOARD_TOKENS`, care sunt deja în
- * pielea SRL (deschisă sau închisă) aleasă la încărcarea paginii — deci tema asta doar le duce și
+ * pielea de panou (deschisă sau închisă) aleasă la încărcarea paginii — deci tema asta doar le duce și
  * la componentele MUI care nu primesc culori prin `sx`: meniuri, dialoguri, câmpuri, tabele.
  */
-export function createSrlTheme(): Theme {
+export function createDashboardPanelTheme(): Theme {
   const overlayShadow = IS_DARK_SKIN ? '0 12px 32px rgba(0, 0, 0, 0.6)' : '0 12px 32px rgba(15, 23, 42, 0.12)'
   const overlayPaper = {
     backgroundColor: T.paper,
@@ -23,8 +23,19 @@ export function createSrlTheme(): Theme {
     palette: {
       mode: IS_DARK_SKIN ? 'dark' : 'light',
       primary: { main: T.primary, dark: T.primaryStrong, contrastText: T.onPrimary },
-      error: { main: T.stateError },
-      warning: { main: T.stateWarning },
+      // Aceeași convenție ca tema panoului: `light` = fundalul insignei, `dark` = bordura ei.
+      // Pe negru, fundalurile pastel ale MUI ar fi pete luminoase sub un text care nu se mai citește.
+      ...(IS_DARK_SKIN
+        ? {
+            success: { main: '#4ADE80', light: '#0B2A17', dark: '#14532D' },
+            warning: { main: T.stateWarning, light: '#2D2006', dark: '#713F12' },
+            error: { main: T.stateError, light: '#2D1010', dark: '#7F1D1D' },
+          }
+        : {
+            success: { main: '#15803D', light: '#F0FDF4', dark: '#BBF7D0' },
+            warning: { main: T.stateWarning, light: '#FFFAEB', dark: '#FEDF89' },
+            error: { main: T.stateError, light: '#FEF2F2', dark: '#FECACA' },
+          }),
       background: { default: T.surface, paper: T.paper },
       text: { primary: T.ink, secondary: T.textMuted, disabled: T.textSubtle },
       divider: T.border,

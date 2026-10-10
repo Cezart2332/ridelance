@@ -75,7 +75,7 @@ export function DocumentRow({
   return (
     <ListItem component="article" aria-label={name} divider sx={{ display: 'block', px: { xs: 2, sm: 2.5 }, py: 2 }}>
       <Stack direction="row" sx={{ gap: 1.5, alignItems: 'flex-start' }}>
-        <Box sx={{ display: 'grid', placeItems: 'center', width: 36, height: 40, borderRadius: 1.5, bgcolor: 'grey.50', flexShrink: 0 }}>
+        <Box sx={{ display: 'grid', placeItems: 'center', width: 36, height: 40, borderRadius: 1.5, bgcolor: 'action.hover', flexShrink: 0 }}>
           <InsertDriveFileOutlinedIcon sx={{ fontSize: 21, color: 'text.secondary' }} />
         </Box>
         <Stack sx={{ flex: 1, minWidth: 0, gap: 0.5 }}>

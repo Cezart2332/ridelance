@@ -203,7 +203,7 @@ export function ServiciiTab({ ownerType = 'Pfa' }: ServiciiTabProps) {
                   fontSize: '0.9rem',
                   py: 1.1,
                   backgroundColor: T.primary,
-                  color: '#fff',
+                  color: T.onPrimary,
                   boxShadow: T.shadow.glow,
                   '&:hover': {
                     backgroundColor: T.primaryStrong,

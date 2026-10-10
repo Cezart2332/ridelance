@@ -322,8 +322,8 @@ export function AbonamenteTab() {
                         display: 'flex', alignItems: 'center', gap: 0.5,
                       }}
                     >
-                      <StarRoundedIcon sx={{ fontSize: 11, color: '#fff' }} />
-                      <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '0.7rem' }}>Popular</Typography>
+                      <StarRoundedIcon sx={{ fontSize: 11, color: T.onPrimary }} />
+                      <Typography sx={{ color: T.onPrimary, fontWeight: 700, fontSize: '0.7rem' }}>Popular</Typography>
                     </Box>
                   )}
                   <Typography sx={{ fontWeight: 800, color: T.ink, fontSize: '1rem', mb: 0.5 }}>
@@ -343,7 +343,7 @@ export function AbonamenteTab() {
                       fontWeight: 700,
                       fontSize: '0.82rem',
                       backgroundColor: isCurrent ? 'transparent' : T.primary,
-                      color: isCurrent ? T.textMuted : '#fff',
+                      color: isCurrent ? T.textMuted : T.onPrimary,
                       '&:hover': { backgroundColor: T.primaryStrong },
                     }}
                   >

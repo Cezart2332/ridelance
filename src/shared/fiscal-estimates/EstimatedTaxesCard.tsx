@@ -27,6 +27,7 @@ import { getErrorMessage } from '../../utils/errorHandler'
 import { TaxPaymentsPanel } from './TaxPaymentsPanel'
 import { COMPONENT_LABEL, accountantCompletes, coverageGapText, formatLei, reasonText } from './texts'
 import { PFA_PATHS } from '../../config/pfaNavigation'
+import { cardShellSx } from '../cardShell'
 
 interface Props {
   mode: FiscalProfileMode
@@ -258,8 +259,7 @@ function CardShell({ children, fill }: { children: React.ReactNode; fill: boolea
       data-testid="estimated-taxes-card"
       sx={(theme) => ({
         bgcolor: 'background.paper',
-        borderRadius: 2,
-        boxShadow: theme.shadows[1],
+        ...cardShellSx(theme),
         p: { xs: 2, sm: 3 },
         height: fill ? '100%' : undefined,
         minWidth: 0,

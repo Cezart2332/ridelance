@@ -1,6 +1,7 @@
 import { Box, Button, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded'
+import { cardShellSx } from '../cardShell'
 
 /**
  * Locul estimărilor de taxe cât timp profilul fiscal nu e confirmat (spec §6.2). Înlocuiește
@@ -15,8 +16,8 @@ export function FiscalProfileInviteCard({ onStart }: { onStart?: () => void }) {
       data-testid="fiscal-profile-invite"
       sx={(theme) => ({
         bgcolor: 'background.paper',
-        borderRadius: 2,
-        boxShadow: theme.shadows[1],
+        ...cardShellSx(theme),
+        // Bordura albastră rămâne: cardul e o invitație și trebuie să se vadă dintre celelalte.
         border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
         p: { xs: 2, sm: 3 },
         height: '100%',

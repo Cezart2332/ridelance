@@ -10,7 +10,7 @@ const tones: Record<StatusTone, { color: string; bgcolor: string; borderColor: s
   success: { color: 'success.main', bgcolor: 'success.light', borderColor: 'success.dark' },
   warning: { color: 'warning.main', bgcolor: 'warning.light', borderColor: 'warning.dark' },
   error: { color: 'error.main', bgcolor: 'error.light', borderColor: 'error.dark' },
-  neutral: { color: 'text.secondary', bgcolor: 'grey.100', borderColor: 'grey.200' },
+  neutral: { color: 'text.secondary', bgcolor: 'action.hover', borderColor: 'divider' },
 }
 
 export function StatusBadge({ label, tone = 'neutral' }: { label: string; tone?: StatusTone }) {

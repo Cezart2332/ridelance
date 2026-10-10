@@ -23,6 +23,7 @@ import AddAPhotoRoundedIcon from '@mui/icons-material/AddAPhotoRounded'
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded'
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded'
 
+import { IS_DARK_SKIN } from '../../dashboardSkin'
 import { DASHBOARD_TOKENS as T } from '../../dashboardTheme'
 import { PageHeader, StatusChip, type StatusTone } from '../../ui'
 import { clientLedgerService, type ClientTransaction, type ClientTransactions, type ClientTransactionState } from '../../../../services/clientLedger.service'
@@ -207,7 +208,7 @@ function TransactionRow({ row, onAttach, busy }: { row: ClientTransaction; onAtt
         <Typography noWrap sx={{ fontWeight: 600, color: T.ink }}>{row.title}</Typography>
         {row.detail && <Typography noWrap sx={{ color: T.textMuted, fontSize: '0.8rem' }}>{row.detail}</Typography>}
       </Box>
-      <Typography sx={{ fontWeight: 700, color: row.amount < 0 ? T.ink : '#15803D', whiteSpace: 'nowrap' }}>{lei(row.amount)}</Typography>
+      <Typography sx={{ fontWeight: 700, color: row.amount < 0 ? T.ink : IS_DARK_SKIN ? '#4ADE80' : '#15803D', whiteSpace: 'nowrap' }}>{lei(row.amount)}</Typography>
       <Stack direction="row" useFlexGap sx={{ gap: 1, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', flex: '0 1 auto' }}>
         <StatusChip label={state.label} tone={state.tone} size="sm" />
         {row.ledgerEntryId && (
