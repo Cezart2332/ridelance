@@ -1,5 +1,7 @@
 import { test, expect, type Page, type Route } from '@playwright/test'
 
+import { mockSession as mockFleetSession } from './fixtures/srlSession'
+
 const API = 'http://localhost:5000'
 const WIZARD = '/app/dashboard-srl/masini/adauga'
 
@@ -11,17 +13,9 @@ const WIZARD = '/app/dashboard-srl/masini/adauga'
  * ajunge efectiv pe server — un formular care arată bine și trimite altceva e mai rău decât unul
  * care arată prost.
  */
+/** Sesiunea comună a contului de flotă (trece și de poarta de acces), fără profil de firmă salvat. */
 async function mockSession(page: Page) {
-  await page.route(`${API}/**`, (route: Route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
-  )
-  await page.route(`${API}/users/refresh-token`, (route: Route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ accessToken: 'test-token', role: 'CarPoster', userId: 'poster-1' }),
-    }),
-  )
+  await mockFleetSession(page)
   await page.route(`${API}/companies/profile`, (route: Route) =>
     route.fulfill({ status: 204, body: '' }),
   )
@@ -107,5 +101,32 @@ test.describe('adăugare mașină', () => {
     // Fără pin ales, coordonatele rămân goale — nu 0, care ar fi o locație reală în ocean.
     expect(details.latitude).toBeNull()
     expect(details.longitude).toBeNull()
+  })
+
+  test('numărul ascuns se bifează la poze și se plătește după salvare', async ({ page }) => {
+    const checkouts: string[] = []
+    await page.route(`${API}/cars`, (route: Route) =>
+      route.request().method() === 'POST'
+        ? route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id: 'car-nou' }) })
+        : route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+    )
+    await page.route(`${API}/cars/*/hidden-plate/checkout`, (route: Route) => {
+      checkouts.push(new URL(route.request().url()).pathname)
+      return route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ detail: 'Stripe indisponibil în test' }) })
+    })
+
+    await page.goto(WIZARD)
+    await fillMinimum(page)
+    await page.getByRole('button', { name: 'Poze' }).click()
+    await page.getByRole('checkbox', { name: /Ascunde numărul de înmatriculare în poze — 14,90 lei/ }).check()
+
+    await page.getByRole('button', { name: 'Preview' }).click()
+    await page.getByRole('button', { name: 'Salvează anunțul' }).click()
+
+    // Plata se cere pentru mașina abia salvată; formularul se închide abia după dialog.
+    await expect.poll(() => checkouts).toEqual(['/cars/car-nou/hidden-plate/checkout'])
+    await expect(page.getByText('Stripe indisponibil în test')).toBeVisible()
+    await page.getByRole('button', { name: 'Renunță' }).last().click()
+    await expect(page).toHaveURL(/\/masini$/)
   })
 })

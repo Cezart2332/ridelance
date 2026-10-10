@@ -8,6 +8,7 @@ import { OwnerAvatar } from '../components/common/OwnerAvatar'
 import AppLayout from '../components/dashboard/layout/AppLayout'
 import { DASHBOARD_TOKENS } from '../components/dashboard/dashboardTheme'
 import { PendingBackendProvider } from '../components/dashboard/srl/PendingBackend'
+import { SrlThemeProvider } from '../components/dashboard/srl/SrlThemeProvider'
 import { SrlRoutes } from '../components/dashboard/srl/SrlRoutes'
 import { useCompanyProfile } from '../components/dashboard/srl/useCompanyProfile'
 import { ROUTES } from '../constants/routes'
@@ -120,24 +121,26 @@ export function CarPosterDashboard() {
   }
 
   return (
-    <PendingBackendProvider>
-      <AppLayout
-        nav={SRL_NAV_CONFIG}
-        onLogout={handleLogout}
-        sidebarFooter={
-          company ? (
-            <CompanyIdentity
-              name={company.legalName}
-              logoUrl={company.logoUrl}
-              verified={company.isVerified}
-            />
-          ) : (
-            <CompanyIdentityPlaceholder />
-          )
-        }
-      >
-        <SrlRoutes />
-      </AppLayout>
-    </PendingBackendProvider>
+    <SrlThemeProvider>
+      <PendingBackendProvider>
+        <AppLayout
+          nav={SRL_NAV_CONFIG}
+          onLogout={handleLogout}
+          sidebarFooter={
+            company ? (
+              <CompanyIdentity
+                name={company.legalName}
+                logoUrl={company.logoUrl}
+                verified={company.isVerified}
+              />
+            ) : (
+              <CompanyIdentityPlaceholder />
+            )
+          }
+        >
+          <SrlRoutes />
+        </AppLayout>
+      </PendingBackendProvider>
+    </SrlThemeProvider>
   )
 }

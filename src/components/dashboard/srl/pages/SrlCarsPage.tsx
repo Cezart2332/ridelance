@@ -15,7 +15,6 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
@@ -502,15 +501,10 @@ function AddCarButton() {
         fontSize: '0.9rem',
         px: 2.6,
         py: 1.05,
-        color: '#fff',
-        borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
-        background: `linear-gradient(135deg, ${DASHBOARD_TOKENS.accent}, ${DASHBOARD_TOKENS.primaryStrong})`,
-        boxShadow: `0 6px 18px ${alpha(DASHBOARD_TOKENS.accent, 0.26)}`,
-        transition: 'box-shadow 160ms ease, transform 160ms ease',
-        '&:hover': {
-          boxShadow: `0 10px 24px ${alpha(DASHBOARD_TOKENS.accent, 0.34)}`,
-          transform: 'translateY(-1px)',
-        },
+        color: DASHBOARD_TOKENS.onPrimary,
+        borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
+        backgroundColor: DASHBOARD_TOKENS.accent,
+        '&:hover': { backgroundColor: DASHBOARD_TOKENS.primaryStrong },
       }}
     >
       Adaugă mașină

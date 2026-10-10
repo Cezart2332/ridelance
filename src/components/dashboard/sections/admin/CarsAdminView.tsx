@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Box, Stack, Typography, Button, Paper, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, Chip,
   IconButton, Tabs, Tab, Avatar, TextField,
   InputAdornment, MenuItem, Switch,
-  Grid, Card, CardContent, LinearProgress
+  Grid, Card, CardContent, LinearProgress, Alert
 } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
@@ -66,7 +67,9 @@ const PAYMENT_COLORS: Record<string, string> = {
 const TAB = { ridelance: 0, srl: 1, leads: 2, stats: 3, review: 4 } as const;
 
 export function CarsAdminView() {
-  const [activeTab, setActiveTab] = useState(0);
+  // Notificarea „Mașină de validat” deschide direct tabul de validare.
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<number>(searchParams.get('section') === 'validare' ? TAB.review : 0);
   const [cars, setCars] = useState<Car[]>([]);
   const [leads, setLeads] = useState<CarLead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -167,6 +170,8 @@ export function CarsAdminView() {
 
   const ridelanceCount = cars.filter((c) => c.approvalStatus === 'Approved' && c.postedByAdmin).length;
   const srlCount = cars.filter((c) => c.approvalStatus === 'Approved' && !c.postedByAdmin).length;
+  // Ce așteaptă o decizie: anunțuri noi sau modificate de firme.
+  const pendingCount = cars.filter((c) => c.approvalStatus === 'Pending').length;
 
   const filteredCars = cars.filter(c => {
     const matchesSearch =
@@ -220,6 +225,16 @@ export function CarsAdminView() {
 
       {loading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
 
+      {pendingCount > 0 && activeTab !== TAB.review && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 2 }}
+          action={<Button color="inherit" size="small" onClick={() => setActiveTab(TAB.review)} sx={{ fontWeight: 700 }}>Deschide validarea</Button>}
+        >
+          {pendingCount === 1 ? 'O mașină așteaptă validarea.' : `${pendingCount} mașini așteaptă validarea.`}
+        </Alert>
+      )}
+
 
       <Paper elevation={0} sx={{ mb: 4, borderRadius: `${DASHBOARD_TOKENS.radius.lg}px`, border: `1px solid ${fade(DASHBOARD_TOKENS.ink, 0.08)}`, overflow: 'hidden' }}>
         <Tabs variant="scrollable" allowScrollButtonsMobile
@@ -231,7 +246,12 @@ export function CarsAdminView() {
           <Tab icon={<BusinessRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label={`Mașini SRL (${srlCount})`} />
           <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Solicitări" />
           <Tab icon={<BarChartRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Statistici" />
-          <Tab icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Validare" />
+          <Tab
+            icon={<AssignmentIndRoundedIcon sx={{ fontSize: 20 }} />}
+            iconPosition="start"
+            label={pendingCount > 0 ? `Validare (${pendingCount})` : 'Validare'}
+            sx={pendingCount > 0 ? { color: 'var(--rl-yellow-text)' } : undefined}
+          />
         </Tabs>
 
         <Box sx={{ p: 3 }}>

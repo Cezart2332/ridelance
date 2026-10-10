@@ -1,12 +1,18 @@
-import { Box, Breadcrumbs, IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Breadcrumbs, IconButton, Paper, Stack, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { alpha } from '@mui/material/styles';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
+import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
+import { IS_DARK_SKIN, IS_SRL_SKIN, setSrlThemeMode } from '../dashboardSkin';
 import { DASHBOARD_TOKENS } from '../dashboardTheme';
 import { NotificationsBell } from '../../notifications/NotificationsBell';
 import { QuickActionsButton } from './QuickActionsButton';
 import type { DashboardNavConfig } from '../../../config/dashboardNav';
-import logo from '../../../assets/logo.svg';
+import lightLogo from '../../../assets/logo.svg';
+import darkLogo from '../../../assets/logo-on-dark.svg';
+
+const logo = IS_DARK_SKIN ? darkLogo : lightLogo;
 
 interface AppHeaderProps {
   /** Meniul curent — antetul are nevoie doar de destinațiile din bara de jos. */
@@ -113,6 +119,26 @@ export default function AppHeader({
       </Stack>
 
       <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', flexShrink: 0, ml: 1 }}>
+        {/* Tema există doar în dashboardul SRL. Schimbarea ei reîncarcă pagina (vezi `dashboardSkin`). */}
+        {IS_SRL_SKIN && (
+          <Tooltip title={IS_DARK_SKIN ? 'Temă deschisă' : 'Temă închisă'}>
+            <IconButton
+              size="small"
+              aria-label={IS_DARK_SKIN ? 'Treci la tema deschisă' : 'Treci la tema închisă'}
+              onClick={() => setSrlThemeMode(IS_DARK_SKIN ? 'light' : 'dark')}
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
+                border: `1px solid ${DASHBOARD_TOKENS.border}`,
+                color: DASHBOARD_TOKENS.textMuted,
+                '&:hover': { color: DASHBOARD_TOKENS.ink, backgroundColor: alpha(DASHBOARD_TOKENS.ink, 0.05) },
+              }}
+            >
+              {IS_DARK_SKIN ? <LightModeRoundedIcon sx={{ fontSize: 18 }} /> : <DarkModeRoundedIcon sx={{ fontSize: 18 }} />}
+            </IconButton>
+          </Tooltip>
+        )}
         {nav.quickActions && <QuickActionsButton menu={nav.quickActions} />}
         {showNotifications && (
           <NotificationsBell />

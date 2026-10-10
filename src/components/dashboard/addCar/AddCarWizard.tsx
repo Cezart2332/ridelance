@@ -7,6 +7,7 @@ import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded'
 
 import { carsService } from '../../../services/cars.service'
+import { HiddenPlateCheckoutDialog } from '../srl/HiddenPlateCheckoutDialog'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { PageHeader, Panel } from '../ui'
 import { ListingPreview } from './ListingPreview'
@@ -56,6 +57,9 @@ export function AddCarWizard({ onCancel, onSaved, mode = 'owner' }: AddCarWizard
   const [step, setStep] = useState<StepId>('vehicul')
   const [visited, setVisited] = useState<Set<StepId>>(new Set(['vehicul']))
   const [saving, setSaving] = useState(false)
+  // „Număr ascuns”: bifat în pasul de poze, plătit după ce mașina există (plata are nevoie de ea).
+  const [hidePlate, setHidePlate] = useState(false)
+  const [payingPlateFor, setPayingPlateFor] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   // Obiect-URL-urile fotografiilor trăiesc până sunt revocate; fără asta, fiecare încercare de
@@ -115,6 +119,11 @@ export function AddCarWizard({ onCancel, onSaved, mode = 'owner' }: AddCarWizard
         await carsService.uploadImage(carId, photo.file)
       }
 
+      if (hidePlate && !isAdmin) {
+        setPayingPlateFor(carId)
+        return
+      }
+
       onSaved(carId)
     } catch {
       setError('Nu am putut salva anunțul. Verifică datele și încearcă din nou.')
@@ -125,6 +134,12 @@ export function AddCarWizard({ onCancel, onSaved, mode = 'owner' }: AddCarWizard
 
   return (
     <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 1280, mx: 'auto' }}>
+      {/* Mașina e deja salvată: cu sau fără plată, formularul se închide pe ea. */}
+      <HiddenPlateCheckoutDialog
+        carId={payingPlateFor}
+        onClose={() => payingPlateFor && onSaved(payingPlateFor)}
+        onPaid={() => payingPlateFor && onSaved(payingPlateFor)}
+      />
       <PageHeader
         title={isAdmin ? 'Adaugă o mașină în catalog' : 'Adaugă o mașină în flotă'}
         subtitle={
@@ -161,7 +176,14 @@ export function AddCarWizard({ onCancel, onSaved, mode = 'owner' }: AddCarWizard
             {step === 'vehicul' && <VehicleStep draft={draft} update={update} />}
             {step === 'oferta' && <OfferStep draft={draft} update={update} mode={mode} />}
             {step === 'poze' && (
-              <PhotosStep photos={photos} onAdd={addPhotos} onRemove={removePhoto} onMakeCover={makeCover} />
+              <PhotosStep
+                photos={photos}
+                onAdd={addPhotos}
+                onRemove={removePhoto}
+                onMakeCover={makeCover}
+                hidePlate={hidePlate}
+                onHidePlate={isAdmin ? undefined : setHidePlate}
+              />
             )}
             {step === 'locatie' && <LocationStep draft={draft} update={update} />}
             {step === 'dosar' && <DossierStep draft={draft} update={update} />}

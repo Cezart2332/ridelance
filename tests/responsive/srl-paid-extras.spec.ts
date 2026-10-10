@@ -6,9 +6,10 @@ const API = 'http://localhost:5000'
 const ROOT = '/app/dashboard-srl'
 
 /**
- * Opțiunile plătite ale anunțurilor de flotă: anunțul extra (40 lei/lună) când s-au folosit cele
- * incluse, și numărul de înmatriculare ascuns (15 lei, o dată per mașină). Nimic nu se publică
- * automat peste limită: firma alege să plătească.
+ * Opțiunile plătite ale anunțurilor de flotă: anunțul extra (39,90 lei/lună) când s-au folosit cele
+ * incluse, și numărul de înmatriculare ascuns (14,90 lei, o dată per mașină). Nimic nu se publică
+ * automat peste limită: firma alege să plătească. Numărul ascuns se întreabă în formularul mașinii
+ * (adăugare sau editare), nu la publicare.
  */
 
 const car = (index: number, extra: Record<string, unknown> = {}) => ({
@@ -79,10 +80,11 @@ test('cu anunțurile incluse folosite, publicarea cere un anunț extra plătit',
 
   const dialog = page.getByRole('dialog')
   await expect(dialog.getByText('Ai folosit toate cele 10 anunțuri incluse în abonament.')).toBeVisible()
-  await expect(dialog.getByText('Ascunde numărul de înmatriculare în anunț — 15 lei')).toBeVisible()
+  // Numărul ascuns nu se mai întreabă la publicare.
+  await expect(dialog.getByText(/Ascunde numărul de înmatriculare/)).toHaveCount(0)
   await page.screenshot({ path: `test-results/srl-extra-listing-${info.project.name}.png` })
 
-  await dialog.getByRole('button', { name: 'Plătește anunțul extra (40 lei / lună)' }).click()
+  await dialog.getByRole('button', { name: 'Plătește anunțul extra (39,90 lei / lună)' }).click()
   // Nu se publică nimic înainte de plată.
   expect(calls).toEqual(['extra-checkout'])
   await expect(dialog.getByText('Stripe indisponibil în test')).toBeVisible()
@@ -97,4 +99,28 @@ test('cu loc liber, se publică direct, fără plată', async ({ page }) => {
   await dialog.getByRole('button', { name: 'Publică anunțul' }).click()
   await expect(dialog.getByText('Anunțul e publicat.')).toBeVisible()
   expect(calls).toEqual(['toggle'])
+})
+
+test('numărul ascuns se cere din editarea mașinii și deschide plata', async ({ page }) => {
+  await mockFleet(page, 3)
+  const checkouts: string[] = []
+  await page.route(`${API}/cars/*/hidden-plate/checkout`, (route: Route) => {
+    checkouts.push(new URL(route.request().url()).pathname)
+    return route.fulfill({ status: 500, json: { detail: 'Stripe indisponibil în test' } })
+  })
+  await page.goto(`${ROOT}/masini`)
+  const card = page.getByText('Dacia Nepublicat', { exact: false }).first()
+  await expect(card).toBeVisible()
+  const article = page.locator('div', { has: card }).filter({ has: page.getByRole('button', { name: /Mai multe/ }) }).last()
+  await article.getByRole('button', { name: /Mai multe/ }).click()
+  await page.getByRole('menuitem', { name: /Editează/ }).click()
+
+  const dialog = page.getByRole('dialog').first()
+  await dialog.getByRole('tab', { name: /Foto|Poze/ }).click()
+  await expect(dialog.getByText('Ascunde numărul de înmatriculare în poze — 14,90 lei')).toBeVisible()
+  await dialog.getByRole('button', { name: 'Plătește și ascunde' }).click()
+
+  await expect.poll(() => checkouts.length).toBe(1)
+  expect(checkouts[0]).toContain('/hidden-plate/checkout')
+  await expect(page.getByText('Stripe indisponibil în test')).toBeVisible()
 })

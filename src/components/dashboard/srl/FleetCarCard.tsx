@@ -162,8 +162,9 @@ export function FleetCarCard({
             position: 'absolute',
             top: 8,
             right: 8,
+            // Buton alb peste poză, în orice temă: iconița rămâne închisă.
             bgcolor: alpha('#fff', 0.92),
-            color: DASHBOARD_TOKENS.ink,
+            color: '#1a1a2e',
             '&:hover': { bgcolor: '#fff' },
           }}
         >

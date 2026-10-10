@@ -50,12 +50,6 @@ interface RentFormModalProps {
   intent?: CarLeadIntent
 }
 
-const DURATIONS = [
-  { value: 1, label: 'O săptămână' },
-  { value: 4, label: '4 săptămâni' },
-  { value: 12, label: '12 săptămâni' },
-]
-
 /** Verdele de confirmare, același cu cel al statusului „Disponibil" din listă. */
 const SUCCESS = '#10b981'
 
@@ -66,7 +60,6 @@ const EMPTY_FORM = {
   city: '',
   interest: 'Închiriere săptămânală',
   startDate: '',
-  weeks: 4,
   hasPlatformAccount: '',
   message: '',
 }
@@ -107,7 +100,8 @@ export default function RentFormModal({ open, onClose, car, intent = 'Request' }
         consentAccepted: consent,
         intent,
         preferredStartDate: formData.startDate || null,
-        weeks: formData.weeks,
+        // Perioada nu se mai întreabă în formular; se stabilește în discuția cu proprietarul.
+        weeks: null,
         hasPlatformAccount:
           formData.hasPlatformAccount === '' ? null : formData.hasPlatformAccount === 'yes',
         message: formData.message || null,
@@ -243,20 +237,6 @@ export default function RentFormModal({ open, onClose, car, intent = 'Request' }
               </Stack>
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} component="div">
-                <TextField
-                  fullWidth
-                  select
-                  label="Pe ce perioadă"
-                  value={formData.weeks}
-                  onChange={(e) => setFormData({ ...formData, weeks: Number(e.target.value) })}
-                >
-                  {DURATIONS.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-
                 <TextField
                   fullWidth
                   select

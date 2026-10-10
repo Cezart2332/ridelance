@@ -44,6 +44,8 @@ import {
 import { AddressSearch } from '../../cars/map/AddressSearch'
 import { PinPicker } from '../../cars/map/LazyMaps'
 import { reverseGeocode } from '../../../lib/geocoding'
+import { HiddenPlateCheckoutDialog } from './HiddenPlateCheckoutDialog'
+import { HIDDEN_PLATE_LEI } from './paidExtras'
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme'
 import { TalonScan } from './TalonScan'
 
@@ -150,6 +152,7 @@ function CarEditForm({ car, mode, onClose, onSaved }: Omit<CarEditDialogProps, '
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
+  const [payingPlate, setPayingPlate] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const details: CarListingDetails = { ...BLANK_DETAILS, ...draft.details }
@@ -716,6 +719,18 @@ function CarEditForm({ car, mode, onClose, onSaved }: Omit<CarEditDialogProps, '
 
         {tab === 'foto' && (
           <Stack spacing={2}>
+            {isOwner && (
+              <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+                <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: DASHBOARD_TOKENS.ink }}>
+                  {car.plateHidden ? 'Numărul de înmatriculare e ascuns în poze.' : `Ascunde numărul de înmatriculare în poze — ${HIDDEN_PLATE_LEI} lei`}
+                </Typography>
+                {!car.plateHidden && (
+                  <Button variant="outlined" size="small" onClick={() => setPayingPlate(true)} sx={{ textTransform: 'none', fontWeight: 700 }}>
+                    Plătește și ascunde
+                  </Button>
+                )}
+              </Stack>
+            )}
             <Box
               onDragOver={(e) => {
                 e.preventDefault()
@@ -790,7 +805,8 @@ function CarEditForm({ car, mode, onClose, onSaved }: Omit<CarEditDialogProps, '
                           px: 0.9,
                           py: 0.2,
                           borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
-                          bgcolor: alpha(DASHBOARD_TOKENS.ink, 0.72),
+                          // Etichetă închisă peste poză, în orice temă.
+                          bgcolor: alpha('#1a1a2e', 0.72),
                           color: '#fff',
                           fontSize: '0.66rem',
                           fontWeight: 800,
@@ -854,6 +870,15 @@ function CarEditForm({ car, mode, onClose, onSaved }: Omit<CarEditDialogProps, '
           </Button>
         </Stack>
       </DialogActions>
+
+      <HiddenPlateCheckoutDialog
+        carId={payingPlate ? car.id : null}
+        onClose={() => setPayingPlate(false)}
+        onPaid={() => {
+          setPayingPlate(false)
+          onSaved()
+        }}
+      />
     </Dialog>
   )
 }

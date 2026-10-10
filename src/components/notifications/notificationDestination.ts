@@ -11,6 +11,7 @@ const TITLES: Record<string, string> = {
   DocumentStatusUpdate: 'Status document', PaymentConfirmed: 'Plată confirmată',
   DocumentExpiringSoon: 'Document aproape de expirare', MonthProcessed: 'Lună procesată',
   FleetAccountConfigured: 'Cont de platformă configurat', BankConnection: 'Cont bancar',
+  CarListingReview: 'Mașină de validat',
   FiscalProfile: 'Profil fiscal', AccountantMessage: 'Mesaj de la contabil',
 }
 
@@ -30,6 +31,8 @@ export function notificationTitle(notification: Notification) {
 export function notificationDestination(notification: Notification, role: string | null): string | null {
   const type = notification.type
   if (!TITLES[type]) return null
+  // Anunțul unei firme la validare: direct în tabul „Validare” de la Mașini.
+  if (role === 'Admin' && type === 'CarListingReview') return '/admin?tab=masini&section=validare'
   if (role === 'Admin' || role === 'Contabil') {
     // Contabilul: „Clienți PFA”, care deschide profilul clientului după `user` și `section`.
     const tab = role === 'Admin' ? (type === 'ChatRoomMessage' ? 'chat' : 'pfa') : 'clienti'

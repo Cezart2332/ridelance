@@ -2,8 +2,9 @@ import type { SxProps, Theme } from '@mui/material/styles'
 import { alpha } from '@mui/material/styles'
 
 import { TOKENS as GLOBAL } from '../../constants/tokens'
+import { ACTIVE_SKIN, type DashboardSkin } from './dashboardSkin'
 
-export const DASHBOARD_TOKENS = {
+const DEFAULT_TOKENS = {
   ink: '#1a1a2e',
   primary: '#5CCBF5',
   primaryStrong: '#45B8E2',
@@ -38,6 +39,8 @@ export const DASHBOARD_TOKENS = {
    * Aceeași ambră ca `HOME_TOKENS.warn[600]`, ca dashboardul să nu aibă două galbenuri.
    */
   stateWarning: '#B54708',
+  /** Textul de pe un fundal plin `primary` sau `accent`. */
+  onPrimary: '#FFFFFF',
   radius: {
     xs: 4,
     sm: 8,
@@ -52,6 +55,69 @@ export const DASHBOARD_TOKENS = {
     glow: '0 0 0 3px rgba(92, 203, 245, 0.16)',
   },
 }
+
+/**
+ * Dashboardul SRL, deschis: același alb cu albastru, în structura panoului de lucru (shadcn/ui).
+ * Suprafețele se despart prin borduri de 1px, nu prin umbre, iar colțurile sunt mici.
+ */
+const SRL_LIGHT_TOKENS: typeof DEFAULT_TOKENS = {
+  ...DEFAULT_TOKENS,
+  paper: '#FFFFFF',
+  surface: '#F8FAFC',
+  surfaceAlt: '#F1F5F9',
+  border: '#E2E8F0',
+  borderHover: '#CBD5E1',
+  textMuted: '#64748B',
+  textSubtle: '#94A3B8',
+  stateNeutral: '#64748B',
+  radius: { xs: 4, sm: 6, md: 8, lg: 10, xl: 12, full: 999 },
+  shadow: {
+    sm: 'none',
+    md: 'none',
+    glow: '0 0 0 3px rgba(92, 203, 245, 0.2)',
+  },
+}
+
+/**
+ * Dashboardul SRL, închis: negru cu același albastru. Aceeași structură ca varianta deschisă;
+ * se schimbă doar culorile. Albastrul de accent e cel de brand (pe negru, cel închis din varianta
+ * deschisă nu s-ar citi), iar textul de pe butoanele pline e închis, nu alb.
+ */
+const SRL_DARK_TOKENS: typeof DEFAULT_TOKENS = {
+  ...SRL_LIGHT_TOKENS,
+  ink: '#FAFAFA',
+  primary: '#5CCBF5',
+  primaryStrong: '#8ADAF8',
+  paper: '#131316',
+  surface: '#09090B',
+  surfaceAlt: '#1C1C1F',
+  border: '#27272A',
+  borderHover: '#3F3F46',
+  textMuted: '#A1A1AA',
+  textSubtle: '#71717A',
+  accent: '#5CCBF5',
+  accentSoft: '#1E6F8C',
+  accentWash: 'rgba(92, 203, 245, 0.12)',
+  stateActive: '#5CCBF5',
+  stateNeutral: '#A1A1AA',
+  stateError: '#F87171',
+  stateWarning: '#FBBF24',
+  onPrimary: '#06202B',
+  shadow: {
+    sm: 'none',
+    md: 'none',
+    glow: '0 0 0 3px rgba(92, 203, 245, 0.28)',
+  },
+}
+
+const SKINS: Record<DashboardSkin, typeof DEFAULT_TOKENS> = {
+  default: DEFAULT_TOKENS,
+  'srl-light': SRL_LIGHT_TOKENS,
+  'srl-dark': SRL_DARK_TOKENS,
+}
+
+/** Tokenii dashboardului, în pielea cu care s-a încărcat pagina (vezi `dashboardSkin`). */
+export const DASHBOARD_TOKENS = SKINS[ACTIVE_SKIN]
 
 /**
  * Fundalurile avatarelor fără logo încărcat. Spec §3.1 cere un fallback „pe fundal din paletă,

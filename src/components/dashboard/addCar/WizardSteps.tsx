@@ -21,6 +21,7 @@ import {
   type WizardMode,
 } from './wizardModel'
 import { BOLT_CATEGORIES, CAR_BRANDS, UBER_CATEGORIES, modelsForBrand } from '../../../data/carCatalog'
+import { HIDDEN_PLATE_LEI } from '../srl/paidExtras'
 import { DateField } from '../../common/DateField'
 import { TalonScan } from '../srl/TalonScan'
 
@@ -298,14 +299,31 @@ export function PhotosStep({
   onAdd,
   onRemove,
   onMakeCover,
+  hidePlate,
+  onHidePlate,
 }: {
   photos: DraftPhoto[]
   onAdd: (files: FileList | null) => void
   onRemove: (id: string) => void
   onMakeCover: (id: string) => void
+  /** Opțiunea plătită „număr ascuns”. Fără `onHidePlate` (admin) nu se oferă. */
+  hidePlate?: boolean
+  onHidePlate?: (next: boolean) => void
 }) {
   return (
     <Stack spacing={2.5}>
+      {onHidePlate && (
+        <FormControlLabel
+          control={<Checkbox checked={hidePlate === true} onChange={(event) => onHidePlate(event.target.checked)} />}
+          label={
+            <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: DASHBOARD_TOKENS.ink }}>
+              Ascunde numărul de înmatriculare în poze — {HIDDEN_PLATE_LEI} lei
+            </Typography>
+          }
+          sx={{ m: 0 }}
+        />
+      )}
+
       <Button
         component="label"
         variant="outlined"
@@ -408,8 +426,9 @@ const makeCoverSx = {
   fontSize: '0.66rem',
   fontWeight: 700,
   textTransform: 'none',
+  // Buton alb peste poză, în orice temă: textul rămâne închis.
   bgcolor: alpha('#FFFFFF', 0.92),
-  color: DASHBOARD_TOKENS.ink,
+  color: '#1a1a2e',
   '&:hover': { bgcolor: '#FFFFFF' },
 } as const
 

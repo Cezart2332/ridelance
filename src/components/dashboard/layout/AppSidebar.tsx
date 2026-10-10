@@ -13,7 +13,11 @@ import {
   type NavEntry,
   type NavLeaf,
 } from '../../../config/dashboardNav';
-import logo from '../../../assets/logo.svg';
+import lightLogo from '../../../assets/logo.svg';
+import darkLogo from '../../../assets/logo-on-dark.svg';
+import { IS_DARK_SKIN } from '../dashboardSkin';
+
+const logo = IS_DARK_SKIN ? darkLogo : lightLogo;
 
 interface AppSidebarProps {
   /** Meniul de randat. Sidebar-ul nu cunoaște niciun dashboard anume. */

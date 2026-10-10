@@ -19,6 +19,7 @@ import { useId, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import type { QuickActionsMenu } from '../../../config/dashboardNav'
+import { IS_DARK_SKIN } from '../dashboardSkin'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 
 /**
@@ -183,7 +184,8 @@ export function QuickActionsButton({ menu }: { menu: QuickActionsMenu }) {
             borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
             px: 1.75,
             backgroundColor: DASHBOARD_TOKENS.primary,
-            color: DASHBOARD_TOKENS.ink,
+            // Pe albastrul plin textul e închis în orice temă (în cea închisă, `ink` e alb).
+            color: IS_DARK_SKIN ? DASHBOARD_TOKENS.onPrimary : DASHBOARD_TOKENS.ink,
             '&:hover': { backgroundColor: DASHBOARD_TOKENS.primaryStrong },
           }}
         >

@@ -1,3 +1,5 @@
+import { IS_DARK_SKIN } from '../dashboardSkin'
+
 /**
  * Regulile tipografice ale unei cifre afișate. Stau separat de `DASHBOARD_TOKENS` fiindcă sunt
  * consumate de o singură componentă — `Amount` — și de pagina Acasă, care trebuie să rămână la
@@ -19,7 +21,6 @@ export const tabularNums = {
  * Perechea de culori a unui număr: partea întreagă poartă greutatea, zecimalele și unitatea
  * rămân mereu secundare. E rampa neutră a paginii Acasă, ridicată la comun.
  */
-export const NUMERIC_TEXT = {
-  primary: '#101828',
-  secondary: '#667085',
-} as const
+export const NUMERIC_TEXT = IS_DARK_SKIN
+  ? ({ primary: '#FAFAFA', secondary: '#A1A1AA' } as const)
+  : ({ primary: '#101828', secondary: '#667085' } as const)

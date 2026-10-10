@@ -20,6 +20,7 @@ import { RoleAreaGate } from './components/auth/RoleAreaGate'
 import { FleetAccessGate } from './components/onboarding/fleet/FleetAccessGate'
 import RoleRedirect from './components/auth/RoleRedirect'
 import { SRL_ROOT } from './config/srlNavigation'
+import { SkinBoundary } from './components/dashboard/SkinBoundary'
 import { DocumentViewerHost } from './components/common/documentViewerHost'
 import { SignDocumentPage } from './pages/SignDocumentPage'
 import { IS_NATIVE_APP } from './native/platform'
@@ -96,6 +97,7 @@ function App() {
   return (
     <>
       <ScrollToTop />
+      <SkinBoundary />
       <ReloadOnNewVersion />
       {/* Suprapunere unică pentru vizualizarea documentelor, apelabilă din orice pagină. */}
       <DocumentViewerHost />

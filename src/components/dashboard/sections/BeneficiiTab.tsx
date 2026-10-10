@@ -23,6 +23,7 @@ import { EldriveOffer } from '../../partners/EldriveOffer'
 import { PartnerShowcase } from '../../partners/PartnerShowcase'
 import { getPartnerShowcase } from '../../../data/partnerShowcases'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { IS_DARK_SKIN } from '../dashboardSkin'
 import { PageHeader } from '../ui'
 
 /**
@@ -129,6 +130,8 @@ function PartnerTabs({
                   opacity: isActive ? 1 : 0.55,
                   filter: isActive ? 'grayscale(0)' : 'grayscale(1)',
                   transition: 'all 200ms ease',
+                  // Logourile partenerilor sunt desenate pentru fundal alb; pe negru îl primesc.
+                  ...(IS_DARK_SKIN && { backgroundColor: '#FFFFFF', borderRadius: '6px', p: 0.5 }),
                 }}
               />
             </ButtonBase>
@@ -180,7 +183,8 @@ function PartnerPanel({
             display: 'grid',
             placeItems: 'center',
             borderRadius: `${DASHBOARD_TOKENS.radius.md}px`,
-            backgroundColor: DASHBOARD_TOKENS.paper,
+            // Alb în orice temă: logoul partenerului e desenat pentru fundal alb.
+            backgroundColor: '#FFFFFF',
             border: `1px solid ${DASHBOARD_TOKENS.border}`,
             p: 1,
           }}
@@ -574,7 +578,7 @@ const primaryButtonSx = {
   fontWeight: 800,
   fontSize: '0.86rem',
   textTransform: 'none',
-  color: '#fff',
+  color: DASHBOARD_TOKENS.onPrimary,
   backgroundColor: DASHBOARD_TOKENS.primary,
   borderRadius: `${DASHBOARD_TOKENS.radius.full}px`,
   boxShadow: 'none',

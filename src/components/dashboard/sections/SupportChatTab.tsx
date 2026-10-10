@@ -314,7 +314,7 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
                   minWidth: { xs: 44, sm: 64 },
                   height: 44,
                   flexShrink: 0,
-                  color: '#fff',
+                  color: DASHBOARD_TOKENS.onPrimary,
                   backgroundColor: DASHBOARD_TOKENS.primary,
                   fontWeight: 700,
                   boxShadow: DASHBOARD_TOKENS.shadow.glow,
@@ -322,7 +322,7 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
                 }}
               >
                 {sending ? (
-                  <CircularProgress size={18} sx={{ color: '#fff' }} />
+                  <CircularProgress size={18} sx={{ color: DASHBOARD_TOKENS.onPrimary }} />
                 ) : (
                   <>
                     <SendRoundedIcon sx={{ display: { xs: 'block', sm: 'none' }, fontSize: 20 }} />
