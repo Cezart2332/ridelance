@@ -9,7 +9,7 @@ import { DEFAULT_CENTER, MAPBOX_AVAILABLE, MAPBOX_STYLE, MAPBOX_TOKEN } from '..
 import { TOKENS } from '../../../constants/tokens'
 import type { EldriveStation } from '../../../data/eldrive'
 import { MapUnavailable } from '../../cars/map/MapUnavailable'
-import { applyBrandTint, attachMapDiagnostics, mapContainerSx } from '../../cars/map/mapRuntime'
+import { applyBrandTint, attachMapDiagnostics, createMap, mapContainerSx } from '../../cars/map/mapRuntime'
 import { EldriveStationCard } from './EldriveStationCard'
 import { DAY_PRICE, NIGHT_PRICE, NONSTOP_COLOR, NONSTOP_PRICE, stationRateLabel } from './stationRates'
 
@@ -76,7 +76,7 @@ export function EldriveStationsMap({ stations, activeId, onSelect }: EldriveStat
     if (!MAPBOX_AVAILABLE || !container || mapRef.current) return
 
     mapboxgl.accessToken = MAPBOX_TOKEN
-    const map = new mapboxgl.Map({
+    const map = createMap({
       container,
       style: MAPBOX_STYLE,
       center: DEFAULT_CENTER,
@@ -87,7 +87,9 @@ export function EldriveStationsMap({ stations, activeId, onSelect }: EldriveStat
       renderWorldCopies: false,
       // Pe pagină, rotița derulează pagina; harta se mărește din butoane sau cu ctrl.
       cooperativeGestures: true,
-    })
+    }, setFailure)
+    // Harta n-a putut fi creată (de regulă lipsește WebGL): motivul ajunge la `setFailure`.
+    if (!map) return
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right')
 
     const detach = attachMapDiagnostics(map, container, setFailure)

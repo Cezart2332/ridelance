@@ -6,7 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { MAPBOX_AVAILABLE, MAPBOX_STYLE, MAPBOX_TOKEN } from '../../lib/mapbox'
 import { TOKENS } from '../../constants/tokens'
 import { MapUnavailable } from '../cars/map/MapUnavailable'
-import { applyBrandTint, attachMapDiagnostics, mapContainerSx } from '../cars/map/mapRuntime'
+import { applyBrandTint, attachMapDiagnostics, createMap, mapContainerSx } from '../cars/map/mapRuntime'
 import { MAP_FRAME_SX } from './mapFrame'
 import {
   PLATFORMS,
@@ -95,7 +95,7 @@ export function CoverageMap({
     const markers = markersRef.current
 
     mapboxgl.accessToken = MAPBOX_TOKEN
-    const map = new mapboxgl.Map({
+    const map = createMap({
       container,
       style: MAPBOX_STYLE,
       center: [25.0, 45.9],
@@ -121,7 +121,9 @@ export function CoverageMap({
         'ScrollZoomBlocker.CmdMessage': 'Ține ⌘ apăsat și derulează pentru zoom',
         'TouchPanBlocker.Message': 'Folosește două degete ca să miști harta',
       },
-    })
+    }, setFailure)
+    // Harta n-a putut fi creată (de regulă lipsește WebGL): motivul ajunge la `setFailure`.
+    if (!map) return
     map.touchZoomRotate.disableRotation()
     mapRef.current = map
 

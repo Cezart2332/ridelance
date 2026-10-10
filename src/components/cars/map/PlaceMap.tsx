@@ -6,7 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { MAPBOX_AVAILABLE, MAPBOX_STYLE, MAPBOX_TOKEN } from '../../../lib/mapbox'
 import { TOKENS } from '../../../constants/tokens'
 import { MapUnavailable } from './MapUnavailable'
-import { applyBrandTint, attachMapDiagnostics, mapContainerSx } from './mapRuntime'
+import { applyBrandTint, attachMapDiagnostics, createMap, mapContainerSx } from './mapRuntime'
 
 /**
  * Un singur punct pe hartă, de privit.
@@ -49,14 +49,16 @@ export function PlaceMap({
     if (!MAPBOX_AVAILABLE || !container || mapRef.current) return
 
     mapboxgl.accessToken = MAPBOX_TOKEN
-    const map = new mapboxgl.Map({
+    const map = createMap({
       container,
       style: MAPBOX_STYLE,
       center: [longitude, latitude],
       zoom,
       interactive,
       attributionControl: true,
-    })
+    }, setFailure)
+    // Harta n-a putut fi creată (de regulă lipsește WebGL): motivul ajunge la `setFailure`.
+    if (!map) return
 
     const detach = attachMapDiagnostics(map, container, setFailure)
     map.on('load', () => applyBrandTint(map))

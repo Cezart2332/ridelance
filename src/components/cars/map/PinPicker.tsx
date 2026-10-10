@@ -6,7 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { DEFAULT_CENTER, DEFAULT_ZOOM, MAPBOX_AVAILABLE, MAPBOX_STYLE, MAPBOX_TOKEN } from '../../../lib/mapbox'
 import { TOKENS } from '../../../constants/tokens'
 import { MapUnavailable } from './MapUnavailable'
-import { applyBrandTint, attachMapDiagnostics, mapContainerSx } from './mapRuntime'
+import { applyBrandTint, attachMapDiagnostics, createMap, mapContainerSx } from './mapRuntime'
 
 /**
  * Alegerea locului de preluare prin click pe hartă.
@@ -37,13 +37,15 @@ export function PinPicker({ latitude, longitude, onChange, height = 300 }: PinPi
     if (!MAPBOX_AVAILABLE || !containerRef.current || mapRef.current) return
 
     mapboxgl.accessToken = MAPBOX_TOKEN
-    const map = new mapboxgl.Map({
+    const map = createMap({
       container: containerRef.current,
       style: MAPBOX_STYLE,
       center: latitude != null && longitude != null ? [longitude, latitude] : DEFAULT_CENTER,
       zoom: latitude != null && longitude != null ? 13 : DEFAULT_ZOOM,
       attributionControl: false,
-    })
+    }, setFailure)
+    // Harta n-a putut fi creată (de regulă lipsește WebGL): motivul ajunge la `setFailure`.
+    if (!map) return
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right')
 
     map.on('click', (event) => {

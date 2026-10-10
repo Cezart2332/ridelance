@@ -11,7 +11,7 @@ import { TOKENS } from '../../../constants/tokens'
 import { spreadOffsets } from './spreadOverlapping'
 import { MapUnavailable } from './MapUnavailable'
 import { CarMapCard } from './CarMapCard'
-import { applyBrandTint, attachMapDiagnostics, mapContainerSx } from './mapRuntime'
+import { applyBrandTint, attachMapDiagnostics, createMap, mapContainerSx } from './mapRuntime'
 
 /**
  * Harta flotei, cu un pin per mașină.
@@ -85,13 +85,15 @@ export function FleetMap({ points, activeId, onSelect, onBoundsSearch, height = 
     if (!MAPBOX_AVAILABLE || !containerRef.current || mapRef.current) return
 
     mapboxgl.accessToken = MAPBOX_TOKEN
-    const map = new mapboxgl.Map({
+    const map = createMap({
       container: containerRef.current,
       style: MAPBOX_STYLE,
       center: DEFAULT_CENTER,
       zoom: DEFAULT_ZOOM,
       attributionControl: false,
-    })
+    }, setFailure)
+    // Harta n-a putut fi creată (de regulă lipsește WebGL): motivul ajunge la `setFailure`.
+    if (!map) return
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right')
     mapRef.current = map
 

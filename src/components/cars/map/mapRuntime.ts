@@ -1,5 +1,6 @@
 import type { SxProps, Theme } from '@mui/material/styles'
-import type { Map as MapboxMap } from 'mapbox-gl'
+import mapboxgl from 'mapbox-gl'
+import type { Map as MapboxMap, MapOptions } from 'mapbox-gl'
 
 /**
  * Stilul containerului în care Mapbox își montează pânza.
@@ -156,6 +157,56 @@ export function attachMapDiagnostics(
     window.clearTimeout(watchdog)
     observer.disconnect()
     map.off('error', onError)
+  }
+}
+
+/**
+ * De ce n-a putut fi construită harta, în cuvinte pentru om.
+ *
+ * WebGL lipsă e cazul care contează: e mediul utilizatorului, nu un defect al nostru, și nu se
+ * repară reîncercând. Orice altceva e neașteptat — mesajul original rămâne în consolă.
+ */
+function constructionFailureReason(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error)
+
+  if (/webgl/i.test(message)) {
+    return 'Harta nu poate fi afișată: browserul nu are WebGL activ. Activează accelerarea grafică sau încearcă alt browser.'
+  }
+
+  return 'Harta nu a putut porni în acest browser. Reîncarcă pagina sau încearcă alt browser.'
+}
+
+/**
+ * Construiește harta fără să lase constructorul să dărâme pagina.
+ *
+ * `new mapboxgl.Map` aruncă sincron „Failed to initialize WebGL" când browserul n-are WebGL —
+ * dezactivat, driver vechi, unele WebView-uri. Aruncată dintr-un `useEffect`, eroarea urcă până
+ * la ErrorBoundary-ul aplicației și toată pagina devine „500", deși doar harta lipsea.
+ * `attachMapDiagnostics` nu are cum s-o prindă: ea se leagă de o hartă care, aici, nu există.
+ *
+ * Întoarce `null` când harta n-a putut fi creată; motivul ajunge la `onFatal`, la fel ca pentru
+ * erorile fatale de după creare, deci componentele arată același `MapUnavailable`.
+ *
+ * `onFatal` e amânat într-un microtask: apelat sincron din corpul efectului, un `setState` ar
+ * declanșa o randare în cascadă (și regula `react-hooks/set-state-in-effect` îl respinge).
+ */
+export function createMap(
+  options: MapOptions & { container: HTMLElement },
+  onFatal: (reason: string) => void,
+): MapboxMap | null {
+  try {
+    return new mapboxgl.Map(options)
+  } catch (error) {
+    console.warn('[mapbox] harta nu a putut fi creată:', error)
+
+    // Constructorul apucă să-și monteze pânza și controalele în container înainte să arunce.
+    // Containerul e un `Box` gol al nostru, deci îl putem curăța fără să încurcăm React-ul.
+    options.container.classList.remove('mapboxgl-map')
+    options.container.replaceChildren()
+
+    const reason = constructionFailureReason(error)
+    queueMicrotask(() => onFatal(reason))
+    return null
   }
 }
 
