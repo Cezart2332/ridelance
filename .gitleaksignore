@@ -26,3 +26,7 @@ b57f75cad3371e2a5049b9451d4447845c1e283b:tests/responsive/anaf-efactura.spec.ts:
 65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-3/traces/fe534f0825407f213faa-a0541215a7111b38fc39.network:generic-api-key:263
 65d878eec3bb8030cad2c58bf2930fcf5f397451:test-results/responsive/.playwright-artifacts-2/traces/86a5e4e303644cf814e4-81aa6638ff2de2f8f71d.network:generic-api-key:207
 734fff892e0c2f1ecc3e697c5641c5ed472d7398:4213cde4-c0ce-4288-b03f-f598c636982d.pem:private-key:1
+
+# 2026-10-10: valoare fictivă dintr-un răspuns simulat (testul emailului operațional), nu o parolă reală.
+# Scoasă din fișier în commit-ul următor; rămâne doar în istoric.
+2a4eb7141273a001b47cd2bfa6bf7b86876fde0f:tests/responsive/admin-redesign.spec.ts:generic-api-key:222

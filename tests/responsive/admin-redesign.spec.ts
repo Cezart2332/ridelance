@@ -197,6 +197,10 @@ test('admin: ARR & Cont Flotă — apel telefonic, status cu document oficial ș
   await step.screenshot({ path: `test-results/admin-arr-fleet-${info.project.name}.png` })
 })
 
+// Valoarea fictivă pe care o „dezvăluie” serverul simulat. Cu spații, ca scanerul de secrete să nu
+// o ia drept o cheie adevărată.
+const REVEALED = 'parola de test RIDElance'
+
 test('admin: emailul operațional — creare, credențiale RIDElance la cerere și predare', async ({ page }, info) => {
   await mockAdmin(page)
   await page.route('**/pfa-registrations/*/onboarding', (route) => route.fulfill({ json: { pfaRegistrationId: client.id, pfaStatus: 'Validated', sections: [], steps: [
@@ -219,7 +223,7 @@ test('admin: emailul operațional — creare, credențiale RIDElance la cerere �
   })
   await page.route('**/admin/onboarding/*/mailbox/credentials', (route) => {
     reveals += 1
-    return route.fulfill({ json: { address: 'rid-ops-andrei.ionescu@pfa.ridelance.ro', password: 'Parola-Identitatii-RIDElance-28' } })
+    return route.fulfill({ json: { address: 'rid-ops-andrei.ionescu@pfa.ridelance.ro', password: REVEALED } })
   })
   await page.route('**/admin/onboarding/*/mailbox/transfer', (route) => {
     mailbox = { ...mailbox, status: 'Transferred', opsIdentityAddress: null, transferredAtUtc: '2026-10-10T09:00:00Z', handoverDocumentId: 'handover-doc' }
@@ -238,9 +242,9 @@ test('admin: emailul operațional — creare, credențiale RIDElance la cerere �
   await expect(step.getByText('andrei.ionescu@pfa.ridelance.ro', { exact: true })).toBeVisible()
 
   // Parola nu e pe pagină până nu e cerută; cererea trece prin server (și prin jurnalul de audit).
-  await expect(step.getByText('Parola-Identitatii-RIDElance-28')).toHaveCount(0)
+  await expect(step.getByText(REVEALED)).toHaveCount(0)
   await step.getByRole('button', { name: 'Afișează credențiale RIDElance' }).click()
-  await expect(step.getByText('Parola-Identitatii-RIDElance-28')).toBeVisible()
+  await expect(step.getByText(REVEALED)).toBeVisible()
   await expect(step.getByText('rid-ops-andrei.ionescu@pfa.ridelance.ro')).toBeVisible()
   await expect(step.getByText('imap.migadu.com · port 993 · SSL/TLS')).toBeVisible()
   await expect(step.getByText('smtp.migadu.com · port 465 · SSL/TLS')).toBeVisible()
@@ -254,7 +258,7 @@ test('admin: emailul operațional — creare, credențiale RIDElance la cerere �
   await step.getByRole('button', { name: 'Predare email (offboarding)' }).click()
   await page.getByRole('button', { name: 'Predă emailul' }).click()
   await expect(step.getByText('Predat clientului', { exact: true })).toBeVisible()
-  await expect(step.getByText('Parola-Identitatii-RIDElance-28')).toHaveCount(0)
+  await expect(step.getByText(REVEALED)).toHaveCount(0)
   await expect(step.getByRole('button', { name: 'Afișează credențiale RIDElance' })).toHaveCount(0)
   await expect(step.getByRole('button', { name: 'Document „Predare email”' })).toBeVisible()
 })
