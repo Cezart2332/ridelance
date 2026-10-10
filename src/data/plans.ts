@@ -222,29 +222,3 @@ export const SRL_PLANS: Plan[] = [
   },
 ]
 export const plansFor = (audience: Audience): Plan[] => (audience === 'pfa' ? PFA_PLANS : SRL_PLANS)
-
-/**
- * Ce primește oricine, indiferent de plan.
- *
- * Stă jos, sub carduri, tocmai ca să nu fie repetat în fiecare: aceleași opt rânduri scrise de
- * trei ori ar fi făcut cardurile de două ori mai lungi fără să spună nimic în plus.
- */
-export interface IncludedBenefit {
-  partner?: string
-  title: string
-  text: string
-}
-
-export const INCLUDED_IN_ALL: IncludedBenefit[] = [
-  { title: 'Deschidere PFA gratuită', text: 'Pentru utilizatorii eligibili RIDElance.' },
-  { partner: 'bcr', title: 'Beneficii BCR', text: '50 lei/lună reducere la abonament timp de 6 luni, pentru conturi eligibile deschise prin RIDElance.' },
-  { partner: 'mol', title: 'Reduceri MOL', text: 'Combustibil și spălătorii la tarife dedicate.' },
-  { partner: 'asigurari-ro', title: 'Asigurări online', text: 'Acces prin asigurari.ro și suport RIDElance la nevoie.' },
-  { partner: 'eldrive', title: 'Reduceri Eldrive', text: 'Reducere de 0,80 lei/kWh la stațiile incluse în promoție.' },
-  { partner: 'consulto', title: 'Beneficii Consulto', text: 'Sediu profesional PFA la 349 lei/an și reduceri pentru operațiuni SRL eligibile.' },
-  { title: 'Dashboard RIDElance', text: 'Activitate, profit, taxe, documente și conexiuni într-un singur loc.' },
-  { title: 'Beneficii parteneri', text: 'Acces la ofertele și avantajele din ecosistemul RIDElance.' },
-]
-
-export const INCLUDED_FOOTNOTE =
-  'Condițiile comerciale ale beneficiilor oferite de parteneri pot depinde de eligibilitatea și termenii fiecărui partener.'
