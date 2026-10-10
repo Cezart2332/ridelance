@@ -1,5 +1,10 @@
 FROM node:25-alpine AS build
 
+# Chromium pentru pre-randarea paginilor publice (scripts/prerender.mjs). Rămâne în etapa de build;
+# imaginea finală e doar nginx cu fișierele rezultate.
+RUN apk add --no-cache chromium
+ENV PRERENDER_CHROMIUM=/usr/bin/chromium
+
 WORKDIR /usr/src/app
 
 COPY package*.json package-lock.json ./
@@ -22,7 +27,10 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_MAPBOX_TOKEN=$VITE_MAPBOX_TOKEN \
     VITE_PUBLIC_STRIPE=$VITE_PUBLIC_STRIPE
 
-RUN npm run build
+# Pre-randarea vine imediat după build: fără ea, serverul ar răspunde pe orice adresă cu același
+# HTML gol. Dacă o pagină nu se poate pre-randa, build-ul se oprește — mai bine fără imagine nouă
+# decât cu un site invizibil pentru motoarele de căutare.
+RUN npm run build && node scripts/prerender.mjs
 
 FROM nginx:stable-alpine AS production
 

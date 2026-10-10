@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { usePageSeo } from '../seo/pageSeo'
 import { useParams } from 'react-router-dom'
 import { Box, CircularProgress } from '@mui/material'
 
@@ -45,14 +46,8 @@ export function CompanyPublicPage() {
     }
   }, [companyPath])
 
-  useEffect(() => {
-    if (!company) return
-    const previous = document.title
-    document.title = `${company.legalName} — RIDElance`
-    return () => {
-      document.title = previous
-    }
-  }, [company])
+  // /f/{slug} și /{slug} arată aceeași pagină; canonica e cea de la rădăcină.
+  usePageSeo(company && companyPath ? { title: company.legalName, path: `/${companyPath}` } : null)
 
   if (loading) {
     return (

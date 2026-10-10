@@ -4,6 +4,7 @@ import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
 import { OfficeBookingCalendar, OFFICE_ADDRESS } from '../components/office/OfficeBookingCalendar'
 import { pageFrameSx } from '../constants/layout'
+import { staticPageSeo, usePageSeo } from '../seo/pageSeo'
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
@@ -59,15 +60,17 @@ function ColumnHeading({ title, subtitle }: { title: string; subtitle: string })
   )
 }
 
+const TITLE = 'Contact'
+const SUBTITLE =
+  'Dacă ai întrebări despre platformă, abonamente, zona fiscală sau o posibilă colaborare, trimite-ne un mesaj sau programează direct o vizită la biroul nostru. Revenim către tine cât mai curând posibil.'
+
 export function ContactPage() {
+  usePageSeo(staticPageSeo(TITLE, '/contact', SUBTITLE))
   return (
     <Box sx={pageFrameSx}>
       <Container maxWidth="lg">
         <Stack spacing={4}>
-          <SectionHeader
-            title="Contact"
-            subtitle="Dacă ai întrebări despre platformă, abonamente, zona fiscală sau o posibilă colaborare, trimite-ne un mesaj sau programează direct o vizită la biroul nostru. Revenim către tine cât mai curând posibil."
-          />
+          <SectionHeader as="h1" title={TITLE} subtitle={SUBTITLE} />
 
           <Box
             sx={{

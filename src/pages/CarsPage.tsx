@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { staticPageSeo, usePageSeo } from '../seo/pageSeo'
 import { 
   Box, 
   Typography, 
@@ -54,6 +55,13 @@ import { matchesOfferTypeFilter, matchesStatusFilter } from '../utils/carLabels'
 import { DEFAULT_SORT, SORT_OPTIONS, sortKeyFor, type SortOption } from '../utils/carSorting';
 
 export function CarsPage() {
+  usePageSeo(
+    staticPageSeo(
+      'Alege o mașină pregătită pentru Ridesharing',
+      '/masini',
+      'Pentru Uber sau Bolt, cu închiriere săptămânală sau la rămânere și aplicare 100% online.',
+    ),
+  )
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);

@@ -110,7 +110,8 @@ test.describe('marketplace', () => {
 
     const owner = page.getByRole('link', { name: /pagina publică a proprietarului TUKI GO SRL/i })
     await expect(owner).toBeVisible()
-    await expect(owner).toHaveAttribute('href', '/f/tuki-go')
+    // Mini-site-ul stă la rădăcină (/tuki-go); /f/{slug} rămâne doar pentru linkurile vechi.
+    await expect(owner).toHaveAttribute('href', '/tuki-go')
     // Cardul întreg e clicabil; blocul de proprietar trebuie să scape de sub el.
     await expect(owner).toHaveAttribute('target', '_blank')
   })

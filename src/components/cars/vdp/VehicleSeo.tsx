@@ -1,16 +1,21 @@
 import { getCarImageUrl, type Car } from '../../../services/cars.service'
+import { breadcrumbJsonLd, SITE_ORIGIN, usePageSeo } from '../../../seo/pageSeo'
 import { formatLei } from '../../../utils/vehiclePricing'
 
 /**
  * Titlul, descrierea și datele structurate ale paginii (spec §22).
  *
- * React 19 ridică singur `<title>`, `<meta>` și `<link>` din componente în `<head>`, deci nu e
- * nevoie de nicio bibliotecă. Limitarea rămâne cea a oricărui SPA: le văd doar crawlerele care
- * execută JavaScript.
+ * Se scriu direct în `<head>` (`usePageSeo`), pe etichetele care există deja. Randate ca etichete
+ * din componentă, pagina ajungea cu două `<title>` și două descrieri — cele statice din
+ * `index.html` și cele de aici — iar un crawler le lua pe primele, cele generice.
  *
- * Prețul din JSON-LD e exprimat pe **săptămână** (`unitCode: WEE`). Un preț pe zi calculat de noi
- * și pus în date structurate ar deveni prețul afișat în rezultatele căutării — exact confuzia pe
- * care o evită restul paginii.
+ * Adresa canonică e mereu `/masini/{slug}`: aceeași mașină se deschide și din mini-site-ul firmei
+ * (`/{firma}/{slug}`), iar fără canonică fiecare adresă ar fi tratată ca pagină separată.
+ *
+ * Datele structurate descriu o **mașină de închiriat** (`Car` cu ofertă `LeaseOut`), nu un produs
+ * de vânzare. Prețul e exprimat pe **săptămână** (`unitCode: WEE`): un preț pe zi calculat de noi
+ * ar deveni prețul afișat în rezultatele căutării — exact confuzia pe care o evită restul paginii.
+ * Intră doar ce se vede pe pagină.
  */
 export function VehicleSeo({ car }: { car: Car }) {
   const name = `${car.brand} ${car.model} ${car.year}`
@@ -18,51 +23,54 @@ export function VehicleSeo({ car }: { car: Car }) {
   const description =
     `${name}, ${car.transmission.toLowerCase()}, ${car.engine.toLowerCase()}, disponibilă în ` +
     `${car.location} pentru ridesharing. ${formatLei(car.pricePerWeek)} lei pe săptămână, fără plată online.`
-  const image = car.images[0] ? getCarImageUrl(car.images[0].imageUrl) : undefined
-  const url = `${window.location.origin}/masini/${car.slug}`
+  const images = car.images.map((image) => getCarImageUrl(image.imageUrl))
+  const path = `/masini/${car.slug}`
+  const url = `${SITE_ORIGIN}${path}`
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name,
-    description: car.description || description,
-    image: image ? [image] : undefined,
-    brand: { '@type': 'Brand', name: car.brand },
-    offers: {
-      '@type': 'Offer',
-      url,
-      priceCurrency: 'RON',
-      availability:
-        car.status === 'Available'
-          ? 'https://schema.org/InStock'
-          : 'https://schema.org/OutOfStock',
-      priceSpecification: {
-        '@type': 'UnitPriceSpecification',
-        price: car.pricePerWeek,
-        priceCurrency: 'RON',
-        unitCode: 'WEE',
-        unitText: 'săptămână',
+  usePageSeo({
+    title,
+    description,
+    path,
+    image: images[0],
+    type: 'product',
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Car',
+        '@id': `${url}#car`,
+        name,
+        description: car.description || description,
+        image: images.length > 0 ? images : undefined,
+        brand: { '@type': 'Brand', name: car.brand },
+        model: car.model,
+        vehicleModelDate: String(car.year),
+        fuelType: car.engine,
+        vehicleTransmission: car.transmission,
+        offers: {
+          '@type': 'Offer',
+          url,
+          businessFunction: 'http://purl.org/goodrelations/v1#LeaseOut',
+          price: car.pricePerWeek,
+          priceCurrency: 'RON',
+          availability: car.status === 'Available' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+          areaServed: car.location,
+          seller: car.owner ? { '@type': 'Organization', name: car.owner.displayName } : undefined,
+          priceSpecification: {
+            '@type': 'UnitPriceSpecification',
+            price: car.pricePerWeek,
+            priceCurrency: 'RON',
+            unitCode: 'WEE',
+            unitText: 'săptămână',
+          },
+        },
       },
-    },
-  }
+      breadcrumbJsonLd([
+        { name: 'Acasă', path: '/' },
+        { name: 'Mașini', path: '/masini' },
+        { name, path },
+      ]),
+    ],
+  })
 
-  return (
-    <>
-      <title>{title}</title>
-      <meta name="description" content={description} />
-      <link rel="canonical" href={url} />
-
-      <meta property="og:type" content="product" />
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
-      <meta property="og:url" content={url} />
-      {image && <meta property="og:image" content={image} />}
-
-      <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
-      <meta name="twitter:title" content={title} />
-      <meta name="twitter:description" content={description} />
-
-      <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-    </>
-  )
+  return null
 }

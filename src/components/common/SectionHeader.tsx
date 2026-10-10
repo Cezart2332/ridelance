@@ -6,9 +6,15 @@ export const SectionHeader = ({
   subtitle,
   align = 'center',
   maxWidth = 640,
+  as = 'h2',
 }: {
   title: string
   subtitle?: string
+  /**
+   * Nivelul titlului în structura paginii. Titlul principal al unei pagini e `h1`; aspectul rămâne
+   * același, se schimbă doar eticheta.
+   */
+  as?: 'h1' | 'h2'
   align?: 'center' | 'left'
   maxWidth?: number
 }) => (
@@ -23,6 +29,7 @@ export const SectionHeader = ({
     >
       <Typography
         variant="h2"
+        component={as}
         sx={{
           fontSize: { xs: '1.7rem', md: '2.6rem' },
           color: TOKENS.ink,

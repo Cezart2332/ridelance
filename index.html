@@ -15,6 +15,34 @@
       content="Ridelance - înrolare și management PFA pentru șoferi Uber și Bolt din România."
     />
     <title>Ridelance • Platforma PFA pentru ridesharing</title>
+    <!-- Cine e site-ul, pentru motoarele de căutare. Doar ce se vede și în subsol. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://ridelance.ro/#organization",
+            "name": "RIDElance",
+            "url": "https://ridelance.ro/",
+            "logo": "https://ridelance.ro/icon-192.png",
+            "email": "contact@ridelance.ro",
+            "sameAs": [
+              "https://www.facebook.com/profile.php?id=61589705146000",
+              "https://www.instagram.com/ridelance/"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://ridelance.ro/#website",
+            "url": "https://ridelance.ro/",
+            "name": "RIDElance",
+            "inLanguage": "ro-RO",
+            "publisher": { "@id": "https://ridelance.ro/#organization" }
+          }
+        ]
+      }
+    </script>
     <!--
       Aplicația mobilă: fundalul închis și logoul se văd din primul cadru, în continuarea ecranului
       de start nativ, până montează React cortina (src/native/launch/NativeCurtain.tsx), care arată
@@ -47,6 +75,13 @@
       html[data-native="true"] .MuiSnackbar-anchorOriginTopLeft,
       html[data-native="true"] .MuiSnackbar-anchorOriginTopRight { margin-top: var(--sat); }
       #boot-splash { display: none; }
+      /*
+        Pagina pre-randată la build (scripts/prerender.mjs) rămâne pe ecran până e gata cea vie,
+        care se randează între timp în #root, ascuns (src/seo/PrerenderHandoff.tsx). `visibility`,
+        nu `display`: componentele care își măsoară lățimea la montare trebuie să aibă ce măsura.
+      */
+      #prerender { min-height: 100%; width: 100%; overflow-x: clip; }
+      #prerender ~ #root { position: absolute; top: 0; left: 0; visibility: hidden; }
       html[data-native="true"][data-surface="dark"],
       html[data-native="true"][data-surface="dark"] body { background-color: #1a1a2e !important; }
       html[data-native="true"] #boot-splash {

@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { staticPageSeo, usePageSeo } from '../seo/pageSeo'
 import { Box, Container, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
@@ -34,6 +35,13 @@ const normalize = (value: string) =>
   value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
 export function RidesharingCitiesPage() {
+  usePageSeo(
+    staticPageSeo(
+      'Unde poți conduce pe Uber, Bolt și Blue',
+      '/orase-ridesharing',
+      `${LOCATION_COUNT} de orașe și zone, strânse din comunicările oficiale ale celor trei platforme. Caută-ți orașul înainte să-ți deschizi PFA-ul — de el depinde dacă ai unde lucra.`,
+    ),
+  )
   const [activePlatform, setActivePlatform] = useState<PlatformId | null>(null)
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
@@ -546,6 +554,11 @@ function PlatformLogo({
       component="img"
       src={platform.logo}
       alt={`${platform.name}${suffix}`}
+      // Pagina are peste 150 de astfel de logouri, aproape toate sub prima vedere.
+      loading="lazy"
+      decoding="async"
+      width={Math.round(height * platform.aspect)}
+      height={height}
       sx={{
         height,
         width: height * platform.aspect,

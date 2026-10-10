@@ -21,6 +21,7 @@ import { FleetAccessGate } from './components/onboarding/fleet/FleetAccessGate'
 import RoleRedirect from './components/auth/RoleRedirect'
 import { SRL_ROOT } from './config/srlNavigation'
 import { SkinBoundary } from './components/dashboard/SkinBoundary'
+import { PrivateAreaRobots } from './seo/PrivateAreaRobots'
 import { DocumentViewerHost } from './components/common/documentViewerHost'
 import { SignDocumentPage } from './pages/SignDocumentPage'
 import { IS_NATIVE_APP } from './native/platform'
@@ -98,6 +99,7 @@ function App() {
     <>
       <ScrollToTop />
       <SkinBoundary />
+      <PrivateAreaRobots />
       <ReloadOnNewVersion />
       {/* Suprapunere unică pentru vizualizarea documentelor, apelabilă din orice pagină. */}
       <DocumentViewerHost />

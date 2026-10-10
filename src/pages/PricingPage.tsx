@@ -9,11 +9,16 @@ import { PublicPlanCard } from '../components/pricing/PublicPlanCard'
 import { Switcher } from '../components/pricing/Switcher'
 import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../data/bcrDiscount'
 import { pageFrameSx } from '../constants/layout'
+import { staticPageSeo, usePageSeo } from '../seo/pageSeo'
 import { ANNUAL_DISCOUNT, INCLUDED_FOOTNOTE, INCLUDED_IN_ALL, partnerLogoFor, plansFor, type Audience, type BillingCycle } from '../data/plans'
 import { useAppSelector } from '../store/hooks'
 import ridelanceLogo from '../assets/logo.svg'
 
+const TITLE = 'Abonamente'
+const SUBTITLE = 'Planuri simple. Beneficii reale. Sprijin complet.'
+
 export function PricingPage() {
+  usePageSeo(staticPageSeo(TITLE, '/abonamente-preturi', SUBTITLE))
   const navigate = useNavigate()
   const { accessToken, isInitialized } = useAppSelector((s) => s.auth)
   const [audience, setAudience] = useState<Audience>('pfa')
@@ -30,7 +35,7 @@ export function PricingPage() {
     <Box sx={{ ...pageFrameSx, py: 3 }}>
       <Container maxWidth="lg">
         <Stack spacing={2} sx={{ alignItems: 'center' }}>
-          <SectionHeader title="Abonamente" subtitle="Planuri simple. Beneficii reale. Sprijin complet." />
+          <SectionHeader as="h1" title={TITLE} subtitle={SUBTITLE} />
           <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 1.5 }}>
             <Switcher value={audience} onChange={setAudience} options={[{ value: 'pfa', label: 'PFA' }, { value: 'srl', label: 'SRL' }]} />
             <Switcher value={cycle} onChange={setCycle} options={[{ value: 'monthly', label: 'Lunar' }, { value: 'annual', label: 'Anual', badge: `-${Math.round(ANNUAL_DISCOUNT * 100)}%` }]} />

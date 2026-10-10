@@ -13,9 +13,6 @@ import checkSvg from '../assets/SVG/2- Regular/check-circle.svg'
 import starSvg from '../assets/SVG/2- Regular/star.svg'
 import desktop from '../assets/SVG/2- Regular/desktop.svg'
 
-export const loremLongText =
-  'Lorem ipsum dolor sit amet consectetur adipisicing elit. Distinctio ipsa ducimus, ipsam pariatur hic possimus aliquam eaque similique nostrum! Vero veniam earum sint sapiente ut. Quae aspernatur assumenda aliquam pariatur suscipit in porro ipsam.'
-
 export const navItems = [
   { label: 'Servicii', path: '/servicii' },
   { label: 'Mașini', path: '/masini' },
@@ -28,19 +25,6 @@ export const navItems = [
   { label: 'Despre Ridelance', path: '/despre-ridelance' },
   { label: 'Contact', path: '/contact' },
 ]
-
-export const faqItems = [
-  {
-    title: 'De ce as avea nevoie de o platforma ca aceasta',
-    text: loremLongText,
-  },
-  {
-    title: 'Daca am deja PFA, pot sa folosesc platforma?',
-    text: loremLongText,
-  },
-  { title: 'De ce documente am nevoie?', text: loremLongText },
-]
-
 
 /**
  * Logourile de pe pagina publică. Ordinea vine din `benefits.ts`, ca peste tot: aici era scrisă

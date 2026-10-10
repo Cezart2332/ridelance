@@ -5,10 +5,12 @@ import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
 import { HOME_FAQ } from '../data/faq'
 import { pageFrameSx } from '../constants/layout'
+import { staticPageSeo, usePageSeo } from '../seo/pageSeo'
 import logoWithMotto from '../assets/logowithmotto.svg'
 import motto from '../assets/motto.svg'
 
 export function AboutPage() {
+  usePageSeo(staticPageSeo('Despre Ridelance', '/despre-ridelance'))
   const aboutSections = [
     {
       title: 'Ce este Ridelance',
@@ -34,12 +36,15 @@ export function AboutPage() {
         <Stack spacing={6} sx={{ alignItems: "center" }}>
           {/* Logoul cu motto spune și ce e RIDElance, deci titlul și fraza de sub el ar fi
               repetat aceeași idee de trei ori pe același ecran. A rămas doar logoul. */}
-          <Box
-            component="img"
-            src={logoWithMotto}
-            alt="RIDElance — Independent. Dar nu singur."
-            sx={{ width: '100%', maxWidth: { xs: 260, md: 320 }, height: 'auto', mx: 'auto' }}
-          />
+          {/* Titlul paginii e logoul: `h1`-ul îl înconjoară, iar textul lui e cel alternativ al imaginii. */}
+          <Box component="h1" sx={{ m: 0, lineHeight: 0, width: '100%', maxWidth: { xs: 260, md: 320 }, mx: 'auto' }}>
+            <Box
+              component="img"
+              src={logoWithMotto}
+              alt="RIDElance — Independent. Dar nu singur."
+              sx={{ width: '100%', height: 'auto', display: 'block' }}
+            />
+          </Box>
 
           <Box sx={{ position: 'relative', width: '100%', maxWidth: 1000, mx: 'auto', py: 2 }}>
             {/* The central vertical line */}

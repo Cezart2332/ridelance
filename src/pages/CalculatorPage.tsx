@@ -6,8 +6,13 @@ import { SectionHeader } from '../components/common/SectionHeader'
 import { TaxRow } from '../components/common/TaxRow'
 import { DeductibleExpensesList } from '../components/fiscal/DeductibleExpensesList'
 import { pageFrameSx } from '../constants/layout'
+import { staticPageSeo, usePageSeo } from '../seo/pageSeo'
+
+const TITLE = 'Calculator Fiscal'
+const SUBTITLE = 'Estimează veniturile nete și taxele datorate pentru PFA în sistem real.'
 
 export function CalculatorPage() {
+  usePageSeo(staticPageSeo(TITLE, '/fiscal', SUBTITLE))
   const GROSS_SALARY = 4050
 
   const roundToInt = (value: number) => Math.round(value)
@@ -113,10 +118,7 @@ export function CalculatorPage() {
     <Box sx={pageFrameSx}>
       <Container maxWidth="xl">
         <Stack sx={{ alignItems: "center" }} spacing={6}>
-          <SectionHeader
-            title="Calculator Fiscal"
-            subtitle="Estimează veniturile nete și taxele datorate pentru PFA în sistem real."
-          />
+          <SectionHeader as="h1" title={TITLE} subtitle={SUBTITLE} />
 
           <Paper
             elevation={0}

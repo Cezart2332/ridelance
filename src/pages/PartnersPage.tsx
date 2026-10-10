@@ -15,6 +15,7 @@ import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
 import { pageFrameSx } from '../constants/layout'
+import { staticPageSeo, usePageSeo } from '../seo/pageSeo'
 import { InsuranceLinksGrid } from '../components/insurance/InsuranceLinksGrid'
 import { BcrOffer } from '../components/partners/BcrOffer'
 import { EldriveOffer } from '../components/partners/EldriveOffer'
@@ -244,9 +245,23 @@ function PartnerPanel({ partner }: { partner: Partner }) {
   )
 }
 
+const TITLE = 'Parteneri'
+const SUBTITLE =
+  'Colaborăm cu parteneri care aduc beneficii concrete șoferilor RIDElance. Alege un partener pentru detalii și oferte.'
+
 export function PartnersPage() {
   const { slug } = useParams()
   const partner = slug ? getPartnerBySlug(slug) : partners[0]
+  const isFirst = partner?.slug === partners[0]?.slug
+  usePageSeo(
+    partner
+      ? {
+          ...staticPageSeo(TITLE, '/parteneri', SUBTITLE),
+          // Pagina unui partener are titlul lui; primul e chiar pagina „Parteneri”.
+          ...(isFirst ? {} : { title: `${partner.name} — ${TITLE}`, path: `/parteneri/${partner.slug}` }),
+        }
+      : null,
+  )
 
   if (!partner) {
     return <Navigate to="/parteneri" replace />
@@ -256,10 +271,7 @@ export function PartnersPage() {
     <Box sx={pageFrameSx}>
       <Container maxWidth="lg">
         <Stack spacing={{ xs: 3, md: 4 }}>
-          <SectionHeader
-            title="Parteneri"
-            subtitle="Colaborăm cu parteneri care aduc beneficii concrete șoferilor RIDElance. Alege un partener pentru detalii și oferte."
-          />
+          <SectionHeader as="h1" title={TITLE} subtitle={SUBTITLE} />
 
           <PartnerTabs activeSlug={partner.slug} />
           <PartnerPanel partner={partner} />

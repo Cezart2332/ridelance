@@ -1,7 +1,7 @@
 import { Suspense, useState, useEffect } from 'react'
 import { AppBar, Box, Button, Container, Drawer, IconButton, Stack, Toolbar, useMediaQuery, Avatar } from '@mui/material'
 import { alpha, useTheme } from '@mui/material/styles'
-import { useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom'
+import { Link as RouterLink, useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom'
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
@@ -16,9 +16,9 @@ import { RouteFallback } from '../common/RouteFallback'
 import { ErrorPage } from '../common/ErrorPage'
 import { ServicePaymentSuccessDialog } from '../services/ServicePaymentSuccessDialog'
 import { lazyWithRetry } from '../../utils/lazyWithRetry'
+import { PrerenderHandoff } from '../../seo/PrerenderHandoff'
 
 const HomePage = lazyWithRetry(() => import('../../pages/HomePage').then((m) => ({ default: m.HomePage })))
-const FaqPage = lazyWithRetry(() => import('../../pages/FaqPage').then((m) => ({ default: m.FaqPage })))
 const ServicesPage = lazyWithRetry(() => import('../../pages/ServicesPage').then((m) => ({ default: m.ServicesPage })))
 const AboutPage = lazyWithRetry(() => import('../../pages/AboutPage').then((m) => ({ default: m.AboutPage })))
 const CalculatorPage = lazyWithRetry(() => import('../../pages/CalculatorPage').then((m) => ({ default: m.CalculatorPage })))
@@ -101,8 +101,10 @@ export function AppLayout() {
           >
             {/* Logo */}
             <Box
-              component="button"
-              onClick={() => goTo('/')}
+              component={RouterLink}
+              to="/"
+              aria-label="RIDElance — pagina principală"
+              onClick={() => setIsMobileMenuOpen(false)}
               sx={{
                 border: 'none',
                 backgroundColor: 'transparent',
@@ -120,8 +122,10 @@ export function AppLayout() {
               />
             </Box>
 
-            {/* Desktop Nav */}
+            {/* Desktop Nav — linkuri reale (`<a href>`), ca un crawler să aibă ce urmări. */}
             <Stack
+              component="nav"
+              aria-label="Meniul principal"
               direction="row"
               spacing={0.5}
               sx={{
@@ -137,7 +141,9 @@ export function AppLayout() {
                 return (
                   <Button
                     key={item.path}
-                    onClick={() => goTo(item.path)}
+                    component={RouterLink}
+                    to={item.path}
+                    aria-current={isActive ? 'page' : undefined}
                     sx={{
                       color: isActive
                         ? TOKENS.ink
@@ -333,11 +339,13 @@ export function AppLayout() {
             </IconButton>
           </Stack>
 
-          <Stack spacing={0.5} sx={{ mt: 1 }}>
+          <Stack component="nav" aria-label="Meniul principal" spacing={0.5} sx={{ mt: 1 }}>
             {navItems.map((item) => (
               <Button
                 key={`mobile-${item.path}`}
-                onClick={() => goTo(item.path)}
+                component={RouterLink}
+                to={item.path}
+                onClick={() => setIsMobileMenuOpen(false)}
                 sx={{
                   justifyContent: 'flex-start',
                   px: 1.5,
@@ -407,14 +415,20 @@ export function AppLayout() {
 
       {/* ── Main Content ── */}
       <Box component="main" sx={{ flex: 1, position: 'relative' }}>
-        <Suspense fallback={<RouteFallback />}>
+        {/*
+          Cât se încarcă pagina, zona ei ține un ecran întreg. Cu indicatorul de 50vh al
+          `RouteFallback`, subsolul apărea la jumătatea ecranului și sărea în jos când sosea pagina
+          (CLS 0,42 pe o conexiune lentă).
+        */}
+        <Suspense fallback={<Box sx={{ minHeight: '100vh' }}><RouteFallback /></Box>}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/masini" element={<CarsPage />} />
             <Route path="/masini/:slug" element={<VehicleDetailPage />} />
             {/* Mini-site-ul firmei — destinația blocului de proprietar de pe cardul de mașină. */}
             <Route path="/f/:slug" element={<CompanyPublicPage />} />
-            <Route path="/intrebari-frecvente" element={<FaqPage />} />
+            {/* Pagina separată de întrebări frecvente a dispărut; linkurile vechi duc acasă, unde sunt întrebările. */}
+            <Route path="/intrebari-frecvente" element={<Navigate to="/" replace />} />
             <Route path="/servicii" element={<ServicesPage />} />
             <Route path="/despre-ridelance" element={<AboutPage />} />
             <Route path="/fiscal" element={<CalculatorPage />} />
@@ -444,6 +458,7 @@ export function AppLayout() {
             <Route path="/:companySlug/:slug" element={<VehicleDetailPage />} />
             <Route path="*" element={<ErrorPage code={404} embedded />} />
           </Routes>
+          <PrerenderHandoff />
         </Suspense>
       </Box>
 

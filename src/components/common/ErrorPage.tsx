@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { usePageSeo } from '../../seo/pageSeo'
 import { Box, Button, Stack, Typography } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
 
@@ -39,11 +40,9 @@ export function ErrorPage({ code, requiredRole, embedded = false, homePath }: Er
   const loggedIn = Boolean(accessToken)
   const home = homePath ?? (loggedIn ? '/app' : '/')
 
-  useEffect(() => {
-    const previous = document.title
-    document.title = `${code} · ${TITLES[code]} — RIDElance`
-    return () => { document.title = previous }
-  }, [code])
+  // Adresele inexistente răspund tot cu 200 (aplicația e servită pe orice cale), deci pagina își
+  // spune singură că nu trebuie indexată.
+  usePageSeo({ title: `${code} · ${TITLES[code]}`, noindex: true })
 
   const message =
     code === 403

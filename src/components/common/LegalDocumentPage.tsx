@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { usePageSeo } from '../../seo/pageSeo'
 import { Alert, Box, Container, Paper, Skeleton, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { TOKENS } from '../../constants/tokens'
@@ -24,6 +25,8 @@ export function LegalDocumentPage({
   documentPath,
   errorMessage,
 }: LegalDocumentPageProps) {
+  // Titlurile documentelor se termină deja cu numele site-ului; în `<title>` ar apărea de două ori.
+  usePageSeo({ title: title.replace(/\s+RIDElance$/, '') })
   const [documentText, setDocumentText] = useState('')
   const [hasError, setHasError] = useState(false)
 

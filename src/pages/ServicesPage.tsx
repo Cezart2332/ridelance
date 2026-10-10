@@ -5,10 +5,15 @@ import { TOKENS } from '../constants/tokens'
 import { SectionHeader } from '../components/common/SectionHeader'
 import { homeSec6 } from '../data/constants'
 import { pageFrameSx } from '../constants/layout'
+import { staticPageSeo, usePageSeo } from '../seo/pageSeo'
 import { ServiceOrderWizard } from '../components/services/ServiceOrderWizard'
 import type { ServiceKey } from '../services/stripe.service'
 
+const TITLE = 'Serviciile noastre'
+const SUBTITLE = 'Tot ce ai nevoie pentru activitatea ta, într-un singur loc.'
+
 export function ServicesPage() {
+  usePageSeo(staticPageSeo(TITLE, '/servicii', SUBTITLE))
   // Fiecare serviciu își are formularul: aceleași date ca în onboarding, apoi plata.
   const [ordering, setOrdering] = useState<ServiceKey | null>(null)
 
@@ -16,10 +21,7 @@ export function ServicesPage() {
     <Box sx={pageFrameSx}>
       <Container maxWidth="lg">
         <Stack spacing={6} sx={{ alignItems: 'center', justifyContent: 'center' }}>
-          <SectionHeader
-            title="Serviciile noastre"
-            subtitle="Tot ce ai nevoie pentru activitatea ta, într-un singur loc."
-          />
+          <SectionHeader as="h1" title={TITLE} subtitle={SUBTITLE} />
 
           <Box>
             <Typography variant="h4" sx={{ mb: 4, fontWeight: 700, color: TOKENS.ink }}>

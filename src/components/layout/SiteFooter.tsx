@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Box, Button, Checkbox, Container, IconButton, InputBase, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { useNavigate } from 'react-router-dom'
+import { Link as RouterLink } from 'react-router-dom'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
 import MailOutlineRoundedIcon from '@mui/icons-material/MailOutlineRounded'
@@ -277,7 +277,6 @@ function StoreBadge({ src, alt, href, crop }: { src: string; alt: string; href: 
 }
 
 export function SiteFooter() {
-  const navigate = useNavigate()
 
   return (
     <Box component="footer">
@@ -358,7 +357,7 @@ export function SiteFooter() {
               </Typography>
               <Stack spacing={1.6} sx={{ alignItems: 'flex-start' }}>
                 {navItems.map((item) => (
-                  <Button key={item.path} onClick={() => navigate(item.path)} sx={footerLinkSx}>
+                  <Button key={item.path} component={RouterLink} to={item.path} sx={footerLinkSx}>
                     {item.label}
                   </Button>
                 ))}
@@ -372,7 +371,7 @@ export function SiteFooter() {
               </Typography>
               <Stack spacing={1.6} sx={{ alignItems: 'flex-start' }}>
                 {legalLinks.map((item) => (
-                  <Button key={item.path} onClick={() => navigate(item.path)} sx={{ ...footerLinkSx, textAlign: 'left' }}>
+                  <Button key={item.path} component={RouterLink} to={item.path} sx={{ ...footerLinkSx, textAlign: 'left' }}>
                     {item.label}
                   </Button>
                 ))}
@@ -503,7 +502,7 @@ export function SiteFooter() {
             </Typography>
             <Stack direction="row" spacing={3}>
               {[legalLinks[0], legalLinks[1]].map((item) => (
-                <Button key={item.path} onClick={() => navigate(item.path)} sx={{ ...footerLinkSx, fontSize: '0.9rem', whiteSpace: 'nowrap', '&:hover': { color: '#fff', backgroundColor: 'transparent' } }}>
+                <Button key={item.path} component={RouterLink} to={item.path} sx={{ ...footerLinkSx, fontSize: '0.9rem', whiteSpace: 'nowrap', '&:hover': { color: '#fff', backgroundColor: 'transparent' } }}>
                   {item.label}
                 </Button>
               ))}

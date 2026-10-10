@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { usePageSeo } from '../seo/pageSeo'
 import { ServiceOrderWizard } from '../components/services/ServiceOrderWizard'
 import type { ServiceKey } from '../services/stripe.service'
 import { Box, Button, Container, Paper, Stack, Typography } from '@mui/material'
@@ -21,9 +22,9 @@ import { ANNUAL_DISCOUNT, plansFor, type Audience, type BillingCycle } from '../
 import { readBcrDiscountIntent, writeBcrDiscountIntent } from '../data/bcrDiscount'
 
 import motto from '../assets/motto.svg'
-import heroSticker from '../assets/hero-sticker.png'
+import heroSticker from '../assets/hero-sticker.webp'
 import checkSvg from '../assets/SVG/2- Regular/check-circle.svg'
-import dashboard from '../assets/dashboard.png'
+import dashboard from '../assets/dashboard.webp'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
 import { ProcessVisual } from '../components/home/ProcessVisual'
 import { HowItWorks } from '../components/home/HowItWorks'
@@ -32,6 +33,7 @@ import { CarCarousel } from '../components/home/CarCarousel'
 import { InsuranceLinksGrid, LANDING_INSURANCE_SLUGS } from '../components/insurance/InsuranceLinksGrid'
 
 export function HomePage() {
+  usePageSeo({ path: '/' })
   const navigate = useNavigate()
   const { accessToken, isInitialized } = useAppSelector((s) => s.auth)
 
@@ -239,7 +241,13 @@ export function HomePage() {
               component="img"
               src={heroSticker}
               alt="Hero"
+              // Cea mai mare imagine din prima vedere: dimensiunile îi rezervă locul, iar prioritatea
+              // o aduce înaintea celorlalte.
+              width={840}
+              height={630}
+              fetchPriority="high"
               sx={{
+                height: 'auto',
                 width: { xs: '90%', md: '100%' },
                 maxWidth: 420,
                 filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.06))',
@@ -752,6 +760,8 @@ export function HomePage() {
                     <Box
                       component="img"
                       src={checkSvg}
+                      // Decorativă: textul de lângă ea spune tot.
+                      alt=""
                       sx={{
                         width: 20,
                         height: 20,
@@ -807,7 +817,13 @@ export function HomePage() {
                 component="img"
                 src={dashboard}
                 alt="Dashboardul RIDElance"
+                // E mult sub prima vedere: se descarcă abia când se apropie de ecran.
+                width={1448}
+                height={1086}
+                loading="lazy"
+                decoding="async"
                 sx={{
+                  height: 'auto',
                   width: '100%',
                   display: 'block',
                   borderRadius: `${TOKENS.radius.xl}px`,
@@ -898,6 +914,8 @@ export function HomePage() {
                   component="img"
                   src={partner.image}
                   alt={partner.name}
+                  loading="lazy"
+                  decoding="async"
                   sx={{
                     ...PARTNER_LOGO.wall,
                     width: 'auto',

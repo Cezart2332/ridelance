@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  sitemap-static.xml: paginile site-ului, scris la build de scripts/prerender.mjs.
+  sitemap-anunturi.xml: mașinile publicate și paginile firmelor, generat de API la cerere
+  (nginx îl aduce de la backend, vezi nginx/default.conf).
+-->
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>https://ridelance.ro/sitemap-static.xml</loc></sitemap>
+  <sitemap><loc>https://ridelance.ro/sitemap-anunturi.xml</loc></sitemap>
+</sitemapindex>
