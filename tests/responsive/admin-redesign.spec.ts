@@ -18,6 +18,7 @@ async function mockAdmin(page: Page, failFirst = false) {
   await page.route('**/pfa-registrations/*/eligibility/validate', (route) => { eligibilityValidated = true; return route.fulfill({ status: 204 }) })
   await page.route('**/admin/pfas/*/details', (route) => route.fulfill({ json: { ...client, companyName: 'Andrei Ionescu PFA', email: client.userEmail, plan: 'PFA Full', subscriptionStatus: 'Trial', activityLog: [{ id: 'event1', description: 'Clientul a încărcat documentele de eligibilitate.', performedBy: 'Andrei Ionescu', createdAtUtc: '2026-09-14T08:00:00Z' }] } }))
   await page.route('**/admin/documents/*/extracted-fields', (route) => route.fulfill({ json: { fields: [] } }))
+  await page.route('**/admin/onboarding/*/mailbox', (route) => route.fulfill({ json: { status: 'NotCreated', address: null, opsIdentityAddress: null, lastError: null, activatedAtUtc: null, transferredAtUtc: null, handoverDocumentId: null } }))
   await page.route(/\/documents(?:\?.*)?$/, (route) => route.fulfill({ json: docs }))
   await page.route('**/documents/*/status', async (route) => {
     const path = new URL(route.request().url()).pathname
@@ -194,6 +195,68 @@ test('admin: ARR & Cont Flotă — apel telefonic, status cu document oficial ș
   await expect.poll(() => uploads.length).toBe(1)
   expect(uploads[0]).toContain('UberBadge')
   await step.screenshot({ path: `test-results/admin-arr-fleet-${info.project.name}.png` })
+})
+
+test('admin: emailul operațional — creare, credențiale RIDElance la cerere și predare', async ({ page }, info) => {
+  await mockAdmin(page)
+  await page.route('**/pfa-registrations/*/onboarding', (route) => route.fulfill({ json: { pfaRegistrationId: client.id, pfaStatus: 'Validated', sections: [], steps: [
+    { key: 'eligibility', status: 'Completed', state: 'completed' },
+    { key: 'pfa', status: 'Completed', state: 'completed' },
+    { key: 'fiscal', status: 'Completed', state: 'completed' },
+    { key: 'arr_fleet', status: 'InProgress', state: 'available' },
+  ] } }))
+  await page.route('**/admin/onboarding/*/arr-fleet', (route) => route.fulfill({ json: {
+    pfaRegistrationId: client.id, status: 'Draft', statusLabel: 'În completare', platforms: [], driverAccounts: [], vehicleOwnership: null,
+    paymentAmountBani: 0, payments: [], agency: null, agencyError: null, paymentProofOutdated: false, submittedAtUtc: null, reopenedReason: null, missing: [], statusLog: [],
+  } }))
+
+  const empty = { address: null as string | null, opsIdentityAddress: null as string | null, lastError: null as string | null, activatedAtUtc: null, transferredAtUtc: null as string | null, handoverDocumentId: null as string | null }
+  let mailbox = { status: 'Failed', ...empty, address: 'andrei.ionescu@pfa.ridelance.ro', lastError: 'Migadu nu răspunde la „creare identitate”.' }
+  let reveals = 0
+  await page.route('**/admin/onboarding/*/mailbox', (route) => {
+    if (route.request().method() === 'POST') mailbox = { ...mailbox, status: 'Active', lastError: null, opsIdentityAddress: 'rid-ops-andrei.ionescu@pfa.ridelance.ro' }
+    return route.fulfill({ json: mailbox })
+  })
+  await page.route('**/admin/onboarding/*/mailbox/credentials', (route) => {
+    reveals += 1
+    return route.fulfill({ json: { address: 'rid-ops-andrei.ionescu@pfa.ridelance.ro', password: 'Parola-Identitatii-RIDElance-28' } })
+  })
+  await page.route('**/admin/onboarding/*/mailbox/transfer', (route) => {
+    mailbox = { ...mailbox, status: 'Transferred', opsIdentityAddress: null, transferredAtUtc: '2026-10-10T09:00:00Z', handoverDocumentId: 'handover-doc' }
+    return route.fulfill({ json: mailbox })
+  })
+  await page.route('**/admin/mailboxes/usage', (route) => route.fulfill({ json: { incomingToday: 170, incomingLimit: 200, outgoingToday: 3, outgoingLimit: 20, storageGb: 0.5, alert: true } }))
+  await page.goto('/admin?tab=pfa&user=client-review')
+
+  const step = page.locator('#step-arr_fleet')
+  await expect(step.getByText('Email operațional', { exact: true })).toBeVisible()
+  await expect(step.getByText('Eșuat', { exact: true })).toBeVisible()
+  await expect(step.getByText('Migadu nu răspunde la „creare identitate”.')).toBeVisible()
+
+  await step.getByRole('button', { name: 'Reîncearcă' }).click()
+  await expect(step.getByText('Activ', { exact: true })).toBeVisible()
+  await expect(step.getByText('andrei.ionescu@pfa.ridelance.ro', { exact: true })).toBeVisible()
+
+  // Parola nu e pe pagină până nu e cerută; cererea trece prin server (și prin jurnalul de audit).
+  await expect(step.getByText('Parola-Identitatii-RIDElance-28')).toHaveCount(0)
+  await step.getByRole('button', { name: 'Afișează credențiale RIDElance' }).click()
+  await expect(step.getByText('Parola-Identitatii-RIDElance-28')).toBeVisible()
+  await expect(step.getByText('rid-ops-andrei.ionescu@pfa.ridelance.ro')).toBeVisible()
+  await expect(step.getByText('imap.migadu.com · port 993 · SSL/TLS')).toBeVisible()
+  await expect(step.getByText('smtp.migadu.com · port 465 · SSL/TLS')).toBeVisible()
+  expect(reveals).toBe(1)
+
+  await step.getByRole('button', { name: 'Consum domeniu' }).click()
+  await expect(step.getByText(/170\/200 primite · 3\/20 trimise .* peste 80% din limită/)).toBeVisible()
+  await step.screenshot({ path: `test-results/admin-mailbox-${info.project.name}.png` })
+
+  // Predarea cere confirmare; după ea nu mai există nici credențiale, nici butoanele lor.
+  await step.getByRole('button', { name: 'Predare email (offboarding)' }).click()
+  await page.getByRole('button', { name: 'Predă emailul' }).click()
+  await expect(step.getByText('Predat clientului', { exact: true })).toBeVisible()
+  await expect(step.getByText('Parola-Identitatii-RIDElance-28')).toHaveCount(0)
+  await expect(step.getByRole('button', { name: 'Afișează credențiale RIDElance' })).toHaveCount(0)
+  await expect(step.getByRole('button', { name: 'Document „Predare email”' })).toBeVisible()
 })
 
 test('admin: lista și dosarul PFA se reîmprospătează singure la 10 secunde și din buton', async ({ page }) => {

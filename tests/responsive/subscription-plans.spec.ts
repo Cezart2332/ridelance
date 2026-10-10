@@ -60,3 +60,12 @@ test('după luna gratuită, PFAlone păstrează Open Banking prin plată, cu op�
   await expect.poll(() => bodies.length).toBe(1)
   expect(bodies[0]).toMatchObject({ plan: 'pfalone', isPlanChange: true, addons: ['open-banking', 'cash-register'] })
 })
+
+test('clientul își vede emailul operațional în profil, fără parolă', async ({ page }) => {
+  await client(page, { status: 'Active', dashboardAccessGranted: true, plan: 'PfaFull' })
+  await page.route(`${API}/users/profile`, route => route.fulfill({ json: { firstName: 'Ana', lastName: 'Ionescu', email: 'ana@example.test', role: 'Client' } }))
+  await page.route(`${API}/pfa/mailbox`, route => route.fulfill({ json: { address: 'ana.ionescu@pfa.ridelance.ro' } }))
+  await page.goto('/app/dashboard/profil')
+  await expect(page.getByText('ana.ionescu@pfa.ridelance.ro')).toBeVisible({ timeout: 45_000 })
+  await expect(page.getByText('Accesul complet îți este predat la încheierea colaborării.', { exact: false })).toBeVisible()
+})

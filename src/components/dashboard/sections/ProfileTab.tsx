@@ -14,6 +14,7 @@ import { alpha } from '@mui/material/styles'
 import character2 from '../../../assets/Stickers/character 2.png'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { userService, type UserProfile, type DashboardSummary } from '../../../services/user.service'
+import { clientMailboxService } from '../../../services/clientMailbox.service'
 import { documentService } from '../../../services/document.service'
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
 import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded'
@@ -34,6 +35,12 @@ export function ProfileTab() {
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [downloading, setDownloading] = useState(false)
+  // Adresa pe care RIDElance o folosește pentru ARR și conturile Uber/Bolt; lipsește până e creată.
+  const [operationalEmail, setOperationalEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    clientMailboxService.own().then(setOperationalEmail).catch(() => setOperationalEmail(null))
+  }, [])
 
   useEffect(() => {
     Promise.all([
@@ -56,11 +63,18 @@ export function ProfileTab() {
     }
   }
 
-  const profileFields = profile
+  const profileFields: { label: string; value: string; note?: string }[] = profile
     ? [
         { label: 'Prenume', value: profile.firstName },
         { label: 'Nume', value: profile.lastName },
         { label: 'Email', value: profile.email },
+        ...(operationalEmail
+          ? [{
+              label: 'Email operațional',
+              value: operationalEmail,
+              note: 'Adresa folosită de RIDElance pentru ARR și conturile Uber/Bolt. Accesul complet îți este predat la încheierea colaborării.',
+            }]
+          : []),
         { label: 'Telefon', value: profile.phoneNumber || '—' },
         { label: 'Rol', value: formatRole(profile.role) },
         { label: 'Parola', value: '**********' },
@@ -194,11 +208,16 @@ export function ProfileTab() {
                 <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.85rem', flexShrink: 0 }}>
                   {field.label}
                 </Typography>
-                <Typography
-                  sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700, fontSize: '0.9rem', textAlign: 'right', wordBreak: 'break-word', minWidth: 0 }}
-                >
-                  {field.value}
-                </Typography>
+                <Box sx={{ minWidth: 0, textAlign: 'right' }}>
+                  <Typography sx={{ color: DASHBOARD_TOKENS.ink, fontWeight: 700, fontSize: '0.9rem', wordBreak: 'break-word' }}>
+                    {field.value}
+                  </Typography>
+                  {field.note && (
+                    <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.78rem', mt: 0.3, maxWidth: 420, ml: 'auto' }}>
+                      {field.note}
+                    </Typography>
+                  )}
+                </Box>
               </Stack>
             ))}
           </Box>

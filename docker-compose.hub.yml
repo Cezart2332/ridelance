@@ -137,6 +137,17 @@ services:
       Twilio__AuthToken: ${TWILIO_AUTH_TOKEN:-}
       Twilio__VerifyServiceSid: ${TWILIO_VERIFY_SERVICE_SID:-}
 
+      # ─── Email operațional per client (Migadu) ──────────────────────────────────────────
+      # Aici implicit Migadu: cu Fake, serverul ar nota ca active adrese care nu există nicăieri.
+      # Fără cheile de mai jos nu se creează nimic automat; MAILBOX_PROVIDER=Fake doar pentru probe.
+      Mailbox__Provider: ${MAILBOX_PROVIDER:-Migadu}
+      Mailbox__ApiUser: ${MIGADU_API_USER:-}
+      Mailbox__ApiKey: ${MIGADU_API_KEY:-}
+      Mailbox__Domain: ${MIGADU_DOMAIN:-pfa.ridelance.ro}
+      Mailbox__DailyIncomingLimit: ${MIGADU_DAILY_INCOMING_LIMIT:-200}
+      Mailbox__DailyOutgoingLimit: ${MIGADU_DAILY_OUTGOING_LIMIT:-20}
+      Mailbox__CredentialsKey: ${MAILBOX_CREDENTIALS_KEY:-}
+
       # ─── Notificări push (Web Push / VAPID) ─────────────────────────────────────────────
       WebPush__PublicKey: ${WEBPUSH_PUBLIC_KEY:-}
       WebPush__PrivateKey: ${WEBPUSH_PRIVATE_KEY:-}

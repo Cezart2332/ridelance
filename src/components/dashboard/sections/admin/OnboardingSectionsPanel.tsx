@@ -27,6 +27,7 @@ import { PANEL_COMPAT_TOKENS as TOKENS } from '../../../panel/tokens'
 import { fade } from '../../../panel/tokens'
 import AdminExtractedFields from './AdminExtractedFields'
 import { ArrFleetReview } from './ArrFleetReview'
+import { ClientMailboxCard } from './ClientMailboxCard'
 import { VatRegistrationBlock } from '../../../../shared/accounting/ui/workspace/VatRegistrationCard'
 import { DocumentRejectDialog } from './DocumentRejectDialog'
 import { DocumentRow, SectionSkeleton } from '../../../admin'
@@ -877,6 +878,9 @@ export function OnboardingSectionsPanel({
                     <PfaReview state={state} />
                   </Box>
                 )}
+
+                {/* Agentul are nevoie de adresă când completează ARR și conturile de flotă. */}
+                {group.key === 'arr_fleet' && hasRegistration && <ClientMailboxCard key={pfaId} pfaId={pfaId} onSnackbar={onSnackbar} />}
 
                 {group.key === 'arr_fleet' && hasRegistration && (
                   <ArrFleetReview
