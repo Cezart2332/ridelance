@@ -9,7 +9,11 @@
     <link rel="icon" type="image/png" href="/icon-192.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#5CCBF5" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <!--
+      Pe site pagina se poate mări cu degetele; aplicația mobilă rămâne la scară fixă, ca orice
+      aplicație (blocarea o adaugă tot pluginul „native-flag” din vite.config.ts).
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0__VIEWPORT_LOCK__, viewport-fit=cover" />
     <meta
       name="description"
       content="Ridelance - înrolare și management PFA pentru șoferi Uber și Bolt din România."
@@ -74,6 +78,16 @@
       html[data-native="true"] .MuiSnackbar-anchorOriginTopCenter,
       html[data-native="true"] .MuiSnackbar-anchorOriginTopLeft,
       html[data-native="true"] .MuiSnackbar-anchorOriginTopRight { margin-top: var(--sat); }
+      /*
+        iOS mărește singur pagina când se atinge un câmp cu text sub 16px și n-o mai micșorează.
+        Până acum asta era oprită prin blocarea zoom-ului pentru toată pagina; acum câmpurile au
+        pe iOS cel puțin 16px, iar pagina rămâne liberă. `-webkit-touch-callout` există doar acolo.
+      */
+      @supports (-webkit-touch-callout: none) {
+        html[data-native="false"] input, html[data-native="false"] textarea, html[data-native="false"] select {
+          font-size: max(16px, 1em) !important;
+        }
+      }
       #boot-splash { display: none; }
       /*
         Pagina pre-randată la build (scripts/prerender.mjs) rămâne pe ecran până e gata cea vie,

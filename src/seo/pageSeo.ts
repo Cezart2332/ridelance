@@ -145,8 +145,19 @@ export function usePageSeo(seo: PageSeo | null): void {
   useEffect(() => {
     if (key === null) return undefined
     applySeo(JSON.parse(key) as PageSeo)
-    return resetSeo
+    activePages += 1
+    return () => {
+      activePages -= 1
+      resetSeo()
+    }
   }, [key])
+}
+
+let activePages = 0
+
+/** Există acum o pagină montată care și-a declarat `<head>`-ul? Vezi `StaleHeadReset`. */
+export function hasActivePageSeo(): boolean {
+  return activePages > 0
 }
 
 /** Firul de navigare al unei pagini, ca date structurate: „Acasă > Abonamente”. */

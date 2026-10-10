@@ -248,10 +248,10 @@ export const BCR_OFFER_CTA = {
 export const BCR_OFFER_LEGAL: { label: string; text: string }[] = [
   {
     label: 'Campanie RIDElance:',
-    text: 'reducerea de 50 lei/lună timp de 6 luni este un beneficiu oferit de RIDElance pentru utilizatorii eligibili care deschid un cont BCR prin fluxul/linkul dedicat RIDElance până la 31.12.2026. Mecanismul exact de validare a deschiderii contului și momentul activării reducerii trebuie implementate conform acordului comercial RIDElance–BCR.',
+    text: 'reducerea de 50 lei/lună timp de 6 luni este un beneficiu oferit de RIDElance pentru utilizatorii eligibili care deschid un cont BCR prin fluxul/linkul dedicat RIDElance până la 31.12.2026.',
   },
   {
     label: 'Oferta bancară BCR:',
-    text: 'informațiile privind comisioanele, perioadele gratuite, condițiile de reducere și eligibilitatea PFA/SRL trebuie afișate în forma agreată contractual cu BCR. BCR stabilește eligibilitatea finală pentru produsele bancare.',
+    text: 'comisioanele, perioadele gratuite și condițiile de reducere sunt cele stabilite de BCR. BCR stabilește eligibilitatea finală pentru produsele bancare.',
   },
 ]

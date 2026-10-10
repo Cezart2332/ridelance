@@ -61,14 +61,15 @@ export function PublicPlanCard({ plan, cycle = 'monthly', bcrDiscount, onBcrDisc
           <Typography sx={{ fontSize: '1.5rem', fontWeight: 900, color: TOKENS.primaryStrong }}>Preț la lansare</Typography>
         </Box> : <Box data-testid="plan-price" sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', alignItems: 'center', columnGap: 1.2, height: { xs: 76, sm: 54 }, textAlign: 'left' }}>
           <Box>
-            <Typography component="s" aria-hidden={!bcrDiscount} sx={{ ...smallTextSx, display: 'block', height: 15, visibility: bcrDiscount ? 'visible' : 'hidden' }}>{money(basePrice)}</Typography>
+            <Typography component="s" aria-hidden={!bcrDiscount} sx={{ ...smallTextSx, display: 'block', height: 15, visibility: bcrDiscount ? 'visible' : 'hidden' }}>{bcrDiscount ? money(basePrice) : null}</Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: { xs: 0, sm: 0.5 }, alignItems: { xs: 'flex-start', sm: 'baseline' }, whiteSpace: 'nowrap' }}>
               <Typography sx={{ color: TOKENS.primaryStrong, fontWeight: 900, fontSize: { xs: annual ? '1.1rem' : '1.45rem', sm: '1.75rem' }, lineHeight: 1.2 }}>{money(displayPrice)}</Typography>
               <Typography sx={{ ...smallTextSx, fontWeight: 700 }}>{annual ? '/ an' : '/ lună'}</Typography>
             </Stack>
           </Box>
           <Typography data-testid="bcr-price-note" sx={{ fontSize: '0.73rem', fontWeight: 650, lineHeight: 1.4, color: TOKENS.primaryStrong, visibility: bcrDiscount ? 'visible' : 'hidden' }}>
-            {annual ? `primul an, apoi ${money(basePrice)}/an.` : `primele 6 luni, apoi ${money(basePrice)}/lună.`}
+            {/* Fără ofertă bifată locul rămâne, dar gol: textul ascuns doar prin stil tot ajunge la un cititor automat. */}
+            {bcrDiscount && (annual ? `primul an, apoi ${money(basePrice)}/an.` : `primele 6 luni, apoi ${money(basePrice)}/lună.`)}
           </Typography>
         </Box>}
         <Typography sx={{ ...smallTextSx, fontSize: '0.72rem', minHeight: 18 }}>

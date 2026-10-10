@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { usePageSeo } from '../seo/pageSeo'
+import { companyDescription } from '../seo/companySeo'
 import { useParams } from 'react-router-dom'
 import { Box, CircularProgress } from '@mui/material'
 
@@ -47,7 +48,15 @@ export function CompanyPublicPage() {
   }, [companyPath])
 
   // /f/{slug} și /{slug} arată aceeași pagină; canonica e cea de la rădăcină.
-  usePageSeo(company && companyPath ? { title: company.legalName, path: `/${companyPath}` } : null)
+  usePageSeo(
+    company && companyPath
+      ? {
+          title: company.legalName,
+          description: companyDescription(company.legalName, company.tagline, company.publicDescription),
+          path: `/${companyPath}`,
+        }
+      : null,
+  )
 
   if (loading) {
     return (

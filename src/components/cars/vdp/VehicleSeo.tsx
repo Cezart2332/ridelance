@@ -16,6 +16,10 @@ import { formatLei } from '../../../utils/vehiclePricing'
  * de vânzare. Prețul e exprimat pe **săptămână** (`unitCode: WEE`): un preț pe zi calculat de noi
  * ar deveni prețul afișat în rezultatele căutării — exact confuzia pe care o evită restul paginii.
  * Intră doar ce se vede pe pagină.
+ *
+ * Titlul și descrierea sunt scrise la fel și pe server (`GetPageHeadQuery` din backend), care le pune
+ * în pagină înainte să pornească aplicația, pentru previzualizarea linkului distribuit. Trebuie
+ * ținute identice.
  */
 export function VehicleSeo({ car }: { car: Car }) {
   const name = `${car.brand} ${car.model} ${car.year}`

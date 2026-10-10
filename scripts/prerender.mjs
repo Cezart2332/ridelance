@@ -17,7 +17,12 @@
  * sunt paginile site-ului.
  *
  * Cererile în afara serverului local sunt oprite: pagina salvată nu depinde de API, iar un build
- * nu trebuie să lovească producția. Paginile al căror conținut vine din API nu se pre-randează.
+ * nu trebuie să lovească producția. Paginile al căror conținut vine din API primesc altceva:
+ *
+ * - lista de mașini (`/masini`) are titlul și descrierea fixe, deci i se salvează doar `<head>`-ul;
+ * - o mașină sau pagina unei firme își află titlul abia din date. Pentru ele se scrie
+ *   `dist/dynamic-page.html`, pagina de pornire în care nginx pune, la fiecare cerere, etichetele
+ *   primite de la API (un `include` SSI, vezi `nginx/default.conf`).
  */
 import { createServer } from 'node:http'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
@@ -45,8 +50,8 @@ const STATIC_ROUTES = [
   '/politica-plati-abonamente',
 ]
 
-/** În sitemap, dar nepre-randate: lista de mașini vine din API. */
-const LISTED_ONLY = ['/masini']
+/** Conținutul vine din API, deci se salvează doar `<head>`-ul: titlul și descrierea sunt fixe. */
+const HEAD_ONLY_ROUTES = ['/masini']
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -131,16 +136,48 @@ function snapshot() {
   }
 }
 
-function buildPage(shell, defaults, page) {
+/** Valorile implicite ajung pe `<html>`: aplicația le citește de acolo când `<head>`-ul e deja al paginii. */
+function withDefaults(html, defaults) {
+  return replaceOnce(
+    html,
+    /<html /,
+    `<html data-default-title="${escapeAttribute(defaults.title)}" data-default-description="${escapeAttribute(defaults.description)}" `,
+    '<html>',
+  )
+}
+
+/**
+ * Pagina de pornire pentru adresele al căror `<head>` vine din date. Titlul și descrierea implicite
+ * devin un bloc de rezervă: nginx pune în locul lor ce răspunde API-ul și revine la ele dacă API-ul
+ * nu răspunde.
+ */
+function buildDynamicPage(shell, defaults) {
+  let html = withDefaults(shell, defaults)
+  html = replaceOnce(html, /\s*<meta\s+name="description"[\s\S]*?\/>/, '', 'descrierea')
+  html = replaceOnce(
+    html,
+    /<title>[\s\S]*?<\/title>/,
+    [
+      '<!--# block name="default_head" -->',
+      `<title>${escapeHtml(defaults.title)}</title>`,
+      `<meta name="description" content="${escapeAttribute(defaults.description)}" />`,
+      '<!--# endblock -->',
+      '<!--# include virtual="/_seo/head" stub="default_head" -->',
+    ].join(''),
+    '<title>',
+  )
+  return html
+}
+
+function buildPage(shell, defaults, page, { withBody }) {
   const missingStylesheets = page.stylesheets
     .filter((href) => href && !shell.includes(`href="${href}"`))
     .map((href) => `<link rel="stylesheet" crossorigin href="${escapeAttribute(href)}">`)
   const head = [
-    ...missingStylesheets,
     ...page.managedHead,
     // Clasele din HTML-ul salvat sunt generate la rulare; fără regulile lor pagina ar apărea
     // nestilizată până pornește aplicația. Se scot odată cu copia.
-    `<style data-prerender>${page.css}</style>`,
+    ...(withBody ? [...missingStylesheets, `<style data-prerender>${page.css}</style>`] : []),
   ].join('\n    ')
 
   let html = shell
@@ -151,24 +188,20 @@ function buildPage(shell, defaults, page) {
     `<meta name="description" content="${escapeAttribute(page.description)}" />`,
     'descrierea',
   )
-  // Aplicația își citește valorile implicite din `<head>`; aici ele sunt deja ale paginii.
-  html = replaceOnce(
-    html,
-    /<html /,
-    `<html data-default-title="${escapeAttribute(defaults.title)}" data-default-description="${escapeAttribute(defaults.description)}" `,
-    '<html>',
-  )
+  html = withDefaults(html, defaults)
   html = replaceOnce(html, /<\/head>/, `  ${head}\n  </head>`, '</head>')
-  html = replaceOnce(
-    html,
-    /<div id="root"><\/div>/,
-    `<div id="prerender">${page.html}</div>\n    <div id="root"></div>`,
-    '#root',
-  )
+  if (withBody) {
+    html = replaceOnce(
+      html,
+      /<div id="root"><\/div>/,
+      `<div id="prerender">${page.html}</div>\n    <div id="root"></div>`,
+      '#root',
+    )
+  }
   return html
 }
 
-async function render(browser, origin, route) {
+async function render(browser, origin, route, { withBody }) {
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 } })
   try {
     await page.route('**/*', (request) =>
@@ -181,7 +214,7 @@ async function render(browser, origin, route) {
 
     if (result.pathname !== route) throw new Error(`a redirecționat spre ${result.pathname}`)
     if (result.robots?.includes('noindex')) throw new Error('pagina se declară „noindex”')
-    if (!result.hasHeading) throw new Error('pagina nu are <h1>')
+    if (withBody && !result.hasHeading) throw new Error('pagina nu are <h1>')
     if (!result.canonical) throw new Error('pagina nu are adresă canonică')
     return result
   } finally {
@@ -203,7 +236,7 @@ const defaults = {
   description: shell.match(/<meta\s+name="description"\s+content="([^"]*)"/)?.[1] ?? '',
 }
 
-const routes = [...STATIC_ROUTES, ...(await partnerRoutes())]
+const routes = [...STATIC_ROUTES, ...(await partnerRoutes()), ...HEAD_ONLY_ROUTES]
 const server = await serve(shell)
 const origin = `http://127.0.0.1:${server.address().port}`
 // În imaginea de build, Chromium vine din pachetele sistemului; local, din Playwright.
@@ -216,7 +249,7 @@ const pages = new Map()
 try {
   for (const route of routes) {
     try {
-      pages.set(route, await render(browser, origin, route))
+      pages.set(route, await render(browser, origin, route, { withBody: !HEAD_ONLY_ROUTES.includes(route) }))
     } catch (error) {
       throw new Error(`Pre-randarea a eșuat pentru ${route}: ${error.message}`, { cause: error })
     }
@@ -227,19 +260,18 @@ try {
 }
 
 await writeFile(path.join(DIST, 'shell.html'), shell)
+await writeFile(path.join(DIST, 'dynamic-page.html'), buildDynamicPage(shell, defaults))
 const listed = []
 for (const [route, page] of pages) {
   const file = route === '/' ? path.join(DIST, 'index.html') : path.join(DIST, `${route}.html`)
+  const withBody = !HEAD_ONLY_ROUTES.includes(route)
   await mkdir(path.dirname(file), { recursive: true })
-  await writeFile(file, buildPage(shell, defaults, page))
+  await writeFile(file, buildPage(shell, defaults, page, { withBody }))
   // O pagină care își declară altă adresă canonică (primul partener e chiar „/parteneri”) nu intră
   // în sitemap: acolo stau doar adresele canonice.
   if (page.canonical === SITE_ORIGIN + route) listed.push(page.canonical)
-  console.log(`  ${route}  →  ${path.relative(DIST, file)}  (${page.title})`)
+  console.log(`  ${route}  →  ${path.relative(DIST, file)}  (${page.title})${withBody ? '' : '  [doar <head>]'}`)
 }
 
-await writeFile(
-  path.join(DIST, 'sitemap-static.xml'),
-  sitemap([...listed, ...LISTED_ONLY.map((route) => SITE_ORIGIN + route)]),
-)
-console.log(`Pre-randate: ${pages.size} pagini. Sitemap: ${listed.length + LISTED_ONLY.length} adrese.`)
+await writeFile(path.join(DIST, 'sitemap-static.xml'), sitemap(listed))
+console.log(`Pre-randate: ${pages.size} pagini. Sitemap: ${listed.length} adrese.`)

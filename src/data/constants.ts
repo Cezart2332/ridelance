@@ -99,7 +99,7 @@ export const economyComparison = [
   },
   {
     service: 'Găzduire sediu social',
-    withRidelance: 'Inclusă în PRO',
+    withRidelance: '349 lei/an',
     withoutRidelance: '449 lei/an',
   },
   {
