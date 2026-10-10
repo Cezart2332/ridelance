@@ -1,5 +1,5 @@
 POLITICA DE PLĂȚI, ABONAMENTE ȘI RAMBURSĂRI RIDELANCE
-Ultima actualizare: 04.06.2026
+Ultima actualizare: 10.10.2026
 Prezenta Politică de Plăți, Abonamente și Rambursări, denumită în continuare „Politica de Plăți”, reglementează modul în care sunt achitate, reînnoite, suspendate, anulate și, după caz, rambursate abonamentele și serviciile oferite prin platforma RIDElance.
 Această Politică se aplică utilizării website-ului www.ridelance.ro, dashboard-ului RIDElance, abonamentelor RIDElance, serviciilor individuale și oricăror plăți efectuate către RIDElance.
 Platforma RIDElance este operată de:
@@ -15,16 +15,17 @@ ________________________________________
 RIDElance poate oferi abonamente recurente și servicii individuale, conform ofertei afișate în platformă.
 La data ultimei actualizări, serviciile și prețurile pot include:
 1.1. Abonamente RIDElance
-RIDElance Solo — 49 lei/săptămână
-RIDElance Start — 99 lei/săptămână
-RIDElance Pro — 149 lei/săptămână
-Abonamentele sunt servicii recurente, cu plată săptămânală, care oferă acces la funcționalitățile și beneficiile aferente planului ales.
+PFAlone — 139 lei/lună
+PFA Full — 299 lei/lună
+SRL Fleet — 299 lei/lună
+Opțiuni suplimentare, plătite separat: Open Banking — 49 lei/lună; Automatizare casă de marcat (PFAlone) — 49 lei/lună; anunț activ suplimentar (SRL Fleet) — 39,90 lei/lună/anunț; anonimizarea numărului de înmatriculare (SRL Fleet) — 14,90 lei, plată unică pentru fiecare mașină.
+Abonamentele sunt servicii recurente, cu plată lunară sau anuală, care oferă acces la funcționalitățile și beneficiile aferente planului ales. La plata anuală se aplică o reducere de 10% față de prețul lunar.
+Avansul de abonament pentru utilizatorii PFA — 299 lei, achitat la începutul înrolării. Se scade din primul abonament ales: o lună gratuită la PFA Full, respectiv două luni gratuite la PFAlone.
 ________________________________________
 1.2. Servicii individuale
-Înființare PFA — 450 lei / serviciu
-Găzduire sediu social/profesional — 449 lei / an
-Start Ride — 799 lei / serviciu
-Adăugare anunț mașină — 29 lei / lună / anunț
+Înființare PFA — 249 lei / serviciu
+Găzduire sediu social/profesional — 349 lei / an
+Start Ride — 999 lei / serviciu
 Serviciile individuale sunt servicii punctuale sau servicii cu durată determinată, achiziționate separat de abonamente, cu excepția cazului în care oferta comercială prevede altfel.
 ________________________________________
 2. Procesatorul de plăți
@@ -38,9 +39,8 @@ Prin achiziționarea unui abonament RIDElance, utilizatorul autorizează debitar
 Abonamentele RIDElance se pot reînnoi automat până la anularea lor de către utilizator sau până la suspendarea/încetarea serviciului de către RIDElance, conform Termenilor și Condițiilor.
 ________________________________________
 4. Ciclul standard de abonament
-Abonamentele RIDElance funcționează, ca regulă generală, pe bază de plată săptămânală.
-Ciclul standard poate fi:
-luni ora 15:00 – următoarea luni ora 14:59
+Abonamentele RIDElance funcționează, ca regulă generală, pe bază de plată lunară sau anuală, la alegerea utilizatorului.
+Abonamentul se încasează la achiziție și se reînnoiește automat la aceeași dată a lunii următoare, respectiv a anului următor.
 Pentru utilizatorii noi, activarea completă poate începe după finalizarea onboardingului, verificarea informațiilor necesare și confirmarea plății.
 RIDElance poate stabili un alt ciclu de facturare, dacă acesta este afișat în platformă sau comunicat utilizatorului înainte de achiziție.
 ________________________________________

@@ -1,5 +1,5 @@
 TERMENI ȘI CONDIȚII GENERALE RIDELANCE
-Ultima actualizare: 04.06.2026
+Ultima actualizare: 10.10.2026
 Prezentele Termeni și Condiții Generale, denumite în continuare „Condițiile”, reglementează accesul și utilizarea platformei RIDElance, disponibilă prin website-ul www.ridelance.ro, dashboard-ul RIDElance și orice alte pagini, formulare, module sau servicii digitale puse la dispoziție sub brandul RIDElance.
 Vă rugăm să citiți cu atenție prezentele Condiții înainte de utilizarea platformei, crearea unui cont sau achiziționarea oricărui abonament ori serviciu RIDElance. Prin accesarea platformei, crearea unui cont, încărcarea documentelor, folosirea dashboard-ului sau achiziționarea unui serviciu, confirmați că ați citit, ați înțeles și acceptați prezentele Condiții.
 Platforma RIDElance este operată de:
@@ -22,7 +22,7 @@ PFA – persoană fizică autorizată, înregistrată conform legislației aplic
 Contul RIDElance – contul creat de utilizator în platformă, prin care acesta poate accesa dashboard-ul, documentele, serviciile, abonamentele, alertele, suportul și alte funcționalități disponibile.
 Dashboard-ul utilizatorului – zona digitală din platformă prin care utilizatorul poate gestiona informații, documente, venituri, cheltuieli, abonamente, servicii, notificări, alerte și alte elemente relevante pentru activitatea sa.
 Dashboard-ul contabilului – zona digitală dedicată contabilului partener, prin care acesta poate vizualiza documentele utilizatorilor alocați, poate solicita documente suplimentare, poate comunica cu utilizatorii și poate desfășura activități necesare prestării serviciilor contabile.
-Abonamentul – serviciu recurent, plătit săptămânal, care oferă acces la anumite funcționalități RIDElance, în funcție de planul ales.
+Abonamentul – serviciu recurent, plătit lunar sau anual, care oferă acces la anumite funcționalități RIDElance, în funcție de planul ales.
 Serviciu individual – serviciu punctual, separat de abonamente, achiziționat de utilizator în funcție de nevoile sale.
 Partener RIDElance – terț colaborator al RIDElance, precum furnizor de servicii de înființare PFA, contabil, bancă, procesator de plăți, broker, furnizor de servicii auto, furnizor de combustibil/energie, furnizor de software sau alt prestator relevant.
 Contabil partener – profesionist sau entitate independentă care colaborează cu RIDElance și care poate presta servicii contabile pentru utilizatorii eligibili, în funcție de abonamentul sau serviciul achiziționat.
@@ -149,56 +149,64 @@ ________________________________________
 RIDElance poate oferi mai multe tipuri de abonamente, fiecare cu beneficii, funcționalități, niveluri de suport și prețuri proprii.
 La data ultimei actualizări, abonamentele disponibile sunt:
 ________________________________________
-9.1. RIDElance Solo
-Preț: 49 lei/săptămână
-RIDElance Solo este destinat utilizatorilor care au deja contabil propriu sau doresc să își gestioneze singuri partea contabilă, dar vor acces la infrastructura digitală RIDElance.
-RIDElance Solo poate include:
-a) acces la dashboard PFA;
-b) evidență venituri și cheltuieli;
-c) organizare documente personale/PFA;
-d) organizare documente vehicul;
-e) alerte privind documentele și termenele importante;
-f) calculator estimativ de taxe;
-g) ghiduri și checklist-uri;
-h) acces la oferte partenere;
-i) suport tehnic și operațional privind utilizarea platformei;
-j) export lunar pentru contabilul propriu, dacă funcția este disponibilă.
-RIDElance Solo nu include contabilitate lunară, depuneri fiscale, chat direct cu contabilul, verificare fiscală personalizată, reprezentare ANAF/SPV sau asumarea responsabilității contabile de către RIDElance ori partenerii săi.
-Utilizatorul care alege RIDElance Solo este responsabil să colaboreze cu propriul contabil sau să își gestioneze obligațiile fiscale conform legii.
+9.1. PFAlone
+Preț: 139 lei/lună
+PFAlone este destinat șoferilor care doresc să își gestioneze singuri obligațiile fiscale, dar vor acces la infrastructura digitală RIDElance.
+PFAlone poate include:
+a) deschiderea PFA, cu dosarul și procesul de înființare gestionate prin RIDElance;
+b) soft contabil automatizat, cu evidență financiară și fiscală pentru transport alternativ;
+c) calcul estimativ de taxe, evidențe și dashboard RIDElance, cu încasări, cheltuieli, profit și situația PFA-ului;
+d) introducerea cheltuielilor din fotografia bonului sau a facturii;
+e) acces la aplicația mobilă RIDElance;
+f) organizarea documentelor PFA, personale, auto și contabile;
+g) alerte și notificări privind expirările, obligațiile fiscale și acțiunile importante;
+h) completarea de către utilizator a registrelor proprii și generarea declarațiilor fiscale pe baza datelor introduse de acesta, în vederea depunerii lor de către utilizator.
+PFAlone nu include contabilitate prin partener contabil, gestionarea și depunerea declarațiilor fiscale, chat direct cu contabilul, verificare fiscală personalizată, reprezentare ANAF/SPV sau asumarea responsabilității contabile de către RIDElance ori partenerii săi.
+Utilizatorul care alege PFAlone este responsabil să își țină evidența, să își depună declarațiile și să își gestioneze obligațiile fiscale conform legii.
+Opțiuni suplimentare pentru PFAlone, plătite separat, pe același abonament:
+a) Open Banking – 49 lei/lună: conectarea contului bancar al PFA-ului și sincronizarea automată a tranzacțiilor în RIDElance;
+b) Automatizare casă de marcat – 49 lei/lună: preluarea și procesarea automată a datelor fiscale ale casei de marcat.
+Open Banking poate fi oferit gratuit în prima lună de abonament PFAlone. La finalul acesteia, utilizatorul alege dacă îl păstrează, contra cost, sau renunță la el; în cazul renunțării, contul bancar este deconectat.
+Opțiunile suplimentare pot fi activate sau dezactivate separat de abonament.
 ________________________________________
-9.2. RIDElance Start
-Preț: 99 lei/săptămână
-RIDElance Start este destinat utilizatorilor care doresc acces la infrastructura digitală RIDElance, suport operațional și contabilitate efectivă printr-un partener contabil RIDElance.
-RIDElance Start poate include:
-a) funcționalitățile disponibile în RIDElance Solo;
-b) contabilitate lunară prin partener contabil RIDElance;
-c) acces la comunicare cu contabilul asociat, prin platformă sau prin canalele disponibile;
-d) organizarea documentelor necesare activității contabile;
-e) verificarea operațională a documentelor încărcate în dashboard;
-f) posibilitatea ca partenerul contabil să solicite documente sau informații suplimentare;
-g) notificări privind documentele recurente necesare;
-h) suport operațional din partea unui support agent RIDElance;
-i) suport privind utilizarea dashboard-ului;
-j) acces la ghiduri, checklist-uri și materiale operaționale;
-k) acces la parteneri și beneficii disponibile în platformă.
-Contabilitatea inclusă în RIDElance Start este furnizată printr-un partener contabil independent, autorizat să presteze astfel de servicii. RIDElance facilitează accesul utilizatorului la acest partener și pune la dispoziție infrastructura digitală necesară colaborării.
+9.2. PFA Full
+Preț: 299 lei/lună
+PFA Full este destinat șoferilor care doresc ca partea fiscală și administrativă a PFA-ului să fie automatizată și gestionată prin RIDElance, cu contabilitate efectivă printr-un partener contabil RIDElance.
+PFA Full poate include:
+a) funcționalitățile disponibile în PFAlone;
+b) generarea și depunerea declarațiilor fiscale lunare și anuale necesare PFA-ului;
+c) conectarea cu ANAF și SPV, pentru e-Facturi, declarații, recipise, obligații, vector fiscal și comunicările relevante din SPV;
+d) urmărirea obligațiilor fiscale: termene, statusul declarațiilor și acțiunile necesare;
+e) registre și evidențe contabile generate pe baza datelor din platformă;
+f) Open Banking și automatizarea casei de marcat, fără cost suplimentar;
+g) acces la comunicare cu contabilul asociat, prin platformă sau prin canalele disponibile;
+h) asistență și consultanță pentru situații fiscale, administrative și operaționale specifice transportului alternativ.
+Contabilitatea inclusă în PFA Full este furnizată printr-un partener contabil independent, autorizat să presteze astfel de servicii. RIDElance facilitează accesul utilizatorului la acest partener și pune la dispoziție infrastructura digitală necesară colaborării.
 ________________________________________
-9.3. RIDElance Pro
-Preț: 149 lei/săptămână
-RIDElance Pro este destinat utilizatorilor care doresc acces la cel mai avansat nivel de suport disponibil în platformă, împreună cu contabilitate efectivă prin partener contabil RIDElance și beneficii extinse.
-RIDElance Pro poate include:
-a) funcționalitățile disponibile în RIDElance Start;
-b) contabilitate lunară prin partener contabil RIDElance;
-c) suport prioritar;
-d) comunicare prioritară cu support agentul asociat;
-e) acces extins la parteneri;
-f) beneficii comerciale suplimentare;
-g) oferte speciale;
-h) funcționalități premium;
-i) suport suplimentar pentru organizarea activității;
-j) suport operațional pentru identificarea și corectarea unor erori în documente sau informații;
-k) alte beneficii afișate în platformă.
-Contabilitatea inclusă în RIDElance Pro este furnizată printr-un partener contabil independent, iar RIDElance asigură infrastructura digitală, suportul operațional și fluxurile necesare colaborării dintre utilizator și partenerul contabil.
+9.3. SRL Fleet
+Preț: 299 lei/lună
+SRL Fleet este destinat societăților care administrează mașini pentru ridesharing și doresc să își gestioneze anunțurile, documentele, șoferii și închirierile din RIDElance.
+SRL Fleet poate include:
+a) 10 anunțuri active de mașini;
+b) prezența mașinilor în marketplace-ul RIDElance;
+c) pagină publică pentru flotă;
+d) organizarea documentelor societății și ale vehiculelor, cu expirări și notificări;
+e) generarea și administrarea contractelor și a proceselor-verbale pentru închirieri;
+f) documentarea stării mașinii, cu fotografii, la predare și la returnare;
+g) istoricul închirierilor, pe mașină și pe șofer;
+h) evidența plăților: chirii, scadențe și istoric;
+i) evidența mentenanței și remindere pentru flotă;
+j) valori contractuale configurabile;
+k) acces pentru echipa societății, fără tarif pe utilizator.
+RIDElance nu reține comision din chiria convenită între societate și șofer.
+Opțiuni suplimentare pentru SRL Fleet, plătite separat:
+a) Open Banking – 49 lei/lună: conectarea contului bancar al societății;
+b) anunț activ suplimentar, peste cele 10 incluse – 39,90 lei/lună/anunț;
+c) anonimizarea numărului de înmatriculare în fotografiile unui anunț – 14,90 lei, plată unică pentru fiecare mașină.
+________________________________________
+9.4. Plata anuală și avansul de abonament
+Abonamentele pot fi plătite lunar sau anual. La plata anuală se aplică o reducere de 10% față de prețul lunar, iar suma pentru întregul an se achită o singură dată.
+La începutul înrolării, utilizatorul PFA achită un avans de abonament de 299 lei. Avansul nu este un cost suplimentar: se scade din primul abonament ales, sub forma unei luni gratuite la PFA Full, respectiv a două luni gratuite la PFAlone. Avansul este nerambursabil, cu excepția situațiilor prevăzute în prezentele Condiții sau impuse de lege.
 RIDElance poate modifica structura, beneficiile și disponibilitatea abonamentelor, cu informarea utilizatorilor conform prezentelor Condiții.
 ________________________________________
 10. Servicii individuale
@@ -206,20 +214,20 @@ Pe lângă abonamente, RIDElance poate oferi servicii individuale, achiziționat
 La data ultimei actualizări, serviciile individuale pot include:
 ________________________________________
 10.1. Înființare PFA
-Preț: 450 lei / serviciu
+Preț: 249 lei / serviciu
 Serviciul de înființare PFA este destinat utilizatorilor care doresc să înceapă activitatea pe cont propriu în ridesharing/transport alternativ.
 Serviciul poate fi prestat direct de RIDElance sau prin parteneri specializați, în funcție de disponibilitate, flux operațional și documentele necesare.
 Serviciul poate include suport pentru pregătirea, completarea, organizarea sau transmiterea documentelor necesare înființării PFA, conform condițiilor afișate în platformă.
 RIDElance nu garantează soluționarea favorabilă sau într-un anumit termen a cererilor depuse la ONRC, ANAF sau alte instituții, întrucât aceste procese pot depinde de autorități, documente, verificări și condiții externe platformei.
 ________________________________________
 10.2. Găzduire sediu social/profesional
-Preț: 449 lei/an
+Preț: 349 lei/an
 Serviciul de găzduire sediu social/profesional este destinat utilizatorilor care au nevoie de o adresă pentru sediul profesional al PFA sau pentru alte scopuri administrative permise de lege.
 Serviciul poate fi furnizat prin partener RIDElance și poate fi supus unor condiții suplimentare stabilite de partener, inclusiv semnarea unor documente, furnizarea unor date suplimentare și respectarea duratei contractuale aplicabile.
 Utilizatorul înțelege că serviciul de găzduire sediu social/profesional nu reprezintă închirierea unui spațiu fizic de lucru și nu conferă automat dreptul de desfășurare efectivă a activității la adresa respectivă, cu excepția cazului în care acest lucru este permis expres prin contractul sau condițiile partenerului.
 ________________________________________
 10.3. Start Ride
-Preț: 799 lei / serviciu
+Preț: 999 lei / serviciu
 Start Ride este un serviciu individual destinat utilizatorilor care doresc asistență inițială pentru pornirea activității pe cont propriu în ridesharing/transport alternativ.
 Serviciul poate include:
 a) ghidaj pentru înființare PFA;
@@ -232,9 +240,9 @@ g) suport până la finalizarea pașilor incluși în oferta comercială;
 h) direcționare către parteneri relevanți, dacă este cazul.
 Start Ride nu include contabilitate lunară, depuneri fiscale recurente, reprezentare ANAF/SPV sau garanția acceptării pe platforme terțe, cu excepția cazului în care oferta comercială prevede expres altfel.
 ________________________________________
-10.4. Adăugare anunț mașină
-Preț: 29 lei/lună/anunț
-Serviciul permite listarea unei mașini în secțiunea dedicată mașinilor pentru ridesharing sau într-un modul similar al platformei.
+10.4. Anunțuri de mașini
+Publicarea anunțurilor de mașini este inclusă în abonamentul SRL Fleet, în limita a 10 anunțuri active. Fiecare anunț activ suplimentar costă 39,90 lei/lună, iar anonimizarea numărului de înmatriculare costă 14,90 lei, plată unică pentru fiecare mașină.
+Anunțurile permit listarea unei mașini în secțiunea dedicată mașinilor pentru ridesharing sau într-un modul similar al platformei.
 RIDElance poate verifica manual anunțul înainte de publicare și poate refuza anunțurile incomplete, neconforme, suspecte sau incompatibile cu scopul platformei.
 Publicarea unui anunț nu garantează obținerea de șoferi, cereri, contracte, venituri sau colaborări.
 ________________________________________
@@ -246,9 +254,8 @@ Utilizatorul este responsabil să se asigure că metoda de plată este validă, 
 RIDElance poate emite facturi sau documente fiscale pentru sumele încasate, conform legislației aplicabile și informațiilor furnizate de utilizator.
 ________________________________________
 12. Ciclul de abonament
-Abonamentele RIDElance funcționează, ca regulă generală, pe bază de plată săptămânală.
-Ciclul standard poate fi:
-luni ora 15:00 – următoarea luni ora 14:59
+Abonamentele RIDElance funcționează, ca regulă generală, pe bază de plată lunară sau anuală, la alegerea utilizatorului.
+Abonamentul se încasează la achiziție și se reînnoiește automat la aceeași dată a lunii următoare, respectiv a anului următor.
 Pentru utilizatorii noi, activarea completă poate începe după finalizarea onboardingului, verificarea informațiilor necesare și confirmarea plății.
 RIDElance poate stabili un alt ciclu de facturare, dacă acesta este afișat în platformă sau comunicat utilizatorului înainte de achiziție.
 ________________________________________
