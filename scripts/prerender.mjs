@@ -204,11 +204,31 @@ function buildPage(shell, defaults, page, { withBody }) {
 async function render(browser, origin, route, { withBody }) {
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 } })
   try {
+    // Aplicația află de aici că e pre-randată și sare peste ce n-are cum să intre într-o pagină
+    // salvată: hărțile (`src/seo/prerenderMode.ts`).
+    await page.addInitScript(() => {
+      window.__PRERENDER__ = true
+    })
     await page.route('**/*', (request) =>
       new URL(request.request().url()).origin === origin ? request.continue() : request.abort(),
     )
+    // O pagină care cade nu mai ajunge niciodată „gata”; fără erorile ei, în jurnalul build-ului ar
+    // rămâne doar o expirare de timp.
+    const errors = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    page.on('console', (message) => {
+      if (message.type() === 'error') errors.push(message.text())
+    })
+
     await page.goto(origin + route, { waitUntil: 'load' })
-    await page.waitForFunction(() => document.documentElement.hasAttribute('data-route-ready'), null, { timeout: 30_000 })
+    try {
+      await page.waitForFunction(() => document.documentElement.hasAttribute('data-route-ready'), null, { timeout: 30_000 })
+    } catch {
+      const shown = await page.evaluate(() => document.querySelector('h1')?.textContent ?? document.title)
+      throw new Error(
+        `pagina nu a ajuns gata în 30 s (pe ecran: „${shown}”). Erori în pagină:\n    ${errors.slice(0, 8).join('\n    ') || 'niciuna'}`,
+      )
+    }
     await page.waitForLoadState('networkidle')
     const result = await page.evaluate(snapshot)
 

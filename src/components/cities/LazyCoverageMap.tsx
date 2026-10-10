@@ -1,8 +1,9 @@
 import { Suspense, lazy, type ComponentProps } from 'react'
-import { Skeleton } from '@mui/material'
+import { Box, Skeleton } from '@mui/material'
 
 import { reloadOnceOnChunkError } from '../../utils/lazyWithRetry'
 import { TOKENS } from '../../constants/tokens'
+import { IS_PRERENDER } from '../../seo/prerenderMode'
 import type { CoverageMap as CoverageMapType } from './CoverageMap'
 import { MAP_FRAME_SX } from './mapFrame'
 
@@ -18,6 +19,11 @@ const CoverageMapLazy = lazy(() =>
 )
 
 export function CoverageMap(props: ComponentProps<typeof CoverageMapType>) {
+  // În pagina salvată la build rămâne doar locul hărții; harta o desenează aplicația, în browser.
+  if (IS_PRERENDER) {
+    return <Box sx={{ ...MAP_FRAME_SX, borderRadius: `${TOKENS.radius.xl}px`, backgroundColor: TOKENS.surfaceAlt }} />
+  }
+
   return (
     <Suspense
       fallback={

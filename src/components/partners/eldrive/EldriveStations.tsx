@@ -6,6 +6,7 @@ import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 
 import { ELDRIVE_MAP_SECTION, ELDRIVE_STATIONS, type EldriveStationTariff } from '../../../data/eldrive'
 import { reloadOnceOnChunkError } from '../../../utils/lazyWithRetry'
+import { IS_PRERENDER } from '../../../seo/prerenderMode'
 import type { OfferTokens } from '../offerTokens'
 import { DAY_PRICE, NIGHT_PRICE, NONSTOP_COLOR, NONSTOP_PRICE } from './stationRates'
 
@@ -217,9 +218,12 @@ export function EldriveStations({ tokens }: { tokens: OfferTokens }) {
         </Box>
 
         <Box sx={{ position: 'relative', minHeight: { xs: 420, md: 0 } }}>
-          <Suspense fallback={<Skeleton variant="rectangular" sx={{ position: 'absolute', inset: 0, height: '100%' }} />}>
-            <EldriveStationsMap stations={visible} activeId={activeId} onSelect={setActiveId} />
-          </Suspense>
+          {/* În pagina salvată la build rămâne doar locul hărții (vezi `IS_PRERENDER`). */}
+          {!IS_PRERENDER && (
+            <Suspense fallback={<Skeleton variant="rectangular" sx={{ position: 'absolute', inset: 0, height: '100%' }} />}>
+              <EldriveStationsMap stations={visible} activeId={activeId} onSelect={setActiveId} />
+            </Suspense>
+          )}
         </Box>
       </Box>
     </Box>
