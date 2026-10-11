@@ -35,7 +35,7 @@ export const PFA_UPLOAD_CATEGORIES = [
 export const ADMIN_STEPS: AdminStep[] = [
   {
     key: 'eligibility', order: 0, label: 'Eligibilitate',
-    categories: ['Buletin', 'CarteIdentitate', 'PermisConducere', 'AtestatSofer', 'AtestatTransport'],
+    categories: ['Buletin', 'CarteIdentitate', 'CeiReaderPdf', 'PermisConducere', 'AtestatSofer', 'AtestatTransport'],
     guidedNote: 'Documentele de eligibilitate (CI, permis, atestat). Datele extrase sunt doar ajutor: pasul se bifează la client abia când îl validezi aici. Avizele medical și psihologic se cer la pasul ARR.',
     sections: [{ key: ELIGIBILITY_KEY }],
   },

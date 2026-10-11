@@ -1,3 +1,4 @@
+import { isDocumentRejected } from './documentVerdict'
 import AutorenewRoundedIcon from '@mui/icons-material/AutorenewRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded'
@@ -83,7 +84,7 @@ export function DocumentFirstUpload({
   const [error, setError] = useState<string | null>(null)
 
   const rejected =
-    current !== null && (current.status.toLowerCase() === 'rejected' || current.aiStatus === 'Failed')
+    current !== null && isDocumentRejected(current)
   const verifying = current !== null && !rejected && isAiPending(current)
   const uploading = progress !== null
 

@@ -1,3 +1,4 @@
+import { isApprovedByTeam } from '../documentVerdict'
 import HourglassTopRoundedIcon from '@mui/icons-material/HourglassTopRounded'
 import { Alert, Box, Paper, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -51,7 +52,7 @@ function PfaDocReupload({
 
   const label = PFA_STEP_CATEGORIES[doc.category] ?? doc.category
   const reason =
-    doc.aiStatus === 'Failed' && doc.aiSummary
+    doc.aiStatus === 'Failed' && !isApprovedByTeam(doc) && doc.aiSummary
       ? `respins la verificarea automată: ${doc.aiSummary}`
       : 'respins de echipa RIDElance.'
 

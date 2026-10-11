@@ -1,3 +1,4 @@
+import { isDocumentRejected } from './documentVerdict'
 import type { DocumentSummary } from '../../services/document.service'
 import { isAiPending } from '../../services/document.service'
 import type {
@@ -68,7 +69,7 @@ export function newestPerCategory(documents: DocumentSummary[], categories: stri
 }
 
 const isRejectedDoc = (doc: DocumentSummary) =>
-  doc.status.toLowerCase() === 'rejected' || doc.aiStatus === 'Failed'
+  isDocumentRejected(doc)
 
 function sectionsOf(state: OnboardingState | null, stepKey: string): OnboardingSectionState[] {
   const keys = STEP_SECTION_KEYS[stepKey] ?? []

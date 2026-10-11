@@ -1,3 +1,4 @@
+import { isDocumentRejected } from '../documentVerdict'
 import type { DocumentSummary } from '../../../services/document.service'
 import { onboardingService } from '../../../services/onboarding.service'
 import type { MicroStepContext, MicroStepDef } from '../microStepTypes'
@@ -25,7 +26,7 @@ const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
 function hasDocument(c: MicroStepContext, categories: string[]): boolean {
   const newest = c.documents.filter((d) => categories.includes(d.category)).sort(byNewest)[0]
   if (!newest) return false
-  return newest.status.toLowerCase() !== 'rejected' && newest.aiStatus !== 'Failed'
+  return !isDocumentRejected(newest)
 }
 
 const CI = ['CarteIdentitate']

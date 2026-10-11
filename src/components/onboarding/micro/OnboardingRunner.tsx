@@ -1,3 +1,4 @@
+import { isAiBlocking } from '../documentVerdict'
 import { Alert, Snackbar, Stack } from '@mui/material'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
@@ -335,7 +336,7 @@ export function OnboardingRunner() {
   const summaryBlockers = (): string[] => {
     const stepDocs = newestPerCategory(documents, categoriesOfStep(def.macroStep))
     if (stepDocs.some(isAiPending)) return ['Verificăm automat documentele încărcate. Durează de obicei sub un minut.']
-    if (stepDocs.some((d) => d.aiStatus === 'Failed' || d.aiStatus === 'Error')) {
+    if (stepDocs.some(isAiBlocking)) {
       return ['Unele documente n-au trecut verificarea automată. Reîncarcă-le din lista de mai sus.']
     }
     return []

@@ -1,3 +1,4 @@
+import { isDocumentRejected } from '../documentVerdict'
 import type { DocumentSummary } from '../../../services/document.service'
 import {
   onboardingService,
@@ -35,13 +36,13 @@ const newestOf = (c: MicroStepContext, category: string) =>
 function hasDocument(c: MicroStepContext, category: string): boolean {
   const newest = newestOf(c, category)
   if (!newest) return false
-  return newest.status.toLowerCase() !== 'rejected' && newest.aiStatus !== 'Failed'
+  return !isDocumentRejected(newest)
 }
 
 /** Actul a fost respins (de AI sau de agent): ecranul lui rămâne vizibil și după trimitere. */
 const rejected = (c: MicroStepContext, category: string) => {
   const newest = newestOf(c, category)
-  return newest !== undefined && (newest.status.toLowerCase() === 'rejected' || newest.aiStatus === 'Failed')
+  return newest !== undefined && isDocumentRejected(newest)
 }
 
 const field = (c: MicroStepContext, stepId: string, key: string): string => {

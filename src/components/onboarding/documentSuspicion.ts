@@ -1,3 +1,4 @@
+import { isDocumentRejected } from './documentVerdict'
 import { isAiPending, type DocumentSummary } from '../../services/document.service'
 
 const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
@@ -11,6 +12,6 @@ const byNewest = (a: DocumentSummary, b: DocumentSummary) =>
 export function suspicionOf(documents: DocumentSummary[], categories: string[]): string | null {
   const newest = documents.filter((d) => categories.includes(d.category)).sort(byNewest)[0]
   if (!newest || isAiPending(newest)) return null
-  if (newest.status.toLowerCase() === 'rejected' || newest.aiStatus === 'Failed') return null
+  if (isDocumentRejected(newest)) return null
   return newest.aiSuspicionReasons?.[0] ?? null
 }
