@@ -11,6 +11,7 @@ import { AuthLayout } from './shell/AuthLayout'
 import { CodeInput } from './shell/CodeInput'
 import { AUTH_COLORS, AUTH_DENSITY, authPrimaryButtonSx } from './shell/authShellSx'
 import { EMAIL_VERIFICATION, PHONE_VERIFICATION } from './emailVerification'
+import { useVerificationPolicy } from './verificationPolicy'
 
 /**
  * Confirmarea contului nou, în doi pași: codul din email, apoi codul din SMS.
@@ -45,6 +46,8 @@ export default function VerifyEmailPage() {
 
   const [step, setStep] = useState<Step>('email')
   const [emailConfirmed, setEmailConfirmed] = useState(false)
+  // Ce coduri sunt obligatorii pe mediul acesta (producție: da; site de test: nu).
+  const policy = useVerificationPolicy()
 
   // Fără adresă nu există ce confirma: cineva a ajuns direct pe rută.
   useEffect(() => {
@@ -61,9 +64,14 @@ export default function VerifyEmailPage() {
     <AuthLayout>
       <StepIndicator step={step} emailConfirmed={emailConfirmed} hasPhone={Boolean(phone)} />
       {step === 'email' ? (
-        <EmailStep email={email} onDone={finishEmail} />
+        <EmailStep email={email} required={policy?.emailRequired ?? false} canSkip={policy?.emailRequired === false} onDone={finishEmail} />
       ) : (
-        <PhoneStep phone={phone} onDone={() => navigate(next, { replace: true })} />
+        <PhoneStep
+          phone={phone}
+          required={policy?.phoneRequired ?? false}
+          canSkip={policy?.phoneRequired === false}
+          onDone={() => navigate(next, { replace: true })}
+        />
       )}
     </AuthLayout>
   )
@@ -118,7 +126,13 @@ function useCooldown() {
   return [seconds, setSeconds] as const
 }
 
-function EmailStep({ email, onDone }: { email: string; onDone: (confirmed: boolean) => void }) {
+/** `required`: un cod greșit oprește pasul. `canSkip`: se poate trece mai departe fără cod. */
+interface StepPolicy {
+  required: boolean
+  canSkip: boolean
+}
+
+function EmailStep({ email, required, canSkip, onDone }: StepPolicy & { email: string; onDone: (confirmed: boolean) => void }) {
   const [digits, setDigits] = useState(() => emptyCode(EMAIL_VERIFICATION.codeLength))
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -135,7 +149,7 @@ function EmailStep({ email, onDone }: { email: string; onDone: (confirmed: boole
       await authService.verifyEmail(email, digits.join(''))
       onDone(true)
     } catch {
-      if (EMAIL_VERIFICATION.required) {
+      if (required) {
         setError('Codul introdus nu este corect sau a expirat.')
         setIsLoading(false)
         return
@@ -186,12 +200,12 @@ function EmailStep({ email, onDone }: { email: string; onDone: (confirmed: boole
 
       <ResendRow cooldown={cooldown} onResend={() => void handleResend()} />
 
-      {!EMAIL_VERIFICATION.required && <SkipLink onClick={() => onDone(false)} />}
+      {canSkip && <SkipLink onClick={() => onDone(false)} />}
     </>
   )
 }
 
-function PhoneStep({ phone, onDone }: { phone: string; onDone: () => void }) {
+function PhoneStep({ phone, required, canSkip, onDone }: StepPolicy & { phone: string; onDone: () => void }) {
   const [digits, setDigits] = useState(() => emptyCode(PHONE_VERIFICATION.codeLength))
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -230,7 +244,7 @@ function PhoneStep({ phone, onDone }: { phone: string; onDone: () => void }) {
       await userService.confirmPhone(digits.join(''))
       onDone()
     } catch {
-      if (PHONE_VERIFICATION.required) {
+      if (required) {
         setError('Codul introdus nu este corect sau a expirat.')
         setIsLoading(false)
         return
@@ -269,7 +283,7 @@ function PhoneStep({ phone, onDone }: { phone: string; onDone: () => void }) {
 
       <ResendRow cooldown={cooldown} onResend={() => void send()} />
 
-      {!PHONE_VERIFICATION.required && <SkipLink onClick={onDone} />}
+      {canSkip && <SkipLink onClick={onDone} />}
     </>
   )
 }

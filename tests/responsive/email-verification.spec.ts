@@ -134,4 +134,23 @@ test.describe('confirmare cont', () => {
     // Serverul a refuzat ambele coduri, dar contul e utilizabil: se ajunge în dashboard.
     await expect(page).toHaveURL(/dashboard-srl/)
   })
+  test('pe un mediu care impune codurile, un cod greșit oprește pasul și nu se poate sări peste el', async ({ page }) => {
+    await mockAuth(page)
+    // Serverul de producție: REQUIRE_EMAIL_VERIFICATION și REQUIRE_PHONE_VERIFICATION pornite.
+    await page.route(`${API}/users/verification-policy`, (route: Route) =>
+      route.fulfill({ json: { emailRequired: true, phoneRequired: true } }),
+    )
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await register(page)
+
+    await expect(page.getByRole('button', { name: 'Confirmă adresa' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Continuă', exact: true })).toHaveCount(0)
+
+    await typeCode(page, 'Cifra', '000000')
+    await page.getByRole('button', { name: 'Confirmă adresa' }).click()
+
+    await expect(page.getByText('Codul introdus nu este corect sau a expirat.')).toBeVisible()
+    await expect(page).toHaveURL(/confirmare-email/)
+    await expect(page.getByRole('heading', { name: /Confirmă-ți telefonul/ })).toHaveCount(0)
+  })
 })

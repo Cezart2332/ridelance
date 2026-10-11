@@ -76,6 +76,10 @@ services:
       Onboarding__DevTools__Enabled: ${ONBOARDING_DEV_TOOLS:-false}
       Onboarding__AutoApproveDocuments: ${ONBOARDING_AUTO_APPROVE_DOCUMENTS:-false}
       Onboarding__RequireContactVerification: ${ONBOARDING_REQUIRE_CONTACT_VERIFICATION:-false}
+      # Codul de pe email și cel din SMS, obligatorii la înregistrare. Pe producție „true”; pe un
+      # site de test rămân „false”, ca să poți crea conturi fără email și fără SMS reale.
+      Verification__RequireEmail: ${REQUIRE_EMAIL_VERIFICATION:-false}
+      Verification__RequirePhone: ${REQUIRE_PHONE_VERIFICATION:-false}
 
       # ─── Email (Resend) ─────────────────────────────────────────────────────────────────
       Resend__ApiKey: ${RESEND_API_KEY:-}
