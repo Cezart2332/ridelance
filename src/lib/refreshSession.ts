@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { store } from '../store/store'
-import { setCredentials } from '../store/authSlice'
+import { setCredentials, startImpersonation } from '../store/authSlice'
+import { clearImpersonationTarget, readImpersonationTarget } from './impersonationTarget'
 import { IS_NATIVE_APP } from '../native/platform'
 import { NATIVE_CLIENT_HEADERS, clearRefreshToken, readRefreshToken, storeRefreshToken } from '../native/nativeSession'
 
@@ -44,14 +45,47 @@ async function requestRefresh(): Promise<RefreshResult> {
   }
 }
 
+/** Intrarea unui admin în contul unui client: un token scurt, al clientului. */
+export async function requestImpersonation(targetUserId: string, adminAccessToken: string): Promise<RefreshResult> {
+  const res = await axios.post<RefreshResult>(
+    `${BASE_URL}/users/impersonate/${targetUserId}`,
+    {},
+    { headers: { Authorization: `Bearer ${adminAccessToken}` }, withCredentials: true },
+  )
+  return { accessToken: res.data.accessToken, role: res.data.role, userId: res.data.userId }
+}
+
+/**
+ * Reîmprospătarea aduce mereu sesiunea adminului (tokenul de reîmprospătare e al lui). Dacă fila
+ * e într-un cont de client, se intră la loc în același cont, fără să treacă prin sesiunea de
+ * admin: altfel garda pe rol ar vedea un admin în zona clientului.
+ */
+async function resumeImpersonation(admin: RefreshResult): Promise<RefreshResult | null> {
+  const target = readImpersonationTarget()
+  if (!target || admin.role !== 'Admin') {
+    if (target) clearImpersonationTarget()
+    return null
+  }
+
+  try {
+    const client = await requestImpersonation(target.userId, admin.accessToken)
+    store.dispatch(startImpersonation({ adminUserId: admin.userId, adminRole: admin.role, targetName: target.name }))
+    return client
+  } catch {
+    // Contul nu mai poate fi deschis (șters, devenit membru al echipei): rămâne sesiunea adminului.
+    clearImpersonationTarget()
+    return null
+  }
+}
+
 let refreshPromise: Promise<RefreshResult> | null = null
 
 /** Single in-flight refresh for AuthInitializer and axios 401 handler. */
 export function refreshAccessToken(): Promise<RefreshResult> {
   if (!refreshPromise) {
     refreshPromise = requestRefresh()
-      .then((data) => {
-        const { accessToken, role, userId } = data
+      .then(async (data) => {
+        const { accessToken, role, userId } = (await resumeImpersonation(data)) ?? data
         store.dispatch(setCredentials({ accessToken, role, userId }))
         return { accessToken, role, userId }
       })

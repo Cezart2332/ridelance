@@ -3,6 +3,7 @@ import axios from 'axios'
 import { store } from '../store/store'
 import { setCredentials, clearCredentials, startImpersonation } from '../store/authSlice'
 import { refreshAccessToken } from '../lib/refreshSession'
+import { clearImpersonationTarget, storeImpersonationTarget } from '../lib/impersonationTarget'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
@@ -117,6 +118,7 @@ export const authService = {
     const token = store.getState().auth.accessToken
     // Clear Redux state immediately so the UI reacts instantly
     store.dispatch(clearCredentials())
+    clearImpersonationTarget()
     await clearRefreshToken()
     // Tell the backend to invalidate the refresh token cookie
     try {
@@ -150,6 +152,8 @@ export const authService = {
       store.dispatch(startImpersonation({ adminUserId, adminRole, targetName }))
     }
     store.dispatch(setCredentials({ accessToken, role, userId: targetUserId }))
+    // Ca reîmprospătarea tokenului sau a paginii să rămână în contul clientului.
+    storeImpersonationTarget({ userId: targetUserId, name: targetName })
 
     return response.data
   },
@@ -160,6 +164,8 @@ export const authService = {
    * (which also clears the impersonation flag in the store).
    */
   stopImpersonation: async () => {
+    // Fără semn, reîmprospătarea rămâne la sesiunea adminului.
+    clearImpersonationTarget()
     return refreshAccessToken()
   },
 }
