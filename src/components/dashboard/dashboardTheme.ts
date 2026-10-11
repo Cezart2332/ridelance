@@ -2,6 +2,7 @@ import type { SxProps, Theme } from '@mui/material/styles'
 import { alpha } from '@mui/material/styles'
 
 import { TOKENS as GLOBAL } from '../../constants/tokens'
+import { PANEL_TOKENS } from '../../theme/panelTheme'
 import { ACTIVE_SKIN, type DashboardSkin } from './dashboardSkin'
 
 const DEFAULT_TOKENS = {
@@ -110,10 +111,33 @@ const PANEL_DARK_TOKENS: typeof DEFAULT_TOKENS = {
   },
 }
 
+/**
+ * Panourile Admin și Contabil: structura de mai sus, în paleta zinc a panoului (`PANEL_TOKENS`),
+ * ca ecranele comune cu clientul să nu se vadă ca altă aplicație în mijlocul panoului. Albastrul
+ * rămâne cel de brand; textul de pe butoanele pline e cel al panoului.
+ */
+const staffTokens = (base: typeof DEFAULT_TOKENS, mode: 'dark' | 'light'): typeof DEFAULT_TOKENS => {
+  const p = PANEL_TOKENS[mode]
+  return {
+    ...base,
+    ink: p.fg,
+    paper: p.card,
+    surface: p.bg,
+    surfaceAlt: p.hover,
+    border: p.border,
+    borderHover: p.borderStrong,
+    textMuted: p.textMuted,
+    textSubtle: p.textSubtle,
+    stateNeutral: p.textMuted,
+  }
+}
+
 const SKINS: Record<DashboardSkin, typeof DEFAULT_TOKENS> = {
   default: DEFAULT_TOKENS,
   'panel-light': PANEL_LIGHT_TOKENS,
   'panel-dark': PANEL_DARK_TOKENS,
+  'staff-light': staffTokens(PANEL_LIGHT_TOKENS, 'light'),
+  'staff-dark': staffTokens(PANEL_DARK_TOKENS, 'dark'),
 }
 
 /** Tokenii dashboardului, în pielea cu care s-a încărcat pagina (vezi `dashboardSkin`). */

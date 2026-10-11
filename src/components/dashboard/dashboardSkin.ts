@@ -4,7 +4,10 @@
  * - `default` — tot ce nu e dashboard de client (admin, site-ul public), exact ca până acum;
  * - `panel-light` / `panel-dark` — dashboardurile PFA și SRL, în stilul panoului de lucru
  *   (shadcn/ui: borduri de 1px în loc de umbre, colțuri mici), alb cu albastru sau negru cu
- *   albastru.
+ *   albastru;
+ * - `staff-light` / `staff-dark` — panourile Admin și Contabil: aceeași structură, în paleta zinc
+ *   a panoului (`PANEL_TOKENS`). Fără ele, ecranele comune deschise de staff (formularul de mașină,
+ *   asigurările, dialogurile) rămâneau albe sau cu text închis pe negru în tema închisă.
  *
  * Se alege **o singură dată, la încărcarea paginii**, din adresă și din preferința salvată. De ce
  * nu la rulare: peste o sută de fișiere citesc `DASHBOARD_TOKENS` la nivel de modul, în constante
@@ -14,7 +17,7 @@
  * Prețul: schimbarea temei și trecerea între un dashboard de client și restul aplicației
  * reîncarcă pagina (`SkinBoundary`). E o reîncărcare obișnuită, o dată.
  */
-export type DashboardSkin = 'default' | 'panel-light' | 'panel-dark'
+export type DashboardSkin = 'default' | 'panel-light' | 'panel-dark' | 'staff-light' | 'staff-dark'
 
 export type DashboardThemeMode = 'light' | 'dark'
 
@@ -43,8 +46,27 @@ export function storedThemeMode(): DashboardThemeMode {
   }
 }
 
+/** Panourile Admin și Contabil, cu tema lor (`PanelThemeProvider`). */
+const STAFF_ROOTS = ['/admin', '/contabil']
+
+/** Cheia temei panourilor Admin/Contabil. Implicit închisă, ca până acum. */
+const STAFF_STORAGE_KEY = 'rl-panel-theme'
+
+export function isStaffPath(pathname: string): boolean {
+  return STAFF_ROOTS.some((root) => pathname === root || pathname.startsWith(`${root}/`))
+}
+
+export function storedStaffThemeMode(): DashboardThemeMode {
+  try {
+    return window.localStorage.getItem(STAFF_STORAGE_KEY) === 'light' ? 'light' : 'dark'
+  } catch {
+    return 'dark'
+  }
+}
+
 /** Pielea potrivită unei adrese, cu preferința de acum. */
 export function skinFor(pathname: string): DashboardSkin {
+  if (isStaffPath(pathname)) return storedStaffThemeMode() === 'dark' ? 'staff-dark' : 'staff-light'
   if (!isPanelPath(pathname)) return 'default'
   return storedThemeMode() === 'dark' ? 'panel-dark' : 'panel-light'
 }
@@ -62,7 +84,10 @@ export const ACTIVE_SKIN: DashboardSkin = initialSkin()
 
 export const IS_PANEL_SKIN = ACTIVE_SKIN !== 'default'
 
-export const IS_DARK_SKIN = ACTIVE_SKIN === 'panel-dark'
+export const IS_DARK_SKIN = ACTIVE_SKIN === 'panel-dark' || ACTIVE_SKIN === 'staff-dark'
+
+/** Panourile Admin/Contabil: tokenii statici iau paleta zinc a panoului, nu albastrul clientului. */
+export const IS_STAFF_SKIN = ACTIVE_SKIN === 'staff-light' || ACTIVE_SKIN === 'staff-dark'
 
 /**
  * Fundalul paginii, pus imediat ce se încarcă modulul. Fără el, în tema închisă pagina ar clipi
@@ -89,4 +114,18 @@ export function setDashboardThemeMode(mode: DashboardThemeMode): void {
     return
   }
   window.location.reload()
+}
+
+/**
+ * Schimbă tema panourilor Admin/Contabil. Variabilele `--rl-*` s-ar schimba și pe loc, dar tokenii
+ * statici (formulare, dialoguri, ecrane comune cu clientul) sunt aleși la încărcare: fără
+ * reîncărcare, jumătate din pagină ar rămâne în tema veche.
+ */
+export function setStaffThemeMode(mode: DashboardThemeMode): void {
+  try {
+    window.localStorage.setItem(STAFF_STORAGE_KEY, mode)
+  } catch {
+    return
+  }
+  if (skinFor(window.location.pathname) !== ACTIVE_SKIN) window.location.reload()
 }

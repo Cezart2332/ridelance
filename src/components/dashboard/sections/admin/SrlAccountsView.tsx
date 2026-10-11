@@ -169,7 +169,7 @@ export function SrlAccountsView({
 
       {accounts && visible.length > 0 && (
         <Paper sx={{ overflow: 'hidden' }}>
-          <Box sx={{ px: 2.5, py: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+          <Box sx={{ px: 2.5, py: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: 'action.hover' }}>
             <Typography variant="body2" color="text.secondary">
               {visible.length} firme afișate
             </Typography>
@@ -195,7 +195,7 @@ export function SrlAccountsView({
                     p: 2.5,
                     alignItems: 'center',
                     opacity: deleted ? 0.8 : 1,
-                    '&:hover': { bgcolor: 'grey.50' },
+                    '&:hover': { bgcolor: 'action.hover' },
                   }}
                 >
                   <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', minWidth: 0 }}>

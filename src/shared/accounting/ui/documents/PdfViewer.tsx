@@ -114,7 +114,7 @@ export function PdfViewer({
         sx={(theme) => ({
           overflow: 'auto',
           flex: 1,
-          bgcolor: 'grey.100',
+          bgcolor: 'action.hover',
           p: 2,
           display: 'flex',
           flexDirection: 'column',

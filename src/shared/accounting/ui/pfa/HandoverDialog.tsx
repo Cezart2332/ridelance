@@ -63,7 +63,7 @@ export function HandoverDialog({ summary, onClose }: { summary: PfaAccountingSum
           <Typography variant="body2">Arhiva conține registrele, ledger-ul, documentele originale și declarațiile cu recipise:</Typography>
           <Box
             component="pre"
-            sx={{ m: 0, p: 2, bgcolor: 'grey.50', border: 1, borderColor: 'divider', borderRadius: 1, overflowX: 'auto', typography: 'caption', fontFamily: 'ui-monospace, Consolas, monospace' }}
+            sx={{ m: 0, p: 2, bgcolor: 'action.hover', border: 1, borderColor: 'divider', borderRadius: 1, overflowX: 'auto', typography: 'caption', fontFamily: 'ui-monospace, Consolas, monospace' }}
           >
             {handoverTree(summary.cui, year, true)}
           </Box>

@@ -1,4 +1,5 @@
 import { ACTIVE_SKIN } from '../components/dashboard/dashboardSkin'
+import { PANEL_TOKENS } from '../theme/panelTheme'
 
 /**
  * Fundalul platformei: alb cu o tentă din albastrul logoului, nu gri neutru.
@@ -43,8 +44,8 @@ const SITE_TOKENS = {
 
 /**
  * Componentele site-ului public refolosite în dashboardul de client (mașinile din „Servicii”,
- * întrebările frecvente din „Suport”, asigurările) citesc tokenii ăștia. În pielea de panou
- * (`dashboardSkin`) primesc culorile panoului, ca să nu rămână carduri albe pe fundal negru.
+ * întrebările frecvente din „Suport”, asigurările) și în Admin citesc tokenii ăștia. În pielea de
+ * panou (`dashboardSkin`) primesc culorile panoului, ca să nu rămână carduri albe pe fundal negru.
  * Pe site pielea e mereu cea implicită, deci valorile de mai sus rămân neatinse.
  */
 const PANEL_LIGHT: typeof SITE_TOKENS = {
@@ -74,5 +75,29 @@ const PANEL_DARK: typeof SITE_TOKENS = {
   shadow: { sm: 'none', md: 'none', lg: 'none', xl: '0 12px 32px rgba(0,0,0,0.6)', glow: '0 0 0 3px rgba(92,203,245,0.28)' },
 }
 
-export const TOKENS: typeof SITE_TOKENS =
-  ACTIVE_SKIN === 'panel-dark' ? PANEL_DARK : ACTIVE_SKIN === 'panel-light' ? PANEL_LIGHT : SITE_TOKENS
+/** Admin/Contabil: aceleași chei, în paleta zinc a panoului (vezi `dashboardTheme`). */
+const staff = (base: typeof SITE_TOKENS, mode: 'dark' | 'light'): typeof SITE_TOKENS => {
+  const p = PANEL_TOKENS[mode]
+  return {
+    ...base,
+    ink: p.fg,
+    textMain: p.fg,
+    paper: p.card,
+    surface: p.bg,
+    surfaceAlt: p.hover,
+    border: p.border,
+    borderHover: p.borderStrong,
+    textMuted: p.textMuted,
+    textSubtle: p.textSubtle,
+  }
+}
+
+const BY_SKIN: Record<typeof ACTIVE_SKIN, typeof SITE_TOKENS> = {
+  default: SITE_TOKENS,
+  'panel-light': PANEL_LIGHT,
+  'panel-dark': PANEL_DARK,
+  'staff-light': staff(PANEL_LIGHT, 'light'),
+  'staff-dark': staff(PANEL_DARK, 'dark'),
+}
+
+export const TOKENS: typeof SITE_TOKENS = BY_SKIN[ACTIVE_SKIN]

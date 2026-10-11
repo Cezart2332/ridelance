@@ -330,7 +330,7 @@ export function DocumentReviewDialog({
                           mx: -1.25,
                           borderRadius: 1,
                           outline: 'none',
-                          bgcolor: activeField === spec.key ? 'grey.100' : 'transparent',
+                          bgcolor: activeField === spec.key ? 'action.selected' : 'transparent',
                           '&:focus-visible': { boxShadow: `0 0 0 2px ${theme.palette.primary.main}` },
                         }}
                       >

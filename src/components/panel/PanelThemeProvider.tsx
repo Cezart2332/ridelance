@@ -3,17 +3,8 @@ import { CssBaseline, GlobalStyles } from '@mui/material'
 import { ThemeProvider } from '@mui/material/styles'
 
 import { createPanelTheme, panelCssVars, type PanelMode } from '../../theme/panelTheme'
+import { setStaffThemeMode, storedStaffThemeMode } from '../dashboard/dashboardSkin'
 import { PanelThemeContext, type PanelThemeValue } from './panelThemeContext'
-
-const STORAGE_KEY = 'rl-panel-theme'
-
-function storedMode(): PanelMode {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY) === 'light' ? 'light' : 'dark'
-  } catch {
-    return 'dark'
-  }
-}
 
 /**
  * Tema Admin/Contabil: tema MUI a modului ales și variabilele `--rl-*` pe `:root` (le văd și
@@ -22,21 +13,18 @@ function storedMode(): PanelMode {
  */
 export function PanelThemeProvider({ children }: { children: ReactNode }) {
   const parent = useContext(PanelThemeContext)
-  const [mode, setMode] = useState<PanelMode>(storedMode)
+  const [mode, setMode] = useState<PanelMode>(storedStaffThemeMode)
   const theme = useMemo(() => createPanelTheme(mode), [mode])
   const value = useMemo<PanelThemeValue>(
     () => ({
       mode,
-      toggle: () =>
-        setMode((current) => {
-          const next = current === 'dark' ? 'light' : 'dark'
-          try {
-            window.localStorage.setItem(STORAGE_KEY, next)
-          } catch {
-            // Fără stocare (fereastră privată): modul ține doar până la reîncărcare.
-          }
-          return next
-        }),
+      // În Admin/Contabil schimbarea reîncarcă pagina (vezi `setStaffThemeMode`); pe pagina de dev a
+      // contabilității, unde tokenii statici nu depind de temă, se schimbă pe loc.
+      toggle: () => {
+        const next = mode === 'dark' ? 'light' : 'dark'
+        setStaffThemeMode(next)
+        setMode(next)
+      },
     }),
     [mode],
   )

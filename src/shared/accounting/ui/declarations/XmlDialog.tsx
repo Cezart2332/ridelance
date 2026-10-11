@@ -35,7 +35,7 @@ export function XmlDialog({ versionId, title, onClose }: { versionId: string; ti
             sx={{
               m: 0,
               p: 2,
-              bgcolor: 'grey.50',
+              bgcolor: 'action.hover',
               border: 1,
               borderColor: 'divider',
               borderRadius: 1,
