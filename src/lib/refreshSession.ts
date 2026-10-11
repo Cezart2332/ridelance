@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './runtimeConfig'
 import axios from 'axios'
 import { store } from '../store/store'
 import { setCredentials, startImpersonation } from '../store/authSlice'
@@ -5,7 +6,7 @@ import { clearImpersonationTarget, readImpersonationTarget } from './impersonati
 import { IS_NATIVE_APP } from '../native/platform'
 import { NATIVE_CLIENT_HEADERS, clearRefreshToken, readRefreshToken, storeRefreshToken } from '../native/nativeSession'
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+const BASE_URL = API_BASE_URL
 
 export interface RefreshResult {
   accessToken: string

@@ -1,3 +1,4 @@
+import { STRIPE_PUBLIC_KEY } from '../../../lib/runtimeConfig'
 import {
   Alert,
   Box,
@@ -20,7 +21,7 @@ import { getErrorMessage } from '../../../utils/errorHandler'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { EXTRA_LISTING_LEI } from './paidExtras'
 
-const stripePromise = loadStripe(import.meta.env.VITE_PUBLIC_STRIPE || '')
+const stripePromise = loadStripe(STRIPE_PUBLIC_KEY)
 
 type Step =
   | { kind: 'choose' }

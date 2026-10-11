@@ -40,6 +40,10 @@ COPY --from=build /usr/src/app/nginx /etc/nginx/conf.d
 
 COPY --from=build /usr/src/app/dist /usr/share/nginx/html
 
+# Imaginea nginx rulează tot ce găsește în /docker-entrypoint.d/ înainte să pornească serverul:
+# de aici se scrie /config.js, cu adresa API-ului și cheile publice ale mediului în care rulează.
+COPY --chmod=755 docker/40-runtime-config.sh /docker-entrypoint.d/40-runtime-config.sh
+
 EXPOSE 80
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

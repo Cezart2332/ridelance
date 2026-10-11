@@ -1,8 +1,9 @@
+import { API_BASE_URL } from '../lib/runtimeConfig'
 import { api } from '../lib/axios';
 import { uploadUrl } from '../lib/api';
 import { currentSource } from '../lib/trafficSource';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const BASE_URL = API_BASE_URL;
 
 /** Aceeași regulă ca pentru orice fișier încărcat; păstrat ca nume pentru apelurile existente. */
 export const getCarImageUrl = (path: string | undefined) => uploadUrl(path);

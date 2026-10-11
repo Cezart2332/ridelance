@@ -1,3 +1,4 @@
+import { STRIPE_PUBLIC_KEY } from '../../../lib/runtimeConfig'
 import { Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material'
 import { loadStripe } from '@stripe/stripe-js'
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js'
@@ -7,7 +8,7 @@ import { carsService } from '../../../services/cars.service'
 import { getErrorMessage } from '../../../utils/errorHandler'
 import { HIDDEN_PLATE_LEI } from './paidExtras'
 
-const stripePromise = loadStripe(import.meta.env.VITE_PUBLIC_STRIPE || '')
+const stripePromise = loadStripe(STRIPE_PUBLIC_KEY)
 
 /**
  * Plata opțiunii „număr de înmatriculare ascuns” pentru o mașină: o singură dată, în dialog

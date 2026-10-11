@@ -1,3 +1,4 @@
+import { MAPBOX_PUBLIC_TOKEN } from './runtimeConfig'
 /**
  * Accesul la Mapbox, într-un singur loc.
  *
@@ -5,7 +6,7 @@
  * are ce căuta în repo — se setează pe mediul de rulare. În dezvoltare lipsește de obicei, iar
  * componentele care folosesc harta trebuie să arate ceva util, nu o pânză gri.
  */
-export const MAPBOX_TOKEN: string = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
+export const MAPBOX_TOKEN: string = MAPBOX_PUBLIC_TOKEN
 
 export const MAPBOX_AVAILABLE = MAPBOX_TOKEN.length > 0
 

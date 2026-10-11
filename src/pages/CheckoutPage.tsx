@@ -1,3 +1,4 @@
+import { STRIPE_PUBLIC_KEY } from '../lib/runtimeConfig'
 import { useEffect, useState } from 'react'
 import { Box, Button, CircularProgress, Container, Paper, Stack, Typography } from '@mui/material'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
@@ -11,7 +12,7 @@ import type { CheckoutKind } from '../services/stripe.service'
 import { TOKENS as GLOBAL_TOKENS } from '../constants/tokens'
 
 // Initialize Stripe outside component render
-const stripePromise = loadStripe(import.meta.env.VITE_PUBLIC_STRIPE || '')
+const stripePromise = loadStripe(STRIPE_PUBLIC_KEY)
 
 const TOKENS = {
   ink: '#1a1a2e',

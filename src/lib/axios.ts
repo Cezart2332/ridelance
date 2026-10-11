@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './runtimeConfig'
 import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { store } from '../store/store'
 import { clearCredentials } from '../store/authSlice'
@@ -17,7 +18,7 @@ declare module 'axios' {
 
 // Create the configured Axios instance
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
+  baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true, // Always send cookies (needed for refresh-token cookie)
 })

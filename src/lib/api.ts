@@ -1,4 +1,5 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+import { API_BASE_URL } from './runtimeConfig'
+export { API_BASE_URL };
 
 /**
  * Adresa completă a unui fișier încărcat, servit de API din `/uploads`.

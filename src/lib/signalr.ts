@@ -1,7 +1,8 @@
+import { API_BASE_URL } from './runtimeConfig'
 import * as signalR from '@microsoft/signalr'
 import { store } from '../store/store'
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+const BASE_URL = API_BASE_URL
 
 let connection: signalR.HubConnection | null = null
 let starting: Promise<void> | null = null

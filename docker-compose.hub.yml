@@ -179,6 +179,12 @@ services:
     image: cezarique/ridelance-frontend:${FRONTEND_TAG:-sha-9d82b8d8b022}
     depends_on:
       - backend
+    environment:
+      # Citite la pornirea containerului și servite ca /config.js. Aceeași imagine merge așa și pe
+      # producție, și pe un site de test: schimbi variabilele, nu imaginea. Goale = valorile din build.
+      PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-}
+      PUBLIC_STRIPE_KEY: ${PUBLIC_STRIPE_KEY:-}
+      PUBLIC_MAPBOX_TOKEN: ${PUBLIC_MAPBOX_TOKEN:-}
     ports:
       - "${FRONTEND_PORT:-5173}:80"
     restart: unless-stopped

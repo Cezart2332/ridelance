@@ -1,3 +1,4 @@
+import { STRIPE_PUBLIC_KEY } from '../../../lib/runtimeConfig'
 import { useCallback, useEffect, useState } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import {
@@ -48,7 +49,7 @@ import { FLEET_STEPS, FLEET_STEP_INTRO, fleetStepViews } from './fleetSteps'
 import { FleetContactVerification } from './FleetContactVerification'
 import { FleetBankStep, FleetOblioStep } from './FleetConnections'
 
-const stripePromise = loadStripe(import.meta.env.VITE_PUBLIC_STRIPE || '')
+const stripePromise = loadStripe(STRIPE_PUBLIC_KEY)
 
 /** Iconița din capul cardului, pe pas. Aceleași chei ca la PFA, ca ecranele să se citească la fel. */
 const FLEET_STEP_ICONS: Record<string, MicroStepIcon> = {

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../lib/runtimeConfig'
 import { NATIVE_CLIENT_HEADERS, clearRefreshToken, storeRefreshToken } from '../native/nativeSession'
 import axios from 'axios'
 import { store } from '../store/store'
@@ -5,7 +6,7 @@ import { setCredentials, clearCredentials, startImpersonation } from '../store/a
 import { refreshAccessToken } from '../lib/refreshSession'
 import { clearImpersonationTarget, storeImpersonationTarget } from '../lib/impersonationTarget'
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+const BASE_URL = API_BASE_URL
 
 // Use a plain axios instance (not the intercepted one) for auth calls
 // to avoid circular refresh loops.

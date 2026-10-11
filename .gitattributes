@@ -1,0 +1,3 @@
+
+# Scripturile care rulează în containere Linux: mereu LF, altfel shell-ul nu le poate porni.
+docker/*.sh text eol=lf
