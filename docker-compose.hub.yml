@@ -99,11 +99,15 @@ services:
       AnafOAuth__RedirectUri: ${ANAF_OAUTH_REDIRECT_URI:-https://api.ridelance.ro/anaf/oauth/callback}
       # Mandatarul din împuternicirea ANAF generată la pasul fiscal. Gol = apare la admin ca „lipsește”.
       AnafMandatar__FullName: ${ANAF_MANDATAR_FULL_NAME:-}
+      # Numele și prenumele separat: declarațiile depuse prin împuternicit (D700) le cer în câmpuri diferite.
+      AnafMandatar__LastName: ${ANAF_MANDATAR_LAST_NAME:-}
+      AnafMandatar__FirstName: ${ANAF_MANDATAR_FIRST_NAME:-}
       AnafMandatar__Cnp: ${ANAF_MANDATAR_CNP:-}
       AnafMandatar__Domicile: ${ANAF_MANDATAR_DOMICILE:-}
       AnafMandatar__IdSeries: ${ANAF_MANDATAR_ID_SERIES:-}
       AnafMandatar__IdNumber: ${ANAF_MANDATAR_ID_NUMBER:-}
       AnafMandatar__Email: ${ANAF_MANDATAR_EMAIL:-}
+      AnafMandatar__Phone: ${ANAF_MANDATAR_PHONE:-}
 
       # ─── Facturare (Oblio) ──────────────────────────────────────────────────────────────
       Oblio__ClientId: ${OBLIO_CLIENT_ID:-}

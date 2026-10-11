@@ -22,7 +22,6 @@ import { carsService, getCarImageUrl, type Car, type CarLead } from '../../../..
 import {
   formatCarStatus,
   getCarStatusColor,
-  LISTING_SOURCE_FROM_API,
   formatApprovalStatus,
   getApprovalStatusColor,
 } from '../../../../utils/carLabels';
@@ -268,7 +267,6 @@ export function CarsAdminView() {
                       <TableCell sx={{ fontWeight: 650 }}>Preț săptămână</TableCell>
                       <TableCell sx={{ fontWeight: 650 }}>Media</TableCell>
                       <TableCell sx={{ fontWeight: 650 }}>Status</TableCell>
-                      <TableCell sx={{ fontWeight: 650 }}>Sursă</TableCell>
                       <TableCell sx={{ fontWeight: 650 }}>Validare</TableCell>
                       <TableCell sx={{ fontWeight: 650 }}>Plată</TableCell>
                       <TableCell sx={{ fontWeight: 650 }}>Vizibilă</TableCell>
@@ -316,11 +314,6 @@ export function CarsAdminView() {
                         <TableCell>
                           <Chip label={formatCarStatus(car.status)} size="small"
                             sx={{ fontWeight: 650, fontSize: '0.65rem', bgcolor: fade(getCarStatusColor(car.status), 0.1), color: getCarStatusColor(car.status), border: `1px solid ${fade(getCarStatusColor(car.status), 0.2)}` }} />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                            {LISTING_SOURCE_FROM_API[car.listingSource] ?? car.listingSource}
-                          </Typography>
                         </TableCell>
                         <TableCell>
                           <Chip label={formatApprovalStatus(car.approvalStatus)} size="small"

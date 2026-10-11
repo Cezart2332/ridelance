@@ -4,7 +4,6 @@ import LocalGasStationOutlinedIcon from '@mui/icons-material/LocalGasStationOutl
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined'
 import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
-import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined'
 import { Box, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import type { ReactNode } from 'react'
@@ -12,7 +11,6 @@ import type { ReactNode } from 'react'
 import { TOKENS } from '../../../constants/tokens'
 import type { Car } from '../../../services/cars.service'
 import {
-  formatCarListingLabel,
   formatCarOfferType,
   formatCarStatus,
   getCarStatusColor,
@@ -117,10 +115,6 @@ export function VehicleHeader({ car }: { car: Car }) {
             label={`Garanție ${formatLei(car.garantie)} lei`}
           />
         )}
-        <Chip
-          icon={<VerifiedOutlinedIcon sx={{ fontSize: 15 }} />}
-          label={formatCarListingLabel(car.listingSource)}
-        />
         {/* Statusul apare doar când spune ceva: „Disponibil” e presupunerea implicită. */}
         {!isAvailable && <Chip label={formatCarStatus(car.status)} tone={statusColor} />}
       </Stack>

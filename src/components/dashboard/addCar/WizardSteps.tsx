@@ -11,7 +11,6 @@ import {
   AVAILABILITY,
   BADGE_OPTIONS,
   ENGINES,
-  LISTING_SOURCES,
   MINIMUM_PERIODS,
   OFFER_TYPES,
   SEATS,
@@ -212,19 +211,6 @@ export function OfferStep({
           />
         )}
         <TextField label="Garanție (lei)" type="number" value={draft.garantie} onChange={(e) => update('garantie', e.target.value)} fullWidth size="small" sx={dashboardInputSx} />
-        {isAdmin && (
-          <TextField
-            select
-            label="Sursa anunțului"
-            value={draft.listingSource}
-            onChange={(e) => update('listingSource', e.target.value)}
-            fullWidth
-            size="small"
-            sx={dashboardInputSx}
-          >
-            {LISTING_SOURCES.map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
-          </TextField>
-        )}
         <TextField select label="Tip ofertă" value={draft.offerType} onChange={(e) => update('offerType', e.target.value)} fullWidth size="small" sx={dashboardInputSx}>
           {OFFER_TYPES.map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
         </TextField>

@@ -97,10 +97,6 @@ export const LISTING_SOURCE_FROM_API: Record<string, string> = {
   External: 'Oferit (altă sursă)',
 };
 
-export function formatCarListingLabel(listingSource: string): string {
-  if (!listingSource) return 'Oferit';
-  return LISTING_SOURCE_FROM_API[listingSource] ?? 'Oferit';
-}
 
 export function formatApprovalStatus(status: string): string {
   switch (status) {

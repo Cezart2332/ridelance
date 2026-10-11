@@ -117,7 +117,6 @@ export const MINIMUM_PERIODS = ['Fără perioadă minimă', '1 lună', '2 luni',
 export const AVAILABILITY = ['Disponibilă acum', 'Disponibilă de la o dată', 'Momentan indisponibilă']
 
 /** Doar pentru admin. Etichetele vin din maparea comună, ca să nu existe o a doua listă. */
-export const LISTING_SOURCES = Object.keys(LISTING_SOURCE_TO_API)
 
 /** Avantajele afișate ca insigne pe anunț. Aceleași etichete ca în marketplace. */
 export const BADGE_OPTIONS = [
