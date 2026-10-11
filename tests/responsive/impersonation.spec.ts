@@ -74,7 +74,13 @@ test('intrarea în contul clientului rezistă la expirarea tokenului și la reî
 
   await expect(banner(page)).toBeVisible()
   await expect(page).not.toHaveURL(/\/admin/)
-  expect(api.impersonations).toBe(1)
+  // Ieșirea din panoul de admin schimbă pielea paginii, care se reîncarcă o dată (`SkinBoundary`),
+  // iar reîncărcarea cere din nou intrarea în cont: o cerere, sau două dacă pielea s-a schimbat.
+  await page.waitForLoadState('networkidle')
+  await expect(banner(page)).toBeVisible()
+  const entered = api.impersonations
+  expect(entered).toBeGreaterThanOrEqual(1)
+  expect(entered).toBeLessThanOrEqual(2)
 
   // Tokenul clientului expiră: următoarea cerere primește 401 și pornește reîmprospătarea.
   api.expireNextClientCall = true
@@ -83,7 +89,7 @@ test('intrarea în contul clientului rezistă la expirarea tokenului și la reî
   await expect(forbidden(page)).toHaveCount(0)
   await expect(page).not.toHaveURL(/\/admin/)
   // O dată la reîncărcare, o dată după 401.
-  await expect.poll(() => api.impersonations).toBeGreaterThanOrEqual(3)
+  await expect.poll(() => api.impersonations).toBeGreaterThanOrEqual(entered + 2)
   await expect(banner(page)).toBeVisible()
   await expect(forbidden(page)).toHaveCount(0)
 })
