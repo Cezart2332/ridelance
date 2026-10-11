@@ -1172,6 +1172,12 @@ export interface Asset {
   asOf: IsoDate
   accumulated: number
   remaining: number
+  /** Autoturism: durata normală e între 48 și 72 de luni. */
+  isPassengerCar: boolean
+  /** Cât din amortizarea unei luni se deduce cel mult; `null` = toată. */
+  monthlyDeductionCap: number | null
+  /** Partea deductibilă din `monthlyDepreciation`. */
+  monthlyDeductible: number | null
 }
 
 export interface DepreciationLine {
@@ -1181,6 +1187,8 @@ export interface DepreciationLine {
   accumulated: number
   remaining: number
   isLocked: boolean
+  /** Partea din `amount` care se deduce (toată, sau cel mult plafonul activului). */
+  deductibleAmount: number
 }
 
 export interface AssetDetail {
@@ -1209,6 +1217,8 @@ export interface AssetClassificationRequest {
   depreciationClassCode: string | null
   normalLifeMonths: number | null
   reason: string | null
+  isPassengerCar: boolean
+  monthlyDeductionCap: number | null
 }
 
 export interface ManualAssetRequest {

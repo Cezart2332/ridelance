@@ -2395,6 +2395,9 @@ export function createMockAccountingApi(): AccountingApi {
             disposalReason: null,
             document: null,
             monthlyDepreciation: null,
+            isPassengerCar: false,
+            monthlyDeductionCap: null,
+            monthlyDeductible: null,
             asOf: todayIso(),
             accumulated: 0,
             remaining: value,
@@ -2429,6 +2432,9 @@ export function createMockAccountingApi(): AccountingApi {
             disposalReason: null,
             document: null,
             monthlyDepreciation: null,
+            isPassengerCar: false,
+            monthlyDeductionCap: null,
+            monthlyDeductible: null,
             asOf: todayIso(),
             accumulated: 0,
             remaining: round2(request.entryValue),
@@ -2446,6 +2452,13 @@ export function createMockAccountingApi(): AccountingApi {
           if (request.normalLifeMonths !== null && (request.normalLifeMonths < 12 || request.normalLifeMonths > 600)) {
             throw badRequest('ASSET_INVALID', 'Durata normală de funcționare e în luni, între 12 și 600.')
           }
+          const isCar = asset.kind === 'FIXED_ASSET' && request.isPassengerCar
+          if (isCar && request.normalLifeMonths !== null && (request.normalLifeMonths < 48 || request.normalLifeMonths > 72)) {
+            throw badRequest('ASSET_INVALID', 'Un autoturism se amortizează în 48–72 de luni (4–6 ani, HG 2139/2004).')
+          }
+          if (request.monthlyDeductionCap !== null && (request.monthlyDeductionCap <= 0 || asset.kind !== 'FIXED_ASSET')) {
+            throw badRequest('ASSET_INVALID', 'Plafonul deductibil lunar e o sumă pozitivă și se pune doar la un mijloc fix.')
+          }
           if (request.inServiceDate && request.inServiceDate < asset.entryDate) throw badRequest('ASSET_INVALID', 'Punerea în funcțiune nu poate fi înainte de data intrării.')
           const updated: Asset = {
             ...asset,
@@ -2453,8 +2466,10 @@ export function createMockAccountingApi(): AccountingApi {
             documentRef: request.documentRef.trim(),
             supplierName: request.supplierName,
             inServiceDate: request.inServiceDate,
-            depreciationClassCode: request.depreciationClassCode?.trim() || null,
+            depreciationClassCode: request.depreciationClassCode?.trim() || (isCar ? '2.3.2.1.1' : null),
             normalLifeMonths: asset.kind === 'FIXED_ASSET' ? request.normalLifeMonths : null,
+            isPassengerCar: isCar,
+            monthlyDeductionCap: request.monthlyDeductionCap,
           }
           if (updated.status !== 'DISPOSED') updated.status = isComplete(updated) ? 'ACTIVE' : 'PENDING_CLASSIFICATION'
           db.assets = db.assets.map((candidate) => (candidate.id === id ? updated : candidate))

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import {
   Button,
+  Checkbox,
+  FormControlLabel,
   MenuItem,
   Paper,
   Stack,
@@ -36,7 +38,13 @@ interface ClassifyForm {
   inServiceDate: string
   depreciationClassCode: string
   normalLifeMonths: string
+  isPassengerCar: boolean
+  monthlyDeductionCap: string
 }
+
+/** Codul autoturismelor în Catalogul duratelor normale (HG 2139/2004) și intervalul lor: 4–6 ani. */
+const CAR_CLASS_CODE = '2.3.2.1.1'
+const CAR_LIFE = { min: 48, max: 72 }
 
 interface ManualForm {
   name: string
@@ -68,7 +76,11 @@ export function AssetsCard({ summary, onChanged }: DossierTabProps & { onChanged
   const classifyForm = classifying?.form
   const setClassify = (patch: Partial<ClassifyForm>) => setClassifying((current) => current && { ...current, form: { ...current.form, ...patch } })
   const life = classifyForm?.normalLifeMonths ? Number(classifyForm.normalLifeMonths) : null
-  const classifyValid = Boolean(classifyForm?.name.trim() && classifyForm.documentRef.trim() && (life === null || (life >= 12 && life <= 600)))
+  const lifeRange = classifyForm?.isPassengerCar ? CAR_LIFE : { min: 12, max: 600 }
+  const lifeValid = life === null || (life >= lifeRange.min && life <= lifeRange.max)
+  const cap = classifyForm?.monthlyDeductionCap.trim() ? parseAmount(classifyForm.monthlyDeductionCap) : null
+  const capValid = !classifyForm?.monthlyDeductionCap.trim() || (cap !== null && cap > 0)
+  const classifyValid = Boolean(classifyForm?.name.trim() && classifyForm.documentRef.trim() && lifeValid && capValid)
   const manualValid = Boolean(manual?.name.trim() && manual.documentRef.trim() && manual.entryDate && parseAmount(manual.entryValue))
 
   return (
@@ -181,6 +193,8 @@ export function AssetsCard({ summary, onChanged }: DossierTabProps & { onChanged
                               inServiceDate: asset.inServiceDate ?? '',
                               depreciationClassCode: asset.depreciationClassCode ?? '',
                               normalLifeMonths: asset.normalLifeMonths ? String(asset.normalLifeMonths) : '',
+                              isPassengerCar: asset.isPassengerCar,
+                              monthlyDeductionCap: asset.monthlyDeductionCap === null ? '' : String(asset.monthlyDeductionCap),
                             },
                           })
                         }
@@ -259,6 +273,8 @@ export function AssetsCard({ summary, onChanged }: DossierTabProps & { onChanged
             depreciationClassCode: form.depreciationClassCode.trim() || null,
             normalLifeMonths: form.normalLifeMonths ? Number(form.normalLifeMonths) : null,
             reason: reason || null,
+            isPassengerCar: classifying.asset.kind === 'FIXED_ASSET' && form.isPassengerCar,
+            monthlyDeductionCap: classifying.asset.kind === 'FIXED_ASSET' ? cap : null,
           })
           reload()
         }}
@@ -272,6 +288,24 @@ export function AssetsCard({ summary, onChanged }: DossierTabProps & { onChanged
             </Stack>
             <DateField label="Punere în funcțiune" value={classifyForm.inServiceDate} onChange={(iso) => setClassify({ inServiceDate: iso })} />
             {classifying.asset.kind === 'FIXED_ASSET' && (
+              <FormControlLabel
+                label="Autoturism"
+                control={
+                  <Checkbox
+                    checked={classifyForm.isPassengerCar}
+                    onChange={(event) =>
+                      setClassify({
+                        isPassengerCar: event.target.checked,
+                        // Autoturismele au un singur cod în catalog.
+                        depreciationClassCode:
+                          event.target.checked && !classifyForm.depreciationClassCode.trim() ? CAR_CLASS_CODE : classifyForm.depreciationClassCode,
+                      })
+                    }
+                  />
+                }
+              />
+            )}
+            {classifying.asset.kind === 'FIXED_ASSET' && (
               <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2 }}>
                 <TextField label="Clasa (HG 2139/2004)" value={classifyForm.depreciationClassCode} onChange={(event) => setClassify({ depreciationClassCode: event.target.value })} fullWidth />
                 <TextField
@@ -279,10 +313,19 @@ export function AssetsCard({ summary, onChanged }: DossierTabProps & { onChanged
                   type="number"
                   value={classifyForm.normalLifeMonths}
                   onChange={(event) => setClassify({ normalLifeMonths: event.target.value })}
-                  error={life !== null && (life < 12 || life > 600)}
+                  error={!lifeValid}
+                  helperText={classifyForm.isPassengerCar ? `${CAR_LIFE.min}–${CAR_LIFE.max}` : undefined}
                   fullWidth
                 />
               </Stack>
+            )}
+            {classifying.asset.kind === 'FIXED_ASSET' && (
+              <TextField
+                label="Plafon deductibil lunar (lei)"
+                value={classifyForm.monthlyDeductionCap}
+                onChange={(event) => setClassify({ monthlyDeductionCap: event.target.value })}
+                error={!capValid}
+              />
             )}
           </>
         )}

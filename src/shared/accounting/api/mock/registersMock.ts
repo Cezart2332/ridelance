@@ -43,7 +43,15 @@ export function depreciationPlan(asset: Asset): DepreciationLine[] {
     if (stop && month > stop) break
     const amount = index === life - 1 ? round2(asset.entryValue - monthly * (life - 1)) : monthly
     accumulated = round2(accumulated + amount)
-    lines.push({ year: Number(month.slice(0, 4)), month: Number(month.slice(5, 7)), amount, accumulated, remaining: round2(asset.entryValue - accumulated), isLocked: false })
+    lines.push({
+      year: Number(month.slice(0, 4)),
+      month: Number(month.slice(5, 7)),
+      amount,
+      accumulated,
+      remaining: round2(asset.entryValue - accumulated),
+      isLocked: false,
+      deductibleAmount: asset.monthlyDeductionCap === null ? amount : Math.min(amount, asset.monthlyDeductionCap),
+    })
   }
   return lines
 }
@@ -56,7 +64,15 @@ export function assetAt(asset: Asset, asOf: IsoDate): Asset {
   )
   const remaining = round2(asset.entryValue - accumulated)
   const status = asset.status === 'ACTIVE' && lines.length > 0 && remaining === 0 ? 'FULLY_DEPRECIATED' : asset.status
-  return { ...asset, status, asOf, accumulated, remaining, monthlyDepreciation: lines[0]?.amount ?? null }
+  return {
+    ...asset,
+    status,
+    asOf,
+    accumulated,
+    remaining,
+    monthlyDepreciation: lines[0]?.amount ?? null,
+    monthlyDeductible: lines[0]?.deductibleAmount ?? null,
+  }
 }
 
 export function nextInventoryNumber(db: MockDb, pfaId: string, kind: Asset['kind']): string {

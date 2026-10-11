@@ -683,6 +683,9 @@ function assetsFor(pfa: MockPfa): Asset[] {
     asOf: entryDate,
     accumulated: 0,
     remaining: entryValue,
+    isPassengerCar: classification?.depreciationClassCode === '2.3.2.1.1',
+    monthlyDeductionCap: null,
+    monthlyDeductible: null,
   })
   switch (pfa.name) {
     case 'Ion Popescu':
