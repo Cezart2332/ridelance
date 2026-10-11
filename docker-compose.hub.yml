@@ -75,6 +75,10 @@ services:
       Onboarding__EnableTestSkip: ${ONBOARDING_ENABLE_TEST_SKIP:-false}
       Onboarding__DevTools__Enabled: ${ONBOARDING_DEV_TOOLS:-false}
       Onboarding__AutoApproveDocuments: ${ONBOARDING_AUTO_APPROVE_DOCUMENTS:-false}
+      # Anunțurile interne (plăți, comenzi de servicii) și dosarul de înființare PFA, care pleacă la
+      # Consulto. Pe un site de test lasă CONSULTO_EMAIL gol: dosarul vine atunci la OPS_EMAIL.
+      Notifications__OpsEmail: ${OPS_EMAIL:-contact@ridelance.ro}
+      Notifications__ConsultoEmail: ${CONSULTO_EMAIL:-}
       Onboarding__RequireContactVerification: ${ONBOARDING_REQUIRE_CONTACT_VERIFICATION:-false}
       # Codul de pe email și cel din SMS, obligatorii la înregistrare. Pe producție „true”; pe un
       # site de test rămân „false”, ca să poți crea conturi fără email și fără SMS reale.
