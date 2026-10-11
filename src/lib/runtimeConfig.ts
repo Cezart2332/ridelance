@@ -20,7 +20,16 @@ const runtime: RuntimeConfig =
 const pick = (fromContainer: string | undefined, fromBuild: string | undefined, fallback: string) =>
   fromContainer?.trim() || fromBuild || fallback
 
-export const API_BASE_URL = pick(runtime.apiBaseUrl, import.meta.env.VITE_API_BASE_URL, 'http://localhost:5000').replace(/\/+$/, '')
+/**
+ * Adresa API-ului, mereu absolută. Scrisă fără protocol („api.exemplu.ro”), browserul ar lua-o
+ * drept cale pe site-ul curent și ar cere `https://site/api.exemplu.ro/...`.
+ */
+function absoluteUrl(value: string): string {
+  const trimmed = value.replace(/\/+$/, '')
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed.replace(/^\/+/, '')}`
+}
+
+export const API_BASE_URL = absoluteUrl(pick(runtime.apiBaseUrl, import.meta.env.VITE_API_BASE_URL, 'http://localhost:5000'))
 
 export const STRIPE_PUBLIC_KEY = pick(runtime.stripePublicKey, import.meta.env.VITE_PUBLIC_STRIPE, '')
 
