@@ -10,38 +10,52 @@ import login3 from '../../../assets/auth/login-3.webp'
 
 interface AuthSlide {
   image: string
-  /** Textul din imagine, pentru cititoarele de ecran — pe slide e desenat în poză. */
-  caption: string
+  label: string
+  /** Cele două rânduri ale titlului. */
+  title: [string, string]
+  text: string
 }
 
 /**
  * Cele trei slide-uri din stânga cardului: platforma, PFA, SRL.
  *
- * Titlurile sunt desenate în imagini, deci peste ele nu se mai pune text și nici vălul întunecat
- * care îi dădea contrast. Imaginile sunt portret (2:3) și se așază întregi (`contain`) pe un fundal
- * cu nuanța marginilor lor: tăiate (`cover`) își pierdeau fie ilustrația, fie titlul, după cât de
- * înalt iese formularul din dreapta.
+ * Imaginile sunt doar ilustrația, fără text: umplu tot chenarul (`cover`), prinse de marginea de
+ * sus, unde stă ilustrația. Textul e scris peste ele, jos, pe un văl deschis care topește podiumul
+ * în fundal și îi dă contrast.
  */
 const SLIDES: AuthSlide[] = [
-  { image: login1, caption: 'Platforma ta. Tot businessul tău. Într-un singur loc.' },
-  { image: login2, caption: 'Pentru PFA. PFA-ul tău. Mai simplu, zi de zi.' },
-  { image: login3, caption: 'Pentru SRL și flote. Flota ta. Totul sub control.' },
+  {
+    image: login1,
+    label: 'Platforma ta',
+    title: ['Tot businessul tău.', 'Într-un singur loc.'],
+    text: 'Mașini, administrare și beneficii pentru PFA-uri și flote.',
+  },
+  {
+    image: login2,
+    label: 'Pentru PFA',
+    title: ['PFA-ul tău.', 'Mai simplu, zi de zi.'],
+    text: 'Gestionează veniturile, cheltuielile și documentele dintr-un singur loc.',
+  },
+  {
+    image: login3,
+    label: 'Pentru SRL și flote',
+    title: ['Flota ta.', 'Totul sub control.'],
+    text: 'Gestionează mașinile, închirierile și documentele într-un singur loc.',
+  },
 ]
 
-/** Nuanțele marginilor imaginilor, de sus în jos. */
-const SLIDE_BACKGROUND = 'linear-gradient(180deg, #DEF1FE 0%, #F6FBFE 50%, #F2F9FE 72%, #D8EFFE 100%)'
+/** Nuanța de jos a imaginilor: se vede doar până se încarcă poza. */
+const SLIDE_BACKGROUND = '#EEF7FE'
+
+/** Vălul de sub text: transparent peste ilustrație, plin în dreptul titlului. */
+const TEXT_VEIL = `linear-gradient(180deg, ${alpha(SLIDE_BACKGROUND, 0)} 0%, ${alpha(SLIDE_BACKGROUND, 0.94)} 30%, ${SLIDE_BACKGROUND} 100%)`
+
+const TITLE_COLOR = '#0B1B4D'
+
+/** Albastrul platformei, închis cât să se citească pe fundalul deschis. */
+const LABEL_COLOR = '#1A8FE3'
 
 const INTERVAL_MS = 6000
-
-/** Ascuns vizual, citit de cititoarele de ecran. */
-const visuallyHidden = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-} as const
 
 export function AuthSlider() {
   const [active, setActive] = useState(0)
@@ -78,16 +92,66 @@ export function AuthSlider() {
             transition: `opacity 700ms ${TOKENS.easing}, transform 1200ms ${TOKENS.easing}`,
           }}
         >
-          {/* Marginile pozei se topesc în fundal: altfel laturile lăsate libere de `contain` se
-              vedeau ca două benzi. */}
           <Box
             sx={{
               position: 'absolute',
               inset: 0,
-              background: `center / contain no-repeat url(${slide.image})`,
-              maskImage: 'linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%)',
+              background: `center top / cover no-repeat url(${slide.image})`,
             }}
           />
+
+          <Box
+            sx={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              px: { md: 3.5, lg: 4.5 },
+              pt: 7,
+              pb: 5.5,
+              background: TEXT_VEIL,
+            }}
+          >
+            <Box
+              sx={{
+                fontSize: '0.74rem',
+                fontWeight: 700,
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+                color: LABEL_COLOR,
+              }}
+            >
+              {slide.label}
+            </Box>
+            <Box
+              component="p"
+              sx={{
+                m: 0,
+                mt: 1,
+                fontSize: { md: '1.6rem', lg: '1.9rem' },
+                fontWeight: 800,
+                lineHeight: 1.12,
+                letterSpacing: '-0.02em',
+                color: TITLE_COLOR,
+              }}
+            >
+              {slide.title[0]}
+              <br />
+              {slide.title[1]}
+            </Box>
+            <Box
+              component="p"
+              sx={{
+                m: 0,
+                mt: 1,
+                fontSize: '0.9rem',
+                lineHeight: 1.4,
+                color: alpha(TITLE_COLOR, 0.72),
+              }}
+            >
+              {slide.text}
+            </Box>
+          </Box>
         </Box>
       ))}
 
@@ -118,10 +182,6 @@ export function AuthSlider() {
         Înapoi la site
         <ArrowForwardRoundedIcon sx={{ fontSize: 16 }} />
       </Link>
-
-      <Box component="p" sx={visuallyHidden}>
-        {SLIDES[active].caption}
-      </Box>
 
       <Box sx={{ position: 'absolute', left: 0, right: 0, bottom: 16, textAlign: 'center' }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
