@@ -28,7 +28,7 @@ import {
   type PersoanaFizica,
 } from '../../services/companyFormation.service'
 import { ONE_TIME_SERVICES, stripeService, type ServiceKey } from '../../services/stripe.service'
-import { COUNTIES } from '../../data/counties'
+import { canonicalCounty } from '../../data/counties'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { PaymentPolicyAcceptance } from '../common/PaymentPolicyAcceptance'
 import { TermsAcceptance } from '../common/TermsAcceptance'
@@ -137,6 +137,7 @@ function personMissing(p: PersoanaFizica): string[] {
   if (!p.dataExpirarii) missing.push('data expirării')
   const d = p.domiciliu
   if (!d.judet || !d.localitate || !d.strada || !d.numar) missing.push('domiciliul complet')
+  if (!/^\d{6}$/.test(d.codPostal ?? '')) missing.push('codul poștal')
   return missing
 }
 
@@ -148,16 +149,6 @@ function officeComplete({ office, owners }: RegisteredOfficeValue): boolean {
   if (office.isOwner === null || !office.acknowledgedOwnershipDocs || !office.acknowledgedSubmitLater) return false
   if (office.isOwner) return true
   return office.acknowledgedOwnerConsent === true && owners.length > 0 && owners.every((o) => personMissing(o.persoana).length === 0)
-}
-
-const plain = (value: string) =>
-  value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/^(jud(etul)?.?|mun(icipiul)?.?)s*/, '').trim()
-
-/** Județul citit din buletin, ca valoare din listă: „ILFOV", „Jud. Argeș", „Mun. București". */
-function matchCounty(raw: string | null): string | null {
-  if (!raw) return null
-  const wanted = plain(raw)
-  return COUNTIES.find((c) => plain(c) === wanted) ?? null
 }
 
 /** Ce s-a citit din buletin trece peste formular; ce n-a putut fi citit rămâne cum era. */
@@ -175,7 +166,7 @@ function applyScan(p: PersoanaFizica, scan: IdentityCardScan): PersoanaFizica {
     dataExpirarii: scan.dataExpirarii ?? p.dataExpirarii,
     domiciliu: {
       ...p.domiciliu,
-      judet: matchCounty(d.judet) ?? p.domiciliu.judet,
+      judet: canonicalCounty(d.judet) ?? p.domiciliu.judet,
       localitate: d.localitate ?? p.domiciliu.localitate,
       strada: d.strada ?? p.domiciliu.strada,
       numar: d.numar ?? p.domiciliu.numar,
@@ -183,6 +174,7 @@ function applyScan(p: PersoanaFizica, scan: IdentityCardScan): PersoanaFizica {
       scara: d.scara ?? p.domiciliu.scara,
       etaj: d.etaj ?? p.domiciliu.etaj,
       apartament: d.apartament ?? p.domiciliu.apartament,
+      codPostal: d.codPostal ?? p.domiciliu.codPostal,
     },
   }
 }

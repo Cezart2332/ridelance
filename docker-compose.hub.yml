@@ -139,6 +139,10 @@ services:
       FiscalLink__ManagementKey: ${FISCALLINK_MANAGEMENT_KEY:-}
       FiscalLink__CommandKey: ${FISCALLINK_COMMAND_KEY:-}
 
+      # ─── Coduri poștale (localitati.dev) ────────────────────────────────────────────────
+      # Fără cheie merg doar 20 de căutări pe zi; contul gratuit dă 100.
+      Localitati__ApiKey: ${LOCALITATI_API_KEY:-}
+
       # ─── Eldrive ────────────────────────────────────────────────────────────────────────
       Eldrive__ApiKey: ${ELDRIVE_API_KEY:-}
       Eldrive__PartnerId: ${ELDRIVE_PARTNER_ID:-1452}

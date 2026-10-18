@@ -31,17 +31,16 @@ interface AutoAdvanceFooterProps {
   /** „Rămân aici”. */
   onStay: () => void
   /**
-   * Buton „Continuă” în loc de numărătoare. Pentru ecranele unde omul scrie date pe care trebuie
-   * să le verifice (conturile Uber/Bolt, datele de înființare): acolo trecerea singură pleca cu
-   * precompletările înainte ca el să apuce să le corecteze.
+   * Buton „Continuă” în loc de numărătoare, oriunde omul scrie sau bifează: acolo trecerea singură
+   * pleca înainte ca el să termine (la prima platformă bifată, la prima valoare validă).
    */
   manual?: boolean
 }
 
 /**
- * Footerul cardului de onboarding, fără „Continuă”: un ecran terminat trece singur mai departe.
- * Cât numără, o bară arată că urmează pasul următor, iar „Rămân aici” oprește trecerea (cine a
- * revenit pe un ecran ca să-l recitească). Un ecran neterminat spune ce mai lipsește.
+ * Footerul cardului de onboarding. Cu `manual`, un buton „Continuă”, activ când ecranul e gata —
+ * pe ecranele cu câmpuri și bife. Altfel, ecranul terminat trece singur: o bară arată că urmează
+ * pasul următor, iar „Rămân aici” oprește trecerea. Un ecran neterminat spune ce mai lipsește.
  */
 export function AutoAdvanceFooter({ reasons = [], countdown, stayed, busy, onDone, onStay, manual = false }: AutoAdvanceFooterProps) {
   const onDoneRef = useRef(onDone)
@@ -60,7 +59,8 @@ export function AutoAdvanceFooter({ reasons = [], countdown, stayed, busy, onDon
   }, [running, delay, restartKey])
 
   if (manual) {
-    const ready = countdown != null && !countdown.paused
+    // O eroare pe ecran nu blochează butonul: „Continuă” e chiar reîncercarea.
+    const ready = countdown != null
     return (
       <Stack
         direction={{ xs: 'column-reverse', sm: 'row' }}

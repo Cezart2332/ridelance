@@ -18,7 +18,10 @@ interface AutoContinueProps {
   delayMs?: number
   /** Spațiul dintre câmpuri și footer, ca în restul paginii. */
   spacing?: number
-  /** Buton „Continuă” în loc de trecerea singură — vezi `AutoAdvanceFooter`. */
+  /**
+   * Buton „Continuă” în loc de trecerea singură — implicit, pentru că aici sunt formulare. `false`
+   * doar pe ecranele fără câmpuri (un cont tocmai conectat).
+   */
   manual?: boolean
   children?: ReactNode
 }
@@ -27,8 +30,8 @@ const isField = (target: EventTarget) =>
   target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement
 
 /**
- * Un formular de onboarding fără „Continuă”: gata completat, trece singur mai departe după o
- * scurtă numărătoare, care repornește la fiecare tastă; Enter trece imediat.
+ * Footerul unui formular de onboarding: „Continuă”, activ când formularul e gata; Enter trece
+ * imediat. Cu `manual={false}`, ecranul trece singur după o scurtă numărătoare.
  */
 export function AutoContinue({
   ready,
@@ -39,7 +42,7 @@ export function AutoContinue({
   reasons,
   delayMs = 2000,
   spacing = 3,
-  manual = false,
+  manual = true,
   children,
 }: AutoContinueProps) {
   /** Fiecare tastă repornește numărătoarea: plecăm după ce omul se oprește din scris. */

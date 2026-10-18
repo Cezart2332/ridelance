@@ -1,15 +1,12 @@
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
 import { Box, Button, Checkbox, FormControlLabel, LinearProgress, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 
 import type { LegalConsentStep } from '../../../services/companyFormation.service'
 import { PanelCard } from '../PanelCard'
 import { AutoAdvanceFooter } from '../micro/AutoAdvanceFooter'
 import { TOKENS } from '../onboardingTheme'
-
-/** Cât așteptăm după bifare înainte să avansăm singuri, ca userul să vadă ce a bifat. */
-const AUTO_ADVANCE_MS = 400
 
 function Stepper({ total, current, accepted }: { total: number; current: number; accepted: boolean[] }) {
   return (
@@ -60,29 +57,11 @@ interface ConsentWizardProps {
 export function ConsentWizard({ steps, onComplete, disabled }: ConsentWizardProps) {
   const [current, setCurrent] = useState(0)
   const [accepted, setAccepted] = useState<boolean[]>(() => steps.map(() => false))
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  /** O bifă tocmai pusă și-a programat deja trecerea mai departe. */
-  const [ticked, setTicked] = useState(false)
-  /** „Rămân aici” pe o declarație deja acceptată, la care omul s-a întors să o recitească. */
-  const [stayAt, setStayAt] = useState<number | null>(null)
-
-  useEffect(
-    () => () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-    },
-    [],
-  )
-
   const step = steps[current]
   const isLast = current === steps.length - 1
   const allAccepted = accepted.every(Boolean)
 
   const advance = () => {
-    // Și bifa, și numărătoarea duc aici: fără asta s-ar chema amândouă.
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = null
-    setTicked(false)
-
     if (isLast) {
       onComplete()
       return
@@ -90,20 +69,8 @@ export function ConsentWizard({ steps, onComplete, disabled }: ConsentWizardProp
     setCurrent((c) => c + 1)
   }
 
-  const toggle = (checked: boolean) => {
-    const next = accepted.map((value, i) => (i === current ? checked : value))
-    setAccepted(next)
-
-    if (timerRef.current) clearTimeout(timerRef.current)
-    setTicked(checked)
-    if (!checked) return
-
-    // Avans automat: bifa E acceptarea. Fără „Continuă” — cine a bifat din greșeală debifează.
-    timerRef.current = setTimeout(() => {
-      if (isLast && !next.every(Boolean)) return
-      advance()
-    }, AUTO_ADVANCE_MS)
-  }
+  const toggle = (checked: boolean) =>
+    setAccepted(accepted.map((value, i) => (i === current ? checked : value)))
 
   return (
     <Stack spacing={2}>
@@ -156,10 +123,7 @@ export function ConsentWizard({ steps, onComplete, disabled }: ConsentWizardProp
 
       <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'space-between' }}>
         <Button
-          onClick={() => {
-            setTicked(false)
-            setCurrent((c) => Math.max(0, c - 1))
-          }}
+          onClick={() => setCurrent((c) => Math.max(0, c - 1))}
           disabled={disabled || current === 0}
           sx={{ textTransform: 'none', fontWeight: 700, color: TOKENS.textMuted }}
         >
@@ -167,16 +131,16 @@ export function ConsentWizard({ steps, onComplete, disabled }: ConsentWizardProp
         </Button>
       </Stack>
 
-      {/* Întors pe o declarație deja acceptată: trece singur mai departe, dacă nu rămâne aici. */}
+      {/* Bifa nu mai trece singură mai departe: declarația se acceptă cu „Continuă”. */}
       <AutoAdvanceFooter
+        manual
         countdown={
-          accepted[current] && !ticked && !disabled && !(isLast && !allAccepted)
-            ? { delayMs: 2500, restartKey: String(current), paused: false }
+          accepted[current] && !disabled && !(isLast && !allAccepted)
+            ? { delayMs: 0, restartKey: String(current), paused: false }
             : null
         }
-        stayed={stayAt === current}
         onDone={advance}
-        onStay={() => setStayAt(current)}
+        onStay={() => undefined}
       />
     </Stack>
   )

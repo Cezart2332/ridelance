@@ -227,7 +227,6 @@ export function RegisteredOfficeForm({
                 value={office.adresa}
                 onChange={(adresa) => patchOffice({ adresa })}
                 onBlur={onBlur}
-                requirePostalCode
                 disabled={disabled || mirrors}
               />
 

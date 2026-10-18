@@ -147,6 +147,7 @@ export function FleetBankStep({ state, busy, save, refresh }: Props) {
       {/* Contul conectat: pasul trece singur mai departe, fără „Continuă”. */}
       {state.bankConnected && (
         <AutoContinue
+          manual={false}
           ready
           busy={busy}
           restartKey="bank-connected"
@@ -276,7 +277,7 @@ export function FleetOblioStep({ state, busy, save, refresh }: Props) {
       {error && <Alert severity="error">{error}</Alert>}
       {/* Oblio conectat: pasul trece singur mai departe, fără „Continuă”. */}
       {state.oblioConnected && (
-        <AutoContinue ready busy={busy || working} restartKey="oblio-connected" onContinue={() => void save({ step: 5 })} />
+        <AutoContinue manual={false} ready busy={busy || working} restartKey="oblio-connected" onContinue={() => void save({ step: 5 })} />
       )}
       <Button
         disabled={busy || working}

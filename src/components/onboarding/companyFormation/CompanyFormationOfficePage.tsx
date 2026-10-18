@@ -58,8 +58,6 @@ export default function CompanyFormationOfficePage() {
 
   return (
     <AutoContinue
-      // Datele de înființare se verifică înainte de trimitere: cu „Continuă”, nu cu trecerea singură.
-      manual
       spacing={3}
       ready={state.registeredOfficeComplete}
       disabled={disabled}

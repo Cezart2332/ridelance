@@ -398,7 +398,6 @@ function FleetStep({ step, state, busy, save, refresh }: StepProps) {
       </Stack>
     )
   if (step === 2) {
-    // Fără „Continuă”: completat (și cu telefonul verificat, când serverul o cere), trece singur.
     const contactReady =
       Boolean(firstName.trim() && lastName.trim() && position) &&
       (position !== 'Altă funcție' || Boolean(other.trim())) &&

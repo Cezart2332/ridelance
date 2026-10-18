@@ -44,10 +44,10 @@ const AUTO_KINDS = new Set(['upload', 'action'])
  * Runnerul: primește micro-pașii pasului curent și randează ecranul potrivit. Un singur `switch`,
  * într-un singur fișier — de aici încolo, un pas nou înseamnă un fișier de config, nu componente.
  *
- * Nu există „Continuă”: un ecran gata trece singur mai departe. O alegere, un document acceptat
- * sau o acțiune executată trec imediat; un formular completat, bifele, un ecran de citit sau
- * rezumatul trec după o scurtă numărătoare, pe care omul o poate opri („Rămân aici”). Un „Nu” care
- * oprește parcursul deschide un pop-up cu motivul.
+ * O alegere, un document acceptat sau o acțiune executată trec singure mai departe; un ecran de
+ * citit sau rezumatul, după o scurtă numărătoare, pe care omul o poate opri („Rămân aici”). Ecranele
+ * cu câmpuri sau cu mai multe bife au „Continuă”. Un „Nu” care oprește parcursul deschide un pop-up
+ * cu motivul.
  */
 export function OnboardingRunner() {
   const { steps, current, answers, answer, goTo, next, canGoForward } = useMicroSteps()
@@ -342,10 +342,7 @@ export function OnboardingRunner() {
     return []
   }
 
-  /**
-   * Ce mai lipsește ca ecranul să fie gata. Gol = gata: ecranul trece singur mai departe. Nu mai
-   * există „Continuă” nicăieri în onboarding — un pas terminat nu mai cere încă un clic.
-   */
+  /** Ce mai lipsește ca ecranul să fie gata. Gol = gata (trece singur sau se activează „Continuă”). */
   const pending = (): string[] => {
     switch (def.kind) {
       case 'question':
@@ -415,7 +412,9 @@ export function OnboardingRunner() {
         busy={submitting}
         onDone={() => void advance()}
         onStay={() => setStay({ id: def.id, answers })}
-        manual={def.manualContinue === true}
+        // Unde omul scrie sau bifează mai multe variante, trece mai departe cu „Continuă”: o
+        // numărătoare pornită la prima bifă sau la prima valoare validă pleca de sub el.
+        manual={def.manualContinue === true || def.kind === 'text' || def.kind === 'multi'}
       />
     )
   }

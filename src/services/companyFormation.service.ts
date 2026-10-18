@@ -247,6 +247,18 @@ export const companyFormationService = {
     return data
   },
 
+  /**
+   * Codul poștal al localității (localitati.dev, prin server). `null` când nu se găsește: omul îl
+   * scrie de mână. Fără cont, ca să meargă și în formularul serviciilor de pe site.
+   */
+  async lookupPostalCode(judet: string, localitate: string): Promise<string | null> {
+    const { data } = await api.get<{ codPostal: string | null }>('/onboarding/cod-postal', {
+      params: { judet, localitate },
+      publicRequest: true,
+    })
+    return data.codPostal
+  },
+
   /** Textele wizardului, în versiunea activă. Nu trăiesc în frontend. */
   async getConsentFlow(
     context = 'infiintare-societate',
