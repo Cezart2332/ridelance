@@ -19,13 +19,14 @@ import { useState } from 'react'
 import { carsService, type Car, type ListingQuota } from '../../../services/cars.service'
 import { getErrorMessage } from '../../../utils/errorHandler'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
+import { DiscountCodeField } from './DiscountCodeField'
 import { EXTRA_LISTING_LEI } from './paidExtras'
 
 const stripePromise = loadStripe(STRIPE_PUBLIC_KEY)
 
 type Step =
   | { kind: 'choose' }
-  | { kind: 'pay'; secret: string }
+  | { kind: 'pay'; secret: string; code: string | null }
   | { kind: 'done'; message: string }
 
 /**
@@ -76,13 +77,26 @@ export function PublishCarDialog({
     setError(null)
     try {
       if (needsExtra) {
-        setStep({ kind: 'pay', secret: await carsService.createExtraListingCheckout(car.id) })
+        setStep({ kind: 'pay', secret: await carsService.createExtraListingCheckout(car.id), code: null })
       } else {
         await carsService.toggleActive(car.id)
         finish('Anunțul e publicat.')
       }
     } catch (err) {
       setError(getErrorMessage(err, 'Nu am putut publica anunțul.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /** Reface plata cu codul de reducere; un cod greșit lasă plata de dinainte pe loc. */
+  const applyCode = async (code: string) => {
+    setBusy(true)
+    setError(null)
+    try {
+      setStep({ kind: 'pay', secret: await carsService.createExtraListingCheckout(car.id, code), code })
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nu am putut aplica codul de reducere.'))
     } finally {
       setBusy(false)
     }
@@ -132,7 +146,9 @@ export function PublishCarDialog({
 
         {step.kind === 'pay' && (
           <Box sx={{ minHeight: 420 }}>
+            <DiscountCodeField busy={busy} applied={step.code} onApply={(code) => void applyCode(code)} />
             <EmbeddedCheckoutProvider
+              key={step.secret}
               stripe={stripePromise}
               options={{
                 clientSecret: step.secret,

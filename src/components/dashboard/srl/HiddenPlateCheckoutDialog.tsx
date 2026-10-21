@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 
 import { carsService } from '../../../services/cars.service'
 import { getErrorMessage } from '../../../utils/errorHandler'
+import { DiscountCodeField } from './DiscountCodeField'
 import { HIDDEN_PLATE_LEI } from './paidExtras'
 
 const stripePromise = loadStripe(STRIPE_PUBLIC_KEY)
@@ -31,6 +32,24 @@ export function HiddenPlateCheckoutDialog({
   const [secret, setSecret] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [paid, setPaid] = useState(false)
+  /** Codul de reducere aflat pe plata deschisă. */
+  const [code, setCode] = useState<string | null>(null)
+  const [applying, setApplying] = useState(false)
+
+  /** Reface plata cu codul; un cod greșit lasă plata de dinainte pe loc. */
+  const applyCode = async (next: string) => {
+    if (!carId) return
+    setApplying(true)
+    setError(null)
+    try {
+      setSecret(await carsService.createHiddenPlateCheckout(carId, next))
+      setCode(next)
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nu am putut aplica codul de reducere.'))
+    } finally {
+      setApplying(false)
+    }
+  }
 
   useEffect(() => {
     if (!carId) return undefined
@@ -58,8 +77,9 @@ export function HiddenPlateCheckoutDialog({
           </Stack>
         )}
         {!paid && secret && (
-          <Box sx={{ minHeight: 420 }}>
-            <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret: secret, onComplete: () => setPaid(true) }}>
+          <Box sx={{ minHeight: 420, mt: error ? 2 : 0 }}>
+            <DiscountCodeField busy={applying} applied={code} onApply={(next) => void applyCode(next)} />
+            <EmbeddedCheckoutProvider key={secret} stripe={stripePromise} options={{ clientSecret: secret, onComplete: () => setPaid(true) }}>
               <EmbeddedCheckout />
             </EmbeddedCheckoutProvider>
           </Box>
