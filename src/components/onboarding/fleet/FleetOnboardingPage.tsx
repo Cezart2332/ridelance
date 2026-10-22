@@ -26,6 +26,7 @@ import { useAppSelector } from '../../../store/hooks'
 import { SRL_ROOT } from '../../../config/srlNavigation'
 import { ANNUAL_DISCOUNT } from '../../../data/plans'
 import { BILLING_SRL_PLANS as SRL_PLANS } from '../../../data/billingPlans'
+import { DiscountCodeField } from '../../dashboard/srl/DiscountCodeField'
 import { PlanCard } from '../../pricing/PlanCard'
 import { PlanPrice } from '../../pricing/PlanPrice'
 import { Switcher } from '../../pricing/Switcher'
@@ -613,6 +614,21 @@ function FleetPayment({
   const [secret, setSecret] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  /** Codul de reducere aflat pe plata deschisă. */
+  const [code, setCode] = useState<string | null>(null)
+  /** Reface plata cu codul; un cod greșit lasă plata de dinainte pe loc. */
+  const applyCode = async (next: string) => {
+    setBusy(true)
+    setError('')
+    try {
+      setSecret((await fleetOnboardingService.checkout(next)).clientSecret)
+      setCode(next)
+    } catch (e) {
+      setError(getErrorMessage(e, 'Nu am putut aplica codul de reducere.'))
+    } finally {
+      setBusy(false)
+    }
+  }
   const pay = async () => {
     setBusy(true)
     setError('')
@@ -721,12 +737,16 @@ function FleetPayment({
           </Button>
         </>
       ) : (
+        <Box>
+        <DiscountCodeField busy={busy} applied={code} onApply={(next) => void applyCode(next)} />
         <EmbeddedCheckoutProvider
+          key={secret}
           stripe={stripePromise}
           options={{ clientSecret: secret, onComplete: () => navigate('/onboarding-srl?payment=returned', { replace: true }) }}
         >
           <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>
+        </Box>
       )}
       {error && <Alert severity="error">{error}</Alert>}
       {state.progress.checkoutAttemptId && (

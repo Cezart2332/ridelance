@@ -75,8 +75,8 @@ export const fleetOnboardingService = {
   get: async () => (await api.get<FleetState>('/fleet-onboarding')).data,
   save: async (input: FleetInput) =>
     (await api.put<FleetState>('/fleet-onboarding', input)).data,
-  checkout: async () =>
-    (await api.post<{ clientSecret: string }>('/fleet-onboarding/checkout'))
+  checkout: async (discountCode?: string) =>
+    (await api.post<{ clientSecret: string }>('/fleet-onboarding/checkout', { discountCode: discountCode || null }))
       .data,
   cancelCheckout: async () =>
     (await api.delete<FleetState>('/fleet-onboarding/checkout')).data,
