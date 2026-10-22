@@ -2,19 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import { Box, Button, MenuItem, Stack, TextField, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
-import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
 import EmailRoundedIcon from '@mui/icons-material/EmailRounded'
-import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded'
-import ForumRoundedIcon from '@mui/icons-material/ForumRounded'
-import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded'
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded'
 import DirectionsRoundedIcon from '@mui/icons-material/DirectionsRounded'
 import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded'
-import MapRoundedIcon from '@mui/icons-material/MapRounded'
 import PhoneRoundedIcon from '@mui/icons-material/PhoneRounded'
-import StarRoundedIcon from '@mui/icons-material/StarRounded'
 import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded'
 import WhatsAppIcon from '@mui/icons-material/WhatsApp'
 
@@ -42,14 +36,15 @@ import { hasPin, visibleSections, type SectionId } from './sections'
  * Tot conținutul e pe o singură pagină. Meniul derulează, nu navighează: o flotă cu patru mașini
  * n-are nevoie de cinci rute, iar linkul distribuit trebuie să ducă la tot.
  *
- * Pe ecran lat meniul stă vertical, lipit în stânga, ca la un site de firmă; pe telefon devine
- * banda orizontală de sub bara RIDElance. Pragurile sunt pe lățimea containerului, nu a ferestrei:
+ * Pagina are bara ei de sus, în locul barei RIDElance (vezi `siteHeader`): logo-ul și numele firmei,
+ * secțiunile și un buton mic înapoi spre RIDElance. Pe ecran lat secțiunile stau în bară; pe
+ * telefon coboară într-o bandă care se derulează lateral. Pragurile sunt pe lățimea containerului:
  * previzualizarea din dashboard e un panou îngust într-un ecran lat și trebuie să arate ca pagina
  * văzută pe un ecran de lățimea panoului, nu ca o pagină de desktop strivită.
  *
  * Culorile firmei trăiesc într-un set de variabile CSS puse pe containerul de aici. În afara lui
- * — bara RIDElance de sus, subsolul — nimic nu se tematizează. Pagina e a firmei, dar e găzduită
- * la noi, iar asta trebuie să se vadă fără să scrie nicăieri „găzduit de".
+ * — subsolul — nimic nu se tematizează. Pagina e a firmei, dar e găzduită la noi: butonul înapoi
+ * spre RIDElance și subsolul o spun fără să scrie nicăieri „găzduit de".
  */
 
 interface CompanySiteProps {
@@ -58,25 +53,19 @@ interface CompanySiteProps {
   preview?: boolean
 }
 
-/** Înălțimea barei RIDElance de sus, ca titlurile să nu ajungă sub ea la scroll. */
-const APP_BAR = { xs: 64, md: 72 }
-const SECTION_NAV = { xs: 52, md: 56 }
-const SIDEBAR_WIDTH = 216
+/**
+ * Bara de sus a mini-site-ului: un rând pe ecran lat, două pe îngust (firma și butonul înapoi,
+ * apoi banda de secțiuni). Titlurile și harta lipită se feresc de ea la scroll.
+ */
+const TOP_BAR = { narrow: 60, wide: 68 }
+const SECTION_NAV = 50
+/** Cât acoperă bara lipită: pe îngust cele două rânduri, pe lat unul. */
+const NARROW_COVER = TOP_BAR.narrow + SECTION_NAV
 
 /** Pragurile mini-site-ului, pe lățimea containerului `site`. */
 const WIDE = '@container site (min-width: 960px)'
 const MEDIUM = '@container site (min-width: 620px)'
 const XWIDE = '@container site (min-width: 1240px)'
-
-const SECTION_ICONS: Record<SectionId, typeof InfoOutlinedIcon> = {
-  despre: InfoOutlinedIcon,
-  avantaje: StarRoundedIcon,
-  flota: DirectionsCarFilledRoundedIcon,
-  program: EventNoteRoundedIcon,
-  intrebari: HelpOutlineRoundedIcon,
-  locatie: LocationOnRoundedIcon,
-  contact: ForumRoundedIcon,
-}
 
 export function CompanySite({ company, preview = false }: CompanySiteProps) {
   const theme = normalizeTheme(company.theme)
@@ -135,308 +124,287 @@ export function CompanySite({ company, preview = false }: CompanySiteProps) {
         minHeight: preview ? 'auto' : '100%',
       }}
     >
-      {sections.length > 1 && (
-        <Box sx={{ [WIDE]: { display: 'none' } }}>
-          <SectionStrip sections={sections} active={active} preview={preview} />
-        </Box>
-      )}
+      <SiteTopBar company={company} sections={sections} active={active} preview={preview} />
 
       <Box
         sx={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr)',
-          [WIDE]: { gridTemplateColumns: `${SIDEBAR_WIDTH}px minmax(0, 1fr)` },
+          minWidth: 0,
+          px: 2,
+          pt: 2,
+          pb: { xs: 6, md: 9 },
+          [MEDIUM]: { px: 3, pt: 3 },
+          [WIDE]: { px: 4, pt: 3.5 },
         }}
       >
-        <Box sx={{ display: 'none', [WIDE]: { display: 'block' } }}>
-          <SectionRail
-            company={company}
-            sections={sections}
-            active={active}
-            preview={preview}
-          />
-        </Box>
+        <Box sx={{ maxWidth: 1376, mx: 'auto' }}>
+          <Hero company={company} preview={preview} />
 
-        <Box
-          sx={{
-            minWidth: 0,
-            px: 2,
-            pt: 2,
-            pb: { xs: 6, md: 9 },
-            [MEDIUM]: { px: 3, pt: 3 },
-            [WIDE]: { px: 4, pt: 3.5 },
-          }}
-        >
-          <Box sx={{ maxWidth: 1376, mx: 'auto' }}>
-            <Hero company={company} preview={preview} />
-
-            <Stack spacing={{ xs: 7, md: 10 }} sx={{ mt: { xs: 7, md: 9 } }}>
-              {sections.some((s) => s.id === 'despre') && (
-                <Section id="despre" title="Despre noi" preview={preview}>
-                  <Box
-                    sx={{
-                      p: 3,
-                      borderRadius: '21px',
-                      bgcolor: 'var(--cs-surface)',
-                      border: '1px solid var(--cs-border)',
-                      [MEDIUM]: { p: 5 },
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        color: 'var(--cs-text-muted)',
-                        fontSize: '1.05rem',
-                        lineHeight: 1.85,
-                        maxWidth: 820,
-                        whiteSpace: 'pre-line',
-                      }}
-                    >
-                      {company.publicDescription}
-                    </Typography>
-                  </Box>
-                </Section>
-              )}
-
-              {sections.some((s) => s.id === 'avantaje') && (
-                <Section id="avantaje" title="De ce noi" preview={preview}>
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr',
-                      gap: 2,
-                      [MEDIUM]: { gridTemplateColumns: 'repeat(2, 1fr)' },
-                      [WIDE]: { gridTemplateColumns: 'repeat(3, 1fr)' },
-                    }}
-                  >
-                    {content.highlights.map((highlight, index) => {
-                      const Icon = highlightIcon(highlight.iconKey)
-                      return (
-                        <Box
-                          key={`${highlight.title}-${index}`}
-                          sx={{
-                            p: 3.2,
-                            borderRadius: `${TOKENS.radius.xl}px`,
-                            bgcolor: 'var(--cs-bg)',
-                            border: '1px solid var(--cs-border)',
-                          }}
-                        >
-                          <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 2.2 }}>
-                            <Box
-                              sx={{
-                                width: 44,
-                                height: 44,
-                                borderRadius: `${TOKENS.radius.lg}px`,
-                                display: 'grid',
-                                placeItems: 'center',
-                                bgcolor: 'var(--cs-accent-soft)',
-                              }}
-                            >
-                              <Icon sx={{ fontSize: 22, color: 'var(--cs-accent)' }} />
-                            </Box>
-                            <Typography sx={{ fontSize: '0.8rem', fontWeight: 900, color: 'var(--cs-accent)' }}>
-                              {String(index + 1).padStart(2, '0')}
-                            </Typography>
-                          </Stack>
-                          <Typography sx={{ fontWeight: 900, fontSize: '1.15rem', letterSpacing: '-0.02em', mb: 0.8 }}>
-                            {highlight.title}
-                          </Typography>
-                          {highlight.text && (
-                            <Typography sx={{ color: 'var(--cs-text-muted)', fontSize: '0.9rem', lineHeight: 1.7 }}>
-                              {highlight.text}
-                            </Typography>
-                          )}
-                        </Box>
-                      )
-                    })}
-                  </Box>
-                </Section>
-              )}
-
-              <Section
-                id="flota"
-                title={company.cars.length === 0 ? 'Flota' : `Flota (${company.cars.length})`}
-                preview={preview}
-              >
-                <FleetCatalogue company={company} preview={preview} />
-              </Section>
-
-              {sections.some((s) => s.id === 'program') && (
-                <Section id="program" title="Program și zone de predare" preview={preview}>
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr',
-                      gap: 3,
-                      [MEDIUM]: { gridTemplateColumns: content.schedule.length > 0 ? '1fr 1fr' : '1fr', gap: 4 },
-                    }}
-                  >
-                    {content.schedule.length > 0 && (
-                      <Box>
-                        <Stack
-                          divider={<Box sx={{ height: '1px', bgcolor: 'var(--cs-border)' }} />}
-                          sx={{
-                            borderRadius: `${TOKENS.radius.xl}px`,
-                            border: '1px solid var(--cs-border)',
-                            bgcolor: 'var(--cs-surface)',
-                            px: 2.4,
-                          }}
-                        >
-                          {content.schedule.map((row, index) => (
-                            <Stack
-                              key={`${row.day}-${index}`}
-                              direction="row"
-                              spacing={2}
-                              sx={{ justifyContent: 'space-between', alignItems: 'center', py: 1.6 }}
-                            >
-                              <Typography sx={{ fontWeight: 800, fontSize: '0.92rem' }}>{row.day}</Typography>
-                              <Typography sx={{ color: 'var(--cs-text-muted)', fontSize: '0.92rem', fontWeight: 600 }}>
-                                {row.hours}
-                              </Typography>
-                            </Stack>
-                          ))}
-                        </Stack>
-                      </Box>
-                    )}
-
-                    {(content.coverageAreas.length > 0 || content.coverageNote) && (
-                      <Box>
-                        {content.coverageAreas.length > 0 && (
-                          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1, mb: 1.8 }}>
-                            {content.coverageAreas.map((area) => (
-                              <Box
-                                key={area}
-                                sx={{
-                                  px: 1.6,
-                                  py: 0.7,
-                                  borderRadius: `${TOKENS.radius.full}px`,
-                                  bgcolor: 'var(--cs-accent-soft)',
-                                  border: '1px solid var(--cs-accent-line)',
-                                  fontSize: '0.85rem',
-                                  fontWeight: 700,
-                                }}
-                              >
-                                {area}
-                              </Box>
-                            ))}
-                          </Stack>
-                        )}
-                        {content.coverageNote && (
-                          <Typography
-                            sx={{
-                              color: 'var(--cs-text-muted)',
-                              fontSize: '0.95rem',
-                              lineHeight: 1.7,
-                              whiteSpace: 'pre-line',
-                            }}
-                          >
-                            {content.coverageNote}
-                          </Typography>
-                        )}
-                      </Box>
-                    )}
-                  </Box>
-                </Section>
-              )}
-
-              {sections.some((s) => s.id === 'intrebari') && (
-                <Section id="intrebari" title="Întrebări frecvente" preview={preview}>
-                  <Box sx={{ maxWidth: 880, borderTop: '1px solid var(--cs-border)' }}>
-                    {content.faq.map((entry, index) => (
-                      <Box
-                        key={`${entry.question}-${index}`}
-                        component="details"
-                        sx={{
-                          borderBottom: '1px solid var(--cs-border)',
-                          '& summary': {
-                            listStyle: 'none',
-                            py: 2.4,
-                            px: 0.5,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 2,
-                            cursor: 'pointer',
-                            fontWeight: 900,
-                            fontSize: '1rem',
-                          },
-                          '& summary::-webkit-details-marker': { display: 'none' },
-                          '& summary::after': {
-                            content: '"+"',
-                            fontSize: '1.5rem',
-                            fontWeight: 500,
-                            lineHeight: 1,
-                            color: 'var(--cs-accent)',
-                          },
-                          '&[open] summary::after': { content: '"−"' },
-                        }}
-                      >
-                        <summary>{entry.question}</summary>
-                        <Typography
-                          sx={{
-                            color: 'var(--cs-text-muted)',
-                            fontSize: '0.94rem',
-                            lineHeight: 1.75,
-                            whiteSpace: 'pre-line',
-                            px: 0.5,
-                            pb: 2.6,
-                            pr: 4,
-                          }}
-                        >
-                          {entry.answer}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                </Section>
-              )}
-
-              {sections.some((s) => s.id === 'locatie') && (
-                <Section id="locatie" title="Unde ne găsiți" preview={preview}>
-                  <PickupBlock company={company} accent={theme.accent} preview={preview} />
-                </Section>
-              )}
-
-              <Section id="contact" title="Contact" preview={preview}>
+          <Stack spacing={{ xs: 7, md: 10 }} sx={{ mt: { xs: 7, md: 9 } }}>
+            {sections.some((s) => s.id === 'despre') && (
+              <Section id="despre" title="Despre noi" preview={preview}>
                 <Box
                   sx={{
                     p: 3,
                     borderRadius: '21px',
-                    bgcolor: 'var(--cs-accent-soft)',
+                    bgcolor: 'var(--cs-surface)',
+                    border: '1px solid var(--cs-border)',
                     [MEDIUM]: { p: 5 },
                   }}
                 >
-                  {hasContact || company.location || company.website ? (
-                    <Stack spacing={3}>
-                      <Stack spacing={1.6}>
-                        {company.location && (
-                          <ContactLine icon={LocationOnRoundedIcon}>{company.location}</ContactLine>
+                  <Typography
+                    sx={{
+                      color: 'var(--cs-text-muted)',
+                      fontSize: '1.05rem',
+                      lineHeight: 1.85,
+                      maxWidth: 820,
+                      whiteSpace: 'pre-line',
+                    }}
+                  >
+                    {company.publicDescription}
+                  </Typography>
+                </Box>
+              </Section>
+            )}
+
+            {sections.some((s) => s.id === 'avantaje') && (
+              <Section id="avantaje" title="De ce noi" preview={preview}>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr',
+                    gap: 2,
+                    [MEDIUM]: { gridTemplateColumns: 'repeat(2, 1fr)' },
+                    [WIDE]: { gridTemplateColumns: 'repeat(3, 1fr)' },
+                  }}
+                >
+                  {content.highlights.map((highlight, index) => {
+                    const Icon = highlightIcon(highlight.iconKey)
+                    return (
+                      <Box
+                        key={`${highlight.title}-${index}`}
+                        sx={{
+                          p: 3.2,
+                          borderRadius: `${TOKENS.radius.xl}px`,
+                          bgcolor: 'var(--cs-bg)',
+                          border: '1px solid var(--cs-border)',
+                        }}
+                      >
+                        <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 2.2 }}>
+                          <Box
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: `${TOKENS.radius.lg}px`,
+                              display: 'grid',
+                              placeItems: 'center',
+                              bgcolor: 'var(--cs-accent-soft)',
+                            }}
+                          >
+                            <Icon sx={{ fontSize: 22, color: 'var(--cs-accent)' }} />
+                          </Box>
+                          <Typography sx={{ fontSize: '0.8rem', fontWeight: 900, color: 'var(--cs-accent)' }}>
+                            {String(index + 1).padStart(2, '0')}
+                          </Typography>
+                        </Stack>
+                        <Typography sx={{ fontWeight: 900, fontSize: '1.15rem', letterSpacing: '-0.02em', mb: 0.8 }}>
+                          {highlight.title}
+                        </Typography>
+                        {highlight.text && (
+                          <Typography sx={{ color: 'var(--cs-text-muted)', fontSize: '0.9rem', lineHeight: 1.7 }}>
+                            {highlight.text}
+                          </Typography>
                         )}
-                        {company.website && (
-                          <ContactLine icon={LanguageRoundedIcon}>
-                            <Box
-                              component="a"
-                              href={normalizeUrl(company.website)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              sx={{ color: 'var(--cs-accent)', textDecoration: 'none' }}
-                            >
-                              {company.website}
-                            </Box>
-                          </ContactLine>
-                        )}
+                      </Box>
+                    )
+                  })}
+                </Box>
+              </Section>
+            )}
+
+            <Section
+              id="flota"
+              title={company.cars.length === 0 ? 'Flota' : `Flota (${company.cars.length})`}
+              preview={preview}
+            >
+              <FleetCatalogue company={company} preview={preview} />
+            </Section>
+
+            {sections.some((s) => s.id === 'program') && (
+              <Section id="program" title="Program și zone de predare" preview={preview}>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr',
+                    gap: 3,
+                    [MEDIUM]: { gridTemplateColumns: content.schedule.length > 0 ? '1fr 1fr' : '1fr', gap: 4 },
+                  }}
+                >
+                  {content.schedule.length > 0 && (
+                    <Box>
+                      <Stack
+                        divider={<Box sx={{ height: '1px', bgcolor: 'var(--cs-border)' }} />}
+                        sx={{
+                          borderRadius: `${TOKENS.radius.xl}px`,
+                          border: '1px solid var(--cs-border)',
+                          bgcolor: 'var(--cs-surface)',
+                          px: 2.4,
+                        }}
+                      >
+                        {content.schedule.map((row, index) => (
+                          <Stack
+                            key={`${row.day}-${index}`}
+                            direction="row"
+                            spacing={2}
+                            sx={{ justifyContent: 'space-between', alignItems: 'center', py: 1.6 }}
+                          >
+                            <Typography sx={{ fontWeight: 800, fontSize: '0.92rem' }}>{row.day}</Typography>
+                            <Typography sx={{ color: 'var(--cs-text-muted)', fontSize: '0.92rem', fontWeight: 600 }}>
+                              {row.hours}
+                            </Typography>
+                          </Stack>
+                        ))}
                       </Stack>
-                      {hasContact && <ContactButtons company={company} />}
-                    </Stack>
-                  ) : (
-                    <Typography sx={{ color: 'var(--cs-text-muted)' }}>
-                      Firma nu a făcut publice date de contact. Poți trimite o cerere direct de pe anunțul
-                      mașinii care te interesează.
-                    </Typography>
+                    </Box>
+                  )}
+
+                  {(content.coverageAreas.length > 0 || content.coverageNote) && (
+                    <Box>
+                      {content.coverageAreas.length > 0 && (
+                        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1, mb: 1.8 }}>
+                          {content.coverageAreas.map((area) => (
+                            <Box
+                              key={area}
+                              sx={{
+                                px: 1.6,
+                                py: 0.7,
+                                borderRadius: `${TOKENS.radius.full}px`,
+                                bgcolor: 'var(--cs-accent-soft)',
+                                border: '1px solid var(--cs-accent-line)',
+                                fontSize: '0.85rem',
+                                fontWeight: 700,
+                              }}
+                            >
+                              {area}
+                            </Box>
+                          ))}
+                        </Stack>
+                      )}
+                      {content.coverageNote && (
+                        <Typography
+                          sx={{
+                            color: 'var(--cs-text-muted)',
+                            fontSize: '0.95rem',
+                            lineHeight: 1.7,
+                            whiteSpace: 'pre-line',
+                          }}
+                        >
+                          {content.coverageNote}
+                        </Typography>
+                      )}
+                    </Box>
                   )}
                 </Box>
               </Section>
-            </Stack>
-          </Box>
+            )}
+
+            {sections.some((s) => s.id === 'intrebari') && (
+              <Section id="intrebari" title="Întrebări frecvente" preview={preview}>
+                <Box sx={{ maxWidth: 880, borderTop: '1px solid var(--cs-border)' }}>
+                  {content.faq.map((entry, index) => (
+                    <Box
+                      key={`${entry.question}-${index}`}
+                      component="details"
+                      sx={{
+                        borderBottom: '1px solid var(--cs-border)',
+                        '& summary': {
+                          listStyle: 'none',
+                          py: 2.4,
+                          px: 0.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 2,
+                          cursor: 'pointer',
+                          fontWeight: 900,
+                          fontSize: '1rem',
+                        },
+                        '& summary::-webkit-details-marker': { display: 'none' },
+                        '& summary::after': {
+                          content: '"+"',
+                          fontSize: '1.5rem',
+                          fontWeight: 500,
+                          lineHeight: 1,
+                          color: 'var(--cs-accent)',
+                        },
+                        '&[open] summary::after': { content: '"−"' },
+                      }}
+                    >
+                      <summary>{entry.question}</summary>
+                      <Typography
+                        sx={{
+                          color: 'var(--cs-text-muted)',
+                          fontSize: '0.94rem',
+                          lineHeight: 1.75,
+                          whiteSpace: 'pre-line',
+                          px: 0.5,
+                          pb: 2.6,
+                          pr: 4,
+                        }}
+                      >
+                        {entry.answer}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Section>
+            )}
+
+            {sections.some((s) => s.id === 'locatie') && (
+              <Section id="locatie" title="Unde ne găsiți" preview={preview}>
+                <PickupBlock company={company} accent={theme.accent} preview={preview} />
+              </Section>
+            )}
+
+            <Section id="contact" title="Contact" preview={preview}>
+              <Box
+                sx={{
+                  p: 3,
+                  borderRadius: '21px',
+                  bgcolor: 'var(--cs-accent-soft)',
+                  [MEDIUM]: { p: 5 },
+                }}
+              >
+                {hasContact || company.location || company.website ? (
+                  <Stack spacing={3}>
+                    <Stack spacing={1.6}>
+                      {company.location && (
+                        <ContactLine icon={LocationOnRoundedIcon}>{company.location}</ContactLine>
+                      )}
+                      {company.website && (
+                        <ContactLine icon={LanguageRoundedIcon}>
+                          <Box
+                            component="a"
+                            href={normalizeUrl(company.website)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{ color: 'var(--cs-accent)', textDecoration: 'none' }}
+                          >
+                            {company.website}
+                          </Box>
+                        </ContactLine>
+                      )}
+                    </Stack>
+                    {hasContact && <ContactButtons company={company} />}
+                  </Stack>
+                ) : (
+                  <Typography sx={{ color: 'var(--cs-text-muted)' }}>
+                    Firma nu a făcut publice date de contact. Poți trimite o cerere direct de pe anunțul
+                    mașinii care te interesează.
+                  </Typography>
+                )}
+              </Box>
+            </Section>
+          </Stack>
         </Box>
       </Box>
     </Box>
@@ -663,14 +631,14 @@ function Hero({ company, preview }: { company: PublicCompany; preview: boolean }
 }
 
 /**
- * Meniul vertical, pe ecran lat.
+ * Bara de sus a mini-site-ului, în locul barei RIDElance.
  *
- * Lipit sub bara RIDElance cât se derulează pagina. Jos stă semnătura platformei, în culorile
- * ei, nu ale firmei: e singurul loc din pagină care spune unde te afli. O flotă cu fundal negru și
- * accent roșu poate face pagina să arate ca site-ul ei — dar nu și ca un site care nu are nicio
- * legătură cu noi.
+ * În stânga, firma: logo-ul și numele, care duc la începutul paginii. Pe ecran lat secțiunile stau
+ * în mijlocul barei; pe îngust coboară într-o bandă care se derulează lateral, ca să nu se
+ * înghesuie pe două rânduri. În dreapta, un buton mic înapoi spre RIDElance, în culorile firmei:
+ * e singurul semn al platformei de sus, fără să concureze cu marca firmei.
  */
-function SectionRail({
+function SiteTopBar({
   company,
   sections,
   active,
@@ -681,201 +649,153 @@ function SectionRail({
   active: SectionId | null
   preview: boolean
 }) {
-  const top = preview ? 0 : APP_BAR.md
+  const links = [
+    ...sections.map((section) => ({ id: section.id, label: section.label, href: `#sectiune-${section.id}` })),
+    ...(company.cars.some(hasCarPin) ? [{ id: 'harta' as const, label: 'Hartă', href: '#harta-flotei' }] : []),
+  ]
+  const showLinks = links.length > 1
 
-  return (
-    <Box
-      component="nav"
-      aria-label="Secțiunile paginii"
-      sx={{
-        position: 'sticky',
-        top,
-        height: preview ? 'auto' : `calc(100vh - ${top}px)`,
-        minHeight: preview ? 480 : undefined,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 0.6,
-        px: 1.6,
-        pt: 4,
-        pb: 3,
-        borderRight: '1px solid var(--cs-border)',
-        bgcolor: 'var(--cs-bg)',
-        overflowY: 'auto',
-        scrollbarWidth: 'thin',
-      }}
-    >
-      <Typography
-        sx={{
-          px: 1.8,
-          pb: 1.6,
-          fontSize: '0.66rem',
-          fontWeight: 900,
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-          color: 'var(--cs-text-subtle)',
-        }}
-      >
-        Explorează flota
-      </Typography>
+  const linkSx = (isActive: boolean) => ({
+    flexShrink: 0,
+    px: 1.5,
+    py: 0.8,
+    borderRadius: `${TOKENS.radius.full}px`,
+    fontSize: '0.86rem',
+    fontWeight: 700,
+    textDecoration: 'none',
+    whiteSpace: 'nowrap',
+    cursor: preview ? 'default' : 'pointer',
+    color: isActive ? 'var(--cs-accent)' : 'var(--cs-text-muted)',
+    bgcolor: isActive ? 'var(--cs-accent-soft)' : 'transparent',
+    transition: `background-color ${TOKENS.duration} ${TOKENS.easing}, color ${TOKENS.duration} ${TOKENS.easing}`,
+    '&:hover': preview ? undefined : { color: 'var(--cs-text)', bgcolor: 'var(--cs-accent-soft)' },
+  })
 
-      {sections.map((section) => {
-        const Icon = SECTION_ICONS[section.id]
-        const isActive = active === section.id
-        return (
-          <Box
-            key={section.id}
-            component={preview ? 'span' : 'a'}
-            href={preview ? undefined : `#sectiune-${section.id}`}
-            aria-current={isActive ? 'location' : undefined}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1.5,
-              minHeight: 45,
-              px: 1.6,
-              borderRadius: '11px',
-              fontSize: '0.85rem',
-              fontWeight: 800,
-              textDecoration: 'none',
-              cursor: preview ? 'default' : 'pointer',
-              color: isActive ? 'var(--cs-text)' : 'var(--cs-text-muted)',
-              bgcolor: isActive ? 'var(--cs-accent-soft)' : 'transparent',
-              transition: `background-color ${TOKENS.duration} ${TOKENS.easing}, color ${TOKENS.duration} ${TOKENS.easing}`,
-              '& svg': { fontSize: 18, color: isActive ? 'var(--cs-accent)' : 'var(--cs-text-subtle)' },
-              '&:hover': preview
-                ? undefined
-                : { color: 'var(--cs-text)', bgcolor: 'var(--cs-accent-soft)', '& svg': { color: 'var(--cs-accent)' } },
-            }}
-          >
-            <Icon />
-            {section.label}
-          </Box>
-        )
-      })}
-
-      {company.cars.some(hasCarPin) && (
+  const renderLinks = () =>
+    links.map((link) => {
+      const isActive = active === link.id
+      return (
         <Box
+          key={link.id}
           component={preview ? 'span' : 'a'}
-          href={preview ? undefined : '#harta-flotei'}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
-            minHeight: 45,
-            mt: 1,
-            pt: 1,
-            px: 1.6,
-            borderTop: '1px solid var(--cs-border)',
-            fontSize: '0.85rem',
-            fontWeight: 800,
-            textDecoration: 'none',
-            color: 'var(--cs-text-muted)',
-            '& svg': { fontSize: 18, color: 'var(--cs-text-subtle)' },
-            '&:hover': preview ? undefined : { color: 'var(--cs-text)', '& svg': { color: 'var(--cs-accent)' } },
-          }}
+          href={preview ? undefined : link.href}
+          aria-current={isActive ? 'location' : undefined}
+          sx={linkSx(isActive)}
         >
-          <MapRoundedIcon />
-          Hartă
+          {link.label}
         </Box>
-      )}
+      )
+    })
 
-      <Box sx={{ mt: 'auto', pt: 3, px: 1.4 }}>
-        <Box
-          sx={{
-            p: 1.6,
-            borderRadius: `${TOKENS.radius.lg}px`,
-            bgcolor: TOKENS.paper,
-            border: `1px solid ${TOKENS.border}`,
-            color: TOKENS.ink,
-          }}
-        >
-          <Stack direction="row" spacing={0.6} sx={{ alignItems: 'center', mb: 1 }}>
-            <Typography sx={{ fontSize: '0.76rem', fontWeight: 800 }}>Flotă pe RIDElance</Typography>
-            {company.isVerified && (
-              <VerifiedRoundedIcon titleAccess="Verificată" sx={{ fontSize: 15, color: TOKENS.primaryStrong }} />
-            )}
-          </Stack>
-          {preview ? (
-            <Typography sx={{ fontSize: '0.76rem', fontWeight: 700, color: TOKENS.primaryStrong }}>
-              Vezi toate mașinile
-            </Typography>
-          ) : (
-            <Box
-              component={RouterLink}
-              to="/masini"
-              sx={{ fontSize: '0.76rem', fontWeight: 700, color: TOKENS.primaryStrong, textDecoration: 'none' }}
-            >
-              Vezi toate mașinile
-            </Box>
-          )}
-        </Box>
-      </Box>
-    </Box>
-  )
-}
-
-/** Meniul pe ecran îngust: banda orizontală lipită sub bara RIDElance. */
-function SectionStrip({
-  sections,
-  active,
-  preview,
-}: {
-  sections: { id: SectionId; label: string }[]
-  active: SectionId | null
-  preview: boolean
-}) {
   return (
     <Box
+      component="header"
       sx={{
         // `html` are deja `scroll-behavior: smooth`, deci ancorele derulează lin fără cod.
         position: preview ? 'static' : 'sticky',
-        top: preview ? undefined : APP_BAR,
-        zIndex: 2,
+        top: 0,
+        zIndex: 10,
         bgcolor: 'var(--cs-bg)',
         borderBottom: '1px solid var(--cs-border)',
       }}
     >
-      <Stack
-        direction="row"
-        spacing={0.5}
+      <Box
         sx={{
-          minHeight: SECTION_NAV,
-          px: 1.5,
+          maxWidth: 1376,
+          mx: 'auto',
+          px: 2,
+          minHeight: TOP_BAR.narrow,
+          display: 'flex',
           alignItems: 'center',
-          // Pe telefon secțiunile nu încap; se derulează lateral, nu se înghesuie pe două rânduri.
-          overflowX: 'auto',
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': { display: 'none' },
+          gap: 2,
+          [MEDIUM]: { px: 3 },
+          [WIDE]: { px: 4, minHeight: TOP_BAR.wide },
         }}
       >
-        {sections.map((section) => {
-          const isActive = active === section.id
-          return (
-            <Box
-              key={section.id}
-              component={preview ? 'span' : 'a'}
-              href={preview ? undefined : `#sectiune-${section.id}`}
-              sx={{
-                flexShrink: 0,
-                px: 1.6,
-                py: 0.9,
-                borderRadius: `${TOKENS.radius.full}px`,
-                fontSize: '0.86rem',
-                fontWeight: 700,
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-                cursor: preview ? 'default' : 'pointer',
-                color: isActive ? 'var(--cs-accent)' : 'var(--cs-text-muted)',
-                bgcolor: isActive ? 'var(--cs-accent-soft)' : 'transparent',
-                transition: `background-color ${TOKENS.duration} ${TOKENS.easing}`,
-                '&:hover': { bgcolor: preview ? 'transparent' : 'var(--cs-accent-soft)' },
-              }}
-            >
-              {section.label}
-            </Box>
-          )
-        })}
-      </Stack>
+        <Box
+          component={preview ? 'span' : 'a'}
+          href={preview ? undefined : '#'}
+          aria-label={preview ? undefined : `${company.legalName} — începutul paginii`}
+          sx={{ display: 'flex', alignItems: 'center', gap: 1.2, minWidth: 0, textDecoration: 'none', color: 'var(--cs-text)' }}
+        >
+          <OwnerAvatar
+            name={company.legalName}
+            logoUrl={company.logoUrl}
+            size={36}
+            sx={company.logoUrl ? undefined : { bgcolor: 'var(--cs-accent)', color: 'var(--cs-button-text)' }}
+          />
+          <Typography noWrap sx={{ fontWeight: 900, fontSize: '1rem', letterSpacing: '-0.02em' }}>
+            {company.legalName}
+          </Typography>
+        </Box>
+
+        {showLinks && (
+          <Stack
+            component="nav"
+            aria-label="Secțiunile paginii"
+            direction="row"
+            spacing={0.5}
+            sx={{
+              display: 'none',
+              [WIDE]: { display: 'flex', flex: 1, justifyContent: 'center', minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none' },
+            }}
+          >
+            {renderLinks()}
+          </Stack>
+        )}
+
+        <Box
+          component={preview ? 'span' : RouterLink}
+          {...(preview ? {} : { to: '/' })}
+          aria-label="Înapoi la RIDElance"
+          sx={{
+            ml: 'auto',
+            flexShrink: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 0.6,
+            height: 32,
+            px: 1.3,
+            borderRadius: `${TOKENS.radius.full}px`,
+            border: '1px solid var(--cs-border)',
+            fontSize: '0.78rem',
+            fontWeight: 700,
+            whiteSpace: 'nowrap',
+            textDecoration: 'none',
+            color: 'var(--cs-text-muted)',
+            cursor: preview ? 'default' : 'pointer',
+            transition: `color ${TOKENS.duration} ${TOKENS.easing}, border-color ${TOKENS.duration} ${TOKENS.easing}`,
+            '& svg': { fontSize: 16 },
+            '&:hover': preview ? undefined : { color: 'var(--cs-text)', borderColor: 'var(--cs-accent)' },
+            [WIDE]: { ml: 0 },
+          }}
+        >
+          <ArrowBackRoundedIcon />
+          RIDElance
+        </Box>
+      </Box>
+
+      {showLinks && (
+        <Stack
+          component="nav"
+          aria-label="Secțiunile paginii"
+          direction="row"
+          spacing={0.5}
+          sx={{
+            minHeight: SECTION_NAV,
+            px: 1.5,
+            alignItems: 'center',
+            borderTop: '1px solid var(--cs-border)',
+            // Pe telefon secțiunile nu încap; se derulează lateral, nu se înghesuie pe două rânduri.
+            overflowX: 'auto',
+            scrollbarWidth: 'none',
+            '&::-webkit-scrollbar': { display: 'none' },
+            [WIDE]: { display: 'none' },
+          }}
+        >
+          {renderLinks()}
+        </Stack>
+      )}
     </Box>
   )
 }
@@ -1100,7 +1020,7 @@ function FleetCatalogue({ company, preview }: { company: PublicCompany; preview:
           <Box
             id="harta-flotei"
             sx={{
-              scrollMarginTop: preview ? 0 : APP_BAR.md + 16,
+              scrollMarginTop: preview ? 0 : NARROW_COVER + 16,
               height: preview ? 360 : 460,
               borderRadius: '18px',
               overflow: 'hidden',
@@ -1108,7 +1028,13 @@ function FleetCatalogue({ company, preview }: { company: PublicCompany; preview:
               boxShadow: `0 12px 45px ${alpha(TOKENS.ink, 0.08)}`,
               [XWIDE]: preview
                 ? {}
-                : { position: 'sticky', top: APP_BAR.md + 24, height: `calc(100vh - ${APP_BAR.md + 48}px)`, maxHeight: 720 },
+                : {
+                    position: 'sticky',
+                    top: TOP_BAR.wide + 24,
+                    height: `calc(100vh - ${TOP_BAR.wide + 48}px)`,
+                    maxHeight: 720,
+                    scrollMarginTop: TOP_BAR.wide + 16,
+                  },
             }}
           >
             <FleetMap points={mapPoints} activeId={activeCarId} onSelect={setActiveCarId} />
@@ -1135,11 +1061,9 @@ function Section({
       id={`sectiune-${id}`}
       component="section"
       sx={{
-        // Pe telefon, cât bara RIDElance plus banda de secțiuni; pe lat, doar bara.
-        scrollMarginTop: preview
-          ? 0
-          : { xs: APP_BAR.xs + SECTION_NAV.xs + 16, md: APP_BAR.md + SECTION_NAV.md + 16 },
-        [WIDE]: preview ? {} : { scrollMarginTop: `${APP_BAR.md + 24}px` },
+        // Pe îngust, cât bara firmei plus banda de secțiuni; pe lat, doar bara.
+        scrollMarginTop: preview ? 0 : `${NARROW_COVER + 16}px`,
+        [WIDE]: preview ? {} : { scrollMarginTop: `${TOP_BAR.wide + 24}px` },
       }}
     >
       <Typography

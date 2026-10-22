@@ -10,6 +10,7 @@ import { TOKENS } from '../../constants/tokens'
 import { navItems } from '../../data/constants'
 import logo from '../../assets/logo.svg'
 import { SiteFooter } from './SiteFooter'
+import { SiteHeaderContext } from './siteHeader'
 import { useAppSelector } from '../../store/hooks'
 
 import { RouteFallback } from '../common/RouteFallback'
@@ -49,6 +50,8 @@ export function AppLayout() {
   const theme = useTheme()
   const [isNavPinned, setIsNavPinned] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  // Mini-site-ul unei firme își are bara lui (vezi `siteHeader`).
+  const [headerHidden, setHeaderHidden] = useState(false)
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'))
   const { accessToken } = useAppSelector((s) => s.auth)
 
@@ -75,6 +78,7 @@ export function AppLayout() {
       }}
     >
       {/* ── Navigation ── */}
+      {!headerHidden && (
       <AppBar
         position="sticky"
         elevation={0}
@@ -303,6 +307,7 @@ export function AppLayout() {
           </Toolbar>
         </Container>
       </AppBar>
+      )}
 
       {/* ── Mobile Drawer ── */}
       <Drawer
@@ -420,6 +425,7 @@ export function AppLayout() {
           `RouteFallback`, subsolul apărea la jumătatea ecranului și sărea în jos când sosea pagina
           (CLS 0,42 pe o conexiune lentă).
         */}
+        <SiteHeaderContext.Provider value={setHeaderHidden}>
         <Suspense fallback={<Box sx={{ minHeight: '100vh' }}><RouteFallback /></Box>}>
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -460,6 +466,7 @@ export function AppLayout() {
           </Routes>
           <PrerenderHandoff />
         </Suspense>
+        </SiteHeaderContext.Provider>
       </Box>
 
       <SiteFooter />

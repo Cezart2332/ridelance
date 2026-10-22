@@ -6,6 +6,7 @@ import { Box, CircularProgress } from '@mui/material'
 
 import { CompanySite } from '../components/company/CompanySite'
 import { ErrorPage } from '../components/common/ErrorPage'
+import { useHideSiteHeader } from '../components/layout/siteHeader'
 import { companyService, type PublicCompany } from '../services/company.service'
 
 /**
@@ -46,6 +47,10 @@ export function CompanyPublicPage() {
       cancelled = true
     }
   }, [companyPath])
+
+  // Mini-site-ul are bara lui; un 404 (slug greșit) o păstrează pe a noastră, ca omul să aibă
+  // pe unde ieși.
+  useHideSiteHeader(!notFound)
 
   // /f/{slug} și /{slug} arată aceeași pagină; canonica e cea de la rădăcină.
   usePageSeo(
