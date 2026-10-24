@@ -72,6 +72,17 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
+    // Cont neconfirmat: serverul nu-l lasă mai departe, deci nici interfața.
+    if (
+      error.response?.status === 403 &&
+      error.response?.data?.code === 'Account.VerificationRequired' &&
+      window.location.pathname !== ROUTES.verifyEmail
+    ) {
+      // Reîncărcare completă: starea confirmării din memorie pornește de la zero.
+      window.location.href = ROUTES.verifyEmail
+      return Promise.reject(error)
+    }
+
     // Only attempt refresh for 401 errors on non-refresh endpoints
     if (
       error.response?.status !== 401 ||

@@ -342,11 +342,21 @@ function CompanyPageEditor({
         {tab === 'aspect' && (
           <Stack spacing={3}>
             <Box>
-              <SubTitle>Fotografia de fundal</SubTitle>
+              <SubTitle>Fotografia principală</SubTitle>
               <CompanyCoverPanel
                 coverUrl={profile.coverImageUrl}
                 hasProfile={profile.id !== ''}
-                onCoverChange={(url) => onProfileChange({ ...profile, coverImageUrl: url })}
+                onCoverChange={(url) => {
+                  onProfileChange({
+                    ...profile,
+                    coverImageUrl: url,
+                    // Serverul a trimis-o deja la verificare; starea paginii o spune imediat.
+                    pageModeration: { ...profile.pageModeration, status: url ? 'Pending' : profile.pageModeration.status },
+                  })
+                  // O poză nouă e o modificare a paginii: butonul de trimitere trebuie să se aprindă.
+                  setDirty(true)
+                  setSaved(false)
+                }}
               />
             </Box>
 

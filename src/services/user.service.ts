@@ -11,6 +11,10 @@ export interface UserProfile {
   isPhoneVerified: boolean;
   role: string;
   createdAtUtc: string;
+  isEmailVerified?: boolean;
+  /** Confirmări cerute înainte de orice alt pas; serverul refuză restul cererilor până atunci. */
+  pendingEmailVerification?: boolean;
+  pendingPhoneVerification?: boolean;
 }
 
 export interface MonthlyRevenuePoint {

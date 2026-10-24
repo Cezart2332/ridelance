@@ -37,6 +37,7 @@ import { PageSectionsPanel } from '../../../srl/pages/companyPage/PageSectionsPa
 import { CompanyPagePreview } from './CompanyPagePreview'
 import { statusChip } from './statusChip'
 import { PUBLIC_SITE_URL } from '../../../../../native/platform'
+import { uploadUrl } from '../../../../../lib/api'
 
 /**
  * Verificarea unui mini-site: ce a scris firma, ce se vede acum, și ce facem cu asta.
@@ -67,6 +68,8 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
   const [content, setContent] = useState<CompanyPageContent>(detail.draft.content)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /** Ce s-a întâmplat după ultimul buton, scris lângă butoanele de verdict. */
+  const [done, setDone] = useState<string | null>(null)
   const [rejectOpen, setRejectOpen] = useState(false)
   const [rejectNote, setRejectNote] = useState('')
 
@@ -74,11 +77,13 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
    * Fiecare acțiune întoarce detaliul complet, deci starea locală se rescrie din răspuns.
    * Reîncărcarea separată ar fi lăsat panoul o clipă pe starea dinainte de apăsare.
    */
-  const run = async (action: () => Promise<AdminCompanyPageDetail>) => {
+  const run = async (action: () => Promise<AdminCompanyPageDetail>, success?: string) => {
     setBusy(true)
     setError(null)
+    setDone(null)
     try {
       const next = await action()
+      if (success) setDone(success)
       onChanged(next)
       setBlocked(next.moderation.blockedSections)
       setTagline(next.draft.tagline ?? '')
@@ -202,11 +207,13 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
                 disabled={busy}
                 startIcon={<CheckCircleRoundedIcon />}
                 onClick={() =>
-                  void run(() =>
-                    adminCompanyPageService.approve(detail.profileId, {
-                      note: note.trim() || null,
-                      blockedSections: blocked,
-                    }),
+                  void run(
+                    () =>
+                      adminCompanyPageService.approve(detail.profileId, {
+                        note: note.trim() || null,
+                        blockedSections: blocked,
+                      }),
+                    'Publicat. Pagina publică arată acum versiunea aprobată.',
                   )
                 }
                 sx={{ textTransform: 'none', fontWeight: 700 }}
@@ -228,6 +235,19 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
                 Refuză și scoate de pe internet
               </Button>
             </Stack>
+
+            {/* Lângă butoane, nu doar în cardul de sus: acolo, după un clic aici jos, rezultatul
+                rămânea în afara ecranului și aprobarea părea că n-a făcut nimic. */}
+            {done && (
+              <Alert severity="success" sx={{ mt: 2, borderRadius: `${TOKENS.radius.md}px`, fontWeight: 600 }}>
+                {done}
+              </Alert>
+            )}
+            {error && (
+              <Alert severity="error" sx={{ mt: 2, borderRadius: `${TOKENS.radius.md}px`, fontWeight: 600 }}>
+                {error}
+              </Alert>
+            )}
 
             <Typography sx={{ mt: 1.4, fontSize: '0.8rem', color: fade(TOKENS.ink, 0.6) }}>
               Aprobarea publică versiunea din ciornă, cu secțiunile bifate mai jos oprite.
@@ -281,7 +301,7 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
               <Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 2.5 }}>
                 <Box
                   component="img"
-                  src={detail.logoUrl}
+                  src={uploadUrl(detail.logoUrl)}
                   alt="Logo-ul firmei"
                   sx={{
                     width: 72,
@@ -317,14 +337,14 @@ export function CompanyPageReviewPanel({ detail, onBack, onChanged }: CompanyPag
             <Divider sx={{ my: 2 }} />
 
             <Typography sx={{ fontWeight: 700, fontSize: '0.88rem', mb: 1 }}>
-              Fotografia de fundal
+              Fotografia principală
             </Typography>
             {detail.draft.coverImageUrl ? (
               <Stack spacing={1.5}>
                 <Box
                   component="img"
-                  src={detail.draft.coverImageUrl}
-                  alt="Fotografia de fundal a paginii"
+                  src={uploadUrl(detail.draft.coverImageUrl)}
+                  alt="Fotografia principală a paginii"
                   sx={{
                     width: '100%',
                     maxHeight: 180,

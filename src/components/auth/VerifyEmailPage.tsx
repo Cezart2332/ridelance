@@ -12,6 +12,8 @@ import { CodeInput } from './shell/CodeInput'
 import { AUTH_COLORS, AUTH_DENSITY, authPrimaryButtonSx } from './shell/authShellSx'
 import { EMAIL_VERIFICATION, PHONE_VERIFICATION } from './emailVerification'
 import { useVerificationPolicy } from './verificationPolicy'
+import { loadPendingVerification, resetPendingVerification } from './verificationGate'
+import { ROUTES } from '../../constants/routes'
 
 /**
  * Confirmarea contului nou, în doi pași: codul din email, apoi codul din SMS.
@@ -40,25 +42,56 @@ export default function VerifyEmailPage() {
   const location = useLocation()
   const state = (location.state ?? {}) as LocationState
 
-  const email = state.email ?? ''
-  const phone = state.phone ?? ''
   const next = state.next ?? '/app'
 
+  // Din înregistrare, adresa și numărul vin în `state`. Din poarta de confirmare (cine a plecat
+  // de pe pagină și a revenit în aplicație) vin din profil, împreună cu ce mai lipsește.
+  const [email, setEmail] = useState(state.email ?? '')
+  const [phone, setPhone] = useState(state.phone ?? '')
   const [step, setStep] = useState<Step>('email')
+  const [ready, setReady] = useState(Boolean(state.email))
   const [emailConfirmed, setEmailConfirmed] = useState(false)
   // Ce coduri sunt obligatorii pe mediul acesta (producție: da; site de test: nu).
   const policy = useVerificationPolicy()
 
-  // Fără adresă nu există ce confirma: cineva a ajuns direct pe rută.
   useEffect(() => {
-    if (!email) navigate('/app', { replace: true })
-  }, [email, navigate])
+    if (state.email) return
+    let active = true
+    userService
+      .getProfile()
+      .then(async (profile) => {
+        if (!active) return
+        const pending = await loadPendingVerification()
+        if (!pending.email && !pending.phone) {
+          navigate(next, { replace: true })
+          return
+        }
+        setEmail(profile.email)
+        setPhone(profile.phoneNumber ?? '')
+        setEmailConfirmed(!pending.email)
+        setStep(pending.email ? 'email' : 'phone')
+        setReady(true)
+      })
+      // Fără sesiune n-are ce confirma aici: întâi autentificarea.
+      .catch(() => active && navigate(ROUTES.login, { replace: true }))
+    return () => {
+      active = false
+    }
+  }, [state.email, next, navigate])
+
+  /** Gata: starea confirmării se recitește, ca poarta din aplicație să nu-l trimită înapoi. */
+  const finish = () => {
+    resetPendingVerification()
+    navigate(next, { replace: true })
+  }
 
   const finishEmail = (confirmed: boolean) => {
     setEmailConfirmed(confirmed)
     if (phone) setStep('phone')
-    else navigate(next, { replace: true })
+    else finish()
   }
+
+  if (!ready) return <AuthLayout>{null}</AuthLayout>
 
   return (
     <AuthLayout>
@@ -70,7 +103,7 @@ export default function VerifyEmailPage() {
           phone={phone}
           required={policy?.phoneRequired ?? false}
           canSkip={policy?.phoneRequired === false}
-          onDone={() => navigate(next, { replace: true })}
+          onDone={finish}
         />
       )}
     </AuthLayout>

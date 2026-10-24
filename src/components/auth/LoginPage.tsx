@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Box, Button, Checkbox, FormControlLabel, Link, Stack, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Checkbox, FormControlLabel, Link, Stack, TextField, Typography } from '@mui/material'
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom'
 import { AuthLayout } from './shell/AuthLayout'
 import { AuthFormHeader } from './shell/AuthFormHeader'
@@ -89,6 +89,13 @@ export default function LoginPage() {
         }
         error={serverError?.message}
       />
+
+      {/* Vine de la resetarea parolei: parola s-a schimbat, acum se intră cu ea. */}
+      {typeof location.state?.notice === 'string' && !serverError && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          {location.state.notice}
+        </Alert>
+      )}
 
       <Box component="form" onSubmit={handleSubmit} noValidate>
         <Stack sx={AUTH_DENSITY.betweenFields}>

@@ -114,6 +114,16 @@ export const authService = {
     await authAxios.post('/users/resend-verification', { email })
   },
 
+  /** Trimite pe email codul de resetare a parolei. Serverul răspunde la fel și dacă adresa n-are cont. */
+  forgotPassword: async (email: string): Promise<void> => {
+    await authAxios.post('/users/forgot-password', { email })
+  },
+
+  /** Setează parola nouă cu codul primit pe email. Închide sesiunile deschise ale contului. */
+  resetPassword: async (email: string, code: string, newPassword: string): Promise<void> => {
+    await authAxios.post('/users/reset-password', { email, code, newPassword })
+  },
+
   logout: async () => {
     // Grab the current access token BEFORE clearing Redux
     const token = store.getState().auth.accessToken

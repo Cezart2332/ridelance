@@ -9,7 +9,7 @@ import { companyService } from '../../../../../services/company.service'
 import { DASHBOARD_TOKENS } from '../../../dashboardTheme'
 
 /**
- * Fotografia din antetul mini-site-ului.
+ * Fotografia principală a mini-site-ului, în antet, lângă denumirea firmei.
  *
  * Nu se refuză nicio imagine pentru că e prea mică. Se aduce ea la dimensiunea de care are
  * nevoie antetul, aici în browser, înainte de upload — vezi `lib/imageProcessing.ts`. Ce urcă
@@ -101,7 +101,7 @@ export function CompanyCoverPanel({ coverUrl, hasProfile, onCoverChange }: Compa
       >
         {!coverUrl && (
           <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.86rem', px: 2, textAlign: 'center' }}>
-            Fără fotografie, antetul rămâne o bandă în culorile firmei.
+            Fără fotografie, în antet apare prima mașină publicată.
           </Typography>
         )}
       </Box>
@@ -143,8 +143,7 @@ export function CompanyCoverPanel({ coverUrl, hasProfile, onCoverChange }: Compa
       </Stack>
 
       <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.82rem' }}>
-        Orice fotografie — o mărim și o pregătim noi pentru antet. Se salvează imediat, separat
-        de restul paginii.
+        Apare în antet, lângă denumirea firmei, după verificare.
       </Typography>
 
       {note && (
