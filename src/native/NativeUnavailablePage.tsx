@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Box, Button, Stack, Typography } from '@mui/material'
 import HourglassTopRoundedIcon from '@mui/icons-material/HourglassTopRounded'
@@ -5,6 +6,7 @@ import HourglassTopRoundedIcon from '@mui/icons-material/HourglassTopRounded'
 import { TOKENS } from '../constants/tokens'
 import { ROUTES } from '../constants/routes'
 import { authService } from '../services/auth.service'
+import { DeleteAccountDialog } from '../components/common/DeleteAccountDialog'
 import type { NativeUnavailableReason } from './platform'
 
 /**
@@ -12,7 +14,9 @@ import type { NativeUnavailableReason } from './platform'
  *
  * Aplicația nu face onboarding și nu vinde abonamente, deci aici nu există buton spre ele — nici
  * link spre site pentru plată, pe care magazinele de aplicații nu-l acceptă. Omul află de ce nu
- * vede nimic, poate verifica din nou după ce contul se activează sau se poate deconecta.
+ * vede nimic, poate verifica din nou după ce contul se activează, se poate deconecta sau își poate
+ * șterge contul — fără dashboard n-ajunge în Profil, iar magazinele cer ștergerea din aplicație.
+ * Conturile echipei nu au opțiunea: le închide un admin.
  */
 const MESSAGES: Record<NativeUnavailableReason, { title: string; text: string }> = {
   onboarding: {
@@ -42,6 +46,7 @@ export function NativeUnavailablePage() {
   const [params] = useSearchParams()
   const reason = (params.get('motiv') as NativeUnavailableReason | null) ?? 'onboarding'
   const message = MESSAGES[reason] ?? MESSAGES.onboarding
+  const [deleting, setDeleting] = useState(false)
 
   const logout = async () => {
     await authService.logout()
@@ -86,7 +91,13 @@ export function NativeUnavailablePage() {
           <Button variant="text" onClick={() => void logout()} sx={{ color: TOKENS.textMuted }}>
             Deconectare
           </Button>
+          {reason !== 'rol' && (
+            <Button variant="text" color="error" onClick={() => setDeleting(true)}>
+              Șterge contul
+            </Button>
+          )}
         </Stack>
+        <DeleteAccountDialog open={deleting} onClose={() => setDeleting(false)} />
       </Stack>
     </Box>
   )

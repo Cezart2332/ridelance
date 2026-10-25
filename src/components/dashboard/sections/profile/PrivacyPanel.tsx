@@ -1,24 +1,10 @@
 import { useState } from 'react'
-import { Link as RouterLink, useNavigate } from 'react-router-dom'
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
+import { Link as RouterLink } from 'react-router-dom'
+import { Button, Paper, Stack, Typography } from '@mui/material'
 import GavelRoundedIcon from '@mui/icons-material/GavelRounded'
 
-import { DASHBOARD_TOKENS, dashboardInputSx } from '../../dashboardTheme'
-import { api } from '../../../../lib/axios'
-import { authService } from '../../../../services/auth.service'
-import { getErrorMessage } from '../../../../utils/errorHandler'
+import { DASHBOARD_TOKENS } from '../../dashboardTheme'
+import { DeleteAccountDialog } from '../../../common/DeleteAccountDialog'
 
 const LINKS = [
   { label: 'Termeni și condiții', to: '/termeni-si-conditii' },
@@ -30,36 +16,11 @@ const LINKS = [
 /**
  * Confidențialitate și cont, în subsolul Profilului.
  *
- * Ștergerea contului se face de aici, confirmată cu parola. Pe server e închiderea pe care o face
- * și adminul: accesul se pierde, abonamentul se oprește, iar documentele rămân, cum cere legea.
- * Exportul datelor se cere în continuare prin Suport.
+ * Ștergerea contului se face de aici (`DeleteAccountDialog`); exportul datelor se cere în
+ * continuare prin Suport.
  */
 export function PrivacyPanel() {
-  const navigate = useNavigate()
-  const [open, setOpen] = useState(false)
-  const [password, setPassword] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const close = () => {
-    if (busy) return
-    setOpen(false)
-    setPassword('')
-    setError(null)
-  }
-
-  const deleteAccount = async () => {
-    setBusy(true)
-    setError(null)
-    try {
-      await api.post('/users/me/delete', { password })
-      await authService.logout()
-      navigate('/', { replace: true })
-    } catch (cause) {
-      setError(getErrorMessage(cause, 'Contul nu a putut fi șters.'))
-      setBusy(false)
-    }
-  }
+  const [deleting, setDeleting] = useState(false)
 
   return (
     <Paper
@@ -114,52 +75,13 @@ export function PrivacyPanel() {
       <Button
         variant="outlined"
         color="error"
-        onClick={() => setOpen(true)}
+        onClick={() => setDeleting(true)}
         sx={{ mt: 2.5, textTransform: 'none', fontWeight: 750, borderRadius: `${DASHBOARD_TOKENS.radius.full}px`, px: 3 }}
       >
         Șterge contul
       </Button>
 
-      <Dialog open={open} onClose={close} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 750 }}>Ștergi contul?</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2}>
-            <Typography variant="body2" color="text.secondary">
-              Pierzi accesul, iar abonamentul se oprește. Documentele contabile rămân păstrate cât cere legea.
-            </Typography>
-            <TextField
-              type="password"
-              label="Parola"
-              size="small"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && password && !busy) void deleteAccount()
-              }}
-              autoFocus
-              fullWidth
-              sx={dashboardInputSx}
-            />
-            {error && <Alert severity="error">{error}</Alert>}
-          </Stack>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={close} disabled={busy} sx={{ textTransform: 'none' }}>
-            Anulează
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            disableElevation
-            onClick={() => void deleteAccount()}
-            disabled={busy || !password}
-            sx={{ textTransform: 'none', fontWeight: 750 }}
-          >
-            {busy ? <CircularProgress size={18} color="inherit" /> : 'Șterge contul'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <DeleteAccountDialog open={deleting} onClose={() => setDeleting(false)} />
     </Paper>
   )
 }
