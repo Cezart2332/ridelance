@@ -23,9 +23,9 @@ export interface BoltOrderDto {
   destinationAddress: string;
   rideDistance: number;
   ridePrice: number;
-  netEarnings: number;
+  netEarnings: number | null;
   tip: number;
-  commission: number;
+  commission: number | null;
   vehicleModel: string;
   vehicleLicensePlate: string;
   orderFinishedTime: string | null;
@@ -34,8 +34,8 @@ export interface BoltOrderDto {
 export interface BoltOrdersResponse {
   orders: BoltOrderDto[];
   totalOrdersCount: number;
-  totalNetEarnings: number;
-  totalCommissions: number;
+  totalEarnings: number;
+  totalCommissions: number | null;
   totalTips: number;
 }
 
@@ -43,10 +43,10 @@ export type BoltDashboardPeriod = 'month' | 'year' | 'total';
 
 export interface BoltDashboardPointDto {
   label: string;
-  netEarnings: number;
+  earnings: number;
   ordersCount: number;
   tips: number;
-  commissions: number;
+  commissions: number | null;
   rideHours: number;
 }
 
@@ -58,9 +58,9 @@ export interface BoltDashboardRideDto {
   destinationAddress: string;
   rideDistanceKm: number;
   ridePrice: number;
-  netEarnings: number;
+  netEarnings: number | null;
   tip: number;
-  commission: number;
+  commission: number | null;
   paymentMethod: string;
   vehicleModel: string;
   vehicleLicensePlate: string;
@@ -76,16 +76,16 @@ export interface BoltDashboardDto {
   year: number | null;
   month: number | null;
   totalOrdersCount: number;
-  totalNetEarnings: number;
+  totalEarnings: number;
   totalCashEarnings: number;
   totalCardEarnings: number;
   totalBusinessEarnings: number;
   totalTips: number;
-  totalCommissions: number;
+  totalCommissions: number | null;
   totalRideDistanceKm: number;
   totalRideHours: number;
-  averageNetPerRide: number;
-  averageNetPerRideHour: number;
+  averagePerRide: number;
+  averagePerRideHour: number;
   series: BoltDashboardPointDto[];
   recentRides: BoltDashboardRideDto[];
 }

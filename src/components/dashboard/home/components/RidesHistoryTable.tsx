@@ -305,7 +305,7 @@ function RideTable({ items, sortField, sortDescending, onToggleSort }: RideTable
             <Box component="th" scope="col" sx={headCellSx}>
               Plată
             </Box>
-            {sortableHeader('net', 'Net (lei)', 'right')}
+            {sortableHeader('net', 'Încasat (lei)', 'right')}
           </Box>
         </Box>
         <Box component="tbody">

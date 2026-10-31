@@ -449,8 +449,8 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
               icon={<LocalTaxiRoundedIcon />}
             />
             <StatCard
-              label="Încasat net"
-              value={formatLei(dashboard?.totalNetEarnings ?? 0)}
+              label="Încasat"
+              value={formatLei(dashboard?.totalEarnings ?? 0)}
               icon={<AccountBalanceWalletRoundedIcon />}
               variant="accent"
             />
@@ -551,7 +551,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
                               {formatHours(getRideHours(order))}
                             </TableCell>
                             <TableCell align="right" sx={{ fontWeight: 900, color: DASHBOARD_TOKENS.accent, fontVariantNumeric: 'tabular-nums' }}>
-                              {formatLei(Number(order.netEarnings))}
+                              {formatLei(Number(order.ridePrice))}
                             </TableCell>
                             <TableCell>
                               <StatusChip label={statusCfg.label} tone={statusCfg.tone} size="sm" />
@@ -635,9 +635,9 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
                             minWidth: 0,
                           }}
                         >
-                          <Typography sx={{ fontSize: '0.82rem', fontWeight: 800, color: DASHBOARD_TOKENS.textMuted }}>Venit net</Typography>
+                          <Typography sx={{ fontSize: '0.82rem', fontWeight: 800, color: DASHBOARD_TOKENS.textMuted }}>Încasat</Typography>
                           <Typography sx={{ minWidth: 0, textAlign: 'right', overflowWrap: 'anywhere', fontSize: '1.05rem', fontWeight: 900, color: DASHBOARD_TOKENS.accent, fontVariantNumeric: 'tabular-nums' }}>
-                            {formatLei(Number(order.netEarnings))}
+                            {formatLei(Number(order.ridePrice))}
                           </Typography>
                         </Box>
                       </Box>
