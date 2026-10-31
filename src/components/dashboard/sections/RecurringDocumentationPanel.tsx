@@ -55,7 +55,6 @@ export function RecurringDocumentationPanel({
   onSnackbar,
 }: RecurringDocumentationPanelProps) {
   const [documents, setDocuments] = useState<DocumentSummary[]>([])
-  const [loading, setLoading] = useState(true)
   const [uploadingCategory, setUploadingCategory] = useState<string | null>(null)
   const [openingId, setOpeningId] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
@@ -63,19 +62,20 @@ export function RecurringDocumentationPanel({
 
   const isContabil = Boolean(contabilContext)
 
-  const loadDocuments = useCallback(async () => {
-    setLoading(true)
-    try {
-      const docs = isContabil
-        ? await documentService.getByUser(contabilContext!.userId)
-        : await documentService.getByUser()
-      setDocuments(docs)
-    } catch {
-      onSnackbar?.('Nu s-au putut încărca documentele.', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }, [isContabil, contabilContext, onSnackbar])
+  // Al cui dosar e afișat: contabilul vede clientul ales, clientul pe al lui. Se încarcă până când
+  // lista afișată e a dosarului cerut; o reîncărcare după upload nu mai ascunde lista.
+  const docsOwner = isContabil ? contabilContext!.userId : null
+  const [loadedOwner, setLoadedOwner] = useState<string | null | undefined>(undefined)
+  const loading = loadedOwner !== docsOwner
+
+  const loadDocuments = useCallback(
+    () =>
+      (docsOwner ? documentService.getByUser(docsOwner) : documentService.getByUser())
+        .then(setDocuments)
+        .catch(() => onSnackbar?.('Nu s-au putut încărca documentele.', 'error'))
+        .finally(() => setLoadedOwner(docsOwner)),
+    [docsOwner, onSnackbar],
+  )
 
   useEffect(() => {
     void loadDocuments()

@@ -33,6 +33,7 @@ import {
   type BoltIntegrationDto,
   type BoltOrderDto,
 } from '../../../services/bolt.service';
+import { getErrorMessage } from '../../../utils/errorHandler';
 import { DASHBOARD_TOKENS, dashboardInputSx } from '../dashboardTheme';
 import { StatCard, StatusChip, type StatusTone } from '../ui';
 
@@ -118,34 +119,33 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
   const [clientSecret, setClientSecret] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const loadData = async () => {
-    try {
-      const [integrationData, ordersResponse, dashboardData] = await Promise.all([
-        boltService.getIntegration(),
-        boltService.getOrders(5, 0),
-        boltService.getDashboard('month'),
-      ]);
-
-      setIntegration(integrationData);
-      setOrders(ordersResponse.orders || []);
-      setTotalOrdersCount(ordersResponse.totalOrdersCount);
-      setDashboard(dashboardData);
-
+  // Lanț de promisiuni, nu try/await: starea se schimbă doar după răspuns, deci efectul de la
+  // montare nu declanșează randări în cascadă.
+  const loadData = () =>
+    Promise.all([
+      boltService.getIntegration(),
+      boltService.getOrders(5, 0),
+      boltService.getDashboard('month'),
+    ])
+      .then(([integrationData, ordersResponse, dashboardData]) => {
+        setIntegration(integrationData);
+        setOrders(ordersResponse.orders || []);
+        setTotalOrdersCount(ordersResponse.totalOrdersCount);
+        setDashboard(dashboardData);
+      })
       // Câmpurile de credențiale rămân goale, chiar și când există deja o integrare. Aici se
       // punea masca primită de la server ca valoare inițială; cine apăsa Conectează fără s-o
       // rescrie trimitea `4wEssh...ME` în loc de Client ID, iar salvarea suprascria valoarea
       // bună cu masca. De acolo încolo Bolt răspundea 500 la fiecare încercare, la nesfârșit:
       // masca mascată e tot masca, deci nimic nu mai ieșea din starea asta singur.
-    } catch (err: any) {
-      console.error('Failed to load Bolt integration data', err);
-      setErrorMsg('Nu s-au putut încărca datele Bolt.');
-    } finally {
-      setLoading(false);
-    }
-  };
+      .catch((err) => {
+        console.error('Failed to load Bolt integration data', err);
+        setErrorMsg('Nu s-au putut încărca datele Bolt.');
+      })
+      .finally(() => setLoading(false));
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const handleLoadMore = async () => {
@@ -179,9 +179,9 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
       setClientId('');
       setClientSecret('');
       onConnected?.();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to configure Bolt API', err);
-      setErrorMsg(err.response?.data?.detail || 'Eroare la autentificarea cu Bolt API. Verifică datele introduse.');
+      setErrorMsg(getErrorMessage(err, 'Eroare la autentificarea cu Bolt API. Verifică datele introduse.'));
     } finally {
       setSyncing(false);
     }
@@ -193,7 +193,7 @@ export function BoltIntegrationTab({ embedded = false, onConnected }: BoltIntegr
     try {
       await boltService.syncOrders();
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Sync failed', err);
       setErrorMsg('Eroare la sincronizarea datelor Bolt.');
     } finally {

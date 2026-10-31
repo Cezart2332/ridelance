@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   Drawer,
@@ -70,20 +70,15 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   const theme = useTheme()
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'))
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [isStandalone, setIsStandalone] = useState(false)
-  
-  useEffect(() => {
-    const standalone = window.matchMedia('(display-mode: standalone)').matches || 
-                        (window.navigator as any).standalone || 
-                        document.referrer.includes('android-app://');
-    setIsStandalone(standalone)
-  }, [])
-
-  // Close mobile drawer when viewport is desktop — avoids invisible Modal backdrop blocking clicks
-  useEffect(() => {
-    if (isMdUp) setMobileOpen(false)
-  }, [isMdUp])
+  const [drawerToggled, setMobileOpen] = useState(false)
+  // Pe desktop sertarul mobil e mereu închis: altfel backdrop-ul invizibil al Modalului blochează click-urile.
+  const mobileOpen = drawerToggled && !isMdUp
+  const [isStandalone] = useState(
+    () =>
+      window.matchMedia('(display-mode: standalone)').matches ||
+      Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone) ||
+      document.referrer.includes('android-app://'),
+  )
 
   const activeParentItem = navItems.find((n) => n.subItems?.some((s) => s.id === activeId))
   const activeItem = navItems.find((n) => n.id === activeId) ?? activeParentItem
@@ -94,7 +89,7 @@ export function DashboardLayout({
   }
 
   const handleDrawerToggle = () => {
-    setMobileOpen((prev) => !prev)
+    setMobileOpen(!mobileOpen)
   }
 
   const renderIcon = (icon: React.ReactNode | string, isActive: boolean) => {

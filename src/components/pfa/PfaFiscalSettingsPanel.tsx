@@ -258,7 +258,6 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
 
   const [settings, setSettings] = useState<PfaFiscalSettings | null>(null)
-  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [apiUnavailable, setApiUnavailable] = useState(false)
@@ -318,26 +317,40 @@ export function PfaFiscalSettingsPanel({ pfaId, editable = false, clientUserId }
     setAccounts(nextAccounts)
   }
 
-  const loadSettings = () => {
-    setLoading(true)
-    setError(null)
-    setApiUnavailable(false)
+  // Alt PFA: panoul pornește de la prezentare și se încarcă până sosesc setările lui.
+  const [shownPfaId, setShownPfaId] = useState(pfaId)
+  if (shownPfaId !== pfaId) {
+    setShownPfaId(pfaId)
+    setSection('overview')
+  }
+  const [loadedPfaId, setLoadedPfaId] = useState<string | null>(null)
+  const loading = loadedPfaId !== pfaId
+
+  useEffect(() => {
+    let ignore = false
     pfaService.getFiscalSettings(pfaId)
-      .then(applySettings)
+      .then((data) => {
+        if (ignore) return
+        setError(null)
+        setApiUnavailable(false)
+        applySettings(data)
+      })
       .catch((err) => {
+        if (ignore) return
         if (isAxiosError(err) && err.response?.status === 404) {
+          setError(null)
           setApiUnavailable(true)
           applySettings(buildDefaultSettings(pfaId))
           return
         }
         setError('Nu s-au putut încărca setările fiscale PFA.')
       })
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(() => {
-    setSection('overview')
-    loadSettings()
+      .finally(() => {
+        if (!ignore) setLoadedPfaId(pfaId)
+      })
+    return () => {
+      ignore = true
+    }
   }, [pfaId])
 
   const selectSection = (next: FiscalSection) => {

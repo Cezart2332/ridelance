@@ -48,17 +48,15 @@ export function CarsView() {
   const [platform, setPlatform] = useState('Toate');
   const [sort, setSort] = useState('Preț: Mic la Mare');
 
-  const fetchCars = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await carsService.getAll();
-      setCars(data);
-    } catch (error) {
-      console.error('Error fetching cars:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchCars = useCallback(
+    () =>
+      carsService
+        .getAll()
+        .then(setCars)
+        .catch((error) => console.error('Error fetching cars:', error))
+        .finally(() => setLoading(false)),
+    [],
+  );
 
   useEffect(() => {
     fetchCars();

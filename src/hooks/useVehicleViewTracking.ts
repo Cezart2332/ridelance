@@ -27,7 +27,7 @@ export function useVehicleViewTracking(carId: string | undefined, enabled = true
   useEffect(() => {
     if (!carId || !enabled || sentRef.current) return
 
-    let alreadySeen = false
+    let alreadySeen: boolean
     try {
       alreadySeen = sessionStorage.getItem(keyOf(carId)) !== null
     } catch {

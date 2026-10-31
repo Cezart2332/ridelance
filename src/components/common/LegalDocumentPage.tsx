@@ -111,7 +111,6 @@ export function LegalDocumentPage({
             <Stack spacing={1.5}>
               {Array.from({ length: 10 }).map((_, index) => (
                 <Skeleton
-                  // eslint-disable-next-line react/no-array-index-key
                   key={index}
                   variant="text"
                   height={index % 4 === 0 ? 34 : 22}
@@ -129,7 +128,6 @@ export function LegalDocumentPage({
                 if (isSectionTitle(line)) {
                   return (
                     <Typography
-                      // eslint-disable-next-line react/no-array-index-key
                       key={index}
                       component="h2"
                       sx={{
@@ -148,7 +146,6 @@ export function LegalDocumentPage({
 
                 return (
                   <Typography
-                    // eslint-disable-next-line react/no-array-index-key
                     key={index}
                     component="p"
                     sx={{

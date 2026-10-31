@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -54,7 +54,6 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
   const [income, setIncome] = useState<PfaMonthlyIncome>(() =>
     emptyIncome(pfaRegistrationId, propYear ?? initial.year, propMonth ?? initial.month)
   );
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -75,24 +74,35 @@ export function PfaMonthlyIncomeForm({ pfaRegistrationId, year: propYear, month:
     [income.venitCash, income.venitCard, income.venitBolt, income.venitUber]
   );
 
-  const loadIncome = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setSaved(false);
-    try {
-      const data = await pfaService.getMonthlyIncome(pfaRegistrationId, year, month);
-      setIncome(data);
-    } catch {
-      setError('Nu s-au putut încărca veniturile.');
-      setIncome(emptyIncome(pfaRegistrationId, year, month));
-    } finally {
-      setLoading(false);
-    }
-  }, [pfaRegistrationId, year, month]);
+  // Formularul stă în încărcare până când veniturile afișate sunt ale lunii alese, ca o salvare
+  // rapidă după schimbarea lunii să nu scrie cifrele lunii vechi peste cea nouă.
+  const incomeKey = `${pfaRegistrationId}:${year}:${month}`;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const loading = loadedKey !== incomeKey;
 
   useEffect(() => {
-    loadIncome();
-  }, [loadIncome]);
+    let ignore = false;
+    pfaService
+      .getMonthlyIncome(pfaRegistrationId, year, month)
+      .then((data) => {
+        if (ignore) return;
+        setIncome(data);
+        setError(null);
+      })
+      .catch(() => {
+        if (ignore) return;
+        setError('Nu s-au putut încărca veniturile.');
+        setIncome(emptyIncome(pfaRegistrationId, year, month));
+      })
+      .finally(() => {
+        if (ignore) return;
+        setSaved(false);
+        setLoadedKey(incomeKey);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [pfaRegistrationId, year, month, incomeKey]);
 
   const handleSave = async () => {
     setSaving(true);

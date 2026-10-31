@@ -63,7 +63,6 @@ export function CarsPage() {
     ),
   )
   const [cars, setCars] = useState<Car[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   
   // Filter States
@@ -89,17 +88,18 @@ export function CarsPage() {
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
 
   // Refetch la schimbarea sortării: ordinea vine de la server, care e singurul care știe scorul.
-  const fetchCars = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await carsService.getAll(sortKeyFor(sort));
-      setCars(data);
-    } catch (error) {
-      console.error('Error fetching cars:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [sort]);
+  // Se încarcă cât timp lista afișată nu e încă cea pentru sortarea aleasă.
+  const [loadedSort, setLoadedSort] = useState<SortOption | null>(null);
+  const loading = loadedSort !== sort;
+  const fetchCars = useCallback(
+    () =>
+      carsService
+        .getAll(sortKeyFor(sort))
+        .then(setCars)
+        .catch((error) => console.error('Error fetching cars:', error))
+        .finally(() => setLoadedSort(sort)),
+    [sort],
+  );
 
   useEffect(() => {
     fetchCars();

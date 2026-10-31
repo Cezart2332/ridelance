@@ -30,7 +30,8 @@ import { ProcessVisual } from '../components/home/ProcessVisual'
 import { HowItWorks } from '../components/home/HowItWorks'
 import { FaqSection } from '../components/home/FaqSection'
 import { CarCarousel } from '../components/home/CarCarousel'
-import { InsuranceLinksGrid, LANDING_INSURANCE_SLUGS } from '../components/insurance/InsuranceLinksGrid'
+import { InsuranceLinksGrid } from '../components/insurance/InsuranceLinksGrid'
+import { LANDING_INSURANCE_SLUGS } from '../components/insurance/insuranceSlugs'
 
 export function HomePage() {
   usePageSeo({ path: '/' })

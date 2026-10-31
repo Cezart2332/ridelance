@@ -111,17 +111,27 @@ export function DiscountsAdminView() {
   const [submitting, setSubmitting] = useState(false)
   const [formResult, setFormResult] = useState<{ ok: boolean; message: string } | null>(null)
 
-  const load = useCallback(() => {
+  // Cererea nu atinge starea sincron, ca să poată porni din efectul de la montare; reîncărcările
+  // din butoane aprind întâi spinnerul.
+  const fetchCodes = useCallback(
+    () =>
+      discountsService
+        .list()
+        .then(setCodes)
+        .catch((err) => setListError(getErrorMessage(err, 'Nu am putut încărca codurile de reducere.')))
+        .finally(() => setLoading(false)),
+    [],
+  )
+
+  const load = () => {
     setLoading(true)
     setListError(null)
-    discountsService
-      .list()
-      .then(setCodes)
-      .catch((err) => setListError(getErrorMessage(err, 'Nu am putut încărca codurile de reducere.')))
-      .finally(() => setLoading(false))
-  }, [])
+    void fetchCodes()
+  }
 
-  useEffect(load, [load])
+  useEffect(() => {
+    void fetchCodes()
+  }, [fetchCodes])
 
   const handleCreate = async () => {
     const trimmedCode = code.trim().toUpperCase()

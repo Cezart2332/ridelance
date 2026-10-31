@@ -89,8 +89,9 @@ export function OblioAdminView() {
   const [submitting, setSubmitting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string; link?: string } | null>(null)
 
-  const loadStatus = useCallback(() => {
-    setStatusLoading(true)
+  // Cererile propriu-zise nu ating starea sincron, ca să poată porni din efectul de la montare;
+  // butoanele de reîncărcare aprind întâi spinnerul.
+  const fetchStatus = useCallback(() =>
     oblioService
       .getStatus()
       .then(setStatus)
@@ -105,22 +106,29 @@ export function OblioAdminView() {
           error: getErrorMessage(err, 'Nu am putut verifica statusul Oblio.'),
         })
       })
-      .finally(() => setStatusLoading(false))
-  }, [])
+      .finally(() => setStatusLoading(false)), [])
 
-  const loadInvoices = useCallback(() => {
-    setInvoicesLoading(true)
+  const fetchInvoices = useCallback(() =>
     oblioService
       .getInvoices()
       .then(setInvoices)
       .catch(() => setInvoices([]))
-      .finally(() => setInvoicesLoading(false))
-  }, [])
+      .finally(() => setInvoicesLoading(false)), [])
+
+  const loadStatus = () => {
+    setStatusLoading(true)
+    void fetchStatus()
+  }
+
+  const loadInvoices = () => {
+    setInvoicesLoading(true)
+    void fetchInvoices()
+  }
 
   useEffect(() => {
-    loadStatus()
-    loadInvoices()
-  }, [loadStatus, loadInvoices])
+    void fetchStatus()
+    void fetchInvoices()
+  }, [fetchStatus, fetchInvoices])
 
   const handleTestInvoice = async () => {
     const amount = Number(amountLei.replace(',', '.'))

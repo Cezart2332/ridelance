@@ -2,9 +2,17 @@
  * Extracts a user-friendly error message from an API response or generic error.
  * Uses the RFC7807 'detail' property returned by our backend ProblemDetails.
  */
-export function getErrorMessage(err: any, fallbackMessage: string = 'A apărut o eroare neașteptată.'): string {
+interface ApiErrorLike {
+  response?: { data?: { detail?: unknown; error?: unknown; title?: unknown } };
+  message?: unknown;
+  code?: unknown;
+}
+
+export function getErrorMessage(error: unknown, fallbackMessage: string = 'A apărut o eroare neașteptată.'): string {
+  const err = (typeof error === 'object' && error !== null ? error : {}) as ApiErrorLike;
+
   // Check if it's an Axios error with response data
-  if (err?.response?.data) {
+  if (err.response?.data) {
     const data = err.response.data;
     
     // Priority 1: Our backend puts the friendly description in `detail`
@@ -23,11 +31,11 @@ export function getErrorMessage(err: any, fallbackMessage: string = 'A apărut o
   }
 
   // Network or timeout errors
-  if (err?.message === 'Network Error') {
+  if (err.message === 'Network Error') {
     return 'Eroare de conexiune. Te rugăm să îți verifici conexiunea la internet.';
   }
   
-  if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+  if (err.code === 'ECONNABORTED' || (typeof err.message === 'string' && err.message.includes('timeout'))) {
     return 'Conexiunea a expirat. Te rugăm să încerci din nou.';
   }
 

@@ -79,19 +79,18 @@ export function CarsAdminView() {
   const [editingCar, setEditingCar] = useState<Car | null>(null);
 
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const carsData = await carsService.getAllAdmin();
-      const leadsData = await carsService.getLeads();
-      setCars(carsData);
-      setLeads(leadsData);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Fără spinner la reîncărcare: lista rămâne pe ecran până vin datele noi.
+  const fetchData = useCallback(
+    () =>
+      Promise.all([carsService.getAllAdmin(), carsService.getLeads()])
+        .then(([carsData, leadsData]) => {
+          setCars(carsData);
+          setLeads(leadsData);
+        })
+        .catch((error) => console.error('Error fetching data:', error))
+        .finally(() => setLoading(false)),
+    [],
+  );
 
   useEffect(() => {
     fetchData();
@@ -104,7 +103,7 @@ export function CarsAdminView() {
       try {
         await carsService.delete(id);
         setCars(prev => prev.filter(c => c.id !== id));
-      } catch (error) {
+      } catch {
         alert('Eroare la ștergerea mașinii.');
       }
     }
@@ -114,7 +113,7 @@ export function CarsAdminView() {
     try {
       const next = await carsService.toggleActive(id);
       setCars(prev => prev.map(c => c.id === id ? { ...c, ...next } : c));
-    } catch (error) {
+    } catch {
       alert('Eroare la modificarea vizibilității.');
     }
   };
@@ -132,7 +131,7 @@ export function CarsAdminView() {
     try {
       await carsService.updateLeadStatus(id, backendStatus, adminNote);
       setLeads(prev => prev.map(l => l.id === id ? { ...l, status: label, adminNote: adminNote ?? l.adminNote } : l));
-    } catch (error) {
+    } catch {
       alert('Eroare la actualizarea statusului.');
     }
   };

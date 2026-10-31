@@ -64,13 +64,10 @@ export function SupportChatTab({ accountantChatPath, faq = [] }: SupportChatTabP
     userService.getProfile().then(setProfile).catch(() => {})
   }, [])
 
-  // Bootstrap: get support room, load history, connect to hub
+  // Bootstrap: get support room, load history, connect to hub. Rulează o dată, la montare, când
+  // starea e deja cea inițială (se încarcă, fără cameră, fără mesaje).
   useEffect(() => {
     let currentRoomId: string
-    setLoading(true)
-    setNoAgent(false)
-    setMessages([])
-    setRoomId(null)
 
     chatService.getSupportRoom()
       .then(async ({ roomId: id }) => {

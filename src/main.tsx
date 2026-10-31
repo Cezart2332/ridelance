@@ -11,10 +11,8 @@ import { AuthInitializer } from './components/auth/AuthInitializer'
 import { reloadForMissingChunk } from './utils/lazyWithRetry'
 import { watchForNewVersion } from './utils/appVersion'
 import { IS_NATIVE_APP } from './native/platform'
-// @ts-ignore
 import '@fontsource-variable/geist'
 // Display face pentru onboarding (titluri de pas, progres) — body-ul rămâne Geist.
-// @ts-ignore
 import '@fontsource-variable/bricolage-grotesque'
 
 watchForNewVersion()

@@ -55,18 +55,21 @@ function statusChip(status: string) {
 
 export function ServicesAdminView() {
   const [orders, setOrders] = useState<ServiceOrder[]>([])
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>('')
+  // Se încarcă până când lista afișată e cea pentru filtrul ales.
+  const [loadedFilter, setLoadedFilter] = useState<string | null>(null)
+  const loading = loadedFilter !== statusFilter
 
   useEffect(() => {
-    setLoading(true)
-    setError(null)
     serviceOrdersService
       .getAllAdmin(statusFilter || undefined)
-      .then(setOrders)
+      .then((items) => {
+        setOrders(items)
+        setError(null)
+      })
       .catch(() => setError('Nu s-au putut încărca comenzile de servicii.'))
-      .finally(() => setLoading(false))
+      .finally(() => setLoadedFilter(statusFilter))
   }, [statusFilter])
 
   return (

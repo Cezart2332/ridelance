@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import {
   Button,
   Dialog,
@@ -14,16 +13,10 @@ import { TOKENS } from '../../constants/tokens'
 export function ServicePaymentSuccessDialog() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    if (searchParams.get('service_paid') === '1') {
-      setOpen(true)
-    }
-  }, [searchParams])
+  // Dialogul stă deschis cât timp parametrul e în URL; închiderea îl scoate.
+  const open = searchParams.get('service_paid') === '1'
 
   const handleClose = () => {
-    setOpen(false)
     const next = new URLSearchParams(searchParams)
     next.delete('service_paid')
     const qs = next.toString()

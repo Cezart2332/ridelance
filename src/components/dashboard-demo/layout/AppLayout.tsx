@@ -7,7 +7,7 @@ import AppHeader from './AppHeader';
 interface AppLayoutProps {
   children: React.ReactNode;
   activeSection: string;
-  setActiveSection: React.Dispatch<React.SetStateAction<any>>;
+  setActiveSection: (id: string) => void;
   sectionConfig: readonly { id: string; label: string }[];
 }
 

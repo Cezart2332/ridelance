@@ -42,45 +42,47 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const refresh = useCallback(async () => {
-    try {
-      const [nextState, nextDocuments, nextEligibility] = await Promise.all([
+  // Lanț de promisiuni, nu try/await: starea se schimbă doar după răspuns, deci pornirea din
+  // efectul de la montare nu declanșează randări în cascadă.
+  const refresh = useCallback(
+    (): Promise<void> =>
+      Promise.all([
         onboardingService.getState(),
         documentService.getByUser(),
         onboardingService.getEligibility().catch(() => null),
       ])
-      setState(nextState)
-      // RL-07 — punctul unic de filtrare pentru tot onboardingul. Documentele pe care le producem
-      // noi (dosare generate, acte moștenite) rămân în backend și intră în dosarul depus, dar nu
-      // au ce căuta în lista șoferului. Filtrând aici, și progresul se numără pe ce se vede.
-      // Adminul citește documentele pe alt drum, deci le vede în continuare pe toate.
-      setDocuments(nextDocuments.filter((d) => d.isUserFacing))
-      setEligibility(nextEligibility)
-      setError(null)
+        .then(([nextState, nextDocuments, nextEligibility]) => {
+          setState(nextState)
+          // RL-07 — punctul unic de filtrare pentru tot onboardingul. Documentele pe care le producem
+          // noi (dosare generate, acte moștenite) rămân în backend și intră în dosarul depus, dar nu
+          // au ce căuta în lista șoferului. Filtrând aici, și progresul se numără pe ce se vede.
+          // Adminul citește documentele pe alt drum, deci le vede în continuare pe toate.
+          setDocuments(nextDocuments.filter((d) => d.isUserFacing))
+          setEligibility(nextEligibility)
+          setError(null)
 
-      const nextSteps = buildStepViews(nextState, nextDocuments, nextEligibility)
-      const previous = previousStates.current
-      if (previous) {
-        const turned = nextSteps.filter(
-          (step) => step.state === 'rejected' && previous.get(step.key) === 'approved',
-        )
-        if (turned.length > 0) {
-          setRejectionAlert({
-            keys: turned.map((s) => s.key),
-            labels: turned.map((s) => s.label),
-            nonce: Date.now(),
-          })
-        }
-      }
-      previousStates.current = new Map(nextSteps.map((step) => [step.key, step.state]))
-    } catch {
-      setError('Nu am putut încărca starea contului. Reîncearcă.')
-    } finally {
-      setLoading(false)
-    }
-
-    await Promise.all([...fetchers.current].map(([key, fetcher]) => runResource(key, fetcher)))
-  }, [runResource])
+          const nextSteps = buildStepViews(nextState, nextDocuments, nextEligibility)
+          const previous = previousStates.current
+          if (previous) {
+            const turned = nextSteps.filter(
+              (step) => step.state === 'rejected' && previous.get(step.key) === 'approved',
+            )
+            if (turned.length > 0) {
+              setRejectionAlert({
+                keys: turned.map((s) => s.key),
+                labels: turned.map((s) => s.label),
+                nonce: Date.now(),
+              })
+            }
+          }
+          previousStates.current = new Map(nextSteps.map((step) => [step.key, step.state]))
+        })
+        .catch(() => setError('Nu am putut încărca starea contului. Reîncearcă.'))
+        .finally(() => setLoading(false))
+        .then(() => Promise.all([...fetchers.current].map(([key, fetcher]) => runResource(key, fetcher))))
+        .then(() => undefined),
+    [runResource],
+  )
 
   useEffect(() => {
     void refresh()

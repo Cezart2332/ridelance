@@ -48,14 +48,19 @@ export function AbonamenteTab() {
   // Opțiunile alese pe ecran; null = încă cele din abonament.
   const [addonChoice, setAddonChoice] = useState<AddonKey[] | null>(null)
 
+  // Întoarcerea de la Stripe după schimbarea planului: anunțul se aprinde în render, iar efectul
+  // doar curăță parametrul din URL, ca să nu reapară la refresh.
+  const planChanged = searchParams.get('plan_changed') === '1'
+  if (planChanged && !planChangeNotice) {
+    setPlanChangeNotice(true)
+  }
+
   useEffect(() => {
-    if (searchParams.get('plan_changed') === '1') {
-      setPlanChangeNotice(true)
-      const next = new URLSearchParams(searchParams)
-      next.delete('plan_changed')
-      setSearchParams(next, { replace: true })
-    }
-  }, [searchParams, setSearchParams])
+    if (!planChanged) return
+    const next = new URLSearchParams(searchParams)
+    next.delete('plan_changed')
+    setSearchParams(next, { replace: true })
+  }, [planChanged, searchParams, setSearchParams])
 
   useEffect(() => {
     async function fetchStatus() {

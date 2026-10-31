@@ -17,12 +17,21 @@ import { ChatAttachmentView } from '../../chat/ChatAttachmentView'
 import { ChatAttachButton, PendingAttachment } from '../../chat/ChatAttachmentPicker'
 import { useChatComposer } from '../../chat/useChatComposer'
 
+/** Câmpurile din lista de PFA-uri de care are nevoie chatul. */
+interface ChatPfa {
+  id: string
+  userId: string
+  userName: string
+  userEmail: string
+  lastActivityAtUtc: string | null
+}
+
 interface AdminChatViewProps {
-  pfas: any[]
+  pfas: ChatPfa[]
 }
 
 export function AdminChatView({ pfas }: AdminChatViewProps) {
-  const [manualPfa, setSelectedPfa] = useState<any | null>(null)
+  const [manualPfa, setSelectedPfa] = useState<ChatPfa | null>(null)
   const [params, setParams] = useSearchParams()
   const selectedPfa = params.get('user') ? pfas.find((pfa) => pfa.userId === params.get('user')) ?? null : manualPfa
   const [roomId, setRoomId] = useState<string | null>(null)

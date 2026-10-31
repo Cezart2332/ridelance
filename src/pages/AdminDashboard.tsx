@@ -14,6 +14,7 @@ import { fade } from '../components/panel/tokens'
 import { AdminLayout } from '../components/admin/AdminLayout'
 import { PanelThemeProvider } from '../components/panel/PanelThemeProvider'
 import { pfaService } from '../services/pfa.service'
+import { getErrorMessage } from '../utils/errorHandler'
 import { notificationService } from '../services/notification.service'
 import { userService, type UserProfile } from '../services/user.service'
 import { documentService, type DocumentSummary } from '../services/document.service'
@@ -162,7 +163,13 @@ function isActiveSubscription(status: string | null): boolean {
 
 type DetailAction = 'plan' | 'discount' | 'suspend' | 'reactivate' | 'note' | null
 
-function normalizePfaSummary(item: any): PfaSummary {
+/** Rândul din /pfa-registrations, înainte de completarea valorilor implicite. */
+type PfaSummaryRequiredKey = 'id' | 'userId' | 'userEmail' | 'userName' | 'registrationType' | 'status' | 'documentCount' | 'createdAtUtc'
+type RawPfaSummary = Pick<PfaSummary, PfaSummaryRequiredKey> & {
+  [K in Exclude<keyof PfaSummary, PfaSummaryRequiredKey>]?: PfaSummary[K] | null
+}
+
+function normalizePfaSummary(item: RawPfaSummary): PfaSummary {
   return {
     id: item.id,
     userId: item.userId,
@@ -187,7 +194,7 @@ function normalizePfaSummary(item: any): PfaSummary {
     onboardingCompletedAtUtc: item.onboardingCompletedAtUtc ?? null,
     hasRegistration: item.hasRegistration !== false,
     createdAtUtc: item.createdAtUtc,
-    lastActivityAtUtc: item.lastActivityAtUtc,
+    lastActivityAtUtc: item.lastActivityAtUtc ?? null,
     deletedAtUtc: item.deletedAtUtc ?? null,
     fiscalProfileStatus: item.fiscalProfileStatus ?? 'NOT_STARTED',
   }
@@ -203,6 +210,13 @@ function relativeTime(utcString: string): string {
   const days = Math.floor(hours / 24)
   if (days === 1) return 'Ieri'
   return `Acum ${days} zile`
+}
+
+function customerAgeLabel(createdAtUtc: string): string {
+  const weeks = Math.max(0, Math.floor((Date.now() - new Date(createdAtUtc).getTime()) / (7 * 24 * 60 * 60 * 1000)))
+  if (weeks < 1) return 'Client RIDElance activ de sub o săptămână'
+  if (weeks === 1) return 'Client RIDElance activ de 1 săptămână'
+  return `Client RIDElance activ de ${weeks} săptămâni`
 }
 
 function formatLei(bani: number | null | undefined) {
@@ -254,21 +268,18 @@ export function AdminDashboard() {
 
   // PFA list
   const [pfas, setPfas] = useState<PfaSummary[]>([])
-  const [pfasLoading, setPfasLoading] = useState(false)
   const [pfasError, setPfasError] = useState<string | null>(null)
 
   // PFA detail
   const [manualPfa, setSelectedPfa] = useState<PfaSummary | null>(null)
   const selectedPfa = notificationParams.get('user') && ['pfa', 'pfa_inrolate'].includes(activeTab) ? pfas.find((pfa) => pfa.userId === notificationParams.get('user')) ?? manualPfa : manualPfa
   const [documents, setDocuments] = useState<DocumentSummary[]>([])
-  const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [openingId, setOpeningId] = useState<string | null>(null)
   const [statusUpdatingDocId, setStatusUpdatingDocId] = useState<string | null>(null)
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' })
   const [pfaDetail, setPfaDetail] = useState<AdminPfaDetail | null>(null)
-  const [pfaDetailLoading, setPfaDetailLoading] = useState(false)
   const [pfaDetailError, setPfaDetailError] = useState<string | null>(null)
   const [detailAction, setDetailAction] = useState<DetailAction>(null)
   const [detailActionError, setDetailActionError] = useState<string | null>(null)
@@ -301,20 +312,26 @@ export function AdminDashboard() {
 
   const pfaListVisible = (activeTab === 'pfa' || activeTab === 'pfa_inrolate' || activeTab === 'chat') && !selectedPfa
 
-  const fetchPfas = useCallback(async () => {
-    const data = await pfaService.getAll()
-    const items = data?.items ?? data ?? []
-    setPfas(items.map(normalizePfaSummary))
-    setPfasError(null)
-  }, [])
+  const fetchPfas = useCallback(
+    () =>
+      pfaService.getAll().then((data) => {
+        const items: RawPfaSummary[] = data?.items ?? data ?? []
+        setPfas(items.map(normalizePfaSummary))
+        setPfasError(null)
+      }),
+    [],
+  )
+
+  // Lista se încarcă până când a venit răspunsul pentru ultima cerere de reîncărcare; la
+  // întoarcerea pe listă rămân rândurile vechi pe ecran cât se aduc cele noi.
+  const [pfasLoadedToken, setPfasLoadedToken] = useState<number | null>(null)
+  const pfasLoading = pfaListVisible && pfasLoadedToken !== pfasReloadToken
 
   useEffect(() => {
     if (!pfaListVisible) return
-    setPfasLoading(true)
-    setPfasError(null)
     fetchPfas()
       .catch(() => setPfasError('Nu s-au putut încărca înregistrările PFA.'))
-      .finally(() => setPfasLoading(false))
+      .finally(() => setPfasLoadedToken(pfasReloadToken))
   }, [pfaListVisible, fetchPfas, pfasReloadToken])
 
   // Dosarul deschis: documentele, detaliile și pașii de onboarding, fără spinner — ce e pe
@@ -361,29 +378,42 @@ export function AdminDashboard() {
     </Button>
   )
 
+  // Dosarul deschis se încarcă până sosesc documentele și detaliile lui. Alt dosar pornește fără
+  // detaliile celui de dinainte; aceleași date reîncărcate nu mai aprind spinnerul.
+  const [docsLoadedFor, setDocsLoadedFor] = useState<string | null>(null)
+  const docsLoading = selectedPfa !== null && docsLoadedFor !== selectedPfa.userId
+  const [detailShownFor, setDetailShownFor] = useState<string | null>(null)
+  const [detailLoadedFor, setDetailLoadedFor] = useState<string | null>(null)
+  const pfaDetailLoading = selectedPfa !== null && detailLoadedFor !== selectedPfa.id
+  const selectedPfaId = selectedPfa?.id ?? null
+  if (detailShownFor !== selectedPfaId) {
+    setDetailShownFor(selectedPfaId)
+    setPfaDetail(null)
+    setPfaDetailError(null)
+  }
+
   useEffect(() => {
     if (!selectedPfa) return
-    setDocsLoading(true)
-    setDocsError(null)
-    documentService.getByUser(selectedPfa.userId)
-      .then(setDocuments)
+    const userId = selectedPfa.userId
+    documentService.getByUser(userId)
+      .then((docs) => {
+        setDocuments(docs)
+        setDocsError(null)
+      })
       .catch(() => setDocsError('Ne pare rău, documentele nu au putut fi încărcate. Te rugăm să verifici conexiunea și să încerci din nou.'))
-      .finally(() => setDocsLoading(false))
+      .finally(() => setDocsLoadedFor(userId))
   }, [selectedPfa])
 
   useEffect(() => {
-    if (!selectedPfa) {
-      setPfaDetail(null)
-      setPfaDetailError(null)
-      return
-    }
-
-    setPfaDetailLoading(true)
-    setPfaDetailError(null)
-    adminOverviewService.getPfaDetails(selectedPfa.id)
-      .then(setPfaDetail)
+    if (!selectedPfa) return
+    const id = selectedPfa.id
+    adminOverviewService.getPfaDetails(id)
+      .then((detail) => {
+        setPfaDetail(detail)
+        setPfaDetailError(null)
+      })
       .catch(() => setPfaDetailError('Nu am putut încărca detaliile extinse. Afișez datele existente pentru acest PFA.'))
-      .finally(() => setPfaDetailLoading(false))
+      .finally(() => setDetailLoadedFor(id))
   }, [selectedPfa])
 
   const handleDownload = useCallback(async (doc: DocumentSummary) => {
@@ -478,9 +508,8 @@ export function AdminDashboard() {
       setStatusDialog({ open: false, action: null })
       setOnboardingRefreshKey((k) => k + 1)
       setSnackbar({ open: true, message: `Statusul a fost actualizat cu succes.`, severity: 'success' });
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Actualizarea statusului a eșuat. Încearcă din nou.'
-      setStatusError(msg)
+    } catch (err) {
+      setStatusError(getErrorMessage(err, 'Actualizarea statusului a eșuat. Încearcă din nou.'))
     } finally {
       setStatusUpdating(false)
     }
@@ -588,9 +617,8 @@ export function AdminDashboard() {
         severity: 'success',
       })
       window.dispatchEvent(new Event('ridelance:notifications-changed'))
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Trimiterea notificărilor de test a eșuat.'
-      setSnackbar({ open: true, message: msg, severity: 'error' })
+    } catch (err) {
+      setSnackbar({ open: true, message: getErrorMessage(err, 'Trimiterea notificărilor de test a eșuat.'), severity: 'error' })
     } finally {
       setTestNotifLoading(false)
     }
@@ -654,13 +682,6 @@ export function AdminDashboard() {
 
   // Contorul se calculează înainte de filtru, altfel ar arăta mereu numărul afișat.
   const awaitingAdminCount = filteredPfas.filter(p => p.awaitingAdminAction).length
-
-  const customerAgeLabel = (createdAtUtc: string) => {
-    const weeks = Math.max(0, Math.floor((Date.now() - new Date(createdAtUtc).getTime()) / (7 * 24 * 60 * 60 * 1000)))
-    if (weeks < 1) return 'Client RIDElance activ de sub o săptămână'
-    if (weeks === 1) return 'Client RIDElance activ de 1 săptămână'
-    return `Client RIDElance activ de ${weeks} săptămâni`
-  }
 
   const subscriptionStatusLabel = (status: string | null) => {
     if (!status) return 'Fără abonament'

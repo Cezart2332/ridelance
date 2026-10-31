@@ -40,8 +40,6 @@ export function CalculatorPage() {
     const profit = Math.max(0, anualIncome - deductibleExpenses)
     let CAS = 0
     let CASS = 0
-    let incomeTax = 0
-    let netIncomeAfterTaxes = 0
 
     // CAS (25%)
     if (profit >= GROSS_SALARY * 12 && profit < GROSS_SALARY * 24) {
@@ -72,10 +70,10 @@ export function CalculatorPage() {
      */
     const deductibleCASS = Math.min(CASS, 0.1 * profit)
     const taxableIncome = Math.max(0, profit - CAS - deductibleCASS)
-    incomeTax = 0.1 * taxableIncome
+    const incomeTax = 0.1 * taxableIncome
 
     // Venit net PFA (What's left from your bank account = Income - Expenses - Taxes)
-    netIncomeAfterTaxes = anualIncome - deductibleExpenses - CAS - CASS - incomeTax
+    const netIncomeAfterTaxes = anualIncome - deductibleExpenses - CAS - CASS - incomeTax
 
     setRealCAS(roundToInt(CAS))
     setRealCASS(roundToInt(CASS))

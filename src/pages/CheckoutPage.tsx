@@ -1,6 +1,6 @@
 import { STRIPE_PUBLIC_KEY } from '../lib/runtimeConfig'
-import { useEffect, useState } from 'react'
-import { Box, Button, CircularProgress, Container, Paper, Stack, Typography } from '@mui/material'
+import { useState } from 'react'
+import { Box, Button, Container, Paper, Stack, Typography } from '@mui/material'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import LockRoundedIcon from '@mui/icons-material/LockRounded'
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded'
@@ -61,40 +61,24 @@ const ASSURANCES: Record<CheckoutKind, string[]> = {
 const isCheckoutKind = (value: string | null): value is CheckoutKind =>
   value === 'subscription' || value === 'service' || value === 'advance'
 
+/** Ce a pus în sessionStorage pagina care a pornit plata; se citește o singură dată, la montare. */
+function readCheckoutSession() {
+  const kind = sessionStorage.getItem('stripe_checkout_kind')
+  return {
+    clientSecret: sessionStorage.getItem('stripe_client_secret') || null,
+    cancelUrl: sessionStorage.getItem('stripe_cancel_url') || '/app',
+    title: sessionStorage.getItem('stripe_checkout_title') || 'Plată RIDElance',
+    price: sessionStorage.getItem('stripe_checkout_price') || '',
+    desc: sessionStorage.getItem('stripe_checkout_desc') || '',
+    renewal: sessionStorage.getItem('stripe_checkout_renewal') || '',
+    // Serviciu, nu abonament: e varianta cu cele mai puține promisiuni, deci cea în care o
+    // etichetă lipsă nu poate promite ceva ce nu se livrează.
+    kind: isCheckoutKind(kind) ? kind : ('service' as CheckoutKind),
+  }
+}
+
 export default function CheckoutPage() {
-  const [clientSecret, setClientSecret] = useState<string | null>(null)
-  const [cancelUrl, setCancelUrl] = useState<string>('/app')
-  const [title, setTitle] = useState<string>('Plată RIDElance')
-  const [price, setPrice] = useState<string>('')
-  const [desc, setDesc] = useState<string>('')
-  const [renewal, setRenewal] = useState<string>('')
-  // Serviciu, nu abonament: e varianta cu cele mai puține promisiuni, deci cea în care o
-  // etichetă lipsă nu poate promite ceva ce nu se livrează.
-  const [kind, setKind] = useState<CheckoutKind>('service')
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    // Read from sessionStorage
-    const secret = sessionStorage.getItem('stripe_client_secret')
-    const cancel = sessionStorage.getItem('stripe_cancel_url')
-    const t = sessionStorage.getItem('stripe_checkout_title')
-    const p = sessionStorage.getItem('stripe_checkout_price')
-    const d = sessionStorage.getItem('stripe_checkout_desc')
-    const r = sessionStorage.getItem('stripe_checkout_renewal')
-    const k = sessionStorage.getItem('stripe_checkout_kind')
-
-    if (secret) {
-      setClientSecret(secret)
-    }
-    if (cancel) setCancelUrl(cancel)
-    if (t) setTitle(t)
-    if (p) setPrice(p)
-    if (d) setDesc(d)
-    if (r) setRenewal(r)
-    if (isCheckoutKind(k)) setKind(k)
-
-    setLoading(false)
-  }, [])
+  const [{ clientSecret, cancelUrl, title, price, desc, renewal, kind }] = useState(readCheckoutSession)
 
   const handleCancel = () => {
     // Clear storage on cancel
@@ -105,14 +89,6 @@ export default function CheckoutPage() {
     sessionStorage.removeItem('stripe_checkout_desc')
     sessionStorage.removeItem('stripe_checkout_renewal')
     window.location.href = cancelUrl
-  }
-
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: TOKENS.surface }}>
-        <CircularProgress size={40} sx={{ color: TOKENS.primary }} />
-      </Box>
-    )
   }
 
   if (!clientSecret) {
