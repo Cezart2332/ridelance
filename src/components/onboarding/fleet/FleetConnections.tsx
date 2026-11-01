@@ -1,5 +1,16 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import {
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material'
 import {
   bankService,
   type BankConnectionDto,
@@ -22,6 +33,45 @@ interface Props {
   refresh: () => Promise<void>
 }
 
+/**
+ * „Nu” la contul bancar sau la Oblio: pasul nu se poate termina, deci oferta apare într-un popup,
+ * cu trecerea mai departe fără cont. Închis, omul rămâne pe întrebare.
+ */
+function NoAccountDialog({
+  open,
+  title,
+  busy,
+  onClose,
+  onLater,
+  children,
+}: {
+  open: boolean
+  title: string
+  busy: boolean
+  onClose: () => void
+  onLater: () => void
+  children: ReactNode
+}) {
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth aria-labelledby="no-account-title">
+      <DialogTitle id="no-account-title" sx={{ fontWeight: 700 }}>
+        {title}
+      </DialogTitle>
+      <DialogContent>
+        <Stack spacing={2}>{children}</Stack>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+        <Button onClick={onClose} disabled={busy}>
+          Înapoi
+        </Button>
+        <Button variant="contained" onClick={onLater} disabled={busy} autoFocus>
+          Continuă
+        </Button>
+      </DialogActions>
+    </Dialog>
+  )
+}
+
 export function FleetBankStep({ state, busy, save, refresh }: Props) {
   const [hasAccount, setHasAccount] = useState<boolean | null>(
     state.bankConnected ? true : null,
@@ -31,6 +81,9 @@ export function FleetBankStep({ state, busy, save, refresh }: Props) {
     () => state.progress.bcrRequested || readBcrDiscountIntent(),
   )
   const [error, setError] = useState('')
+  const [offerOpen, setOfferOpen] = useState(false)
+  // Pas deja terminat: cine s-a întors aici vrea să schimbe ceva, deci nu-l trimitem singuri mai departe.
+  const revisit = state.progress.completedStep >= 4
 
   /**
    * Starea conexiunii, citită de la server. E și momentul finalizării: furnizorul nu ne sună
@@ -70,7 +123,10 @@ export function FleetBankStep({ state, busy, save, refresh }: Props) {
           <Button
             key={String(value)}
             variant={hasAccount === value ? 'contained' : 'outlined'}
-            onClick={() => setHasAccount(value)}
+            onClick={() => {
+              setHasAccount(value)
+              setOfferOpen(!value)
+            }}
           >
             {value ? 'Da' : 'Nu'}
           </Button>
@@ -78,10 +134,6 @@ export function FleetBankStep({ state, busy, save, refresh }: Props) {
       </Stack>
       {hasAccount && (
         <>
-          <Typography color="text.secondary">
-            Conectează contul bancar pentru a vedea soldul și tranzacțiile
-            firmei în RIDElance.
-          </Typography>
           {state.bankConnected ? (
             <Alert severity="success">
               Cont bancar conectat {connection?.institutionName}{' '}
@@ -100,56 +152,45 @@ export function FleetBankStep({ state, busy, save, refresh }: Props) {
           )}
         </>
       )}
-      {hasAccount === false && (
+      <NoAccountDialog
+        open={offerOpen}
+        title="Deschide un cont BCR prin RIDElance"
+        busy={busy}
+        onClose={() => setOfferOpen(false)}
+        onLater={() => void save({ step: 4, deferred: true, bcrRequested: requested })}
+      >
         <Box
-          sx={{
-            p: 3,
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 3,
-          }}
+          component="img"
+          src="/logobcr.jpeg"
+          alt="BCR"
+          sx={{ width: 90, height: 48, objectFit: 'contain' }}
+        />
+        <Typography>50 lei reducere/lună timp de 6 luni la abonamentul RIDElance.</Typography>
+        <Button
+          component="a"
+          href={BCR_ONBOARDING_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => setRequested(true)}
+          variant="outlined"
         >
-          <Stack spacing={2}>
-            <Box
-              component="img"
-              src="/logobcr.jpeg"
-              alt="BCR"
-              sx={{ width: 90, height: 48, objectFit: 'contain' }}
-            />
-            <Typography variant="h6">
-              Deschide un cont BCR prin RIDElance
-            </Typography>
-            <Typography>
-              Beneficiezi de oferta dedicată BCR și de 50 lei reducere/lună timp
-              de 6 luni la abonamentul RIDElance, după confirmarea
-              eligibilității.
-            </Typography>
-            <Button
-              component="a"
-              href={BCR_ONBOARDING_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setRequested(true)}
-              variant="contained"
-            >
-              Deschide cont BCR
-            </Button>
-            <Box
-              component="img"
-              src="/codqrbcr.jpeg"
-              alt="Cod QR pentru deschiderea contului BCR"
-              sx={{ width: 112, height: 112, objectFit: 'contain' }}
-            />
-          </Stack>
-        </Box>
-      )}
+          Deschide cont BCR
+        </Button>
+        <Box
+          component="img"
+          src="/codqrbcr.jpeg"
+          alt="Cod QR pentru deschiderea contului BCR"
+          sx={{ width: 112, height: 112, objectFit: 'contain' }}
+        />
+      </NoAccountDialog>
       {error && <Alert severity="error">{error}</Alert>}
-      {/* Contul conectat: pasul trece singur mai departe, fără „Continuă”. */}
-      {state.bankConnected && (
+      {/* Contul tocmai conectat: pasul trece singur mai departe. Revenit aici, „Continuă”. */}
+      {hasAccount && state.bankConnected && (
         <AutoContinue
-          manual={false}
+          manual={revisit}
           ready
           busy={busy}
+          disabled={offerOpen}
           restartKey="bank-connected"
           onContinue={() => void save({ step: 4, bcrRequested: requested })}
         />
@@ -175,6 +216,8 @@ export function FleetOblioStep({ state, busy, save, refresh }: Props) {
   const [series, setSeries] = useState('')
   const [working, setWorking] = useState(false)
   const [error, setError] = useState('')
+  const [offerOpen, setOfferOpen] = useState(false)
+  const revisit = state.progress.completedStep >= 5
   const connect = async () => {
     setWorking(true)
     setError('')
@@ -195,17 +238,16 @@ export function FleetOblioStep({ state, busy, save, refresh }: Props) {
   }
   return (
     <Stack spacing={2.5}>
-      <Typography color="text.secondary">
-        RIDElance se integrează cu Oblio pentru a simplifica emiterea și
-        gestionarea facturilor direct din dashboard.
-      </Typography>
       <Typography>Ai deja cont Oblio?</Typography>
       <Stack direction="row" spacing={1}>
         {[true, false].map((value) => (
           <Button
             key={String(value)}
             variant={hasAccount === value ? 'contained' : 'outlined'}
-            onClick={() => setHasAccount(value)}
+            onClick={() => {
+              setHasAccount(value)
+              setOfferOpen(!value)
+            }}
           >
             {value ? 'Da' : 'Nu'}
           </Button>
@@ -259,25 +301,34 @@ export function FleetOblioStep({ state, busy, save, refresh }: Props) {
           </>
         )
       )}
-      {hasAccount === false && (
-        <Alert icon={false} severity="info">
-          <Typography sx={{ fontWeight: 700 }}>
-            Nu ai Oblio? Prin RIDElance beneficiezi de 1 an gratuit.
-          </Typography>
-          <Button
-            component="a"
-            href="https://www.oblio.eu"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Creează cont Oblio ↗
-          </Button>
-        </Alert>
-      )}
+      <NoAccountDialog
+        open={offerOpen}
+        title="Prin RIDElance beneficiezi de 1 an gratuit de Oblio"
+        busy={busy}
+        onClose={() => setOfferOpen(false)}
+        onLater={() => void save({ step: 5, deferred: true })}
+      >
+        <Button
+          component="a"
+          href="https://www.oblio.eu"
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="outlined"
+        >
+          Creează cont Oblio ↗
+        </Button>
+      </NoAccountDialog>
       {error && <Alert severity="error">{error}</Alert>}
-      {/* Oblio conectat: pasul trece singur mai departe, fără „Continuă”. */}
-      {state.oblioConnected && (
-        <AutoContinue manual={false} ready busy={busy || working} restartKey="oblio-connected" onContinue={() => void save({ step: 5 })} />
+      {/* Oblio tocmai conectat: pasul trece singur mai departe. Revenit aici, „Continuă”. */}
+      {hasAccount && state.oblioConnected && (
+        <AutoContinue
+          manual={revisit}
+          ready
+          busy={busy || working}
+          disabled={offerOpen}
+          restartKey="oblio-connected"
+          onContinue={() => void save({ step: 5 })}
+        />
       )}
       <Button
         disabled={busy || working}
