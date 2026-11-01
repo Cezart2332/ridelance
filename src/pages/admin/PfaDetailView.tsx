@@ -183,28 +183,31 @@ export function PfaDetailView(props: PfaDetailViewProps) {
     ? { label: 'Aprobă dosarul', onClick: onApprove }
     : { label: 'Autentificare ca utilizator', onClick: onImpersonate }
 
+  // Suspendarea ține de cont, nu de dosar: merge și pentru clientul fără dosar PFA.
+  const suspendAction: ActionMenuItem = isSuspended
+    ? {
+        key: 'reactivate',
+        label: 'Reactivează cont',
+        onClick: () => onOpenAction('reactivate'),
+        dividerBefore: true,
+      }
+    : {
+        key: 'suspend',
+        label: 'Suspendă cont',
+        onClick: () => onOpenAction('suspend'),
+        destructive: true,
+        dividerBefore: true,
+      }
+
   const headerMenu: ActionMenuItem[] = !hasRegistration
-    ? [{ key: 'chat', label: 'Deschide chat', onClick: onOpenChat }]
+    ? [{ key: 'chat', label: 'Deschide chat', onClick: onOpenChat }, suspendAction]
     : [
         ...(isPending ? [{ key: 'reject', label: 'Respinge dosarul', onClick: onReject, destructive: true }] : []),
         { key: 'plan', label: 'Schimbă plan', onClick: () => onOpenAction('plan') },
         { key: 'discount', label: 'Aplică discount', onClick: () => onOpenAction('discount') },
         { key: 'chat', label: 'Deschide chat', onClick: onOpenChat },
         { key: 'note', label: 'Note interne', onClick: () => onOpenAction('note') },
-        isSuspended
-          ? {
-              key: 'reactivate',
-              label: 'Reactivează cont',
-              onClick: () => onOpenAction('reactivate'),
-              dividerBefore: true,
-            }
-          : {
-              key: 'suspend',
-              label: 'Suspendă cont',
-              onClick: () => onOpenAction('suspend'),
-              destructive: true,
-              dividerBefore: true,
-            },
+        suspendAction,
       ]
 
   return (
@@ -231,7 +234,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
             status={
               <StatusBadge
                 label={detail?.accountStatus ?? pfa.accountStatus}
-                tone={isPending || !hasRegistration ? 'warning' : isSuspended ? 'error' : 'success'}
+                tone={isSuspended ? 'error' : isPending || !hasRegistration ? 'warning' : 'success'}
               />
             }
             primaryAction={primaryAction}
