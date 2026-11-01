@@ -114,6 +114,8 @@ services:
       AnafMandatar__Domicile: ${ANAF_MANDATAR_DOMICILE:-}
       AnafMandatar__IdSeries: ${ANAF_MANDATAR_ID_SERIES:-}
       AnafMandatar__IdNumber: ${ANAF_MANDATAR_ID_NUMBER:-}
+      AnafMandatar__IdIssuer: ${ANAF_MANDATAR_ID_ISSUER:-}
+      AnafMandatar__IdIssuedOn: ${ANAF_MANDATAR_ID_ISSUED_ON:-}
       AnafMandatar__Email: ${ANAF_MANDATAR_EMAIL:-}
       AnafMandatar__Phone: ${ANAF_MANDATAR_PHONE:-}
 
