@@ -7,7 +7,6 @@ import oblio from '../assets/partners/oblio.png'
 import simplifi from '../assets/partners/simplifi.png'
 import smartfintech from '../assets/partners/smartfintech.png'
 import fiscallink from '../assets/partners/Fiscallink.svg'
-import constalaris from '../assets/partners/constalaris.png'
 import { sortByPartnerOrder } from './benefits'
 import checkSvg from '../assets/SVG/2- Regular/check-circle.svg'
 import starSvg from '../assets/SVG/2- Regular/star.svg'
@@ -42,7 +41,6 @@ export const partnerLogos: { slug: string; name: string; image: string; href?: s
     { slug: 'benefit-edenred', name: 'Benefit Edenred', image: benefitEdenred },
     { slug: 'smart-fintech', name: 'Smart Fintech', image: smartfintech },
     { slug: 'fiscallink', name: 'FiscalLink', image: fiscallink },
-    { slug: 'constalaris', name: 'Constalaris', image: constalaris },
   ])
 
 export const homeSec2 = [

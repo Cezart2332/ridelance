@@ -1,6 +1,5 @@
 import asigurari from '../assets/partners/asigurari.png'
 import benefitEdenred from '../assets/partners/benefit_edenred.svg'
-import constalaris from '../assets/partners/constalaris.png'
 import consulto from '../assets/partners/consulto.png'
 import eldrive from '../assets/partners/eldrive.png'
 import fiscallink from '../assets/partners/Fiscallink.svg'
@@ -231,14 +230,6 @@ export const partnerBenefits: PartnerBenefit[] = [
     website: 'https://fiscallink.ro',
     // Pentru SRL e în discuție ce oferim; până atunci doar anunțat.
     comingSoonFor: ['srl'],
-    blocks: [],
-  },
-  {
-    slug: 'constalaris',
-    name: 'Constalaris',
-    image: constalaris,
-    tagline: 'Case de marcat și servicii de fiscalizare pentru PFA, SRL și flote.',
-    website: 'https://www.constalaris.ro',
     blocks: [],
   },
 ]

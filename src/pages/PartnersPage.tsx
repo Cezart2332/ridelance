@@ -129,7 +129,7 @@ function PartnerPanel({ partner }: { partner: Partner }) {
   // Fără el, pagina lor publică arăta doar logoul și numele.
   const benefit = getPartnerBenefit(partner.slug)
   const tagline = partner.tagline ?? benefit?.tagline
-  // Partenerii cu material propriu (MOL, Oblio, Consulto, Smart Fintech, FiscalLink, Constalaris)
+  // Partenerii cu material propriu (MOL, Oblio, Consulto, Smart Fintech, FiscalLink)
   // au pagina lor întreagă; descrierea scurtă ar spune același lucru a doua oară.
   const showcase = getPartnerShowcase(partner.slug)
 

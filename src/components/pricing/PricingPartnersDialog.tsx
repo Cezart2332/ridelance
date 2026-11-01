@@ -11,7 +11,6 @@ const benefits = [
   { slug: 'eldrive', text: 'Reducere de 0,80 lei/kWh la stațiile Eldrive incluse în promoția RIDElance.', audience: ['pfa'] },
   { slug: 'eldrive', text: 'Beneficii pentru încărcarea vehiculelor electrice în stațiile incluse în promoțiile active.', audience: ['srl'] },
   { slug: 'consulto', text: 'Sediu profesional pentru PFA la 349 lei/an, 20% reducere la înființarea unui SRL și 85% reducere pentru operațiunile eligibile de modificare la ONRC ale acelui SRL.', audience: ['pfa'] },
-  { slug: 'constalaris', text: 'Casă de marcat de la 550 lei, cu serviciile incluse în primul an, apoi 250 lei/an.', audience: ['pfa'] },
   { slug: 'asigurari-ro', text: 'Acces online la oferte de asigurare, direct prin ecosistemul RIDElance, pentru a compara și alege oferta potrivită.', audience: ['pfa', 'srl'] },
   { slug: 'oblio', text: 'Integrare pentru facturare și fluxuri administrative, conform condițiilor campaniei active.', audience: ['srl'] },
 ]

@@ -1,14 +1,13 @@
 /**
  * Paginile de partener, cu textul materialelor primite de la fiecare (Consulto, MOL, Oblio,
- * FiscalLink, Smart Fintech, Constalaris, Simplifi, Benefit Edenred), păstrat cuvânt cu cuvânt.
+ * FiscalLink, Smart Fintech, Simplifi, Benefit Edenred), păstrat cuvânt cu cuvânt.
  *
  * Materialele veneau ca pagini HTML de sine stătătoare, fiecare cu stilul ei. Aici stă doar
  * conținutul lor, în ordinea din pagină, iar `PartnerShowcase` îl desenează cu tokenii noștri — la
  * fel pe pagina publică de Parteneri și în Beneficii. Textul NU se reformulează aici: e al
  * partenerului, iar o modificare pleacă de la materialul lui.
  *
- * Din HTML-uri lipsesc doar bara de sus cu logoul RIDElance și meniul paginii Constalaris: pe site
- * le ține deja antetul nostru.
+ * Din HTML-uri lipsește doar bara de sus cu logoul RIDElance: pe site o ține deja antetul nostru.
  */
 
 /** Iconițele disponibile, mapate pe componente MUI în `PartnerShowcase`. */
@@ -164,7 +163,7 @@ export interface PartnerShowcase {
   slug: string
   /** Eticheta din bara de sus a materialului; devine descrierea scurtă a partenerului. */
   tagline: string
-  /** Paragraful de deasupra hero-ului (doar Constalaris îl are). */
+  /** Paragraful de deasupra hero-ului, unde materialul îl are. */
   intro?: Rich
   hero: {
     eyebrow: string
@@ -597,112 +596,6 @@ export const partnerShowcases: PartnerShowcase[] = [
     // Rândul al doilea din subsolul materialului era „Preview pagină partener” — eticheta
     // machetei, nu text pentru clienți.
     footer: { left: 'RIDElance · Partener FiscalLink' },
-  },
-  {
-    slug: 'constalaris',
-    tagline: 'Case de marcat și servicii de fiscalizare pentru PFA, SRL și flote.',
-    intro: [
-      'Prin partenerul Constalaris poți achiziționa o casă de marcat Orgtech Teo pentru activitatea de ridesharing, nouă sau second-hand. Ai acces la fiscalizare, asistență pentru NUI și conectare ANAF, împreună cu un contract de service. ',
-      { strong: 'Comanzi direct pe site-ul Constalaris.' },
-    ],
-    hero: {
-      eyebrow: 'PARTENER RIDELANCE',
-      headline: 'Casa de marcat pentru activitatea ta de ridesharing.',
-      lead: [
-        'Alegi varianta potrivită bugetului tău: ',
-        { strong: '300 lei pentru un aparat SH' },
-        ' sau ',
-        { strong: '445 lei pentru un aparat nou' },
-        ', la care se adaugă contractul anual de service.',
-      ],
-      actions: [
-        { label: 'Vezi casele de marcat', section: 'produse' },
-        { label: 'Mergi pe Constalaris', href: 'https://www.constalaris.ro/' },
-      ],
-      card: {
-        label: 'COST ÎN PRIMUL AN',
-        amount: { prefix: 'de la', value: '550', unit: 'lei' },
-        text: 'aparat SH + service standard',
-        lines: ['300 lei pentru aparat', '+ de la 250 lei/an pentru service'],
-      },
-    },
-    sections: [
-      {
-        kind: 'callout',
-        title: 'Comanda se plasează pe site-ul Constalaris',
-        text: 'Butoanele de mai jos te duc direct la produs, unde verifici disponibilitatea și finalizezi achiziția.',
-        badge: 'PFA + SRL',
-      },
-      {
-        kind: 'products',
-        id: 'produse',
-        title: 'Case de marcat disponibile',
-        lead: 'Alege aparatul și continuă comanda pe site-ul partenerului.',
-        items: [
-          {
-            label: 'Varianta second-hand',
-            name: 'Orgtech Teo SH',
-            description: 'Un cost inițial mai mic pentru activitatea ta.',
-            price: '300',
-            unit: 'lei / aparat',
-            taxNote: 'TVA și timbru verde incluse în prețul aparatului',
-            features: ['Testată de service, cu memorie fiscală nouă', 'Produs folosit, cu posibile urme de utilizare'],
-            firstYear: { title: 'Primul an, cu service standard', subtitle: 'Aparat + contract pentru 12 luni', prefix: 'de la', value: '550', unit: 'lei' },
-            cta: { label: 'Comandă pe Constalaris', href: 'https://www.constalaris.ro/case-de-marcat/casa-de-marcat-second-hand/' },
-          },
-          {
-            label: 'Varianta nouă',
-            name: 'Orgtech Teo',
-            description: 'Aparat nou, prezentat de partener pentru ridesharing.',
-            price: '445',
-            unit: 'lei / aparat',
-            taxNote: 'TVA și timbru verde incluse în prețul aparatului',
-            features: ['Acumulator și alimentator auto incluse', 'Conexiune Wi-Fi, fără SIM dedicat aparatului'],
-            firstYear: { title: 'Primul an, cu service standard', subtitle: 'Aparat + contract pentru 12 luni', prefix: 'de la', value: '695', unit: 'lei' },
-            cta: { label: 'Comandă pe Constalaris', href: 'https://www.constalaris.ro/case-de-marcat/casa-de-marcat-uber-orgtech-teo/' },
-          },
-        ],
-        footnote: 'Totalurile pentru primul an sunt estimative și folosesc contractul standard de la 250 lei/an/aparat, achitat pentru 12 luni. Consumabilele, actualizările legislative și eventualele costuri de livrare se plătesc separat.',
-      },
-      {
-        kind: 'cards',
-        id: 'servicii',
-        title: 'Ce este inclus în pachet',
-        lead: 'La achiziția aparatului împreună cu un contract de service, conform informațiilor Constalaris.',
-        cards: [
-          { icon: 'verified', title: 'Fiscalizarea aparatului', text: 'Inclusă în pachetul aparat + contract service.' },
-          { icon: 'document', title: 'Asistență pentru NUI', text: 'Sprijin pentru obținerea și configurarea NUI.' },
-          { icon: 'link', title: 'Conectare la ANAF', text: 'Configurarea conexiunii aparatului la serverele ANAF.' },
-          { icon: 'wifi', title: 'Configurare inițială', text: 'Instalare și configurare cu sprijinul Constalaris.' },
-        ],
-        note: 'Configurarea se face la sediul Constalaris sau online, în timpul programului de lucru. Conexiunea Wi-Fi utilizează accesul tău la internet.',
-      },
-      {
-        kind: 'notes',
-        items: [
-          {
-            label: 'Începând cu anul al doilea',
-            title: 'De la 250 lei',
-            titleUnit: '/ an / aparat',
-            text: 'Contract de service standard. Prețul aparatului se achită o singură dată; tariful anual se poate modifica.',
-          },
-          {
-            title: 'Alte costuri de avut în vedere',
-            text: 'Consumabilele și actualizările legislative se achită separat. Pentru intervențiile acoperite de contract este indicată manopera inclusă; piesele și serviciile suplimentare se confirmă cu furnizorul.',
-          },
-          {
-            text: [
-              { strong: 'Prețurile și disponibilitatea se verifică pe constalaris.ro la momentul comenzii.' },
-              ' Prețurile aparatelor includ TVA și timbru verde; TVA-ul serviciilor și totalul final se confirmă cu furnizorul. Comercializarea, fiscalizarea și service-ul sunt asigurate de Constalaris, în condițiile contractului propriu.',
-            ],
-          },
-        ],
-      },
-    ],
-    footer: {
-      left: 'RIDElance × Constalaris · Beneficii pentru afacerea ta',
-      link: { label: 'Vizitează site-ul partenerului', href: 'https://www.constalaris.ro/' },
-    },
   },
   {
     slug: 'simplifi',

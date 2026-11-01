@@ -607,7 +607,7 @@ test.describe('navigație PFA', () => {
   })
 
   /** Partenerii cu material propriu au în Beneficii aceeași pagină ca pe site, nu doar logoul. */
-  test('beneficiile Consulto și Constalaris arată oferta completă', async ({ page }, testInfo) => {
+  test('beneficiile Consulto arată oferta completă', async ({ page }, testInfo) => {
     await page.goto(`${ROOT}/beneficii`, { waitUntil: 'networkidle' })
     const main = page.getByRole('main')
 
@@ -618,11 +618,7 @@ test.describe('navigație PFA', () => {
     // Prețurile vechi, contrazise de materialul nou, nu mai apar.
     await expect(main.getByText('−100 lei')).toHaveCount(0)
     await page.screenshot({ path: `test-results/beneficii-consulto-${testInfo.project.name}.png`, fullPage: true })
-
-    await main.getByRole('tab', { name: 'Constalaris' }).click()
-    await expect(main.getByText('Orgtech Teo SH')).toBeVisible()
-    await expect(main.getByRole('link', { name: /Comandă pe Constalaris/ }).first()).toHaveAttribute('href', /constalaris\.ro/)
-    await expect(main.getByText('Te interesează și aplicația de raportare?')).toHaveCount(0)
+    await expect(main.getByRole('tab', { name: 'Constalaris' })).toHaveCount(0)
   })
 
   test('MOL arată oferta RIDElance, eldrive are contact pe WhatsApp', async ({ page }, testInfo) => {
