@@ -34,7 +34,9 @@ RUN npm run build && node scripts/prerender.mjs
 
 FROM nginx:stable-alpine AS production
 
-
+# Pachetele Alpine la zi: imaginea nginx se reconstruiește rar, iar între timp apar corecturi de
+# securitate (Trivy blochează deploy-ul pe CRITICAL cu fix disponibil).
+RUN apk upgrade --no-cache
 
 COPY --from=build /usr/src/app/nginx /etc/nginx/conf.d
 
