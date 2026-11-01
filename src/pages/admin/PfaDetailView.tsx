@@ -24,6 +24,7 @@ import type { DocumentSummary } from '../../services/document.service'
 import { onboardingService, type OnboardingState } from '../../services/onboarding.service'
 import type { AdminPfaDetail } from '../../services/adminOverview.service'
 import { DocumentLibrary } from '../../components/admin/DocumentLibrary'
+import { ClientReferralsPanel } from '../../components/referrals/ClientReferralsPanel'
 
 export interface PfaDetailSubject {
   id: string
@@ -89,6 +90,7 @@ const TABS = [
   { value: 'contabilitate', label: 'Contabilitate' },
   { value: 'dosar', label: 'Dosar înființare' },
   { value: 'rapoarte', label: 'Rapoarte Uber' },
+  { value: 'recomandari', label: 'Recomandări' },
   { value: 'activitate', label: 'Activitate' },
 ]
 
@@ -357,6 +359,8 @@ export function PfaDetailView(props: PfaDetailViewProps) {
                   ) : <EmptyState title="Nu există activitate înregistrată." />}
                 </Section>
               )}
+
+              {tab === 'recomandari' && <ClientReferralsPanel userId={pfa.userId} />}
 
               {tab === 'dosar' && <CompanyFormationAdminPanel key={pfa.id} pfaId={pfa.id} />}
 

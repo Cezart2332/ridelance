@@ -93,13 +93,15 @@ export const authService = {
     email: string,
     password: string,
     role: string = 'Client',
-    phoneNumber?: string
+    phoneNumber?: string,
+    referralCode?: string | null
   ): Promise<string> => {
     const response = await authAxios.post<string>('/users/register', {
       email,
       password,
       role,
       phoneNumber: phoneNumber?.trim() || undefined,
+      referralCode: referralCode || undefined,
     })
     return response.data
   },

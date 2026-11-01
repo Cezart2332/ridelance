@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { SRL_LEGACY_ACCOUNTING_SEGMENT, SRL_PATHS } from '../../../config/srlNavigation'
 import { BankTab } from '../sections/BankTab'
 import { BeneficiiTab } from '../sections/BeneficiiTab'
+import { ReferralsTab } from '../sections/ReferralsTab'
 import { SupportChatTab } from '../sections/SupportChatTab'
 import { SRL_DASHBOARD_FAQ } from '../../../data/faq'
 import { InvoicesPage } from '../invoices/InvoicesPage'
@@ -88,6 +89,7 @@ export function SrlRoutes() {
       {/* ── Platformă ── */}
       <Route path={rel(SRL_PATHS.connections)} element={<SrlConnectionsPage />} />
       <Route path={rel(SRL_PATHS.benefits)} element={<BeneficiiTab audience="srl" />} />
+      <Route path={rel(SRL_PATHS.referrals)} element={<ReferralsTab />} />
       {/* SRL-ul nu are contabil în platformă, deci trimiterea către chatul lui nu se afișează. */}
       <Route path={rel(SRL_PATHS.support)} element={<SupportChatTab faq={SRL_DASHBOARD_FAQ} />} />
 

@@ -19,6 +19,7 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded'
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import RedeemRoundedIcon from '@mui/icons-material/RedeemRounded'
+import GroupAddRoundedIcon from '@mui/icons-material/GroupAddRounded'
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded'
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded'
@@ -74,6 +75,7 @@ export const PFA_PATHS = {
   connFiscalLink: at('conexiuni/fiscallink'),
 
   benefits: at('beneficii'),
+  referrals: at('recomandari'),
 
   services: at('servicii'),
   svcCars: at('servicii/masini'),
@@ -178,6 +180,14 @@ export const PFA_NAV: NavEntry[] = [
     icon: RedeemRoundedIcon,
     path: PFA_PATHS.benefits,
     hint: 'Oferte de la partenerii RIDElance',
+  },
+  {
+    kind: 'link',
+    id: 'referrals',
+    label: 'Recomandări',
+    icon: GroupAddRoundedIcon,
+    path: PFA_PATHS.referrals,
+    hint: 'Codul tău și invitațiile trimise',
   },
 
   {
@@ -407,6 +417,7 @@ export const PFA_NAV_CONFIG: DashboardNavConfig = {
     [PFA_PATHS.support]: HeadsetMicRoundedIcon,
     [PFA_PATHS.profile]: PersonRoundedIcon,
     [PFA_PATHS.benefits]: RedeemRoundedIcon,
+    [PFA_PATHS.referrals]: GroupAddRoundedIcon,
   },
   extraPageTitles: EXTRA_PAGE_TITLES,
   fallbackTitle: 'Dashboard PFA',

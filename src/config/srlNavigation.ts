@@ -14,6 +14,7 @@ import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded'
 import LinkRoundedIcon from '@mui/icons-material/LinkRounded'
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded'
 import RedeemRoundedIcon from '@mui/icons-material/RedeemRounded'
+import GroupAddRoundedIcon from '@mui/icons-material/GroupAddRounded'
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded'
 
 import { IS_NATIVE_APP } from '../native/platform'
@@ -80,6 +81,7 @@ export const SRL_PATHS = {
   // ── Platformă ──
   connections: at('conexiuni'),
   benefits: at('beneficii'),
+  referrals: at('recomandari'),
   support: at('suport'),
 
   settings: at('setari'),
@@ -157,6 +159,14 @@ export const SRL_NAV: NavEntry[] = [
     icon: RedeemRoundedIcon,
     path: SRL_PATHS.benefits,
     hint: 'Oferte de la partenerii RIDElance',
+  },
+  {
+    kind: 'link',
+    id: 'referrals',
+    label: 'Recomandări',
+    icon: GroupAddRoundedIcon,
+    path: SRL_PATHS.referrals,
+    hint: 'Codul tău și invitațiile trimise',
   },
 ]
 
@@ -281,6 +291,7 @@ export const SRL_NAV_CONFIG: DashboardNavConfig = {
     [SRL_PATHS.settings]: SettingsRoundedIcon,
     [SRL_PATHS.connections]: LinkRoundedIcon,
     [SRL_PATHS.benefits]: RedeemRoundedIcon,
+    [SRL_PATHS.referrals]: GroupAddRoundedIcon,
   },
   fallbackTitle: 'Dashboard SRL',
   quickActions: SRL_QUICK_ACTIONS,

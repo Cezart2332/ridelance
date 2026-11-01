@@ -4,6 +4,7 @@ import { AbonamenteTab } from './sections/AbonamenteTab'
 import { AccountantChatTab } from './sections/AccountantChatTab'
 import { BankTab } from './sections/BankTab'
 import { BeneficiiTab } from './sections/BeneficiiTab'
+import { ReferralsTab } from './sections/ReferralsTab'
 import { ExpensesPage } from './sections/accounting/ExpensesPage'
 import { FinancialOverviewPage } from './sections/accounting/FinancialOverviewPage'
 import { RegistersPage } from './sections/accounting/RegistersPage'
@@ -108,6 +109,7 @@ export function DashboardRoutes({ pfaRegistrationId, onSnackbar }: DashboardRout
 
       {/* ── Beneficii ── */}
       <Route path={rel(PFA_PATHS.benefits)} element={<BeneficiiTab audience="pfa" onNavigate={navigateToSection} />} />
+      <Route path={rel(PFA_PATHS.referrals)} element={<ReferralsTab />} />
 
       {/* ── Servicii ── */}
       <Route path={rel(PFA_PATHS.services)} element={<Navigate to={PFA_PATHS.svcCars} replace />} />

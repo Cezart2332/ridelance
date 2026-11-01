@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Box, Button, FormHelperText, Link, Stack, TextField } from '@mui/material'
-import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom'
 import { AuthLayout } from './shell/AuthLayout'
 import { AuthFormHeader } from './shell/AuthFormHeader'
 import { AuthSwitchLink } from './shell/AuthSwitchLink'
@@ -19,6 +19,7 @@ import {
 } from './authValidation'
 import { TermsAcceptance } from '../common/TermsAcceptance'
 import { authService } from '../../services/auth.service'
+import { forgetReferralCode, rememberReferralCode, storedReferralCode } from '../../services/referrals.service'
 import { ROUTES } from '../../constants/routes'
 import { SRL_ROOT } from '../../config/srlNavigation'
 import { IS_NATIVE_APP } from '../../native/platform'
@@ -46,6 +47,14 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
   const [touched, setTouched] = useState(EMPTY_TOUCHED)
   const [serverError, setServerError] = useState<AuthErrorInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [params] = useSearchParams()
+  // Codul din linkul de invitație (`?ref=`). Ținut și în browser: omul poate pleca de pe pagină
+  // și reveni la înregistrare fără link.
+  const [referralCode] = useState(() => {
+    const fromLink = params.get('ref')
+    rememberReferralCode(fromLink)
+    return fromLink?.trim().toUpperCase() || storedReferralCode()
+  })
 
   const touch = (field: 'email' | 'phone' | 'password' | 'confirmation') => () => {
     const values = { email: email.trim(), phone: phone.trim(), password, confirmation }
@@ -77,7 +86,8 @@ export default function RegisterPage({ role = 'Client' }: RegisterPageProps) {
     try {
       const trimmedEmail = email.trim()
       const trimmedPhone = phone.trim()
-      await authService.register(trimmedEmail, password, accountType, trimmedPhone)
+      await authService.register(trimmedEmail, password, accountType, trimmedPhone, referralCode)
+      forgetReferralCode()
       await authService.login(trimmedEmail, password)
       // Confirmarea se cere înaintea oricărui alt pas. Destinația de după ea se decide aici, unde
       // se știe tipul de cont: SRL-ul merge în dashboardul lui, PFA-ul în onboarding.
