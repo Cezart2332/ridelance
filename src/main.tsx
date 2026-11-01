@@ -122,6 +122,13 @@ const theme = createTheme({
           WebkitUserSelect: 'none',
           userSelect: 'none',
         },
+        // Meniurile și dialogurile MUI blochează scroll-ul punând `overflow: hidden` pe `body`. Pagina
+        // derulează însă pe `html` (de mai sus), iar MUI mută blocarea pe `html` doar când acesta are
+        // `overflow-y: scroll`, nu `auto`. Fără regula asta, un Select deschis rămâne fix pe ecran în
+        // timp ce pagina derulează de sub el. Compensarea pentru bara de scroll o pune MUI pe `body`.
+        'html:has(> body[style*="overflow: hidden"])': {
+          overflowY: 'hidden',
+        },
         body: {
           color: TOKENS.ink,
           backgroundColor: TOKENS.surface,
