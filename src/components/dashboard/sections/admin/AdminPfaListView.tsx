@@ -17,6 +17,8 @@ export interface AdminPfaRow {
   fullName: string | null
   phone: string | null
   status: string
+  /** Starea contului calculată pe server: „Suspendat”, „Închis”, „Cont nou”… */
+  accountStatus?: string
   subscriptionStatus: string | null
   subscriptionPlan: string | null
   documentCount: number
@@ -30,6 +32,10 @@ export interface AdminPfaRow {
 
 export type EnrolledFilter = 'active' | 'inactive' | 'deleted'
 export type FiscalFilter = 'all' | FiscalProfileStatus
+/** Tabul de onboarding: conturile suspendate stau separat, nu printre cele în lucru. */
+export type OnboardingFilter = 'all' | 'admin' | 'suspended'
+
+const isSuspendedRow = (row: AdminPfaRow) => row.accountStatus === 'Suspendat'
 
 const FISCAL_LABEL: Record<FiscalProfileStatus, { label: string; tone: PanelTone }> = {
   NOT_STARTED: { label: 'Necompletat', tone: 'yellow' },
@@ -39,6 +45,7 @@ const FISCAL_LABEL: Record<FiscalProfileStatus, { label: string; tone: PanelTone
 
 function statusBadge(row: AdminPfaRow): { label: string; tone: PanelTone } {
   if (row.deletedAtUtc) return { label: 'Cont închis', tone: 'red' }
+  if (isSuspendedRow(row)) return { label: 'Suspendat', tone: 'red' }
   if (row.awaitingAdminAction) return { label: 'Necesită verificare', tone: 'yellow' }
   switch (row.status.toLowerCase()) {
     case 'approved':
@@ -68,9 +75,10 @@ export function AdminPfaListView({
   enrolledCounts,
   fiscalFilter,
   onFiscalFilter,
-  onlyAwaitingAdmin,
-  onOnlyAwaitingAdmin,
+  onboardingFilter,
+  onOnboardingFilter,
   awaitingAdminCount,
+  suspendedCount,
   refreshing,
   onRefresh,
   onOpen,
@@ -83,7 +91,7 @@ export function AdminPfaListView({
   mode: 'onboarding' | 'enrolled'
   /** Rândurile după toate filtrele. */
   rows: AdminPfaRow[]
-  /** Toți clienții tabului, doar după căutare (pentru cifre). */
+  /** Toți clienții tabului, doar după căutare (pentru cifre). La onboarding, fără cei suspendați. */
   all: AdminPfaRow[]
   loading: boolean
   error: string | null
@@ -94,9 +102,10 @@ export function AdminPfaListView({
   enrolledCounts: Record<EnrolledFilter, number>
   fiscalFilter: FiscalFilter
   onFiscalFilter: (value: FiscalFilter) => void
-  onlyAwaitingAdmin: boolean
-  onOnlyAwaitingAdmin: (value: boolean) => void
+  onboardingFilter: OnboardingFilter
+  onOnboardingFilter: (value: OnboardingFilter) => void
   awaitingAdminCount: number
+  suspendedCount: number
   refreshing: boolean
   onRefresh: () => void
   onOpen: (row: AdminPfaRow) => void
@@ -116,9 +125,10 @@ export function AdminPfaListView({
     { value: 'inactive', label: 'Inactive', count: enrolledCounts.inactive },
     { value: 'deleted', label: 'Șterse', count: enrolledCounts.deleted, toneName: 'red' },
   ]
-  const onboardingTabs: FilterTab<'all' | 'admin'>[] = [
+  const onboardingTabs: FilterTab<OnboardingFilter>[] = [
     { value: 'all', label: 'Toate', count: all.length },
     { value: 'admin', label: 'Așteaptă adminul', count: awaitingAdminCount, toneName: 'yellow' },
+    { value: 'suspended', label: 'Suspendate', count: suspendedCount, toneName: 'red' },
   ]
   const notDeleted = all.filter((row) => !row.deletedAtUtc)
 
@@ -149,8 +159,8 @@ export function AdminPfaListView({
           </>
         ) : (
           <>
-            <StatCard label="În onboarding" value={all.length} active={!onlyAwaitingAdmin} onClick={() => onOnlyAwaitingAdmin(false)} />
-            <StatCard label="Așteaptă adminul" value={awaitingAdminCount} toneName={awaitingAdminCount > 0 ? 'yellow' : undefined} active={onlyAwaitingAdmin} onClick={() => onOnlyAwaitingAdmin(!onlyAwaitingAdmin)} />
+            <StatCard label="În onboarding" value={all.length} active={onboardingFilter === 'all'} onClick={() => onOnboardingFilter('all')} />
+            <StatCard label="Așteaptă adminul" value={awaitingAdminCount} toneName={awaitingAdminCount > 0 ? 'yellow' : undefined} active={onboardingFilter === 'admin'} onClick={() => onOnboardingFilter(onboardingFilter === 'admin' ? 'all' : 'admin')} />
             <StatCard label="Fără documente" value={all.filter((row) => row.documentCount === 0).length} />
             <StatCard label="Dosar aprobat" value={all.filter((row) => row.status.toLowerCase() === 'approved').length} toneName="green" />
           </>
@@ -165,7 +175,7 @@ export function AdminPfaListView({
               {enrolled ? (
                 <FilterTabs items={enrolledTabs} value={enrolledFilter} onChange={onEnrolledFilter} />
               ) : (
-                <FilterTabs items={onboardingTabs} value={onlyAwaitingAdmin ? 'admin' : 'all'} onChange={(value) => onOnlyAwaitingAdmin(value === 'admin')} />
+                <FilterTabs items={onboardingTabs} value={onboardingFilter} onChange={onOnboardingFilter} />
               )}
             </Stack>
             {enrolled && (

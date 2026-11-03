@@ -64,6 +64,26 @@ test('admin: respinge un document verificat, păstrează motivul la eroare și n
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
+test('admin: conturile suspendate stau în tabul lor, nu printre cele din onboarding', async ({ page }, info) => {
+  await mockAdmin(page)
+  const suspended = { ...client, id: 'pfa-suspended', userId: 'client-suspended', userName: 'Valentin Tanase', userEmail: 'valentin@example.test', accountStatus: 'Suspendat' }
+  await page.route(/\/pfa-registrations(\?.*)?$/, (route) => route.fulfill({ json: { items: [client, suspended] } }))
+  await page.goto('/admin?tab=pfa')
+
+  const table = page.getByRole('table')
+  await expect(table.getByText('Andrei Ionescu', { exact: true })).toBeVisible()
+  await expect(table.getByText('Valentin Tanase')).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Așteaptă adminul (1)', exact: true }).click()
+  await expect(table.getByText('Valentin Tanase')).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Suspendate (1)', exact: true }).click()
+  await expect(table.getByText('Valentin Tanase')).toBeVisible()
+  await expect(table.getByText('Suspendat', { exact: true })).toBeVisible()
+  await expect(table.getByText('Andrei Ionescu', { exact: true })).toHaveCount(0)
+  await page.screenshot({ path: `test-results/admin-suspended-${info.project.name}.png`, fullPage: true })
+})
+
 test('admin: verificare pe pas, filtrare documente și revenire la lista de clienți', async ({ page }, info) => {
   await mockAdmin(page)
   await page.goto('/admin?tab=pfa&user=client-review')

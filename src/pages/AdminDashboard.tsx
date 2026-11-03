@@ -53,7 +53,7 @@ import { AdminOverviewView } from '../components/dashboard/sections/admin/AdminO
 import { SrlAccountsView } from '../components/dashboard/sections/admin/SrlAccountsView'
 import { AdminTasksView } from '../components/dashboard/sections/admin/AdminTasksView'
 import { CloseAccountDialog } from '../components/dashboard/sections/admin/CloseAccountDialog'
-import { AdminPfaListView } from '../components/dashboard/sections/admin/AdminPfaListView'
+import { AdminPfaListView, type OnboardingFilter } from '../components/dashboard/sections/admin/AdminPfaListView'
 import { StaffTeamView } from '../components/dashboard/sections/admin/StaffTeamView'
 import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded'
 import { PfaDetailView } from './admin/PfaDetailView'
@@ -259,7 +259,7 @@ export function AdminDashboard() {
   const linkedTab = notificationParams.get('tab') ?? ''
   const activeTab = ['overview', 'pfa', 'pfa_inrolate', 'srl_inrolate', 'masini', 'pagini_firme', 'servicii', 'facturare', 'reduceri', 'eldrive', 'asigurari', 'calendar', 'chat', 'contabili', 'notificari', 'sarcini', ...Object.values(ACCOUNTING_TABS)].includes(linkedTab) ? linkedTab : manualTab
   const [search, setSearch] = useState('')
-  const [onlyAwaitingAdmin, setOnlyAwaitingAdmin] = useState(false)
+  const [onboardingFilter, setOnboardingFilter] = useState<OnboardingFilter>('all')
   const [enrolledFilter, setEnrolledFilter] = useState<EnrolledFilter>('active')
   const [fiscalFilter, setFiscalFilter] = useState<FiscalFilter>('all')
   /** Contul pe care îl închidem sau redeschidem acum. */
@@ -667,21 +667,26 @@ export function AdminDashboard() {
     {} as Record<EnrolledFilter, number>,
   )
 
-  const displayPfas = filteredPfas
-    // Înrolat = onboarding complet, nu „dosar PFA aprobat": un dosar aprobat poate avea încă
-    // patru pași de parcurs, iar tabul de onboarding e chiar locul unde se urmăresc. Conturile
-    // închise ies din onboarding și stau la „Șterse”.
-    .filter(p =>
-      activeTab === 'pfa_inrolate'
-        ? enrolledFilterOf(p) === enrolledFilter
-        : p.onboardingCompletedAtUtc === null && !p.deletedAtUtc
-    )
-    // Filtrul rapid din spec: dosarele la care mingea e la noi, nu la client.
-    .filter(p => !onlyAwaitingAdmin || p.awaitingAdminAction)
-    .filter(p => activeTab !== 'pfa_inrolate' || fiscalFilter === 'all' || p.fiscalProfileStatus === fiscalFilter)
+  // Înrolat = onboarding complet, nu „dosar PFA aprobat": un dosar aprobat poate avea încă patru
+  // pași de parcurs, iar tabul de onboarding e chiar locul unde se urmăresc. Conturile închise ies
+  // din onboarding și stau la „Șterse”; cele suspendate au tabul lor, „Suspendate”.
+  const isSuspended = (p: PfaSummary) => p.accountStatus === 'Suspendat'
+  const inOnboarding = filteredPfas.filter((p) => p.onboardingCompletedAtUtc === null && !p.deletedAtUtc)
+  const onboardingActive = inOnboarding.filter((p) => !isSuspended(p))
+  const onboardingSuspended = inOnboarding.filter(isSuspended)
+
+  const displayPfas =
+    activeTab === 'pfa_inrolate'
+      ? filteredPfas
+          .filter((p) => enrolledFilterOf(p) === enrolledFilter)
+          .filter((p) => fiscalFilter === 'all' || p.fiscalProfileStatus === fiscalFilter)
+      : onboardingFilter === 'suspended'
+        ? onboardingSuspended
+        : // Filtrul rapid din spec: dosarele la care mingea e la noi, nu la client.
+          onboardingActive.filter((p) => onboardingFilter !== 'admin' || p.awaitingAdminAction)
 
   // Contorul se calculează înainte de filtru, altfel ar arăta mereu numărul afișat.
-  const awaitingAdminCount = filteredPfas.filter(p => p.awaitingAdminAction).length
+  const awaitingAdminCount = onboardingActive.filter((p) => p.awaitingAdminAction).length
 
   const subscriptionStatusLabel = (status: string | null) => {
     if (!status) return 'Fără abonament'
@@ -946,7 +951,7 @@ export function AdminDashboard() {
       <AdminPfaListView
         mode={activeTab === 'pfa_inrolate' ? 'enrolled' : 'onboarding'}
         rows={displayPfas}
-        all={activeTab === 'pfa_inrolate' ? filteredPfas.filter((p) => enrolledFilterOf(p) !== null) : filteredPfas.filter((p) => p.onboardingCompletedAtUtc === null && !p.deletedAtUtc)}
+        all={activeTab === 'pfa_inrolate' ? filteredPfas.filter((p) => enrolledFilterOf(p) !== null) : onboardingActive}
         loading={pfasLoading}
         error={pfasError}
         search={search}
@@ -956,9 +961,10 @@ export function AdminDashboard() {
         enrolledCounts={enrolledCounts}
         fiscalFilter={fiscalFilter}
         onFiscalFilter={setFiscalFilter}
-        onlyAwaitingAdmin={onlyAwaitingAdmin}
-        onOnlyAwaitingAdmin={setOnlyAwaitingAdmin}
+        onboardingFilter={onboardingFilter}
+        onOnboardingFilter={setOnboardingFilter}
         awaitingAdminCount={awaitingAdminCount}
+        suspendedCount={onboardingSuspended.length}
         refreshing={manualRefreshing}
         onRefresh={() => void handleManualRefresh()}
         onOpen={(row) => {
@@ -1036,7 +1042,7 @@ export function AdminDashboard() {
     setActiveTab(id)
     setSelectedPfa(null)
     setSearch('')
-    setOnlyAwaitingAdmin(false)
+    setOnboardingFilter('all')
   }
 
   // Sub-taburile „Clienți PFA” stau deasupra listelor; într-o fișă deschisă are deja „Înapoi”.
