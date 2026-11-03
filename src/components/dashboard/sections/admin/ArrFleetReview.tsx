@@ -192,15 +192,12 @@ export function ArrFleetReview({
             ? `${state.agency.beneficiaryName} · CIF ${state.agency.fiscalCode} · ${state.agency.iban} · ${state.agency.treasury}`
             : (state.agencyError ?? '—')}
         </Row>
-        {state.payments.map((payment) => (
-          <Row key={payment.kind} label={`Plata: ${payment.label.toLowerCase()}`}>
-            {lei(payment.amountBani)} · {payment.proofUploaded ? 'dovadă încărcată' : 'fără dovadă'}
-          </Row>
-        ))}
-        <Row label="Total">{lei(state.paymentAmountBani)}</Row>
+        <Row label="Plata">
+          {lei(state.paymentAmountBani)} · {state.paymentProofUploaded ? 'dovadă încărcată' : 'fără dovadă'}
+        </Row>
         {state.paymentProofOutdated && (
           <Alert severity="warning" sx={{ mt: 1 }}>
-            Dovada plății ecusoanelor e pentru o sumă veche: clientul a schimbat platformele după ce a încărcat-o.
+            Dovada plății e pentru o sumă veche: clientul a schimbat platformele după ce a încărcat-o.
           </Alert>
         )}
         <Row label="Trimis">

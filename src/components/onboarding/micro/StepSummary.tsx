@@ -2,8 +2,6 @@ import AutorenewRoundedIcon from '@mui/icons-material/AutorenewRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import { Box, Button, Chip, Stack, Typography } from '@mui/material'
 
-import { suspicionOf } from '../documentSuspicion'
-
 import { isAiPending, type DocumentSummary } from '../../../services/document.service'
 import type { MicroStepAnswers, MicroStepView } from '../microStepTypes'
 import { TOKENS } from '../onboardingTheme'
@@ -22,8 +20,8 @@ interface StepSummaryProps {
 /**
  * Rezumatul pasului: ce a răspuns și ce a încărcat, cu posibilitatea de a schimba orice.
  *
- * Documentele încă în verificare NU blochează — chip-ul „Se verifică" o spune, butonul rămâne
- * activ. Dacă unul pică după ce a avansat, pasul se redeschide singur în rail.
+ * Documentele care încă se citesc NU blochează — chip-ul „Se citește" o spune, butonul rămâne
+ * activ. Dacă echipa respinge unul după ce a avansat, pasul se redeschide singur în rail.
  */
 export function StepSummary({ steps, answers, documents, onEdit }: StepSummaryProps) {
   const docFor = (categories: string[]): DocumentSummary | null =>
@@ -39,7 +37,6 @@ export function StepSummary({ steps, answers, documents, onEdit }: StepSummaryPr
         label: def.document.label,
         value: doc?.originalFileName ?? 'Neîncărcat',
         pending: doc !== null && isAiPending(doc),
-        suspicion: suspicionOf(documents, [def.document.category]),
       }
     }
 
@@ -50,7 +47,7 @@ export function StepSummary({ steps, answers, documents, onEdit }: StepSummaryPr
       const titles = answer
         .map((value) => def.choices?.find((c) => c.value === value)?.title ?? value)
         .join(', ')
-      return { id: def.id, label: def.railLabel, value: titles || 'Nimic ales', pending: false, suspicion: null }
+      return { id: def.id, label: def.railLabel, value: titles || 'Nimic ales', pending: false }
     }
 
     // Câmpurile de text nu au valoare proprie sub `def.id` — se cheie pe câmp.
@@ -63,7 +60,6 @@ export function StepSummary({ steps, answers, documents, onEdit }: StepSummaryPr
         label: def.railLabel,
         value: filled.length > 0 ? filled.join(' · ') : 'Necompletat',
         pending: false,
-        suspicion: null,
       }
     }
 
@@ -73,7 +69,6 @@ export function StepSummary({ steps, answers, documents, onEdit }: StepSummaryPr
       label: def.railLabel,
       value: choice?.title ?? 'Confirmat din documente',
       pending: false,
-      suspicion: null,
     }
   })
 
@@ -103,17 +98,10 @@ export function StepSummary({ steps, answers, documents, onEdit }: StepSummaryPr
               >
                 {row.value}
               </Typography>
-              {row.suspicion && (
-                <Typography variant="caption" sx={{ color: 'warning.dark', fontWeight: 600 }}>
-                  {row.suspicion}
-                </Typography>
-              )}
             </Box>
 
             {row.pending ? (
-              <Chip size="small" icon={<AutorenewRoundedIcon />} label="Se verifică" />
-            ) : row.suspicion ? (
-              <Chip size="small" label="? De verificat" color="warning" variant="outlined" />
+              <Chip size="small" icon={<AutorenewRoundedIcon />} label="Se citește" />
             ) : (
               <Chip
                 size="small"

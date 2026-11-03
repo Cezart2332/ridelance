@@ -2,8 +2,8 @@ import { expect, test, type Page } from '@playwright/test'
 
 const client = { id: 'pfa-review', userId: 'client-review', userName: 'Andrei Ionescu', userEmail: 'andrei@example.test', fullName: 'Andrei Ionescu', phone: '0722123456', registrationType: 'ExistingPfa', status: 'Pending', accountStatus: 'În onboarding', documentCount: 2, awaitingAdminAction: true, onboardingCompletedAtUtc: null, createdAtUtc: '2026-09-01T10:00:00Z', lastActivityAtUtc: '2026-09-14T08:00:00Z' }
 const documents = [
-  { id: 'identity', originalFileName: 'Carte de identitate.pdf', category: 'CarteIdentitate', status: 'Pending', fileSize: 120400, uploadedAtUtc: '2026-09-14T08:00:00Z', aiStatus: 'Passed', aiRequiresManualReview: false, origin: 'UserUpload', isUserFacing: true, contentType: 'application/pdf' },
-  { id: 'license', originalFileName: 'Permis de conducere.pdf', category: 'PermisConducere', status: 'Verified', fileSize: 84200, uploadedAtUtc: '2026-09-14T08:00:00Z', aiStatus: 'Passed', aiRequiresManualReview: false, origin: 'UserUpload', isUserFacing: true, contentType: 'application/pdf' },
+  { id: 'identity', originalFileName: 'Carte de identitate.pdf', category: 'CarteIdentitate', status: 'Pending', fileSize: 120400, uploadedAtUtc: '2026-09-14T08:00:00Z', aiStatus: 'Read', aiRequiresManualReview: false, origin: 'UserUpload', isUserFacing: true, contentType: 'application/pdf' },
+  { id: 'license', originalFileName: 'Permis de conducere.pdf', category: 'PermisConducere', status: 'Verified', fileSize: 84200, uploadedAtUtc: '2026-09-14T08:00:00Z', aiStatus: 'Read', aiRequiresManualReview: false, origin: 'UserUpload', isUserFacing: true, contentType: 'application/pdf' },
 ]
 
 async function mockAdmin(page: Page, failFirst = false) {
@@ -143,11 +143,8 @@ test('admin: ARR & Cont Flotă — apel telefonic, status cu document oficial ș
       { platform: 'Bolt', hasAccount: false, email: null, phone: null, fullName: null, requiresPhoneCall: true },
     ],
     vehicleOwnership: 'Rental', paymentAmountBani: 41600,
-    payments: [
-      { kind: 'Authorization', label: 'Autorizația de transport', explanation: '', amountBani: 30000, proofCategory: 'ArrAuthorizationPaymentProof', proofUploaded: true },
-      { kind: 'CertifiedCopy', label: 'Copia conformă', explanation: '', amountBani: 10000, proofCategory: 'ArrCertifiedCopyPaymentProof', proofUploaded: true },
-      { kind: 'Badges', label: 'Ecusoanele', explanation: '', amountBani: 1600, proofCategory: 'ArrBadgesPaymentProof', proofUploaded: false },
-    ],
+    paymentExplanation: '300 lei autorizația de transport, 100 lei copia conformă, 8 lei ecusoane Uber, 8 lei ecusoane Bolt.',
+    paymentProofUploaded: false,
     agency: { countyCode: 'CJ', countyName: 'Cluj', beneficiaryName: 'A.R.R. — Agenția Teritorială Cluj', treasury: 'Trezoreria Cluj-Napoca', fiscalCode: '23826223', iban: 'RO93TREZ216501701X030552' },
     agencyError: null,
     paymentProofOutdated: false, submittedAtUtc: '2026-10-09T08:00:00Z', reopenedReason: null, missing: [], statusLog: [] as unknown[],
@@ -172,9 +169,8 @@ test('admin: ARR & Cont Flotă — apel telefonic, status cu document oficial ș
   await expect(step.getByText('Necesită apel telefonic — nu are cont')).toBeVisible()
   await expect(step.getByText('sofer@example.test · +40712345678 · Andrei Ionescu')).toBeVisible()
   await expect(step.getByText('Contract de închiriere', { exact: true })).toBeVisible()
-  await expect(step.getByText('416 lei')).toBeVisible()
   await expect(step.getByText(/A\.R\.R\. — Agenția Teritorială Cluj · CIF 23826223/)).toBeVisible()
-  await expect(step.getByText('16 lei · fără dovadă')).toBeVisible()
+  await expect(step.getByText('416 lei · fără dovadă')).toBeVisible()
 
   // Autorizația cere documentul oficial: serverul refuză, iar mesajul ajunge la admin.
   await step.getByLabel('Status').click()

@@ -185,20 +185,22 @@ const ORIGIN_LABELS: Record<DocumentSummary['origin'], string> = {
   AdminUpload: 'Încărcat de agent',
 }
 
-/** Chip cu verdictul prevalidării AI + tooltip cu detaliile extrase. */
-function AiVerdictChip({ doc }: { doc: DocumentSummary }) {
+/**
+ * Chip cu starea citirii automate (OCR) + tooltip cu ce s-a citit. Nu e un verdict: AI-ul doar
+ * citește, documentul îl judecă adminul.
+ */
+function AiReadChip({ doc }: { doc: DocumentSummary }) {
   const config: Record<string, { label: string; tone: Tone }> = {
-    Queued: { label: 'AI: în curs', tone: 'info' },
-    Processing: { label: 'AI: în curs', tone: 'info' },
-    Passed: { label: 'AI: OK', tone: 'success' },
-    Failed: { label: 'AI: respins', tone: 'error' },
-    Error: { label: 'AI: indisponibil', tone: 'neutral' },
+    Queued: { label: 'OCR: în curs', tone: 'info' },
+    Processing: { label: 'OCR: în curs', tone: 'info' },
+    Read: { label: 'OCR: citit', tone: 'neutral' },
+    Error: { label: 'OCR: indisponibil', tone: 'neutral' },
   }
   const reasons = doc.aiSuspicionReasons ?? []
-  // Trecut, dar suspect: fără ștampilă, PDF din Word, titular diferit de buletin. Nu „AI: OK”.
+  // Citit, cu ceva de văzut: act expirat, PDF din Word, titular diferit de buletin.
   const entry =
-    doc.aiStatus === 'Passed' && reasons.length > 0
-      ? { label: 'AI: suspect', tone: 'warning' as Tone }
+    doc.aiStatus === 'Read' && reasons.length > 0
+      ? { label: 'OCR: de văzut', tone: 'warning' as Tone }
       : config[doc.aiStatus]
   if (!entry) return null
 
@@ -725,7 +727,7 @@ export function OnboardingSectionsPanel({
         updatingStatus={statusUpdatingDocId !== null}
         opening={openingId === doc.id}
         downloading={downloadingId === doc.id}
-        extra={<AiVerdictChip doc={doc} />}
+        extra={<AiReadChip doc={doc} />}
       />
       <AdminExtractedFields documentId={doc.id} />
     </Box>

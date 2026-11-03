@@ -94,7 +94,7 @@ const uploadedDoc = (category: string, fileName: string) => ({
   fileSize: 1024,
   uploadedAtUtc: '2026-08-01T09:00:00Z',
   expiresAtUtc: null,
-  aiStatus: 'Passed',
+  aiStatus: 'Read',
   aiSummary: null,
   aiDetectedType: null,
   aiExtractedExpiresAtUtc: null,
@@ -297,10 +297,10 @@ test.describe('pasul 1 pe micro-pași', () => {
   })
 
   /**
-   * Un document trecut, dar suspect (aici: permisul altcuiva), nu primește bifă: „?” și motivul,
-   * direct în listă și în rezumat — nu abia când deschizi ecranul documentului.
+   * AI-ul doar citește: motivele găsite automat (aici: permisul altcuiva) sunt pentru admin, nu
+   * pentru client. Clientul vede documentul încărcat, fără „?” și fără verdict.
    */
-  test('documentul suspect are „?” și motivul, nu bifă', async ({ page }, info) => {
+  test('motivele găsite automat nu ajung la client', async ({ page }, info) => {
     test.skip(info.project.name === 'mobile', 'Lista pașilor stă în rail-ul de desktop.')
     const reason = 'CNP-ul de pe „Permis de conducere” nu e cel din buletin.'
     await stubEligibility(
@@ -314,9 +314,9 @@ test.describe('pasul 1 pe micro-pași', () => {
     )
     await page.goto('/onboarding/eligibility?pas=eligibility_summary', { waitUntil: 'networkidle' })
 
-    await expect(page.getByText('De verificat').first()).toBeVisible()
-    await expect(page.getByText(reason).first()).toBeVisible()
-    await expect(page.getByText('? De verificat')).toBeVisible()
+    await expect(page.getByText('permis.pdf').first()).toBeVisible()
+    await expect(page.getByText(reason)).toHaveCount(0)
+    await expect(page.getByText('? De verificat')).toHaveCount(0)
     await page.screenshot({ path: `test-results/onboarding-suspect-${info.project.name}.png` })
   })
 
@@ -499,7 +499,7 @@ test.describe('pasul 2 — am deja PFA', () => {
   })
 
   /** Înainte, butonul era activ imediat după upload — pasul „se termina" pe acte necitite de AI. */
-  test('rezumatul nu lasă mai departe cât timp AI-ul verifică actele', async ({ page }) => {
+  test('rezumatul nu lasă mai departe cât timp AI-ul citește actele', async ({ page }) => {
     await stubBackend(
       page,
       [
@@ -510,8 +510,8 @@ test.describe('pasul 2 — am deja PFA', () => {
     )
     await page.goto('/onboarding/pfa?pas=pfa_summary', { waitUntil: 'networkidle' })
 
-    // Nu numără spre pasul următor cât timp actele sunt în verificare; spune de ce așteaptă.
-    await expect(page.getByText('Verificăm automat documentele încărcate', { exact: false })).toBeVisible()
+    // Nu numără spre pasul următor cât timp actele se citesc; spune de ce așteaptă.
+    await expect(page.getByText('Citim documentele încărcate', { exact: false })).toBeVisible()
     await expect(page.getByTestId('auto-advance')).toHaveCount(0)
     await expect(page.getByRole('button', { name: /Continuă/ })).toHaveCount(0)
   })
@@ -901,11 +901,8 @@ test.describe('pasul 4 — ARR & Cont Flotă', () => {
     driverAccounts: [{ platform: 'Uber', hasAccount: null, email: null, phone: null, fullName: null, requiresPhoneCall: false }],
     vehicleOwnership: 'Ownership',
     paymentAmountBani: 40800,
-    payments: [
-      { kind: 'Authorization', label: 'Autorizația de transport', explanation: 'Valabilă 3 ani.', amountBani: 30000, proofCategory: 'ArrAuthorizationPaymentProof', proofUploaded: false },
-      { kind: 'CertifiedCopy', label: 'Copia conformă', explanation: 'Valabilă 1 an.', amountBani: 10000, proofCategory: 'ArrCertifiedCopyPaymentProof', proofUploaded: false },
-      { kind: 'Badges', label: 'Ecusoanele', explanation: 'Câte 8 lei pe platformă: 8 lei Uber.', amountBani: 800, proofCategory: 'ArrBadgesPaymentProof', proofUploaded: false },
-    ],
+    paymentExplanation: '300 lei autorizația de transport, 100 lei copia conformă, 8 lei ecusoane Uber.',
+    paymentProofUploaded: false,
     agency: {
       countyCode: 'CJ',
       countyName: 'Cluj',
@@ -954,44 +951,36 @@ test.describe('pasul 4 — ARR & Cont Flotă', () => {
     return requests
   }
 
-  test('fiecare plată către ARR are suma ei exactă și contul agenției din județul sediului', async ({ page }, info) => {
+  test('o singură plată de 408 lei, în contul agenției din județul sediului', async ({ page }, info) => {
     await stubArrFleet(page, arrFleet())
-    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata_autorizatie', { waitUntil: 'networkidle' })
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata', { waitUntil: 'networkidle' })
 
-    await expect(page.getByText('300 lei', { exact: true })).toBeVisible()
+    await expect(page.getByText('408 lei', { exact: true })).toBeVisible()
+    await expect(page.getByText(/8 lei ecusoane Uber\./)).toBeVisible()
     await expect(page.getByText('A.R.R. — Agenția Teritorială Cluj')).toBeVisible()
     await expect(page.getByText('RO93 TREZ 2165 0170 1X03 0552')).toBeVisible()
     await expect(page.getByText('Trezoreria Cluj-Napoca')).toBeVisible()
     await page.screenshot({ path: `test-results/onboarding-arr-fleet-plata-${info.project.name}.png` })
 
-    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata_copie', { waitUntil: 'networkidle' })
-    await expect(page.getByText('100 lei', { exact: true })).toBeVisible()
-
-    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata_ecusoane', { waitUntil: 'networkidle' })
-    await expect(page.getByText('8 lei', { exact: true })).toBeVisible()
-    await expect(page.getByText(/8 lei Uber\./)).toBeVisible()
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata_autorizatie', { waitUntil: 'networkidle' })
+    await expect(page.getByText('300 lei', { exact: true })).toHaveCount(0)
   })
 
-  test('cu ambele platforme ecusoanele costă 16 lei, iar o dovadă pentru suma veche e semnalată', async ({ page }) => {
-    const base = arrFleet()
+  test('cu ambele platforme plata e 416 lei, iar o dovadă pentru suma veche e semnalată', async ({ page }) => {
     await stubArrFleet(
       page,
-      {
-        ...base,
+      arrFleet({
         platforms: ['Uber', 'Bolt'],
         paymentAmountBani: 41600,
+        paymentExplanation: '300 lei autorizația de transport, 100 lei copia conformă, 8 lei ecusoane Uber, 8 lei ecusoane Bolt.',
+        paymentProofUploaded: true,
         paymentProofOutdated: true,
-        payments: (base.payments as { kind: string }[]).map((payment) =>
-          payment.kind === 'Badges'
-            ? { ...payment, amountBani: 1600, explanation: 'Câte 8 lei pe platformă: 8 lei Uber, 8 lei Bolt.' }
-            : payment,
-        ),
-      },
-      [uploadedDoc('ArrBadgesPaymentProof', 'ecusoane.pdf')],
+      }),
+      [uploadedDoc('DovadaPlataArr', 'plata.pdf')],
     )
-    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata_ecusoane', { waitUntil: 'networkidle' })
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata', { waitUntil: 'networkidle' })
 
-    await expect(page.getByText('16 lei', { exact: true })).toBeVisible()
+    await expect(page.getByText('416 lei', { exact: true })).toBeVisible()
     await expect(page.getByText(/încarcă dovada pentru suma nouă/)).toBeVisible()
   })
 
@@ -1003,7 +992,7 @@ test.describe('pasul 4 — ARR & Cont Flotă', () => {
         agencyError: 'Nu știm județul sediului social al PFA-ului, deci nici agenția ARR la care plătești. Scrie-ne la suport și îl completăm.',
       }),
     )
-    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata_autorizatie', { waitUntil: 'networkidle' })
+    await page.goto('/onboarding/arr-fleet?pas=arr_fleet_plata', { waitUntil: 'networkidle' })
 
     await expect(page.getByText(/Nu știm județul sediului social/)).toBeVisible()
     await expect(page.getByText('IBAN')).toHaveCount(0)
@@ -1032,9 +1021,7 @@ test.describe('pasul 4 — ARR & Cont Flotă', () => {
       }),
       [
         ...personalDocuments,
-        uploadedDoc('ArrAuthorizationPaymentProof', 'plata-autorizatie.pdf'),
-        uploadedDoc('ArrCertifiedCopyPaymentProof', 'plata-copie.pdf'),
-        uploadedDoc('ArrBadgesPaymentProof', 'plata-ecusoane.pdf'),
+        uploadedDoc('DovadaPlataArr', 'plata.pdf'),
       ],
     )
     await page.goto('/onboarding/arr-fleet', { waitUntil: 'networkidle' })

@@ -1,13 +1,11 @@
 /**
  * Verdictul unui document în onboarding, într-un singur loc.
  *
- * Verificarea automată e doar primul filtru. Dacă un om din echipă a validat documentul, verdictul
- * lui bate „respins” de la AI: altfel documentul rămânea roșu la client și pasul nu mai înainta,
- * deși adminul îl aprobase.
+ * Verdictul îl dă doar echipa (admin sau contabil). AI-ul doar citește documentul (OCR) și nu
+ * respinge nimic, deci `aiStatus` nu intră aici.
  */
 interface Judged {
   status: string
-  aiStatus?: string | null
 }
 
 /** Validat de echipă (admin sau contabil). */
@@ -16,13 +14,7 @@ export function isApprovedByTeam(document: Judged): boolean {
   return status === 'verified' || status === 'approved'
 }
 
-/** Respins: de echipă, sau de verificarea automată fără ca echipa să fi spus altceva. */
+/** Respins de echipă. */
 export function isDocumentRejected(document: Judged): boolean {
-  if (document.status.toLowerCase() === 'rejected') return true
-  return document.aiStatus === 'Failed' && !isApprovedByTeam(document)
-}
-
-/** Verificarea automată a picat sau n-a putut rula, iar echipa încă nu s-a pronunțat. */
-export function isAiBlocking(document: Judged): boolean {
-  return (document.aiStatus === 'Failed' || document.aiStatus === 'Error') && !isApprovedByTeam(document)
+  return document.status.toLowerCase() === 'rejected'
 }

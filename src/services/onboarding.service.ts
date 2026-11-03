@@ -271,17 +271,6 @@ export interface ArrFleetDriverAccount {
   requiresPhoneCall: boolean
 }
 
-/** O plată separată către ARR: autorizația, copia conformă sau ecusoanele. */
-export interface ArrFleetPayment {
-  kind: 'Authorization' | 'CertifiedCopy' | 'Badges'
-  label: string
-  explanation: string
-  amountBani: number
-  /** Categoria în care se încarcă dovada: `ArrAuthorizationPaymentProof`, … */
-  proofCategory: string
-  proofUploaded: boolean
-}
-
 /** Agenția teritorială ARR și contul ei de trezorerie. */
 export interface ArrAgency {
   countyCode: string
@@ -301,15 +290,17 @@ export interface ArrFleetState {
   platforms: PlatformProvider[]
   driverAccounts: ArrFleetDriverAccount[]
   vehicleOwnership: ArrFleetVehicleOwnership | null
-  /** Totalul celor trei plăți, calculat pe server: 408 lei pentru o platformă, 416 pentru ambele. */
+  /** O singură plată, calculată pe server: 408 lei pentru o platformă, 416 pentru ambele. */
   paymentAmountBani: number
-  /** Cele trei plăți separate cerute de ARR, fiecare cu dovada ei. */
-  payments: ArrFleetPayment[]
+  /** „300 lei autorizația de transport, 100 lei copia conformă, 8 lei ecusoane Uber.” */
+  paymentExplanation: string
+  /** Dovada plății (`DovadaPlataArr`) e încărcată. */
+  paymentProofUploaded: boolean
   /** Agenția ARR din județul sediului social, cu contul de trezorerie. Null = vezi `agencyError`. */
   agency: ArrAgency | null
   /** De ce n-am putut stabili agenția (județul lipsește sau nu e recunoscut). */
   agencyError: string | null
-  /** Dovada plății ecusoanelor e pentru o sumă care între timp s-a schimbat. */
+  /** Dovada plății e pentru o sumă care între timp s-a schimbat. */
   paymentProofOutdated: boolean
   submittedAtUtc: string | null
   /** Motivul pentru care un agent a redeschis pasul. */

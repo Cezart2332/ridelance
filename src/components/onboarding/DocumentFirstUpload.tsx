@@ -150,7 +150,7 @@ export function DocumentFirstUpload({
         <Chip
           size="small"
           icon={<AutorenewRoundedIcon />}
-          label="Se verifică"
+          label="Se citește"
           sx={{ fontWeight: 700, fontSize: '0.68rem' }}
         />
       )
@@ -196,12 +196,12 @@ export function DocumentFirstUpload({
 
       {rejected && (
         <Alert severity="error" sx={{ mb: 1, borderRadius: `${TOKENS.radius.md}px` }}>
-          {current?.aiSummary ?? 'Document respins. Încarcă altul.'}
+          {current?.reviewNote ?? 'Document respins. Încarcă altul.'}
         </Alert>
       )}
 
-      {/* Verificarea automată e o stare separată de upload: fișierul a ajuns, acum se citește.
-          Chip-ul „Se verifică" o numește deja — aici rămâne doar bara. */}
+      {/* Citirea automată e o stare separată de upload: fișierul a ajuns, acum se citește.
+          Chip-ul „Se citește" o numește deja — aici rămâne doar bara. */}
       {verifying && (
         <LinearProgress
           sx={{

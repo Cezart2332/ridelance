@@ -1,4 +1,3 @@
-import { isApprovedByTeam } from '../documentVerdict'
 import HourglassTopRoundedIcon from '@mui/icons-material/HourglassTopRounded'
 import { Alert, Box, Paper, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -51,10 +50,6 @@ function PfaDocReupload({
   const [uploadError, setUploadError] = useState<string | null>(null)
 
   const label = PFA_STEP_CATEGORIES[doc.category] ?? doc.category
-  const reason =
-    doc.aiStatus === 'Failed' && !isApprovedByTeam(doc) && doc.aiSummary
-      ? `respins la verificarea automată: ${doc.aiSummary}`
-      : 'respins de echipa RIDElance.'
 
   /** Documentul pleacă de îndată ce a fost ales — nu mai există un al doilea pas de confirmat. */
   const handleUpload = async (picked: File[]) => {
@@ -75,7 +70,7 @@ function PfaDocReupload({
   return (
     <Stack spacing={1.5} sx={{ textAlign: 'left' }}>
       <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>
-        Documentul „{label}” a fost {reason} Încarcă o variantă corectă mai jos.
+        Documentul „{label}” a fost respins de echipa RIDElance. Încarcă o variantă corectă mai jos.
       </Alert>
       {uploadError && (
         <Alert severity="error" sx={{ borderRadius: `${TOKENS.radius.md}px` }}>

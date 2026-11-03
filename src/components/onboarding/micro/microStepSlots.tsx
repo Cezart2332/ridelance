@@ -27,12 +27,9 @@ import { useOnboarding } from '../useOnboarding'
 export function MicroStepSlotContent({
   slot,
   context,
-  category,
 }: {
   slot: MicroStepSlot
   context: MicroStepContext
-  /** Categoria documentului de pe ecran: plata a cărei dovadă se încarcă acolo. */
-  category?: string
 }): ReactNode {
   switch (slot) {
     case 'bankAccountCta':
@@ -40,7 +37,7 @@ export function MicroStepSlotContent({
     case 'bankConnect':
       return <BankConnectSlot context={context} />
     case 'arrFleetPayment':
-      return <ArrFleetPaymentSlot context={context} category={category} />
+      return <ArrFleetPaymentSlot context={context} />
     case 'arrFleetStatus':
       return <ArrFleetStatusSlot context={context} />
     case 'onboardingAdvance':
@@ -452,13 +449,12 @@ function CopyableRow({ label, value, copyValue }: { label: string; value: string
 }
 
 /**
- * O plată către ARR: suma exactă, ce acoperă și contul de trezorerie al agenției din județul
- * sediului social. ARR cere plăți separate, deci fiecare ecran de dovadă are plata lui.
+ * Plata către ARR: o singură sumă (408 lei pentru o platformă, 416 pentru ambele), ce acoperă și
+ * contul de trezorerie al agenției din județul sediului social.
  */
-function ArrFleetPaymentSlot({ context, category }: { context: MicroStepContext; category?: string }) {
+function ArrFleetPaymentSlot({ context }: { context: MicroStepContext }) {
   const state = arrFleetOf(context)
-  const payment = state?.payments.find((p) => p.proofCategory === category)
-  if (!state || !payment) return null
+  if (!state || state.paymentAmountBani === 0) return null
 
   const agency = state.agency
 
@@ -472,14 +468,12 @@ function ArrFleetPaymentSlot({ context, category }: { context: MicroStepContext;
           backgroundColor: TOKENS.primarySoft,
         }}
       >
-        <Typography sx={{ fontSize: '0.78rem', fontWeight: 800, color: TOKENS.textMuted }}>
-          {payment.label.toUpperCase()}
-        </Typography>
+        <Typography sx={{ fontSize: '0.78rem', fontWeight: 800, color: TOKENS.textMuted }}>DE PLATĂ</Typography>
         <Typography sx={{ fontSize: '2rem', fontWeight: 800, color: TOKENS.ink, lineHeight: 1.2 }}>
-          {lei(payment.amountBani)}
+          {lei(state.paymentAmountBani)}
         </Typography>
         <Typography sx={{ mt: 0.5, fontSize: '0.85rem', color: TOKENS.textMuted }}>
-          {payment.explanation} Plătește exact suma asta, separat de celelalte.
+          {state.paymentExplanation}
         </Typography>
       </Box>
 
@@ -494,10 +488,10 @@ function ArrFleetPaymentSlot({ context, category }: { context: MicroStepContext;
         <Alert severity="error">{state.agencyError ?? 'Nu știm agenția ARR la care plătești. Scrie-ne la suport.'}</Alert>
       )}
 
-      {payment.kind === 'Badges' && state.paymentProofOutdated && (
+      {state.paymentProofOutdated && (
         <Alert severity="warning">
-          Ai schimbat platformele după ce ai încărcat dovada. Suma pentru ecusoane e acum {lei(payment.amountBani)}:
-          încarcă dovada pentru suma nouă.
+          Ai schimbat platformele după ce ai încărcat dovada. Suma e acum {lei(state.paymentAmountBani)}: încarcă
+          dovada pentru suma nouă.
         </Alert>
       )}
     </Stack>

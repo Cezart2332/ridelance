@@ -14,8 +14,8 @@ import { toE164 } from './contact'
  * plătește; contul ARR, conturile de flotă, autorizația, copia conformă și ecusoanele le obține
  * agentul RIDElance din admin.
  *
- * Secțiunile, în ordine: documente personale, platforme, cele trei plăți către ARR, vehicul,
- * documente auto, trimitere.
+ * Secțiunile, în ordine: documente personale, platforme, plata către ARR, vehicul, documente auto,
+ * trimitere.
  * După trimitere pasul e doar de citit: rămâne ecranul cu statusul și, dacă agentul respinge un act,
  * ecranul acelui act, ca să-l poată reîncărca.
  */
@@ -39,7 +39,7 @@ function hasDocument(c: MicroStepContext, category: string): boolean {
   return !isDocumentRejected(newest)
 }
 
-/** Actul a fost respins (de AI sau de agent): ecranul lui rămâne vizibil și după trimitere. */
+/** Actul a fost respins de agent: ecranul lui rămâne vizibil și după trimitere. */
 const rejected = (c: MicroStepContext, category: string) => {
   const newest = newestOf(c, category)
   return newest !== undefined && isDocumentRejected(newest)
@@ -243,33 +243,19 @@ export const arrFleetMicroSteps: MicroStepDef[] = [
   ...driverAccountSteps('Uber'),
   ...driverAccountSteps('Bolt'),
 
-  // ── 3. Plată: trei plăți separate, în cuantum exact, la agenția ARR a sediului social ──
+  // ── 3. Plată: o singură sumă, 408 sau 416 lei, la agenția ARR a sediului social ──
   uploadStep(
-    'arr_fleet_plata_autorizatie',
-    'ArrAuthorizationPaymentProof',
-    'Dovada plății autorizației',
-    'Chitanța sau ordinul de plată pentru 300 lei.',
-    { railLabel: 'Plata autorizației', title: 'Plătește autorizația de transport', slot: 'arrFleetPayment', slotBeforeBody: true },
-  ),
-  uploadStep(
-    'arr_fleet_plata_copie',
-    'ArrCertifiedCopyPaymentProof',
-    'Dovada plății copiei conforme',
-    'Chitanța sau ordinul de plată pentru 100 lei.',
-    { railLabel: 'Plata copiei conforme', title: 'Plătește copia conformă', slot: 'arrFleetPayment', slotBeforeBody: true },
-  ),
-  uploadStep(
-    'arr_fleet_plata_ecusoane',
-    'ArrBadgesPaymentProof',
-    'Dovada plății ecusoanelor',
+    'arr_fleet_plata',
+    'DovadaPlataArr',
+    'Dovada plății',
     'Chitanța sau ordinul de plată pentru suma de mai sus.',
     {
-      railLabel: 'Plata ecusoanelor',
-      title: 'Plătește ecusoanele',
+      railLabel: 'Plata',
+      title: 'Plătește taxele ARR',
       slot: 'arrFleetPayment',
       slotBeforeBody: true,
       // Dovada pentru o sumă veche (alte platforme) nu mai închide ecranul.
-      isDone: (c) => hasDocument(c, 'ArrBadgesPaymentProof') && !arrFleetOf(c)?.paymentProofOutdated,
+      isDone: (c) => hasDocument(c, 'DovadaPlataArr') && !arrFleetOf(c)?.paymentProofOutdated,
     },
   ),
 

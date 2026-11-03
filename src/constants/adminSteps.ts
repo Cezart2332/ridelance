@@ -53,7 +53,7 @@ export const ADMIN_STEPS: AdminStep[] = [
     key: 'arr_fleet', order: 3, label: 'ARR & Cont Flotă',
     categories: [
       'AdeverintaMedicala', 'AvizPsihologic', 'CazierJudiciar',
-      'ArrAuthorizationPaymentProof', 'ArrCertifiedCopyPaymentProof', 'ArrBadgesPaymentProof',
+      'DovadaPlataArr',
       'ContractComodat', 'ContractInchiriere', 'ContractLeasing',
       'Talon', 'RCA', 'AsigurareCalatori', 'Casco',
       'AutorizatieTransportAlternativ', 'CopieConforma', 'EcusonUber', 'EcusonBolt',

@@ -10,7 +10,7 @@ export interface DocumentSummary {
   fileSize: number;
   uploadedAtUtc: string;
   expiresAtUtc?: string | null;
-  /** Prevalidarea AI: None | Queued | Processing | Passed | Failed | Error */
+  /** Citirea automată (OCR), fără verdict: None | Queued | Processing | Read | Error */
   aiStatus: string;
   aiSummary?: string | null;
   /** Motivul respingerii scris de admin/contabil, cât timp documentul e respins. */
@@ -22,10 +22,7 @@ export interface DocumentSummary {
    * încredere prea mică. Documentul rămâne acceptat — doar că îl verifică un om.
    */
   aiRequiresManualReview: boolean;
-  /**
-   * De ce îl verifică un om, pe rânduri: fără ștampilă, PDF din Word, titular diferit de buletin.
-   * Șoferul vede primul rând; adminul pe toate.
-   */
+  /** De ce îl verifică un om, pe rânduri: act expirat, PDF din Word, titular diferit de buletin. Doar pentru admin. */
   aiSuspicionReasons?: string[] | null;
   /** `UserUpload` | `Prefilled` | `Inherited` | `SystemGenerated`. */
   origin: 'UserUpload' | 'Prefilled' | 'Inherited' | 'SystemGenerated' | 'AdminUpload';
@@ -40,7 +37,7 @@ export interface DocumentSummary {
   isUserFacing: boolean;
 }
 
-/** Documentul este încă în coada de prevalidare automată (AI). */
+/** Documentul încă se citește automat (OCR). */
 export const isAiPending = (doc: DocumentSummary) =>
   doc.aiStatus === 'Queued' || doc.aiStatus === 'Processing';
 

@@ -1,4 +1,3 @@
-import { isAiBlocking } from '../documentVerdict'
 import { Alert, Snackbar, Stack } from '@mui/material'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
@@ -327,18 +326,15 @@ export function OnboardingRunner() {
   const deadEnd = isLast && !canGoForward
 
   /**
-   * Rezumatul nu lasă omul mai departe cât timp actele pasului n-au trecut de verificarea automată
-   * — altfel pasul „s-ar termina" pe acte necitite.
+   * Rezumatul nu lasă omul mai departe cât timp actele pasului încă se citesc automat — altfel
+   * pasul „s-ar termina" pe acte necitite. Citirea nu dă verdict, deci nu blochează altfel.
    *
    * Validarea echipei nu se așteaptă aici: după rezumat vine ecranul „e la noi", iar când adminul
    * validează, `MicroStepProvider` mută singur omul la pasul următor.
    */
   const summaryBlockers = (): string[] => {
     const stepDocs = newestPerCategory(documents, categoriesOfStep(def.macroStep))
-    if (stepDocs.some(isAiPending)) return ['Verificăm automat documentele încărcate. Durează de obicei sub un minut.']
-    if (stepDocs.some(isAiBlocking)) {
-      return ['Unele documente n-au trecut verificarea automată. Reîncarcă-le din lista de mai sus.']
-    }
+    if (stepDocs.some(isAiPending)) return ['Citim documentele încărcate. Durează de obicei sub un minut.']
     return []
   }
 
@@ -474,13 +470,9 @@ export function OnboardingRunner() {
                 footer={footer()}
               >
                 <Stack spacing={2.5}>
-                  {def.slotBeforeBody && def.slot && (
-                    <MicroStepSlotContent slot={def.slot} context={context} category={def.document?.category} />
-                  )}
+                  {def.slotBeforeBody && def.slot && <MicroStepSlotContent slot={def.slot} context={context} />}
                   {body()}
-                  {def.slot && !def.slotBeforeBody && (
-                    <MicroStepSlotContent slot={def.slot} context={context} category={def.document?.category} />
-                  )}
+                  {def.slot && !def.slotBeforeBody && <MicroStepSlotContent slot={def.slot} context={context} />}
                 </Stack>
               </OnboardingCard>
             )}
