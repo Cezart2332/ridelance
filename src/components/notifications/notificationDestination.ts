@@ -3,7 +3,9 @@ import { PFA_PATHS } from '../../config/pfaNavigation'
 import { SRL_PATHS } from '../../config/srlNavigation'
 
 const TITLES: Record<string, string> = {
-  RecurringDocumentation: 'Documente lunare', TaxThreshold: 'Situație fiscală',
+  RecurringDocumentation: 'Închiderea lunii – documente necesare',
+  RecurringDocumentationReminder: 'Ultimele zile pentru documentele lunare',
+  TaxThreshold: 'Situație fiscală',
   ChatRoomMessage: 'Mesaj nou', PfaStatusUpdate: 'Dosarul PFA',
   OnboardingStarted: 'Onboarding nou', OnboardingSectionUpdate: 'Actualizare onboarding',
   OnboardingStepAwaitingAdmin: 'Dosar de verificat', OnboardingStepUpdate: 'Actualizare onboarding',
@@ -50,7 +52,7 @@ export function notificationDestination(notification: Notification, role: string
     return null
   }
   if (role !== 'Client') return null
-  if (type === 'RecurringDocumentation') return PFA_PATHS.docsRecurring
+  if (type === 'RecurringDocumentation' || type === 'RecurringDocumentationReminder') return PFA_PATHS.docsRecurring
   if (type === 'TaxThreshold') return PFA_PATHS.taxes
   if (type === 'FiscalProfile') return PFA_PATHS.fiscalProfile
   if (type === 'AccountantMessage') return ACCOUNTANT_MESSAGE_PATHS[notification.sectionKey ?? ''] ?? null

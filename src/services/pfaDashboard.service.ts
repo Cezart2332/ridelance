@@ -114,12 +114,15 @@ export interface DashboardSources {
      * Nici conectat, nici lipsă: card informativ, nu CTA (spec fix-uri §12).
      */
     onboardingPending: boolean;
+    /** PFA-ul lucrează pe Bolt; pentru o platformă nefolosită nu spunem „neconectat”. */
+    used?: boolean;
   };
   uber: {
     connected: boolean;
     lastReportAt: string | null;
     detectedRange: string | null;
     onboardingPending: boolean;
+    used?: boolean;
   };
 }
 

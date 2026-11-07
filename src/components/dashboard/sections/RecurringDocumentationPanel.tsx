@@ -25,12 +25,15 @@ import {
 import { documentService, type DocumentSummary } from '../../../services/document.service'
 import { documentStatusColors, documentStatusLabel, normalizeDocumentStatus } from '../../../utils/documentStatus'
 import {
+  accountingMonthKey,
   formatAccountingDeadline,
   formatAccountingMonth,
   isUploadedInAccountingMonth,
   requestedAccountingMonth,
   type AccountingMonth,
 } from '../../../utils/accountingPeriod'
+import { notificationService } from '../../../services/notification.service'
+import { NOTIFICATIONS_CHANGED } from '../../notifications/useNotifications'
 import { DASHBOARD_TOKENS } from '../dashboardTheme'
 import { openDocument } from '../../common/documentViewerBus'
 
@@ -86,6 +89,40 @@ export function RecurringDocumentationPanel({
     () => (year !== undefined && month !== undefined ? { year, month } : requestedAccountingMonth()),
     [year, month],
   )
+
+  // „Nu am bonuri de încărcat”: luna e completă din partea clientului, iar amintirile se opresc.
+  const targetKey = accountingMonthKey(target)
+  const [confirmedMonths, setConfirmedMonths] = useState<string[] | null>(null)
+  const [confirming, setConfirming] = useState(false)
+  useEffect(() => {
+    if (isContabil) return undefined
+    let cancelled = false
+    notificationService
+      .getMonthlyDocumentsConfirmations()
+      .then((months) => {
+        if (!cancelled) setConfirmedMonths(months)
+      })
+      .catch(() => {
+        if (!cancelled) setConfirmedMonths([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [isContabil])
+  const monthConfirmed = confirmedMonths?.includes(targetKey) ?? false
+  const confirmMonth = async () => {
+    setConfirming(true)
+    try {
+      await notificationService.confirmMonthlyDocuments(targetKey)
+      setConfirmedMonths((months) => [...(months ?? []), targetKey])
+      window.dispatchEvent(new Event(NOTIFICATIONS_CHANGED))
+      onSnackbar?.('Luna e completă.', 'success')
+    } catch {
+      onSnackbar?.('Nu am putut confirma luna.', 'error')
+    } finally {
+      setConfirming(false)
+    }
+  }
 
   const docsByCategory = useMemo(() => {
     const map = new Map<string, DocumentSummary>()
@@ -171,9 +208,39 @@ export function RecurringDocumentationPanel({
         {isContabil ? `Încărcate de client · ${monthLabel}` : `Documentație lunară — ${monthLabel}`}
       </Typography>
       {!isContabil && (
-        <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, mt: 0.7, fontSize: '0.9rem', mb: 2 }}>
-          {`Încarcă documentele pentru ${formatAccountingMonth(target)} până pe ${deadlineLabel}, când contabilul închide luna.`}
-        </Typography>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          sx={{ mt: 0.7, mb: 2, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between' }}
+        >
+          <Typography sx={{ color: DASHBOARD_TOKENS.textMuted, fontSize: '0.9rem' }}>
+            {`Încarcă bonurile fiscale pentru ${formatAccountingMonth(target)} până pe ${deadlineLabel}.`}
+          </Typography>
+          {confirmedMonths !== null &&
+            (monthConfirmed ? (
+              <Chip
+                icon={<CheckCircleRoundedIcon sx={{ fontSize: 16 }} />}
+                label="Luna e completă"
+                size="small"
+                sx={{
+                  fontWeight: 700,
+                  color: DASHBOARD_TOKENS.stateActive,
+                  bgcolor: alpha(DASHBOARD_TOKENS.stateActive, 0.1),
+                  '& .MuiChip-icon': { color: DASHBOARD_TOKENS.stateActive },
+                }}
+              />
+            ) : (
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={confirming}
+                onClick={() => void confirmMonth()}
+                sx={{ textTransform: 'none', fontWeight: 700, flexShrink: 0 }}
+              >
+                Nu am bonuri de încărcat
+              </Button>
+            ))}
+        </Stack>
       )}
 
       {loading ? (

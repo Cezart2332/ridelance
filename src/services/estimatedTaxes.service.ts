@@ -60,6 +60,14 @@ export interface EstimatedTaxes {
     uncoveredPeriod?: string | null
     uncoveredWeeks?: number
   } | null
+  /** Încasările anului față de plafonul TVA; netul anual estimat față de plafoanele CAS. */
+  thresholds?: {
+    incomeYtd: number
+    netAnnualEstimated: number | null
+    vatThreshold: number
+    cas12: number | null
+    cas24: number | null
+  } | null
   profileRevision?: number | null
   ruleVersion?: string | null
   financialSnapshotId?: string | null

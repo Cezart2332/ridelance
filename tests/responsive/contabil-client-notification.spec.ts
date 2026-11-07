@@ -26,11 +26,11 @@ test('notificarea contabilului duce clientul în secțiunea aleasă', () => {
   expect(notificationDestination({ ...base, sectionKey: null }, 'Client')).toBeNull()
 })
 
-test('luna contabilă: până pe 25 luna trecută, de pe 26 luna curentă (ora României)', () => {
-  expect(requestedAccountingMonth(new Date('2026-10-25T20:59:00Z'))).toEqual({ year: 2026, month: 9 })
-  expect(requestedAccountingMonth(new Date('2026-09-25T21:00:00Z'))).toEqual({ year: 2026, month: 9 })
-  expect(requestedAccountingMonth(new Date('2026-09-25T20:59:00Z'))).toEqual({ year: 2026, month: 8 })
-  expect(requestedAccountingMonth(new Date('2026-01-10T10:00:00Z'))).toEqual({ year: 2025, month: 12 })
+test('luna contabilă: până pe 5 luna trecută, de pe 6 luna curentă (ora României)', () => {
+  expect(requestedAccountingMonth(new Date('2026-10-05T20:59:00Z'))).toEqual({ year: 2026, month: 9 })
+  expect(requestedAccountingMonth(new Date('2026-10-05T21:00:00Z'))).toEqual({ year: 2026, month: 10 })
+  expect(requestedAccountingMonth(new Date('2026-10-01T06:00:00Z'))).toEqual({ year: 2026, month: 9 })
+  expect(requestedAccountingMonth(new Date('2026-01-03T10:00:00Z'))).toEqual({ year: 2025, month: 12 })
 })
 
 test('contabilul trimite o notificare clientului din fișa lui', async ({ page }, info) => {
@@ -44,7 +44,7 @@ test('contabilul trimite o notificare clientului din fișa lui', async ({ page }
   await page.getByRole('menuitem', { name: 'Trimite notificare' }).click()
   const dialog = page.getByRole('dialog')
   await dialog.getByRole('button', { name: 'Documente lunare', exact: true }).click()
-  await expect(dialog.getByLabel('Mesaj')).toHaveValue(/Te rog să încarci documentele pentru .+ până pe 25 /)
+  await expect(dialog.getByLabel('Mesaj')).toHaveValue(/Te rog să încarci documentele pentru .+ până pe 5 /)
   await page.screenshot({ path: `test-results/contabil-client-notification-${info.project.name}.png` })
   await dialog.getByRole('button', { name: 'Trimite', exact: true }).click()
 

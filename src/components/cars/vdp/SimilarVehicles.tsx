@@ -228,6 +228,7 @@ function SimilarCard({ car, to }: { car: Car; to: string }) {
     >
       <Box
         sx={{
+          position: 'relative',
           aspectRatio: '16 / 10',
           overflow: 'hidden',
           backgroundColor: TOKENS.surfaceAlt,
@@ -241,7 +242,7 @@ function SimilarCard({ car, to }: { car: Car; to: string }) {
             src={getCarImageUrl(cover.imageUrl)}
             alt={`${car.brand} ${car.model} ${car.year}`}
             loading="lazy"
-            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
           />
         ) : (
           <DirectionsCarFilledRoundedIcon sx={{ fontSize: 40, color: TOKENS.textSubtle }} />

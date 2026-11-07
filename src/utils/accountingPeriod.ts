@@ -1,15 +1,15 @@
 /**
  * Regula lunii contabile, pereche cu `Application/Accounting/AccountingPeriod.cs` din backend.
  *
- * Contabilul închide luna pe 25 ale lunii următoare. Documentele pentru o lună se cer de pe 26 ale
- * ei până pe 25 ale lunii următoare: pentru septembrie, de pe 26 septembrie până pe 25 octombrie.
- * Un document încărcat în intervalul ăsta se socotește la luna aceea. Toate datele, ora României.
+ * Bonurile pentru o lună se primesc până pe 5 ale lunii următoare (banca, Uber/Bolt și SPV vin
+ * automat). Un document încărcat de pe 6 ale unei luni până pe 5 ale lunii următoare se socotește
+ * la luna aceea: pentru octombrie, de pe 6 octombrie până pe 5 noiembrie. Toate datele, ora României.
  */
 
 const ROMANIA_TZ = 'Europe/Bucharest'
 
-/** Ziua din luna următoare în care contabilul închide luna. */
-export const ACCOUNTING_CLOSE_DAY = 25
+/** Ultima zi din luna următoare în care se mai primesc bonurile lunii. */
+export const ACCOUNTING_CLOSE_DAY = 5
 
 export interface AccountingMonth {
   year: number
@@ -18,7 +18,7 @@ export interface AccountingMonth {
 }
 
 /** Ziua calendaristică din România pentru un moment dat. */
-function romaniaDay(date: Date): { year: number; month: number; day: number } {
+export function romaniaDay(date: Date): { year: number; month: number; day: number } {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: ROMANIA_TZ,
     year: 'numeric',
@@ -30,7 +30,7 @@ function romaniaDay(date: Date): { year: number; month: number; day: number } {
 }
 
 /**
- * Luna pentru care se cer documente la momentul dat: de pe 26 încolo luna curentă, până pe 25
+ * Luna pentru care se cer documente la momentul dat: de pe 6 încolo luna curentă, până pe 5
  * inclusiv luna trecută. Tot asta e și luna la care se socotește un document încărcat atunci.
  */
 export function requestedAccountingMonth(date = new Date()): AccountingMonth {
@@ -45,7 +45,7 @@ export function isUploadedInAccountingMonth(uploadedAtUtc: string, target: Accou
   return owner.year === target.year && owner.month === target.month
 }
 
-/** Ultima zi în care se mai primesc documente pentru luna dată (25 ale lunii următoare). */
+/** Ultima zi în care se mai primesc documente pentru luna dată (5 ale lunii următoare). */
 export function accountingDeadline({ year, month }: AccountingMonth): Date {
   return new Date(Date.UTC(year, month, ACCOUNTING_CLOSE_DAY, 12))
 }
@@ -57,7 +57,7 @@ export function formatAccountingMonth({ year, month }: AccountingMonth): string 
   )
 }
 
-/** „25 octombrie". */
+/** „5 noiembrie". */
 export function formatAccountingDeadline(target: AccountingMonth): string {
   return new Intl.DateTimeFormat('ro-RO', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
     accountingDeadline(target),

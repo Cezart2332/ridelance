@@ -8,6 +8,7 @@ import {
   Collapse,
   Divider,
   IconButton,
+  LinearProgress,
   Skeleton,
   Stack,
   Typography,
@@ -223,6 +224,8 @@ export function EstimatedTaxesCard({ mode, pfaId, onEditProfile, onContactAccoun
           />
         ))}
       </Stack>
+
+      {!calculating && data?.thresholds && <ThresholdsBlock thresholds={data.thresholds} taxYear={taxYear} />}
 
       {/* Plățile înregistrate de contabil se scad din total — spunem asta doar când există. */}
       {!calculating && reserve && reserve.recordedTaxPayments > 0 && (
@@ -461,6 +464,55 @@ function ComponentRow({
           </Box>
         </Collapse>
       )}
+    </Box>
+  )
+}
+
+/**
+ * Plafoanele anului: încasările de până acum față de plafonul de scutire TVA, netul anual
+ * estimat față de plafoanele CAS. Doar cifre și bara de progres.
+ */
+function ThresholdsBlock({ thresholds, taxYear }: { thresholds: NonNullable<EstimatedTaxes['thresholds']>; taxYear: number }) {
+  const net = thresholds.netAnnualEstimated
+  const rows: { label: string; value: number | null; limit: number }[] = [
+    { label: 'Plafon TVA', value: thresholds.incomeYtd, limit: thresholds.vatThreshold },
+  ]
+  if (thresholds.cas12 != null) rows.push({ label: 'Plafon CAS · 12 salarii', value: net, limit: thresholds.cas12 })
+  if (thresholds.cas24 != null) rows.push({ label: 'Plafon CAS · 24 salarii', value: net, limit: thresholds.cas24 })
+
+  return (
+    <Box sx={{ mt: 2 }} data-testid="tax-thresholds">
+      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+        Plafoane {taxYear}
+      </Typography>
+      <Stack spacing={1.25} sx={{ mt: 1 }}>
+        {rows.map((row) => {
+          const pct = row.value != null && row.limit > 0 ? Math.min(100, (row.value / row.limit) * 100) : 0
+          const reached = row.value != null && row.value >= row.limit
+          return (
+            <Box key={row.label}>
+              <Stack direction="row" sx={{ justifyContent: 'space-between', flexWrap: 'wrap', columnGap: 1 }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  {row.label}
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                  {row.value != null ? formatLei(row.value) : '—'}
+                  <Box component="span" sx={{ color: 'text.secondary', fontWeight: 400 }}>
+                    {' '}/ {formatLei(row.limit)}
+                  </Box>
+                </Typography>
+              </Stack>
+              <LinearProgress
+                variant="determinate"
+                value={pct}
+                color={reached ? 'warning' : 'primary'}
+                aria-label={row.label}
+                sx={{ mt: 0.5, height: 6, borderRadius: 3 }}
+              />
+            </Box>
+          )
+        })}
+      </Stack>
     </Box>
   )
 }

@@ -121,8 +121,13 @@ export function HomeDashboardContent({
 
   const sources = data?.sources
   const noSources = !!sources && !sources.bolt.configured && !sources.uber.connected
-  const onlyOneSource =
-    !!sources && sources.bolt.configured !== sources.uber.connected && !noSources
+  // Pastila „X neconectat” doar pentru o platformă pe care PFA-ul chiar lucrează și care nu e
+  // nici în curs de activare (pentru aceea e deja pastila de activare).
+  const boltMissing =
+    !!sources && !sources.bolt.configured && sources.bolt.used !== false && !sources.bolt.onboardingPending
+  const uberMissing =
+    !!sources && !sources.uber.connected && sources.uber.used !== false && !sources.uber.onboardingPending
+  const onlyOneSource = !!sources && !noSources && boltMissing !== uberMissing
 
   /**
    * Contul de flotă e creat în onboarding, dar platforma nu l-a activat încă.
@@ -212,7 +217,7 @@ export function HomeDashboardContent({
         {onlyOneSource && (
           <Chip
             label={
-              sources?.bolt.configured
+              uberMissing
                 ? 'Uber neconectat — datele afișate includ doar Bolt'
                 : 'Bolt neconectat — datele afișate includ doar Uber'
             }

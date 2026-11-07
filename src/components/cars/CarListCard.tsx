@@ -128,10 +128,15 @@ export default function CarListCard({ car, newTab = false, companySlug, to: toOv
             alt={title}
             loading="lazy"
             onError={() => setCoverFailed(true)}
+            // Absolut, nu în grilă: rândul grilei creștea cât poza, iar `overflow` tăia doar partea
+            // de sus. Așa poza umple cutia și se vede mijlocul ei, ca în pagina mașinii.
             sx={{
+              position: 'absolute',
+              inset: 0,
               width: '100%',
               height: '100%',
               objectFit: 'cover',
+              objectPosition: 'center',
               transition: `transform ${TOKENS.duration} ${TOKENS.easing}`,
             }}
           />

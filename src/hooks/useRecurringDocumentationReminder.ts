@@ -1,20 +1,31 @@
 import { useEffect } from 'react'
 import { getRequestedAccountingMonthKey } from '../constants/recurringDocumentationNotification'
 import { notificationService } from '../services/notification.service'
+import { ACCOUNTING_CLOSE_DAY, romaniaDay } from '../utils/accountingPeriod'
 
-const SYNC_PREFIX = 'ridelance-recurring-doc-synced:'
+// Prefix nou: cheile vechi, scrise oricând în lună, ar fi oprit anunțul din 1–5 ale lunii următoare.
+const SYNC_PREFIX = 'ridelance-monthly-docs-ensured:'
 
 /**
- * O dată pe lună contabilă, în orice zi a ferestrei ei (26 – 25): serverul trimite cererea doar
- * dacă n-a plecat deja, deci cine n-a deschis aplicația pe 26 o primește la prima deschidere.
+ * Anunțul „Închiderea lunii” pleacă pe 1; cine n-a deschis aplicația atunci îl primește la prima
+ * deschidere până pe 5. Serverul trimite doar dacă n-a plecat deja.
  */
 async function dispatchRecurringDocumentationReminder(): Promise<void> {
+  if (romaniaDay(new Date()).day > ACCOUNTING_CLOSE_DAY) return
   const syncKey = `${SYNC_PREFIX}${getRequestedAccountingMonthKey()}`
-  if (localStorage.getItem(syncKey)) return
+  try {
+    if (localStorage.getItem(syncKey)) return
+  } catch {
+    // Fără localStorage întrebăm serverul de fiecare dată; el deduplică.
+  }
 
   try {
     await notificationService.ensureMonthlyRecurringDocumentation()
-    localStorage.setItem(syncKey, '1')
+    try {
+      localStorage.setItem(syncKey, '1')
+    } catch {
+      // Fără localStorage: următoarea verificare întreabă din nou serverul.
+    }
   } catch (error) {
     // Se reîncearcă la următoarea verificare: cheia lunii nu s-a scris.
     console.warn('Recurring documentation ensure failed.', error)
@@ -22,7 +33,7 @@ async function dispatchRecurringDocumentationReminder(): Promise<void> {
 }
 
 /**
- * Cererea de documente lunare, cât timp aplicația e deschisă. Jobul serverului o trimite pe 26
+ * Anunțul de închidere a lunii, cât timp aplicația e deschisă. Jobul serverului îl trimite pe 1
  * (ora României); aici se acoperă cine n-a primit-o atunci.
  */
 export function useRecurringDocumentationReminder(enabled: boolean) {

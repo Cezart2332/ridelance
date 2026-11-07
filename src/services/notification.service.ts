@@ -47,6 +47,18 @@ export const notificationService = {
    * Idempotent per user/month. Backend should create in-app notification + web push
    * when today is the 1st (Europe/Bucharest). Safe to call on app load.
    */
+  /** „Nu am bonuri de încărcat”: luna (`2026-10`) e completă din partea PFA-ului. */
+  confirmMonthlyDocuments: async (monthKey: string): Promise<void> => {
+    const [year, month] = monthKey.split('-').map(Number);
+    await api.post(`/notifications/monthly-documents/${year}/${month}/confirm`);
+  },
+
+  /** Lunile confirmate în ultimul an, ca `2026-10`. */
+  getMonthlyDocumentsConfirmations: async (): Promise<string[]> => {
+    const response = await api.get<string[]>('/notifications/monthly-documents/confirmations');
+    return response.data;
+  },
+
   ensureMonthlyRecurringDocumentation: async (): Promise<RecurringDocumentationEnsureResult> => {
     const response = await api.post<RecurringDocumentationEnsureResult>(
       '/notifications/recurring-documentation/ensure',

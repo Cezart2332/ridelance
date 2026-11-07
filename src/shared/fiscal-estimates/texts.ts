@@ -4,7 +4,7 @@ export const COMPONENT_LABEL: Record<string, string> = {
   CAS: 'CAS (pensie)',
   CASS: 'CASS (sănătate)',
   INCOME_TAX: 'Impozit pe venit',
-  PLATFORM_TAXES: 'TVA / taxe platforme',
+  PLATFORM_TAXES: 'TVA intracomunitar',
 }
 
 export function formatLei(value: number): string {
@@ -55,7 +55,7 @@ export function reasonText(reasonCode: string | null, missing: string[], taxYear
         ? `Nu avem veniturile pentru perioada ${missing.join(', ')}. Fără ele nu putem estima anul.`
         : 'Nu avem încă venituri înregistrate pentru acest an.'
     case 'SHORT_HISTORY':
-      return 'Avem nevoie de cel puțin 4 săptămâni de activitate.'
+      return 'Avem nevoie de cel puțin o săptămână de încasări.'
     case 'DATA_CORRECTION_PENDING':
       return 'Așteptăm corectarea datelor PFA pe care le-ai semnalat.'
     case 'PENSIONER_MID_YEAR':
