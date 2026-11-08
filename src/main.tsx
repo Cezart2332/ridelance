@@ -118,9 +118,14 @@ const theme = createTheme({
           margin: 0,
           padding: 0,
           WebkitTextSizeAdjust: '100%',
-          WebkitTouchCallout: 'none',
+          // Textul se poate selecta și copia peste tot (emailuri, CIF-uri, IBAN-uri, numere):
+          // `user-select: none` pe toată pagina obliga adminul și contabilul să le rescrie de mână.
+        },
+        // Doar controalele rămân neselectabile: un dublu-click pe un buton sau un tab nu-i colorează eticheta.
+        'button, [role="button"], [role="tab"], [role="menuitem"], [role="option"], .MuiChip-clickable, svg, img': {
           WebkitUserSelect: 'none',
           userSelect: 'none',
+          WebkitTouchCallout: 'none',
         },
         // Meniurile și dialogurile MUI blochează scroll-ul punând `overflow: hidden` pe `body`. Pagina
         // derulează însă pe `html` (de mai sus), iar MUI mută blocarea pe `html` doar când acesta are
