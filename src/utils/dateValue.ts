@@ -109,7 +109,10 @@ export function buildMonthGrid(year: number, month: number): DateParts[] {
 
 /** Anii oferiți în saltul rapid: o fereastră în jurul celui vizibil, tăiată de min/max. */
 export function yearWindow(viewYear: number, minYear?: number, maxYear?: number): number[] {
-  const start = Math.max(minYear ?? viewYear - 60, viewYear - 60)
-  const end = Math.min(maxYear ?? viewYear + 10, viewYear + 10)
+  // Fereastra stă pe anul de azi, nu pe cel afișat, și merge departe în viitor: un buletin
+  // permanent (peste 55 de ani) expiră pe la 2070, iar lista se oprea la anul afișat + 10.
+  const current = new Date().getFullYear()
+  const start = Math.max(minYear ?? -Infinity, Math.min(viewYear, current) - 100)
+  const end = Math.min(maxYear ?? Infinity, Math.max(viewYear, current) + 80)
   return Array.from({ length: Math.max(end - start + 1, 1) }, (_, index) => start + index)
 }
