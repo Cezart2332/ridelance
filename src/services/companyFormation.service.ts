@@ -48,6 +48,11 @@ export interface CompanyFormationOwner {
   id: string
   position: number
   persoana: PersoanaFizica
+  /** Unde trimitem acordul de semnat (doar în onboarding). */
+  email?: string | null
+  consentSentAtUtc?: string | null
+  consentSignedAtUtc?: string | null
+  consentSignatureDocumentId?: string | null
 }
 
 export interface CompanyFormationOffice {
@@ -97,6 +102,7 @@ export interface PersoanaFizicaPayload {
 export interface OwnerPayload {
   id?: string | null
   persoana: PersoanaFizicaPayload
+  email?: string | null
 }
 
 export interface RegisteredOfficePayload {
@@ -301,6 +307,11 @@ export const companyFormationService = {
   },
 
   /** Redeschide dosarul cu un motiv; consimțămintele și semnătura se invalidează. */
+  /** Retrimite proprietarului acordul de semnat; linkul vechi nu mai merge. */
+  async sendOwnerConsent(pfaRegistrationId: string, ownerId: string): Promise<void> {
+    await api.post(`/admin/company-formation/${pfaRegistrationId}/owners/${ownerId}/send-consent`)
+  },
+
   async requestInfo(pfaRegistrationId: string, reason: string): Promise<AdminCompanyFormation> {
     const { data } = await api.post<AdminCompanyFormation>(
       `/admin/company-formation/${pfaRegistrationId}/request-info`,

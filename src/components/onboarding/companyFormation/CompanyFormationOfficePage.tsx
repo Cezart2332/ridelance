@@ -36,6 +36,7 @@ export default function CompanyFormationOfficePage() {
     owners: source.owners.map((o) => ({
       id: o.id || null,
       persoana: o.persoana,
+      email: o.email?.trim() || null,
     })),
   })
 
@@ -81,6 +82,7 @@ export default function CompanyFormationOfficePage() {
       )}
 
       <RegisteredOfficeForm
+        askOwnerEmail
         value={{ office, owners: state.owners }}
         domiciliu={state.solicitant.domiciliu}
         offices={offices}

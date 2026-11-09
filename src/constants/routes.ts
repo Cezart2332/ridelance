@@ -20,4 +20,5 @@ export const ROUTES = {
    * Publică prin proiectare: chiriașul n-are cont RIDElance. Tokenul din cale e autentificarea.
    */
   signDocument: '/semneaza/:token',
+  ownerConsent: '/acord-proprietar/:token',
 } as const

@@ -17,6 +17,7 @@ Disallow: /poster/
 Disallow: /checkout$
 Disallow: /banca/
 Disallow: /semneaza/
+Disallow: /acord-proprietar/
 Disallow: /invitatie/
 
 Sitemap: https://ridelance.ro/sitemap.xml

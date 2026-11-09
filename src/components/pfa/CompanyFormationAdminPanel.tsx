@@ -27,6 +27,7 @@ import {
   type PersoanaFizica,
 } from '../../services/companyFormation.service'
 import { getErrorMessage } from '../../utils/errorHandler'
+import { openDocument } from '../common/documentViewerBus'
 
 const STATUS_LABELS: Record<string, string> = {
   Draft: 'În completare',
@@ -174,6 +175,18 @@ export function CompanyFormationAdminPanel({ pfaId }: { pfaId: string }) {
     }
   }
 
+  const sendOwnerConsent = async (ownerId: string) => {
+    setBusy(`consent-${ownerId}`)
+    try {
+      await companyFormationService.sendOwnerConsent(pfaId, ownerId)
+      await load()
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nu am putut trimite acordul.'))
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const exportPackage = async () => {
     setBusy('export')
     try {
@@ -253,14 +266,49 @@ export function CompanyFormationAdminPanel({ pfaId }: { pfaId: string }) {
           />
 
           {dosar.owners.map((owner, index) => (
-            <PersonBlock
-              key={owner.id}
-              title={`Proprietar ${index + 1}`}
-              persoana={owner.persoana}
-              revealed={revealed[owner.id] ?? null}
-              onReveal={() => void reveal(owner.id, owner.id)}
-              busy={busy === owner.id}
-            />
+            <Stack key={owner.id} spacing={1}>
+              <PersonBlock
+                title={`Proprietar ${index + 1}`}
+                persoana={owner.persoana}
+                revealed={revealed[owner.id] ?? null}
+                onReveal={() => void reveal(owner.id, owner.id)}
+                busy={busy === owner.id}
+              />
+              <Row label="Email" value={owner.email || '—'} />
+              <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 1 }}>
+                <Typography variant="body2" sx={{ color: TOKENS.textMuted, minWidth: 168, flexShrink: 0 }}>
+                  Acord proprietar
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {owner.consentSignedAtUtc
+                    ? `Semnat ${new Date(owner.consentSignedAtUtc).toLocaleString('ro-RO', { dateStyle: 'short', timeStyle: 'short' })}`
+                    : owner.consentSentAtUtc
+                      ? `Trimis ${new Date(owner.consentSentAtUtc).toLocaleString('ro-RO', { dateStyle: 'short', timeStyle: 'short' })}`
+                      : 'Netrimis'}
+                </Typography>
+                {owner.consentSignatureDocumentId && (
+                  <Button
+                    size="small"
+                    startIcon={<VisibilityOutlinedIcon fontSize="small" />}
+                    onClick={() => openDocument(owner.consentSignatureDocumentId!, `semnatura-proprietar-${index + 1}.png`)}
+                    sx={{ textTransform: 'none', fontWeight: 700 }}
+                  >
+                    Semnătura
+                  </Button>
+                )}
+                {!owner.consentSignedAtUtc && owner.email && (
+                  <Button
+                    size="small"
+                    startIcon={busy === `consent-${owner.id}` ? <CircularProgress size={13} /> : <ReplayRoundedIcon fontSize="small" />}
+                    onClick={() => void sendOwnerConsent(owner.id)}
+                    disabled={busy !== null}
+                    sx={{ textTransform: 'none', fontWeight: 700 }}
+                  >
+                    {owner.consentSentAtUtc ? 'Retrimite acordul' : 'Trimite acordul'}
+                  </Button>
+                )}
+              </Stack>
+            </Stack>
           ))}
 
           <Stack spacing={1}>

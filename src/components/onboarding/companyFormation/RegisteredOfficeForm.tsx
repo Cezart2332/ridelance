@@ -10,6 +10,7 @@ import {
   Radio,
   RadioGroup,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material'
 import { useMemo, useState } from 'react'
@@ -65,13 +66,55 @@ interface RegisteredOfficeFormProps {
   onChange: (next: RegisteredOfficeValue, commit: boolean) => void
   onBlur: () => void
   disabled?: boolean
+  /**
+   * Onboardingul cere emailul fiecărui proprietar: după semnarea dosarului îi trimitem acolo
+   * acordul de semnat. Comenzile de pe site n-au semnare la distanță.
+   */
+  askOwnerEmail?: boolean
 }
+
+const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
 /**
  * Sediul social al firmei de înființat: o zonă din lista Consulto sau o adresă proprie, cu
  * proprietarii ei. Același formular în onboarding („Nu am PFA") și la serviciile cumpărate de pe
  * site — de aceea nu știe nimic despre salvare.
  */
+/** Emailul proprietarului: acolo pleacă acordul de semnat. */
+function OwnerEmailField({
+  value,
+  onChange,
+  onBlur,
+  disabled,
+}: {
+  value: string
+  onChange: (email: string) => void
+  onBlur: () => void
+  disabled: boolean
+}) {
+  const [touched, setTouched] = useState(false)
+  const invalid = touched && !EMAIL_PATTERN.test(value.trim())
+  return (
+    <TextField
+      label="Emailul proprietarului"
+      type="email"
+      inputMode="email"
+      autoComplete="off"
+      required
+      fullWidth
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onBlur={() => {
+        setTouched(true)
+        onBlur()
+      }}
+      disabled={disabled}
+      error={invalid}
+      helperText={invalid ? 'Adresa de email nu e validă.' : undefined}
+    />
+  )
+}
+
 export function RegisteredOfficeForm({
   value,
   domiciliu,
@@ -79,6 +122,7 @@ export function RegisteredOfficeForm({
   onChange,
   onBlur,
   disabled = false,
+  askOwnerEmail = false,
 }: RegisteredOfficeFormProps) {
   const { office, owners } = value
 
@@ -117,6 +161,9 @@ export function RegisteredOfficeForm({
 
   const setOwnerPersoana = (index: number, persoana: PersoanaFizica) =>
     onChange({ office, owners: owners.map((o, i) => (i === index ? { ...o, persoana } : o)) }, false)
+
+  const setOwnerEmail = (index: number, email: string) =>
+    onChange({ office, owners: owners.map((o, i) => (i === index ? { ...o, email } : o)) }, false)
 
   const isOwn = office.type === 'Own'
   const needsOwners = isOwn && office.isOwner === false
@@ -262,12 +309,22 @@ export function RegisteredOfficeForm({
                     ) : undefined
                   }
                 >
-                  <PersoanaFizicaForm
-                    value={owner.persoana}
-                    onChange={(persoana) => setOwnerPersoana(index, persoana)}
-                    onBlur={onBlur}
-                    disabled={disabled}
-                  />
+                  <Stack spacing={2}>
+                    <PersoanaFizicaForm
+                      value={owner.persoana}
+                      onChange={(persoana) => setOwnerPersoana(index, persoana)}
+                      onBlur={onBlur}
+                      disabled={disabled}
+                    />
+                    {askOwnerEmail && (
+                      <OwnerEmailField
+                        value={owner.email ?? ''}
+                        onChange={(email) => setOwnerEmail(index, email)}
+                        onBlur={onBlur}
+                        disabled={disabled}
+                      />
+                    )}
+                  </Stack>
                 </PanelCard>
               ))}
 

@@ -25,6 +25,7 @@ import { PrivateAreaRobots } from './seo/PrivateAreaRobots'
 import { StaleHeadReset } from './seo/StaleHeadReset'
 import { DocumentViewerHost } from './components/common/documentViewerHost'
 import { SignDocumentPage } from './pages/SignDocumentPage'
+import { OwnerConsentPage } from './pages/OwnerConsentPage'
 import { IS_NATIVE_APP } from './native/platform'
 import { NativeApp } from './native/NativeApp'
 
@@ -116,6 +117,7 @@ function App() {
           <Route path={ROUTES.verifyEmail} element={<VerifyEmailPage />} />
           {/* Semnarea din email. Fără `ProtectedRoute`: cine semnează n-are cont. */}
           <Route path={ROUTES.signDocument} element={<SignDocumentPage />} />
+          <Route path={ROUTES.ownerConsent} element={<OwnerConsentPage />} />
           <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
           <Route path="/invitatie/:token" element={<StaffInvitationPage />} />
           <Route path="/auth" element={<Navigate to={ROUTES.login} replace />} />
