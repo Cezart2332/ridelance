@@ -450,6 +450,20 @@ export const stripeService = {
     }
   },
 
+  /**
+   * Sesiunea de checkout din URL chiar a fost plătită? Întoarcerea din Stripe nu e o dovadă:
+   * `?subscribed=1` îl poate scrie oricine în bara de adrese. Orice eroare înseamnă „nu".
+   */
+  async isSessionPaid(sessionId: string | null): Promise<boolean> {
+    if (!sessionId) return false
+    try {
+      const response = await api.get<{ paid: boolean }>('/payments/session-status', { params: { sessionId } })
+      return response.data.paid === true
+    } catch {
+      return false
+    }
+  },
+
   /** Get real payment history from the database */
   async getPaymentHistory(page = 1, pageSize = 20): Promise<PaymentHistoryItem[]> {
     try {

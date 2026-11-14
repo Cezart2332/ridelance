@@ -84,13 +84,17 @@ function DashboardPageContent() {
     // Dashboardul este accesibil doar după onboarding complet + abonament activ;
     // altfel userul e trimis înapoi în fluxul de onboarding/plată.
     // Excepție: întoarcerea din checkout (?subscribed=1) — webhookul Stripe poate întârzia.
-    const justSubscribed = new URLSearchParams(window.location.search).get('subscribed') === '1'
+    const returnParams = new URLSearchParams(window.location.search)
+    const returnedFromCheckout = returnParams.get('subscribed') === '1'
     const boot = async () => {
       try {
-        const [summary, sub] = await Promise.all([
+        const [summary, sub, sessionPaid] = await Promise.all([
           userService.getDashboardSummary(),
           stripeService.getSubscriptionStatus(),
+          // Parametrul singur nu dovedește nimic: toleranța se dă doar pe o sesiune Stripe plătită.
+          returnedFromCheckout ? stripeService.isSessionPaid(returnParams.get('session_id')) : Promise.resolve(false),
         ])
+        const justSubscribed = returnedFromCheckout && sessionPaid
         // Fail-closed: panelul se arată DOAR cu PFA aprobat + secțiunile de onboarding
         // validate + abonament activ. ?subscribed=1 (întoarcerea din checkout) tolerează
         // doar webhookul Stripe întârziat al abonamentului — nu și onboardingul nevalidat.
