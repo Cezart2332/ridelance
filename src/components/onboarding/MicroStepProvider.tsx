@@ -15,6 +15,9 @@ import { isBlockingAnswer } from './microStepTypes'
 /** Micro-pasul curent trăiește în URL, nu în state: Back-ul browserului trebuie să funcționeze. */
 const PARAM = 'pas'
 
+/** Cât rămâne „Aprobat" pe ecran înainte ca omul să fie mutat la pasul următor. */
+const APPROVED_HOLD_MS = 2500
+
 interface MicroStepProviderProps {
   /** Pasul mare al rutei curente. `null` cât timp starea încă se încarcă. */
   activeKey: string | null
@@ -201,14 +204,32 @@ export function MicroStepProvider({ activeKey, children }: MicroStepProviderProp
   const activeState = steps.find((s) => s.key === activeKey)?.state ?? null
   const previousState = useRef<{ key: string | null; state: string | null }>({ key: activeKey, state: activeState })
 
+  /**
+   * Mutarea nu e instantanee: ecranul de stare apucă să arate „Aprobat" înainte să dispară. Fără
+   * pauză, omul vedea „în verificare" și, fără nicio tranziție, primul ecran al pasului următor.
+   * Ținta se citește la expirare, din ref: pasul următor se deblochează în aceeași reîmprospătare.
+   */
+  const forwardPath = useRef(forwardTarget?.path ?? '/onboarding')
+  useEffect(() => {
+    forwardPath.current = forwardTarget?.path ?? '/onboarding'
+  }, [forwardTarget])
+  const approvalTimer = useRef<number | undefined>(undefined)
+
   useEffect(() => {
     const before = previousState.current
     previousState.current = { key: activeKey, state: activeState }
-    if (before.key !== activeKey) return
-    if (before.state === 'pending_review' && activeState === 'approved') {
-      navigate(forwardTarget?.path ?? '/onboarding')
+    if (before.key !== activeKey) {
+      // A plecat singur de pe pas: nu-l mai mutăm noi peste unde a ajuns.
+      window.clearTimeout(approvalTimer.current)
+      return
     }
-  }, [activeKey, activeState, forwardTarget, navigate])
+    if (before.state === 'pending_review' && activeState === 'approved') {
+      window.clearTimeout(approvalTimer.current)
+      approvalTimer.current = window.setTimeout(() => navigate(forwardPath.current), APPROVED_HOLD_MS)
+    }
+  }, [activeKey, activeState, navigate])
+
+  useEffect(() => () => window.clearTimeout(approvalTimer.current), [])
 
   const next = useCallback(() => {
     if (!current) return leave(1)

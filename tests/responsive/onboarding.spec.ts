@@ -449,8 +449,11 @@ test.describe('pasul 2 — am deja PFA', () => {
     await expect(page.getByText('Dosarul tău PFA este în validare')).toBeHidden()
   })
 
-  /** Iar când chiar e predat, ecranul de așteptare vine după rezumat — nu în locul lui. */
-  test('predat spre validare: rezumatul întâi, apoi ecranul de așteptare', async ({ page }) => {
+  /**
+   * Predat cu adevărat: pasul își arată starea — ce acte au ajuns și că sunt în verificare. Ecranul
+   * de stare înlocuiește rezumatul urmat de „Dosarul tău PFA este în validare".
+   */
+  test('predat spre validare: ecranul de stare, cu actele primite', async ({ page }) => {
     await stubBackend(
       page,
       [
@@ -470,15 +473,18 @@ test.describe('pasul 2 — am deja PFA', () => {
     )
     await page.goto('/onboarding/pfa', { waitUntil: 'networkidle' })
 
+    await expect(page.getByRole('heading', { name: 'Am primit documentele tale' })).toBeVisible()
+    await expect(page.getByRole('status').filter({ hasText: 'În verificare' })).toBeVisible()
+    await expect(page.getByText('Primit', { exact: true })).toHaveCount(2)
+
+    // Pasul fiscal e deja deschis în fixture: validarea merge în paralel, deci se poate continua.
+    await expect(page.getByRole('button', { name: 'Continuă la pasul 3' })).toBeVisible()
+
+    // Răspunsurile rămân la un click distanță.
+    await page.getByRole('button', { name: 'Vezi răspunsurile' }).click()
     await expect(
       page.getByRole('heading', { name: 'Verifică datele înainte să trimitem dosarul' }),
     ).toBeVisible()
-
-    // Fără „Continuă”: rezumatul complet trece singur, iar după el vine ecranul de așteptare, nu pasul fiscal.
-    await expect(page.getByTestId('auto-advance')).toBeVisible()
-    await expect(page.getByRole('button', { name: /Continuă/ })).toHaveCount(0)
-
-    await expect(page.getByText('Dosarul tău PFA este în validare')).toBeVisible()
   })
 
   test('cu ambele certificate, rezumatul rămâne accesibil', async ({ page }) => {
@@ -531,7 +537,7 @@ test.describe('pasul 2 — am deja PFA', () => {
       }),
     })
     await page.goto('/onboarding/pfa', { waitUntil: 'networkidle' })
-    await expect(page.getByRole('heading', { name: 'Verifică datele înainte să trimitem dosarul' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Am primit documentele tale' })).toBeVisible()
 
     // Adminul validează: la următorul poll, pasul PFA e închis, iar cel fiscal e deschis.
     await page.route(`${API}/onboarding/state`, async (route) => {
@@ -557,7 +563,9 @@ test.describe('pasul 2 — am deja PFA', () => {
         ),
       })
     })
-    // Pollul rulează la 10 secunde cât timp un pas e în verificare.
+    // Pollul rulează la 10 secunde cât timp un pas e în verificare. Întâi se vede aprobarea, apoi
+    // clientul e mutat singur.
+    await expect(page.getByRole('heading', { name: 'Pasul 2 a fost aprobat' })).toBeVisible({ timeout: 20_000 })
     await expect(page).toHaveURL(/\/onboarding\/step2/, { timeout: 20_000 })
   })
 })

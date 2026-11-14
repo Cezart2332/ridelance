@@ -31,6 +31,9 @@ import { OnboardingProvider } from './OnboardingProvider'
 import { TOKENS } from './onboardingTheme'
 import { SHELL } from './shellTokens'
 import { RightRail } from './rail/RightRail'
+import { ReviewRail } from './review/ReviewRail'
+import { reviewDocumentsOf, reviewModeOf } from './review/reviewModel'
+import { StepReviewCard } from './review/StepReviewCard'
 import { SidebarSupportBlock } from './shell/SidebarSupportBlock'
 import { OnboardingChrome } from './shell/OnboardingChrome'
 import { StepIntroCard } from './shell/StepIntroCard'
@@ -183,7 +186,7 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
   // Sub 1200px rail-ul dreapta nu mai are loc lateral: coboară sub conținut, ca secțiune normală.
   const showRightRail = useMediaQuery('(min-width:1200px)')
 
-  const { state, steps, loading, error, refresh, rejectionAlert, dismissRejectionAlert } =
+  const { state, steps, documents, loading, error, refresh, rejectionAlert, dismissRejectionAlert } =
     useOnboarding()
   const micro = useMicroSteps()
 
@@ -222,6 +225,13 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [confirmingPayment])
 
+  /**
+   * Pasul ale cărui ecrane le-a deschis omul de pe ecranul de stare („Vezi răspunsurile",
+   * „Corectează", „Reîncarcă"). Ține doar cât pasul rămâne în aceeași stare: o corectură trimisă
+   * îl mută înapoi în verificare, iar ecranul de stare revine singur.
+   */
+  const [openedStep, setOpenedStep] = useState<{ key: string; state: string } | null>(null)
+
   // Onboarding complet → urmează plata abonamentului.
   useEffect(() => {
     if (state?.allSectionsValidated) {
@@ -258,6 +268,8 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
   }
 
   const goToStep = (target: StepView) => {
+    // Alt pas din rail: la întoarcere, pasul predat își arată din nou starea, nu ecranele.
+    setOpenedStep(null)
     if (target.path !== location.pathname) navigate(target.path)
   }
 
@@ -275,6 +287,29 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
   const currentStepView = steps.find((s) => s.key === activeKey) ?? null
   // Ecranul de final nu ține de niciun pas: altfel antetul ar scrie „Pasul 1 din 6" peste el.
   const onDoneScreen = location.pathname === '/onboarding/finalizat'
+
+  // Pasul predat își arată starea în locul ecranelor lui: în verificare, aprobat sau cu corecturi.
+  // Doar pe ecranul principal al pasului — sub-paginile (dosarul de înființare) au conținutul lor.
+  const serverStep = (state?.steps ?? []).find((s) => s.key === activeKey) ?? null
+  const stepOpened =
+    openedStep !== null && openedStep.key === serverStep?.key && openedStep.state === serverStep.state
+  const reviewMode =
+    currentStepView !== null && location.pathname === currentStepView.path && !stepOpened
+      ? reviewModeOf(serverStep, state, micro.steps)
+      : null
+  const stepIndex = steps.findIndex((s) => s.key === activeKey)
+  // Pasul următor, dacă e deja deschis. Cât îl ține închis verificarea, nu există buton.
+  const openNextStep = steps.slice(stepIndex + 1).find((s) => s.state !== 'locked') ?? null
+
+  const openStepScreens = (category?: string) => {
+    if (!serverStep) return
+    setOpenedStep({ key: serverStep.key, state: serverStep.state })
+    // Un act respins are ecranul lui de încărcare: mergem direct acolo, nu la primul nerezolvat.
+    const upload = category
+      ? micro.steps.find((view) => view.def.kind === 'upload' && view.def.document?.category === category)
+      : undefined
+    if (upload) micro.goTo(upload.def.id)
+  }
   const stepPosition = onDoneScreen
     ? Math.max(steps.length, 1)
     : Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)
@@ -302,16 +337,25 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
         brandCaption="Onboarding PFA ridesharing"
         banner={<TestSkipBanner />}
         mobileExtra={
-          <MobileMicroBar
-            position={micro.position}
-            total={micro.total}
-            percent={micro.percent}
-            canGoBack={micro.canGoBack}
-            onBack={micro.back}
-          />
+          // Pe ecranul de stare nu e niciun ecran de parcurs: contorul ar număra în gol.
+          reviewMode ? undefined : (
+            <MobileMicroBar
+              position={micro.position}
+              total={micro.total}
+              percent={micro.percent}
+              canGoBack={micro.canGoBack}
+              onBack={micro.back}
+            />
+          )
         }
         support={<SidebarSupportBlock />}
-        rightRail={<RightRail step={currentStepView} loading={loading} />}
+        rightRail={
+          reviewMode === 'pending' || reviewMode === 'correction' ? (
+            <ReviewRail mode={reviewMode} />
+          ) : (
+            <RightRail step={currentStepView} loading={loading} />
+          )
+        }
         showRightRail={showRightRail}
         isMobile={isMobile}
       >
@@ -346,36 +390,56 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
                     două antete unul peste altul. */}
                 {/* Pasul respins spune de ce, sus, pe orice ecran al lui — nu doar în rail, unde pe
                     telefon lista e ascunsă într-un sheet. */}
-                {currentStepView?.state === 'rejected' && currentStepView.reason && (
-                  <Alert severity="error" sx={{ mb: 2, maxWidth: 720, mx: 'auto' }}>
-                    <Box component="span" sx={{ fontWeight: 700 }}>
-                      Pasul „{currentStepView.label}” are observații:
-                    </Box>{' '}
-                    {currentStepView.reason}
-                  </Alert>
-                )}
-                <StepIntroCard
-                  stepKey={location.pathname === currentStepView?.path ? activeKey : null}
-                  position={Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)}
-                  total={Math.max(steps.length, 1)}
-                  label={currentStepView?.label ?? null}
-                  estimate={stepEstimate(currentStepView)}
-                />
-                <Outlet />
-                {/* Fiecare pas se deschide doar pe validarea adminului: fără mesajul ăsta clientul
-                    rămâne pe ultimul ecran fără buton și fără să știe că așteaptă pe cineva. Sub
-                    card, nu deasupra antetului: e o notă despre ce urmează, nu primul lucru citit. */}
-                {currentStepView?.state === 'pending_review' && (
-                  <Alert
-                    severity="info"
-                    icon={<HourglassTopRoundedIcon fontSize="inherit" />}
-                    sx={{ mt: 2, maxWidth: 720, mx: 'auto', alignItems: 'center' }}
-                  >
-                    <Box component="span" sx={{ fontWeight: 700 }}>
-                      Pasul „{currentStepView.label}” e în verificare.
-                    </Box>{' '}
-                    Un agent RIDElance se uită peste documente; pasul următor se deschide automat după validare.
-                  </Alert>
+                {reviewMode && currentStepView ? (
+                  <StepReviewCard
+                    mode={reviewMode}
+                    position={stepIndex + 1}
+                    total={Math.max(steps.length, 1)}
+                    label={currentStepView.label}
+                    documents={reviewDocumentsOf(currentStepView.key, documents, reviewMode)}
+                    reason={currentStepView.reason}
+                    followingLabel={steps[stepIndex + 1]?.label ?? 'Abonament'}
+                    continueLabel={
+                      openNextStep ? `Continuă la pasul ${steps.indexOf(openNextStep) + 1}` : null
+                    }
+                    onContinue={() => navigate(openNextStep?.path ?? '/onboarding')}
+                    onOpenStep={() => openStepScreens()}
+                    onReupload={openStepScreens}
+                  />
+                ) : (
+                  <>
+                    {currentStepView?.state === 'rejected' && currentStepView.reason && (
+                      <Alert severity="error" sx={{ mb: 2, maxWidth: 720, mx: 'auto' }}>
+                        <Box component="span" sx={{ fontWeight: 700 }}>
+                          Pasul „{currentStepView.label}” are observații:
+                        </Box>{' '}
+                        {currentStepView.reason}
+                      </Alert>
+                    )}
+                    <StepIntroCard
+                      stepKey={location.pathname === currentStepView?.path ? activeKey : null}
+                      position={Math.max(1, steps.findIndex((s) => s.key === activeKey) + 1)}
+                      total={Math.max(steps.length, 1)}
+                      label={currentStepView?.label ?? null}
+                      estimate={stepEstimate(currentStepView)}
+                    />
+                    <Outlet />
+                    {/* Fiecare pas se deschide doar pe validarea adminului: fără mesajul ăsta clientul
+                        rămâne pe ultimul ecran fără buton și fără să știe că așteaptă pe cineva. Sub
+                        card, nu deasupra antetului: e o notă despre ce urmează, nu primul lucru citit. */}
+                    {currentStepView?.state === 'pending_review' && (
+                      <Alert
+                        severity="info"
+                        icon={<HourglassTopRoundedIcon fontSize="inherit" />}
+                        sx={{ mt: 2, maxWidth: 720, mx: 'auto', alignItems: 'center' }}
+                      >
+                        <Box component="span" sx={{ fontWeight: 700 }}>
+                          Pasul „{currentStepView.label}” e în verificare.
+                        </Box>{' '}
+                        Un agent RIDElance se uită peste documente; pasul următor se deschide automat după validare.
+                      </Alert>
+                    )}
+                  </>
                 )}
               </motion.div>
             </AnimatePresence>
