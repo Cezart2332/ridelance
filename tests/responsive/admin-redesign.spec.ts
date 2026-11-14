@@ -88,6 +88,9 @@ test('admin: verificare pe pas, filtrare documente și revenire la lista de clie
   await mockAdmin(page)
   await page.goto('/admin?tab=pfa&user=client-review')
   await expect(page.getByRole('heading', { name: 'Verificarea dosarului' })).toBeVisible()
+  // Un client aflat încă în onboarding: intrarea în contul lui stă lângă aprobare, nu apare abia după ea.
+  await expect(page.getByRole('button', { name: 'Autentificare ca utilizator' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Aprobă dosarul' })).toBeVisible()
   await expect(page.getByRole('article', { name: 'Permis de conducere.pdf' }).getByRole('button', { name: 'Respinge document' })).toBeVisible()
   await page.screenshot({ path: `test-results/admin-review-${info.project.name}.png`, fullPage: true })
   await page.getByRole('button', { name: 'Validează pasul', exact: true }).click()

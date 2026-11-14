@@ -201,6 +201,20 @@ export function PfaDetailView(props: PfaDetailViewProps) {
         dividerBefore: true,
       }
 
+  // Intrarea în cont nu depinde de dosar: un client aflat la pasul 1 sau 2 din onboarding e exact
+  // cel la care trebuie să vezi ce vede el. Cât timp acțiunea primară e aprobarea, butonul stă
+  // lângă ea — înainte dispărea cu totul până la aprobarea dosarului.
+  const headerActions = (
+    <>
+      {refreshAction}
+      {isPending && (
+        <Button variant="outlined" onClick={onImpersonate}>
+          Autentificare ca utilizator
+        </Button>
+      )}
+    </>
+  )
+
   const headerMenu: ActionMenuItem[] = !hasRegistration
     ? [{ key: 'chat', label: 'Deschide chat', onClick: onOpenChat }, suspendAction]
     : [
@@ -240,7 +254,7 @@ export function PfaDetailView(props: PfaDetailViewProps) {
               />
             }
             primaryAction={primaryAction}
-            extraActions={refreshAction}
+            extraActions={headerActions}
             menuItems={headerMenu}
           />
 

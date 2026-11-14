@@ -258,7 +258,7 @@ export function AdminPfaListView({
                           label={`Acțiuni pentru ${name}`}
                           actions={[
                             { label: 'Deschide dosarul', onClick: () => onOpen(row) },
-                            { label: 'Intră în contul clientului', onClick: () => onImpersonate(row), disabled: row.status.toLowerCase() !== 'approved' },
+                            { label: 'Intră în contul clientului', onClick: () => onImpersonate(row), disabled: Boolean(row.deletedAtUtc) },
                             ...(enrolled && !row.deletedAtUtc ? [{ label: 'Situația fiscală', onClick: () => setSituationFor(row) }] : []),
                             ...(enrolled ? [{ label: row.deletedAtUtc ? 'Redeschide contul' : 'Închide contul', onClick: () => onAccountAction(row), danger: !row.deletedAtUtc }] : []),
                           ]}
