@@ -110,7 +110,7 @@ const eligibilityProfile = {
   reasons: [],
 }
 
-async function stubBackend(page: Page, eligibility: StepState, documents: unknown[]) {
+async function stubState(page: Page, state: unknown, documents: unknown[], extra: Record<string, unknown> = {}) {
   const reply = (body: unknown) => async (route: Route) => {
     const headers = {
       'Access-Control-Allow-Origin': (await route.request().headerValue('origin')) ?? '*',
@@ -124,10 +124,51 @@ async function stubBackend(page: Page, eligibility: StepState, documents: unknow
 
   await page.route(`${API}/**`, reply(null))
   await page.route(`${API}/users/refresh-token`, reply({ accessToken: 'test-token', role: 'Client', userId: 'u1' }))
-  await page.route(`${API}/onboarding/state`, reply(stateFor(eligibility)))
+  await page.route(`${API}/onboarding/state`, reply(state))
   await page.route(`${API}/documents**`, reply(documents))
   await page.route(`${API}/onboarding/eligibility`, reply(eligibilityProfile))
+  for (const [path, body] of Object.entries(extra)) await page.route(`${API}${path}`, reply(body))
 }
+
+const stubBackend = (page: Page, eligibility: StepState, documents: unknown[]) =>
+  stubState(page, stateFor(eligibility), documents)
+
+const ORDER = ['eligibility', 'pfa', 'fiscal', 'arr_fleet']
+
+/** Pașii dinaintea lui `key` sunt validați, `key` are starea cerută, cei de după sunt blocați. */
+function stateAt(key: string, stepState: StepState, overrides: Record<string, unknown> = {}) {
+  const at = ORDER.indexOf(key)
+  const base = stepsFor('completed')
+  return {
+    ...stateFor('completed'),
+    pfaRegistrationId: 'reg-1',
+    pfaStatus: 'Approved',
+    registrationType: 'AmPfa',
+    hasPaidInfiintare: true,
+    currentStep: stepState === 'pending_admin' ? null : key,
+    steps: base.map((step, index) =>
+      index < at
+        ? { ...step, status: 'Completed', state: 'completed', userPartDone: true, blockReason: null }
+        : index === at
+          ? {
+              ...step,
+              status: stepState === 'completed' ? 'Completed' : stepState === 'rejected' ? 'InProgress' : 'AwaitingValidation',
+              state: stepState,
+              userPartDone: stepState !== 'rejected',
+              blockReason: null,
+            }
+          : { ...step, status: 'Locked', state: 'locked', blockReason: `Verificăm pasul „${base[at].label}”.` },
+    ),
+    ...overrides,
+  }
+}
+
+const step2 = (signature: Record<string, unknown>) => ({
+  fiscal: { vatAnswer: 'No' },
+  bank: null,
+  oblio: { allConsentsAccepted: true, accountEmail: 'test@example.test' },
+  signature: { submittedForReviewAtUtc: null, signatureCount: null, rejectionReason: null, ...signature },
+})
 
 async function shoot(page: Page, project: string, name: string) {
   const dir = `test-results/responsive/screenshots/${project}`
@@ -186,5 +227,78 @@ test.describe('starea unui pas predat', () => {
 
     await page.getByRole('button', { name: 'Continuă la pasul 2' }).click()
     await expect(page).toHaveURL(/\/onboarding\/pfa/)
+  })
+
+  test('fiscal: pachetul de semnături e la noi, cu durata lui', async ({ page }, testInfo) => {
+    await stubState(page, stateAt('fiscal', 'pending_admin'), [], {
+      '/onboarding/step2': step2({ status: 'Pending', submittedForReviewAtUtc: '2026-08-02T10:00:00Z' }),
+    })
+    await page.goto('/onboarding/step2', { waitUntil: 'networkidle' })
+
+    await expect(page.getByRole('heading', { name: 'Pregătim pachetul de semnături' })).toBeVisible()
+    await expect(page.getByRole('list', { name: 'Etapele verificării' }).getByText('Pachetul de semnături')).toBeVisible()
+    await expect(page.getByText('1–2 zile lucrătoare')).toBeVisible()
+    await shoot(page, testInfo.project.name, 'onboarding-review-fiscal')
+  })
+
+  test('fiscal: pachetul întors își arată motivul', async ({ page }) => {
+    await stubState(page, stateAt('fiscal', 'rejected'), [], {
+      '/onboarding/step2': step2({ status: 'Rejected', rejectionReason: 'Semnătura de pe împuternicire lipsește.' }),
+    })
+    await page.goto('/onboarding/step2', { waitUntil: 'networkidle' })
+
+    await expect(page.getByRole('heading', { name: 'Pasul are observații' })).toBeVisible()
+    await expect(page.getByText('Semnătura de pe împuternicire lipsește.', { exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Corectează' })).toBeVisible()
+  })
+
+  test('ARR: etapele procedurii, cu autorizația deja obținută', async ({ page }, testInfo) => {
+    const arrDocs = ['AdeverintaMedicala', 'AvizPsihologic', 'CazierJudiciar', 'DovadaPlataArr', 'Talon', 'RCA', 'AsigurareCalatori']
+    await stubState(page, stateAt('arr_fleet', 'pending_admin'), arrDocs.map((category) => doc(category)), {
+      '/onboarding/arr-fleet': {
+        pfaRegistrationId: 'reg-1',
+        status: 'AuthorizationIssued',
+        statusLabel: 'Autorizație emisă',
+        platforms: ['Uber'],
+        driverAccounts: [{ platform: 'Uber', hasAccount: true, email: 'a@b.ro', phone: '+40722123456', fullName: 'Ion Pop' }],
+        vehicleOwnership: 'Ownership',
+        paymentAmountBani: 40800,
+        paymentExplanation: '',
+        paymentProofUploaded: true,
+        agency: null,
+        agencyError: null,
+        paymentProofOutdated: false,
+        submittedAtUtc: '2026-08-03T10:00:00Z',
+        reopenedReason: null,
+        missing: [],
+        statusLog: [],
+      },
+    })
+    await page.goto('/onboarding/arr-fleet', { waitUntil: 'networkidle' })
+
+    const trail = page.getByRole('list', { name: 'Etapele verificării' })
+    await expect(page.getByRole('heading', { name: 'Am primit documentele tale' })).toBeVisible()
+    await expect(trail.getByRole('listitem')).toHaveCount(4)
+    await expect(trail.getByText('Copie conformă')).toBeVisible()
+    await expect(page.getByText('Primit', { exact: true })).toHaveCount(arrDocs.length)
+    await shoot(page, testInfo.project.name, 'onboarding-review-arr')
+  })
+
+  test('PFA nou: dosarul de înființare e la ONRC', async ({ page }, testInfo) => {
+    await stubState(
+      page,
+      stateAt('pfa', 'pending_admin', {
+        pfaStatus: 'Pending',
+        registrationType: 'NuAmPfa',
+        companyFormationStatus: 'InReviewConsulto',
+        companyFormationStage: 'Consent',
+      }),
+      [],
+    )
+    await page.goto('/onboarding/pfa', { waitUntil: 'networkidle' })
+
+    await expect(page.getByRole('heading', { name: 'Dosarul de înființare e la noi' })).toBeVisible()
+    await expect(page.getByRole('list', { name: 'Etapele verificării' }).getByText('Înregistrare la ONRC')).toBeVisible()
+    await shoot(page, testInfo.project.name, 'onboarding-review-pfa-nou')
   })
 })

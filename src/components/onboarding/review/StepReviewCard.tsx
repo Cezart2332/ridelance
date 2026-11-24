@@ -7,7 +7,7 @@ import { Box, Button, Paper, Stack, Typography } from '@mui/material'
 import type { ReactNode } from 'react'
 
 import { displaySx, stateColors, TOKENS } from '../onboardingTheme'
-import type { ReviewDocument, ReviewMode } from './reviewModel'
+import type { ReviewDocument, ReviewMode, TrailItem } from './reviewModel'
 
 /**
  * Ce vede omul după ce a predat un pas: unde e verificarea, ce acte au ajuns și ce are de refăcut.
@@ -40,8 +40,12 @@ export interface StepReviewCardProps {
   documents: ReviewDocument[]
   /** Observația echipei, când pasul e întors fără ca un act anume să fie respins. */
   reason: string | null
-  /** Ce urmează după verificare: pasul următor, sau abonamentul după ultimul pas. */
-  followingLabel: string
+  /** Etapele pasului, de la ce a trimis omul până la ce urmează. */
+  trail: TrailItem[]
+  /** Titlul, când cel generic n-ar fi adevărat pentru pasul ăsta. */
+  title: string | null
+  /** Singurul rând de sub titlu, cât pasul e la noi. */
+  note: string | null
   /** Pasul următor e deja deschis. `null` cât timp îl ține închis verificarea. */
   continueLabel: string | null
   onContinue: () => void
@@ -58,7 +62,9 @@ export function StepReviewCard({
   label,
   documents,
   reason,
-  followingLabel,
+  trail,
+  title: customTitle,
+  note,
   continueLabel,
   onContinue,
   onOpenStep,
@@ -72,36 +78,12 @@ export function StepReviewCard({
     mode === 'approved'
       ? `Pasul ${position} a fost aprobat`
       : mode === 'pending'
-        ? hasDocuments
-          ? 'Am primit documentele tale'
-          : 'Am primit datele tale'
+        ? (customTitle ?? (hasDocuments ? 'Am primit documentele tale' : 'Am primit datele tale'))
         : rejected.length === 1
           ? 'Un document trebuie reîncărcat'
           : rejected.length > 1
             ? `${rejected.length} documente trebuie reîncărcate`
             : 'Pasul are observații'
-
-  const trail: { label: string; node: ReactNode }[] = [
-    {
-      label: hasDocuments ? 'Documente primite' : 'Date primite',
-      node: <TrailNode tone="success" icon={<CheckRoundedIcon sx={{ fontSize: 16 }} />} />,
-    },
-    {
-      label: 'Verificare RIDElance',
-      node:
-        mode === 'approved' ? (
-          <TrailNode tone="success" icon={<CheckRoundedIcon sx={{ fontSize: 16 }} />} />
-        ) : mode === 'correction' ? (
-          <TrailNode tone="danger" icon={<PriorityHighRoundedIcon sx={{ fontSize: 16 }} />} />
-        ) : (
-          <TrailNode tone="pending" icon={<HourglassTopRoundedIcon sx={{ fontSize: 15 }} />} />
-        ),
-    },
-    {
-      label: followingLabel,
-      node: <TrailNode tone={mode === 'approved' ? 'accent' : 'neutral'} icon={3} />,
-    },
-  ]
 
   return (
     <Paper
@@ -154,11 +136,8 @@ export function StepReviewCard({
           <Typography sx={{ mt: 1.25, color: TOKENS.ink, fontSize: '0.95rem', lineHeight: 1.6 }}>{reason}</Typography>
         )}
 
-        {/* Fără buton de continuat, cardul n-ar spune ce are omul de făcut: nimic. */}
-        {mode === 'pending' && !continueLabel && (
-          <Typography sx={{ mt: 1.25, color: TOKENS.textMuted, fontSize: '0.95rem', lineHeight: 1.6 }}>
-            Pasul următor se deschide singur după aprobare.
-          </Typography>
+        {mode === 'pending' && note && (
+          <Typography sx={{ mt: 1.25, color: TOKENS.textMuted, fontSize: '0.95rem', lineHeight: 1.6 }}>{note}</Typography>
         )}
 
         <Stack
@@ -174,7 +153,7 @@ export function StepReviewCard({
               direction="row"
               sx={{ alignItems: 'center', gap: 1.25, minWidth: 0, flex: index < trail.length - 1 ? { sm: 1 } : 'none' }}
             >
-              {item.node}
+              <TrailNode state={item.state} position={item.number ?? index + 1} />
               <Typography sx={{ fontSize: '0.86rem', fontWeight: 600, color: TOKENS.ink, whiteSpace: 'nowrap' }}>
                 {item.label}
               </Typography>
@@ -241,8 +220,20 @@ export function StepReviewCard({
 }
 
 /** Un punct de pe traseu. Starea se citește din iconiță, nu doar din culoare. */
-function TrailNode({ tone, icon }: { tone: Tone; icon: ReactNode }) {
+function TrailNode({ state, position }: { state: TrailItem['state']; position: number }) {
+  const tone: Tone =
+    state === 'done' ? 'success' : state === 'current' ? 'pending' : state === 'failed' ? 'danger' : state === 'next' ? 'accent' : 'neutral'
   const colors = stateColors(tone)
+  const icon: ReactNode =
+    state === 'done' ? (
+      <CheckRoundedIcon sx={{ fontSize: 16 }} />
+    ) : state === 'current' ? (
+      <HourglassTopRoundedIcon sx={{ fontSize: 15 }} />
+    ) : state === 'failed' ? (
+      <PriorityHighRoundedIcon sx={{ fontSize: 16 }} />
+    ) : (
+      position
+    )
 
   return (
     <Box

@@ -32,7 +32,7 @@ import { TOKENS } from './onboardingTheme'
 import { SHELL } from './shellTokens'
 import { RightRail } from './rail/RightRail'
 import { ReviewRail } from './review/ReviewRail'
-import { reviewDocumentsOf, reviewModeOf } from './review/reviewModel'
+import { reviewDocumentsOf, reviewPlanOf } from './review/reviewModel'
 import { StepReviewCard } from './review/StepReviewCard'
 import { SidebarSupportBlock } from './shell/SidebarSupportBlock'
 import { OnboardingChrome } from './shell/OnboardingChrome'
@@ -186,7 +186,7 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
   // Sub 1200px rail-ul dreapta nu mai are loc lateral: coboară sub conținut, ca secțiune normală.
   const showRightRail = useMediaQuery('(min-width:1200px)')
 
-  const { state, steps, documents, loading, error, refresh, rejectionAlert, dismissRejectionAlert } =
+  const { state, steps, documents, resources, loading, error, refresh, rejectionAlert, dismissRejectionAlert } =
     useOnboarding()
   const micro = useMicroSteps()
 
@@ -293,13 +293,22 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
   const serverStep = (state?.steps ?? []).find((s) => s.key === activeKey) ?? null
   const stepOpened =
     openedStep !== null && openedStep.key === serverStep?.key && openedStep.state === serverStep.state
-  const reviewMode =
-    currentStepView !== null && location.pathname === currentStepView.path && !stepOpened
-      ? reviewModeOf(serverStep, state, micro.steps)
-      : null
   const stepIndex = steps.findIndex((s) => s.key === activeKey)
   // Pasul următor, dacă e deja deschis. Cât îl ține închis verificarea, nu există buton.
   const openNextStep = steps.slice(stepIndex + 1).find((s) => s.state !== 'locked') ?? null
+  const reviewPlan =
+    currentStepView !== null && location.pathname === currentStepView.path && !stepOpened
+      ? reviewPlanOf({
+          step: serverStep,
+          state,
+          documents,
+          resources,
+          following: steps[stepIndex + 1]?.label ?? 'Abonament',
+          followingNumber: steps[stepIndex + 1] ? stepIndex + 2 : null,
+          nextOpen: openNextStep !== null,
+        })
+      : null
+  const reviewMode = reviewPlan?.mode ?? null
 
   const openStepScreens = (category?: string) => {
     if (!serverStep) return
@@ -351,7 +360,7 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
         support={<SidebarSupportBlock />}
         rightRail={
           reviewMode === 'pending' || reviewMode === 'correction' ? (
-            <ReviewRail mode={reviewMode} />
+            <ReviewRail mode={reviewMode} eta={reviewPlan?.eta ?? null} />
           ) : (
             <RightRail step={currentStepView} loading={loading} />
           )
@@ -390,15 +399,17 @@ function ShellBody({ activeKey }: { activeKey: string | null }) {
                     două antete unul peste altul. */}
                 {/* Pasul respins spune de ce, sus, pe orice ecran al lui — nu doar în rail, unde pe
                     telefon lista e ascunsă într-un sheet. */}
-                {reviewMode && currentStepView ? (
+                {reviewPlan && currentStepView ? (
                   <StepReviewCard
-                    mode={reviewMode}
+                    mode={reviewPlan.mode}
                     position={stepIndex + 1}
                     total={Math.max(steps.length, 1)}
                     label={currentStepView.label}
-                    documents={reviewDocumentsOf(currentStepView.key, documents, reviewMode)}
-                    reason={currentStepView.reason}
-                    followingLabel={steps[stepIndex + 1]?.label ?? 'Abonament'}
+                    documents={reviewDocumentsOf(currentStepView.key, documents, reviewPlan.mode)}
+                    reason={reviewPlan.reason ?? currentStepView.reason}
+                    trail={reviewPlan.trail}
+                    title={reviewPlan.title}
+                    note={reviewPlan.note}
                     continueLabel={
                       openNextStep ? `Continuă la pasul ${steps.indexOf(openNextStep) + 1}` : null
                     }

@@ -644,8 +644,11 @@ test.describe('pas respins', () => {
     await stubBackend(page, [rejectedCazier], { state: arrRejected })
     await page.goto('/onboarding/arr-fleet', { waitUntil: 'networkidle' })
 
-    // Banner deasupra pasului, pe orice dispozitiv.
-    await expect(page.getByRole('alert').filter({ hasText: 'Cazierul e mai vechi de 6 luni.' })).toBeVisible()
+    // Pe cardul de stare al pasului, pe rândul actului respins, cu drum direct la reîncărcare.
+    await expect(page.getByRole('heading', { name: 'Un document trebuie reîncărcat' })).toBeVisible()
+    const row = page.getByRole('listitem').filter({ hasText: 'Cazier judiciar' }).filter({ hasText: 'De reîncărcat' })
+    await expect(row.getByText('Cazierul e mai vechi de 6 luni.', { exact: true })).toBeVisible()
+    await expect(row.getByRole('button', { name: 'Reîncarcă' })).toBeVisible()
 
     if (!mobile) {
       // Și pe rândul din rail, fără hover.

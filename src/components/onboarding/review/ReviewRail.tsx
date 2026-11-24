@@ -5,21 +5,21 @@ import { SUPPORT_EMAIL } from '../dialogs/SupportEmailDialog'
 import { displaySx } from '../onboardingTheme'
 import { SHELL } from '../shellTokens'
 import { useOnboardingSupport } from '../supportContext'
-import { REVIEW_ETA, REVIEW_HOURS, type ReviewMode } from './reviewModel'
+import { REVIEW_HOURS, type ReviewMode } from './reviewModel'
 
 /**
  * Rail-ul din dreapta cât pasul e la noi: cât durează și când lucrăm. Înlocuiește lista „Ce ai de
  * făcut aici", care pe un pas predat nu mai are ce cere.
  */
-export function ReviewRail({ mode }: { mode: ReviewMode }) {
+export function ReviewRail({ mode, eta }: { mode: ReviewMode; eta: string | null }) {
   const support = useOnboardingSupport()
 
   return (
     <Stack spacing={2}>
-      {mode === 'pending' && (
+      {mode === 'pending' && eta && (
         <Card label="Durata verificării">
           <Typography sx={{ ...displaySx, fontSize: 26, fontWeight: 700, lineHeight: 1.2, color: SHELL.text.primary }}>
-            {REVIEW_ETA}
+            {eta}
           </Typography>
         </Card>
       )}
