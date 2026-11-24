@@ -16,6 +16,8 @@ export interface AdminPfaRow {
   userName: string
   fullName: string | null
   phone: string | null
+  /** CUI-ul PFA-ului, de îndată ce îl avem (din certificat sau confirmat la aprobare). */
+  cui?: string | null
   status: string
   /** Starea contului calculată pe server: „Suspendat”, „Închis”, „Cont nou”… */
   accountStatus?: string
@@ -171,7 +173,7 @@ export function AdminPfaListView({
         toolbar={
           <>
             <Stack direction={{ xs: 'column', md: 'row' }} sx={{ gap: 1, flex: 1, width: { xs: '100%', md: 'auto' }, minWidth: 0, flexWrap: { xs: 'nowrap', md: 'wrap' }, alignItems: { md: 'center' } }}>
-              <SearchField value={search} onChange={onSearch} placeholder="Caută după nume sau email" label="Caută client" />
+              <SearchField value={search} onChange={onSearch} placeholder="Caută după nume, email sau CUI" label="Caută client" />
               {enrolled ? (
                 <FilterTabs items={enrolledTabs} value={enrolledFilter} onChange={onEnrolledFilter} />
               ) : (
@@ -233,7 +235,7 @@ export function AdminPfaListView({
                       sx={{ cursor: 'pointer' }}
                     >
                       <TableCell sx={{ pl: 2 }}>
-                        <PersonCell name={name} meta={[row.userEmail, row.phone].filter(Boolean).join(' · ')} />
+                        <PersonCell name={name} meta={[row.cui ? `CUI ${row.cui}` : null, row.userEmail, row.phone].filter(Boolean).join(' · ')} />
                       </TableCell>
                       <TableCell>
                         <Badge toneName={status.tone}>{status.label}</Badge>

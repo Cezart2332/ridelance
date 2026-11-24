@@ -140,6 +140,23 @@ interface PfaSummary {
   fiscalSituation?: FiscalProfileAnswers | null
 }
 
+/**
+ * Căutarea din listele de clienți: nume (din cont sau din dosar), email sau CUI. CUI-ul se compară
+ * pe cifre, ca „RO 4123" și „4123" să găsească același PFA.
+ */
+function matchesPfaSearch(p: PfaSummary, search: string): boolean {
+  const query = search.trim().toLowerCase()
+  if (!query) return true
+  const digits = query.replace(/\D/g, '')
+  const cuiDigits = (p.cui ?? '').replace(/\D/g, '')
+  return (
+    p.userName.toLowerCase().includes(query) ||
+    (p.fullName ?? '').toLowerCase().includes(query) ||
+    p.userEmail.toLowerCase().includes(query) ||
+    (digits.length >= 3 && cuiDigits.includes(digits))
+  )
+}
+
 /** Filtrul listei „PFA înrolate”. */
 type EnrolledFilter = 'active' | 'inactive' | 'deleted'
 
@@ -648,9 +665,7 @@ export function AdminDashboard() {
     { id: 'notificari', label: 'Notificări', group: 'Administrare', icon: <NotificationsActiveRoundedIcon /> },
   ]
 
-  const filteredPfas = pfas.filter(
-    (p) => p.userName.toLowerCase().includes(search.toLowerCase()) || p.userEmail.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredPfas = pfas.filter((p) => matchesPfaSearch(p, search))
 
   /**
    * Unde cade un client în „PFA înrolate”. Un cont închis merge la „Șterse” oricând s-ar fi

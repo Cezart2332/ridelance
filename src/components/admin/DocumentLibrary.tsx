@@ -64,11 +64,11 @@ export function DocumentLibrary({ documents, loading, error, busy, openingId, do
             {docs.map((doc) => {
               const docStatus = doc.status.toLowerCase()
               const approved = ['verified', 'approved'].includes(docStatus)
-              return <DocumentRow key={doc.id} name={doc.originalFileName}
-                meta={`${formatDocumentCategory(doc.category)} · ${Math.max(1, Math.round(doc.fileSize / 1024))} KB · ${new Date(doc.uploadedAtUtc).toLocaleDateString('ro-RO')}`}
+              return <DocumentRow key={doc.id} title={formatDocumentCategory(doc.category)}
+                meta={`${doc.originalFileName} · ${Math.max(1, Math.round(doc.fileSize / 1024))} KB · ${new Date(doc.uploadedAtUtc).toLocaleDateString('ro-RO')}`}
                 statusLabel={statusLabels[docStatus] ?? doc.status} statusTone={approved ? 'success' : docStatus === 'rejected' ? 'error' : 'warning'}
                 reviewNote={docStatus === 'rejected' ? doc.reviewNote : null}
-                onApprove={approved ? undefined : () => onApprove(doc)} onReject={docStatus === 'rejected' ? undefined : () => onReject(doc)}
+                onApprove={approved || docStatus === 'rejected' ? undefined : () => onApprove(doc)} onReject={docStatus === 'rejected' ? undefined : () => onReject(doc)}
                 onOpen={() => onOpen(doc)} onDownload={() => onDownload(doc)} updatingStatus={busy} opening={openingId === doc.id} downloading={downloadingId === doc.id} />
             })}
           </Section>

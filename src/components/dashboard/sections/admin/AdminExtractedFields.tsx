@@ -1,11 +1,7 @@
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
 import EditRoundedIcon from '@mui/icons-material/EditRounded'
-import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 import {
   Box,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Button,
   Chip,
   IconButton,
@@ -147,9 +143,12 @@ function FieldRow({ field, onSaved }: { field: ExtractedField; onSaved: () => vo
   )
 }
 
-/** Datele extrase automat (OCR) ale unui document, cu corectare de către admin. */
+/**
+ * Datele extrase automat (OCR) ale unui document, cu corectare de către admin. Se montează abia când
+ * adminul le deschide din rândul documentului, deci cererea pleacă doar atunci.
+ */
 export default function AdminExtractedFields({ documentId }: { documentId: string }) {
-  const [fields, setFields] = useState<ExtractedField[]>([])
+  const [fields, setFields] = useState<ExtractedField[] | null>(null)
 
   const load = () => {
     documentService
@@ -160,20 +159,15 @@ export default function AdminExtractedFields({ documentId }: { documentId: strin
 
   useEffect(load, [documentId])
 
-  if (fields.length === 0) {
-    return null
-  }
-
   return (
-    <Accordion defaultExpanded disableGutters sx={{ mx: 2, mb: 2, border: 0, bgcolor: 'action.hover', '&:before': { display: 'none' } }}>
-      <AccordionSummary expandIcon={<ExpandMoreRoundedIcon fontSize="small" />}>
-        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>Date citite din document · {fields.length} câmpuri</Typography>
-      </AccordionSummary>
-      <AccordionDetails>
-        {fields.map((f) => (
-          <FieldRow key={f.id} field={f} onSaved={load} />
-        ))}
-      </AccordionDetails>
-    </Accordion>
+    <Box sx={{ px: 2, py: 1.25, borderRadius: 1.5, bgcolor: 'action.hover' }}>
+      {fields === null ? (
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>Se încarcă…</Typography>
+      ) : fields.length === 0 ? (
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>Nu s-a citit nimic din document.</Typography>
+      ) : (
+        fields.map((f) => <FieldRow key={f.id} field={f} onSaved={load} />)
+      )}
+    </Box>
   )
 }

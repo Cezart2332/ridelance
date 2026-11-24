@@ -41,9 +41,9 @@ async function mockAdmin(page: Page, failFirst = false) {
 test('admin: respinge un document verificat, păstrează motivul la eroare și nu respinge pasul', async ({ page }, info) => {
   const writes = await mockAdmin(page, true)
   await page.goto('/admin?tab=pfa&user=client-review&section=documente')
-  const license = page.getByRole('article', { name: 'Permis de conducere.pdf' })
+  const license = page.getByRole('article').filter({ hasText: 'Permis de conducere.pdf' })
   await expect(license).toBeVisible()
-  await license.getByRole('button', { name: 'Respinge document', exact: true }).click()
+  await license.getByRole('button', { name: 'Respinge', exact: true }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog.getByRole('button', { name: 'Respinge documentul', exact: true })).toBeDisabled()
   await dialog.getByLabel('Motivul respingerii').fill('Documentul este expirat. Încarcă permisul reînnoit.')
@@ -54,7 +54,9 @@ test('admin: respinge un document verificat, păstrează motivul la eroare și n
   await expect(dialog).toHaveCount(0)
   await expect(license.getByText('Respins', { exact: true })).toBeVisible()
   await expect(license.getByText(/Documentul este expirat/)).toBeVisible()
-  await expect(page.getByRole('article', { name: 'Carte de identitate.pdf' }).getByText('De verificat', { exact: true })).toBeVisible()
+  // Respins: așteaptă reîncărcarea clientului, deci nu se mai poate aproba din admin.
+  await expect(license.getByRole('button', { name: 'Aprobă', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('article').filter({ hasText: 'Carte de identitate.pdf' }).getByText('De verificat', { exact: true })).toBeVisible()
   expect(writes).toHaveLength(2)
   expect(writes.every((write) => write.path.endsWith('/documents/license/status') && write.body.status === 'Rejected')).toBe(true)
   await page.reload()
@@ -88,10 +90,17 @@ test('admin: verificare pe pas, filtrare documente și revenire la lista de clie
   await mockAdmin(page)
   await page.goto('/admin?tab=pfa&user=client-review')
   await expect(page.getByRole('heading', { name: 'Verificarea dosarului' })).toBeVisible()
+  // Denumirea actului e titlul rândului, fișierul clientului stă dedesubt.
+  const identity = page.getByRole('article', { name: 'Carte de identitate' }).first()
+  await expect(identity.getByText('Carte de identitate.pdf')).toBeVisible()
+  // Datele citite din document stau ascunse până le ceri.
+  await expect(identity.getByText('Nu s-a citit nimic din document.')).toHaveCount(0)
+  await identity.getByRole('button', { name: 'Date citite' }).click()
+  await expect(identity.getByText('Nu s-a citit nimic din document.')).toBeVisible()
   // Un client aflat încă în onboarding: intrarea în contul lui stă lângă aprobare, nu apare abia după ea.
   await expect(page.getByRole('button', { name: 'Autentificare ca utilizator' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Aprobă dosarul' })).toBeVisible()
-  await expect(page.getByRole('article', { name: 'Permis de conducere.pdf' }).getByRole('button', { name: 'Respinge document' })).toBeVisible()
+  await expect(page.getByRole('article').filter({ hasText: 'Permis de conducere.pdf' }).getByRole('button', { name: 'Respinge', exact: true })).toBeVisible()
   await page.screenshot({ path: `test-results/admin-review-${info.project.name}.png`, fullPage: true })
   await page.getByRole('button', { name: 'Validează pasul', exact: true }).click()
   await expect(page.getByText('1 din 2 pași validați', { exact: true }).first()).toBeVisible()
@@ -305,14 +314,14 @@ test('admin: lista și dosarul PFA se reîmprospătează singure la 10 secunde �
 
   // În dosarul deschis: un act încărcat de client apare singur în lista de documente.
   await page.goto('/admin?tab=pfa&user=client-review&section=documente')
-  await expect(page.getByRole('article', { name: 'Permis de conducere.pdf' })).toBeVisible()
+  await expect(page.getByRole('article').filter({ hasText: 'Permis de conducere.pdf' })).toBeVisible()
   docs = [...docs, { ...documents[0], id: 'arr', originalFileName: 'Atestat ARR.pdf', category: 'AtestatArr' }]
   await page.clock.fastForward(10_000)
-  await expect(page.getByRole('article', { name: 'Atestat ARR.pdf' })).toBeVisible()
+  await expect(page.getByRole('article').filter({ hasText: 'Atestat ARR.pdf' })).toBeVisible()
 
   docs = [...docs, { ...documents[0], id: 'cazier', originalFileName: 'Cazier.pdf', category: 'Cazier' }]
   await page.getByRole('button', { name: 'Reîmprospătează' }).click()
-  await expect(page.getByRole('article', { name: 'Cazier.pdf' })).toBeVisible()
+  await expect(page.getByRole('article').filter({ hasText: 'Cazier.pdf' })).toBeVisible()
 })
 
 test('admin: la „Nu” pe TVA intracomunitar, D700 generat apare la pasul fiscal', async ({ page }, info) => {
@@ -350,4 +359,19 @@ test('admin: la „Nu” pe TVA intracomunitar, D700 generat apare la pasul fisc
   await fiscal.getByRole('button', { name: 'Aprobă' }).click()
   await expect(fiscal.getByText('De depus', { exact: true })).toBeVisible()
   expect(approvals).toEqual([{ to: 'APPROVED' }])
+})
+
+test('admin: CUI-ul apare pe rândul clientului și se poate căuta după el', async ({ page }) => {
+  await mockAdmin(page)
+  const withCui = { ...client, cui: '45123987' }
+  const other = { ...client, id: 'pfa-other', userId: 'client-other', userName: 'Maria Pop', userEmail: 'maria@example.test', fullName: 'Maria Pop', cui: '40111222' }
+  await page.route(/\/pfa-registrations(\?.*)?$/, (route) => route.fulfill({ json: { items: [withCui, other] } }))
+
+  await page.goto('/admin?tab=pfa')
+  await expect(page.getByText(/CUI 45123987/)).toBeVisible()
+
+  // „RO” și spațiile nu contează: se caută pe cifre.
+  await page.getByRole('textbox', { name: 'Caută client' }).fill('RO 45123987')
+  await expect(page.getByText('Andrei Ionescu', { exact: true })).toBeVisible()
+  await expect(page.getByText('Maria Pop', { exact: true })).toHaveCount(0)
 })

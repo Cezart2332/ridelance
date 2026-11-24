@@ -1,9 +1,11 @@
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded'
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined'
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
-import { Alert, Box, Button, CircularProgress, IconButton, ListItem, Stack, Tooltip, Typography } from '@mui/material'
+import { Alert, Box, Button, CircularProgress, Collapse, IconButton, ListItem, Stack, Tooltip, Typography } from '@mui/material'
+import { useState, type ReactNode } from 'react'
 
 import { StatusBadge, type StatusTone } from './StatusBadge'
 
@@ -19,10 +21,10 @@ function RowAction({
   children,
 }: {
   title: string
-  color: 'success.main' | 'error.main' | 'primary.dark'
+  color: 'success.main' | 'error.main' | 'primary.dark' | 'text.secondary'
   busy: boolean
   onClick: () => void
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <Tooltip title={title}>
@@ -37,13 +39,14 @@ function RowAction({
 }
 
 /**
- * Un rând de document: nume, meta pe rândul doi, status, apoi aceleași acțiuni ca în panoul de
- * onboarding — bifă, respinge, deschide, descarcă — vizibile direct, nu ascunse într-un „⋯".
+ * Un rând de document, citit de sus în jos: ce act e (denumirea cerută de platformă), apoi fișierul
+ * încărcat de client, apoi verdictul. Totul pe un singur rând, cu acțiunile la dreapta.
  *
- * Acțiunile sunt etichetate explicit și se așază pe un rând separat pe ecrane înguste.
+ * Datele citite automat stau ascunse: la verificare contează actul, nu cele zece câmpuri OCR.
+ * Se deschid dintr-un buton mic, doar când e nevoie de ele.
  */
 export function DocumentRow({
-  name,
+  title,
   meta,
   statusLabel,
   statusTone = 'neutral',
@@ -56,8 +59,12 @@ export function DocumentRow({
   downloading = false,
   reviewNote,
   extra,
+  details,
+  detailsLabel = 'Date citite',
 }: {
-  name: string
+  /** Denumirea standard a actului („Atestat șofer"), nu numele fișierului. */
+  title: string
+  /** Fișierul și restul detaliilor, pe rândul mic de dedesubt. */
   meta: string
   statusLabel?: string
   statusTone?: StatusTone
@@ -70,40 +77,89 @@ export function DocumentRow({
   opening?: boolean
   downloading?: boolean
   reviewNote?: string | null
-  extra?: React.ReactNode
+  extra?: ReactNode
+  /** Ce se deschide din butonul de detalii (datele citite). Se montează abia la deschidere. */
+  details?: ReactNode
+  detailsLabel?: string
 }) {
+  const [detailsOpen, setDetailsOpen] = useState(false)
+
   return (
-    <ListItem component="article" aria-label={name} divider sx={{ display: 'block', px: { xs: 2, sm: 2.5 }, py: 2 }}>
-      <Stack direction="row" sx={{ gap: 1.5, alignItems: 'flex-start' }}>
-        <Box sx={{ display: 'grid', placeItems: 'center', width: 36, height: 40, borderRadius: 1.5, bgcolor: 'action.hover', flexShrink: 0 }}>
-          <InsertDriveFileOutlinedIcon sx={{ fontSize: 21, color: 'text.secondary' }} />
-        </Box>
-        <Stack sx={{ flex: 1, minWidth: 0, gap: 0.5 }}>
-          <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>{name}</Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{meta}</Typography>
+    <ListItem component="article" aria-label={title} divider sx={{ display: 'block', px: { xs: 2, sm: 2.5 }, py: 1.75 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} sx={{ gap: { xs: 1.25, md: 2 }, alignItems: { md: 'center' } }}>
+        <Stack direction="row" sx={{ gap: 1.5, alignItems: 'center', flex: 1, minWidth: 0 }}>
+          <Box sx={{ display: 'grid', placeItems: 'center', width: 34, height: 38, borderRadius: 1.5, bgcolor: 'action.hover', flexShrink: 0 }}>
+            <InsertDriveFileOutlinedIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', lineHeight: 1.35, overflowWrap: 'anywhere' }}>{title}</Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', overflowWrap: 'anywhere' }}>
+              {meta}
+            </Typography>
+          </Box>
+        </Stack>
+
+        <Stack direction="row" sx={{ alignItems: 'center', columnGap: 1.5, rowGap: 1, flexWrap: 'wrap', flexShrink: 0 }}>
+          {/* Două grupuri care nu se rup în ele: verdictul, apoi acțiunile. Pe telefon stau pe două rânduri. */}
+          <Stack direction="row" sx={{ alignItems: 'center', gap: 0.75 }}>
+            {statusLabel && <StatusBadge label={statusLabel} tone={statusTone} />}
+            {extra}
+          </Stack>
+          <Stack direction="row" sx={{ alignItems: 'center', gap: 0.5 }}>
+            {onApprove && (
+              <Button
+                size="small"
+                variant="outlined"
+                color="success"
+                disabled={updatingStatus}
+                onClick={onApprove}
+                startIcon={<CheckCircleRoundedIcon />}
+              >
+                Aprobă
+              </Button>
+            )}
+            {onReject && (
+              <Button size="small" color="error" disabled={updatingStatus} onClick={onReject} startIcon={<CancelRoundedIcon />}>
+                Respinge
+              </Button>
+            )}
+            {updatingStatus && (onApprove || onReject) && <CircularProgress size={16} aria-label="Se salvează statusul" />}
+            <RowAction title="Deschide" color="primary.dark" busy={opening} onClick={onOpen}>
+              <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />
+            </RowAction>
+            <RowAction title="Descarcă" color="primary.dark" busy={downloading} onClick={onDownload}>
+              <FileDownloadRoundedIcon sx={{ fontSize: 18 }} />
+            </RowAction>
+            {details && (
+              <Tooltip title={detailsOpen ? `Ascunde ${detailsLabel.toLowerCase()}` : detailsLabel}>
+                <IconButton
+                  size="small"
+                  aria-label={detailsLabel}
+                  aria-expanded={detailsOpen}
+                  onClick={() => setDetailsOpen((open) => !open)}
+                  sx={{ color: 'text.secondary' }}
+                >
+                  <ExpandMoreRoundedIcon
+                    sx={{ fontSize: 20, transform: detailsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
+                  />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Stack>
         </Stack>
       </Stack>
-      <Stack direction="row" sx={{ alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
-        {statusLabel && <StatusBadge label={statusLabel} tone={statusTone} />}
-        {extra}
-        <Box sx={{ flex: 1 }} />
-        <RowAction title="Deschide" color="primary.dark" busy={opening} onClick={onOpen}>
-          <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />
-        </RowAction>
-        <RowAction title="Descarcă" color="primary.dark" busy={downloading} onClick={onDownload}>
-          <FileDownloadRoundedIcon sx={{ fontSize: 18 }} />
-        </RowAction>
-      </Stack>
-      {(onApprove || onReject) && <Stack direction="row" sx={{ gap: 1, mt: 1, flexWrap: 'wrap' }}>
-        {onApprove && (
-          <Button size="small" variant="outlined" disabled={updatingStatus} onClick={onApprove} startIcon={<CheckCircleRoundedIcon />}>Aprobă document</Button>
-        )}
-        {onReject && (
-          <Button size="small" color="error" disabled={updatingStatus} onClick={onReject} startIcon={<CancelRoundedIcon />}>Respinge document</Button>
-        )}
-        {updatingStatus && <CircularProgress size={18} aria-label="Se salvează statusul" />}
-      </Stack>}
-      {reviewNote && <Alert severity="error" icon={false} sx={{ mt: 1.5, overflowWrap: 'anywhere' }}><strong>Motivul respingerii:</strong> {reviewNote}</Alert>}
+
+      {reviewNote && (
+        <Alert severity="error" icon={false} sx={{ mt: 1.25, py: 0.25, overflowWrap: 'anywhere' }}>
+          <strong>Motivul respingerii:</strong> {reviewNote}
+        </Alert>
+      )}
+
+      {details && (
+        <Collapse in={detailsOpen} unmountOnExit>
+          <Box sx={{ mt: 1.5 }}>{details}</Box>
+        </Collapse>
+      )}
     </ListItem>
   )
 }

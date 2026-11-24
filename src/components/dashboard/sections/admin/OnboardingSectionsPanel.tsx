@@ -703,35 +703,41 @@ export function OnboardingSectionsPanel({
     }
   }
 
-  const renderDocRow = (doc: DocumentSummary) => (
-    <Box key={doc.id} sx={{ '& + &': { borderTop: `1px solid ${fade(TOKENS.ink, 0.06)}` } }}>
-      <DocumentRow
-        name={doc.originalFileName}
-        meta={[
-          formatDocumentCategory(doc.category),
-          doc.expiresAtUtc ? 'Expiră ' + new Date(doc.expiresAtUtc).toLocaleDateString('ro-RO') : null,
-          !doc.isUserFacing ? (ORIGIN_LABELS[doc.origin] ?? doc.origin) + ' · ascuns clientului' : null,
-          doc.origin === 'AdminUpload' ? ORIGIN_LABELS.AdminUpload : null,
-          doc.documentNumber ? `Nr. ${doc.documentNumber}` : null,
-          doc.isSuperseded ? 'Înlocuit' : null,
-        ]
-          .filter(Boolean)
-          .join(' · ')}
-        statusLabel={docStatusLabel(doc.status)}
-        statusTone={doc.status.toLowerCase() === 'rejected' ? 'error' : ['verified', 'approved'].includes(doc.status.toLowerCase()) ? 'success' : 'warning'}
-        reviewNote={doc.status.toLowerCase() === 'rejected' ? doc.reviewNote : null}
-        onApprove={!['verified', 'approved'].includes(doc.status.toLowerCase()) ? () => void onUpdateDocStatus(doc.id, 'Verified') : undefined}
-        onReject={doc.status.toLowerCase() !== 'rejected' ? () => setDocRejectTarget(doc) : undefined}
-        onOpen={() => onOpenDocument(doc)}
-        onDownload={() => onDownload(doc)}
-        updatingStatus={statusUpdatingDocId !== null}
-        opening={openingId === doc.id}
-        downloading={downloadingId === doc.id}
-        extra={<AiReadChip doc={doc} />}
-      />
-      <AdminExtractedFields documentId={doc.id} />
-    </Box>
-  )
+  const renderDocRow = (doc: DocumentSummary) => {
+    const docStatus = doc.status.toLowerCase()
+    const approved = docStatus === 'verified' || docStatus === 'approved'
+    const rejected = docStatus === 'rejected'
+    return (
+      <Box key={doc.id} sx={{ '& + &': { borderTop: `1px solid ${fade(TOKENS.ink, 0.06)}` } }}>
+        <DocumentRow
+          title={formatDocumentCategory(doc.category)}
+          meta={[
+            doc.originalFileName,
+            doc.expiresAtUtc ? 'Expiră ' + new Date(doc.expiresAtUtc).toLocaleDateString('ro-RO') : null,
+            !doc.isUserFacing ? (ORIGIN_LABELS[doc.origin] ?? doc.origin) + ' · ascuns clientului' : null,
+            doc.origin === 'AdminUpload' ? ORIGIN_LABELS.AdminUpload : null,
+            doc.documentNumber ? `Nr. ${doc.documentNumber}` : null,
+            doc.isSuperseded ? 'Înlocuit' : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+          statusLabel={docStatusLabel(doc.status)}
+          statusTone={rejected ? 'error' : approved ? 'success' : 'warning'}
+          reviewNote={rejected ? doc.reviewNote : null}
+          // Un act respins așteaptă reîncărcarea clientului: aprobarea lui ar valida fișierul greșit.
+          onApprove={!approved && !rejected ? () => void onUpdateDocStatus(doc.id, 'Verified') : undefined}
+          onReject={!rejected ? () => setDocRejectTarget(doc) : undefined}
+          onOpen={() => onOpenDocument(doc)}
+          onDownload={() => onDownload(doc)}
+          updatingStatus={statusUpdatingDocId !== null}
+          opening={openingId === doc.id}
+          downloading={downloadingId === doc.id}
+          extra={<AiReadChip doc={doc} />}
+          details={doc.aiStatus === 'Read' ? <AdminExtractedFields documentId={doc.id} /> : undefined}
+        />
+      </Box>
+    )
+  }
 
   if (loading) {
     return (
@@ -745,16 +751,10 @@ export function OnboardingSectionsPanel({
     <Stack spacing={2.5}>
       {/* Antet: unde e dosarul, dintr-o privire */}
       <Paper variant="outlined" sx={{ p: { xs: 2.5, md: 3 } }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ justifyContent: 'space-between', alignItems: { sm: 'flex-end' }, gap: 1.5, mb: 2.5 }}>
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 800, mb: 0.5 }}>
-              Verificarea dosarului
-            </Typography>
-            <Typography variant="body2" sx={{ color: TOKENS.textMuted, maxWidth: 620 }}>
-              Fiecare pas se deschide clientului abia după ce îl validezi. Un document greșit se respinge singur, cu motiv —
-              nu întoarce tot pasul.
-            </Typography>
-          </Box>
+        <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ justifyContent: 'space-between', alignItems: { sm: 'center' }, gap: 1.5, mb: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 800 }}>
+            Verificarea dosarului
+          </Typography>
           <Typography sx={{ fontWeight: 800, color: TOKENS.ink, whiteSpace: 'nowrap' }}>
             {validated} din {total} pași validați
           </Typography>
@@ -930,12 +930,6 @@ export function OnboardingSectionsPanel({
                       onSnackbar={onSnackbar}
                     />
                   </Box>
-                )}
-
-                {group.guidedNote && (
-                  <Typography variant="body2" sx={{ color: TOKENS.textMuted, fontStyle: 'italic' }}>
-                    {group.guidedNote}
-                  </Typography>
                 )}
 
                 {/* Validarea — acțiunea principală a fiecărui pas */}
