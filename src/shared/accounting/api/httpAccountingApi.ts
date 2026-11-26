@@ -101,6 +101,14 @@ export function createHttpAccountingApi(): AccountingApi {
       getSummary: (pfaId) => get(`pfas/${pfaId}/summary`),
       getSettings: (pfaId) => get(`pfas/${pfaId}/settings`),
       updateSettings: (pfaId, change) => put(`pfas/${pfaId}/settings`, change),
+      // Aceeași setare versionată, pe cheia categoriei: `deductibility:FUEL`.
+      updateCategoryDeductibility: (pfaId, change) =>
+        put(`pfas/${pfaId}/settings`, {
+          field: `deductibility:${change.category}`,
+          value: change.value,
+          validFrom: change.validFrom,
+          note: change.note,
+        }),
       uploadCashEvidence: (pfaId, file) => post(`pfas/${pfaId}/cash/evidence`, form({ file })),
       transitionCash: (pfaId, request) => post(`pfas/${pfaId}/cash/transition`, request),
       deactivate: (pfaId, request) => post(`pfas/${pfaId}/deactivate`, request),

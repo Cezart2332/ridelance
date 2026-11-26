@@ -1327,6 +1327,9 @@ export function createMockAccountingApi(): AccountingApi {
           return toSettings(pfa)
         }),
 
+      // Mock-ul nu ține procente per categorie: întoarce setările neschimbate.
+      updateCategoryDeductibility: (pfaId) => respond(() => toSettings(findPfa(pfaId))),
+
       uploadCashEvidence: (pfaId, file) =>
         respond(async () => {
           ensureWritable(findPfa(pfaId))

@@ -98,3 +98,33 @@ test('bank receipt: requires an existing payment and keeps the bank date and amo
   await expect(dialog).not.toBeVisible()
   expect(saved()).toMatchObject({ ledgerEntryId: 'bank-payment', paymentMethod: 'Bank', paymentDate: '2026-10-03', amountRon: 320 })
 })
+
+test('rejecting an expense asks why, then shows it rejected with the reason and no actions', async ({ page }) => {
+  await setup(page)
+  const pending = { id: 'expense', documentId: 'document', pfaRegistrationId: PFA, userId: 'client', catalogCategory: 'Nedefinit',
+    itemName: 'bon-gresit.jpg', deductibleLabel: 'De clasificat', amountRon: null, year: 2026, month: 10, documentStatus: 'Pending',
+    originalFileName: 'bon-gresit.jpg', expenseDate: null, supplierName: null, vatAmount: null, documentTypeLabel: null, status: 'Draft' }
+  let current: Record<string, unknown> = pending
+  const writes: Record<string, unknown>[] = []
+  await page.route(`${endpoint}*`, route => route.fulfill({ json: [current] }))
+  await page.route('**/documents/document/status', route => {
+    const body = route.request().postDataJSON()
+    writes.push(body)
+    current = { ...pending, documentStatus: 'Rejected', documentReviewNote: body.note }
+    return route.fulfill({ status: 200, json: {} })
+  })
+
+  await page.goto(`${clientProfileUrl(PFA, 'cheltuieli')}&luna=2026-10`)
+  await page.getByRole('button', { name: 'Respinge', exact: true }).click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Motivul respingerii').fill('Bonul nu e lizibil.')
+  await dialog.getByRole('button', { name: 'Respinge documentul', exact: true }).click()
+
+  await expect(dialog).not.toBeVisible()
+  expect(writes).toEqual([{ status: 'Rejected', note: 'Bonul nu e lizibil.' }])
+  await expect(page.getByText('Respinsă', { exact: true })).toBeVisible()
+  await expect(page.getByText('Motiv: Bonul nu e lizibil.')).toBeVisible()
+  for (const name of ['Respinge', 'Aprobă cheltuiala', 'Verifică / modifică', 'Vezi documentul']) {
+    await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0)
+  }
+})

@@ -263,6 +263,34 @@ export interface SettingHistoryEntry<K extends SettingKey = SettingKey> {
   changedAt: IsoDateTime
 }
 
+/** Deductibilitatea unei categorii: procent sau regim special (amortizare, fără procent). */
+export type DeductibilityChoice = '100_PERCENT' | '50_PERCENT' | 'NON_DEDUCTIBLE' | 'SPECIAL_RULE'
+
+/** Ce se poate alege pentru un client; `null` = înapoi la regula globală. */
+export type OwnDeductibility = '100_PERCENT' | '50_PERCENT' | 'NON_DEDUCTIBLE'
+
+/**
+ * O categorie de cheltuieli pentru un PFA: regula globală și ce se aplică lui azi. `Vehicle` =
+ * categoria urmează setarea auto a PFA-ului; `Special` = amortizare, fără procent.
+ */
+export interface CategoryDeductibility {
+  category: string
+  label: string
+  global: DeductibilityChoice
+  own: OwnDeductibility | null
+  ownFrom: IsoDate | null
+  effective: DeductibilityChoice
+  source: 'Global' | 'Client' | 'Vehicle' | 'Special'
+}
+
+/** Procentul unei categorii pentru un client, append-only ca restul setărilor. */
+export interface CategoryDeductibilityChange {
+  category: string
+  value: OwnDeductibility | null
+  validFrom: IsoDate
+  note: string
+}
+
 export interface PfaAccountingSettings {
   pfaId: string
   realSystem: boolean
@@ -273,6 +301,8 @@ export interface PfaAccountingSettings {
   vehicleDeductibility: VehicleDeductibility
   cash: CashRegisterState
   history: SettingHistoryEntry[]
+  /** Categoriile de cheltuieli, cu regula globală și procentul acestui client. */
+  categoryDeductibility?: CategoryDeductibility[]
 }
 
 export type SettingsChange = {

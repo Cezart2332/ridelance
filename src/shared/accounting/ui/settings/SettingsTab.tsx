@@ -22,6 +22,7 @@ import { useNotify } from '../notify'
 import type { DossierTabProps } from '../pfa/PfaDossierView'
 import { useApi } from '../useApi'
 import { CashSection } from './CashSection'
+import { CategoryDeductibilitySection } from './CategoryDeductibilitySection'
 
 const SETTING_LABEL: Record<SettingKey, string> = {
   art317: 'Cod TVA art. 317',
@@ -159,6 +160,17 @@ export function SettingsTab({ summary, onSummaryChanged }: DossierTabProps) {
           {section('vehicle_deductibility', DEDUCTIBILITY_LABEL[data.vehicleDeductibility])}
         </Stack>
       </Paper>
+
+      <CategoryDeductibilitySection
+        pfaId={summary.id}
+        categories={data.categoryDeductibility ?? []}
+        readOnly={readOnly}
+        defaultValidFrom={`${summary.currentPeriod}-01`}
+        onChanged={() => {
+          settings.reload()
+          onSummaryChanged()
+        }}
+      />
 
       <CashSection
         summary={summary}

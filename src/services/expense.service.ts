@@ -36,6 +36,8 @@ export interface DeductibleExpense {
   deductibleAmount?: number | null;
   paymentMethod?: string | null;
   paymentDate?: string | null;
+  /** De ce a respins contabilul documentul. Doar cât e respins. */
+  documentReviewNote?: string | null;
 }
 
 export interface CreateDeductibleExpensePayload {

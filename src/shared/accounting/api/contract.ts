@@ -73,6 +73,7 @@ import type {
   RjipView,
   RuleInput,
   SettingsChange,
+  CategoryDeductibilityChange,
   SupplierTaxProfile,
   TransitionRequest,
   UpdateExtractionRequest,
@@ -116,6 +117,8 @@ export interface AccountingApi {
     getSummary(pfaId: string): Promise<PfaAccountingSummary>
     getSettings(pfaId: string): Promise<PfaAccountingSettings>
     updateSettings(pfaId: string, change: SettingsChange): Promise<PfaAccountingSettings>
+    /** Procentul deductibil al unei categorii pentru acest client (gol = regula globală). */
+    updateCategoryDeductibility(pfaId: string, change: CategoryDeductibilityChange): Promise<PfaAccountingSettings>
     /** Dovada de fiscalizare a casei de marcat (multipart), cerută de tranziția spre `ACTIVE`. */
     uploadCashEvidence(pfaId: string, file: File): Promise<CashEvidenceUploadResult>
     transitionCash(pfaId: string, request: CashTransitionRequest): Promise<CashRegisterState>
