@@ -88,6 +88,20 @@ export interface SubscriptionResponse {
   /** Opțiunile plătite pe abonament (nu cele incluse sau gratuite). */
   hasOpenBankingAddon?: boolean
   hasCashRegisterAddon?: boolean
+  /** Reînnoirea n-a trecut și o reîncercăm (5 ori, la 3 zile). Null cât abonamentul e plătit la zi. */
+  paymentRetry?: SubscriptionPaymentRetry | null
+}
+
+export interface SubscriptionPaymentRetry {
+  /** „Fonduri insuficiente (insufficient_funds)”. */
+  failureReason: string | null
+  nextAttemptAtUtc: string
+  attemptsMade: number
+  attemptsTotal: number
+  /** Dacă nici ultima reîncercare nu trece, accesul se suspendă atunci. */
+  suspendsAtUtc: string
+  /** Pagina Stripe a facturii: o poate plăti singur, și cu alt card. */
+  payPage: string | null
 }
 
 
@@ -99,6 +113,8 @@ export interface PaymentHistoryItem {
   description: string
   stripePaymentId: string | null
   createdAtUtc: string
+  /** De ce a refuzat banca, la plățile eșuate. */
+  failureReason?: string | null
 }
 
 export interface PlanInfo {

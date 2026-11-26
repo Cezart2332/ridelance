@@ -247,7 +247,14 @@ function PaymentsTable({ rows, failedOnly = false }: { rows: AdminPaymentRow[]; 
               <TableCell>{row.productOrService}</TableCell>
               <TableCell>{row.paymentType}</TableCell>
               <TableCell sx={{ fontWeight: 650 }}>{formatLei(row.amountBani)}</TableCell>
-              <TableCell><StatusChip status={row.status} /></TableCell>
+              <TableCell>
+                <StatusChip status={row.status} />
+                {row.failureReason && (
+                  <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: TOKENS.textMuted, maxWidth: 260 }}>
+                    {row.failureReason}
+                  </Typography>
+                )}
+              </TableCell>
               <TableCell>{formatDate(row.dateUtc)}</TableCell>
               <TableCell>{row.paymentMethod}</TableCell>
             </TableRow>

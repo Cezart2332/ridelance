@@ -9,7 +9,8 @@ import { PfaFiscalProfileProvider } from '../../shared/fiscal-profile'
 
 import { authService } from '../../services/auth.service'
 import { userService } from '../../services/user.service'
-import { stripeService, type SubscriptionResponse } from '../../services/stripe.service'
+import { stripeService, type SubscriptionPaymentRetry, type SubscriptionResponse } from '../../services/stripe.service'
+import { PaymentRetryBanner } from './PaymentRetryBanner'
 import { OpenBankingDecision } from './OpenBankingDecision'
 import { canAccessDashboard, resolveClientPath } from '../../utils/clientOnboarding'
 import { useRecurringDocumentationReminder } from '../../hooks/useRecurringDocumentationReminder'
@@ -70,6 +71,8 @@ function DashboardPageContent() {
   const [planAccess, setPlanAccess] = useState<PlanAccess>(DEFAULT_PLAN_ACCESS)
   // PFAlone la finalul lunii gratuite de Open Banking: abonamentul, ca ecranul de decizie să-l știe.
   const [openBankingDecision, setOpenBankingDecision] = useState<SubscriptionResponse | null>(null)
+  // Reînnoirea n-a trecut: bannerul cu motivul și cu plata manuală, deasupra oricărei pagini.
+  const [paymentRetry, setPaymentRetry] = useState<SubscriptionPaymentRetry | null>(null)
 
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity })
@@ -108,6 +111,7 @@ function DashboardPageContent() {
           return
         }
         setPlanAccess(planAccessOf(sub))
+        setPaymentRetry(sub?.paymentRetry ?? null)
         // Întoarcerea din plata opțiunii: webhookul poate întârzia, deci nu întrebăm din nou.
         // În aplicația mobilă nu se plătește nimic, deci nici nu blocăm acolo.
         const justPaidOpenBanking = new URLSearchParams(window.location.search).get('open_banking') === '1'
@@ -162,6 +166,7 @@ function DashboardPageContent() {
         showNotifications
         onOpenRecurringDocumentation={() => navigate(PFA_PATHS.docsRecurring)}
       >
+        {paymentRetry && <PaymentRetryBanner retry={paymentRetry} />}
         <PfaFiscalProfileProvider>
           <DashboardRoutes pfaRegistrationId={pfaRegistrationId} onSnackbar={showSnackbar} />
         </PfaFiscalProfileProvider>

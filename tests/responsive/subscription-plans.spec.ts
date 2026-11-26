@@ -69,3 +69,30 @@ test('clientul își vede emailul operațional în profil, fără parolă', asyn
   await expect(page.getByText('ana.ionescu@pfa.ridelance.ro')).toBeVisible({ timeout: 45_000 })
   await expect(page.getByText('Accesul complet îți este predat la încheierea colaborării.', { exact: false })).toBeVisible()
 })
+
+test('reînnoirea refuzată: clientul vede motivul, când reîncercăm și își păstrează accesul', async ({ page }, info) => {
+  await client(page, {
+    status: 'Active',
+    dashboardAccessGranted: true,
+    plan: 'PfaFull',
+    paymentRetry: {
+      failureReason: 'Fonduri insuficiente (insufficient_funds)',
+      nextAttemptAtUtc: '2026-11-29T12:30:00Z',
+      attemptsMade: 0,
+      attemptsTotal: 5,
+      suspendsAtUtc: '2026-12-11T12:30:00Z',
+      payPage: 'https://invoice.stripe.com/i/in_test',
+    },
+  })
+  // Profilul: pagina principală are nevoie de mult mai multe date simulate decât setul ăsta.
+  await page.goto('/app/dashboard/profil')
+
+  const banner = page.getByRole('alert').filter({ hasText: 'Plata abonamentului nu a trecut' })
+  await expect(banner).toBeVisible({ timeout: 45_000 })
+  await expect(banner).toContainText('Fonduri insuficiente (insufficient_funds)')
+  await expect(banner).toContainText('29.11.2026')
+  await expect(banner.getByRole('link', { name: 'Plătește acum' })).toHaveAttribute('href', 'https://invoice.stripe.com/i/in_test')
+  // Accesul rămâne: e tot în panou, nu trimis la alegerea abonamentului.
+  await expect(page).toHaveURL(/\/app\/dashboard/)
+  await page.screenshot({ path: `test-results/payment-retry-banner-${info.project.name}.png` })
+})

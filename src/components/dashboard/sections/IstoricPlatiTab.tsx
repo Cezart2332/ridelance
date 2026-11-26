@@ -16,6 +16,8 @@ export interface PaymentItem {
   amount: string
   description: string
   status: 'paid' | 'pending' | 'scheduled' | 'failed' | 'refunded'
+  /** De ce a refuzat banca, la o plată eșuată. */
+  failureReason?: string | null
 }
 
 const T = DASHBOARD_TOKENS
@@ -55,6 +57,7 @@ export function IstoricPlatiTab() {
             amount: `${item.amountBani / 100} lei`,
             description: item.description,
             status,
+            failureReason: item.failureReason ?? null,
           }
         })
 
@@ -184,6 +187,11 @@ export function IstoricPlatiTab() {
                       {formatRomanianDate(payment.date)}
                       {payment.status === 'scheduled' && ' la 15:00'}
                     </Typography>
+                    {payment.status === 'failed' && payment.failureReason && (
+                      <Typography sx={{ color: 'error.main', fontSize: '0.82rem', mt: 0.3 }}>
+                        {payment.failureReason}
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
 

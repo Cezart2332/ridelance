@@ -40,6 +40,8 @@ export interface AdminPaymentRow {
   status: string
   dateUtc: string
   paymentMethod: string
+  /** De ce a refuzat plata: „Fonduri insuficiente (insufficient_funds)”. Doar la plățile eșuate. */
+  failureReason?: string | null
 }
 
 export interface AdminServiceSaleRow {
